@@ -323,10 +323,10 @@ extension Event {
                 return convertToHieroglyphs(text: "(Encrypted content)")
             }
             if pubkey == account.publicKey, let firstP = self.firstP() {
-                return NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: firstP, content: encrypted) ?? "(Encrypted content)"
+                return Keys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: firstP, content: encrypted) ?? "(Encrypted content)"
             }
             else {
-                return NKeys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: pubkey, content: encrypted) ?? "(Encrypted content)"
+                return Keys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: pubkey, content: encrypted) ?? "(Encrypted content)"
             }
         }
         else {

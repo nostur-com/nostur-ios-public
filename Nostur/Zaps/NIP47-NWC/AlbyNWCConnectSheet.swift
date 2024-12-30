@@ -196,7 +196,7 @@ struct AlbyNWCConnectSheet: View {
     
     func startNWC() {
         bg().perform {
-            nwcConnection = NWCConnection.createAlbyConnection(context: bg())
+            nwcConnection = try? NWCConnection.createAlbyConnection(context: bg())
             
             if let nwcConnection = nwcConnection, let nwcUrl = URL(string:"https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(nwcConnection.pubkey)&return_to=nostur%3A%2F%2Fnwc_callback") {
                 DispatchQueue.main.async {

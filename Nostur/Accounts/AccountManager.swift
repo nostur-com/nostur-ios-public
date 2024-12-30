@@ -8,20 +8,24 @@
 import Foundation
 import KeychainAccess
 import CoreData
+import NostrEssentials
 
 class AccountManager {
     
     static let shared = AccountManager()
     
-    func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> CloudAccount {
-        let newKeys = NKeys.newKeys()
+    func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> CloudAccount? {
+        guard let newKeys = try? Keys.newKeys() else {
+            L.og.error("🔴🔴 Could not generate keys 🔴🔴")
+            return nil
+        }
         storeKeys(newKeys)
         
         let account = CloudAccount(context: context)
         account.createdAt = Date()
         account.name = name
         account.about = about
-        account.publicKey = newKeys.publicKeyHex()
+        account.publicKey = newKeys.publicKeyHex
         account.flagsSet = ["nostur_created", "full_account"] // need this to know if we can enable to follow button, normally we wait after we received contact list
         
         try! context.save()
@@ -57,13 +61,13 @@ class AccountManager {
         }
     }
     
-    func storeKeys(_ keys:NKeys) {
+    func storeKeys(_ keys: Keys) {
         let keychain = Keychain(service: "nostur.com.Nostur")
             .synchronizable(true)
         do {
             try keychain
                 .accessibility(.afterFirstUnlock)
-                .set(keys.privateKeyHex(), key: keys.publicKeyHex())
+                .set(keys.privateKeyHex, key: keys.publicKeyHex)
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
         }
@@ -159,7 +163,7 @@ class AccountManager {
         
         if (account.privateKey != nil) {
             do {
-                let keys = try NKeys(privateKeyHex: account.privateKey!)
+                let keys = try Keys(privateKeyHex: account.privateKey!)
                 
                 var newKind0Event = NEvent(content: setMetadataContent)
                 
@@ -189,7 +193,7 @@ class AccountManager {
         
         if (account.privateKey != nil) {
             do {
-                let keys = try NKeys(privateKeyHex: account.privateKey!)
+                let keys = try Keys(privateKeyHex: account.privateKey!)
                 
                 var newKind3Event = NEvent(content: "")
                 newKind3Event.kind = .contactList
@@ -245,7 +249,7 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
     //        if account.display_name != "" { setMetadataContent.display_name = account.display_name }
     
     do {
-        let keys = try NKeys(privateKeyHex: pk)
+        let keys = try Keys(privateKeyHex: pk)
         
         var newKind0Event = NEvent(content: setMetadataContent)
         

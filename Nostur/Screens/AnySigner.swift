@@ -111,7 +111,7 @@ struct AnySigner: View {
                                 error = String(localized:"Account has no private key", comment: "Error message"); return
                             }
                             
-                            guard let keys = try? NKeys(privateKeyHex: pk), let signedNEvent = try? nEvent.sign(keys), let verified = try? signedNEvent.verified(), verified else {
+                            guard let keys = try? Keys(privateKeyHex: pk), let signedNEvent = try? nEvent.sign(keys), let verified = try? signedNEvent.verified(), verified else {
                                 error = String(localized:"Could not sign event", comment: "Error message"); return
                             }
 
@@ -217,9 +217,9 @@ struct AnyNEvent: Codable {
         self.signature = ""
     }
 
-    mutating func sign(_ keys:NKeys) throws -> AnyNEvent {
+    mutating func sign(_ keys: Keys) throws -> AnyNEvent {
 
-        let serializableEvent = NSerializableEvent(publicKey: keys.publicKeyHex(), createdAt: self.createdAt ?? NTimestamp.init(date: Date()), kind:self.kind, tags: self.tags, content: self.content)
+        let serializableEvent = NSerializableEvent(publicKey: keys.publicKeyHex, createdAt: self.createdAt ?? NTimestamp.init(date: Date()), kind:self.kind, tags: self.tags, content: self.content)
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
@@ -228,14 +228,13 @@ struct AnyNEvent: Codable {
 
         let sig = try! keys.signature(for: sha256Serialized)
 
-
-        guard keys.publicKey.schnorr.isValidSignature(sig, for: sha256Serialized) else {
+        guard keys.publicKey.isValidSignature(sig, for: sha256Serialized) else {
             throw "Signing failed"
         }
 
         self.id = String(bytes:sha256Serialized.bytes)
-        self.publicKey = keys.publicKeyHex()
-        self.signature = String(bytes:sig.rawRepresentation.bytes)
+        self.publicKey = keys.publicKeyHex
+        self.signature = String(bytes:sig.bytes)
 
         return self
     }
@@ -257,14 +256,13 @@ struct AnyNEvent: Codable {
             throw "🔴🔴 Invalid ID 🔴🔴"
         }
 
-        let xOnlyKey = try secp256k1.Signing.XonlyKey(rawRepresentation: publicKey.bytes, keyParity: 1)
-        let pubKey = secp256k1.Signing.PublicKey(xonlyKey: xOnlyKey)
+        let xOnlyKey = try secp256k1.Schnorr.XonlyKey(dataRepresentation: publicKey.bytes, keyParity: 1)
 
         // signature from this event
-        let schnorrSignature = try secp256k1.Signing.SchnorrSignature(rawRepresentation: signature.bytes)
+        let schnorrSignature = try secp256k1.Schnorr.SchnorrSignature(dataRepresentation: signature.bytes)
 
         // public and signature from this event is valid?
-        guard pubKey.schnorr.isValidSignature(schnorrSignature, for: sha256Serialized) else {
+        guard xOnlyKey.isValidSignature(schnorrSignature, for: sha256Serialized) else {
             throw "Invalid signature"
         }
 

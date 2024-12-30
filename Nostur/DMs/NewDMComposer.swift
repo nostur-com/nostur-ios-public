@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct NewDMComposer: View {
     @EnvironmentObject private var la: LoggedInAccount
@@ -37,7 +38,7 @@ struct NewDMComposer: View {
                 if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                     nEvent.content = replaceNsecWithHunter2(nEvent.content)
                 }
-                guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
+                guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
                     L.og.error("🔴🔴 Could encrypt content")
                     return
                 }

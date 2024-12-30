@@ -8,6 +8,7 @@
 
 import Foundation
 import CoreData
+import NostrEssentials
 
 extension NWCConnection {
 
@@ -27,11 +28,11 @@ extension NWCConnection {
 
 extension NWCConnection : Identifiable {
     
-    static func createAlbyConnection(context: NSManagedObjectContext) -> NWCConnection {
+    static func createAlbyConnection(context: NSManagedObjectContext) throws -> NWCConnection {
         let c = NWCConnection(context: context)
         c.createdAt = .now
         c.connectionId = UUID().uuidString
-        c.pubkey = NIP47SecretManager.shared.generateKeysForConnection(c)
+        c.pubkey = try NIP47SecretManager.shared.generateKeysForConnection(c)
         c.type = "ALBY"
         return c
     }
@@ -40,9 +41,9 @@ extension NWCConnection : Identifiable {
         let c = NWCConnection(context: context)
         c.createdAt = .now
         c.connectionId = UUID().uuidString
-        guard let existingKeys = try? NKeys(privateKeyHex: secret) else { return nil }
+        guard let existingKeys = try? Keys(privateKeyHex: secret) else { return nil }
         NIP47SecretManager.shared.storeSecret(existingKeys, connectionId: c.connectionId)
-        c.pubkey = existingKeys.publicKeyHex()
+        c.pubkey = existingKeys.publicKeyHex
         c.type = "CUSTOM"
         return c
     }

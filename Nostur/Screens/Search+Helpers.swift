@@ -523,7 +523,7 @@ extension Search {
                     
                     
                     do {
-                        let signedKind443 = try kind443.sign(NKeys(privateKeyHex: pk))
+                        let signedKind443 = try kind443.sign(Keys(privateKeyHex: pk))
                         let unpublishedKind443 = Event.saveEvent(event: signedKind443, context: bgContext)
                         try? bgContext.save() 
                         let nrPost = NRPost(event: unpublishedKind443)

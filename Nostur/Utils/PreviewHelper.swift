@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import NostrEssentials
 
 let PREVIEW_ACCOUNT_ID = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
 let PREVIEW_DEVICE = "iPhone 15"
@@ -403,44 +404,46 @@ extension PreviewEnvironment {
             account3.name = "Explorer"
             account3.about = "Third account"
             
-            
-            let account4keys = NKeys.newKeys()
-            let account4 = CloudAccount(context: self.context)
-            account4.createdAt = Date()
-            account4.flags = "full_account"
-            account4.publicKey = account4keys.publicKeyHex()
-            account4.privateKey = account4keys.privateKeyHex()
-            account4.name = "The Poster"
-            account4.about = "4th account, with private key"
-            
-            let account5keys = NKeys.newKeys()
-            let account5 = CloudAccount(context: self.context)
-            account5.flags = "full_account"
-            account5.createdAt = Date()
-            account5.publicKey = account5keys.publicKeyHex()
-            account5.privateKey = account5keys.privateKeyHex()
-            account5.name = "Alt"
-            account5.about = "5th account, with private kay"
-            
-            let account6keys = NKeys.newKeys()
-            let account6 = CloudAccount(context: self.context)
-            account6.flags = "full_account"
-            account6.createdAt = Date()
-            account6.publicKey = account6keys.publicKeyHex()
-            account6.privateKey = account6keys.privateKeyHex()
-            account6.name = "Alt"
-            account6.about = "6th account, with private kay"
-            
-            let account7keys = NKeys.newKeys()
-            let account7 = CloudAccount(context: self.context)
-            account7.flags = "full_account"
-            account7.createdAt = Date()
-            account7.publicKey = account7keys.publicKeyHex()
-            account7.privateKey = account7keys.privateKeyHex()
-            account7.name = "Alt"
-            account7.about = "5th account, with private kay"
-            
-            NRState.shared.accounts = [account, account2, account3, account4, account5, account6, account7]
+            do {
+                
+                let account4keys = try Keys.newKeys()
+                let account4 = CloudAccount(context: self.context)
+                account4.createdAt = Date()
+                account4.flags = "full_account"
+                account4.publicKey = account4keys.publicKeyHex
+                account4.privateKey = account4keys.privateKeyHex
+                account4.name = "The Poster"
+                account4.about = "4th account, with private key"
+                
+                let account5keys = try Keys.newKeys()
+                let account5 = CloudAccount(context: self.context)
+                account5.flags = "full_account"
+                account5.createdAt = Date()
+                account5.publicKey = account5keys.publicKeyHex
+                account5.privateKey = account5keys.privateKeyHex
+                account5.name = "Alt"
+                account5.about = "5th account, with private kay"
+                
+                let account6keys = try Keys.newKeys()
+                let account6 = CloudAccount(context: self.context)
+                account6.flags = "full_account"
+                account6.createdAt = Date()
+                account6.publicKey = account6keys.publicKeyHex
+                account6.privateKey = account6keys.privateKeyHex
+                account6.name = "Alt"
+                account6.about = "6th account, with private kay"
+                
+                let account7keys = try Keys.newKeys()
+                let account7 = CloudAccount(context: self.context)
+                account7.flags = "full_account"
+                account7.createdAt = Date()
+                account7.publicKey = account7keys.publicKeyHex
+                account7.privateKey = account7keys.privateKeyHex
+                account7.name = "Alt"
+                account7.about = "5th account, with private kay"
+                
+                NRState.shared.accounts = [account, account2, account3, account4, account5, account6, account7]
+            } catch { }
         }
 //        NRState.shared.loadAccounts()
         

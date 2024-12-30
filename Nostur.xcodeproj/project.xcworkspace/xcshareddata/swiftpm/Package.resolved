@@ -1,5 +1,5 @@
 {
-  "originHash" : "5b4309023548ed3bd1e5812882e9db61fb3733931e22cbb6dd76ee7b26ea644a",
+  "originHash" : "b5e25233173fa56eb41d6ac5e69d88752b3e50388b08e219db94b1161988a6c9",
   "pins" : [
     {
       "identity" : "client-sdk-swift",
@@ -50,7 +50,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nostur-com/nostr-essentials",
       "state" : {
-        "revision" : "461fe465121bd8f17900fbdb28eeb989b73f2b80"
+        "revision" : "9bedd109d9e7e3f68c52f972c29bc4ab7cca9e1e"
       }
     },
     {
@@ -76,8 +76,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/GigaBitcoin/secp256k1.swift",
       "state" : {
-        "revision" : "39dd39248e769ea88253a0ce300399b402a64529",
-        "version" : "0.9.2"
+        "revision" : "1a14e189def5eaa92f839afdd2faad8e43b61a6e",
+        "version" : "0.12.2"
       }
     },
     {

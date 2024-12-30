@@ -1,4 +1,5 @@
 import SwiftUI
+import NostrEssentials
 
 /// Just for testing things
 struct NIP47TesterView: View {
@@ -21,7 +22,7 @@ struct NIP47TesterView: View {
 //                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
-                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
                     print("Could not decrypt nwcResponse, \(event.eventJson())")
                     return
                 }
@@ -43,7 +44,7 @@ struct NIP47TesterView: View {
             }
             Button("Send payment test") {
                 let walletPubkey = "69effe7b49a6dd5cf525bd0905917a5005ffe480b58eeb8e861418cf3ae760d9"
-                if let keys = try? NKeys(privateKeyHex: TEST_PK) {
+                if let keys = try? Keys(privateKeyHex: TEST_PK) {
                     
                     let request = NWCRequest(method: "pay_invoice", params: NWCRequest.NWCParams(invoice: TEST_LNINVOICE))
                     let encoder = JSONEncoder()
@@ -56,7 +57,7 @@ struct NIP47TesterView: View {
                             
                             print(nwcReq.eventJson())
                             
-                            guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: walletPubkey, content: nwcReq.content) else {
+                            guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: walletPubkey, content: nwcReq.content) else {
                                 L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
@@ -80,12 +81,12 @@ struct NIP47TesterView: View {
             }
             
             Button("Create test keys") {
-                if let keys = try? NKeys(privateKeyHex: "") {
+                if let keys = try? Keys(privateKeyHex: "") {
                     //                let keys = NKeys.newKeys()
-                    print("Public: \(keys.publicKeyHex())")
-                    print("Private: \(keys.privateKeyHex())")
-                    print("https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(keys.publicKeyHex())&return_to=nostur%3A%2F%2Fnwc_callback")
-                    print("https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(keys.publicKeyHex())")
+                    print("Public: \(keys.publicKeyHex)")
+                    print("Private: \(keys.privateKeyHex)")
+                    print("https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(keys.publicKeyHex)&return_to=nostur%3A%2F%2Fnwc_callback")
+                    print("https://nwc.getalby.com/apps/new?c=Nostur&pubkey=\(keys.publicKeyHex)")
                 }
             }
         }

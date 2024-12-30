@@ -234,14 +234,14 @@ struct AddExistingAccountSheet: View {
     }
     
     private func addExistingAccount(privkey: String) {
-        guard let keys = try? NKeys(privateKeyHex: privkey) else {
+        guard let keys = try? Keys(privateKeyHex: privkey) else {
             invalidKey = true
             key = ""
             return
         }
         
-        if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: keys.publicKeyHex(), context: viewContext)) {
-            existingAccount.privateKey = keys.privateKeyHex()
+        if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: keys.publicKeyHex, context: viewContext)) {
+            existingAccount.privateKey = keys.privateKeyHex
             existingAccount.isNC = false
             existingAccount.flagsSet.insert("full_account")
             NRState.shared.changeAccount(existingAccount)
@@ -252,8 +252,8 @@ struct AddExistingAccountSheet: View {
         
         let account = CloudAccount(context: viewContext)
         account.createdAt = Date()        
-        account.publicKey = keys.publicKeyHex()
-        account.privateKey = keys.privateKeyHex()
+        account.publicKey = keys.publicKeyHex
+        account.privateKey = keys.privateKeyHex
         account.flags = "full_account"
         
         try? viewContext.save()

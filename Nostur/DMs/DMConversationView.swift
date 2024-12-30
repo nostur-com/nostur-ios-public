@@ -8,6 +8,7 @@
 import SwiftUI
 import Algorithms
 import Combine
+import NostrEssentials
 
 // Do the flip flip.
 // We need to start at the last received message (bottom)
@@ -275,7 +276,7 @@ struct DMConversationView: View {
                                         nEvent.content = replaceNsecWithHunter2(nEvent.content)
                                     }
                                     nEvent.kind = .directMessage
-                                    guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
+                                    guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
                                         L.og.error("🔴🔴 Could encrypt content")
                                         return
                                     }

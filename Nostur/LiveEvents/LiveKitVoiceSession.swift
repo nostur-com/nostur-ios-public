@@ -33,7 +33,7 @@ class LiveKitVoiceSession: ObservableObject {
     
     @Published public var listenAnonymously: Bool = false
     
-    public let anonymousKeys = NKeys.newKeys()
+    public let anonymousKeys = try! Keys.newKeys()
     public var anonymousPubkeyCached = ""
     
     static let shared = LiveKitVoiceSession()
@@ -54,7 +54,7 @@ class LiveKitVoiceSession: ObservableObject {
     
     @MainActor
     func connect(_ url: String, token: String, accountType: NestAccountType, nrLiveEvent: NRLiveEvent, completion: (() -> Void)? = nil) {
-        self.anonymousPubkeyCached = anonymousKeys.publicKeyHex()
+        self.anonymousPubkeyCached = anonymousKeys.publicKeyHex
         self.state = .connecting
         try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .duckOthers)
         self.nrLiveEvent = nrLiveEvent
@@ -116,7 +116,7 @@ class LiveKitVoiceSession: ObservableObject {
             }
             
         case .anonymous(let nKeys):
-            presenceEvent.publicKey = nKeys.publicKeyHex()
+            presenceEvent.publicKey = nKeys.publicKeyHex
             nrLiveEvent?.participantsOrSpeakers.first(where: { $0.pubkey == presenceEvent.publicKey })?.raisedHand = raisedHand
             guard let signedPresenceEvent = try? presenceEvent.sign(nKeys) else { return }
             Unpublisher.shared.publishNow(signedPresenceEvent, skipDB: true)
@@ -558,5 +558,5 @@ enum LiveKitVoiceSessionState {
 
 enum NestAccountType {
     case account(CloudAccount)
-    case anonymous(NKeys)
+    case anonymous(Keys)
 }

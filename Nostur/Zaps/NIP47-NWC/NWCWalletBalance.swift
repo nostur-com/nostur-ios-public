@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct NWCWalletBalance: View {
     @EnvironmentObject private var themes:Themes
@@ -82,7 +83,7 @@ func nwcSendBalanceRequest() {
             NWCRequestQueue.shared.ensureNWCconnection()
             
             DispatchQueue.main.async {
-                if let keys = try? NKeys(privateKeyHex: pk) {
+                if let keys = try? Keys(privateKeyHex: pk) {
                     
                     let request = NWCRequest(method: "get_balance")
                     let encoder = JSONEncoder()
@@ -95,7 +96,7 @@ func nwcSendBalanceRequest() {
                             
                             L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
                             
-                            guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: walletPubkey, content: nwcReq.content) else {
+                            guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: walletPubkey, content: nwcReq.content) else {
                                 L.og.error("⚡️ Problem encrypting request")
                                 return
                             }

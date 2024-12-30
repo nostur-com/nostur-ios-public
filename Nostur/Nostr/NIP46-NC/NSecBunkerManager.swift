@@ -48,7 +48,7 @@ class NSecBunkerManager: ObservableObject {
                 guard let account = self.account else { return }
                 guard let sessionPrivateKey = account.privateKey else { return }
              
-                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: sessionPrivateKey, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: sessionPrivateKey, pubkey: event.publicKey, content: event.content) else {
                     L.og.error("🏰 Could not decrypt ncMessage, \(event.eventJson())")
                     return
                 }
@@ -195,11 +195,11 @@ class NSecBunkerManager: ObservableObject {
     public func setAccount(_ account: CloudAccount) {
         self.account = account
         guard let sessionPrivateKey = account.privateKey else { return }
-        guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
+        guard let keys = try? Keys(privateKeyHex: sessionPrivateKey) else { return }
         // connect to NC relay, the session public key is used as id
         if account.ncRelay != "" {
             Task { @MainActor in
-                self.connectToBunker(sessionPublicKey: keys.publicKeyHex(), relay: account.ncRelay)
+                self.connectToBunker(sessionPublicKey: keys.publicKeyHex, relay: account.ncRelay)
             }
         }
     }
@@ -210,7 +210,9 @@ class NSecBunkerManager: ObservableObject {
         self.account = account
         
         // Generate session key, the private key is stored in keychain, it is accessed by using the public key of the bunker managed account
-        let ncClientPubkey = NIP46SecretManager.shared.generateKeysForAccount(account)
+        guard let ncClientPubkey = try? NIP46SecretManager.shared.generateKeysForAccount(account) else {
+            state = .error; return 
+        }
         
         account.isNC = true
         account.ncClientPubkey_ = ncClientPubkey // need to listen for NC messages on this (can be different from user pubkey)
@@ -218,7 +220,7 @@ class NSecBunkerManager: ObservableObject {
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
         guard let sessionPrivateKey = account.privateKey else { state = .error; return }
-        guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { state = .error; return }
+        guard let keys = try? Keys(privateKeyHex: sessionPrivateKey) else { state = .error; return }
         
         // connect to NC relay, the ncRemoteSignerPubkey is used as id
         Task { @MainActor in
@@ -246,7 +248,7 @@ class NSecBunkerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: ncRemoteSignerPubkey, content: ncReq.content) else {
             L.og.error("🏰 🔴🔴 Could not encrypt content for ncMessage")
             return
         }
@@ -261,7 +263,7 @@ class NSecBunkerManager: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             // Setup the NC subscription that listens for NC messages
             // filter: authors (remote signer pubkey), #p (our session pubkey)
-            req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
+            req(RM.getNCResponses(pubkey: keys.publicKeyHex, bunkerPubkey: ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
             
             // Send connection request
             ConnectionPool.shared.sendMessage(
@@ -289,7 +291,7 @@ class NSecBunkerManager: ObservableObject {
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
         guard let sessionPrivateKey = account.privateKey else { return }
-        guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
+        guard let keys = try? Keys(privateKeyHex: sessionPrivateKey) else { return }
         
         var unsignedEvent = event
         unsignedEvent.publicKey = account.publicKey
@@ -310,7 +312,7 @@ class NSecBunkerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
             L.og.error("🏰🔴🔴 Could not encrypt content")
             return
         }
@@ -329,7 +331,7 @@ class NSecBunkerManager: ObservableObject {
         }
         
         // Make sure "NC" subscription is active
-        req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
+        req(RM.getNCResponses(pubkey: keys.publicKeyHex, bunkerPubkey: account.ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker
         ConnectionPool.shared.sendMessage(
@@ -349,7 +351,7 @@ class NSecBunkerManager: ObservableObject {
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
         guard let sessionPrivateKey = account.privateKey else { return }
-        guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
+        guard let keys = try? Keys(privateKeyHex: sessionPrivateKey) else { return }
             
         let commandId = "describe-\(UUID().uuidString)"
         let request = NCRequest(id: commandId, method: "describe", params: [])
@@ -367,7 +369,7 @@ class NSecBunkerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
             L.og.error("🏰🔴🔴 Could not encrypt content")
             return
         }
@@ -379,7 +381,7 @@ class NSecBunkerManager: ObservableObject {
         L.og.debug("🏰 ncReqSigned (encrypted): \(signedReq.wrappedEventJson())")
         
         // Make sure "NC" subscription is active
-        req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
+        req(RM.getNCResponses(pubkey: keys.publicKeyHex, bunkerPubkey: account.ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker
         ConnectionPool.shared.sendMessage(
@@ -398,7 +400,7 @@ class NSecBunkerManager: ObservableObject {
         
         // account does not have a .privateKey, but because isNC=true it will look up in NIP46SecretManager for a session private key and use that instead
         guard let sessionPrivateKey = account.privateKey else { return }
-        guard let keys = try? NKeys(privateKeyHex: sessionPrivateKey) else { return }
+        guard let keys = try? Keys(privateKeyHex: sessionPrivateKey) else { return }
             
         let commandId = "get_public_key-\(UUID().uuidString)"
         let request = NCRequest(id: commandId, method: "get_public_key", params: [])
@@ -416,7 +418,7 @@ class NSecBunkerManager: ObservableObject {
         L.og.debug("🏰 ncReq (unencrypted): \(ncReq.eventJson())")
 #endif
         
-        guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
+        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: account.ncRemoteSignerPubkey, content: ncReq.content) else {
             L.og.error("🏰🔴🔴 Could not encrypt content")
             return
         }
@@ -428,7 +430,7 @@ class NSecBunkerManager: ObservableObject {
         L.og.debug("🏰 ncReqSigned (encrypted): \(signedReq.wrappedEventJson())")
         
         // Make sure "NC" subscription is active
-        req(RM.getNCResponses(pubkey: keys.publicKeyHex(), bunkerPubkey: account.ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
+        req(RM.getNCResponses(pubkey: keys.publicKeyHex, bunkerPubkey: account.ncRemoteSignerPubkey, subscriptionId: "NC"), activeSubscriptionId: "NC")
         
         // Send message to nsecBunker
         ConnectionPool.shared.sendMessage(

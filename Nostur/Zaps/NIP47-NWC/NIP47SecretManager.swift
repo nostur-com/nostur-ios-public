@@ -7,6 +7,7 @@
 
 import Foundation
 import KeychainAccess
+import NostrEssentials
 
 /// Copy pasta from AccountManager, changed a bit and use background context
 class NIP47SecretManager {
@@ -16,12 +17,12 @@ class NIP47SecretManager {
     let SERVICE = "nwc"
     
     // Store the new private key under the connectionId key, returns the new public key.
-    func generateKeysForConnection(_ connection:NWCConnection) -> String {
-        let newKeys = NKeys.newKeys()
+    func generateKeysForConnection(_ connection:NWCConnection) throws -> String {
+        let newKeys = try Keys.newKeys()
         if !hasSecret(connectionId: connection.connectionId) { // don't override existing keys
             storeSecret(newKeys, connectionId: connection.connectionId)
         }
-        return newKeys.publicKeyHex()
+        return newKeys.publicKeyHex
     }
     
     func getSecret(connectionId:String) -> String? {
@@ -49,14 +50,14 @@ class NIP47SecretManager {
         }
     }
     
-    func storeSecret(_ keys:NKeys, connectionId:String) {
+    func storeSecret(_ keys: Keys, connectionId:String) {
         let keychain = Keychain(service: SERVICE)
             .synchronizable(true)
         do {
             try keychain
                 .accessibility(.afterFirstUnlock)
                 .label("nostr wallet connect")
-                .set(keys.privateKeyHex(), key: connectionId)
+                .set(keys.privateKeyHex, key: connectionId)
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
         }

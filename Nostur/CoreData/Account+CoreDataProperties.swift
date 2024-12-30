@@ -329,6 +329,7 @@ extension Account : Identifiable {
 
 
 import KeychainAccess
+import NostrEssentials
 
 // Copy pasta of a few needed functions for one time migration, they work with CloudAccount on the base class, but use the old Account here for migration.
 extension NIP46SecretManager {
@@ -350,14 +351,14 @@ extension NIP46SecretManager {
         }
     }
     
-    func storeSecret(_ keys:NKeys, account: Account) {
+    func storeSecret(_ keys: Keys, account: Account) {
         let keychain = Keychain(service: SERVICE)
             .synchronizable(true)
         do {
             try keychain
                 .accessibility(.afterFirstUnlock)
                 .label("nostr connect")
-                .set(keys.privateKeyHex(), key: account.publicKey)
+                .set(keys.privateKeyHex, key: account.publicKey)
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
         }

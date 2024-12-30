@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NostrEssentials
 
 // Instant zaps
 // 1. Update UI as if Zap already happened
@@ -400,7 +401,7 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
     guard let pk = pk else { return false }
     guard let walletPubkey = walletPubkey else { return false }
     
-    if let keys = try? NKeys(privateKeyHex: pk) {
+    if let keys = try? Keys(privateKeyHex: pk) {
         
         let request = NWCRequest(method: "pay_invoice", params: NWCRequest.NWCParams(invoice: pr))
         let encoder = JSONEncoder()
@@ -413,7 +414,7 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
                 
                 L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
                 
-                guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: walletPubkey, content: nwcReq.content) else {
+                guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: walletPubkey, content: nwcReq.content) else {
                     L.og.error("⚡️ Problem encrypting request")
                     return false
                 }

@@ -234,11 +234,11 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     }
     
     @MainActor
-    public func joinRoomAnonymously(keys: NKeys, completion: ((String) -> Void)? = nil) {
+    public func joinRoomAnonymously(keys: Keys, completion: ((String) -> Void)? = nil) {
         guard let liveKitJoinUrl = self.liveKitJoinUrl else { return }
         
         var nEvent = NEvent(content: "")
-        nEvent.publicKey = keys.publicKeyHex()
+        nEvent.publicKey = keys.publicKeyHex
         nEvent.kind = .custom(27235)
         nEvent.tags.append(NostrTag(["u", liveKitJoinUrl]))
         nEvent.tags.append(NostrTag(["method", "GET"]))

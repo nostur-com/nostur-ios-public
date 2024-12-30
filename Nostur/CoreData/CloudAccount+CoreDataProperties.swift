@@ -9,6 +9,7 @@
 import Foundation
 import CoreData
 import CloudKit
+import NostrEssentials
 
 extension CloudAccount {
 
@@ -375,7 +376,7 @@ extension CloudAccount : Identifiable {
         
         var eventToSign = event
         do {
-            let keys = try NKeys(privateKeyHex: privateKey)
+            let keys = try Keys(privateKeyHex: privateKey)
             let signedEvent = try eventToSign.sign(keys)
             return signedEvent
         }
@@ -397,7 +398,7 @@ extension CloudAccount : Identifiable {
         
         var eventToSign = event
         do {
-            let keys = try NKeys(privateKeyHex: pk)
+            let keys = try Keys(privateKeyHex: pk)
             let signedEvent = try eventToSign.sign(keys)
             return signedEvent
         }

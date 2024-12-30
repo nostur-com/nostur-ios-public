@@ -1,4 +1,5 @@
 import SwiftUI
+import NostrEssentials
 
 /// Just for testing things
 struct NIP46TesterView: View {
@@ -28,7 +29,7 @@ struct NIP46TesterView: View {
 //                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
-                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
                     print("Could not decrypt nwcResponse, \(event.eventJson())")
                     return
                 }
@@ -61,7 +62,7 @@ struct NIP46TesterView: View {
 //                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
-                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
                     print("Could not DECRYPT nwcResponse, \(event.eventJson())")
                     return
                 }
@@ -105,7 +106,7 @@ struct NIP46TesterView: View {
 //                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
-                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
                     print("Could not DECRYPT nwcResponse, \(event.eventJson())")
                     return
                 }
@@ -148,7 +149,7 @@ struct NIP46TesterView: View {
 //                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://relay.getalby.com/v1") else { print("fail1"); return }
                 guard message.type == .EVENT, let event = message.event else { print("fail2"); return }
                  
-                guard let decrypted = NKeys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: TEST_PK, pubkey: event.publicKey, content: event.content) else {
                     print("Could not DECRYPT nwcResponse, \(event.eventJson())")
                     return
                 }
@@ -180,9 +181,9 @@ struct NIP46TesterView: View {
             Button("Connect") {
                 let nsecBunkerPubkey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027" // bunker managed key (Account.publicKey, but bunker has private key
                 let token = ""
-                if let keys = try? NKeys(privateKeyHex: TEST_PK) {
+                if let keys = try? Keys(privateKeyHex: TEST_PK) {
                     
-                    let request = NCRequest(id: "connect-\(UUID().uuidString)", method: "connect", params: [keys.publicKeyHex(), token])
+                    let request = NCRequest(id: "connect-\(UUID().uuidString)", method: "connect", params: [keys.publicKeyHex, token])
                     let encoder = JSONEncoder()
                     
                     if let requestJsonData = try? encoder.encode(request) {
@@ -193,7 +194,7 @@ struct NIP46TesterView: View {
                             
                             print(ncReq.eventJson())
                             
-                            guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
+                            guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: nsecBunkerPubkey, content: ncReq.content) else {
                                 L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
@@ -219,7 +220,7 @@ struct NIP46TesterView: View {
             Button("get_public_key") {
                 let nsecBunkerPubkey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027"
                 _ = ""
-                if let keys = try? NKeys(privateKeyHex: TEST_PK) {
+                if let keys = try? Keys(privateKeyHex: TEST_PK) {
                     
                     let request = NCRequest(id: "get_public_key-1", method: "get_public_key", params: [])
                     let encoder = JSONEncoder()
@@ -232,7 +233,7 @@ struct NIP46TesterView: View {
                             
                             print(ncReq.eventJson())
                             
-                            guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
+                            guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: nsecBunkerPubkey, content: ncReq.content) else {
                                 L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
@@ -258,7 +259,7 @@ struct NIP46TesterView: View {
             Button("describe") {
                 let nsecBunkerPubkey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027"
                 _ = ""
-                if let keys = try? NKeys(privateKeyHex: TEST_PK) {
+                if let keys = try? Keys(privateKeyHex: TEST_PK) {
                     
                     let request = NCRequest(id: "describe-1", method: "describe", params: [])
                     let encoder = JSONEncoder()
@@ -271,7 +272,7 @@ struct NIP46TesterView: View {
                             
                             print(ncReq.eventJson())
                             
-                            guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
+                            guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: nsecBunkerPubkey, content: ncReq.content) else {
                                 L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
@@ -297,7 +298,7 @@ struct NIP46TesterView: View {
             Button("sign_event") {
                 let nsecBunkerPubkey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027"
                 _ = ""
-                if let keys = try? NKeys(privateKeyHex: TEST_PK) {
+                if let keys = try? Keys(privateKeyHex: TEST_PK) {
                     
                     var ncReq = NEvent(content: "ho ho ho")
                     ncReq.publicKey = "f3498f465b27ae48bd63850e3acda48a90eff80af829514034d11728d9a3a027"
@@ -315,7 +316,7 @@ struct NIP46TesterView: View {
                             
                             print(ncReq.eventJson())
                             
-                            guard let encrypted = NKeys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex(), pubkey: nsecBunkerPubkey, content: ncReq.content) else {
+                            guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: nsecBunkerPubkey, content: ncReq.content) else {
                                 L.og.error("🔴🔴 Could not encrypt content")
                                 return
                             }
@@ -339,9 +340,9 @@ struct NIP46TesterView: View {
             }
             
             Button("Create test keys") {
-                let keys = NKeys.newKeys()
-                print("Public: \(keys.publicKeyHex())")
-                print("Private: \(keys.privateKeyHex())")
+                guard let keys = try? Keys.newKeys() else { return }
+                print("Public: \(keys.publicKeyHex)")
+                print("Private: \(keys.privateKeyHex)")
             }
         }
     }

@@ -18,7 +18,6 @@
 		1F041F422AEBB19200B52D42 /* NRText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F041F412AEBB19200B52D42 /* NRText.swift */; };
 		1F043F052B44FF4A00307526 /* UnknownKindModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F043F042B44FF4A00307526 /* UnknownKindModel.swift */; };
 		1F043F072B45036200307526 /* AppDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F043F062B45036200307526 /* AppDetail.swift */; };
-		1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F055A52296EE2A2009EF792 /* secp256k1 */; };
 		1F056FA62A5C2E7900578B35 /* ZapAmountButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F056FA52A5C2E7900578B35 /* ZapAmountButton.swift */; };
 		1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F056FA72A5C2F3B00578B35 /* CustomZapAmountEntry.swift */; };
 		1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F0592DB2A505531003B4B3C /* DiscoverCommunities.swift */; };
@@ -125,6 +124,7 @@
 		1F3917082C23A07000A4B5AB /* VideoPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3917072C23A07000A4B5AB /* VideoPreviews.swift */; };
 		1F39756F2AB622C1004F9D77 /* MultiFollowSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */; };
 		1F3A26C42B19392100DF54F9 /* NotificationsNewPosts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3A26C32B19392100DF54F9 /* NotificationsNewPosts.swift */; };
+		1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3C8B742D22D175008231A9 /* secp256k1 */; };
 		1F3D4BB72A25CC140084F939 /* AppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3D4BB62A25CC140084F939 /* AppView.swift */; };
 		1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3E135329C89B9F00D076EA /* NukeVideo */; };
 		1F3E135929C8B11F00D076EA /* Event+PrivateNotes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3E135829C8B11F00D076EA /* Event+PrivateNotes.swift */; };
@@ -1140,6 +1140,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */,
 				1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */,
@@ -1155,7 +1156,6 @@
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */,
-				1F055A53296EE2A2009EF792 /* secp256k1 in Frameworks */,
 				1FA97AA62C3F61480091446A /* LiveKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2349,7 +2349,6 @@
 			);
 			name = Nostur;
 			packageProductDependencies = (
-				1F055A52296EE2A2009EF792 /* secp256k1 */,
 				1F75257529962AA300477AF2 /* Nuke */,
 				1F75257729962AA300477AF2 /* NukeExtensions */,
 				1F75257929962AA300477AF2 /* NukeUI */,
@@ -2366,6 +2365,7 @@
 				1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */,
 				1FA97AA52C3F61480091446A /* LiveKit */,
 				1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */,
+				1F3C8B742D22D175008231A9 /* secp256k1 */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -2445,7 +2445,6 @@
 			);
 			mainGroup = 1FB448B12965F3D000038671;
 			packageReferences = (
-				1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */,
 				1F75257429962AA300477AF2 /* XCRemoteSwiftPackageReference "Nuke" */,
 				1FC4D4092997E58E004E88CD /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 				1F006B0829D0A9BE0048C6DD /* XCRemoteSwiftPackageReference "swift-algorithms" */,
@@ -2459,6 +2458,7 @@
 				1FC5834D2BDDB98A000C3588 /* XCRemoteSwiftPackageReference "SwiftUIFlow" */,
 				1FA97AA42C3F61480091446A /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 				1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */,
+				1F3C8B732D22D175008231A9 /* XCRemoteSwiftPackageReference "secp256k1" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -3466,20 +3466,20 @@
 				minimumVersion = 1.0.0;
 			};
 		};
-		1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/GigaBitcoin/secp256k1.swift";
-			requirement = {
-				kind = exactVersion;
-				version = 0.9.2;
-			};
-		};
 		1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kaishin/Gifu.git";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 3.4.1;
+			};
+		};
+		1F3C8B732D22D175008231A9 /* XCRemoteSwiftPackageReference "secp256k1" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/GigaBitcoin/secp256k1.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.12.2;
 			};
 		};
 		1F558B3D29FE66CE002938A3 /* XCRemoteSwiftPackageReference "swift-collections" */ = {
@@ -3519,7 +3519,7 @@
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
 			requirement = {
 				kind = revision;
-				revision = 461fe465121bd8f17900fbdb28eeb989b73f2b80;
+				revision = 9bedd109d9e7e3f68c52f972c29bc4ab7cca9e1e;
 			};
 		};
 		1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */ = {
@@ -3578,15 +3578,15 @@
 			package = 1F006B0829D0A9BE0048C6DD /* XCRemoteSwiftPackageReference "swift-algorithms" */;
 			productName = Algorithms;
 		};
-		1F055A52296EE2A2009EF792 /* secp256k1 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1F055A51296EE2A2009EF792 /* XCRemoteSwiftPackageReference "secp256k1" */;
-			productName = secp256k1;
-		};
 		1F2F54E92A0236E500B6D7E4 /* Gifu */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1F2F54E82A0236E400B6D7E4 /* XCRemoteSwiftPackageReference "Gifu" */;
 			productName = Gifu;
+		};
+		1F3C8B742D22D175008231A9 /* secp256k1 */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F3C8B732D22D175008231A9 /* XCRemoteSwiftPackageReference "secp256k1" */;
+			productName = secp256k1;
 		};
 		1F3E135329C89B9F00D076EA /* NukeVideo */ = {
 			isa = XCSwiftPackageProductDependency;

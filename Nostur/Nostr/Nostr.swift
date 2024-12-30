@@ -8,6 +8,7 @@
 import SwiftUI
 import Foundation
 import secp256k1
+import NostrEssentials
 
 // NIP-20: ["OK", <event_id>, <true|false>, <message>]
 // Example: ["OK", "b1a649ebe8b435ec71d3784793f3bbf4b93e64e17568a741aecd4c7ddeafce30", true, ""]
@@ -302,9 +303,9 @@ public struct NEvent: Codable {
         return self
     }
 
-    mutating func sign(_ keys:NKeys) throws -> NEvent {
+    mutating func sign(_ keys: Keys) throws -> NEvent {
 
-        let serializableEvent = NSerializableEvent(publicKey: keys.publicKeyHex(), createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
+        let serializableEvent = NSerializableEvent(publicKey: keys.publicKeyHex, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
 
         let encoder = JSONEncoder()
         encoder.outputFormatting = .withoutEscapingSlashes
@@ -313,14 +314,13 @@ public struct NEvent: Codable {
 
         let sig = try! keys.signature(for: sha256Serialized)
 
-
-        guard keys.publicKey.schnorr.isValidSignature(sig, for: sha256Serialized) else {
+        guard keys.publicKey.isValidSignature(sig, for: sha256Serialized) else {
             throw "Signing failed"
         }
 
         self.id = String(bytes:sha256Serialized.bytes)
-        self.publicKey = keys.publicKeyHex()
-        self.signature = String(bytes:sig.rawRepresentation.bytes)
+        self.publicKey = keys.publicKeyHex
+        self.signature = String(bytes: sig.bytes)
 
         return self
     }
@@ -338,14 +338,13 @@ public struct NEvent: Codable {
             throw "🔴🔴 Invalid ID 🔴🔴"
         }
 
-        let xOnlyKey = try secp256k1.Signing.XonlyKey(rawRepresentation: self.publicKey.bytes, keyParity: 1)
-        let pubKey = secp256k1.Signing.PublicKey(xonlyKey: xOnlyKey)
+        let xOnlyKey = try secp256k1.Schnorr.XonlyKey(dataRepresentation: self.publicKey.bytes, keyParity: 1)
 
         // signature from this event
-        let schnorrSignature = try secp256k1.Signing.SchnorrSignature(rawRepresentation: self.signature.bytes)
+        let schnorrSignature = try secp256k1.Schnorr.SchnorrSignature(dataRepresentation: self.signature.bytes)
 
         // public and signature from this event is valid?
-        guard pubKey.schnorr.isValidSignature(schnorrSignature, for: sha256Serialized) else {
+        guard xOnlyKey.isValidSignature(schnorrSignature, for: sha256Serialized) else {
             throw "Invalid signature"
         }
 

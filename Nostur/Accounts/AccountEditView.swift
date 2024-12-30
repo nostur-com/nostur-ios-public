@@ -12,6 +12,7 @@ import Nuke
 import NukeUI
 import CryptoKit
 import NavigationBackport
+import NostrEssentials
 
 struct AccountEditView: View {
     
@@ -251,19 +252,19 @@ extension AccountEditView {
                 newPrivateKey = ""
                 return
             }
-            guard let keys = try? NKeys(privateKeyHex: nip19.hexString) else {
+            guard let keys = try? Keys(privateKeyHex: nip19.hexString) else {
                 invalidPrivateKey = true
                 newPrivateKey = ""
                 return
             }
             
-            guard (keys.publicKeyHex() == account.publicKey) else {
+            guard (keys.publicKeyHex == account.publicKey) else {
                 invalidPrivateKey = true
                 newPrivateKey = ""
                 return
             }
             
-            account.privateKey = keys.privateKeyHex()
+            account.privateKey = keys.privateKeyHex
         }
         do {
             if anyLud.contains("@") { // email-like address entered
