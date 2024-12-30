@@ -195,6 +195,15 @@ class LiveKitVoiceSession: ObservableObject {
                 DispatchQueue.main.async {
                     self.nrLiveEvent?.objectWillChange.send()
                     self.nrLiveEvent?.pubkeysOnStage.insert(participantPubkey)
+                    // If our account is moved on stage while we had raised hand, lower hand.
+                    if (self.raisedHand) {
+                        if case .account(let account) = self.accountType, account.publicKey == participantPubkey {
+                            self.lowerHand()
+                        }
+                        else if case .anonymous(let keys) = self.accountType, keys.publicKeyHex == participantPubkey {
+                            self.lowerHand()
+                        }
+                    }
                     self.nrLiveEvent?.othersPresent.remove(participantPubkey)
                     if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
                         self.nrLiveEvent?.mutedPubkeys.insert(participantPubkey)
