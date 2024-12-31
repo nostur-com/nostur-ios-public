@@ -31,7 +31,7 @@ class NIP46SecretManager {
             .synchronizable(true)
         do {
             let privateKeyHex = try keychain
-                .get(account.ncClientPubkey_ ?? account.publicKey) 
+                .get(account.ncRemoteSignerPubkey_ ?? account.publicKey) 
             return privateKeyHex
         }
         catch Status.itemNotFound {
@@ -49,7 +49,7 @@ class NIP46SecretManager {
             .synchronizable(true)
         do {
             let privateKeyHex = try keychain
-                .get(account.ncClientPubkey_ ?? account.publicKey)
+                .get(account.ncRemoteSignerPubkey_ ?? account.publicKey)
             return privateKeyHex != nil
         } catch {
             return false
@@ -63,7 +63,7 @@ class NIP46SecretManager {
             try keychain
                 .accessibility(.afterFirstUnlock)
                 .label("nostr connect")
-                .set(keys.privateKeyHex, key: account.ncClientPubkey_ ?? account.publicKey)
+                .set(keys.privateKeyHex, key: account.ncRemoteSignerPubkey_ ?? account.publicKey)
         } catch {
             L.og.error("🔴🔴🔴 could not store key in keychain")
         }
@@ -73,7 +73,7 @@ class NIP46SecretManager {
         let keychain = Keychain(service: SERVICE)
             .synchronizable(true)
         do {
-            try keychain.remove(account.ncClientPubkey_ ?? account.publicKey)
+            try keychain.remove(account.ncRemoteSignerPubkey_ ?? account.publicKey)
         } catch {
             L.og.error("🔴🔴🔴 could not remove key from keychain")
         }

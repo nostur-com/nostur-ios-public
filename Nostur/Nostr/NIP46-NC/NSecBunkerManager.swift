@@ -184,7 +184,7 @@ class NSecBunkerManager: ObservableObject {
                 else if ncResponse.id.prefix(11) == "sign-event-" {
                     // SIGNED EVENT RESPONSE
                     if let error = ncResponse.error {
-                        L.og.error("🏰 NSECBUNKER error signing event: \(error) ")
+                        L.og.error("🏰 NSECBUNKER error signing event, error: \(error), decrypted: \(decrypted) ")
                         return
                     }
                     guard let result = ncResponse.result else {
@@ -225,7 +225,7 @@ class NSecBunkerManager: ObservableObject {
         state = .connecting
         self.account = account
         
-        // Generate session key, the private key is stored in keychain, it will be accessed by looking up (account.ncClientPubkey_ ?? account.publicKey) in the NC keychain
+        // Generate session key, the private key is stored in keychain, it will be accessed by looking up (account.ncRemoteSignerPubkey_ ?? account.publicKey) in the NC keychain
         guard let ncClientPubkey = try? NIP46SecretManager.shared.generateKeysForAccount(account) else {
             state = .error; return 
         }
