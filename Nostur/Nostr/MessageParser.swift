@@ -241,7 +241,7 @@ class MessageParser {
         let decoder = JSONDecoder()
         guard let nwcConnection = Importer.shared.nwcConnection else { L.og.error("⚡️ NWC response but nwcConnection missing \(nEvent.eventJson())"); return }
         guard let pk = nwcConnection.privateKey else { L.og.error("⚡️ NWC response but private key missing \(nEvent.eventJson())"); return }
-        guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: nEvent.publicKey, content: nEvent.content) else {
+        guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: nEvent.publicKey, content: nEvent.content) ?? Keys.decryptDirectMessageContent44(withPrivateKey: pk, pubkey: nEvent.publicKey, content: nEvent.content) else {
             L.og.error("⚡️ Could not decrypt nwcResponse, \(nEvent.eventJson())")
             return
         }

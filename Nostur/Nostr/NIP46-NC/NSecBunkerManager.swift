@@ -48,7 +48,7 @@ class NSecBunkerManager: ObservableObject {
                 guard let account = self.account else { return }
                 guard let sessionPrivateKey = account.privateKey else { return }
              
-                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: sessionPrivateKey, pubkey: event.publicKey, content: event.content) else {
+                guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: sessionPrivateKey, pubkey: event.publicKey, content: event.content) ?? Keys.decryptDirectMessageContent44(withPrivateKey: sessionPrivateKey, pubkey: event.publicKey, content: event.content) else {
                     L.og.error("🏰 Could not decrypt ncMessage, \(event.eventJson())")
                     return
                 }
@@ -103,7 +103,7 @@ class NSecBunkerManager: ObservableObject {
                     else if result == "ack" {
                         DispatchQueue.main.async {
                             self.state = .connected
-                            L.og.debug("🏰 NSECBUNKER connection success ")
+                            L.og.debug("🏰 NSECBUNKER ack success ")
                             self.getPublicKey()
                         }
                     }
@@ -153,14 +153,30 @@ class NSecBunkerManager: ObservableObject {
                             // response from remote bunker pubkey should be this accounts .ncRemoteSignerPubkey
                             guard account.ncRemoteSignerPubkey == event.publicKey else { return }
                             
+                            guard account.publicKey != result else {
+                                self.state = .connected
+                                L.og.info("🏰 NSECBUNKER get_public_key success, but pubkey is already set to set to: \(account.publicKey)")
+                                return
+                            }
+
                             // use the new pubkey received from bunker
+                            let oldAccountPubkey = account.publicKey
                             account.publicKey = result
+                            viewContextSave()
+                            
+                            if NRState.shared.activeAccountPublicKey == oldAccountPubkey {
+                                NRState.shared.activeAccountPublicKey = result
+                                NRState.shared.loggedInAccount?.pubkey = result
+                                
+                                NRState.shared.loadAccountsState() // Need load account because pubkey changed
+                            }
+                            
                             self.state = .connected
-                            L.og.info("🏰 NSECBUNKER connection success ")
+                            L.og.info("🏰 NSECBUNKER get_public_key success, pubkey set to: \(account.publicKey)")
                         }
                     }
 #if DEBUG
-                            L.og.debug("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
+                    L.og.debug("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
 #endif
                 }
                 
@@ -209,7 +225,7 @@ class NSecBunkerManager: ObservableObject {
         state = .connecting
         self.account = account
         
-        // Generate session key, the private key is stored in keychain, it is accessed by using the public key of the bunker managed account
+        // Generate session key, the private key is stored in keychain, it will be accessed by looking up (account.ncClientPubkey_ ?? account.publicKey) in the NC keychain
         guard let ncClientPubkey = try? NIP46SecretManager.shared.generateKeysForAccount(account) else {
             state = .error; return 
         }

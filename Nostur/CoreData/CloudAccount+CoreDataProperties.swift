@@ -183,18 +183,6 @@ extension CloudAccount {
         set { ncRemoteSignerPubkey_ = newValue }
     }
     
-    public var ncClientPubkey: String {
-        get {
-            if publicKey == ncRemoteSignerPubkey {
-                return publicKey
-            }
-            else {
-                return ncClientPubkey_ ?? ""
-            }
-        }
-        set { ncClientPubkey_ = newValue }
-    }
-    
     public var mostRecentItemDate:Int64 { // Used for duplicate accounts in iCloud, to resolve which one to keep (most recent)
         return [
             Int64((createdAt ?? .distantPast).timeIntervalSince1970),
