@@ -195,7 +195,14 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
                     
                     if let url = URL(string: relayData.url) {
-                        let urlRequest = URLRequest(url: url)
+                        var urlRequest = URLRequest(url: url)
+                        
+                        
+                        if #available(iOS 16, *) { } else {
+                            // Disable extensions on iOS 15
+                            urlRequest.setValue("", forHTTPHeaderField: "Sec-WebSocket-Extensions") // "When websocket-server is sending a large frame data（>1024 bytes) to client(ios15 equipment), client websocket will be closed with an error."
+                        }
+
                         self.webSocketTask = self.session?.webSocketTask(with: urlRequest)
                         self.webSocketTask?.delegate = self
                     }
