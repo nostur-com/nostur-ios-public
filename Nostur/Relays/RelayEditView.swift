@@ -224,6 +224,7 @@ struct RelayEditView: View {
                             connection?.relayData.setRead(relay.read)
                             connection?.relayData.setWrite(relay.write)
                             connection?.relayData.setAuth(relay.auth)
+                            connection?.recentAuthAttempts = 0 // reset or it won't try to auth because of previous failed attempts
                             connection?.relayData.setExcludedPubkeys(relay.excludedPubkeys)
                             
                             if let connection {
@@ -257,6 +258,7 @@ struct RelayEditView: View {
         .onChange(of: relay.auth) { newValue in
             if let connection = connection, connection.relayData.auth != newValue {
                 connection.relayData.setAuth(newValue)
+                connection.recentAuthAttempts = 0 // reset or it won't try to auth because of previous failed attempts
             }
         }
         .onAppear {

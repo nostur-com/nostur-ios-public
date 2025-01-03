@@ -613,7 +613,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     private var lastAuthChallenge: String?
-    private var recentAuthAttempts: Int = 0
+    public var recentAuthAttempts: Int = 0
     private var didAuth: Bool = false
     
     public func handleAuth(_ message: String) {
