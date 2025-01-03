@@ -619,7 +619,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     public func handleAuth(_ message: String) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self else { return }
-            guard relayData.auth else { return }
             guard let messageData = message.data(using: .utf8) else { return }
 
             let decoder = JSONDecoder()
@@ -629,6 +628,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             else { return }
 
             self.lastAuthChallenge = authMessage[1]
+            
+            guard relayData.auth else { return }
+            
             self.sendAuthResponse()
         }
     }
