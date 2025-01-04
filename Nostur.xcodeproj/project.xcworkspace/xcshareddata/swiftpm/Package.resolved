@@ -1,5 +1,5 @@
 {
-  "originHash" : "b5e25233173fa56eb41d6ac5e69d88752b3e50388b08e219db94b1161988a6c9",
+  "originHash" : "5b4309023548ed3bd1e5812882e9db61fb3733931e22cbb6dd76ee7b26ea644a",
   "pins" : [
     {
       "identity" : "client-sdk-swift",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "471a1b3d97d59de80027f44c975cd40bb72e67e0",
         "version" : "2.0.16"
+      }
+    },
+    {
+      "identity" : "cryptoswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/krzyzanowskim/CryptoSwift.git",
+      "state" : {
+        "revision" : "729e01bc9b9dab466ac85f21fb9ee2bc1c61b258",
+        "version" : "1.8.4"
       }
     },
     {
@@ -50,7 +59,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nostur-com/nostr-essentials",
       "state" : {
-        "revision" : "9bedd109d9e7e3f68c52f972c29bc4ab7cca9e1e"
+        "revision" : "e221f299899b9178e97d5cc6b00cc3f53e9ddff5"
       }
     },
     {
@@ -94,8 +103,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections.git",
       "state" : {
-        "revision" : "a902f1823a7ff3c9ab2fba0f992396b948eda307",
-        "version" : "1.0.5"
+        "revision" : "671108c96644956dddcd89dd59c203dcdb36cec7",
+        "version" : "1.1.4"
       }
     },
     {

@@ -12,7 +12,7 @@ Special thanks to:
 - Everyone involved in the protocol and writing NIPs
 - The Nostr Report for giving a great overview of whats happening on nostr every day
 - All the people trying out Nostur and giving great feedback
-
+- Terry Yiu for work on NIP44 through NostrSDK
 
 \
 Thanks

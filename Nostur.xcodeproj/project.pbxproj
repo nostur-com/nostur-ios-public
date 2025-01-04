@@ -2419,7 +2419,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 1610;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					1FB448B92965F3D000038671 = {
@@ -3519,7 +3519,7 @@
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
 			requirement = {
 				kind = revision;
-				revision = 9bedd109d9e7e3f68c52f972c29bc4ab7cca9e1e;
+				revision = e221f299899b9178e97d5cc6b00cc3f53e9ddff5;
 			};
 		};
 		1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */ = {
