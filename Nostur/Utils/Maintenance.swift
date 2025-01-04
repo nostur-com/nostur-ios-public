@@ -35,6 +35,9 @@ struct Maintenance {
                         if (url == "wss://relay.nostr.band") {
                             bootstrapRelay.search = true
                         }
+                        if (url == "wss://nostr.wine") {
+                            bootstrapRelay.auth = true
+                        }
                         relays.append(bootstrapRelay.toStruct())
                     }
                 }
