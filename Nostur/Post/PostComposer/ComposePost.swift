@@ -62,6 +62,14 @@ struct ComposePost: View {
         return quotingNRPost == nil
     }
     
+    private var showAutoPilotPreview: Bool {
+        guard !SettingsStore.shared.lowDataMode, SettingsStore.shared.enableOutboxPreview else { return false } // Don't continue with additional outbox relays on low data mode, or settings toggle
+        guard SettingsStore.shared.enableOutboxRelays, vpnGuardOK() else { return false } // Check if Enhanced Relay Routing toggle is turned on
+        guard let preferredRelays = ConnectionPool.shared.preferredRelays else { return false }
+        
+        return true
+    }
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -153,15 +161,27 @@ struct ComposePost: View {
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         if #available(iOS 16, *) {
                             NavigationStack {
-                                PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
-                                    .environmentObject(themes)
+                                VStack(alignment: .leading) {
+                                    PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                        .environmentObject(themes)
+                                    
+                                    if let nEvent = vm.previewNEvent, showAutoPilotPreview {
+                                        AutoPilotSendPreview(nEvent: nEvent)
+                                    }
+                                }
                             }
                             .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                         else {
                             NBNavigationStack {
-                                PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
-                                    .environmentObject(themes)
+                                VStack(alignment: .leading) {
+                                    PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                        .environmentObject(themes)
+                                    
+                                    if let nEvent = vm.previewNEvent, showAutoPilotPreview {
+                                        AutoPilotSendPreview(nEvent: nEvent)
+                                    }
+                                }
                             }
                             .nbUseNavigationStack(.never)
                             .presentationBackgroundCompat(themes.theme.listBackground)

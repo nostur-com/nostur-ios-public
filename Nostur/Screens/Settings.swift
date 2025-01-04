@@ -183,6 +183,15 @@ struct Settings: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                
+                Toggle(isOn: $settings.enableOutboxPreview) {
+                    VStack(alignment: .leading) {
+                        Text("Show extra relays used on post preview", comment: "Setting on settings screen")
+                        Text("If Relay Autopilot is enabled show which additional relays will be used", comment: "Setting on settings screen")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
             .listRowBackground(themes.theme.background)
             

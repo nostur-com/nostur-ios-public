@@ -70,6 +70,7 @@ public final class NewPostModel: ObservableObject {
     var requiredP:String? = nil
     @Published var availableContacts: Set<Contact> = [] // are available to toggle on/off for notifications
     
+    @Published var previewNEvent: NEvent? // needed for AutoPilot preview (and probably should use this more and reduce use of Event)
     @Published var previewNRPost: NRPost?
     @Published var gifSheetShown = false
     
@@ -518,6 +519,7 @@ public final class NewPostModel: ObservableObject {
             }
             let nrPost = NRPost(event: previewEvent, withFooter: false, isScreenshot: true, isPreview: true)
             DispatchQueue.main.async { [weak self] in
+                self?.previewNEvent = nEvent
                 self?.previewNRPost = nrPost
             }
             bg().delete(previewEvent)

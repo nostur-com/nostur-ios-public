@@ -579,7 +579,7 @@ public class ConnectionPool: ObservableObject {
     
     // Pubkeys grouped by relay url for finding events (.findEventsRelays) (their write relays)
     // and pubkeys grouped by relay url for publishing to reach them (.reachUserRelays) (their read relays)
-    private var preferredRelays: PreferredRelays?
+    public var preferredRelays: PreferredRelays?
     
     private var maxPreferredRelays: Int = 50
     
@@ -727,6 +727,32 @@ public class ConnectionPool: ObservableObject {
                 }
             }
         }
+    }
+    
+    // Copy-paste of sendToOthersPreferredReadRelays() but instead of sending will just return list or relay urls where it would send to
+    public func previewOthersPreferredReadRelays(_ message: NostrEssentials.ClientMessage, pubkeys: Set<String>) -> Set<String> {
+        guard let preferredRelays = self.preferredRelays else { return [] }
+        
+        let ourWriteRelays: Set<String> = Set(connections.filter { $0.value.relayData.write }.map { $0.key })
+        
+        let plan: WritePlan = createWritePlan(pubkeys: pubkeys, ourWriteRelays: ourWriteRelays, preferredRelays: preferredRelays)
+        
+        var relays = Set<String>()
+        
+        for (relay, pubkeys) in plan.relays
+            .filter({ (relay: String, pubkeys: Set<String>) in
+                // Only relays that have .authors > 0
+                pubkeys.count > 0
+                
+            })
+            .sorted(by: {
+                $0.value.count > $1.value.count
+            }) {
+            
+            relays.insert(relay)
+        }
+        
+        return relays
     }
 }
 

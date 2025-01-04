@@ -1620,6 +1620,9 @@
         }
       }
     },
+    "Autopilot will broadcast to the following additional relays" : {
+
+    },
     "Award to" : {
       "comment" : "Navigation title of screen where you choose who to award badge to",
       "localizations" : {
@@ -3891,6 +3894,9 @@
           }
         }
       }
+    },
+    "If Relay Autopilot is enabled show which additional relays will be used" : {
+      "comment" : "Setting on settings screen"
     },
     "Ignore" : {
       "localizations" : {
@@ -7138,6 +7144,9 @@
           }
         }
       }
+    },
+    "Show extra relays used on post preview" : {
+      "comment" : "Setting on settings screen"
     },
     "Show feed" : {
       "localizations" : {
