@@ -28,7 +28,15 @@ struct Box<Content: View>: View {
     
     init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, theme:Theme = Themes.default.theme, @ViewBuilder content: () -> Content) {
         self.kind = nrPost?.kind ?? 1
-        self.navMode = navMode ?? .background
+        
+        // if not deleted: use given navMode or fallback to .background
+        self.navMode = if nrPost?.postRowDeletableAttributes.deletedById == nil {
+            (navMode ?? .background)
+        }
+        else { // if deleted, no navigation
+            .noNavigation
+        }
+        
         self.nrPost = nrPost
         self.content = content()
         self.theme = theme
@@ -48,10 +56,10 @@ struct Box<Content: View>: View {
             content
                 .padding(kind == 30023 ? 20 : 10)
                 .background(kind == 30023 ? theme.secondaryBackground : theme.background)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    
-                }
+//                .contentShape(Rectangle())
+//                .onTapGesture {
+//                    
+//                }
         }
         else {
             content

@@ -55,15 +55,17 @@ struct PostRowDeletable: View {
             NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped, theme: theme)
         }
         else {
-            VStack {
+            HStack {
                 Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)")
-                    .hCentered()
-                Button("Undelete") {
-                    nrPost.undelete()
-                }
-                .foregroundColor(theme.accent)
-                .hCentered()
+                Button(String(localized: "Undelete", comment: "Button to undelete a deleted post")) { nrPost.undelete() }
+                    .buttonStyle(.bordered)
             }
+            .padding(.leading, 8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+            .hCentered()
         }
     }
 }
