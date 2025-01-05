@@ -416,6 +416,50 @@ struct Maintenance {
         } catch {
             L.maintenance.info("🔴🔴 Failed to delete replies/reactions/zaps to our accounts")
         }
+                
+        // Keep imposter cache
+        // Keep zapper pubkey cache
+        // Without metadata (kind 0 missing)
+        let frContacts = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
+        frContacts.predicate = NSPredicate(format: "couldBeImposter == -1 AND zapperPubkey != nil AND metadata_created_at == 0")
+        
+        let frContactsbatchDelete = NSBatchDeleteRequest(fetchRequest: frContacts)
+        frContactsbatchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(frContactsbatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) contacts without metadata")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete contacts without metadata")
+        }
+        
+        
+        // All contacts not in WoT
+        // only if contacts > 15000
+        // only if WoT size > 7000
+        // only older than 2 months (updated_at)
+        
+        guard WebOfTrust.shared.allowedKeysCount > 7000 else { return }
+        
+        // Keep imposter cache
+        let frContactsWoT = Contact.fetchRequest()
+        frContactsWoT.predicate = NSPredicate(format: "updated_at < %i AND couldBeImposter == -1", Int64(monthsAgo.timeIntervalSince1970))
+        
+        // to keep that have private note
+        let privateNotePubkeys = Set(CloudPrivateNote.fetchAll(context: context).filter { $0.pubkey != nil }.map { $0.pubkey })
+        
+        var deletedContacts = 0
+        if let contacts = try? context.fetch(frContactsWoT) {
+            for contact in contacts {
+                if !WebOfTrust.shared.isAllowed(contact.pubkey) && !privateNotePubkeys.contains(contact.pubkey) && contact.couldBeImposter == -1 {
+                    context.delete(contact)
+                    deletedContacts += 1
+                }
+            }
+        }
+        L.maintenance.info("🧹🧹 Deleted \(deletedContacts) old contacts not in Web of Trust")
     }
     
     
