@@ -40,6 +40,8 @@ extension CloudFeed {
     @NSManaged public var repliesEnabled: Bool
     @NSManaged public var accountPubkey: String?
     @NSManaged public var profilesFetchedAt: Date? // use as "since" for checking new profiles for this feed
+    
+    @NSManaged public var lastRead_: String? // same as on CloudAccount
 }
 
 extension CloudFeed : Identifiable {
@@ -154,6 +156,15 @@ extension CloudFeed : Identifiable {
               let account = NRState.shared.accounts.first(where: { $0.publicKey == accountPubkey })
         else { return nil }
         return account
+    }
+    
+    public var lastRead: [String] {
+        get {
+            return lastRead_?.split(separator: " ").map { String($0) } ?? []
+        }
+        set {
+            lastRead_ = newValue.joined(separator: " ")
+        }
     }
 }
 

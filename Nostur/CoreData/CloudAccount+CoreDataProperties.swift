@@ -46,6 +46,7 @@ extension CloudAccount {
     @NSManaged public var picture_: String?
     @NSManaged public var publicKey_: String?
     @NSManaged public var lastLoginAt_: Date? // Or "last use" via in-post switcher
+    @NSManaged public var lastRead_: String? // last 200 read (prefix)ids
     
     // -- MARK: Non-optional getters/setters
     
@@ -202,6 +203,14 @@ extension CloudAccount {
         set { lastLoginAt_ = newValue }
     }
     
+    public var lastRead: [String] {
+        get {
+            return lastRead_?.split(separator: " ").map { String($0) } ?? []
+        }
+        set {
+            lastRead_ = newValue.joined(separator: " ")
+        }
+    }
 }
 
 import NostrEssentials

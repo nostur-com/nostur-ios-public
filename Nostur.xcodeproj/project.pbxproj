@@ -649,6 +649,7 @@
 		1F15F09F2AAF35560004E706 /* LikeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LikeButton.swift; sourceTree = "<group>"; };
 		1F15F0A12AAF35B60004E706 /* BookmarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkButton.swift; sourceTree = "<group>"; };
 		1F18035C2C381D570025227E /* NostrEssentials.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = NostrEssentials.xctestplan; sourceTree = "<group>"; };
+		1F19A92E2D2B0B99005AB859 /* NosturCloud 10.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 10.xcdatamodel"; sourceTree = "<group>"; };
 		1F1ABC482981718700D03FA9 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
 		1F1ABC4A29819CAC00D03FA9 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
 		1F1DCB8C2999290E0085223E /* LightningInvoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightningInvoice.swift; sourceTree = "<group>"; };
@@ -3668,6 +3669,7 @@
 		1F30FAA729705EBD008439C8 /* NosturCloud.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				1F19A92E2D2B0B99005AB859 /* NosturCloud 10.xcdatamodel */,
 				1F32A7B12CF0CDA7003290BF /* NosturCloud 9.xcdatamodel */,
 				1F7E7F632C884B54004DE888 /* NosturCloud 8.xcdatamodel */,
 				1FB7FF812C5FCC0C00EAAD07 /* NosturCloud 7.xcdatamodel */,
@@ -3678,7 +3680,7 @@
 				1F37C8392B8B71F700B0B78B /* NosturCloud 2.xcdatamodel */,
 				1F30FAA829705EBD008439C8 /* NosturCloud.xcdatamodel */,
 			);
-			currentVersion = 1F32A7B12CF0CDA7003290BF /* NosturCloud 9.xcdatamodel */;
+			currentVersion = 1F19A92E2D2B0B99005AB859 /* NosturCloud 10.xcdatamodel */;
 			path = NosturCloud.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
