@@ -41,6 +41,15 @@ class MentionsFeedModel: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
+        
+        receiveNotification(.muteListUpdated)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                withAnimation {
+                    self.load(limit: 500)
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     public func setup(pubkey: String) {
