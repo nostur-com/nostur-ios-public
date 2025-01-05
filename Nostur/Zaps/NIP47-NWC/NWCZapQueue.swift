@@ -284,6 +284,11 @@ class Zap {
                                         self.state = .ERROR
                                     }
                                 }
+                                else {
+                                    L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                    self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                                    self.state = .ERROR
+                                }
                             }
                         })
                     }
@@ -325,6 +330,11 @@ class Zap {
                                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                     self.state = .ERROR
                                 }
+                            }
+                            else {
+                                L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+                                self.error = String(localized:"Could not fetch invoice", comment: "Error message")
+                                self.state = .ERROR
                             }
                         }
                         else {
