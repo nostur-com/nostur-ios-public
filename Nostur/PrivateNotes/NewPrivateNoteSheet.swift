@@ -93,6 +93,7 @@ struct NewPrivateNoteSheet: View {
                         }
                         
                         try viewContext.save()
+                        L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
                     }
                     catch { L.og.error("problem saving private note \(error)") }
                 }

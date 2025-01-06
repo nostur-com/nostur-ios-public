@@ -331,7 +331,7 @@ extension AccountEditView {
                 account.followingPubkeys.insert(contact.pubkey)
 //                print("Adding to followers: \(contact.name ?? "??")")
             }
-            try! viewContext.save();
+            viewContextSave()
         }
     }
     

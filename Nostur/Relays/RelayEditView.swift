@@ -170,6 +170,7 @@ struct RelayEditView: View {
                         dismiss()
                         do {
                             try viewContext.save()
+                            L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
                         } catch {
                             L.og.error("could not save after removing relay")
                         }
@@ -193,6 +194,7 @@ struct RelayEditView: View {
                         relay.excludedPubkeys = excludedPubkeys
                         relay.updatedAt = .now
                         try viewContext.save()
+                        L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
                         // Update existing connections
                         // url change?
                         if (connection?.url != correctedRelayUrl) {

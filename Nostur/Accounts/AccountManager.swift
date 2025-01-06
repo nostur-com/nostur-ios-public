@@ -28,7 +28,7 @@ class AccountManager {
         account.publicKey = newKeys.publicKeyHex
         account.flagsSet = ["nostur_created", "full_account"] // need this to know if we can enable to follow button, normally we wait after we received contact list
         
-        try! context.save()
+        viewContextSave()
         return account
     }
     
@@ -142,7 +142,8 @@ class AccountManager {
             // delete account
             
             DataProvider.shared().viewContext.delete(account)
-            try DataProvider.shared().viewContext.save()         
+            try DataProvider.shared().viewContext.save()
+            L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
         }
         catch {
             L.og.error("🔴🔴🔴🔴🔴 Could not wipe or delete account 🔴🔴🔴🔴🔴")

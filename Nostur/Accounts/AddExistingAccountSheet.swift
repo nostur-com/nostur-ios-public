@@ -257,6 +257,7 @@ struct AddExistingAccountSheet: View {
         account.flags = "full_account"
         
         try? viewContext.save()
+        L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
         
         let pubkey = account.publicKey
         
@@ -313,6 +314,7 @@ struct AddExistingAccountSheet: View {
         account.publicKey = pubkey
         
         try? viewContext.save()
+        L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
         
         let bgContext = bg()
         bgContext.perform {

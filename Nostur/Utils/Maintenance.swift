@@ -142,6 +142,7 @@ struct Maintenance {
                     }
                 }
                 try DataProvider.shared().container.viewContext.save()
+                L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
             }
             
             catch let error {

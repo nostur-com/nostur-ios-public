@@ -159,7 +159,7 @@ class DataProvider: ObservableObject {
                 L.og.debug("💾💾 VIEWCONTEXT: Registered objects: \(self.container.viewContext.registeredObjects.count)")
                 if self.container.viewContext.hasChanges {
                     try? self.container.viewContext.save()
-                    L.og.debug("💾💾 🟢🟢 viewContext saved")
+                    L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
                 }
                 completion?()
             }
@@ -285,6 +285,7 @@ func viewContextSave() { // TODO make this always debounce + throttle latest
     if DataProvider.shared().viewContext.hasChanges {
         do {
             try DataProvider.shared().viewContext.save()
+            L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
         }
         catch {
             L.og.error("🔴🔴 Could not save() context \(error)")
@@ -300,6 +301,9 @@ func save(context: NSManagedObjectContext = context()) {
     if context.hasChanges {
         do {
             try context.save()
+            if Thread.isMainThread {
+                L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+            }
         }
         catch {
             L.og.error("🔴🔴 Could not save() context \(error)")

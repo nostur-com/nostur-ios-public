@@ -43,6 +43,7 @@ struct NewRelayView: View {
         
         do {
             try viewContext().save()
+            L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
             if (relay.read || relay.write) {
                 ConnectionPool.shared.addConnection(relay.toStruct())
             }

@@ -59,6 +59,7 @@ struct EditPrivateNoteSheet: View {
                     do {
                         privateNote.content = noteText
                         try viewContext.save()
+                        L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
                         if let type = privateNote.type, type == CloudPrivateNote.PrivateNoteType.post.rawValue, let eventId = privateNote.eventId {
                             sendNotification(.postAction, PostActionNotification(type: .privateNote, eventId: eventId, hasPrivateNote: true))
                         }
