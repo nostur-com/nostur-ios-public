@@ -214,6 +214,9 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func load(_ config: NXColumnConfig) {
         self.config = config
+        
+        self.vmInner.feed = config.feed
+        
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         guard isVisible else { return }
@@ -422,6 +425,9 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
+        if let feed = config.feed {
+            self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
+        }
         let allIdsSeen = self.allIdsSeen
         let currentIdsOnScreen = self.currentIdsOnScreen
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
@@ -1163,6 +1169,38 @@ class NXColumnViewModelInner: ObservableObject {
     
     @Published public var scrollToIndex: Int?
     @Published public var isAtTop: Bool = true
+    
+    // For syncing .lastRead across devices 
+    public var feed: CloudFeed? = nil {
+        didSet {
+            guard syncFeedSub == nil else { return }
+            syncFeedSub = syncFeedSubject
+                .debounce(for: .seconds(5), scheduler: RunLoop.main)
+                .sink { [weak self] _ in
+                    guard let self, let feed else { return }
+                    feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
+                    
+                    // if size of feed.lastRead is > 200, remove all beyond index 200
+                    if feed.lastRead.count > 200 {
+                        feed.lastRead = Array(feed.lastRead[..<200])
+                    }
+                    
+                    self.markAsReadSyncQueue.removeAll()
+                }
+                
+        }
+    }
+    
+    public func markAsRead(_ postId: String) {
+        guard feed != nil else { return }
+        markAsReadSyncQueue.insert(String(postId.prefix(8)))
+        syncFeedSubject.send()
+    }
+    
+    private var markAsReadSyncQueue: Set<String> = []
+    
+    private var syncFeedSubject = PassthroughSubject<Void, Never>()
+    private var syncFeedSub: AnyCancellable?
 }
 
 // -- MARK: POST RENDERING
@@ -1214,9 +1252,9 @@ extension NXColumnViewModel {
         let filteredEvents: [Event] = (wotEnabled ? applyWoT(events, config: config) : events) // Apply WoT filter or not
             .filter { // Apply (app wide) already-seen filter
                 if $0.isRepost, let firstQuoteId = $0.firstQuoteId {
-                    return !allIdsSeen.contains(firstQuoteId)
+                    return !allIdsSeen.contains(String(firstQuoteId.prefix(8)))
                 }
-                return !allIdsSeen.contains($0.id)
+                return !allIdsSeen.contains(String($0.id.prefix(8)))
             }
         
         let newUnrenderedEvents: [Event] = filteredEvents
@@ -1387,7 +1425,7 @@ extension NXColumnViewModel {
                     addedAndExistingPosts
                 }
                 
-                allIdsSeen = allIdsSeen.union(getAllPostIds(addedAndExistingPostsTruncated))
+                allIdsSeen = allIdsSeen.union(getAllPostIds(addedAndExistingPostsTruncated, prefixOnly: true))
                 
                 if vmInner.isAtTop {
                     let previousFirstPostId: String? = existingPosts.first?.id
@@ -1440,7 +1478,7 @@ extension NXColumnViewModel {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description)")
 #endif
-                allIdsSeen = allIdsSeen.union(getAllPostIds(onlyNewAddedPosts))
+                allIdsSeen = allIdsSeen.union(getAllPostIds(onlyNewAddedPosts, prefixOnly: true))
                 withAnimation {
                     self.viewState = .posts(existingPosts + onlyNewAddedPosts)
                 }
@@ -1451,7 +1489,7 @@ extension NXColumnViewModel {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description)")
 #endif
-            allIdsSeen = allIdsSeen.union(getAllPostIds(uniqueAddedPosts))
+            allIdsSeen = allIdsSeen.union(getAllPostIds(uniqueAddedPosts, prefixOnly: true))
             if !vmInner.isAtTop {
                 vmInner.isAtTop = true
             }
@@ -1467,13 +1505,17 @@ extension NXColumnViewModel {
     // -- MARK: Helpers
     
     @MainActor
-    private func getAllPostIds(_ nrPosts: [NRPost]) -> Set<String> {
+    private func getAllPostIds(_ nrPosts: [NRPost], prefixOnly: Bool = false) -> Set<String> {
         return nrPosts.reduce(Set<NRPostID>()) { partialResult, nrPost in
             if nrPost.isRepost, let firstPost = nrPost.firstQuote {
                 // for repost add post + reposted post
-                return partialResult.union(Set([nrPost.id, firstPost.id]))
+                return prefixOnly
+                    ? partialResult.union(Set([String(nrPost.id.prefix(8)), String(firstPost.id.prefix(8))]))
+                    : partialResult.union(Set([nrPost.id, firstPost.id]))
             } else {
-                return partialResult.union(Set([nrPost.id] + nrPost.parentPosts.map { $0.id }))
+                return prefixOnly
+                        ? partialResult.union(Set([String(nrPost.id.prefix(8))] + nrPost.parentPosts.map { String($0.id.prefix(8)) }))
+                        : partialResult.union(Set([nrPost.id] + nrPost.parentPosts.map { $0.id }))
             }
         }
     }
@@ -1524,6 +1566,7 @@ extension NXColumnViewModel {
                     
                     // Need to go to main context again to get current screen state
                     Task { @MainActor in
+                        self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
                         let allIdsSeen = self.allIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let since = (self.mostRecentCreatedAt ?? 0)

@@ -172,7 +172,13 @@ struct AppView: View {
                                             if didRun {
                                                 await Importer.shared.preloadExistingIdsCache()
                                             }
+                                            else {
+                                                viewContextSave() // need to save to sync cloud for feed.lastRead
+                                            }
                                         }
+                                    }
+                                    else {
+                                        viewContextSave() // need to save to sync cloud for feed.lastRead
                                     }
                                 case .inactive:
                                     L.og.notice("scenePhase inactive")
