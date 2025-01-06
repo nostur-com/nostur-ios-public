@@ -171,7 +171,7 @@ struct NXPostsFeed: View {
         vm.haltProcessing() // will stop new updates on screen for 2.5 seconds
         if vmInner.unreadIds[nrPost.id] != 0 {
             vmInner.unreadIds[nrPost.id] = 0
-            vm.markAsRead(nrPost.id)
+            vm.markAsRead(nrPost.shortId)
         }
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
             if appearedIndex == 0 && !vmInner.unreadIds.isEmpty {
@@ -181,7 +181,7 @@ struct NXPostsFeed: View {
             for i in appearedIndex..<posts.count {
                 if vmInner.unreadIds[posts[i].id] != 0 {
                     vmInner.unreadIds[posts[i].id] = 0
-                    vm.markAsRead(posts[i].id)
+                    vm.markAsRead(posts[i].shortId)
                 }
             }
         }

@@ -8,6 +8,7 @@
 import Foundation
 
 class Deduplicator {
+    // prefix / .shortId only
     public var onScreenSeen: Set<String> = []
     static let shared = Deduplicator()
     private init() { }

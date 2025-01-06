@@ -250,7 +250,7 @@ class NXColumnViewModel: ObservableObject {
                                 vmInner.unreadIds[key] = nil
                             }
                         }
-                        viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains(String($0.id.prefix(8))) })
+                        viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains($0.shortId) })
                     }
                 })
                 .store(in: &subscriptions)
@@ -260,9 +260,9 @@ class NXColumnViewModel: ObservableObject {
     private var markAsReadSyncQueue: Set<String> = []
     
     @MainActor
-    public func markAsRead(_ postId: String) {
+    public func markAsRead(_ shortPostId: String) {
         guard feed != nil else { return }
-        markAsReadSyncQueue.insert(String(postId.prefix(8)))
+        markAsReadSyncQueue.insert(shortPostId)
         syncFeedSubject.send()
     }
     
@@ -920,6 +920,7 @@ class NXColumnViewModel: ObservableObject {
     private var instantFeed: InstantFeed?
     private var backlog = Backlog(auto: true)
     
+    // prefix / .shortId only
     public var allIdsSeen: Set<String> {
         get { SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _allIdsSeen }
         set {
@@ -1212,6 +1213,7 @@ class NXColumnViewModel: ObservableObject {
 extension NXColumnViewModel {
     
     // Primary function to put Events on screen
+    // allIdsSeen must be prefix / .shortId format
     private func processToScreen(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, completion: (() -> Void)? = nil) {
         
         // Apply WoT filter, remove already on screen
@@ -1259,7 +1261,7 @@ extension NXColumnViewModel {
                 if $0.isRepost, let firstQuoteId = $0.firstQuoteId {
                     return !allIdsSeen.contains(String(firstQuoteId.prefix(8)))
                 }
-                return !allIdsSeen.contains(String($0.id.prefix(8)))
+                return !allIdsSeen.contains($0.shortId)
             }
         
         let newUnrenderedEvents: [Event] = filteredEvents
@@ -1515,11 +1517,11 @@ extension NXColumnViewModel {
             if nrPost.isRepost, let firstPost = nrPost.firstQuote {
                 // for repost add post + reposted post
                 return prefixOnly
-                    ? partialResult.union(Set([String(nrPost.id.prefix(8)), String(firstPost.id.prefix(8))]))
+                    ? partialResult.union(Set([nrPost.shortId, firstPost.shortId]))
                     : partialResult.union(Set([nrPost.id, firstPost.id]))
             } else {
                 return prefixOnly
-                        ? partialResult.union(Set([String(nrPost.id.prefix(8))] + nrPost.parentPosts.map { String($0.id.prefix(8)) }))
+                        ? partialResult.union(Set([nrPost.shortId] + nrPost.parentPosts.map { $0.shortId }))
                         : partialResult.union(Set([nrPost.id] + nrPost.parentPosts.map { $0.id }))
             }
         }

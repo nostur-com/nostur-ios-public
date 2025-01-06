@@ -43,6 +43,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     let ago: String
     
     let id: NRPostID
+    let shortId: String
     let kind: Int64
     
     let pubkey: String
@@ -248,6 +249,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.isScreenshot = isScreenshot
         self.isPreview = isPreview
         self.id = event.id
+        self.shortId = String(event.id.prefix(8))
         self.pubkey = event.pubkey
         self.kind = event.kind
         self.createdAt = event.date

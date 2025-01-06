@@ -264,6 +264,10 @@ extension Event {
 
 extension Event {
     
+    var shortId: String {
+        String(id.prefix(8))
+    }
+    
     var isSpam:Bool {
         // combine all the checks here
         
