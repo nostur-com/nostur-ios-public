@@ -59,16 +59,16 @@ struct Repost: View {
                 else {
                     KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped, forceAutoload: shouldForceAutoLoad, theme: theme)
                         .onAppear {
-                            if !nrPost.missingPs.isEmpty {
+                            if !firstQuote.missingPs.isEmpty {
                                 bg().perform {
-                                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                                    QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+                                    EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event, debugInfo: "KindResolver.001")
+                                    QueuedFetcher.shared.enqueue(pTags: firstQuote.missingPs)
                                 }
                             }
                         }
                         .onDisappear {
-                            if !nrPost.missingPs.isEmpty {
-                                QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                            if !firstQuote.missingPs.isEmpty {
+                                QueuedFetcher.shared.dequeue(pTags: firstQuote.missingPs)
                             }
                         }
                     // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
