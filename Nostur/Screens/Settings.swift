@@ -148,6 +148,16 @@ struct Settings: View {
                             .foregroundColor(.secondary)
                     }
                 }
+                if settings.appWideSeenTracker && FileManager.default.ubiquityIdentityToken != nil {
+                    Toggle(isOn: $settings.appWideSeenTrackeriCloud) {
+                        VStack(alignment: .leading) {
+                            Text("Hide posts you have already seen on multiple devices", comment:"Setting on settings screen")
+                            Text("Uses iCloud to sync across devices", comment:"Setting on settings screen")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
                 Toggle(isOn: $settings.autoHideBars) {
                     VStack(alignment: .leading) {
                         Text("Hide tab bars when scrolling", comment:"Setting on settings screen")

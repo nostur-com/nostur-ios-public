@@ -218,6 +218,7 @@ class NXColumnViewModel: ObservableObject {
                 .debounce(for: .seconds(5), scheduler: RunLoop.main)
                 .sink { [weak self] _ in
                     guard let self, let feed else { return }
+                    guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
                     feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
                     
                     // if size of feed.lastRead is > 300, remove all beyond index 300
@@ -233,6 +234,7 @@ class NXColumnViewModel: ObservableObject {
             feed?.objectWillChange
                 .sink(receiveValue: { [weak self] in
                     guard let self, let feed else { return }
+                    guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
                     
                     // Only the keys of self.unreadIds where self.unreadIds[key] > 0
                     let unreadIds: Set<String> = Set(
@@ -262,6 +264,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func markAsRead(_ shortPostId: String) {
         guard feed != nil else { return }
+        guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
         markAsReadSyncQueue.insert(shortPostId)
         syncFeedSubject.send()
     }

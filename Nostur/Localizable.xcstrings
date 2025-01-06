@@ -3779,6 +3779,9 @@
         }
       }
     },
+    "Hide posts you have already seen on multiple devices" : {
+      "comment" : "Setting on settings screen"
+    },
     "Hide tab bars when scrolling" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -8340,6 +8343,9 @@
           }
         }
       }
+    },
+    "Uses iCloud to sync across devices" : {
+      "comment" : "Setting on settings screen"
     },
     "uuuh" : {
 

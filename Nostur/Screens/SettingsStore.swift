@@ -44,6 +44,7 @@ final class SettingsStore: ObservableObject {
         
         static let nwcShowBalance:String = "nwc_show_balance"
         static let appWideSeenTracker:String = "app_wide_seen_tracker"
+        static let appWideSeenTrackeriCloud:String = "app_wide_seen_tracker_icloud"
         static let mainWoTaccountPubkey:String = "main_wot_account_pubkey"
         
         static let postUserAgentEnabled:String = "post_user_agent_enabled"
@@ -164,6 +165,7 @@ final class SettingsStore: ObservableObject {
             Keys.nwcShowBalance: false,
             Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖",
             Keys.appWideSeenTracker: true,
+            Keys.appWideSeenTrackeriCloud: true,
             Keys.mainWoTaccountPubkey: "",
             Keys.postUserAgentEnabled: true,
             Keys.displayUserAgentEnabled: true,
@@ -204,6 +206,7 @@ final class SettingsStore: ObservableObject {
         }
         _fetchCounts = defaults.bool(forKey: Keys.fetchCounts)
         _appWideSeenTracker = defaults.bool(forKey: Keys.appWideSeenTracker)
+        _appWideSeenTrackeriCloud = defaults.bool(forKey: Keys.appWideSeenTrackeriCloud)
         _mainWoTaccountPubkey = defaults.string(forKey: Keys.mainWoTaccountPubkey) ?? ""
         
         // optimize
@@ -521,6 +524,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _appWideSeenTracker:Bool = false
+    
+    public var appWideSeenTrackeriCloud: Bool {
+        set {
+            objectWillChange.send()
+            _appWideSeenTrackeriCloud = newValue
+            defaults.set(newValue, forKey: Keys.appWideSeenTrackeriCloud);
+        }
+        get { _appWideSeenTrackeriCloud }
+    }
+    
+    private var _appWideSeenTrackeriCloud:Bool = false
     
     
     // optimize
