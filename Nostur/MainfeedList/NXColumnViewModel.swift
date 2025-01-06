@@ -210,12 +210,70 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private var gapFiller: NXGapFiller?
+    
+    // For syncing .lastRead across devices
+    public var feed: CloudFeed? = nil {
+        didSet {
+            syncFeedSubject
+                .debounce(for: .seconds(5), scheduler: RunLoop.main)
+                .sink { [weak self] _ in
+                    guard let self, let feed else { return }
+                    feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
+                    
+                    // if size of feed.lastRead is > 300, remove all beyond index 300
+                    if feed.lastRead.count > 300 {
+                        feed.lastRead = Array(feed.lastRead[..<300])
+                    }
+                    
+                    self.markAsReadSyncQueue.removeAll()
+                    viewContextSave()
+                }
+                .store(in: &subscriptions)
+                
+            feed?.objectWillChange
+                .sink(receiveValue: { [weak self] in
+                    guard let self, let feed else { return }
+                    
+                    // Only the keys of self.unreadIds where self.unreadIds[key] > 0
+                    let unreadIds: Set<String> = Set(
+                        self.vmInner.unreadIds.filter({ $0.value > 0 })
+                            .keys
+                            .map { String($0.prefix(8)) } // just the prefix
+                    )
+                
+                    // Only the unreadIds that are also in feedLastReadIds, using Set theory
+                    let lastReadIdsToRemove: Set<String> = unreadIds.intersection(Set(feed.lastRead))
+                    
+                    if case .posts(let existingPosts) = self.viewState {
+                        for key in vmInner.unreadIds.keys {
+                            if lastReadIdsToRemove.contains(String(key.prefix(8))) {
+                                vmInner.unreadIds[key] = nil
+                            }
+                        }
+                        viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains(String($0.id.prefix(8))) })
+                    }
+                })
+                .store(in: &subscriptions)
+        }
+    }
+    
+    private var markAsReadSyncQueue: Set<String> = []
+    
+    @MainActor
+    public func markAsRead(_ postId: String) {
+        guard feed != nil else { return }
+        markAsReadSyncQueue.insert(String(postId.prefix(8)))
+        syncFeedSubject.send()
+    }
+    
+    private var syncFeedSubject = PassthroughSubject<Void, Never>()
 
     @MainActor
     public func load(_ config: NXColumnConfig) {
+        self.subscriptions = Set<AnyCancellable>()
         self.config = config
         
-        self.vmInner.feed = config.feed
+        self.feed = config.feed
         
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
@@ -1148,59 +1206,6 @@ class NXColumnViewModel: ObservableObject {
             self.prefetchedIds = self.prefetchedIds.union(Set(unfetchedIds)) // TODO: need to LRU self.prefetchedIds
         }
     }
-}
-
-// These vars change a lot but trigger rerender on NXPostFeed when not needed
-// So moved to separate NXColumnViewModelInner
-class NXColumnViewModelInner: ObservableObject {
-    
-    @Published public var unreadIds: [String: Int] = [:] { // Dict of [post id: posts count (post + parent posts)]
-        didSet {
-            if unreadCount == 0 {
-                if !isAtTop {
-                    isAtTop = true
-                }
-            }
-        }
-    }
-    public var unreadCount: Int {
-        unreadIds.reduce(0, { $0 + $1.value })
-    }
-    
-    @Published public var scrollToIndex: Int?
-    @Published public var isAtTop: Bool = true
-    
-    // For syncing .lastRead across devices 
-    public var feed: CloudFeed? = nil {
-        didSet {
-            guard syncFeedSub == nil else { return }
-            syncFeedSub = syncFeedSubject
-                .debounce(for: .seconds(5), scheduler: RunLoop.main)
-                .sink { [weak self] _ in
-                    guard let self, let feed else { return }
-                    feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
-                    
-                    // if size of feed.lastRead is > 200, remove all beyond index 200
-                    if feed.lastRead.count > 200 {
-                        feed.lastRead = Array(feed.lastRead[..<200])
-                    }
-                    
-                    self.markAsReadSyncQueue.removeAll()
-                }
-                
-        }
-    }
-    
-    public func markAsRead(_ postId: String) {
-        guard feed != nil else { return }
-        markAsReadSyncQueue.insert(String(postId.prefix(8)))
-        syncFeedSubject.send()
-    }
-    
-    private var markAsReadSyncQueue: Set<String> = []
-    
-    private var syncFeedSubject = PassthroughSubject<Void, Never>()
-    private var syncFeedSub: AnyCancellable?
 }
 
 // -- MARK: POST RENDERING
