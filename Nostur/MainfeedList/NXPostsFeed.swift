@@ -172,6 +172,9 @@ struct NXPostsFeed: View {
         if vmInner.unreadIds[nrPost.id] != 0 {
             vmInner.unreadIds[nrPost.id] = 0
             vm.markAsRead(nrPost.shortId)
+            if nrPost.isRepost, let shortId = nrPost.firstQuote?.shortId {
+                vm.markAsRead(shortId)
+            }
         }
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
             if appearedIndex == 0 && !vmInner.unreadIds.isEmpty {
@@ -182,6 +185,9 @@ struct NXPostsFeed: View {
                 if vmInner.unreadIds[posts[i].id] != 0 {
                     vmInner.unreadIds[posts[i].id] = 0
                     vm.markAsRead(posts[i].shortId)
+                    if posts[i].isRepost, let shortId = posts[i].firstQuote?.shortId {
+                        vm.markAsRead(shortId)
+                    }
                 }
             }
         }
