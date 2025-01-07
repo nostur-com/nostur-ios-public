@@ -42,6 +42,14 @@ struct AnyKind: View {
     var body: some View {
         if SUPPORTED_VIEW_KINDS.contains(nrPost.kind) {
             switch nrPost.kind {
+                case 1: // generic olas
+                    if (nrPost.kTag ?? "" == "20"), let imageUrl = nrPost.imageUrls.first {
+                        ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: imageWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
+                            .padding(.vertical, 10)
+                    }
+                    else {
+                        EmptyView()
+                    }
                 case 20:
                     if let imageUrl = nrPost.imageUrls.first {
                         VStack {

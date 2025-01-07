@@ -39,6 +39,8 @@ struct Kind1Both: View {
         return dim.availablePostDetailRowImageWidth()
     }
     
+    private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
+    
     @State var showMiniProfile = false
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
@@ -56,7 +58,7 @@ struct Kind1Both: View {
     }
     
     var body: some View {
-        if fullWidth || nrPost.kind == 20 {
+        if fullWidth || nrPost.kind == 20 || isOlasGeneric {
             self.fullWidthView
         }
         else {
@@ -311,7 +313,7 @@ struct Kind1Both: View {
                     if imageWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
-                    else if (nrPost.kind != 1) && (nrPost.kind != 6) {
+                    else if ((nrPost.kind != 1) && (nrPost.kind != 6)) || (isOlasGeneric) {
                         AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, imageWidth: imageWidth, theme: theme)
                     }
                     else if (isDetail) {
