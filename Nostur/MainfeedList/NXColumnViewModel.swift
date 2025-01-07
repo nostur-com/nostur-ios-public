@@ -246,6 +246,8 @@ class NXColumnViewModel: ObservableObject {
                     // Only the unreadIds that are also in feedLastReadIds, using Set theory
                     let lastReadIdsToRemove: Set<String> = unreadIds.intersection(Set(feed.lastRead))
                     
+                    guard !lastReadIdsToRemove.isEmpty else { return }
+                    
                     if case .posts(let existingPosts) = self.viewState {
                         for key in vmInner.unreadIds.keys {
                             if lastReadIdsToRemove.contains(String(key.prefix(8))) {
@@ -486,12 +488,15 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
-        if let feed = config.feed {
+        
+        let currentNRPostsOnScreen = self.currentNRPostsOnScreen
+        
+        if !currentNRPostsOnScreen.isEmpty, let feed = config.feed { // if we don't check if screen is empty we can have permanent spinner at first run
             self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
         }
+        
         let allIdsSeen = self.allIdsSeen
         let currentIdsOnScreen = self.currentIdsOnScreen
-        let currentNRPostsOnScreen = self.currentNRPostsOnScreen
         let wotEnabled = config.wotEnabled
         let repliesEnabled = config.repliesEnabled
   
