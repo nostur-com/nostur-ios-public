@@ -146,6 +146,9 @@ class NSecBunkerManager: ObservableObject {
                         return
                     }
                     if isValidPubkey(result) { // should be a valid pubkey
+                        
+                        let newAccountPubkey = result // for readability
+                        
                         // override
                         DispatchQueue.main.async {
                             guard let account = self.account else { return }
@@ -153,7 +156,7 @@ class NSecBunkerManager: ObservableObject {
                             // response from remote bunker pubkey should be this accounts .ncRemoteSignerPubkey
                             guard account.ncRemoteSignerPubkey == event.publicKey else { return }
                             
-                            guard account.publicKey != result else {
+                            guard account.publicKey != newAccountPubkey else {
                                 self.state = .connected
                                 L.og.info("🏰 NSECBUNKER get_public_key success, but pubkey is already set to set to: \(account.publicKey)")
                                 return
@@ -161,18 +164,40 @@ class NSecBunkerManager: ObservableObject {
 
                             // use the new pubkey received from bunker
                             let oldAccountPubkey = account.publicKey
-                            account.publicKey = result
+                            account.publicKey = newAccountPubkey
+                            
+                            // Also update CloudFeeds
+                            let context = viewContext()
+                            let fr = CloudFeed.fetchRequest()
+                            fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.following.rawValue, oldAccountPubkey)
+                            
+                            let followingFeeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
+                            for feed in followingFeeds {
+                                feed.accountPubkey = newAccountPubkey
+                            }
+                            
                             viewContextSave()
                             
                             if NRState.shared.activeAccountPublicKey == oldAccountPubkey {
-                                NRState.shared.activeAccountPublicKey = result
-                                NRState.shared.loggedInAccount?.pubkey = result
+                                NRState.shared.activeAccountPublicKey = newAccountPubkey
+                                NRState.shared.loggedInAccount?.pubkey = newAccountPubkey
                                 
                                 NRState.shared.loadAccountsState() // Need load account because pubkey changed
                             }
                             
                             self.state = .connected
                             L.og.info("🏰 NSECBUNKER get_public_key success, pubkey set to: \(account.publicKey)")
+                            
+                            // Need to (re)load following feed with new pubkey
+                            sendNotification(.revertToOwnFeed) // normally used for reverting from someone else's feed, but also does the job
+                            
+                            // Need to run onboarding again because changed pubkey
+                            do {
+                                try NewOnboardingTracker.shared.start(pubkey: newAccountPubkey)
+                            }
+                            catch {
+                                L.og.error("🔴🔴 Failed to start onboarding")
+                            }
                         }
                     }
 #if DEBUG
@@ -209,6 +234,7 @@ class NSecBunkerManager: ObservableObject {
     }
     
     public func setAccount(_ account: CloudAccount) {
+        guard self.account != account else { return }
         self.account = account
         guard let sessionPrivateKey = account.privateKey else { return }
         guard let keys = try? Keys(privateKeyHex: sessionPrivateKey) else { return }
