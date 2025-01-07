@@ -86,7 +86,7 @@ class NXColumnViewModel: ObservableObject {
     public func haltProcessing() {
         guard let config else { return }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) haltProcessing")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) haltProcessing")
 #endif
         haltedProcessing = true
     }
@@ -94,7 +94,7 @@ class NXColumnViewModel: ObservableObject {
     private func resumeProcessing() {
         guard let config else { return }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) resumeProcessing")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) resumeProcessing")
 #endif
         // Will trigger listenForNewPosts() with maybe subscriptionIds still in queue
         resumeSubject.send(Set())
@@ -423,7 +423,7 @@ class NXColumnViewModel: ObservableObject {
     public func pause() {
         guard let config, !isPaused else { return }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) pause()")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) pause()")
 #endif
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = nil
@@ -456,18 +456,18 @@ class NXColumnViewModel: ObservableObject {
     public func resume() {
         guard let config else { return }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) resume()")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) resume()")
 #endif
         startTime = .now
         
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
         self.listenForNewPosts(config)
-        L.og.debug("☘️☘️⏭️ \(config.id) resume().loadLocal()")
+        L.og.debug("☘️☘️⏭️ \(config.name) - \(config.id) resume().loadLocal()")
         self.loadLocal(config) { [weak self] in
-            L.og.debug("☘️☘️⏭️ \(config.id) resume().loadRemote()")
+            L.og.debug("☘️☘️⏭️ \(config.name) - \(config.id) resume().loadRemote()")
             self?.loadRemote(config)
-//            L.og.debug("☘️☘️⏭️ \(config.id) resume().fetchGap: since: \(self.refreshedAt.description) currentGap: 0")
+//            L.og.debug("☘️☘️⏭️ \(config.name) - \(config.id) resume().fetchGap: since: \(self.refreshedAt.description) currentGap: 0")
 //            gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
         }
     }
@@ -519,7 +519,7 @@ class NXColumnViewModel: ObservableObject {
                 []
             }
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.id) loadLocal(.following) \(older ? "older" : "") \(followingPubkeys.count) pubkeys")
+            L.og.debug("☘️☘️ \(config.name) - \(config.id) loadLocal(.following) \(older ? "older" : "") \(followingPubkeys.count) pubkeys")
 #endif
             
             let hashtagRegex: String? = if let account = feed.account {
@@ -540,7 +540,7 @@ class NXColumnViewModel: ObservableObject {
             }
         case .pubkeys(let feed):
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.id) loadLocal(.pubkeys)\(older ? "older" : "")")
+            L.og.debug("☘️☘️ \(config.name) - \(config.id) loadLocal(.pubkeys)\(older ? "older" : "")")
 #endif
             let pubkeys = feed.contactPubkeys
             bg().perform { [weak self] in
@@ -553,13 +553,13 @@ class NXColumnViewModel: ObservableObject {
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.id) loadLocal(.pubkeys)\(older ? "older" : "").processToScreen")
+            L.og.debug("☘️☘️ \(config.name) - \(config.id) loadLocal(.pubkeys)\(older ? "older" : "").processToScreen")
 #endif
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .someoneElses(_):
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.id) loadLocal(.someoneElses)\(older ? "older" : "")")
+            L.og.debug("☘️☘️ \(config.name) - \(config.id) loadLocal(.someoneElses)\(older ? "older" : "")")
 #endif
             // pubkeys and hashtags coming from loadLocal(_:pubkeys: hashtags:) not from config
             let hashtagRegex: String? = !config.hashtags.isEmpty ? makeHashtagRegex(config.hashtags) : nil
@@ -576,7 +576,7 @@ class NXColumnViewModel: ObservableObject {
             }
         case .relays(let feed):
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.id) loadLocal(.relays)\(older ? "older" : "")")
+            L.og.debug("☘️☘️ \(config.name) - \(config.id) loadLocal(.relays)\(older ? "older" : "")")
 #endif
             let relaysData = feed.relaysData
             bg().perform { [weak self] in
@@ -833,7 +833,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func sendNextPageReq(_ config: NXColumnConfig, until: Int64) {
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) sendNextPageReq()")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) sendNextPageReq()")
 #endif
         switch config.columnType {
         case .following(let feed):
@@ -1024,7 +1024,7 @@ class NXColumnViewModel: ObservableObject {
                     guard subscriptionIds.contains(config.id) else { return }
                     
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.id) listenForNewPosts.subscriptionIds \(subscriptionIds)")
+                    L.og.debug("☘️☘️ \(config.name) - \(config.id) listenForNewPosts.subscriptionIds \(subscriptionIds)")
 #endif
                     
                     self.loadLocal(config)
@@ -1047,7 +1047,7 @@ class NXColumnViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self, watchForFirstConnection else { return }
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.id) listenForFirstConnection.load(config)")
+                L.og.debug("☘️☘️ \(config.name) - \(config.id) listenForFirstConnection.load(config)")
 #endif
                 Task { @MainActor in
                     self.watchForFirstConnection = false
@@ -1069,12 +1069,12 @@ class NXColumnViewModel: ObservableObject {
             .sink { [weak self] oldValue, newValue in
                 if oldValue != newValue {
 #if DEBUG
-                    L.og.debug("☘️☘️💬 \(config.id) reloadWhenNeeded feed.repliesEnabled changed from \(oldValue) to \(newValue)")
+                    L.og.debug("☘️☘️💬 \(config.name) - \(config.id) reloadWhenNeeded feed.repliesEnabled changed from \(oldValue) to \(newValue)")
 #endif
                     self?.reload(config)
                 } else {
 #if DEBUG
-                    L.og.debug("☘️☘️💬 \(config.id) reloadWhenNeeded feed.repliesEnabled unchanged, value: \(newValue)")
+                    L.og.debug("☘️☘️💬 \(config.name) - \(config.id) reloadWhenNeeded feed.repliesEnabled unchanged, value: \(newValue)")
 #endif
                 }
             }
@@ -1088,7 +1088,7 @@ class NXColumnViewModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.id) listenForLastDisconnection")
+                L.og.debug("☘️☘️ \(config.name) - \(config.id) listenForLastDisconnection")
 #endif
                 Task { @MainActor in
                     self.watchForFirstConnection = true
@@ -1120,7 +1120,7 @@ class NXColumnViewModel: ObservableObject {
                 
                 if !danglerIds.isEmpty {
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.id) fetchParents: \(danglers.count.description), fetching....")
+                    L.og.debug("☘️☘️ \(config.name) - \(config.id) fetchParents: \(danglers.count.description), fetching....")
 #endif
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId)) // TODO: req or outboxReq?
                 }
@@ -1129,7 +1129,7 @@ class NXColumnViewModel: ObservableObject {
                 bg().perform { [weak self] in
                     let danglingEvents = danglers.compactMap { $0.event }
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.id) fetchParents.processResponseCommand")
+                    L.og.debug("☘️☘️ \(config.name) - \(config.id) fetchParents.processResponseCommand")
 #endif
                     
                     // Need to go to main context again to get current screen state
@@ -1144,7 +1144,7 @@ class NXColumnViewModel: ObservableObject {
                         bg().perform { [weak self] in
                             guard let self else { return }
 #if DEBUG
-                            L.og.debug("☘️☘️ \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen")
+                            L.og.debug("☘️☘️ \(config.name) - \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen")
 #endif
                             self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
@@ -1155,7 +1155,7 @@ class NXColumnViewModel: ObservableObject {
                 bg().perform { [weak self]  in
                     let danglingEvents: [Event] = danglers.compactMap { $0.event }
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.id) fetchParents.timeoutCommand")
+                    L.og.debug("☘️☘️ \(config.name) - \(config.id) fetchParents.timeoutCommand")
 #endif
                     
                     // Need to go to main context again to get current screen state
@@ -1170,7 +1170,7 @@ class NXColumnViewModel: ObservableObject {
                         bg().perform { [weak self] in
                             guard let self else { return }
 #if DEBUG
-                            L.og.debug("☘️☘️ \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen (timeoutCommand)")
+                            L.og.debug("☘️☘️ \(config.name) - \(config.id) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen (timeoutCommand)")
 #endif
                             self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
@@ -1290,7 +1290,7 @@ extension NXColumnViewModel {
         guard newCount > 0 else { return [] }
         
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) prepareEvents newCount \(newCount.description)")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) prepareEvents newCount \(newCount.description)")
 #endif
         
         return newUnrenderedEvents
@@ -1329,7 +1329,7 @@ extension NXColumnViewModel {
             }
         
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) transformToNRPosts currentIdsOnScreen: \(currentIdsOnScreen.count.description) transformedNrPosts: \(transformedNrPosts.count.description)")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) transformToNRPosts currentIdsOnScreen: \(currentIdsOnScreen.count.description) transformedNrPosts: \(transformedNrPosts.count.description)")
 #endif
         
         return transformedNrPosts
@@ -1410,7 +1410,7 @@ extension NXColumnViewModel {
             
             if !insertAtEnd { // add on top
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (TOP) \(onlyNewAddedPosts.count.description) -> OLD FIRST: \((existingPosts.first?.content ?? "").prefix(150))")
+                L.og.debug("☘️☘️ \(config.name) - \(config.id) putOnScreen addedPosts (TOP) \(onlyNewAddedPosts.count.description) -> OLD FIRST: \((existingPosts.first?.content ?? "").prefix(150))")
 #endif
    
                 let addedAndExistingPosts = onlyNewAddedPosts + existingPosts
@@ -1466,7 +1466,7 @@ extension NXColumnViewModel {
                                 vmInner.scrollToIndex = restoreToIndex
                             }
                             #if DEBUG
-                            L.og.debug("☘️☘️ \(config.id) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
+                            L.og.debug("☘️☘️ \(config.name) - \(config.id) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
                             #endif
                         }
                     }
@@ -1486,7 +1486,7 @@ extension NXColumnViewModel {
             }
             else { // add below
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description)")
+                L.og.debug("☘️☘️ \(config.name) - \(config.id) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description)")
 #endif
                 allIdsSeen = allIdsSeen.union(getAllPostIds(onlyNewAddedPosts, prefixOnly: true))
                 withAnimation {
@@ -1497,7 +1497,7 @@ extension NXColumnViewModel {
         else { // Nothing on screen yet, put first posts on screen
             let uniqueAddedPosts = addedPosts.uniqued(on: { $0.id })
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.id) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description)")
+            L.og.debug("☘️☘️ \(config.name) - \(config.id) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description)")
 #endif
             allIdsSeen = allIdsSeen.union(getAllPostIds(uniqueAddedPosts, prefixOnly: true))
             if !vmInner.isAtTop {
@@ -1549,7 +1549,7 @@ extension NXColumnViewModel {
     @MainActor
     private func loadRemote(_ config: NXColumnConfig) {
         #if DEBUG
-        L.og.debug("☘️☘️ \(config.id) loadRemote(config)")
+        L.og.debug("☘️☘️ \(config.name) - \(config.id) loadRemote(config)")
         #endif
         
         switch config.columnType {
@@ -1571,7 +1571,7 @@ extension NXColumnViewModel {
                     
                     // TODO: Check if we still hit .fetchLimit problem here
     #if DEBUG
-                    L.og.debug("☘️☘️ \(config.id) loadRemoteRelays() instantFeed.onComplete events.count \(events.count.description)")
+                    L.og.debug("☘️☘️ \(config.name) - \(config.id) loadRemoteRelays() instantFeed.onComplete events.count \(events.count.description)")
     #endif
                     
                     // Need to go to main context again to get current screen state
@@ -1597,7 +1597,7 @@ extension NXColumnViewModel {
                 self.refreshedAt
             }
             
-            L.og.debug("☘️☘️⏭️ \(config.id) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0")
+            L.og.debug("☘️☘️⏭️ \(config.name) - \(config.id) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0")
             
             // Don't go older than 24 hrs ago
             let maxAgo = Int64(Date().addingTimeInterval(-24 * 60 * 60).timeIntervalSince1970)
@@ -1742,7 +1742,7 @@ extension NXColumnViewModel {
             .sink { [weak self] lastCreatedAt in
                 
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.id) loadMoreWhenNearBottom.onAppearSubject lastCreatedAt \(lastCreatedAt)")
+                L.og.debug("☘️☘️ \(config.name) - \(config.id) loadMoreWhenNearBottom.onAppearSubject lastCreatedAt \(lastCreatedAt)")
 #endif
                 self?.loadLocal(config, older: true) {
                     self?.sendNextPageReq(config, until: Int64(self?.oldestCreatedAt ?? Int(Date().timeIntervalSince1970)))
