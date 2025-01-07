@@ -254,7 +254,10 @@ class NXColumnViewModel: ObservableObject {
                                 vmInner.unreadIds[key] = nil
                             }
                         }
-                        viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains($0.shortId) })
+
+                        withAnimation { // withAnimation and not at top keeps scroll position
+                            self.viewState = .posts(existingPosts.filter { !lastReadIdsToRemove.contains($0.shortId) })
+                        }
                     }
                 })
                 .store(in: &subscriptions)
