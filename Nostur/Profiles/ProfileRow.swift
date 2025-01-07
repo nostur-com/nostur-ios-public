@@ -157,7 +157,7 @@ struct ProfileRow: View {
                                 la.follow(contact, pubkey: contact.pubkey)
                             }
                         } label: {
-                            FollowButton(isFollowing:isFollowing, isPrivateFollowing:contact.isPrivateFollow)
+                            FollowButton(isFollowing: isFollowing, isPrivateFollowing: contact.isPrivateFollow)
                         }
                         .buttonStyle(.borderless)
                         .disabled(!fg.didReceiveContactListThisSession)

@@ -238,7 +238,7 @@ class Importer {
                                 NRState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }
-                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == NRState.shared.activeAccountPublicKey { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }

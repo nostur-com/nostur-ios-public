@@ -32,19 +32,20 @@ struct NosturButton: ButtonStyle {
 
 struct FollowButton: View {
     @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.colorScheme) var colorScheme
-    var isFollowing: Bool = false
-    var isPrivateFollowing:Bool = false
+    @Environment(\.colorScheme) private var colorScheme
     
-    var buttonText:String {
+    public var isFollowing: Bool = false
+    public var isPrivateFollowing:Bool = false
+    
+    private var buttonText: String {
         if (isFollowing && isPrivateFollowing) {
-            return String(localized:"🤫 Following", comment:"Follow/Unfollow button when the state is 'Following silent'")
+            return String(localized: "🤫 Following", comment: "Follow/Unfollow button when the state is 'Following silent'")
         }
         else if isFollowing {
-            return String(localized:"Following", comment:"Follow/Unfollow button when the state is 'Following'")
+            return String(localized: "Following", comment: "Follow/Unfollow button when the state is 'Following'")
         }
         else {
-            return String(localized:"Follow", comment:"Button to follow someone")
+            return String(localized: "Follow", comment: "Button to follow someone")
         }
     }
     
