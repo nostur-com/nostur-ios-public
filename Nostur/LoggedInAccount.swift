@@ -46,7 +46,7 @@ class LoggedInAccount: ObservableObject {
             account.publishNewContactList()
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
+                sendNotification(.followsChanged, self.viewFollowingPublicKeys)
                 sendNotification(.followingAdded, pubkey)
             }
         }
@@ -74,7 +74,7 @@ class LoggedInAccount: ObservableObject {
 
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
+                sendNotification(.followsChanged, self.viewFollowingPublicKeys)
                 sendNotification(.followingAdded, pubkey)
             }
         }
@@ -96,7 +96,7 @@ class LoggedInAccount: ObservableObject {
             
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                sendNotification(.followersChanged, self.viewFollowingPublicKeys)
+                sendNotification(.followsChanged, self.viewFollowingPublicKeys)
             }
         }
     }
@@ -247,7 +247,7 @@ class LoggedInAccount: ObservableObject {
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 self.viewFollowingPublicKeys = self.followingPublicKeys
-                sendNotification(.followersChanged, self.followingPublicKeys)
+                sendNotification(.followsChanged, self.followingPublicKeys)
             }
         }
     }

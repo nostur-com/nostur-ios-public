@@ -141,8 +141,8 @@ extension Notification.Name {
         return Notification.Name("createNewQuoteOrRepost")
     }
     
-    static var followersChanged: Notification.Name {
-        return Notification.Name("followersChanged")
+    static var followsChanged: Notification.Name {
+        return Notification.Name("followsChanged")
     }
     
     static var followingAdded: Notification.Name {

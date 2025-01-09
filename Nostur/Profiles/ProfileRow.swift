@@ -176,7 +176,7 @@ struct ProfileRow: View {
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
             isFollowing = la.isFollowing(pubkey: contact.pubkey)
         }
-        .onReceive(receiveNotification(.followersChanged)) { notification in
+        .onReceive(receiveNotification(.followsChanged)) { notification in
             guard let follows = notification.object as? Set<String> else { return }
             isFollowing = follows.contains(contact.pubkey)
         }

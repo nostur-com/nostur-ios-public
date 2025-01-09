@@ -27,7 +27,7 @@ class NewOnboardingTracker {
             DataProvider.shared().bgSave()
         }
     }
-    private var fetchedFollowersTask = false { // Fetched followers (Ps in KIND 3)
+    private var fetchedFollowsTask = false { // Fetched follows (Ps in KIND 3)
         didSet {
             DataProvider.shared().bgSave()
         }
@@ -39,10 +39,10 @@ class NewOnboardingTracker {
         }
     }
     
-    private var fetchedProfilesOfFollowersTask = false { // Fetched profiles of followers (KIND 0 of Ps in OWN KIND 3)
+    private var fetchedProfilesOfFollowsTask = false { // Fetched profiles of follows (KIND 0 of Ps in OWN KIND 3)
         didSet {
             DataProvider.shared().bgSave()
-            if fetchedProfilesOfFollowersTask {
+            if fetchedProfilesOfFollowsTask {
                 self.stopAfterDelay() // If we reached here we have completed the onboarding.
             }
         }
@@ -87,10 +87,10 @@ class NewOnboardingTracker {
             }
         }
         self.fetchedOwnProfileTask = false
-        self.fetchedFollowersTask = false
-        self.fetchedProfilesOfFollowersTask = false
+        self.fetchedFollowsTask = false
+        self.fetchedProfilesOfFollowsTask = false
         self.fetchedOutboxRelaysTask = false
-        self.fetchProfileAndFollowers()
+        self.fetchProfileAndFollows()
     }
     
     private func stopAfterDelay() {
@@ -111,11 +111,11 @@ class NewOnboardingTracker {
     
     private func cancel() {
         guard self.account != nil else { return }
-        L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.getFollowingPublicKeys(includeBlocked: true).count) ) followers for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
+        L.onboarding.info("✈️✈️✈️✈️✈️✈️ ONBOARDING COMPLETED/CANCELLED \(String(describing: self.account?.getFollowingPublicKeys(includeBlocked: true).count) ) follows for \(self.account?.name ?? "") \(self.account?.display_name ?? "")")
         self.account = nil
     }
     
-    private func fetchProfileAndFollowers() {
+    private func fetchProfileAndFollows() {
         guard let pubkey = self.pubkey else { return }
 //        guard let account = self.account else { return }
         
@@ -134,11 +134,11 @@ class NewOnboardingTracker {
             self.processKind10002()
         }
         
-        let fetchProfileAndFollowersTask = ReqTask(
+        let fetchProfileAndFollowsTask = ReqTask(
             prefix: "FPF-",
             reqCommand: { (taskId) in
-                L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.reqCommand()")
-                guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowsTask.reqCommand()")
+                guard self.fetchedOwnProfileTask == false && self.fetchedFollowsTask == false else {
                     L.onboarding.info("\(taskId) ✈️✈️ SKIPPED - ALREADY HAVE BOTH")
                     return
                 }
@@ -146,7 +146,7 @@ class NewOnboardingTracker {
                 req(RM.getUserMetadataAndContactList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] (taskId, _, _) in
-                L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowersTask.processResponseCommand()")
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfileAndFollowsTask.processResponseCommand()")
                 self?.bg.perform {
                     guard let self = self else { return }
                     if !self.fetchedOwnProfileTask {
@@ -156,7 +156,7 @@ class NewOnboardingTracker {
                 
                 self?.bg.perform { 
                     guard let self = self else { return }
-                    if !self.fetchedFollowersTask {
+                    if !self.fetchedFollowsTask {
                         self.processKind3()
                     }
                 }
@@ -169,12 +169,12 @@ class NewOnboardingTracker {
                 }
             })
 
-        guard self.fetchedOwnProfileTask == false && self.fetchedFollowersTask == false else {
+        guard self.fetchedOwnProfileTask == false && self.fetchedFollowsTask == false else {
             self.account = nil
             return
         }
-        backlog.add(fetchProfileAndFollowersTask)
-        fetchProfileAndFollowersTask.fetch()
+        backlog.add(fetchProfileAndFollowsTask)
+        fetchProfileAndFollowsTask.fetch()
     }
     
     public var didFetchKind3 = PassthroughSubject<Event, Never>()
@@ -200,16 +200,16 @@ class NewOnboardingTracker {
             
             DispatchQueue.main.async {
                 if NRState.shared.activeAccountPublicKey == pubkey {
-                    sendNotification(.followersChanged, followingPublicKeys)
+                    sendNotification(.followsChanged, followingPublicKeys)
                 }
             }
-            self.fetchedFollowersTask = true
+            self.fetchedFollowsTask = true
             
             self.createRelaysFromKind3Content(kind3.content ?? "")
             L.onboarding.info("✈️✈️ created relays from kind 3")
             
             L.onboarding.info("✈️✈️ processed kind 3")
-            self.fetchProfilesOfFollowers(pTags)
+            self.fetchProfilesOfFollows(pTags)
         }
         else {
             L.onboarding.info("✈️✈️ kind 3 not found. ")
@@ -264,21 +264,21 @@ class NewOnboardingTracker {
         L.onboarding.info("✈️✈️ Preloaded account info")
     }
     
-    private func fetchProfilesOfFollowers(_ pTags:[String]) {
-        guard !self.fetchedProfilesOfFollowersTask else { return }
-        let fetchProfilesOfFollowersTask = ReqTask(
+    private func fetchProfilesOfFollows(_ pTags:[String]) {
+        guard !self.fetchedProfilesOfFollowsTask else { return }
+        let fetchProfilesOfFollowsTask = ReqTask(
             prefix: "FPoF-",
             reqCommand: { (taskId) in
-                L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.reqCommand()")
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowsTask.reqCommand()")
                 req(RM.getUserMetadata(pubkeys: pTags, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] (taskId, _, _) in
                 guard let self = self else { return }
-                L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowersTask.processResponseCommand()")
-                self.fetchedProfilesOfFollowersTask = true
+                L.onboarding.info("\(taskId) ✈️✈️ fetchProfilesOfFollowsTask.processResponseCommand()")
+                self.fetchedProfilesOfFollowsTask = true
             })
-        backlog.add(fetchProfilesOfFollowersTask)
-        fetchProfilesOfFollowersTask.fetch()
+        backlog.add(fetchProfilesOfFollowsTask)
+        fetchProfilesOfFollowsTask.fetch()
     }
     
     private func createContactsFromPs(_ pTags:[String], isOwnAccount: Bool = false) -> [Contact] {

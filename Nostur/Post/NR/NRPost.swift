@@ -617,7 +617,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     private func isFollowingListener() {
         guard isFollowingSubscription == nil else { return }
-        isFollowingSubscription = receiveNotification(.followersChanged)
+        isFollowingSubscription = receiveNotification(.followsChanged)
             .subscribe(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }

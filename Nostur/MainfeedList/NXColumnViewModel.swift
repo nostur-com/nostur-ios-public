@@ -355,7 +355,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func listenForFollowsChanged(_ config: NXColumnConfig) {
         guard followsChangedSub == nil else { return }
-        followsChangedSub = receiveNotification(.followersChanged)
+        followsChangedSub = receiveNotification(.followsChanged)
             .debounce(for: .seconds(2.0), scheduler: RunLoop.main)
             .throttle(for: .seconds(8.0), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
