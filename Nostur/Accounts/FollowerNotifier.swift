@@ -150,11 +150,14 @@ class FollowerNotifier {
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
                 guard nEvent.pTags().contains(NRState.shared.activeAccountPublicKey) else { return }
-                guard !self.currentFollowerPubkeys.isEmpty else { return }
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
+                    guard !self.currentFollowerPubkeys.isEmpty else { return }
 
-                if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
-                    self.newFollowerPubkeys.insert(nEvent.publicKey)
-                    self.generateNewFollowersNotification.send(NRState.shared.activeAccountPublicKey)
+                    if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
+                        self.newFollowerPubkeys.insert(nEvent.publicKey)
+                        self.generateNewFollowersNotification.send(NRState.shared.activeAccountPublicKey)
+                    }
                 }
             }
             .store(in: &subscriptions)
