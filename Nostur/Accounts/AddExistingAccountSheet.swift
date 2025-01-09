@@ -105,17 +105,36 @@ struct AddExistingAccountSheet: View {
                             }
                         }
                         else {
-                            guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
-                                invalidKey = true
-                                key = ""
-                                return
-                            }
-                            
                             if (key.prefix(5) == "npub1") {
+                                guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
+                                    invalidKey = true
+                                    key = ""
+                                    return
+                                }
                                 addExistingReadOnlyAccount(pubkey: nip19.hexString)
                             }
                             else if (key.prefix(5) == "nsec1") {
+                                guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
+                                    invalidKey = true
+                                    key = ""
+                                    return
+                                }
                                 addExistingAccount(privkey: nip19.hexString)
+                            }
+                            else if (key.contains("@")) {
+                                guard let nip05parts = try? NostrEssentials.parseNip05Address(key) else {
+                                    invalidKey = true
+                                    return
+                                }
+                                
+                                Task { 
+                                    do {
+                                        let pubkey = try await NostrEssentials.fetchPubkey(from: nip05parts)
+                                        addExistingReadOnlyAccount(pubkey: pubkey)
+                                    } catch {
+                                        invalidKey = true
+                                    }
+                                }
                             }
                             if (!NRState.shared.onBoardingIsShown) {
                                 dismiss()
