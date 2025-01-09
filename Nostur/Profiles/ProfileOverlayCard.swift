@@ -149,25 +149,7 @@ struct ProfileOverlayCard: View {
                                 ProfileZapButton(contact: contact, zapEtag: zapEtag)
                             }
                             if (!withoutFollowButton) {
-                                Button {
-                                    guard isFullAccount() else { showReadOnlyMessage(); return }
-                                    guard let la = NRState.shared.loggedInAccount else { return }
-                                    
-                                    if la.isFollowing(pubkey: contact.pubkey) {
-                                        if !isPrivateFollowing(contact.pubkey) {
-                                            la.follow(contact.pubkey, privateFollow: true)
-                                        }
-                                        else {
-                                            la.unfollow(contact.pubkey)
-                                        }
-                                    }
-                                    else {
-                                        la.follow(contact.pubkey, privateFollow: false)
-                                    }
-                                } label: {
-                                    FollowButton(isFollowing: isFollowing(contact.pubkey), isPrivateFollowing: isPrivateFollowing(contact.pubkey))
-                                }
-                                .disabled(!fg.didReceiveContactListThisSession)
+                                FollowButton(pubkey: contact.pubkey)
                             }
                         }
                         HStack {

@@ -20,7 +20,6 @@ struct SelectedParticipantView: View {
     @Binding var selectedContact: NRContact?
     
     @ObservedObject private var npn: NewPostNotifier = .shared
-    @ObservedObject private var fg: FollowingGuardian = .shared
     
     @State private var similarPFP = false
     @State private var similarToPubkey: String? = nil
@@ -135,25 +134,7 @@ struct SelectedParticipantView: View {
                 }
                 
                 VStack {
-                    Button {
-                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                        guard let la = NRState.shared.loggedInAccount else { return }
-                        
-                        if la.isFollowing(pubkey: nrContact.pubkey) {
-                            if !isPrivateFollowing(nrContact.pubkey) {
-                                la.follow(nrContact.pubkey, privateFollow: true)
-                            }
-                            else {
-                                la.unfollow(nrContact.pubkey)
-                            }
-                        }
-                        else {
-                            la.follow(nrContact.pubkey, privateFollow: false)
-                        }
-                    } label: {
-                        FollowButton(isFollowing: isFollowing(nrContact.pubkey), isPrivateFollowing: isPrivateFollowing(nrContact.pubkey))
-                    }
-                    .disabled(!fg.didReceiveContactListThisSession)
+                    FollowButton(pubkey: nrContact.pubkey)
                     
                     if showZapButton && nrContact.anyLud {
                         Button {

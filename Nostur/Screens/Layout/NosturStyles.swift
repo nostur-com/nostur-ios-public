@@ -30,7 +30,7 @@ struct NosturButton: ButtonStyle {
     }
 }
 
-struct FollowButton: View {
+struct FollowButtonInner: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.colorScheme) private var colorScheme
     
@@ -74,17 +74,7 @@ struct FollowButton: View {
 struct FollowButton_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
-            FollowButton(isFollowing: false, isPrivateFollowing: false)
-            FollowButton(isFollowing: false, isPrivateFollowing: false)
-                .disabled(true)
-            
-            FollowButton(isFollowing: true, isPrivateFollowing: false)
-            FollowButton(isFollowing: true, isPrivateFollowing: false)
-                .disabled(true)
-            
-            FollowButton(isFollowing: true, isPrivateFollowing: true)
-            FollowButton(isFollowing: true, isPrivateFollowing: true)
-                .disabled(true)
+            FollowButton(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e")
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
     }

@@ -96,9 +96,8 @@ extension CloudAccount {
             return Contact.fetchByPubkeys(Array(followsIncludingPrivate), context: Thread.isMainThread ? DataProvider.shared().viewContext : bg())
         }
         set {
-            guard let account = account() else { return }
-            followingPubkeys_ = newValue.filter { !account.privateFollowingPubkeys.contains($0.pubkey) }.map { $0.pubkey }.joined(separator: " ")
-            privateFollowingPubkeys_ = newValue.filter { account.privateFollowingPubkeys.contains($0.pubkey) }.map { $0.pubkey }.joined(separator: " ")
+            followingPubkeys_ = newValue.filter { !self.privateFollowingPubkeys.contains($0.pubkey) }.map { $0.pubkey }.joined(separator: " ")
+            privateFollowingPubkeys_ = newValue.filter { self.privateFollowingPubkeys.contains($0.pubkey) }.map { $0.pubkey }.joined(separator: " ")
         }
     }
     

@@ -155,26 +155,8 @@ struct ProfileView: View {
                             .buttonStyle(NosturButton())
                         }
                         else {
-                            Button {
-                                guard isFullAccount() else { showReadOnlyMessage(); return }
-                                guard let la = NRState.shared.loggedInAccount else { return }
-                                
-                                if la.isFollowing(pubkey: nrContact.pubkey) {
-                                    if !isPrivateFollowing(nrContact.pubkey) {
-                                        la.follow(nrContact.pubkey, privateFollow: true)
-                                    }
-                                    else {
-                                        la.unfollow(nrContact.pubkey)
-                                    }
-                                }
-                                else {
-                                    la.follow(nrContact.pubkey, privateFollow: false)
-                                }
-                            } label: {
-                                FollowButton(isFollowing: isFollowing(nrContact.pubkey), isPrivateFollowing: isPrivateFollowing(nrContact.pubkey))
-                            }
+                            FollowButton(pubkey: nrContact.pubkey)
                             .buttonStyle(.borderless)
-                            .disabled(nrContact.pubkey != account()?.publicKey && !fg.didReceiveContactListThisSession)
                             .padding(.trailing, 10)
                         }
                     }
@@ -690,26 +672,8 @@ struct ProfileToolbar: View {
                     //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                 }
                 else {
-                    Button {
-                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                        guard let la = NRState.shared.loggedInAccount else { return }
-                        
-                        if la.isFollowing(pubkey: nrContact.pubkey) {
-                            if !isPrivateFollowing(nrContact.pubkey) {
-                                la.follow(nrContact.pubkey, privateFollow: true)
-                            }
-                            else {
-                                la.unfollow(nrContact.pubkey)
-                            }
-                        }
-                        else {
-                            la.follow(nrContact.pubkey, privateFollow: false)
-                        }
-                    } label: {
-                        FollowButton(isFollowing: isFollowing(nrContact.pubkey), isPrivateFollowing: isPrivateFollowing(nrContact.pubkey))
-                    }
-                    .disabled(!FollowingGuardian.shared.didReceiveContactListThisSession)
-                    .layoutPriority(2)
+                    FollowButton(pubkey: nrContact.pubkey)
+                        .layoutPriority(2)
                     //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                 }
                 

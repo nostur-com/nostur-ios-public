@@ -198,6 +198,7 @@
 		1F69854F29F2B63E006F813F /* Bolt11.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69854E29F2B63E006F813F /* Bolt11.swift */; };
 		1F69856329F40409006F813F /* Data+agoString.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F69856229F40408006F813F /* Data+agoString.swift */; };
 		1F6B445029D5D1F700AD3191 /* PostOrThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */; };
+		1F6D2BAB2D3061E2002D533E /* FollowButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6D2BAA2D3061DD002D533E /* FollowButton.swift */; };
 		1F6E448629CC5CAE0037D947 /* Account+Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */; };
 		1F6EB73A29E1C9B200B9DA83 /* EditNosturList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */; };
 		1F71037D296BD9DE006245CC /* Nostr.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F71037C296BD9DE006245CC /* Nostr.swift */; };
@@ -791,6 +792,7 @@
 		1F69854E29F2B63E006F813F /* Bolt11.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bolt11.swift; sourceTree = "<group>"; };
 		1F69856229F40408006F813F /* Data+agoString.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+agoString.swift"; sourceTree = "<group>"; };
 		1F6B444F29D5D1F700AD3191 /* PostOrThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostOrThread.swift; sourceTree = "<group>"; };
+		1F6D2BAA2D3061DD002D533E /* FollowButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowButton.swift; sourceTree = "<group>"; };
 		1F6E448529CC5CAE0037D947 /* Account+Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Account+Notifications.swift"; sourceTree = "<group>"; };
 		1F6EB73929E1C9B200B9DA83 /* EditNosturList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditNosturList.swift; sourceTree = "<group>"; };
 		1F71037C296BD9DE006245CC /* Nostr.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nostr.swift; sourceTree = "<group>"; };
@@ -1587,6 +1589,7 @@
 			isa = PBXGroup;
 			children = (
 				1F4773A6296D4F5B0049454B /* AccountEditView.swift */,
+				1F6D2BAA2D3061DD002D533E /* FollowButton.swift */,
 				1FC4D4072997E126004E88CD /* AccountManager.swift */,
 				1F9C85C12C7C88B300B45304 /* AccountQR.swift */,
 				1F14CC44299D432300131B8D /* AccountsSheet.swift */,
@@ -2576,6 +2579,7 @@
 				1FC0A9512A0F8B9D00F9ABF6 /* ProfileZaps.swift in Sources */,
 				1F88491429B537B400145340 /* TextFormattingRule.swift in Sources */,
 				1FAC3F3B2AD049D7009BA810 /* ComposePost.swift in Sources */,
+				1F6D2BAB2D3061E2002D533E /* FollowButton.swift in Sources */,
 				1FDBD89C2A764224001D9F34 /* NoiseFilter.swift in Sources */,
 				1F15F0992AAF2EDC0004E706 /* FooterAttributes.swift in Sources */,
 				1F6337DF2C30D044009C290C /* DiscoverViewModel.swift in Sources */,

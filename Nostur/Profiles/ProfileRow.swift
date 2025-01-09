@@ -74,8 +74,6 @@ struct ProfileRow: View {
     @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject private var fg: FollowingGuardian = .shared
      
-    // Following/Unfollowing tap is slow so update UI and do in background:
-    @State private var isFollowing = false
     public var withoutFollowButton = false
     public var tapEnabled: Bool = true
     public var showNpub: Bool = false
@@ -141,27 +139,8 @@ struct ProfileRow: View {
                     .multilineTextAlignment(.leading)
                     Spacer()
                     if (!withoutFollowButton) {
-                        Button {
-                            guard isFullAccount() else { showReadOnlyMessage(); return }
-                            if (isFollowing && !la.isPrivateFollowing(pubkey: contact.pubkey)) {
-                                // Change to PRIVATE follow
-                                la.follow(contact.pubkey, privateFollow: true)
-                            }
-                            else if (isFollowing && la.isPrivateFollowing(pubkey: contact.pubkey)) {
-                                // Unfollow
-                                isFollowing = false
-                                la.unfollow(contact.pubkey)
-                            }
-                            else {
-                                // Change to normal (public) follow
-                                isFollowing = true
-                                la.follow(contact.pubkey, privateFollow: false)
-                            }
-                        } label: {
-                            FollowButton(isFollowing: isFollowing, isPrivateFollowing: la.isPrivateFollowing(pubkey: contact.pubkey))
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(!fg.didReceiveContactListThisSession)
+                        FollowButton(pubkey: contact.pubkey)
+                            .buttonStyle(.borderless)
                     }
                 }
                 Text(contact.about ?? "").foregroundColor(.primary)
@@ -173,13 +152,6 @@ struct ProfileRow: View {
         .onTapGesture {
             guard tapEnabled else { return }
             navigateTo(ContactPath(key: contact.pubkey))
-        }
-        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
-            isFollowing = la.isFollowing(pubkey: contact.pubkey)
-        }
-        .onReceive(receiveNotification(.followsChanged)) { notification in
-            guard let follows = notification.object as? Set<String> else { return }
-            isFollowing = follows.contains(contact.pubkey)
         }
         .task { [weak contact] in
             guard let contact else { return }
@@ -194,10 +166,7 @@ struct ProfileRow: View {
                 }
             }
             
-            if la.isFollowing(pubkey: contact.pubkey) {
-                isFollowing = true
-            }
-            else {
+            if !la.isFollowing(pubkey: contact.pubkey) {
                 guard !SettingsStore.shared.lowDataMode else { return }
                 guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
                 guard contact.metadata_created_at != 0 else { return }

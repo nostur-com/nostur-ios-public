@@ -35,8 +35,8 @@ class LoggedInAccount: ObservableObject {
         }
         else {
             account.followingPubkeys.insert(pubkey)
-            account.publishNewContactList()
         }
+        account.publishNewContactList() // Should always publish  so if unfollow (1) -> follow (2) -> private follow (3),  .publishLast() will publish (3) and not (2) if we don't publish on private follow action.
                 
         viewContextSave()
         
