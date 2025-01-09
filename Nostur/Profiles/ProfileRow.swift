@@ -79,7 +79,7 @@ struct ProfileRow: View {
     public var withoutFollowButton = false
     public var tapEnabled: Bool = true
     public var showNpub: Bool = false
-    @ObservedObject public var contact:Contact
+    @ObservedObject public var contact: Contact
     
     @State private var similarPFP = false
     @State private var similarToPubkey: String? = nil
@@ -143,21 +143,22 @@ struct ProfileRow: View {
                     if (!withoutFollowButton) {
                         Button {
                             guard isFullAccount() else { showReadOnlyMessage(); return }
-                            if (isFollowing && !contact.isPrivateFollow) {
-                                contact.isPrivateFollow = true
-                                la.follow(contact, pubkey: contact.pubkey)
+                            if (isFollowing && !la.isPrivateFollowing(pubkey: contact.pubkey)) {
+                                // Change to PRIVATE follow
+                                la.follow(contact.pubkey, privateFollow: true)
                             }
-                            else if (isFollowing && contact.isPrivateFollow) {
+                            else if (isFollowing && la.isPrivateFollowing(pubkey: contact.pubkey)) {
+                                // Unfollow
                                 isFollowing = false
-                                contact.isPrivateFollow = false
                                 la.unfollow(contact.pubkey)
                             }
                             else {
+                                // Change to normal (public) follow
                                 isFollowing = true
-                                la.follow(contact, pubkey: contact.pubkey)
+                                la.follow(contact.pubkey, privateFollow: false)
                             }
                         } label: {
-                            FollowButton(isFollowing: isFollowing, isPrivateFollowing: contact.isPrivateFollow)
+                            FollowButton(isFollowing: isFollowing, isPrivateFollowing: la.isPrivateFollowing(pubkey: contact.pubkey))
                         }
                         .buttonStyle(.borderless)
                         .disabled(!fg.didReceiveContactListThisSession)

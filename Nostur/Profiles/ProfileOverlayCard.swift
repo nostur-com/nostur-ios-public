@@ -34,7 +34,7 @@ struct ProfileOverlayCardContainer: View {
                         bg().perform {
                             if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
                                 let isFollowing = isFollowing(pubkey)
-                                let nrContact = NRContact(contact: bgContact, following: isFollowing)
+                                let nrContact = NRContact(contact: bgContact)
                                 
                                 DispatchQueue.main.async {
                                     self.contact = nrContact
@@ -50,7 +50,7 @@ struct ProfileOverlayCardContainer: View {
                                     processResponseCommand: { taskId, _, _ in
                                         bg().perform {
                                             if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                                let nrContact = NRContact(contact: bgContact, following: isFollowing(pubkey))
+                                                let nrContact = NRContact(contact: bgContact)
                                                 DispatchQueue.main.async {
                                                     self.contact = nrContact
                                                     NRContactCache.shared.setObject(for: pubkey, value: nrContact)
@@ -97,9 +97,9 @@ struct ProfileOverlayCard: View {
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
     var couldBeImposter: Bool {
-        guard let account = account() else { return false }
-        guard account.publicKey != contact.pubkey else { return false }
-        guard !contact.following else { return false }
+        guard let la = NRState.shared.loggedInAccount else { return false}
+        guard la.account.publicKey != contact.pubkey else { return false }
+        guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
         return similarPFP
     }
@@ -151,17 +151,21 @@ struct ProfileOverlayCard: View {
                             if (!withoutFollowButton) {
                                 Button {
                                     guard isFullAccount() else { showReadOnlyMessage(); return }
-                                    if (contact.following && !contact.privateFollow) {
-                                        contact.follow(privateFollow: true)
-                                    }
-                                    else if (contact.following && contact.privateFollow) {
-                                        contact.unfollow()
+                                    guard let la = NRState.shared.loggedInAccount else { return }
+                                    
+                                    if la.isFollowing(pubkey: contact.pubkey) {
+                                        if !isPrivateFollowing(contact.pubkey) {
+                                            la.follow(contact.pubkey, privateFollow: true)
+                                        }
+                                        else {
+                                            la.unfollow(contact.pubkey)
+                                        }
                                     }
                                     else {
-                                        contact.follow()
+                                        la.follow(contact.pubkey, privateFollow: false)
                                     }
                                 } label: {
-                                    FollowButton(isFollowing:contact.following, isPrivateFollowing:contact.privateFollow)
+                                    FollowButton(isFollowing: isFollowing(contact.pubkey), isPrivateFollowing: isPrivateFollowing(contact.pubkey))
                                 }
                                 .disabled(!fg.didReceiveContactListThisSession)
                             }
@@ -364,7 +368,7 @@ struct ProfileOverlayCard: View {
             
             guard !SettingsStore.shared.lowDataMode else { return }
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-            guard !contact.following else { return }
+            guard !isFollowing(contact.pubkey) else { return }
             guard contact.metadata_created_at != 0 else { return }
             guard contact.couldBeImposter == -1 else { return }
             guard let cPic = contact.pictureUrl else { return }

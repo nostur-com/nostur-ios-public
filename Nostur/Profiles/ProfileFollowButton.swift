@@ -19,21 +19,20 @@ struct ProfileFollowButton: View {
     var body: some View {
         if (contact.pubkey != la.pubkey) {
             Button {
-                if (isFollowing && !contact.isPrivateFollow) {
-                    contact.isPrivateFollow = true
-                    la.follow(contact, pubkey: contact.pubkey)
+                if (isFollowing && !la.isPrivateFollowing(pubkey: contact.pubkey)) {
+                    isFollowing = true
+                    la.follow(contact.pubkey, privateFollow: true)
                 }
-                else if (isFollowing && contact.isPrivateFollow) {
+                else if (isFollowing && la.isPrivateFollowing(pubkey: contact.pubkey)) {
                     isFollowing = false
-                    contact.isPrivateFollow = false
                     la.unfollow(contact.pubkey)
                 }
                 else {
                     isFollowing = true
-                    la.follow(contact, pubkey: contact.pubkey)
+                    la.follow(contact.pubkey, privateFollow: false)
                 }
             } label: {
-                FollowButton(isFollowing:isFollowing, isPrivateFollowing: contact.isPrivateFollow)
+                FollowButton(isFollowing: isFollowing, isPrivateFollowing: la.isPrivateFollowing(pubkey: contact.pubkey))
             }
             .disabled(!fg.didReceiveContactListThisSession)
             .onAppear {

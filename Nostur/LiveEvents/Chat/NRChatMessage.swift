@@ -112,7 +112,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
         else if let contact = Contact.contactBy(pubkey: nEvent.publicKey, context: bg()) {
-            self.contact = NRContact(contact: contact, following: self.following)
+            self.contact = NRContact(contact: contact)
             anyName = contact.anyName
             if contact.metadata_created_at == 0 {
                 missingPs.insert(nEvent.publicKey)

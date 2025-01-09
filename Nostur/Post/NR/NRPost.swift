@@ -175,7 +175,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var fileMetadata: KindFileMetadata?
     
-    var following = false
     var blocked: Bool {
         get { postRowDeletableAttributes.blocked }
         set {
@@ -367,7 +366,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             anyName = cachedNRContact.contact?.anyName
         }
         else if let contact = event.contact_ {
-            self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact, following: self.following), pubkey: pubkey)
+            self.pfpAttributes = PFPAttributes(contact: NRContact(contact: contact), pubkey: pubkey)
             anyName = contact.anyName
         }
         else {
@@ -425,7 +424,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             let highlightAuthorPubkey:String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
             
             let highlightContact: NRContact? = if let highlightAuthorPubkey, let contact = Contact.fetchByPubkey(highlightAuthorPubkey, context: bg()) {
-                NRContact(contact: contact, following: isFollowing(contact.pubkey))
+                NRContact(contact: contact)
             }
             else {
                 nil
@@ -489,8 +488,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.sizeEstimate = previewWeights?.sizeEstimate ?? .small
         
-        self.following = isFollowing(event.pubkey)
-        
         self.missingPs = missingPs
         if !isAwaiting && !self.missingPs.isEmpty {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.002 - missingPs: \(missingPs.count)"); isAwaiting = true
@@ -547,7 +544,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     private var repliesCountSubscription: AnyCancellable?
     private var relationSubscription: AnyCancellable?
     private var updateNRPostSubscription: AnyCancellable?
-    private var isFollowingSubscription: AnyCancellable?
     private var unpublishSubscription: AnyCancellable?
     private var publishSubscription: AnyCancellable?
     private var repliesToRootSubscription: AnyCancellable?
@@ -575,7 +571,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         
         updateNRPostListener()
-        isFollowingListener()
         unpublishListener()
         
         groupRepliesToRootSubscription = groupRepliesToRoot
@@ -611,27 +606,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     
                     self.footerAttributes.objectWillChange.send()
                     self.footerAttributes.relays = relays.union(self.footerAttributes.relays)
-                }
-            }
-    }
-    
-    private func isFollowingListener() {
-        guard isFollowingSubscription == nil else { return }
-        isFollowingSubscription = receiveNotification(.followsChanged)
-            .subscribe(on: DispatchQueue.global())
-            .sink { [weak self] notification in
-                guard let self = self else { return }
-                let followingPubkeys = notification.object as! Set<String>
-                let isFollowing = followingPubkeys.contains(self.pubkey)
-                if isFollowing != self.following {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.objectWillChange.send()
-                        self?.following = isFollowing
-                        if (isFollowing) {
-                            self?.contact?.following = isFollowing
-                            self?.contact?.couldBeImposter = 0
-                        }
-                    }
                 }
             }
     }
@@ -684,7 +658,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 guard let self = self else { return }
                 bg().perform { [weak self] in
                     guard let contact = self?.event?.contact else { return }
-                    let nrContact = NRContact(contact: contact, following: self?.following ?? false)
+                    let nrContact = NRContact(contact: contact)
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
                         self?.contact = nrContact
@@ -705,7 +679,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     if self.kind == 9802 && self.highlightAttributes.authorPubkey == pubkey {
                         bg().perform {
                             guard let contact = Contact.fetchByPubkey(pubkey, context: bg()) else { return }
-                            let nrContact = NRContact(contact: contact, following: isFollowing(pubkey))
+                            let nrContact = NRContact(contact: contact)
                             DispatchQueue.main.async { [weak self] in
                                 self?.highlightAttributes.objectWillChange.send()
                                 self?.highlightAttributes.contact = nrContact
@@ -1062,12 +1036,15 @@ extension NRPost { // Helpers for grouped replies
     
     // To make repliesSorted work we need repliesToRoot first (.loadRepliesToRoot())
     func sortGroupedReplies(_ nrPosts: [NRPost]) -> [NRPost] { // Read from bottom to top.
+        
+        let followingPubkeys = NRState.shared.loggedInAccount?.followingPublicKeys ?? []
+        
         if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
             return nrPosts
                 // 4. Everything else last, newest at bottom
                 .sorted(by: { $0.created_at < $1.created_at })
                 // 3. People you follow third
-                .sorted(by: { $0.following && !$1.following })
+                .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
                 // 2. Replies replied by author second
                 .sorted(by: {
                     ($0.pubkey == self.pubkey) &&
@@ -1088,7 +1065,7 @@ extension NRPost { // Helpers for grouped replies
             // 4. Everything else in WoT last, newest at bottom
             .sorted(by: { $0.created_at < $1.created_at })
             // 3. People you follow third
-            .sorted(by: { $0.following && !$1.following })
+            .sorted(by: { followingPubkeys.contains($0.pubkey) && !followingPubkeys.contains($1.pubkey) })
             // 2. Replies replied by author second
             .sorted(by: {
                 ($0.pubkey == self.pubkey) &&
@@ -1345,7 +1322,7 @@ class PFPAttributes: ObservableObject {
             contactSavedSubscription = ViewUpdates.shared.contactUpdated
                 .filter { pubkey == $0.pubkey }
                 .sink(receiveValue: { [weak self] contact in
-                    let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
+                    let nrContact = NRContact(contact: contact)
                     DispatchQueue.main.async { [weak self] in
                         self?.objectWillChange.send()
                         self?.contact = nrContact

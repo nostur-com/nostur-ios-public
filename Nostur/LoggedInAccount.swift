@@ -21,57 +21,49 @@ class LoggedInAccount: ObservableObject {
         viewFollowingPublicKeys.contains(pubkey)
     }
     
-    // USER ACTIONS - TRIGGERED FROM VIEWS
-    
-    @MainActor public func follow(_ pubkey: String) {
-        viewFollowingPublicKeys.insert(pubkey)
-        
-        bg.perform { [weak self] in
-            guard let self else { return }
-            guard let account = self.bgAccount else { return }
-            if let contact = Contact.contactBy(pubkey: pubkey, context: self.bg) {
-                contact.couldBeImposter = 0
-                account.followingPubkeys.insert(pubkey)
-            }
-            else {
-                // if nil, create new contact
-                let contact = Contact(context: self.bg)
-                contact.pubkey = pubkey
-                contact.couldBeImposter = 0
-                account.followingPubkeys.insert(pubkey)
-            }
-            self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingCache = account.loadFollowingCache()
-            
-            account.publishNewContactList()
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                sendNotification(.followsChanged, self.viewFollowingPublicKeys)
-                sendNotification(.followingAdded, pubkey)
-            }
-        }
+    @MainActor public func isPrivateFollowing(pubkey: String) -> Bool {
+        account.privateFollowingPubkeys.contains(pubkey)
     }
     
-    @MainActor public func follow(_ contact: Contact, pubkey: String) {
+    // USER ACTIONS - TRIGGERED FROM VIEWS
+    
+    @MainActor public func follow(_ pubkey: String, privateFollow: Bool = false) {
         viewFollowingPublicKeys.insert(pubkey)
-        account.followingPubkeys.insert(pubkey)
-        account.publishNewContactList()
+        if privateFollow {
+            account.followingPubkeys.remove(pubkey)
+            account.privateFollowingPubkeys.insert(pubkey)
+        }
+        else {
+            account.followingPubkeys.insert(pubkey)
+            account.publishNewContactList()
+        }
+                
         viewContextSave()
+        
+        let viewFollowingPublicKeys = viewFollowingPublicKeys
         
         bg.perform { [weak self] in
             guard let self else { return }
-            guard let contact = self.bg.object(with: contact.objectID) as? Contact else {
-                L.og.error("🔴🔴 Contact in main but not in bg")
-                return
-            }
-            guard let account = self.bgAccount else { return }
+            
+            let contact: Contact = Contact.contactBy(pubkey: pubkey, context: self.bg) ?? Contact(context: self.bg)
+            contact.pubkey = pubkey
             contact.couldBeImposter = 0
             
-            bgSave()
+            self.followingPublicKeys = viewFollowingPublicKeys
             
-            self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingCache = account.loadFollowingCache()
-
+            let pfpURL: URL? = if let picture = contact.picture, picture.prefix(7) != "http://" {
+                URL(string: picture)
+            }
+            else {
+                nil
+            }
+            
+            self.followingCache[contact.pubkey] = FollowCache(
+                anyName: contact.anyName,
+                pfpURL: pfpURL,
+                bgContact: contact
+            )
+            
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
                 sendNotification(.followsChanged, self.viewFollowingPublicKeys)
@@ -83,16 +75,17 @@ class LoggedInAccount: ObservableObject {
     @MainActor public func unfollow(_ pubkey: String) {
         viewFollowingPublicKeys.remove(pubkey)
         account.followingPubkeys.remove(pubkey)
+        account.privateFollowingPubkeys.remove(pubkey)
         account.publishNewContactList()
         viewContextSave()
         
+        let viewFollowingPublicKeys = viewFollowingPublicKeys
+        
         bg.perform { [weak self] in
             guard let self else { return }
-            guard let account = self.bgAccount else { return }
-            
-            self.followingPublicKeys = self.viewFollowingPublicKeys
-            self.followingCache = account.loadFollowingCache()
-            
+
+            self.followingPublicKeys = viewFollowingPublicKeys
+            self.followingCache[pubkey] = nil
             
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
@@ -226,7 +219,6 @@ class LoggedInAccount: ObservableObject {
             return
         }
         if account.followingPubkeys.count < kind3.fastPs.count {
-            L.og.debug("refetchContactListIfNeeded: Deleting because we need to refetch and parse")
             let kind3nEvent = kind3.toNEvent()
             DispatchQueue.main.async {
                 sendNotification(.newFollowingListFromRelay, kind3nEvent)

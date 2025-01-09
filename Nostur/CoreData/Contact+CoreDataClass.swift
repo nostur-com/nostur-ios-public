@@ -19,21 +19,6 @@ public class Contact: NSManagedObject {
         guard let accountPubkey = NRState.shared.loggedInAccount?.pubkey else { return false }
         return !clEvent.fastTags.filter { $0.0 == "p" && $0.1 == accountPubkey }.isEmpty
     }
-    
-    var isPrivateFollow: Bool { // Not saved in DB (derived from account() + privateFollowingPubkeys
-        get {
-            account()?.privateFollowingPubkeys.contains(pubkey) ?? false
-        }
-        set {
-            if newValue {
-                account()?.privateFollowingPubkeys.insert(pubkey)
-            }
-            else {
-                account()?.privateFollowingPubkeys.remove(pubkey)
-            }
-            
-        }
-    }
 }
 
 public typealias ZapEtag = String

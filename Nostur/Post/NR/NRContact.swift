@@ -43,8 +43,6 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     var lud06:String?
     var lud16:String?
     
-    var following:Bool = false
-    var privateFollow:Bool = false
     var zapperPubkey: String?
     var zapState: ZapState?
     
@@ -52,7 +50,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     
     var randomColor: Color
 
-    init(contact: Contact, following: Bool? = nil) {
+    init(contact: Contact) {
         self.contact = contact
         self.pubkey = contact.pubkey
         self.randomColor = Nostur.randomColor(seed: contact.pubkey)
@@ -69,7 +67,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         }
         self.banner = contact.banner
         self.about = contact.about
-        self.couldBeImposter = (following ?? false) ? 0 : contact.couldBeImposter
+        self.couldBeImposter = contact.couldBeImposter
         
         self.nip05verified = contact.nip05veried
         self.nip05 = contact.nip05
@@ -81,50 +79,10 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.lud06 = contact.lud06
         self.lud16 = contact.lud16
         self.zapperPubkey = contact.zapperPubkey
-        
-        self.following = isFollowing(contact.pubkey)
-        self.privateFollow = contact.isPrivateFollow
         self.zapState = contact.zapState
         
         listenForChanges()
-        isFollowingListener()
         listenForNip05()
-    }
-    
-    private func isFollowingListener() {
-        receiveNotification(.followsChanged) // includes followed but blocked keys
-            .subscribe(on: DispatchQueue.global())
-            .sink { [weak self] notification in
-                guard let self = self else { return }
-                let followingPubkeys = notification.object as! Set<String>
-                let isFollowing = followingPubkeys.contains(self.pubkey)
-                if isFollowing != self.following {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.objectWillChange.send()
-                        self?.following = isFollowing
-                        if (isFollowing) {
-                            self?.couldBeImposter = 0
-                        }
-                    }
-                }
-            }
-            .store(in: &subscriptions)
-        
-        receiveNotification(.activeAccountChanged)
-            .subscribe(on: RunLoop.main)
-            .sink { [weak self] notification in
-                guard let self else { return }
-                let account = notification.object as! CloudAccount
-                
-                self.objectWillChange.send()
-                self.following = account.followingPubkeys.contains(pubkey)
-                self.privateFollow = account.privateFollowingPubkeys.contains(pubkey)
-                
-                if self.following && self.couldBeImposter == 1 {
-                    self.couldBeImposter = 0
-                }
-            }
-            .store(in: &subscriptions)
     }
     
     var subscriptions = Set<AnyCancellable>()
@@ -238,46 +196,18 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         }
     }
     
-    @MainActor public func follow(privateFollow: Bool = false) {
+    @MainActor public func follow(privateFollow: Bool = false, la laOrNil: LoggedInAccount? = nil) {
         self.objectWillChange.send()
-        self.following = true
         self.couldBeImposter = 0
-        self.privateFollow = privateFollow
         
-        bg().perform { [weak self] in
-            guard let self else { return }
-            guard let account = account() else { return }
-            self.contact?.isPrivateFollow = privateFollow
-            self.contact?.couldBeImposter = 0
-            account.followingPubkeys.insert(self.pubkey)
-            DataProvider.shared().bgSave()
-            account.publishNewContactList()
-            
-            DispatchQueue.main.async { [weak self] in
-                guard let self else { return }
-                NRState.shared.loggedInAccount?.reloadFollows()
-                sendNotification(.followingAdded, self.pubkey)
-            }
-        }
+        guard let la = (laOrNil ?? NRState.shared.loggedInAccount) else { return }
+        la.follow(pubkey, privateFollow: privateFollow)
     }
     
-    @MainActor public func unfollow() {
+    @MainActor public func unfollow(_ laOrNil: LoggedInAccount? = nil) {
         self.objectWillChange.send()
-        self.following = false
-        self.privateFollow = false
-        
-        bg().perform { [weak self] in
-            guard let self else { return }
-            guard let account = account() else { return }
-            self.contact?.isPrivateFollow = false
-            account.followingPubkeys.remove(self.pubkey)
-            DataProvider.shared().bgSave()
-            account.publishNewContactList()
-            
-            DispatchQueue.main.async {
-                NRState.shared.loggedInAccount?.reloadFollows()
-            }
-        }
+        guard let la = (laOrNil ?? NRState.shared.loggedInAccount) else { return }
+        la.unfollow(pubkey)
     }
     
     // Live events/activities/nests

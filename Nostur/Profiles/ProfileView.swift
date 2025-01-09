@@ -42,10 +42,10 @@ struct ProfileView: View {
         self.tab = tab
     }
     
-    private var couldBeImposter: Bool {
-        guard let account = account() else { return false }
-        guard account.publicKey != nrContact.pubkey else { return false }
-        guard !nrContact.following else { return false }
+    var couldBeImposter: Bool {
+        guard let la = NRState.shared.loggedInAccount else { return false }
+        guard la.account.publicKey != pubkey else { return false }
+        guard !la.isFollowing(pubkey: pubkey) else { return false }
         guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }
         return similarPFP
     }
@@ -157,17 +157,21 @@ struct ProfileView: View {
                         else {
                             Button {
                                 guard isFullAccount() else { showReadOnlyMessage(); return }
-                                if (nrContact.following && !nrContact.privateFollow) {
-                                    nrContact.follow(privateFollow: true)
-                                }
-                                else if (nrContact.following && nrContact.privateFollow) {
-                                    nrContact.unfollow()
+                                guard let la = NRState.shared.loggedInAccount else { return }
+                                
+                                if la.isFollowing(pubkey: nrContact.pubkey) {
+                                    if !isPrivateFollowing(nrContact.pubkey) {
+                                        la.follow(nrContact.pubkey, privateFollow: true)
+                                    }
+                                    else {
+                                        la.unfollow(nrContact.pubkey)
+                                    }
                                 }
                                 else {
-                                    nrContact.follow()
+                                    la.follow(nrContact.pubkey, privateFollow: false)
                                 }
                             } label: {
-                                FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
+                                FollowButton(isFollowing: isFollowing(nrContact.pubkey), isPrivateFollowing: isPrivateFollowing(nrContact.pubkey))
                             }
                             .buttonStyle(.borderless)
                             .disabled(nrContact.pubkey != account()?.publicKey && !fg.didReceiveContactListThisSession)
@@ -455,7 +459,7 @@ struct ProfileView: View {
             }
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
-            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl:nrContact.pictureUrl!, isFollowing: nrContact.following)
+            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl: nrContact.pictureUrl!)
                 .environmentObject(themes)
         }
         .task { [weak nrContact] in
@@ -477,7 +481,7 @@ struct ProfileView: View {
                 }
             }
             
-            guard !nrContact.following else { return }
+            guard !isFollowing(nrContact.pubkey) else { return }
             guard nrContact.metadata_created_at != 0 else { return }
             guard nrContact.couldBeImposter == -1 else { return }
             guard let cPic = nrContact.pictureUrl else { return }
@@ -688,18 +692,23 @@ struct ProfileToolbar: View {
                 else {
                     Button {
                         guard isFullAccount() else { showReadOnlyMessage(); return }
-                        if (nrContact.following && !nrContact.privateFollow) {
-                            nrContact.follow(privateFollow: true)
-                        }
-                        else if (nrContact.following && nrContact.privateFollow) {
-                            nrContact.unfollow()
+                        guard let la = NRState.shared.loggedInAccount else { return }
+                        
+                        if la.isFollowing(pubkey: nrContact.pubkey) {
+                            if !isPrivateFollowing(nrContact.pubkey) {
+                                la.follow(nrContact.pubkey, privateFollow: true)
+                            }
+                            else {
+                                la.unfollow(nrContact.pubkey)
+                            }
                         }
                         else {
-                            nrContact.follow()
+                            la.follow(nrContact.pubkey, privateFollow: false)
                         }
                     } label: {
-                        FollowButton(isFollowing:nrContact.following, isPrivateFollowing:nrContact.privateFollow)
+                        FollowButton(isFollowing: isFollowing(nrContact.pubkey), isPrivateFollowing: isPrivateFollowing(nrContact.pubkey))
                     }
+                    .disabled(!FollowingGuardian.shared.didReceiveContactListThisSession)
                     .layoutPriority(2)
                     //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
                 }

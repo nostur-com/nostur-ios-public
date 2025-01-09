@@ -563,8 +563,14 @@ final class SettingsStore: ObservableObject {
     
     private var _mainWoTaccountPubkey:String = ""
     
-    static func shouldAutodownload(_ nrPost: NRPost) -> Bool {
-        if nrPost.following { return true }
+    @MainActor
+    static func shouldAutodownload(_ nrPost: NRPost, la laOrNil: LoggedInAccount? = nil) -> Bool {
+        let la: LoggedInAccount? = laOrNil ?? NRState.shared.loggedInAccount
+        guard let la else { return false }
+
+        if nrPost.isScreenshot { return true }
+        if la.isFollowing(pubkey: nrPost.pubkey) { return true }
+
         switch SettingsStore.shared.autoDownloadFrom {
         case AutodownloadLevel.all.rawValue:
             return true
@@ -572,7 +578,7 @@ final class SettingsStore: ObservableObject {
             guard WebOfTrust.shared.tresholdReached else { return true }
             return WebOfTrust.shared.isAllowed(nrPost.pubkey)
         case AutodownloadLevel.onlyWoTstrict.rawValue:
-            return isFollowing(nrPost.pubkey)
+            return la.isFollowing(pubkey: nrPost.pubkey)
         default:
             return true
         }

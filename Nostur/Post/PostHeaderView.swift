@@ -58,7 +58,11 @@ struct NRPostHeaderContainer: View {
                     guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
                     guard nrContact.metadata_created_at != 0 else { return }
                     guard nrContact.couldBeImposter == -1 else { return }
-                    guard !nrContact.following else { return }
+                    
+                    guard let la = NRState.shared.loggedInAccount else { return }
+                    guard la.account.publicKey != nrContact.pubkey else { return }
+                    guard !la.isFollowing(pubkey: nrContact.pubkey) else { return }
+                    
                     guard !NewOnboardingTracker.shared.isOnboarding else { return }
                     guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
 

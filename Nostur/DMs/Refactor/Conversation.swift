@@ -61,7 +61,7 @@ class Conversation: Identifiable, Hashable, ObservableObject {
         ViewUpdates.shared.contactUpdated
             .filter { contactPubkey == $0.pubkey }
             .sink { [weak self] contact in
-                let nrContact = NRContact(contact: contact, following: isFollowing(contact.pubkey))
+                let nrContact = NRContact(contact: contact)
                 Task { @MainActor [weak self] in
                     self?.objectWillChange.send()
                     self?.nrContact = nrContact

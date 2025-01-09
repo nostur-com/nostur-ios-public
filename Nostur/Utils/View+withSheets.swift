@@ -381,7 +381,6 @@ private struct WithSheets: ViewModifier {
                     
                     
                     let nrPost = notification.object as! NRPost
-                    nrPost.following = true // Force load image for screenshot...
                     nrPost.isScreenshot = true // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
                     
                     let renderer = ImageRenderer(content:

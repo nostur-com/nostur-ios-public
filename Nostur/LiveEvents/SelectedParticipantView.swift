@@ -37,9 +37,9 @@ struct SelectedParticipantView: View {
     @State private var isZapped = false
     
     var couldBeImposter: Bool {
-        guard let account = account() else { return false }
-        guard account.publicKey != nrContact.pubkey else { return false }
-        guard !nrContact.following else { return false }
+        guard let la = NRState.shared.loggedInAccount else { return false }
+        guard la.account.publicKey != nrContact.pubkey else { return false }
+        guard !la.isFollowing(pubkey: nrContact.pubkey) else { return false }
         guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }
         return similarPFP
     }
@@ -137,17 +137,21 @@ struct SelectedParticipantView: View {
                 VStack {
                     Button {
                         guard isFullAccount() else { showReadOnlyMessage(); return }
-                        if (nrContact.following && !nrContact.privateFollow) {
-                            nrContact.follow(privateFollow: true)
-                        }
-                        else if (nrContact.following && nrContact.privateFollow) {
-                            nrContact.unfollow()
+                        guard let la = NRState.shared.loggedInAccount else { return }
+                        
+                        if la.isFollowing(pubkey: nrContact.pubkey) {
+                            if !isPrivateFollowing(nrContact.pubkey) {
+                                la.follow(nrContact.pubkey, privateFollow: true)
+                            }
+                            else {
+                                la.unfollow(nrContact.pubkey)
+                            }
                         }
                         else {
-                            nrContact.follow()
+                            la.follow(nrContact.pubkey, privateFollow: false)
                         }
                     } label: {
-                        FollowButton(isFollowing: nrContact.following, isPrivateFollowing: nrContact.privateFollow)
+                        FollowButton(isFollowing: isFollowing(nrContact.pubkey), isPrivateFollowing: isPrivateFollowing(nrContact.pubkey))
                     }
                     .disabled(!fg.didReceiveContactListThisSession)
                     
@@ -225,7 +229,7 @@ struct SelectedParticipantView: View {
             
             guard !SettingsStore.shared.lowDataMode else { return }
             guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-            guard !nrContact.following else { return }
+            guard !isFollowing(nrContact.pubkey) else { return }
             guard nrContact.metadata_created_at != 0 else { return }
             guard nrContact.couldBeImposter == -1 else { return }
             guard let cPic = nrContact.pictureUrl else { return }

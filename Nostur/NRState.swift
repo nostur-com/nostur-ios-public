@@ -301,12 +301,21 @@ func notMain() {
     #endif
 }
 
-func isFollowing(_ pubkey:String) -> Bool {
+func isFollowing(_ pubkey: String) -> Bool {
     if Thread.isMainThread {
         return NRState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false
     }
     else {
         return NRState.shared.loggedInAccount?.followingPublicKeys.contains(pubkey) ?? false
+    }
+}
+
+func isPrivateFollowing(_ pubkey: String) -> Bool {
+    if Thread.isMainThread {
+        return NRState.shared.loggedInAccount?.account.privateFollowingPubkeys.contains(pubkey) ?? false
+    }
+    else {
+        return NRState.shared.loggedInAccount?.bgAccount?.privateFollowingPubkeys.contains(pubkey) ?? false
     }
 }
 

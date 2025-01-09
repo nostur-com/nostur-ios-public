@@ -37,7 +37,7 @@ extension Contact {
     @NSManaged public var followedBy: NSSet?
     @NSManaged public var events: Set<Event>?
     @NSManaged public var lists: NSSet?
-    @NSManaged public var privateFollow: Bool
+    @NSManaged public var privateFollow: Bool // Need to keep for old DB migration
     @NSManaged public var couldBeImposter: Int16 // cache (-1 = unchecked, 1/0 = true/false checked)
     @NSManaged public var similarToPubkey: String? // If possible imposter, pubkey of similar profile already following
     

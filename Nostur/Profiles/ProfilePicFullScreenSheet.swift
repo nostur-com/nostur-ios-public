@@ -12,7 +12,6 @@ struct ProfilePicFullScreenSheet: View {
     
     @Binding var profilePicViewerIsShown:Bool
     public var pictureUrl:URL
-    var isFollowing:Bool
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
@@ -180,7 +179,7 @@ struct ProfilePicFullScreenSheet_Previews: PreviewProvider {
         NBNavigationStack {
             ProfilePicFullScreenSheet(
                 profilePicViewerIsShown: $shown,
-                pictureUrl: URL(string: "https://nostur.com/fabian/profile.jpg")!, isFollowing:true)
+                pictureUrl: URL(string: "https://nostur.com/fabian/profile.jpg")!)
         }
     }
 }
