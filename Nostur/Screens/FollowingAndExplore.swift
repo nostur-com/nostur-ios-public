@@ -81,12 +81,12 @@ struct FollowingAndExplore: View {
 
     // If only the Following feed is enabled and all other feeds are disabled, we can hide the entire tab bar
     private var shouldHideTabBar: Bool {
-        if (la.account.followingPubkeys.count > 10 && enableHotFeed) { return false }
-        if (la.account.followingPubkeys.count > 10 && enableEmojiFeed) { return false }
-        if (la.account.followingPubkeys.count > 10 && enableGalleryFeed) { return false }
-        if (la.account.followingPubkeys.count > 10 && enableDiscoverFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableHotFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
         if enableExploreFeed { return false }
-        if (la.account.followingPubkeys.count > 10 && enableArticleFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableArticleFeed) { return false }
         if lists.count > 0 { return false }
             
         return true
@@ -118,7 +118,7 @@ struct FollowingAndExplore: View {
                             Spacer()
                         }
                         
-                        if la.account.followingPubkeys.count > 10 && enableEmojiFeed {
+                        if la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed {
                             TabButton(
                                 action: { selectedSubTab = "Emoji" },
                                 title: emojiType,
@@ -127,7 +127,7 @@ struct FollowingAndExplore: View {
                             Spacer()
                         }
                         
-                        if la.account.followingPubkeys.count > 10 && enableHotFeed {
+                        if la.viewFollowingPublicKeys.count > 10 && enableHotFeed {
                             TabButton(
                                 action: { selectedSubTab = "Hot" },
                                 title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
@@ -136,7 +136,7 @@ struct FollowingAndExplore: View {
                             Spacer()
                         }
                         
-                        if la.account.followingPubkeys.count > 10 && enableDiscoverFeed {
+                        if la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed {
                             TabButton(
                                 action: { selectedSubTab = "Discover" },
                                 title: String(localized: "Discover", comment:"Tab title for Discover feed"),
@@ -145,7 +145,7 @@ struct FollowingAndExplore: View {
                             Spacer()
                         }
                         
-                        if la.account.followingPubkeys.count > 10 && enableGalleryFeed {
+                        if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {
                             TabButton(
                                 action: {
                                     if IS_CATALYST { // On macOS we open the Gallery in the detail pane
@@ -168,7 +168,7 @@ struct FollowingAndExplore: View {
                                 selected: selectedSubTab == "Explore")
                         }
                         
-                        if la.account.followingPubkeys.count > 10 && enableArticleFeed {
+                        if la.viewFollowingPublicKeys.count > 10 && enableArticleFeed {
                             Spacer()
                             TabButton(
                                 action: { selectedSubTab = "Articles" },
@@ -205,7 +205,7 @@ struct FollowingAndExplore: View {
                 themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                 
                 // FOLLOWING
-                if (showingOtherContact == nil && la.account.followingPubkeys.count <= 1 && !didSend) {
+                if (showingOtherContact == nil && la.viewFollowingPublicKeys.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
                         Text("You are not following anyone yet, visit the explore tab and follow some people")
@@ -254,7 +254,7 @@ struct FollowingAndExplore: View {
                 }
                 
                 // HOT/ARTICLES/GALLERY
-                if la.account.followingPubkeys.count > 10 {
+                if la.viewFollowingPublicKeys.count > 10 {
                     AvailableWidthContainer {
                         switch selectedSubTab {
                         case "Emoji":

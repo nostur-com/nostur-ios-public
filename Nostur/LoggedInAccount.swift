@@ -15,7 +15,7 @@ class LoggedInAccount: ObservableObject {
     // VIEW
     @Published public var pubkey: String
     
-    public var viewFollowingPublicKeys: Set<String> = []
+    @Published public var viewFollowingPublicKeys: Set<String> = []
     
     @MainActor public func isFollowing(pubkey: String) -> Bool {
         viewFollowingPublicKeys.contains(pubkey)
