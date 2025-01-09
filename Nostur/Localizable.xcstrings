@@ -1621,7 +1621,14 @@
       }
     },
     "Autopilot will broadcast to the following additional relays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autopilot zal naar deze extra relays verzenden"
+          }
+        }
+      }
     },
     "Award to" : {
       "comment" : "Navigation title of screen where you choose who to award badge to",
@@ -3780,7 +3787,15 @@
       }
     },
     "Hide posts you have already seen on multiple devices" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verberg al gezien op meerdere aparaten"
+          }
+        }
+      }
     },
     "Hide tab bars when scrolling" : {
       "comment" : "Setting on settings screen",
@@ -3899,7 +3914,15 @@
       }
     },
     "If Relay Autopilot is enabled show which additional relays will be used" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon welke extra relays worden gebruikt als Autopilot aan staat"
+          }
+        }
+      }
     },
     "Ignore" : {
       "localizations" : {
@@ -7149,7 +7172,15 @@
       }
     },
     "Show extra relays used on post preview" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon gebruikte extra relays op Bericht voorbeeld"
+          }
+        }
+      }
     },
     "Show feed" : {
       "localizations" : {
@@ -7970,7 +8001,14 @@
       }
     },
     "Time-out while loading feed" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time-out tijdens laden"
+          }
+        }
+      }
     },
     "Time-out while loading gallery" : {
       "localizations" : {
@@ -8227,7 +8265,15 @@
 
     },
     "Undelete" : {
-
+      "comment" : "Button to undelete a deleted post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herstellen"
+          }
+        }
+      }
     },
     "Undo" : {
       "localizations" : {
@@ -8345,7 +8391,15 @@
       }
     },
     "Uses iCloud to sync across devices" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruikt iCloud om te synchroniseren tussen apparaten"
+          }
+        }
+      }
     },
     "uuuh" : {
 
