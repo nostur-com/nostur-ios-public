@@ -24,6 +24,8 @@ struct AccountsSheet: View {
         accounts
             .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
+            // always show current logged in account at top
+            .sorted(by: { NRState.shared.activeAccountPublicKey == $0.publicKey && NRState.shared.activeAccountPublicKey != $1.publicKey })
     }
     
     @State private var logoutAccount: CloudAccount? = nil
