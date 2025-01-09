@@ -310,7 +310,7 @@ struct FollowingAndExplore: View {
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(lists.publisher.collect()) { lists in
-            if !lists.isEmpty && self.lists.count != lists.count {
+            if !lists.isEmpty && self.lists.filter({ $0.showAsTab }) .count != columnConfigs.count {
                 removeDuplicateLists()
                 loadColumnConfigs()
             }
