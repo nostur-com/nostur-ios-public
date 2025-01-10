@@ -30,6 +30,7 @@ struct NewAccountSheet: View {
     var body: some View {
             VStack {
                 TextField(String(localized: "Name", comment:"Label of Name text field on Create new account screen"), text: $name)
+                    .disableAutocorrection(true)
                     .padding()
                     .background(grayBackground)
                     .cornerRadius(5.0)

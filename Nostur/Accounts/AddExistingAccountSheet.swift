@@ -41,6 +41,8 @@ struct AddExistingAccountSheet: View {
                 VStack {
                     if (key.lowercased().starts(with: "nsec1")) {
                         SecureField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
                             .padding()
                             .background(grayBackground)
                             .cornerRadius(5.0)
@@ -48,6 +50,8 @@ struct AddExistingAccountSheet: View {
                     }
                     else {
                         TextField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
                             .padding()
                             .background(grayBackground)
                             .cornerRadius(5.0)
@@ -73,6 +77,8 @@ struct AddExistingAccountSheet: View {
                             Text("Enter relay address")
                         }
                         .keyboardType(.URL)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
                         .padding()
                         .background(grayBackground)
                         .cornerRadius(5.0)

@@ -56,10 +56,14 @@ struct AnySigner: View {
             Form {
                 if #available(iOS 16.0, *) {
                     TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
                         .lineLimit(16, reservesSpace: true)
                 }
                 else {
                     TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"))
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
                         .lineLimit(16)
                 }
                 if let account = NRState.shared.loggedInAccount?.account, account.privateKey != nil, tab == "Signer" {

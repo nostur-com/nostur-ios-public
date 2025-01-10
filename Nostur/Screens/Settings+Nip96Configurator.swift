@@ -65,7 +65,8 @@ struct Nip96Configurator: View {
                 TextField("", text: $address, prompt: Text(verbatim: "https://nostrcheck.me"))
                     .textFieldStyle(.roundedBorder)
                     .keyboardType(.URL)
-                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
                     .padding(.top, 0)
                     .padding(.horizontal, 10)
                 
