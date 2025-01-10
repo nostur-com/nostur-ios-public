@@ -60,6 +60,8 @@ struct LiveEventDetail: View {
     
     @State private var roomAddress: String? = nil
     
+    @State private var moreChatSpace: Bool = false
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -99,7 +101,7 @@ struct LiveEventDetail: View {
                             }
                             
                             ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
-                                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
+                                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : (moreChatSpace ? 400 : 150), maxHeight: .infinity)
                                 .padding(.horizontal, 10)
                                 .environmentObject(vc)
                         }
@@ -306,19 +308,23 @@ struct LiveEventDetail: View {
                 .foregroundColor(themes.theme.secondary)
         }
         
-        if let title = liveEvent.title {
-            Text(title)
-                .font(.title)
-                .fontWeightBold()
-                .lineLimit(2)
-        }
+        Text(liveEvent.title ?? " ")
+            .font(.title)
+            .fontWeightBold()
+            .lineLimit(2)
+            .onVisibilityChange(perform: { isVisible in
+                guard (!isVisible && !moreChatSpace) || (isVisible && moreChatSpace) else { return }
+                withAnimation {
+                    moreChatSpace = !isVisible
+                }
+            })
         
-        if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary {
+        if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary, !moreChatSpace {
             Text(summary)
                 .lineLimit(20)
         }
         
-        if let roomAddress {
+        if let roomAddress, !moreChatSpace {
             CopyableTextView(text: roomAddress, copyText: "nostr:" + roomAddress)
                 .foregroundColor(Color.gray)
                 .lineLimit(1)
@@ -392,7 +398,7 @@ struct LiveEventDetail: View {
         }
         
         // OTHERS PRESENT (ROOM PRESENCE 10312)
-        if !liveEvent.listeners.isEmpty {
+        if !liveEvent.listeners.isEmpty && !moreChatSpace {
             ScrollView(.horizontal) {
                 HFlow(alignment: .top) {
                     ForEach(liveEvent.listeners.indices, id: \.self) { index in
