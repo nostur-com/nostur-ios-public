@@ -41,6 +41,7 @@ struct AppView: View {
     @State private var vmc:ViewModelCache = .shared
     @State private var sound:SoundManager = .shared
     @State private var textParser:NRTextParser = .shared
+    @State private var imposterChecker:ImposterChecker = .shared
     
     @AppStorage("firstTimeCompleted") private var firstTimeCompleted = false
     @AppStorage("did_accept_terms") private var didAcceptTerms = false

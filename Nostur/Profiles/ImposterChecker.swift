@@ -103,3 +103,118 @@ struct Previews_ImpostorChecker_Previews: PreviewProvider {
 func isSimilar(string1: String, string2: String, percent:Double = 0.95) -> Bool {
     return string1.distance(between: string2) >= percent
 }
+
+class ImposterChecker {
+    
+    static let shared = ImposterChecker()
+    
+    public func runImposterCheck(contact: Contact, completion: @escaping (CouldBeImposterYes) -> Void) {
+        guard shouldRunCheck(contact: contact) else { return }
+        
+        guard contact.picture != nil, let cPic = contact.pictureUrl else { return }
+        guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+        
+        let contactAnyName = contact.anyName.lowercased()
+        let cPubkey = contact.pubkey
+        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+        
+        bg().perform {
+            guard let account = account() else { return }
+            guard account.publicKey == currentAccountPubkey else { return }
+            guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
+            }) else { return }
+            
+            guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
+            
+            L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
+            
+            Task.detached(priority: .background) {
+                let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                guard similarPFP else { return }
+                L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
+       
+                DispatchQueue.main.async {
+                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                    
+                    contact.couldBeImposter  = similarPFP ? 1 : 0
+                    
+                    let similarToPubkey = similarPFP ? followingPubkey : nil
+                    contact.similarToPubkey = similarToPubkey
+                    
+                    completion(CouldBeImposterYes(similarToPubkey: followingPubkey))
+                }
+            }
+        }
+    }
+ 
+    public func runImposterCheck(nrContact: NRContact, completion: @escaping (CouldBeImposterYes) -> Void) {
+        guard shouldRunCheck(nrContact: nrContact) else { return }
+        
+        guard let cPic = nrContact.pictureUrl else { return }
+        guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+        
+        let contactAnyName = nrContact.anyName.lowercased()
+        let cPubkey = nrContact.pubkey
+        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+        
+        bg().perform {
+            guard let account = account() else { return }
+            guard account.publicKey == currentAccountPubkey else { return }
+            guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
+                pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
+            }) else { return }
+            
+            guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
+            
+            L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
+            
+            Task.detached(priority: .background) {
+                let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
+                guard similarPFP else { return }
+                L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
+                DispatchQueue.main.async {
+                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                    
+                    let couldBeImposter: Int16 = similarPFP ? 1 : 0
+                    nrContact.couldBeImposter = couldBeImposter
+                    
+                    let similarToPubkey = similarPFP ? followingPubkey : nil
+                    nrContact.similarToPubkey = similarToPubkey
+                    
+                    completion(CouldBeImposterYes(similarToPubkey: followingPubkey))
+                    
+                    bg().perform {
+                        nrContact.contact?.couldBeImposter = couldBeImposter
+                        nrContact.contact?.similarToPubkey = similarToPubkey
+                    }
+                }
+            }
+        }
+    }
+    
+    private func shouldRunCheck(nrContact: NRContact) -> Bool {
+        guard !SettingsStore.shared.lowDataMode else { return false }
+        guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return false }
+        guard !isFollowing(nrContact.pubkey) else { return false }
+        guard nrContact.metadata_created_at != 0 else { return false }
+        guard nrContact.couldBeImposter == -1 else { return false }
+        guard !NewOnboardingTracker.shared.isOnboarding else { return false }
+        return true
+    }
+    
+    private func shouldRunCheck(contact: Contact) -> Bool {
+        guard !SettingsStore.shared.lowDataMode else { return false }
+        guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return false }
+        guard !isFollowing(contact.pubkey) else { return false }
+        guard contact.metadata_created_at != 0 else { return false }
+        guard contact.couldBeImposter == -1 else { return false }
+        guard !NewOnboardingTracker.shared.isOnboarding else { return false }
+        return true
+    }
+}
+
+
+struct CouldBeImposterYes {
+    var similarToPubkey: String
+}

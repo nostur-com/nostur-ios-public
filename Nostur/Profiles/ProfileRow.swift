@@ -166,46 +166,9 @@ struct ProfileRow: View {
                 }
             }
             
-            if !la.isFollowing(pubkey: contact.pubkey) {
-                guard !SettingsStore.shared.lowDataMode else { return }
-                guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-                guard contact.metadata_created_at != 0 else { return }
-                guard contact.couldBeImposter == -1 else { return }
-                guard contact.picture != nil, let cPic = contact.pictureUrl else { return }
-                guard !NewOnboardingTracker.shared.isOnboarding else { return }
-                guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
-                
-                let contactAnyName = contact.anyName.lowercased()
-                let cPubkey = contact.pubkey
-                let currentAccountPubkey = la.pubkey
-                
-                bg().perform { [weak contact] in
-                    guard la.pubkey == currentAccountPubkey else { return }
-                    guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
-                        pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
-                    }) else { return }
-                    
-                    guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
-                    
-                    L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
-                    
-                    Task.detached(priority: .background) {
-                        let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                        if similarPFP {
-                            L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
-                        }
-                        
-                        DispatchQueue.main.async {
-                            guard let contact else { return }
-                            guard currentAccountPubkey == la.pubkey else { return }
-                            self.similarPFP = similarPFP
-                            self.similarToPubkey = followingPubkey
-                            contact.couldBeImposter = similarPFP ? 1 : 0
-                            contact.similarToPubkey = similarPFP ? followingPubkey : nil
-                            save()
-                        }
-                    }
-                }
+            ImposterChecker.shared.runImposterCheck(contact: contact) { imposterYes in
+                self.similarPFP = true
+                self.similarToPubkey = imposterYes.similarToPubkey
             }
             
             if let fixedPfp = contact.fixedPfp,

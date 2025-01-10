@@ -208,44 +208,9 @@ struct SelectedParticipantView: View {
                 }
             }
             
-            guard !SettingsStore.shared.lowDataMode else { return }
-            guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-            guard !isFollowing(nrContact.pubkey) else { return }
-            guard nrContact.metadata_created_at != 0 else { return }
-            guard nrContact.couldBeImposter == -1 else { return }
-            guard let cPic = nrContact.pictureUrl else { return }
-            guard !NewOnboardingTracker.shared.isOnboarding else { return }
-            guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
-            
-            let contactAnyName = nrContact.anyName.lowercased()
-            let cPubkey = nrContact.pubkey
-            let currentAccountPubkey = NRState.shared.activeAccountPublicKey
-            
-            bg().perform {
-                guard let account = account() else { return }
-                guard account.publicKey == currentAccountPubkey else { return }
-                guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
-                    pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
-                }) else { return }
-                
-                guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
-                
-                L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
-                
-                Task.detached(priority: .background) {
-                    let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                    if similarPFP {
-                        L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
-                    }
-                    
-                    DispatchQueue.main.async {
-                        guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
-                        self.similarPFP = similarPFP
-                        self.similarToPubkey = followingPubkey
-                        nrContact.couldBeImposter = similarPFP ? 1 : 0
-                        nrContact.similarToPubkey = similarPFP ? followingPubkey : nil
-                    }
-                }
+            ImposterChecker.shared.runImposterCheck(nrContact: nrContact) { imposterYes in
+                self.similarPFP = true
+                self.similarToPubkey = imposterYes.similarToPubkey
             }
         }
         .task { [weak backlog] in
