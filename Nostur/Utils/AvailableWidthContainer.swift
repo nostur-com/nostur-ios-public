@@ -28,6 +28,11 @@ struct AvailableWidthContainer<Content: View>: View {
             if ready {
                 content
                     .environmentObject(dim)
+                    .onChange(of: geo.size.width) { newWidth in
+                        if dim.listWidth != newWidth {
+                            dim.listWidth = newWidth
+                        }
+                    }
             }
             else {
                 Color.clear
