@@ -348,6 +348,60 @@ class NXColumnViewModel: ObservableObject {
         followsChangedSub?.cancel()
         followsChangedSub = nil
         listenForFollowsChanged(config)
+        
+        blockListUpdatedSub?.cancel()
+        blockListUpdatedSub = nil
+        listenForBlockListUpdatedSub(config)
+        
+        muteListUpdatedSub?.cancel()
+        muteListUpdatedSub = nil
+        listenForMuteListUpdatedSub(config)
+    }
+    
+    private var muteListUpdatedSub: AnyCancellable?
+    
+    @MainActor
+    private func listenForMuteListUpdatedSub(_ config: NXColumnConfig) {
+        guard muteListUpdatedSub == nil else { return }
+        muteListUpdatedSub =  receiveNotification(.muteListUpdated)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                if case .posts(let existingPosts) = viewState {
+                    let mutedRootIds: Set<String> = notification.object as! Set<String>
+                    
+                    for nrPost in existingPosts where (mutedRootIds.contains(nrPost.id) || mutedRootIds.contains(nrPost.replyToRootId ?? "!")) {
+                        vmInner.unreadIds[nrPost.id] = nil
+                    }
+                    
+                    viewState = .posts(existingPosts.filter { nrPost in
+                        return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "!") // id not blocked
+                            && !(nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!")) // is not: repost + muted reposted id
+                    })
+                }
+            }
+    }
+    
+    private var blockListUpdatedSub: AnyCancellable?
+    
+    @MainActor
+    private func listenForBlockListUpdatedSub(_ config: NXColumnConfig) {
+        guard blockListUpdatedSub == nil else { return }
+        blockListUpdatedSub =  receiveNotification(.blockListUpdated)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                if case .posts(let existingPosts) = viewState {
+                    let blocks: Set<String> = notification.object as! Set<String>
+                    
+                    for nrPost in existingPosts where blocks.contains(nrPost.pubkey) {
+                        vmInner.unreadIds[nrPost.id] = nil
+                    }
+                    
+                    viewState = .posts(existingPosts.filter { nrPost in
+                        return !blocks.contains(nrPost.pubkey) // pubkey not blocked
+                            && !(nrPost.isRepost && blocks.contains(nrPost.firstQuote?.pubkey ?? "!")) // is not: repost + blocked reposted pubkey
+                    })
+                }
+            }
     }
     
     private var followsChangedSub: AnyCancellable?

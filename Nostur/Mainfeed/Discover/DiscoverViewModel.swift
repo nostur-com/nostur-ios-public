@@ -89,6 +89,17 @@ class DiscoverViewModel: ObservableObject {
                 self.discoverPosts = self.discoverPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
             }
             .store(in: &self.subscriptions)
+        
+        receiveNotification(.muteListUpdated)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                let mutedRootIds = notification.object as! Set<String>
+                self.discoverPosts = self.discoverPosts.filter { nrPost in
+                    return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "!") // id not blocked
+                        && !(nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!")) // is not: repost + muted reposted id
+                }
+            }
+            .store(in: &self.subscriptions)
     }
     
     // STEP 1: FETCH LIKES AND REPOSTS FROM FOLLOWS FROM RELAYS
