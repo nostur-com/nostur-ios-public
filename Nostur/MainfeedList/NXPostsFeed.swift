@@ -168,7 +168,7 @@ struct NXPostsFeed: View {
     private func onPostAppear(_ nrPost: NRPost) {
         updateIsAtTop()
         loadMoreIfNeeded()
-        vm.haltProcessing() // will stop new updates on screen for 2.5 seconds
+        vm.haltProcessing() // will stop new updates on screen for 5.0 seconds
         if vmInner.unreadIds[nrPost.id] != 0 {
             vmInner.unreadIds[nrPost.id] = 0
             vm.markAsRead(nrPost.shortId)

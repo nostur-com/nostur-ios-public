@@ -69,7 +69,7 @@ class NXColumnViewModel: ObservableObject {
         set {
             if newValue {
                 if delayur == nil { delayur = NXDelayur() }
-                delayur?.setDelayur(true, seconds: 2.5) { [weak self] in
+                delayur?.setDelayur(true, seconds: 5.0) { [weak self] in
                     self?.resumeProcessing()
                 }
             }
