@@ -51,7 +51,7 @@ func fetchMetaTags(url: URL, completion: @escaping (Result<[String: String], Err
         
         // dataTask callback seems main??? don't understand
         DispatchQueue.global().async {
-            let metaTags = parseMetaTags(html: html)
+            let metaTags = parseMetaTags(html: html, url: url)
             completion(.success(metaTags))
         }
     }
@@ -87,7 +87,7 @@ func parseYoutube(json: String) -> [String: String] {
     return metaTags
 }
 
-func parseMetaTags(html: String) -> [String: String] {
+func parseMetaTags(html: String, url: URL) -> [String: String] {
 //    15.00 ms    0.1%    11.00 ms            parseMetaTags(html:)
 //    4.00 ms    0.0%    0 s             specialized Collection.prefix(_:)
     let html = html.count > 300000 ? String(html.prefix(300000)) : html
@@ -101,7 +101,22 @@ func parseMetaTags(html: String) -> [String: String] {
         
         if ["image", "title", "description"].contains(property) {
             let content = (html as NSString).substring(with: contentRange)
-            metaTags[property] = property == "image" ? content : content.htmlUnescape()
+            
+            if property == "image" {
+                if content.starts(with: "/") {
+                    if let imageUrl = URL(string: content, relativeTo: url) {
+                        metaTags[property] = imageUrl.absoluteString
+                            .replacingOccurrences(of: "&amp;", with: "&")
+                    }
+                }
+                else {
+                    metaTags[property] = content
+                        .replacingOccurrences(of: "&amp;", with: "&")
+                }
+            }
+            else{
+                metaTags[property] = content.htmlUnescape()
+            }
         }
     }
     

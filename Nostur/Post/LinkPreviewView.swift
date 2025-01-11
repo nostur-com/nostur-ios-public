@@ -120,7 +120,7 @@ struct LinkPreviewView_Previews: PreviewProvider {
         let url = URL(string:"https://youtu.be/QU9kRF9tHPU")!
 //        let url = URL(string:"https://nostur.com")!
         NBNavigationStack {
-            LinkPreviewView(url: url, theme: Themes.default.theme)
+            LinkPreviewView(url: url, autoload: true, theme: Themes.default.theme)
                 .padding(.vertical, 5)
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
