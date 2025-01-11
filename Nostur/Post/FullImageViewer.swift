@@ -67,7 +67,7 @@ struct FullImageViewer: View {
                             //                    case (...0, -30...30):  print("left swipe")
                             //                    case (0..., -30...30):  print("right swipe")
                             //                    case (-100...100, ...0):  print("up swipe")
-                        case (-100...100, 0...):
+                        case (-100...100, 30...):
                             if duration < quickSwipeThreshold {
                                 dismiss()
                             }
@@ -115,7 +115,7 @@ struct FullImageViewer: View {
                                         .frame(width: geo.size.width, height: geo.size.height)
                                         .scaleEffect(scale)
                                         .offset(position)
-                                        .gesture(magnifyAndDragGesture)
+                                        .simultaneousGesture(magnifyAndDragGesture)
                                         .onTapGesture {
                                             withAnimation {
                                                 mediaPostPreview.toggle()
@@ -132,7 +132,7 @@ struct FullImageViewer: View {
                                         .scaledToFit()
                                         .scaleEffect(scale)
                                         .offset(position)
-                                        .gesture(magnifyAndDragGesture)
+                                        .simultaneousGesture(magnifyAndDragGesture)
                                         .onTapGesture {
                                             withAnimation {
                                                 mediaPostPreview.toggle()
