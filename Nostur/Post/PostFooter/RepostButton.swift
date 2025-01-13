@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct RepostButton: View {
-    private let nrPost:NRPost
-    @ObservedObject private var footerAttributes:FooterAttributes
-    private var isFirst:Bool
-    private var isLast:Bool
-    private var theme:Theme
+    private let nrPost: NRPost
+    @ObservedObject private var footerAttributes: FooterAttributes
+    private var isFirst: Bool
+    private var isLast: Bool
+    private var theme: Theme
     
     init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -30,15 +30,11 @@ struct RepostButton: View {
                     .opacity(footerAttributes.repostsCount == 0 ? 0 : 1.0)
                     .frame(width: 28)
                     .offset(x: 20)
-//                AnimatedNumber(number: 234)
-//                    .frame(width: 28)
-//                    .offset(x: 20)
             }
             .padding(.trailing, 30)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
-//                guard !footerAttributes.reposted else { return }
                 guard let mainEvent = nrPost.mainEvent else { return }
                 sendNotification(.createNewQuoteOrRepost, mainEvent)
             }
