@@ -12,7 +12,7 @@ struct CustomFeedsListView: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
-    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.createdAt, order: .reverse)], predicate: NSPredicate(format: "type != %@", "following"))
+    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.createdAt, order: .reverse)], predicate: NSPredicate(format: "NOT type IN %@", ["following", "picture"]))
     var lists: FetchedResults<CloudFeed>
     
     @State var confirmDeleteShown = false
@@ -21,6 +21,7 @@ struct CustomFeedsListView: View {
     @State private var didRemoveDuplicates = false
     
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
@@ -54,6 +55,10 @@ struct CustomFeedsListView: View {
                 }
                 
                 Section {
+                    Toggle(isOn: $enablePictureFeed, label: {
+                        Text("Pictures")
+                        Text("Pictures-only feed from people you follow")
+                    })
                     Toggle(isOn: $enableHotFeed, label: {
                         Text("Hot")
                         Text("Posts from anyone which are most liked or reposted by people you follow")
@@ -81,7 +86,7 @@ struct CustomFeedsListView: View {
                 } header: {
                     Text("Default feeds")
                 } footer: {
-                    Text("Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
+                    Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                 }
             }
         }
