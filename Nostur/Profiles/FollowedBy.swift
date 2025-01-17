@@ -41,9 +41,12 @@ struct FollowedBy: View {
                 HStack(spacing: 2) {
                     ForEach(firstRow.indices, id:\.self) { index in
                         MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
-                            }
+                            .highPriorityGesture( // Unsure why first/left mini pfps are sometimes untappable with normal onTap
+                                TapGesture()
+                                    .onEnded { _ in
+                                        navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
+                                    }
+                            )
                             .id(index)
                     }
                 }
@@ -52,9 +55,12 @@ struct FollowedBy: View {
                     HStack(spacing: 2) {
                         ForEach(secondRow.indices, id:\.self) { index in
                             MiniPFP(pictureUrl: commonFollowerPFPs[index].1)
-                                .onTapGesture {
-                                    navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
-                                }
+                                .highPriorityGesture( // Unsure why first/left mini pfps are sometimes untappable with normal onTap
+                                    TapGesture()
+                                        .onEnded { _ in
+                                            navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
+                                        }
+                                )
                                 .id(index)
                         }
                     }
