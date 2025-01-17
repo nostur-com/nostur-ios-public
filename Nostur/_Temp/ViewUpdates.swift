@@ -17,6 +17,8 @@ class ViewUpdates {
     public var profileUpdates = PassthroughSubject<ProfileInfo, Never>()
     public var bookmarkUpdates = PassthroughSubject<BookmarkUpdate, Never>()
     public var feedUpdates = PassthroughSubject<FeedUpdate, Never>()
+    
+    // For reloading PostReactions or PostZaps
     public var relatedUpdates = PassthroughSubject<RelatedUpdate, Never>()
     
     public func sendMockProfileUpdate() {
@@ -119,6 +121,8 @@ struct RelatedUpdate {
 
 enum RelatedType {
     case Reactions
+    case Reposts
+    case Mentions
     case Zaps
 }
 

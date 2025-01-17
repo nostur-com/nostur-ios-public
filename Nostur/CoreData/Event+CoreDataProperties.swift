@@ -291,7 +291,7 @@ extension Event {
         // Web of Trust filter
         if WOT_FILTER_ENABLED() {
             if inWoT { return false }
-//            L.og.debug("🕸️🕸️ WebOfTrust: Filtered by WoT: kind: \(self.kind) id: \(self.id): \(self.content ?? "")")
+            //            L.og.debug("🕸️🕸️ WebOfTrust: Filtered by WoT: kind: \(self.kind) id: \(self.id): \(self.content ?? "")")
             return true
         }
         
@@ -443,30 +443,44 @@ extension Event {
     // TODO: 167.00 ms    1.5%    0 s          specialized static Event.updateLikeCountCache(_:content:context:)
     static func updateLikeCountCache(_ reaction: Event, content: String, context: NSManagedObjectContext) throws -> Bool {
         switch content {
-            case "-": // (down vote)
-                break
-            default:
-                // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
-                if let lastEtag = reaction.lastE() {
-                    if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
+        case "-": // (down vote)
+            break
+        default:
+            // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
+            if let lastEtag = reaction.lastE() {
+                if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
+                    guard !reactingToEvent.isDeleted else { break }
+                    reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
+                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+                    reaction.reactionTo = reactingToEvent
+                    reaction.reactionToId = reactingToEvent.id
+                }
+                else {
+                    if let reactingToEvent = try? Event.fetchEvent(id: lastEtag, context: context) {
                         guard !reactingToEvent.isDeleted else { break }
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
                         reaction.reactionTo = reactingToEvent
                         reaction.reactionToId = reactingToEvent.id
                     }
-                    else {
-                        if let reactingToEvent = try? Event.fetchEvent(id: lastEtag, context: context) {
-                            guard !reactingToEvent.isDeleted else { break }
-                            reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-                            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                            reaction.reactionTo = reactingToEvent
-                            reaction.reactionToId = reactingToEvent.id
-                        }
-                    }
                 }
+            }
         }
         return true
+    }
+    
+    static func updateRepostsCountCache(_ repost: Event, context: NSManagedObjectContext)  {
+        if let firstQuote = repost.firstQuote {
+            firstQuote.repostsCount = (firstQuote.repostsCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
+        }
+        else if let firstQuoteId = repost.firstQuoteId {
+            if let firstQuote = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstQuoteId) ?? (try? Event.fetchEvent(id: firstQuoteId, context: context))) {
+                
+                firstQuote.repostsCount = (firstQuote.repostsCount + 1)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
+            }
+        }
     }
     
     // To fix event.reactionTo but not count+1, because +1 is instant at tap, but this relation happens after 8 sec (unpublisher)
@@ -485,56 +499,23 @@ extension Event {
         }
     }
     
-    
-    static func updateZapTallyCache(_ zap: Event, context: NSManagedObjectContext) -> Bool {
-        guard let zappedContact = zap.zappedContact else { // NO CONTACT
-            if let zappedPubkey = zap.otherPubkey {
-                L.fetching.debug("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
-                QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
-                ZapperPubkeyVerificationQueue.shared.addZap(zap)
-            }
-            return false
-        }
-        
-        if zappedContact.metadata_created_at == 0 {
-            L.fetching.debug("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
-            QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
-            ZapperPubkeyVerificationQueue.shared.addZap(zap)
-        }
-        
-        // Check if contact matches the zapped event contact
-        if let otherPubkey = zap.otherPubkey, let zappedEvent = zap.zappedEvent {
-            guard otherPubkey == zappedEvent.pubkey else {
-                L.og.debug("⚡️🔴🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
-                zap.flags = "zpk_mismatch_event"
-                return false
-            }
-        }
-        
-        // Check if zapper pubkey matches contacts published zapper pubkey
-        if let zappedContact = zap.zappedContact, let zapperPubkey = zappedContact.zapperPubkey {
-            guard zap.pubkey == zapperPubkey else {
-                L.og.debug("⚡️🔴🔴 zapper pubkey does not match contacts published zapper pubkey. zap: \(zap.id)")
-                zap.flags = "zpk_mismatch"
-                return false
-            }
-            zap.flags = "zpk_verified" // zapper pubkey is correct
-        }
-        else {
-            zap.flags = "zpk_unverified" // missing contact
-//            return false
-        }
-                
+    static func updateZapTallyCache(_ zap: Event, context: NSManagedObjectContext) {
         if let zappedEvent = zap.zappedEvent {
             zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
             zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
-//            zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
         }
-        return true
+        else if let zappedEventId = zap.zappedEventId {
+            if let zappedEvent = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: zappedEventId) ?? (try? Event.fetchEvent(id: zappedEventId, context: context))) {
+                zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
+                zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
+            }
+        }
     }
     
     // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
+    // TODO: REPLACE WITH q tag handling (NIP-18
     static func updateMentionsCountCache(_ tags:[NostrTag], context: NSManagedObjectContext) throws -> Bool {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
         if let mentionEtags = TagsHelpers(tags).newerMentionEtags() {

@@ -290,7 +290,7 @@ class Importer {
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
-                        let _ = Event.updateZapTallyCache(savedEvent, context: bgContext)
+                        Event.updateZapTallyCache(savedEvent, context: bgContext)
                         
                         if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
@@ -306,11 +306,23 @@ class Importer {
                         }
                     }
                     
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
-                    if event.kind == .textNote || event.kind == .repost {
+                    // UPDATE THINGS THAT THIS EVENT RELATES TO (MENTIONS)
+                    if event.kind == .textNote {
                         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
                         do { try _ = Event.updateMentionsCountCache(event.tags, context: bgContext) } catch {
                             L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
+                        }
+                    }
+                    
+                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPOSTS)
+                    if event.kind == .repost {
+                        Event.updateRepostsCountCache(savedEvent, context: bgContext)
+                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
+                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reposts, accountPubkey: otherPubkey))
+                        }
+                        if let repostedId = savedEvent.firstQuoteId {
+                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reposts, eventId: repostedId))
                         }
                     }
                     
@@ -508,7 +520,7 @@ class Importer {
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .zapNote {
-                        let _ = Event.updateZapTallyCache(savedEvent, context: bgContext)
+                        Event.updateZapTallyCache(savedEvent, context: bgContext)
                         
                         if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?

@@ -76,7 +76,7 @@ public class PreviewEnvironment {
                 
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if event.kind == .zapNote {
-                    let _ = Event.updateZapTallyCache(savedEvent, context: context)
+                    Event.updateZapTallyCache(savedEvent, context: context)
                 }
             }
         }
