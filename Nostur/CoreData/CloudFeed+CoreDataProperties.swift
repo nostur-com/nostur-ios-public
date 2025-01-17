@@ -170,6 +170,7 @@ extension CloudFeed : Identifiable {
 
 enum CloudFeedType: String {
     case following = "following"
+    case picture = "picture"
     case pubkeys = "pubkeys"
     case relays = "relays"
 }

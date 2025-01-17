@@ -20,6 +20,7 @@ struct FollowingAndExplore: View {
     @AppStorage("selected_listId") private var selectedListId = ""
     
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
+    @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
@@ -47,6 +48,7 @@ struct FollowingAndExplore: View {
     
     @State var columnConfigs: [NXColumnConfig] = []
     @State var followingConfig: NXColumnConfig?
+    @State var pictureConfig: NXColumnConfig?
     @State var exploreConfig: NXColumnConfig?
     
     @AppStorage("feed_emoji_type") var emojiType: String = "😂"
@@ -82,6 +84,7 @@ struct FollowingAndExplore: View {
     // If only the Following feed is enabled and all other feeds are disabled, we can hide the entire tab bar
     private var shouldHideTabBar: Bool {
         if (la.viewFollowingPublicKeys.count > 10 && enableHotFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enablePictureFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
@@ -105,6 +108,14 @@ struct FollowingAndExplore: View {
                             title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
                             selected: selectedSubTab == "Following")
                         Spacer()
+                        
+                        if la.viewFollowingPublicKeys.count > 10 && enablePictureFeed {
+                            TabButton(
+                                action: { selectedSubTab = "Picture" },
+                                title: "📸",
+                                selected: selectedSubTab == "Picture")
+                            Spacer()
+                        }
                         
                         ForEach(lists) { list in
                             TabButton(
@@ -235,6 +246,14 @@ struct FollowingAndExplore: View {
                     }
                 }
                 
+                if let pictureConfig, la.viewFollowingPublicKeys.count > 10  {
+                    AvailableWidthContainer {
+                        NXColumnView(config: pictureConfig, isVisible: selectedSubTab == "Picture")
+                    }
+//                        .id(pictureConfig.id)
+                    .opacity(selectedSubTab == "Picture" ? 1.0 : 0)
+                }
+                
                 // LISTS
                 ForEach(columnConfigs) { config in
                     AvailableWidthContainer {
@@ -297,6 +316,7 @@ struct FollowingAndExplore: View {
             didCreate = true
             loadColumnConfigs()
             createFollowingFeed(la.account)
+            createPictureFeed(la.account)
             createExploreFeed() // Also create Explore Feed
         }
         .onChange(of: la.account, perform: { newAccount in
@@ -306,6 +326,7 @@ struct FollowingAndExplore: View {
                 Deduplicator.shared.onScreenSeen = []
             }
             createFollowingFeed(newAccount)
+            createPictureFeed(newAccount)
         })
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -333,6 +354,7 @@ struct FollowingAndExplore: View {
                 Deduplicator.shared.onScreenSeen = []
             }
             createFollowingFeed(la.account)
+            createPictureFeed(la.account)
         }
     }
     
@@ -364,6 +386,8 @@ struct FollowingAndExplore: View {
         columnConfigs = lists
             .filter {
                 switch $0.feedType {
+                    case .picture(_):
+                        return false
                     case .pubkeys(_):
                         return true
                     case .relays(_):
@@ -415,6 +439,42 @@ struct FollowingAndExplore: View {
             fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", account.publicKey)
             if let followingListState = try? context.fetch(fr).first {
                 newFollowingFeed.repliesEnabled = !followingListState.hideReplies
+            }
+        }
+    }
+    
+    private func createPictureFeed(_ account: CloudAccount) {
+        let context = viewContext()
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.picture.rawValue, account.publicKey)
+        
+        let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
+        let feedsNewest: [CloudFeed] = feeds
+            .sorted(by: { a, b in
+                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                return mostRecentA > mostRecentB
+            })
+        
+        if let feed = feedsNewest.first {
+            pictureConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .picture(feed), accountPubkey: account.publicKey, name: "Picture")
+            for f in feedsNewest.dropFirst(1) {
+                context.delete(f)
+            }
+            DataProvider.shared().save()
+        }
+        else {
+            let newFeed = CloudFeed(context: context)
+            newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
+            newFeed.name = "📸"
+            newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
+            newFeed.id = UUID()
+            newFeed.createdAt = .now
+            newFeed.accountPubkey = account.publicKey
+            newFeed.type = CloudFeedType.picture.rawValue
+            newFeed.repliesEnabled = false
+            DataProvider.shared().save() { // callback after save:
+                pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: "Picture")
             }
         }
     }

@@ -47,6 +47,8 @@ struct NXColumnConfig: Identifiable, Equatable {
             return feed
         case .hashtags(let feed):
             return feed
+        case .picture(let feed):
+            return feed
         default:
             return nil
         }
@@ -80,6 +82,7 @@ enum NXColumnType {
     case relays(CloudFeed)
     case hashtags(CloudFeed)
     case someoneElses(String) // pubkeys
+    case picture(CloudFeed) // kind:20 from follows
     
     case mentions
     case newPosts
