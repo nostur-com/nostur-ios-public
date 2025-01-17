@@ -45,7 +45,6 @@ struct Discover: View {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             discoverVM.prefetch(nrPost)
                         }
-                        .id(nrPost.id)
                         .listRowSeparator(.hidden)
                         .listRowBackground(themes.theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))

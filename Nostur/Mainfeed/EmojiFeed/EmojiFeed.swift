@@ -41,7 +41,6 @@ struct EmojiFeed: View {
             case .ready:
                 List(vm.feedPosts) { nrPost in
                     PostOrThread(nrPost: nrPost)
-                        .id(nrPost.id)
                         .onBecomingVisible {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             vm.prefetch(nrPost)

@@ -39,7 +39,6 @@ struct NotificationsMentions: View {
                     Box(nrPost: nrPost) {
                         PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
                     }
-                    .id(nrPost.id)
                     .listRowSeparator(.hidden)
                     .listRowBackground(themes.theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))

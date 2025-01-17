@@ -34,10 +34,7 @@ struct NXPostsFeed: View {
         #endif
         ScrollViewReader { proxy in
             List(posts) { nrPost in
-                    ZStack {
-                        PostOrThread(nrPost: nrPost)
-                    }
-                    .id(nrPost.id)
+                PostOrThread(nrPost: nrPost)
                     .onBecomingVisible {
                         // SettingsStore.shared.fetchCounts should be true for below to work
                         vm.prefetch(nrPost)

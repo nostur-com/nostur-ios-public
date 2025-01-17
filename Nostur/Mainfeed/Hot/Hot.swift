@@ -45,7 +45,6 @@ struct Hot: View {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             hotVM.prefetch(nrPost)
                         }
-                    .id(nrPost.id)
                     .listRowSeparator(.hidden)
                     .listRowBackground(themes.theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
