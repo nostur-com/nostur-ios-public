@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct LazyNoteMenuButton: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     var nrPost: NRPost
     
     var body: some View {
@@ -21,7 +21,6 @@ struct LazyNoteMenuButton: View {
             .padding(.top, 10)
             .padding(.trailing, 10)
             .contentShape(Rectangle())
-//            .background(themes.theme.background)
             .padding(.top, -10)
             .padding(.trailing, -10)
             .highPriorityGesture(
@@ -31,9 +30,6 @@ struct LazyNoteMenuButton: View {
                         sendNotification(.showNoteMenu, nrPost)
                     }
             )
-//            .transaction { t in
-//                t.animation = nil
-//            }
     }
 }
 
@@ -336,9 +332,11 @@ struct LazyNoteMenuSheet_Previews: PreviewProvider {
             pe.loadAccounts()
             pe.loadPosts()
         }) {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
-                    LazyNoteMenuSheet(nrPost:nrPost)
+            NBNavigationStack {
+                VStack {
+                    if let nrPost = PreviewFetcher.fetchNRPost() {
+                        LazyNoteMenuSheet(nrPost:nrPost)
+                    }
                 }
             }
         }
