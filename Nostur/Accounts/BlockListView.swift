@@ -51,65 +51,17 @@ struct BlockedAccounts:View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt_, order: .reverse)], predicate: NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.contact.rawValue))
-    var blockedPubkeys:FetchedResults<CloudBlocked>
+    var blockedPubkeys: FetchedResults<CloudBlocked>
     
     @State private var blocksUntil: [String: Date] = [:] // [pubkey: blocked until]
     
     var body: some View {
-        ScrollView {
-            if !blockedPubkeys.isEmpty {
-                LazyVStack(spacing: GUTTER) {
-                    ForEach(blockedPubkeys) { blockedPubkey in
-                        if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
-                            ProfileRow(withoutFollowButton: true, contact: contact)
-                                .background(themes.theme.background)
-                                .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
-                                    let updatedList = blockedPubkeys
-                                        .filter { $0.pubkey != blockedPubkey.pubkey }
-                                        .map { $0.pubkey }
-                                    
-                                    viewContext.delete(blockedPubkey)
-                                    viewContextSave()
-                                    sendNotification(.blockListUpdated, Set(updatedList))
-                                }
-                                .overlay(alignment: .topTrailing) {
-                                    if let until = blocksUntil[blockedPubkey.pubkey] {
-                                        Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .padding([.top,.trailing], 5)
-                                    }
-                                }
-                        }
-                        else {
-                            HStack(alignment: .top) {
-                                PFP(pubkey: blockedPubkey.pubkey)
-                                VStack(alignment: .leading) {
-                                    HStack {
-                                        VStack(alignment: .leading) {
-                                            Text(blockedPubkey.fixedName).font(.headline).foregroundColor(.primary)
-                                                .lineLimit(1)
-                                        }
-                                        .multilineTextAlignment(.leading)
-                                        Spacer()
-                                    }
-                                }
-                            }
-                            .padding()
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: blockedPubkey.pubkey))
-                            }
+        List {
+            ForEach(blockedPubkeys, id: \.self) { blockedPubkey in
+                ZStack {
+                    if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
+                        ProfileRow(withoutFollowButton: true, contact: contact)
                             .background(themes.theme.background)
-                            .onSwipe(tint: .green, label: "Unblock", icon: "figure.2.arms.open") {
-                                let updatedList = blockedPubkeys
-                                    .filter { $0.pubkey != blockedPubkey.pubkey }
-                                    .map { $0.pubkey }
-                                
-                                viewContext.delete(blockedPubkey)
-                                NRState.shared.blockedPubkeys.remove(blockedPubkey.pubkey)
-                                sendNotification(.blockListUpdated, Set(updatedList))
-                            }
                             .overlay(alignment: .topTrailing) {
                                 if let until = blocksUntil[blockedPubkey.pubkey] {
                                     Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
@@ -118,19 +70,59 @@ struct BlockedAccounts:View {
                                         .padding([.top,.trailing], 5)
                                 }
                             }
+                    }
+                    else {
+                        HStack(alignment: .top) {
+                            PFP(pubkey: blockedPubkey.pubkey)
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(blockedPubkey.fixedName).font(.headline).foregroundColor(.primary)
+                                            .lineLimit(1)
+                                    }
+                                    .multilineTextAlignment(.leading)
+                                    Spacer()
+                                }
+                            }
+                        }
+                        .padding()
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            navigateTo(ContactPath(key: blockedPubkey.pubkey))
+                        }
+                        .background(themes.theme.background)
+                        .overlay(alignment: .topTrailing) {
+                            if let until = blocksUntil[blockedPubkey.pubkey] {
+                                Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .padding([.top,.trailing], 5)
+                            }
                         }
                     }
                 }
-                .onAppear {
-                    removeDuplicates()
-                }
+                .listRowSeparator(.hidden)
+                .listRowBackground(themes.theme.listBackground)
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                .padding(.bottom, GUTTER)
+            }
+            .onDelete { indexSet in
+                unblock(section: Array(blockedPubkeys), offsets: indexSet)
             }
         }
+        .toolbar {
+            EditButton()
+        }
+        .environment(\.defaultMinListRowHeight, 50)
+        .listStyle(.plain)
+        .padding(0)
         .task {
             CloudTask.fetchAll(byType: .blockUntil)
                 .forEach { task in
                     blocksUntil[task.value] = task.date
                 }
+            
+            removeDuplicates()
         }
     }
     
@@ -153,6 +145,16 @@ struct BlockedAccounts:View {
         if !duplicates.isEmpty {
             DataProvider.shared().save()
         }
+    }
+    
+    private func unblock(section: [CloudBlocked], offsets: IndexSet) {
+        for index in offsets {
+            let block = section[index]
+            viewContext.delete(block)
+            NRState.shared.blockedPubkeys.remove(block.pubkey)
+        }
+        viewContextSave()
+        sendNotification(.blockListUpdated, NRState.shared.blockedPubkeys)
     }
 }
 
