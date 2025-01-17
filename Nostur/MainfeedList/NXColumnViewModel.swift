@@ -1927,15 +1927,16 @@ func setFirstTimeCompleted() {
     }
 }
 
-func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int = 5000) -> [Filters] {
+func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int = 5000, kinds: Set<Int>? = nil) -> [Filters] {
     guard !pubkeys.isEmpty || !hashtags.isEmpty else { return [] }
     
     var filters: [Filters] = []
+    let kinds = kinds ?? FETCH_FOLLOWING_KINDS
     
     if !pubkeys.isEmpty {
         let followingContactsFilter = Filters(
             authors: pubkeys,
-            kinds: FETCH_FOLLOWING_KINDS,
+            kinds: kinds,
             since: since, until: until, limit: limit)
         
         filters.append(followingContactsFilter)
@@ -1943,7 +1944,7 @@ func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, si
     
     if !hashtags.isEmpty {
         let followingHashtagsFilter = Filters(
-            kinds: FETCH_FOLLOWING_KINDS,
+            kinds: kinds,
             tagFilter: TagFilter(tag: "t", values: Array(hashtags).map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }),
             since: since, until: until, limit: limit)
         filters.append(followingHashtagsFilter)
@@ -2001,7 +2002,8 @@ import CoreData
 extension Event {
     
     // TODO: Optimize tagsSerialized / hashtags matching
-    static func postsByPubkeys(_ pubkeys: Set<String>, mostRecent: Event, hideReplies: Bool = false, hashtagRegex:String? = nil) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys: Set<String>, mostRecent: Event, hideReplies: Bool = false, hashtagRegex:String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         let cutOffPoint = mostRecent.created_at - (15 * 60)
         
@@ -2010,25 +2012,26 @@ extension Event {
         fr.fetchLimit = QUERY_FETCH_LIMIT
         if let hashtagRegex = hashtagRegex {
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
         }
         else {
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint,  pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint,  pubkeys, kinds, blockedPubkeys)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, kinds, blockedPubkeys)
             }
         }
         return fr
     }
     
     
-    static func postsByPubkeys(_ pubkeys: Set<String>, until: Event, hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys: Set<String>, until: Event, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         let cutOffPoint = until.created_at + (1 * 60)
         
@@ -2040,24 +2043,25 @@ extension Event {
             let after = until.created_at - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
             
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
         }
         else {
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, kinds, blockedPubkeys)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, kinds, blockedPubkeys)
             }
         }
         return fr
     }
     
-    static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
         
@@ -2071,18 +2075,18 @@ extension Event {
         frBefore.fetchLimit = QUERY_FETCH_LIMIT
         if let hashtagRegex = hashtagRegex {
             if hideReplies {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
             else {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
         }
         else {
             if hideReplies {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, kinds, blockedPubkeys)
             }
             else {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, kinds, blockedPubkeys)
             }
         }
         
@@ -2094,15 +2098,16 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = QUERY_FETCH_LIMIT
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, pubkeys, kinds, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint,  pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint,  pubkeys, kinds, blockedPubkeys)
         }
         return fr
     }
     
-    static func postsByPubkeys(_ pubkeys: Set<String>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, hashtagRegex: String? = nil) -> NSFetchRequest<Event> {
+    static func postsByPubkeys(_ pubkeys: Set<String>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         
         let fr = Event.fetchRequest()
@@ -2113,18 +2118,18 @@ extension Event {
             let after = cutOffPoint - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
             
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
         }
         else {
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, kinds, blockedPubkeys)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, QUERY_FOLLOWING_KINDS, blockedPubkeys)
+                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, pubkeys, kinds, blockedPubkeys)
             }
         }
         return fr
@@ -2134,7 +2139,8 @@ extension Event {
 // LVM relays
 extension Event {
     
-    static func postsByRelays(_ relays: Set<RelayData>, mostRecent: Event, hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays: Set<RelayData>, mostRecent: Event, hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2147,16 +2153,17 @@ extension Event {
         // Increased fetchLimit for Relays feed so there are enough events after applying inWoT filter
         fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, kinds, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, kinds, regex, blockedPubkeys)
         }
         return fr
     }
     
     
-    static func postsByRelays(_ relays: Set<RelayData>, until: Event, hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays: Set<RelayData>, until: Event, hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2170,15 +2177,16 @@ extension Event {
         fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, kinds, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, kinds, regex, blockedPubkeys)
         }
         return fr
     }
     
-    static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50, force: Bool = false) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50, force: Bool = false, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2197,10 +2205,10 @@ extension Event {
         frBefore.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffPoint, kinds, blockedPubkeys, regex)
         }
         else {
-            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, QUERY_FOLLOWING_KINDS, blockedPubkeys, regex)
+            frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", cutOffPoint, kinds, blockedPubkeys, regex)
         }
         
         let newFirstEvent = try? bg().fetch(frBefore).last
@@ -2215,19 +2223,20 @@ extension Event {
         
         if hideReplies {
             fr.predicate = !force
-                ? NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
-                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", QUERY_FOLLOWING_KINDS, regex)
+                ? NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", newCutOffPoint, kinds, regex)
+                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", kinds, regex)
         }
         else {
             fr.predicate = !force
-                ? NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, QUERY_FOLLOWING_KINDS, regex)
-                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", QUERY_FOLLOWING_KINDS, regex)
+                ? NSPredicate(format: "created_at >= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", newCutOffPoint, kinds, regex)
+                : NSPredicate(format: "kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\"", kinds, regex)
         }
         return fr
     }
     
     
-    static func postsByRelays(_ relays: Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, fetchLimit: Int = 50) -> NSFetchRequest<Event> {
+    static func postsByRelays(_ relays: Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
+        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2240,10 +2249,10 @@ extension Event {
         fr.fetchLimit = fetchLimit // TODO: Should apply WoT on message parser / receive, before adding to adding to database
         
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, kinds, regex, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, QUERY_FOLLOWING_KINDS, regex, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND relays MATCHES %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffPoint, kinds, regex, blockedPubkeys)
         }
         return fr
     }
