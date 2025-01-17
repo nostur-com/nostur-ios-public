@@ -566,7 +566,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         else if withRepliesCount {
             repliesCountListener()
         }
-        if withReplyTo || (firstQuoteId != nil && firstQuote == nil) {
+        
+        
+        if isRepost || withReplyTo || (firstQuoteId != nil && firstQuote == nil) {
             relationListener()
         }
         
