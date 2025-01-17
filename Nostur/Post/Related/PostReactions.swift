@@ -46,12 +46,24 @@ struct PostReactions: View {
                         Divider()
                     }
                 }
+                if model.foundSpam && !model.includeSpam {
+                    Button {
+                        model.includeSpam = true
+                        model.load(limit: 500, includeSpam: model.includeSpam)
+                            
+                    } label: {
+                       Text("Show more")
+                            .padding(10)
+                            .contentShape(Rectangle())
+                    }
+                    .padding(.bottom, 10)
+                }
             }
         }
         .background(themes.theme.listBackground)
         .onAppear {
             model.setup(eventId: eventId)
-            model.load(limit: 50)
+            model.load(limit: 500)
             fetchNewer()
         }
         .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
@@ -80,10 +92,10 @@ struct PostReactions: View {
                 }
             },
             processResponseCommand: { (taskId, _, _) in
-                model.load(limit: 500)
+                model.load(limit: 500, includeSpam: model.includeSpam)
             },
             timeoutCommand: { taskId in
-                model.load(limit: 500)
+                model.load(limit: 500, includeSpam: model.includeSpam)
             })
         
         backlog.add(fetchNewerTask)

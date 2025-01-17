@@ -10,6 +10,9 @@ import Combine
 
 class PostReactionsModel: ObservableObject {
     @Published public var reactions: [NRPost] = []
+    @Published public var foundSpam: Bool = false
+    @Published public var includeSpam: Bool = false
+    
 
     private var eventId: String?
     
@@ -17,6 +20,7 @@ class PostReactionsModel: ObservableObject {
     public var mostRecentReactionCreatedAt: Int64 {
         allReactionEvents.sorted(by: { $0.created_at > $1.created_at }).first?.created_at ?? 0
     }
+
     private var allReactionEvents: [Event] = []
     private var subscriptions: Set<AnyCancellable> = []
     
@@ -27,7 +31,7 @@ class PostReactionsModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
                 withAnimation {
-                    self.load(limit: 500)
+                    self.load(limit: 500, includeSpam: self.includeSpam)
                 }
             }
             .store(in: &subscriptions)
@@ -54,14 +58,21 @@ class PostReactionsModel: ObservableObject {
             }
             
             self.allReactionEvents = ((try? bgContext.fetch(r1)) ?? [])
-                .filter { includeSpam || !$0.isSpam }
+                .sorted(by: { !$0.isSpam && $1.isSpam })
             
-            let reactions = self.allReactionEvents.map { NRPost(event: $0, withFooter: false, withReplyTo: false, withParents: false, withReplies: false, plainText: true, withRepliesCount: false) }
+            let reactions = self.allReactionEvents
+                .filter { includeSpam || !$0.isSpam }
+                .map { NRPost(event: $0, withFooter: false, withReplyTo: false, withParents: false, withReplies: false, plainText: true, withRepliesCount: false) }
             
             let mostRecentReactionCreatedAt = self.mostRecentReactionCreatedAt
             
+            let foundSpam = self.allReactionEvents.count > reactions.count
+            
             DispatchQueue.main.async {
-                self.reactions = reactions
+                withAnimation {
+                    self.reactions = reactions
+                    self.foundSpam = foundSpam
+                }
                 if let completion {
                     completion(mostRecentReactionCreatedAt)
                 }
@@ -93,7 +104,7 @@ class PostReactionsModel: ObservableObject {
                     )
                 )
             }
-            self.load(limit: 500)
+            self.load(limit: 500, includeSpam: self.includeSpam)
         }
     }
 }
