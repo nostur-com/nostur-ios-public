@@ -176,7 +176,7 @@ extension View {
                     case .Settings:
                         Settings()
                     case .Lists:
-                        NosturListsView()
+                        CustomFeedsListView()
                     case .Relays:
                         RelaysView()    
                     case .Badges:

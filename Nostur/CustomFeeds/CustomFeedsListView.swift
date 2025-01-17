@@ -8,7 +8,7 @@
 import SwiftUI
 import NavigationBackport
 
-struct NosturListsView: View {
+struct CustomFeedsListView: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
@@ -166,7 +166,7 @@ struct NosturListsView_Previews: PreviewProvider {
             pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
-                NosturListsView()
+                CustomFeedsListView()
                     .withNavigationDestinations()
             }
         }
