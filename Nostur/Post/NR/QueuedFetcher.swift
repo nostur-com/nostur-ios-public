@@ -10,44 +10,21 @@ import Combine
 
 class QueuedFetcher {
     static let shared = QueuedFetcher()
-
+    
     private var pQueue = Set<String>()
     private var idQueue = Set<String>()
     
     // TODO: finish recent cache - add recently tried queue, to not retry the same over and over..
     private var recentPs = Set<String>()
     private var recentIds = Set<String>()
-
+    
     private var fetchSubscription: AnyCancellable?
     private var fetchSubject = PassthroughSubject<Void, Never>()
     private var ctx = bg()
     
     
     init() {
-        fetchSubscription = fetchSubject
-            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.ctx.perform { [weak self] in
-                    guard let self else { return }
-                    guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
-                    
-                    if self.idQueue.isEmpty {
-                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
-                        self.pQueue.removeAll()
-                    }
-                    else if self.pQueue.isEmpty {
-                        req(RM.getEvents(ids: Array(self.idQueue)))
-                        self.idQueue.removeAll()
-                    }
-                    else {
-                        // TODO COMBINE IN SINGLE REQUEST:
-                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
-                        req(RM.getEvents(ids: Array(self.idQueue)))
-                        self.pQueue.removeAll()
-                        self.idQueue.removeAll()
-                    }
-                }
-        }
+        setupDebouncedFetcher()
     }
     
     public func enqueue(pTag: String) {
@@ -119,4 +96,32 @@ class QueuedFetcher {
             self?.idQueue.subtract(Set(ids))
         }
     }
+    
+    private func setupDebouncedFetcher() {
+        fetchSubscription = fetchSubject
+            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.ctx.perform { [weak self] in
+                    guard let self else { return }
+                    guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
+                    
+                    if self.idQueue.isEmpty {
+                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
+                        self.pQueue.removeAll()
+                    }
+                    else if self.pQueue.isEmpty {
+                        req(RM.getEvents(ids: Array(self.idQueue)))
+                        self.idQueue.removeAll()
+                    }
+                    else {
+                        // TODO COMBINE IN SINGLE REQUEST:
+                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
+                        req(RM.getEvents(ids: Array(self.idQueue)))
+                        self.pQueue.removeAll()
+                        self.idQueue.removeAll()
+                    }
+                }
+            }
+    }
+    
 }

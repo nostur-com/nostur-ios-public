@@ -24,7 +24,6 @@
 		1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */; };
 		1F05FA0C2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FA0B2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift */; };
 		1F05FE7A2A1DFCDA0005A254 /* InstantFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */; };
-		1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9829A37A47003421D3 /* NoteZaps.swift */; };
 		1F065A9B29A3E67F003421D3 /* NotificationsReactions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */; };
 		1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F065A9C29A3E9E0003421D3 /* FetchThings.swift */; };
 		1F08CA042A5063E3004A3494 /* Community.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F08CA032A5063E3004A3494 /* Community.swift */; };
@@ -613,7 +612,6 @@
 		1F05FA092A35FDEF00DAB8E8 /* NosturVideoViewur.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NosturVideoViewur.swift; sourceTree = "<group>"; };
 		1F05FA0B2A35FFA400DAB8E8 /* VideoViewurRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoViewurRepresentable.swift; sourceTree = "<group>"; };
 		1F05FE792A1DFCDA0005A254 /* InstantFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstantFeed.swift; sourceTree = "<group>"; };
-		1F065A9829A37A47003421D3 /* NoteZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteZaps.swift; sourceTree = "<group>"; };
 		1F065A9A29A3E67F003421D3 /* NotificationsReactions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsReactions.swift; sourceTree = "<group>"; };
 		1F065A9C29A3E9E0003421D3 /* FetchThings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FetchThings.swift; sourceTree = "<group>"; };
 		1F06D2D92A584318007B9373 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -2234,7 +2232,6 @@
 			children = (
 				1FC268C629A2CC4F00A2B577 /* NoteReactions.swift */,
 				1F527CFC2A98CB3100128AD6 /* NoteReposts.swift */,
-				1F065A9829A37A47003421D3 /* NoteZaps.swift */,
 				1FD6C3492C2CD3600085A240 /* PostReactions.swift */,
 				1FD6C3472C2CCB350085A240 /* PostReactionsModel.swift */,
 				1FD6C34E2C2CDEDF0085A240 /* PostZaps.swift */,
@@ -2775,7 +2772,6 @@
 				1F2F54E52A02242900B6D7E4 /* HighlightRenderer.swift in Sources */,
 				1FCDDEBE2A4810F6002EDEEC /* RelayCensorshipResistorTest.swift in Sources */,
 				1FBDE8C129B74EE800F4DFD0 /* ListState+CoreDataProperties.swift in Sources */,
-				1F065A9929A37A47003421D3 /* NoteZaps.swift in Sources */,
 				1F5C58072B5C41A4002B6AD1 /* CloudDMStateBgFetchRequest.swift in Sources */,
 				1FB6E6F029E30909008BE8A6 /* LinkPreviewView.swift in Sources */,
 				1FC7A49929F9389100645FEF /* NostrcheckMeService.swift in Sources */,
