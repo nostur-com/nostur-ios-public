@@ -21,6 +21,9 @@ struct NxZap: Identifiable {
 class PostZapsModel: ObservableObject {
     @Published public var verifiedZaps: [NxZap] = []
     @Published public var unverifiedZaps: [NxZap] = []
+    
+    @Published public var foundSpam: Bool = false
+    @Published public var includeSpam: Bool = false
 
     private var eventId: String?
     
@@ -38,7 +41,7 @@ class PostZapsModel: ObservableObject {
             .sink { [weak self] _ in
                 guard let self else { return }
                 withAnimation {
-                    self.load(limit: 500)
+                    self.load(limit: 500, includeSpam: self.includeSpam)
                 }
             }
             .store(in: &subscriptions)
@@ -65,9 +68,11 @@ class PostZapsModel: ObservableObject {
             }
             
             self.allZapEvents = ((try? bgContext.fetch(r1)) ?? [])
-                .filter { includeSpam || !$0.isSpam }
+                .sorted(by: { !$0.isSpam && $1.isSpam })
             
-            let zaps: [NxZap] = self.allZapEvents.compactMap {
+            let zaps: [NxZap] = self.allZapEvents
+                                        .filter { includeSpam || !$0.isSpam }
+                                        .compactMap {
                 guard let zapFrom = $0.zapFromRequest else { return nil }
                 return NxZap(id: $0.id,
                              sats: $0.naiveSats,
@@ -86,6 +91,8 @@ class PostZapsModel: ObservableObject {
             }
             .sorted(by: { $0.sats > $1.sats })
             
+            let foundSpam = self.allZapEvents.count > zaps.count
+            
             let verifiedZaps = zaps.filter { $0.verified }
             let unverifiedZaps = zaps.filter { !$0.verified }
             
@@ -94,6 +101,7 @@ class PostZapsModel: ObservableObject {
             DispatchQueue.main.async {
                 self.verifiedZaps = verifiedZaps
                 self.unverifiedZaps = unverifiedZaps
+                self.foundSpam = foundSpam
                 if let completion {
                     completion(mostRecentZapCreatedAt)
                 }
