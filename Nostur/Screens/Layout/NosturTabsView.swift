@@ -47,13 +47,13 @@ struct NosturTabsView: View {
     //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
     //                        .tag("Communities")
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
-                        
-                        NotificationsContainer()
+
+                        BookmarksAndPrivateNotes()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
-                            .tabItem { Label("", systemImage: "bell.fill") }
-                            .tag("Notifications")
-                            .badge(unread)
+                            .tabItem { Label("", systemImage: "bookmark") }
+                            .tag("Bookmarks")
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                        
                         
                         Search()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
@@ -61,12 +61,13 @@ struct NosturTabsView: View {
                             .tag("Search")
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
                         
-                        BookmarksAndPrivateNotes()
+                        NotificationsContainer()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
-                            .tabItem { Label("", systemImage: "bookmark") }
-                            .tag("Bookmarks")
+                            .tabItem { Label("", systemImage: "bell.fill") }
+                            .tag("Notifications")
+                            .badge(unread)
                             .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
-                        
+
                         DMContainer()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "envelope.fill") }
