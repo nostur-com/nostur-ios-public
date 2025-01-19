@@ -167,7 +167,7 @@ struct ProfileZaps: View {
     
     func loadZaps() {
         let ctx = bg()
-        let zapperPubkey = contact.zapperPubkey ?? "WHAT"
+        let zapperPubkeys = contact.zapperPubkeys
         ctx.perform {
             let calendar = Calendar.current
             let ago = calendar.date(byAdding: .day, value: -14, to: Date())!
@@ -181,7 +181,7 @@ struct ProfileZaps: View {
             if let zaps = try? ctx.fetch(fr) {
                 
                 let verifiedZaps = zaps.filter { zap in
-                    zap.pubkey == zapperPubkey
+                    zapperPubkeys.contains(zap.pubkey)
                 }
                 
                 let verifiedZapsCount = verifiedZaps.count

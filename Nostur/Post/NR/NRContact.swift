@@ -43,7 +43,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     var lud06:String?
     var lud16:String?
     
-    var zapperPubkey: String?
+    var zapperPubkeys: Set<String> = []
     var zapState: ZapState?
     
     var contact: Contact? // Only touch this in BG context!!!
@@ -78,7 +78,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.anyLud = contact.anyLud
         self.lud06 = contact.lud06
         self.lud16 = contact.lud16
-        self.zapperPubkey = contact.zapperPubkey
+        self.zapperPubkeys = contact.zapperPubkeys
         self.zapState = contact.zapState
         
         listenForChanges()
@@ -137,7 +137,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                     let anyLud = contact.anyLud
                     let lud06 = contact.lud06
                     let lud16 = contact.lud16
-                    let zapperPubkey = contact.zapperPubkey
+                    let zapperPubkeys = contact.zapperPubkeys
 //                    let zapState = contact.zapState
                     
                     DispatchQueue.main.async { [weak self] in
@@ -165,7 +165,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                         self.anyLud = anyLud
                         self.lud06 = lud06
                         self.lud16 = lud16
-                        self.zapperPubkey = zapperPubkey
+                        self.zapperPubkeys = zapperPubkeys
 //                        self.zappableAttributes.zapState = zapState
                     }
                 }

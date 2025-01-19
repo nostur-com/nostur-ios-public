@@ -74,32 +74,30 @@ struct DetailFooterFragment: View {
         .font(.system(size: 14))
         .task { [weak nrPost] in
             guard let nrPost else { return }
-            guard let contact = nrPost.contact?.mainContact else { return }
+            guard let contact = nrPost.contact else { return }
             guard contact.anyLud else { return }
-            guard contact.zapperPubkey == nil else {
-                if let zpk = nrPost.contact?.mainContact?.zapperPubkey {
-                    reverifyZaps(eventId: nrPost.id, expectedZpk: zpk)
-                }
+            guard contact.zapperPubkeys.isEmpty else {
+                reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
                 return
             }
             do {
                 if let lud16 = contact.lud16, lud16 != "" {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
                     await MainActor.run {
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            contact.zapperPubkey = response.nostrPubkey!
-                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                            reverifyZaps(eventId: nrPost.id, expectedZpk: contact.zapperPubkey!)
+                        if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                            contact.zapperPubkeys.insert(zapperPubkey)
+                            L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+                            reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
                         }
                     }
                 }
                 else if let lud06 = contact.lud06, lud06 != "" {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
                     await MainActor.run {
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                            contact.zapperPubkey = response.nostrPubkey!
-                            L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
-                            reverifyZaps(eventId: nrPost.id, expectedZpk: contact.zapperPubkey!)
+                        if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                            contact.zapperPubkeys.insert(zapperPubkey)
+                            L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+                            reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
                         }
                     }
                 }
@@ -125,13 +123,13 @@ struct DetailFooterFragment: View {
     }
 }
 
-func reverifyZaps(eventId: String, expectedZpk: String) {
+func reverifyZaps(eventId: String, expectedZpks: Set<String>) {
     bg().perform {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "zappedEventId == %@ AND kind == 9735", eventId)
         guard let zaps = try? bg().fetch(fr) else { return }
         for zap in zaps {
-            if zap.flags != "zpk_verified" && zap.pubkey == expectedZpk {
+            if zap.flags != "zpk_verified" && expectedZpks.contains(zap.pubkey) {
                 zap.flags = "zpk_verified"
             }
         }

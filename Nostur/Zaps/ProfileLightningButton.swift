@@ -63,10 +63,10 @@ struct ProfileLightningButton: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                contact!.zapperPubkey = response.nostrPubkey!
+                                contact!.zapperPubkeys.insert(zapperPubkey)
                             }
                             paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact, zapEtag: zapEtag)
                             payAmountSelectorShown = true
@@ -91,10 +91,10 @@ struct ProfileLightningButton: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                contact!.zapperPubkey = response.nostrPubkey!
+                                contact!.zapperPubkeys.insert(zapperPubkey)
                             }
                             paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact, zapEtag: zapEtag)
                             payAmountSelectorShown = true

@@ -31,7 +31,7 @@ extension Contact {
     @NSManaged public var picture: String?
     @NSManaged public var banner: String?
     @NSManaged public var pubkey: String
-    @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint
+    @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint. updated to contain Set
     @NSManaged public var updated_at: Int64
     @NSManaged public var metadata_created_at: Int64
     @NSManaged public var followedBy: NSSet?
@@ -57,6 +57,17 @@ extension Contact {
             for feed in newValue {
                 feed.contacts_.append(self)
             }
+        }
+    }
+    
+    // Repurpose zapperPubkey single field to track multiple pubkeys for when user changes zapper (wallet)
+    var zapperPubkeys: Set<String> {
+        get {
+            guard let zapperPubkey else { return [] }
+            return Set(zapperPubkey.split(separator: " ").map { String($0) })
+        }
+        set {
+            zapperPubkey = newValue.joined(separator: " ")
         }
     }
 }
@@ -370,9 +381,7 @@ extension Contact : Identifiable {
                 if zap.zappedContact == nil {
                     zap.zappedContact = contact
                 }
-                if let zapperPubkey = contact.zapperPubkey,
-                    zapperPubkey == zap.pubkey,
-                    let zappedEvent = zap.zappedEvent {
+                if let zappedEvent = zap.zappedEvent, contact.zapperPubkeys.contains(zap.pubkey) {
                     zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
                     zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
 //                    zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))

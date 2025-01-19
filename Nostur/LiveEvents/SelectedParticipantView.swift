@@ -274,9 +274,9 @@ struct SelectedParticipantView: View {
                             let response = try await LUD16.getCallbackUrl(lud16: lud16)
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 await bg().perform {
-                                    guard let contact else { return }
-                                    contact.zapperPubkey = response.nostrPubkey!
-                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                    guard let contact, let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
+                                    contact.zapperPubkeys.insert(zapperPubkey)
+                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
                                 }
                             }
                         }
@@ -284,9 +284,9 @@ struct SelectedParticipantView: View {
                             let response = try await LUD16.getCallbackUrl(lud06: lud06)
                             if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
                                 await bg().perform {
-                                    guard let contact else { return }
-                                    contact.zapperPubkey = response.nostrPubkey!
-                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                    guard let contact, let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
+                                    contact.zapperPubkeys.insert(zapperPubkey)
+                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
                                 }
                             }
                         }
@@ -339,10 +339,10 @@ struct SelectedParticipantView: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrContact.zapperPubkey = response.nostrPubkey!
+                                nrContact.zapperPubkeys.insert(zapperPubkey)
                             }
                             // Old zap sheet
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
@@ -373,10 +373,10 @@ struct SelectedParticipantView: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrContact.zapperPubkey = response.nostrPubkey!
+                                nrContact.zapperPubkeys.insert(zapperPubkey)
                             }
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)

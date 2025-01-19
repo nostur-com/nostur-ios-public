@@ -413,27 +413,27 @@ struct ProfileOverlayCard: View {
                     do {
                         if let lud16 = lud16orNil, lud16 != "" {
                             let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 await bg().perform {
                                     guard let contact else { return }
-                                    contact.zapperPubkey = response.nostrPubkey!
-                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                    contact.zapperPubkeys.insert(zapperPubkey)
+                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
                                 }
                             }
                         }
                         else if let lud06 = lud06orNil, lud06 != "" {
                             let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 await bg().perform {
                                     guard let contact else { return }
-                                    contact.zapperPubkey = response.nostrPubkey!
-                                    L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+                                    contact.zapperPubkeys.insert(zapperPubkey)
+                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
                                 }
                             }
                         }
                     }
                     catch {
-                        L.og.error("problem in lnurlp \(error)")
+                        L.og.error("⚡️ problem in lnurlp \(error)")
                     }
                 }
             }

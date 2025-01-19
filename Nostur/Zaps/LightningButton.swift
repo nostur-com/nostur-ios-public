@@ -84,10 +84,10 @@ extension LightningButton {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost.contact!.zapperPubkey = response.nostrPubkey!
+                                nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
                             }
                             // Old zap sheet
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
@@ -118,10 +118,10 @@ extension LightningButton {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost.contact!.zapperPubkey = response.nostrPubkey!
+                                nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
                             }
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
                             sendNotification(.showZapSheet, paymentInfo)
