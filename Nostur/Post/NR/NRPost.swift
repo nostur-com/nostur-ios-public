@@ -526,10 +526,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         setupSubscriptions()
     }
     
-    private func hasNSFWContent() -> Bool {
-        // event contains nsfw hashtag?
-        return fastTags.first(where: { $0.0 == "t" && $0.1.lowercased() == "nsfw" }) != nil
-        
+    private func hasNSFWContent() -> Bool {        
+        return fastTags.contains(where: { tag in
+            // contains nsfw hashtag?
+            tag.0 == "t" && tag.1.lowercased() == "nsfw" ||
+            // contains content-warning tag
+            tag.0 == "content-warning"
+        })
         // TODO: check labels/reports
     }
     
