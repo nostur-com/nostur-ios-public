@@ -39,7 +39,7 @@ struct DetailFooterFragment: View {
                         .lineLimit(1)
                 }
             }
-            NBNavigationLink(value: ViewPath.PostZaps(eventId: nrPost.id)) {
+            NBNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.zapsCount)
 //                        .fontWeight(.bold)

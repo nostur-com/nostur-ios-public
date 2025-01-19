@@ -2499,6 +2499,9 @@
         }
       }
     },
+    "Could not find latest user profile (kind-0)" : {
+
+    },
     "Could not parse JSON" : {
       "comment" : "Error message",
       "localizations" : {
@@ -8479,6 +8482,12 @@
         }
       }
     },
+    "User does not have a lightning address set" : {
+
+    },
+    "Users wallet does not support nostr" : {
+
+    },
     "Uses iCloud to sync across devices" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -8493,6 +8502,9 @@
     "uuuh" : {
       "shouldTranslate" : false
     },
+    "Verify again" : {
+
+    },
     "Verify message signatures" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -8503,6 +8515,12 @@
           }
         }
       }
+    },
+    "Verifying..." : {
+
+    },
+    "Verifying... Done." : {
+
     },
     "View on web" : {
       "localizations" : {

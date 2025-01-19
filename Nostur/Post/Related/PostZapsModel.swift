@@ -86,7 +86,7 @@ class PostZapsModel: ObservableObject {
                                                plainText: false,
                                                withRepliesCount: false
                                               ),
-                             verified: $0.flags == "zpk_verified"
+                             verified: $0.flags != "zpk_mismatch_event"
                             )
             }
             .sorted(by: { $0.sats > $1.sats })

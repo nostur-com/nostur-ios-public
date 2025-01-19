@@ -512,6 +512,38 @@ extension Event {
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
             }
         }
+        
+        // Repair things afterwards
+        
+        // Missing contact
+        if zap.zappedContact == nil {
+            if let zappedPubkey = zap.otherPubkey {
+                L.fetching.debug("⚡️⏳ missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
+                QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
+                ZapperPubkeyVerificationQueue.shared.addZap(zap)
+            }
+        }
+        
+        // Missing kind-0 metadata
+        else if let zappedContact = zap.zappedContact, zappedContact.metadata_created_at == 0 {
+            L.fetching.debug("⚡️⏳ missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
+            QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
+            ZapperPubkeyVerificationQueue.shared.addZap(zap)
+        }
+        
+        
+        // Check if contact matches the zapped event contact
+        if let otherPubkey = zap.otherPubkey, let zappedEvent = zap.zappedEvent {
+            if otherPubkey != zappedEvent.pubkey {
+                L.og.debug("⚡️🔴🔴 zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
+                zap.flags = "zpk_mismatch_event"
+            }
+        }
+        
+        // Check if zapper pubkey matches contacts published zapper pubkey
+        if let zappedContact = zap.zappedContact, zappedContact.zapperPubkeys.contains(zap.pubkey) {
+            zap.flags = "zpk_verified" // zapper pubkey is correct
+        }
     }
     
     // NIP-10: Those marked with "mention" denote a quoted or reposted event id.

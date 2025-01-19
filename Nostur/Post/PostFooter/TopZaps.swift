@@ -60,7 +60,7 @@ struct TopZaps: View {
     
     private func loadZaps(_ zaps: [Event]) {
         verifiedZaps = zaps
-            .filter { $0.flags == "zpk_verified" }
+            .filter { $0.flags != "zpk_mismatch_event" }
             .prefix(17)
             .compactMap({ zap in
                 guard let zapFrom = zap.zapFromRequest else { return nil }

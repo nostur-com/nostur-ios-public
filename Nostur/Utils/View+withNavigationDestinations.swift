@@ -91,7 +91,7 @@ enum ViewPath: IdentifiableDestination {
     case Bookmarks(account: CloudAccount)
     case PostReactions(eventId: String)
     case NoteReposts(id: String)
-    case PostZaps(eventId: String)
+    case PostZaps(nrPost: NRPost)
     case Settings
     case Lists
     case Relays
@@ -171,8 +171,8 @@ extension View {
                         PostReactions(eventId: eventId)
                     case .NoteReposts(let id):
                         NoteReposts(id: id)
-                    case .PostZaps(let id):
-                        PostZaps(eventId: id)
+                    case .PostZaps(let nrPost):
+                        PostZaps(nrPost: nrPost)
                     case .Settings:
                         Settings()
                     case .Lists:
