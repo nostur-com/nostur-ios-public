@@ -108,7 +108,7 @@ func canRender1063(_ nrPost:NRPost) -> Bool {
     
     guard let mTag = hl.m else { return false }
     guard !hl.url.isEmpty else { return false }
-    guard ["video/mp4", "video/quicktime", "image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp"].contains(mTag) else { return false }
+    guard ["video/mp4", "video/quicktime", "image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp", "image/avif"].contains(mTag) else { return false }
     return true
 }
 

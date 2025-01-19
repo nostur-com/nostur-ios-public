@@ -372,9 +372,9 @@ func getImgUrlsFromContent(_ content:String) -> [URL] {
     return urls
 }
 
-let imageRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:png|jpe?g|gif|webp|bmp)(\\?\\S+){0,1}\\b")
+let imageRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:png|jpe?g|gif|webp|bmp|avif)(\\?\\S+){0,1}\\b")
 
-let mediaRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:mp4|mov|m4a|m3u8|png|jpe?g|gif|webp|bmp)(\\?\\S+){0,1}\\b")
+let mediaRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:mp4|mov|m4a|m3u8|png|jpe?g|gif|webp|bmp|avif)(\\?\\S+){0,1}\\b")
 
 struct FullImageViewer_Previews: PreviewProvider {
     static var previews: some View {
