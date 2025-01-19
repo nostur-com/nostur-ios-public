@@ -1065,7 +1065,7 @@ extension NRPost { // Helpers for grouped replies
         // With WoT enabled with add filter nr 5.
         return nrPosts
             // 5. People outside WoT last
-            .filter { $0.inWoT || NRState.shared.accountPubkeys.contains($0.pubkey) }
+            .filter { $0.inWoT || NRState.shared.accountPubkeys.contains($0.pubkey) || $0.pubkey == self.pubkey }
         
             // 4. Everything else in WoT last, newest at bottom
             .sorted(by: { $0.created_at < $1.created_at })
@@ -1085,7 +1085,7 @@ extension NRPost { // Helpers for grouped replies
     
     func sortGroupedRepliesNotWoT(_ nrPosts:[NRPost]) -> [NRPost] { // Read from bottom to top.
         return nrPosts
-            .filter { !$0.inWoT && !NRState.shared.accountPubkeys.contains($0.pubkey)}
+            .filter { !$0.inWoT && !NRState.shared.accountPubkeys.contains($0.pubkey) && $0.pubkey != self.pubkey }
             .sorted(by: { $0.created_at < $1.created_at })
     }
     
