@@ -47,10 +47,10 @@ struct CustomFeedsListView: View {
                                 }
                                 
                             }
-                            .listRowBackground(themes.theme.background)
                         }
                     } header: {
                         Text("Custom Feeds")
+                        .listRowBackground(themes.theme.background)
                     }
                 }
                 
@@ -88,8 +88,17 @@ struct CustomFeedsListView: View {
                 } footer: {
                     Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                 }
+                .listRowBackground(themes.theme.background)
+                    .background(themes.theme.listBackground)
+                    .background(themes.theme.listBackground)
             }
+            .background(themes.theme.background)
+            .listRowBackground(themes.theme.listBackground)
         }
+        .scrollContentBackgroundCompat(.hidden)
+        .background(themes.theme.listBackground)
+        .nosturNavBgCompat(themes: themes)
+        .listStyle(.plain)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(String(localized:"Create new feed", comment: "Button to create a new feed")) {
