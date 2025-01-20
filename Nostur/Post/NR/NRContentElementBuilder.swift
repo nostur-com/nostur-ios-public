@@ -268,7 +268,7 @@ class NRContentElementBuilder {
     static let imageUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:png#?|jpe?g#?|heic#?|gif#?|webp#?|avif#?)(\??\S+){0,1}\b"###
     static let previewImagePlaceholder = ###"--@!\^@(\d+)@\^!@--"###
     static let previewVideoPlaceholder = ###"-V-@!\^@(\d+)@\^!@-V-"###
-    static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4#?|mov#?|m3u8#?|m4a#?)(\??\S+){0,1}\b"###
+    static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4#?|mov#?|m3u8#?|mp3#?|m4a#?)(\??\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
     static let cashuTokenPattern = ###"cashuA([A-Za-z0-9=\-]+)"###
     static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
