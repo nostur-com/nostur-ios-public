@@ -115,7 +115,7 @@ struct ProfileLightningButton_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadContacts()
         }) {
-            SmoothListMock {
+            PreviewFeed {
                 if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
                     ProfileLightningButton(contact: contact)
                 }

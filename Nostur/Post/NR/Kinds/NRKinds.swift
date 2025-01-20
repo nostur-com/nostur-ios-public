@@ -212,7 +212,7 @@ func fallbackDescription(for nrPost: NRPost) -> String {
         
         ])
     }) {
-        SmoothListMock {
+        PreviewFeed {
             // Embedded zap req
             if let embeddedZapreq = PreviewFetcher.fetchNRPost("7b438527390a2dd5c5490dc2535047977e50810b3506aa924563d85d427e8c40") {
                 Box {

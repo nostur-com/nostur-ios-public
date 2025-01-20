@@ -41,7 +41,7 @@ struct PaddingsTesting_Previews: PreviewProvider {
                 ###"["EVENT","LP",{"pubkey":"c1fc7771f5fa418fd3ac49221a18f19b42ccb7a663da8f04cbbf6c08c80d20b1","content":"Wrote an article about not selling nostr.com to shitcoiners, and our plans for the site🔥\n\nhttps://bitcoinmagazine.com/culture/nostr-com-not-selling-it-to-shitcoiners","id":"5743635d30ebd55e8a05172a8394e263974525e54b02845b9f1b24524f591dab","created_at":1695315966,"sig":"df54b1f78911ad29a72f98fd54bbe673993b4f2fec30cfe5984a4602017f763c23aab6641200d7abe1153059ea7f41e6c3b944d3a67bec2d72a71214e3fc3c21","kind":1,"tags":[["r","nostr.com"],["r","https://bitcoinmagazine.com/culture/nostr-com-not-selling-it-to-shitcoiners"]]}]"###
             ])
         }) {
-            SmoothListMock {
+            PreviewFeed {
                 let testMe: Set<Int> = [1,12]
                 if testMe.contains(1), let p = PreviewFetcher.fetchNRPost("5743635d30ebd55e8a05172a8394e263974525e54b02845b9f1b24524f591dab", withReplyTo: false, withParents: false) {
                     // LINK PREVIEW

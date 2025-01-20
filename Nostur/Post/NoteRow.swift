@@ -76,7 +76,7 @@ struct NoteRow_Previews: PreviewProvider {
             pe.loadHighlights()
             pe.loadKind1063()
         }) {
-            SmoothListMock { // CHANGE 1 == 2 to 1 == 1 to preview
+            PreviewFeed { // CHANGE 1 == 2 to 1 == 1 to preview
                 let testMe: Set<Int> = [1,12]
                 Group {
                     if testMe.contains(1), let p = PreviewFetcher.fetchNRPost("1920b9351f01dd92dad21a9eef04781b896cb45260dfc02d9e9c05bda6dfef77") {

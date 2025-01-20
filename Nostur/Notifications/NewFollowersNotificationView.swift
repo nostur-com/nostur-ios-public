@@ -121,7 +121,7 @@ struct NewFollowersNotificationView_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadNewFollowersNotification()
         }) {
-            SmoothListMock {
+            PreviewFeed {
                 if let pNotification = PreviewFetcher.fetchPersistentNotification() {
                     Box {
                         NewFollowersNotificationView(notification: pNotification)

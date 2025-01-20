@@ -209,7 +209,7 @@ struct QuotedNoteFragmentView_Previews: PreviewProvider {
             pe.loadContacts()
             pe.loadPosts()
         }) {
-            SmoothListMock {
+            PreviewFeed {
                 // Mention at #[5]
                 if let event0 = PreviewFetcher.fetchNRPost("62459426eb9a1aff9bf1a87bba4238614d7b753c914ccd7884dac0aa36e853fe") {
                     Box {

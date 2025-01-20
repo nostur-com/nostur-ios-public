@@ -65,7 +65,7 @@ struct URLView: View {
             ###"["EVENT", "replies", {"id":"c8b233ad67feff9786dc831394397a4a3e4bcb285d89f8deb51994fadeaf92fb","pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1704929201,"kind":1,"tags":[["e","7d56ff8134fa6e500776c2d0dce1e26131f859f352a390d2dd96303458821d82","","root"],["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"],["client","Nostur","31990:9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33:1685868693432"]],"content":"Test post for https://github.com/nostur-com/nids/blob/main/02.md","sig":"1b1751abdd886b1a42dd4e78aabc27aae5c78067d248f82443ab5eb79ba9116516724db7e9d4ad294e5c6442d72a1fd1b6679c0fbcc92b8a9983983e6feb1dd1"}"###,
         ])
     }) {
-        SmoothListMock {
+        PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("7d56ff8134fa6e500776c2d0dce1e26131f859f352a390d2dd96303458821d82") {
                 Box {
                     URLView(nrPost: nrPost, theme: Themes.default.theme)

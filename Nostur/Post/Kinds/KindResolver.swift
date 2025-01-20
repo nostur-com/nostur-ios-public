@@ -56,7 +56,7 @@ struct KindResolver_Previews: PreviewProvider {
             ])
             pe.loadPosts()
         }) {
-            SmoothListMock {
+            PreviewFeed {
                 if let article = PreviewFetcher.fetchNRPost("21b3bd3c5eec98bba15aa0fd32f24f18a0540e70c18ed1ac4f156d41ffc17ce6") {
                     Box {
                         PostRowDeletable(nrPost: article)

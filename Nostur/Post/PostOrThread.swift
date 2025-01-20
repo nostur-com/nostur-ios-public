@@ -173,7 +173,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
             pe.parseMessages(messages)
         }) {
             NBNavigationStack {
-                SmoothListMock {
+                PreviewFeed {
                     if let p = PreviewFetcher.fetchNRPost("0047225fd5ba958d71725d0744cd21b9b6ace949acab69f1fcbb8db2a7020bed") {
                         PostOrThread(nrPost: p)
                             .onAppear {
@@ -215,7 +215,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
         SettingsStore.shared.fullWidthImages = false
     }) {
         NBNavigationStack {
-            SmoothListMock {
+            PreviewFeed {
                 
                 Color.red
                     .frame(height: 30)
@@ -263,7 +263,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
         SettingsStore.shared.fullWidthImages = false
     }) {
         NBNavigationStack {
-            SmoothListMock {
+            PreviewFeed {
                 
                 Color.red
                     .frame(height: 30)
@@ -289,7 +289,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
         SettingsStore.shared.fullWidthImages = false
     }) {
         NBNavigationStack {
-            SmoothListMock {
+            PreviewFeed {
                 
                 Color.red
                     .frame(height: 30)

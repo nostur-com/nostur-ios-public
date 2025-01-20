@@ -85,7 +85,7 @@ struct PostRowDeletable_Previews: PreviewProvider {
             NBNavigationStack {
                 if let example = PreviewFetcher.fetchNRPost() {
                     let _ = example.blocked = true
-                    SmoothListMock {
+                    PreviewFeed {
                         Box {
                             PostRowDeletable(nrPost: example)
                         }

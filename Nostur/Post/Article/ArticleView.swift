@@ -530,7 +530,7 @@ struct Articles_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadArticles()
         }) {
-            SmoothListMock {
+            PreviewFeed {
                 if let p = PreviewFetcher.fetchNRPost("12c29454fc1f995eb6e08a97f91dff37f891d1de130fbb333b5976f2cca99395") {
                     Box(nrPost: p) {
                         PostRowDeletable(nrPost: p, fullWidth: true, theme: Themes.default.theme)

@@ -143,7 +143,7 @@ struct NRTextDynamic: View {
         ])
     }) {
         if let p = PreviewFetcher.fetchNRPost("ea4ea2b6ec2e2208aa2be575769114378c7d73b31a35abf345a8d6a60c949182", withReplyTo: true, withParents: true) {
-            SmoothListMock {
+            PreviewFeed {
                 PostOrThread(nrPost: p)
             }
         }

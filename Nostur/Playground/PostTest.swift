@@ -47,8 +47,9 @@ struct PostTest_Previews: PreviewProvider {
     }
 }
 
-struct SmoothListMock<Content: View>: View {
-    @EnvironmentObject private var themes:Themes
+struct PreviewFeed<Content: View>: View {
+    
+    @EnvironmentObject private var themes: Themes
     let content: Content
     
     init(@ViewBuilder _ content: ()->Content) {
@@ -56,12 +57,19 @@ struct SmoothListMock<Content: View>: View {
     }
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: GUTTER) {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
+        ScrollViewReader { proxy in
+            List {
                 content
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(themes.theme.listBackground)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
+            .environment(\.defaultMinListRowHeight, 50)
+            .listStyle(.plain)
+            .scrollContentBackgroundHidden()
         }
-        .background(themes.theme.listBackground)
     }
 }
-

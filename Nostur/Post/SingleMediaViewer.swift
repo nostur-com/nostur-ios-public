@@ -335,7 +335,7 @@ struct Gif_Previews: PreviewProvider {
         PreviewContainer({ pe in
             pe.loadMedia()
         }) {
-            SmoothListMock {
+            PreviewFeed {
                 if let nrPost = PreviewFetcher.fetchNRPost("8d49bc0204aad2c0e8bb292b9c99b7dc1bdd6c520a877d908724c27eb5ab8ce8") {
                     Box {
                         PostRowDeletable(nrPost: nrPost)
