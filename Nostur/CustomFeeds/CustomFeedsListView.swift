@@ -29,32 +29,25 @@ struct CustomFeedsListView: View {
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
         
     var body: some View {
-        VStack {
-            
-            List {
-                if !lists.isEmpty {
-                    Section {
-                        ForEach(lists) { list in
-                            NBNavigationLink(value: list) {
-                                ListRow(list: list)
-                            }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    listToDelete = list
-                                    confirmDeleteShown = true
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                                
-                            }
+        List {
+            if !lists.isEmpty {
+                Section {
+                    ForEach(lists) { list in
+                        NBNavigationLink(value: list) {
+                            ListRow(list: list)
                         }
-                    } header: {
-                        Text("Custom Feeds")
                         .listRowBackground(themes.theme.background)
                     }
+                    .onDelete { indexSet in
+                        deleteList(section: Array(lists), offsets: indexSet)
+                    }
+                } header: {
+                    Text("Custom Feeds")
                 }
-                
-                Section {
+            }
+            
+            Section {
+                Group {
                     Toggle(isOn: $enablePictureFeed, label: {
                         Text("Pictures")
                         Text("Pictures-only feed from people you follow")
@@ -83,13 +76,13 @@ struct CustomFeedsListView: View {
                         Text("Explore")
                         Text("Posts from people followed by the [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account")
                     })
-                } header: {
-                    Text("Default feeds")
-                } footer: {
-                    Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                 }
                 .listRowBackground(themes.theme.background)
+            } header: {
+                Text("Default feeds")
                     .background(themes.theme.listBackground)
+            } footer: {
+                Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                     .background(themes.theme.listBackground)
             }
             .background(themes.theme.background)
@@ -101,9 +94,16 @@ struct CustomFeedsListView: View {
         .listStyle(.plain)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(String(localized:"Create new feed", comment: "Button to create a new feed")) {
+                EditButton()
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                
+                Button(action: {
                     newListSheet = true
+                }) {
+                    Image(systemName: "plus.circle.fill")
                 }
+                .accessibilityLabel(String(localized:"Create new feed", comment: "Button to create a new feed"))
             }
         }
         .navigationTitle(String(localized:"Feeds", comment: "Navigation title for Feeds screen"))
@@ -125,6 +125,14 @@ struct CustomFeedsListView: View {
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .nosturNavBgCompat(themes: themes)
+    }
+    
+    private func deleteList(section: [CloudFeed], offsets: IndexSet) {
+        for index in offsets {
+            let item = section[index]
+            viewContext.delete(item)
+        }
+        viewContextSave()
     }
     
     func removeDuplicateLists() {
