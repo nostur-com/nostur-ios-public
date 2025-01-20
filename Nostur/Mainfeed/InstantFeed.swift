@@ -134,7 +134,7 @@ class InstantFeed {
             } processResponseCommand: { [weak self] taskId, _, _ in
                 bg().perform {
                     guard let self else { return }
-                    let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: Int64(self.since ?? 0))
+                    let fr = Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: Int64(self.since ?? 0), kinds: QUERY_FOLLOWING_KINDS)
                     guard let events = try? bg().fetch(fr) else {
                         L.og.notice("🟪 \(taskId) Could not fetch posts from relays using \(pubkeys.count) pubkeys. Our pubkey: \(self.pubkey?.short ?? "-") ")
                         return
@@ -177,7 +177,7 @@ class InstantFeed {
                 } processResponseCommand: { [weak self] taskId, _, _ in
                     bg().perform {
                         guard let self = self else { return }
-                        let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 250)
+                        let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 250, kinds: QUERY_FOLLOWING_KINDS)
                         guard let events = try? bg().fetch(fr) else {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return
@@ -192,7 +192,7 @@ class InstantFeed {
                 } timeoutCommand: { [weak self] taskId in
                     guard let self else { return }
                     self.isRunning = false
-                    let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 500, force: true)
+                    let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 500, force: true, kinds: QUERY_FOLLOWING_KINDS)
                     if let events = try? bg().fetch(fr), !events.isEmpty {
                         L.og.notice("🟪 \(taskId) TIMEOUT: Could not fetch posts from globalish relays using \(relayCount) relays. (1) ")
                         self.events = events

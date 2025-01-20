@@ -599,13 +599,17 @@ class NXColumnViewModel: ObservableObject {
             }
             else { nil }
             
+            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+                QUERY_FOLLOWING_KINDS.subtracting([20])
+            } else { QUERY_FOLLOWING_KINDS }
+            
             bg().perform { [weak self] in
                 guard let self else { return }
                 let fr = if !older {
-                    Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex)
+                    Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
                 else {
-                    Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex)
+                    Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
@@ -643,13 +647,14 @@ class NXColumnViewModel: ObservableObject {
             L.og.debug("☘️☘️ \(config.name) - \(config.id) loadLocal(.pubkeys)\(older ? "older" : "")")
 #endif
             let pubkeys = feed.contactPubkeys
+            
             bg().perform { [weak self] in
                 guard let self else { return }
                 let fr = if !older {
-                    Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled)
+                    Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 else {
-                    Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled)
+                    Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
 #if DEBUG
@@ -666,10 +671,10 @@ class NXColumnViewModel: ObservableObject {
             bg().perform { [weak self] in
                 guard let self else { return }
                 let fr = if !older {
-                    Event.postsByPubkeys(config.pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex)
+                    Event.postsByPubkeys(config.pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 else {
-                    Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex)
+                    Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
@@ -682,10 +687,10 @@ class NXColumnViewModel: ObservableObject {
             bg().perform { [weak self] in
                 guard let self else { return }
                 let fr = if !older {
-                    Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled)
+                    Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 else {
-                    Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled)
+                    Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
@@ -748,7 +753,13 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp)
+            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+                FETCH_FOLLOWING_KINDS.subtracting([20])
+            } else {
+                FETCH_FOLLOWING_KINDS
+            }
+            
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: kinds)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
         case .picture(let feed):
@@ -771,7 +782,7 @@ class NXColumnViewModel: ObservableObject {
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id)
@@ -779,7 +790,7 @@ class NXColumnViewModel: ObservableObject {
             }
         case .someoneElses(_):
             guard config.pubkeys.count > 0 || config.hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: NTimestamp(date: Date.now).timestamp)
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id)
@@ -845,7 +856,13 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
+            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+                FETCH_FOLLOWING_KINDS.subtracting([20])
+            } else {
+                FETCH_FOLLOWING_KINDS
+            }
+            
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: kinds)
              
             return (cmd: {
                 guard pubkeys.count > 0 || hashtags.count > 0 else {
@@ -894,7 +911,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
@@ -908,7 +925,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until)
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
@@ -989,7 +1006,13 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150)
+            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+                FETCH_FOLLOWING_KINDS.subtracting([20])
+            } else {
+                FETCH_FOLLOWING_KINDS
+            }
+            
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: kinds)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
@@ -1016,7 +1039,7 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
@@ -1025,7 +1048,7 @@ class NXColumnViewModel: ObservableObject {
             
         case .someoneElses(_):
             guard config.pubkeys.count > 0 || config.hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, until: Int(until), limit: 100)
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
@@ -1927,11 +1950,17 @@ func setFirstTimeCompleted() {
     }
 }
 
-func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int = 5000, kinds: Set<Int>? = nil) -> [Filters] {
+func fetchFollowingFeedKinds() -> Set<Int> {
+    if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+        return FETCH_FOLLOWING_KINDS.subtracting([20])
+    }
+    return FETCH_FOLLOWING_KINDS
+}
+
+func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int = 5000, kinds: Set<Int>) -> [Filters] {
     guard !pubkeys.isEmpty || !hashtags.isEmpty else { return [] }
     
     var filters: [Filters] = []
-    let kinds = kinds ?? FETCH_FOLLOWING_KINDS
     
     if !pubkeys.isEmpty {
         let followingContactsFilter = Filters(
@@ -2002,8 +2031,7 @@ import CoreData
 extension Event {
     
     // TODO: Optimize tagsSerialized / hashtags matching
-    static func postsByPubkeys(_ pubkeys: Set<String>, mostRecent: Event, hideReplies: Bool = false, hashtagRegex:String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByPubkeys(_ pubkeys: Set<String>, mostRecent: Event, hideReplies: Bool = false, hashtagRegex:String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let cutOffPoint = mostRecent.created_at - (15 * 60)
         
@@ -2030,8 +2058,7 @@ extension Event {
     }
     
     
-    static func postsByPubkeys(_ pubkeys: Set<String>, until: Event, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByPubkeys(_ pubkeys: Set<String>, until: Event, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let cutOffPoint = until.created_at + (1 * 60)
         
@@ -2060,8 +2087,7 @@ extension Event {
         return fr
     }
     
-    static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
         
@@ -2106,8 +2132,7 @@ extension Event {
         return fr
     }
     
-    static func postsByPubkeys(_ pubkeys: Set<String>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByPubkeys(_ pubkeys: Set<String>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         
         let fr = Event.fetchRequest()
@@ -2139,8 +2164,7 @@ extension Event {
 // LVM relays
 extension Event {
     
-    static func postsByRelays(_ relays: Set<RelayData>, mostRecent: Event, hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByRelays(_ relays: Set<RelayData>, mostRecent: Event, hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2162,8 +2186,7 @@ extension Event {
     }
     
     
-    static func postsByRelays(_ relays: Set<RelayData>, until: Event, hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByRelays(_ relays: Set<RelayData>, until: Event, hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2185,8 +2208,7 @@ extension Event {
         return fr
     }
     
-    static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50, force: Bool = false, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByRelays(_ relays: Set<RelayData>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, fetchLimit: Int = 50, force: Bool = false, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
@@ -2235,8 +2257,7 @@ extension Event {
     }
     
     
-    static func postsByRelays(_ relays: Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>? = nil) -> NSFetchRequest<Event> {
-        let kinds = kinds ?? QUERY_FOLLOWING_KINDS
+    static func postsByRelays(_ relays: Set<RelayData>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, fetchLimit: Int = 50, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
