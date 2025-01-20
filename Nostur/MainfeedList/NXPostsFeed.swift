@@ -38,6 +38,7 @@ struct NXPostsFeed: View {
                     .onBecomingVisible {
                         // SettingsStore.shared.fetchCounts should be true for below to work
                         vm.prefetch(nrPost)
+                        vm.allIdsSeen.insert(nrPost.shortId)
                     }
                     .onAppear {
                         onPostAppear(nrPost)

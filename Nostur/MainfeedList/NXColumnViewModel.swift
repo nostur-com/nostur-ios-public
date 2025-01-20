@@ -1617,8 +1617,6 @@ extension NXColumnViewModel {
                     addedAndExistingPosts
                 }
                 
-                allIdsSeen = allIdsSeen.union(getAllPostIds(addedAndExistingPostsTruncated, prefixOnly: true))
-                
                 if vmInner.isAtTop {
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
@@ -1670,7 +1668,6 @@ extension NXColumnViewModel {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.name) - \(config.id) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description)")
 #endif
-                allIdsSeen = allIdsSeen.union(getAllPostIds(onlyNewAddedPosts, prefixOnly: true))
                 withAnimation {
                     self.viewState = .posts(existingPosts + onlyNewAddedPosts)
                 }
@@ -1681,7 +1678,6 @@ extension NXColumnViewModel {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) - \(config.id) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description)")
 #endif
-            allIdsSeen = allIdsSeen.union(getAllPostIds(uniqueAddedPosts, prefixOnly: true))
             if !vmInner.isAtTop {
                 vmInner.isAtTop = true
             }
