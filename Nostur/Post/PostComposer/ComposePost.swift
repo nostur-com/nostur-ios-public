@@ -102,6 +102,12 @@ struct ComposePost: View {
 //                                        .frame(height: max(50, (geo.size.height - 70)))
 //                                        .padding(.horizontal, -10)
                                         .id(textfield)
+                                        .onReceive(receiveNotification(.newPostFirstImageAppeared), perform: { _ in
+                                            guard kind == .picture else { return }
+                                            withAnimation {
+                                                proxy.scrollTo(textfield, anchor: .bottom)
+                                            }
+                                        })
                                 }
                                 
                                 .padding(10)
