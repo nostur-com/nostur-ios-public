@@ -65,14 +65,14 @@ struct MainView: View {
                     NBNavigationStack {
                         if la.account.isNC {
                             WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                                ComposePostCompat(onDismiss: { showingNewNote = false })
+                                ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                     .environmentObject(themes)
                                     .environmentObject(dim)
                                     .environmentObject(ns)
                             }
                         }
                         else {
-                            ComposePostCompat(onDismiss: { showingNewNote = false })
+                            ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                 .environmentObject(themes)
                                 .environmentObject(dim)
                                 .environmentObject(ns)
