@@ -40,7 +40,7 @@ struct InlineAccountSwitcher: View, Equatable {
                     .onTapGesture {
                         accountTapped(accountsSorted[index])
                     }
-                    .opacity(index == 0 || expanded ? 1.0 : 0.2)
+                    .opacity(index == 0 || expanded ? 1.0 : (index > 3 ? 0.0 : 0.2))
                     .zIndex(-Double(index))
                     .offset(y: expanded || (index == 0) ? 0 : (Double(index) * -(size - 2)))
                     .animation(.easeOut(duration: 0.2), value: expanded)
