@@ -41,16 +41,18 @@ struct VideoViewurRepresentable: UIViewRepresentable {
         context.coordinator.avpc = avpc
 
         avpc.view.isUserInteractionEnabled = true
+        
+        do { try AVAudioSession.sharedInstance().setActive(true) }
+        catch { }
+        
         return avpc.view
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
         // Update the view if needed...
         
-        uiView.isUserInteractionEnabled = true
+//        uiView.isUserInteractionEnabled = true
         if isPlaying {
-            do { try AVAudioSession.sharedInstance().setActive(true) }
-            catch { }
             context.coordinator.avpc?.player?.isMuted = isMuted
             context.coordinator.avpc?.player?.play()
         }

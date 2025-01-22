@@ -202,7 +202,18 @@ struct NRTextFixed: UIViewRepresentable {
 //        view.layer.backgroundColor = UIColor.red.cgColor
 //        view.layer.borderColor = UIColor.lightGray.cgColor
 //        view.layer.borderWidth = 1.0
-        self.setHeightIfNeeded(uiView: view)
+        if #available(iOS 16.0, *) {
+            DispatchQueue.main.async {
+                self.textHeight = attributedString.boundingRect(
+                    with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
+                    options: [.usesLineFragmentOrigin, .usesFontLeading],
+                    context: nil
+                ).height
+            }
+        }
+        else {
+            self.setHeightIfNeeded(uiView: view)
+        }
         
         return view
     }
@@ -220,19 +231,21 @@ struct NRTextFixed: UIViewRepresentable {
             uiView.tintColor = UIColor(accentColor)
         }
         
-        uiView.attributedText = self.attributedString
+        if (self.attributedString != uiView.attributedText) {
+            uiView.attributedText = self.attributedString
         
-        if #available(iOS 16.0, *) {
-            DispatchQueue.main.async {
-                self.textHeight = attributedString.boundingRect(
-                    with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
-                    options: [.usesLineFragmentOrigin, .usesFontLeading],
-                    context: nil
-                ).height
+            if #available(iOS 16.0, *) {
+                DispatchQueue.main.async {
+                    self.textHeight = attributedString.boundingRect(
+                        with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
+                        options: [.usesLineFragmentOrigin, .usesFontLeading],
+                        context: nil
+                    ).height
+                }
             }
-        }
-        else {
-            self.setHeightIfNeeded(uiView: uiView)
+            else {
+                self.setHeightIfNeeded(uiView: uiView)
+            }
         }
     }
     
