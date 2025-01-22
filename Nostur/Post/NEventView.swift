@@ -31,7 +31,7 @@ struct NEventView: View {
                 }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .onAppear { [weak vm, weak dim] in
+                    .onBecomingVisible { [weak vm, weak dim] in
                         guard let eventId = identifier.eventId else {
                             vm?.error("Problem parsing nostr identifier")
                             return

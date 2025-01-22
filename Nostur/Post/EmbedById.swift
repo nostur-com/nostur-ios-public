@@ -23,7 +23,9 @@ struct EmbedById: View {
                     .frame(height: 250)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .onAppear(perform: load)
+                    .onBecomingVisible {
+                        self.load()
+                    }
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(theme.lineColor, lineWidth: 1)

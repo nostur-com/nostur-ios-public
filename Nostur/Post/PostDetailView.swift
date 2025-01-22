@@ -21,7 +21,7 @@ struct NoteById: View {
             ProgressView()
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .onAppear { [weak vm] in
+                .onBecomingVisible { [weak vm] in
                     let fetchParams: FetchVM.FetchParams = (
                         prio: true,
                         req: { [weak vm] taskId in
@@ -272,7 +272,7 @@ struct PostAndParent: View {
             }
             else if let replyToId = nrPost.replyToId {
                 CenteredProgressView()
-                    .onAppear {
+                    .onBecomingVisible {
                         guard !didFetchParent else { return }
                         didFetchParent = true
                         

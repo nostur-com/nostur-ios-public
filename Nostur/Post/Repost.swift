@@ -86,7 +86,7 @@ struct Repost: View {
         .overlay {
             if let firstQuoteId = nrPost.firstQuoteId, noteRowAttributes.firstQuote == nil {
                 CenteredProgressView()
-                    .onAppear {
+                    .onBecomingVisible {
                         bg().perform {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.001")
                         }
