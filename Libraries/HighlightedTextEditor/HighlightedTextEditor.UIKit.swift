@@ -95,6 +95,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     var gifsTapped: GifsTappedCallback?
     var cameraTapped: CameraTappedCallback?
     var nestsTapped: NestsTappedCallback?
+    var kind: NEventKind?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
     private(set) var onCommit: OnCommitCallback?
@@ -102,6 +103,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     public init(
         text: Binding<String>,
+        kind: NEventKind? = nil,
         pastedImages: Binding<[PostedImageMeta]>,
         pastedVideos: Binding<[PostedVideoMeta]>,
         shouldBecomeFirstResponder: Bool,
@@ -122,6 +124,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         self.gifsTapped = gifsTapped
         self.cameraTapped = cameraTapped
         self.nestsTapped = nestsTapped
+        self.kind = kind
     }
     
     public func makeCoordinator() -> Coordinator {

@@ -17,13 +17,14 @@ struct ComposePostCompat: View {
     public var quotingEvent: Event? = nil
     public var directMention: Contact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
+    public var kind: NEventKind? = nil
     
     var body: some View {
         if #available(iOS 16.0, *) {
-            ComposePost(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss)
+            ComposePost(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss, kind: kind)
         }
         else {
-            ComposePost15(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss)
+            ComposePost15(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss) // No image picker yet on iOS 15 so remove kind:20 detection
         }
     }
 }
@@ -34,6 +35,8 @@ struct ComposePost: View {
     public var quotingEvent: Event? = nil
     public var directMention: Contact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
+    public var kind: NEventKind? = nil
+    
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
     

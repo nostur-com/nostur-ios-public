@@ -23,12 +23,13 @@ struct Entry: View {
     private var onDismiss: () -> Void
     private var replyToKind: Int64?
     static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
+    private var kind: NEventKind?
     
     private var shouldDisablePostButton: Bool {
         typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty)
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil) {
         self.replyTo = replyTo
         self.quotingEvent = quotingEvent
         self.directMention = directMention
@@ -36,6 +37,7 @@ struct Entry: View {
         self.typingTextModel = vm.typingTextModel
         self.onDismiss = onDismiss
         self.replyToKind = replyToKind
+        self.kind = kind
         _photoPickerShown = photoPickerShown
         _videoPickerShown = videoPickerShown
         _gifSheetShown = gifSheetShown
@@ -63,6 +65,7 @@ struct Entry: View {
             
             HighlightedTextEditor(
                 text: $typingTextModel.text,
+                kind: kind,
                 pastedImages: $typingTextModel.pastedImages,
                 pastedVideos: $typingTextModel.pastedVideos,
                 shouldBecomeFirstResponder: true,

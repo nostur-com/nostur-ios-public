@@ -14,6 +14,7 @@ struct ComposePost15: View {
     public var quotingEvent: Event? = nil
     public var directMention: Contact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
+    public var kind: NEventKind? = nil
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
