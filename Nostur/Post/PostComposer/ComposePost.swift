@@ -70,7 +70,7 @@ struct ComposePost: View {
     private var showAutoPilotPreview: Bool {
         guard !SettingsStore.shared.lowDataMode, SettingsStore.shared.enableOutboxPreview else { return false } // Don't continue with additional outbox relays on low data mode, or settings toggle
         guard SettingsStore.shared.enableOutboxRelays, vpnGuardOK() else { return false } // Check if Enhanced Relay Routing toggle is turned on
-        guard let preferredRelays = ConnectionPool.shared.preferredRelays else { return false }
+        guard ConnectionPool.shared.preferredRelays != nil else { return false }
         
         return true
     }

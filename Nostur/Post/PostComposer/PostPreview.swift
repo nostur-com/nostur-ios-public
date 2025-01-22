@@ -95,7 +95,7 @@ struct PostPreview: View {
     }
 }
 
-func createPreviewEvent(_ event:NEvent) -> Event {
+func createPreviewEvent(_ event: NEvent) -> Event {
     let context = bg()
     let previewEvent = Event(context: context)
     previewEvent.insertedAt = Date.now

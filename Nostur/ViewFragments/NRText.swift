@@ -346,6 +346,18 @@ struct NRTextFixedTester: View {
     }
 }
 
+#Preview("NRTextFixedTester3") {
+    PreviewContainer({ pe in
+        pe.parseMessages([
+            ###"["EVENT","test",{"sig":"11858cacfa18147eb04c2e283775140cf1fc204f17b963ed40f75e6e54831467d5dcb646766c42873a3d5b2741339be0471fc87598057e68484620f2b78f7d3c","kind":1,"pubkey":"f0019b0732a2b1a70360fb8f5ddb7f40544f8b46b0c928e300b519f6d53ec7c9","content":"ムカつくから死ねないけど、座りすぎは健康に悪いって話だよ。そこにJoin Nostrリンクがあるよ！滝は82メートルもあって、TikTokを運営する新たな合弁事業を設け、アメリカが合弁事業の50％の株式を持つことを明らかにしてれば勝手に育つと思ったら、本当にのど飴を取り出したんだろうが。","tags":[],"created_at":1737317165,"id":"0e090529d5fa674eeb07a3a17a012349ee6c1db56fa172fd3dc0f704f46a8e3e"}]"###
+        ])
+    }) {
+        if let test = PreviewFetcher.fetchNRPost("0e090529d5fa674eeb07a3a17a012349ee6c1db56fa172fd3dc0f704f46a8e3e") {
+           PostDetailView(nrPost: test)
+        }
+    }
+}
+
 #Preview("NRTextFixedTester2") {
     PreviewContainer({ pe in
         pe.parseMessages([

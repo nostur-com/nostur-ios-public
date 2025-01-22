@@ -282,9 +282,10 @@ struct NoteRow_Previews: PreviewProvider {
 #Preview("Debugging") {
     PreviewContainer({ pe in
         pe.parseMessages([
+            ###"["EVENT", "bug", {"kind":1,"sig":"11858cacfa18147eb04c2e283775140cf1fc204f17b963ed40f75e6e54831467d5dcb646766c42873a3d5b2741339be0471fc87598057e68484620f2b78f7d3c","id":"0e090529d5fa674eeb07a3a17a012349ee6c1db56fa172fd3dc0f704f46a8e3e","tags":[],"pubkey":"f0019b0732a2b1a70360fb8f5ddb7f40544f8b46b0c928e300b519f6d53ec7c9","created_at":1737317165,"content":"ムカつくから死ねないけど、座りすぎは健康に悪いって話だよ。そこにJoin Nostrリンクがあるよ！滝は82メートルもあって、TikTokを運営する新たな合弁事業を設け、アメリカが合弁事業の50％の株式を持つことを明らかにしてれば勝手に育つと思ったら、本当にのど飴を取り出したんだろうが。"}]"###,
             ###"["EVENT", "bug", {"id":"2257f6241b888e264346187653ce186427b72a3b6b69838060567ea8b3c87f5e","kind":1,"created_at":1715162040,"sig":"b0abce338b466d6f253a4d35020b21a8a3a05d763d3c95c50c3dc6c5082be460ab14d042bbc279b28aa1ff460b30b2a24490d26a0fe221d88be35a5e9b75e2eb","content":"Search across long posts, live chats, torrents, communities and other stuff on Nostr.Band!\n\nThe default search query now runs across multiple event kinds on https://nostr.band. You can specify your preferred kind by adding \"kind:N\" to your query, or use our advanced search to select some of supported kinds.\n\nThe site also works a bit faster now, some bugs were fixed. \n\nNostr.Band app didn't get enough of our development attention recently, if you think there are other important missing or broken parts of it - let me know.","tags":[],"pubkey":"3356de61b39647931ce8b2140b2bab837e0810c0ef515bbe92de0248040b8bdd"}]"###])
     }) {
-        if let p = PreviewFetcher.fetchNRPost("2257f6241b888e264346187653ce186427b72a3b6b69838060567ea8b3c87f5e") {
+        if let p = PreviewFetcher.fetchNRPost("0e090529d5fa674eeb07a3a17a012349ee6c1db56fa172fd3dc0f704f46a8e3e") {
             Box {
                 NoteRow(nrPost: p, theme: Themes.default.theme)
             }
