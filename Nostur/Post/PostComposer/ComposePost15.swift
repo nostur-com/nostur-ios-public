@@ -46,6 +46,14 @@ struct ComposePost15: View {
         return quotingNRPost == nil
     }
     
+    private var showAutoPilotPreview: Bool {
+        guard !SettingsStore.shared.lowDataMode, SettingsStore.shared.enableOutboxPreview else { return false } // Don't continue with additional outbox relays on low data mode, or settings toggle
+        guard SettingsStore.shared.enableOutboxRelays, vpnGuardOK() else { return false } // Check if Enhanced Relay Routing toggle is turned on
+        guard ConnectionPool.shared.preferredRelays != nil else { return false }
+        
+        return true
+    }
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
