@@ -1102,9 +1102,19 @@ class NXColumnViewModel: ObservableObject {
     
     // prefix / .shortId only
     public var allIdsSeen: Set<String> {
-        get { SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _allIdsSeen }
+        get {
+            if case .picture(let feed) = config?.columnType {
+                return _allIdsSeen
+            }
+            else {
+                return SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _allIdsSeen
+            }
+        }
         set {
-            if SettingsStore.shared.appWideSeenTracker {
+            if case .picture(let feed) = config?.columnType {
+                _allIdsSeen = newValue
+            }
+            else if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = newValue
             }
             else {
