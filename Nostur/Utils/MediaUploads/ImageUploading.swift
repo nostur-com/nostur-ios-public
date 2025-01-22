@@ -11,12 +11,13 @@ import Combine
 
 public struct PostedImageMeta: Hashable, Identifiable, Equatable {
     static public func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
+        lhs.uniqueId == rhs.uniqueId
     }
-    public var id: Int { index }
+    public var id: String { uniqueId }
     public let index: Int // To keep the correct order in pasted images
     public let imageData: UIImage
     public let type: ImageType
+    public let uniqueId: String
     
     public enum ImageType {
         case jpeg // from pasting
