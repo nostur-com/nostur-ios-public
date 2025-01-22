@@ -260,7 +260,11 @@ public final class NewPostModel: ObservableObject {
         if !imetas.isEmpty {
             // send message with images
             for imeta in imetas {
-                nEvent.content += "\n\(imeta.url)"
+                
+                // don't add image urls in .content for kind:20
+                if nEvent.kind != .picture {
+                    nEvent.content += "\n\(imeta.url)"
+                }
                 
                 var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
                 if let dim = imeta.dim, !dim.isEmpty {
