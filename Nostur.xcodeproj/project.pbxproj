@@ -132,6 +132,7 @@
 		1F4186122A7CCF7000626DF3 /* WithNSecBunkerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */; };
 		1F43CC4E2B949C73004EDE3B /* AskLoginSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */; };
 		1F43CC502B949C94004EDE3B /* Nip97LoginModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */; };
+		1F44363A2D3F2129009FB811 /* AnyPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4436392D3F2129009FB811 /* AnyPlayer.swift */; };
 		1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */; };
 		1F45C7EA29EF930F00F58772 /* ImageUploading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7E929EF930F00F58772 /* ImageUploading.swift */; };
 		1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */; };
@@ -380,6 +381,10 @@
 		1FBAA6192B53E694007C7535 /* Thunderzap71.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1FBAA6162B53E694007C7535 /* Thunderzap71.m4a */; };
 		1FBB901F2A85128A007A1550 /* StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901D2A85128A007A1550 /* StringMetric.swift */; };
 		1FBB90202A85128A007A1550 /* String+StringMetric.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBB901E2A85128A007A1550 /* String+StringMetric.swift */; };
+		1FBBED792D3FF19C00D3E1A4 /* MainPlayerPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBBED782D3FF19200D3E1A4 /* MainPlayerPreview.swift */; };
+		1FBBED7B2D3FF1C000D3E1A4 /* OverlayVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBBED7A2D3FF1BC00D3E1A4 /* OverlayVideo.swift */; };
+		1FBBED7D2D3FF1E500D3E1A4 /* UIKitVideoPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBBED7C2D3FF1E100D3E1A4 /* UIKitVideoPlayer.swift */; };
+		1FBBED7F2D3FF20100D3E1A4 /* AVPlayerViewControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBBED7E2D3FF1FF00D3E1A4 /* AVPlayerViewControllerRepresentable.swift */; };
 		1FBCA08F2AC84AC800913E16 /* ReplyingToEditable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */; };
 		1FBCA0912AC84AFF00913E16 /* ContactsToggleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */; };
 		1FBCD61C2CAAB127008258C3 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBCD61B2CAAB127008258C3 /* XCTest.framework */; platformFilter = ios; };
@@ -724,6 +729,7 @@
 		1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithNSecBunkerConnection.swift; sourceTree = "<group>"; };
 		1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskLoginSheet.swift; sourceTree = "<group>"; };
 		1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nip97LoginModel.swift; sourceTree = "<group>"; };
+		1F4436392D3F2129009FB811 /* AnyPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyPlayer.swift; sourceTree = "<group>"; };
 		1F44A1F12BDD1EEF00C1D3DB /* NosturCloud 5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 5.xcdatamodel"; sourceTree = "<group>"; };
 		1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerPicPicker.swift; sourceTree = "<group>"; };
 		1F45C7E929EF930F00F58772 /* ImageUploading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUploading.swift; sourceTree = "<group>"; };
@@ -970,6 +976,10 @@
 		1FBAA6162B53E694007C7535 /* Thunderzap71.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = Thunderzap71.m4a; sourceTree = "<group>"; };
 		1FBB901D2A85128A007A1550 /* StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StringMetric.swift; sourceTree = "<group>"; };
 		1FBB901E2A85128A007A1550 /* String+StringMetric.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+StringMetric.swift"; sourceTree = "<group>"; };
+		1FBBED782D3FF19200D3E1A4 /* MainPlayerPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPlayerPreview.swift; sourceTree = "<group>"; };
+		1FBBED7A2D3FF1BC00D3E1A4 /* OverlayVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverlayVideo.swift; sourceTree = "<group>"; };
+		1FBBED7C2D3FF1E100D3E1A4 /* UIKitVideoPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitVideoPlayer.swift; sourceTree = "<group>"; };
+		1FBBED7E2D3FF1FF00D3E1A4 /* AVPlayerViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AVPlayerViewControllerRepresentable.swift; sourceTree = "<group>"; };
 		1FBCA08E2AC84AC800913E16 /* ReplyingToEditable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplyingToEditable.swift; sourceTree = "<group>"; };
 		1FBCA0902AC84AFF00913E16 /* ContactsToggleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsToggleSheet.swift; sourceTree = "<group>"; };
 		1FBCD61B2CAAB127008258C3 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -1533,6 +1543,18 @@
 			path = "NIP97-Login";
 			sourceTree = "<group>";
 		};
+		1F4436372D3F20E0009FB811 /* MainPlayer */ = {
+			isa = PBXGroup;
+			children = (
+				1F4436392D3F2129009FB811 /* AnyPlayer.swift */,
+				1FBBED7E2D3FF1FF00D3E1A4 /* AVPlayerViewControllerRepresentable.swift */,
+				1FBBED782D3FF19200D3E1A4 /* MainPlayerPreview.swift */,
+				1FBBED7A2D3FF1BC00D3E1A4 /* OverlayVideo.swift */,
+				1FBBED7C2D3FF1E100D3E1A4 /* UIKitVideoPlayer.swift */,
+			);
+			path = MainPlayer;
+			sourceTree = "<group>";
+		};
 		1F45C7EE29EF998D00F58772 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -1973,6 +1995,7 @@
 				1FAC42B32C03CB0E00362997 /* MultiFeeds */,
 				1FD652532C4C4C8F00FAB2BD /* MainfeedList */,
 				1FB4D3F929BAEAE4004DB537 /* Mainfeed */,
+				1F4436372D3F20E0009FB811 /* MainPlayer */,
 				1F71037B296BD98D006245CC /* Nostr */,
 				1FC2DFF229A9328F00C8A9DA /* Notifications */,
 				1F02EA5D299FE52300FC89EB /* Onboarding */,
@@ -2623,6 +2646,7 @@
 				1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */,
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
 				1FFED7FF2A3970A800A0B1E8 /* PhotosPicker.swift in Sources */,
+				1FBBED7B2D3FF1C000D3E1A4 /* OverlayVideo.swift in Sources */,
 				1FED0D892ACB1D42002DAC02 /* FooterConfigurator.swift in Sources */,
 				1F48C6922C49C77D007BAE00 /* ChatRoomViewModel.swift in Sources */,
 				1F6337DE2C30D042009C290C /* Discover+FeedSettings.swift in Sources */,
@@ -2687,6 +2711,7 @@
 				1F15F0A52AAF9CB00004E706 /* GalleryViewModel.swift in Sources */,
 				1F1580D32AAD11A100E5CCAA /* View+onBecomingVisible.swift in Sources */,
 				1FCB52732A533027006D08DF /* Migration+CoreDataProperties.swift in Sources */,
+				1F44363A2D3F2129009FB811 /* AnyPlayer.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
 				1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */,
 				1F4C1C282A07AB090010573F /* NEventView.swift in Sources */,
@@ -2695,6 +2720,7 @@
 				1F91D8F82A186E5200C419A3 /* AnimatedNumber.swift in Sources */,
 				1F740DA529AF5F6900EFCCA7 /* ContactsSearch.swift in Sources */,
 				1FB448BE2965F3D000038671 /* NosturApp.swift in Sources */,
+				1FBBED792D3FF19C00D3E1A4 /* MainPlayerPreview.swift in Sources */,
 				1F15F09C2AAF2FCC0004E706 /* ReplyButton.swift in Sources */,
 				1FC2DFF429A9330600C8A9DA /* ProfileLightningButton.swift in Sources */,
 				1F2810BB2B1E150B00042928 /* NRBalloonView.swift in Sources */,
@@ -2899,6 +2925,7 @@
 				1FBAA6142B53E50D007C7535 /* SoundManager.swift in Sources */,
 				1F8B135E297B36DB002EB8CF /* HexEncoding.swift in Sources */,
 				1FCB52772A5369BB006D08DF /* Communities.swift in Sources */,
+				1FBBED7F2D3FF20100D3E1A4 /* AVPlayerViewControllerRepresentable.swift in Sources */,
 				1F4AFC4829733E2400CC1F90 /* Event+CoreDataProperties.swift in Sources */,
 				1F6EB73A29E1C9B200B9DA83 /* EditNosturList.swift in Sources */,
 				1F4C1C2A2A07B21F0010573F /* NProfileView.swift in Sources */,
@@ -2973,6 +3000,7 @@
 				1FC85CA62B0C1BC500789615 /* RelayMastery.swift in Sources */,
 				1FC0F5A52A4AEB2E004E4DAA /* ArticleByNaddr.swift in Sources */,
 				1FD49733297FCB5E0084F14E /* PreviewHelper.swift in Sources */,
+				1FBBED7D2D3FF1E500D3E1A4 /* UIKitVideoPlayer.swift in Sources */,
 				1F58157E2AFB03BC0014852A /* CloudBlocked+CoreDataClass.swift in Sources */,
 				1F810B3529E67145006B1614 /* MutedWordsView.swift in Sources */,
 				1F8836E52AA58D6500F252C1 /* DMState+CoreDataProperties.swift in Sources */,
