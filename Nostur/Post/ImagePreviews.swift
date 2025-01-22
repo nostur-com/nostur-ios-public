@@ -9,31 +9,34 @@ import SwiftUI
 import UIKit
 
 struct ImagePreviews: View {
-    @Binding var pastedImages:[PostedImageMeta]
-    var previewImages:[Image] {
-        pastedImages.map { Image(uiImage: $0.imageData) }
-    }
+    @Binding var pastedImages: [PostedImageMeta]
+    public var showButtons: Bool = true
     
     var body: some View {
+#if DEBUG
+        let _ = Self._printChanges()
+#endif
         HStack {
-            ForEach(previewImages.indices, id:\.self) { index in
-                previewImages[index]
+            ForEach(pastedImages) { pastedImage in
+                Image(uiImage: pastedImage.imageData)
                     .resizable()
                     .scaledToFit()
-                    .overlay(
-                        Image(systemName: "xmark.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .foregroundColor(.black)
-                            .background(Circle().foregroundColor(.white))
-                            .frame(width: 20, height: 20)
-                            .padding(5)
-                            .onTapGesture {
-                                _ = pastedImages.remove(at: index)
-                                L.og.debug("remove: \(index)")
-                            },
-                        alignment: .topTrailing
-                    )
+                    .overlay(alignment: .topTrailing) {
+                        if showButtons {
+                            Image(systemName: "xmark.circle.fill")
+                                .resizable()
+                                .scaledToFit()
+                                .foregroundColor(.black)
+                                .background(Circle().foregroundColor(.white))
+                                .frame(width: 20, height: 20)
+                                .padding(5)
+                                .onTapGesture {
+                                    pastedImages.removeAll { $0.uniqueId == pastedImage.uniqueId }
+                                }
+                        }
+                    }
+                    .id(pastedImage.uniqueId)
+                    
             }
         }
     }
@@ -41,8 +44,8 @@ struct ImagePreviews: View {
 
 struct ImagePreviews_Previews: PreviewProvider {
     @State static var images:[PostedImageMeta] = [
-        PostedImageMeta(index: 0, imageData: UIImage(named:"NosturLogo")!, type: .jpeg),
-        PostedImageMeta(index: 1, imageData: UIImage(named:"NosturLogoFull")!, type: .jpeg)
+        PostedImageMeta(index: 0, imageData: UIImage(named:"NosturLogo")!, type: .jpeg, uniqueId: UUID().uuidString),
+        PostedImageMeta(index: 1, imageData: UIImage(named:"NosturLogoFull")!, type: .jpeg, uniqueId: UUID().uuidString)
     ]
     static var previews: some View {
         VStack {
@@ -52,10 +55,8 @@ struct ImagePreviews_Previews: PreviewProvider {
 }
 
 struct PostPreviewImages: View {
-    let images:[UIImage]
-    init(_ images:[UIImage]) {
-        self.images = images
-    }
+    public let images: [UIImage]
+    
     var body: some View {
         ForEach(images.indices, id:\.self) { index in
             Image(uiImage: images[index])
