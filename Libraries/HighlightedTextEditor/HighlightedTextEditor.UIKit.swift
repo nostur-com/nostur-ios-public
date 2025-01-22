@@ -175,14 +175,17 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
         fixedSpace.width = 9
+        
+        let photoButton = UIButton(type: .system)
+        photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
+        photoButton.tintColor = UIColor(Themes.default.theme.accent)
+        photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
+        let photos = UIBarButtonItem(customView: photoButton)
     
-    
-        if #available(iOS 16, *) {
-            let photoButton = UIButton(type: .system)
-            photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
-            photoButton.tintColor = UIColor(Themes.default.theme.accent)
-            photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
-            let photos = UIBarButtonItem(customView: photoButton)
+        if kind == .picture, #available(iOS 16, *) {
+            doneToolbar.setItems([camera, fixedSpace, photos, flexibleSpace], animated: false)
+        }
+        else if #available(iOS 16, *) {
             
             let videoButton = UIButton(type: .system)
             videoButton.setImage(UIImage(systemName: "video"), for: .normal)

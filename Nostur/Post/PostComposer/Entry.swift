@@ -144,21 +144,23 @@ struct Entry: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
                     if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
-                        Button {
-                            if IS_CATALYST { // MacOS can reuse same weird sheet
-                                sendNotification(.showCreateNestsSheet)
-                            }
-                            else { // IPAD needs to dismiss first
-                                onDismiss()
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                        if kind != .picture {
+                            Button {
+                                if IS_CATALYST { // MacOS can reuse same weird sheet
                                     sendNotification(.showCreateNestsSheet)
                                 }
+                                else { // IPAD needs to dismiss first
+                                    onDismiss()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                                        sendNotification(.showCreateNestsSheet)
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "mic")
                             }
-                        } label: {
-                            Image(systemName: "mic")
+                            .buttonStyle(.borderless)
+                            .disabled(typingTextModel.uploading)
                         }
-                        .buttonStyle(.borderless)
-                        .disabled(typingTextModel.uploading)
                         
                         Button { cameraSheetShown = true } label: {
                             Image(systemName: "camera")
@@ -173,24 +175,30 @@ struct Entry: View {
                             .buttonStyle(.borderless)
                             .disabled(typingTextModel.uploading)
                             
-                            Button { videoPickerShown = true } label: {
-                                Image(systemName: "video")
+                            if kind != .picture {
+                                Button { videoPickerShown = true } label: {
+                                    Image(systemName: "video")
+                                }
+                                .buttonStyle(.borderless)
+                                .disabled(typingTextModel.uploading)
+                            }
+                        }
+                        
+                        if kind != .picture {
+                            Button { gifSheetShown = true } label: {
+                                Image("GifButton")
                             }
                             .buttonStyle(.borderless)
                             .disabled(typingTextModel.uploading)
                         }
-                        
-                        Button { gifSheetShown = true } label: {
-                            Image("GifButton")
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(typingTextModel.uploading)
                     }
                     
-                    Button(String(localized:"Preview", comment:"Preview button when creating a new post")) {
-                        vm.showPreview(quotingEvent: quotingEvent, replyTo: replyTo)
+                    if kind != .picture {
+                        Button(String(localized: "Preview", comment:"Preview button when creating a new post")) {
+                            vm.showPreview(quotingEvent: quotingEvent, replyTo: replyTo)
+                        }
+                        .disabled(typingTextModel.uploading)
                     }
-                    .disabled(typingTextModel.uploading)
                     
                     Button {
                         typingTextModel.sending = true
