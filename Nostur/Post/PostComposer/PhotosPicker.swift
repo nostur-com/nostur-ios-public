@@ -61,7 +61,7 @@ class ImagePickerModel: ObservableObject {
         }
     }
 
-    @Published private(set) var imageState: ImageState = .empty
+    @Published var imageState: ImageState = .empty
 
     @Published var newImage: UIImage?
     @Published var imageSelection: PhotosPickerItem? = nil {

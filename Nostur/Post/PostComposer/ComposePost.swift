@@ -53,7 +53,6 @@ struct ComposePost: View {
     @State private var replyToNRPost: NRPost?
     @State private var quotingNRPost: NRPost?
     @State private var isTargeted: Bool = false
-//    @State private var textHeight:CGFloat = 0
     
     @ObservedObject var settings: SettingsStore = .shared
     
@@ -218,7 +217,20 @@ struct ComposePost: View {
                             ipm.newImage = nil
                         }
                     }
-                    
+                    .onChange(of: photoPickerShown) { isShown in
+                        // Dismiss whole sheet if no image was picked (for kind:20)
+                        guard kind == .picture else { return }
+                        guard !isShown else { return }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            guard case .empty = ipm.imageState else {  return }
+                            guard ipm.imageSelection == nil else { return }
+                            guard ipm.newImage == nil else { return }
+                            if vm.typingTextModel.pastedImages.isEmpty && !photoPickerShown {
+                                L.og.debug("No image selected, dismiss")
+                                onDismiss()
+                            }
+                        }
+                    }
                     .sheet(isPresented: $videoPickerShown) {
                         VideoPickerView(selectedVideoURL: $selectedVideoURL)
                     }
