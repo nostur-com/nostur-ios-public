@@ -39,7 +39,7 @@ struct AddExistingAccountSheet: View {
     var body: some View {
             ZStack {
                 VStack {
-                    if (key.lowercased().starts(with: "nsec1")) {
+                    if (key.isEmpty || key.lowercased().starts(with: "nsec1")) {
                         SecureField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
