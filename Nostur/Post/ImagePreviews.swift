@@ -36,6 +36,11 @@ struct ImagePreviews: View {
                         }
                     }
                     .id(pastedImage.uniqueId)
+                    .onAppear {
+                        if pastedImages.count == 1 {
+                            sendNotification(.newPostFirstImageAppeared)
+                        }
+                    }
                     
             }
         }

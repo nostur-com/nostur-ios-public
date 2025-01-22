@@ -22,6 +22,10 @@ func receiveNotification(_ name: Notification.Name) -> NotificationCenter.Publis
 
 extension Notification.Name {
     
+    static var newPostFirstImageAppeared: Notification.Name {
+        return Notification.Name("newPostFirstImageAppeared")
+    }
+    
     static var blockListUpdated: Notification.Name {
         return Notification.Name("blockListUpdated")
     }
