@@ -22,8 +22,15 @@ struct Entry: View {
     private var directMention: Contact?
     private var onDismiss: () -> Void
     private var replyToKind: Int64?
-    static let PLACEHOLDER = String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
     private var kind: NEventKind?
+    private var PLACEHOLDER: String {
+        switch kind {
+            case .picture:
+            String(localized:"Add a caption", comment: "Placeholder text for adding a caption")
+            default:
+            String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
+        }
+    }
     
     private var shouldDisablePostButton: Bool {
         typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty)
@@ -49,6 +56,14 @@ struct Entry: View {
         let _ = Self._printChanges()
 #endif
         VStack(alignment: .leading, spacing: 3) {
+
+            if kind == .picture {
+                ImagePreviews(pastedImages: $typingTextModel.pastedImages, showButtons: false)
+                    .frame(maxWidth: .infinity)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, -10)
+            }
+            
             if replyTo != nil {
                 HStack(alignment: .top) { // name + reply + context menu
                     if replyToKind == 443 {
@@ -101,10 +116,11 @@ struct Entry: View {
                 }
             }
             .background(alignment: .topLeading) {
-                Text(Self.PLACEHOLDER).foregroundColor(.gray)
+                Text(self.PLACEHOLDER).foregroundColor(.gray)
                     .opacity(typingTextModel.text == "" ? 1 : 1)
                     .offset(x: 5.0, y: 8.0)
             }
+            .frame(minHeight: 100)
             .sheet(isPresented: $gifSheetShown) {
                 NBNavigationStack {
                     GifSearcher { gifUrl in
@@ -118,21 +134,24 @@ struct Entry: View {
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
                     CameraView(onUse: { uiImage in
-                        typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg))
+                        typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg, uniqueId: UUID().uuidString))
                     })
                     .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.listBackground)
             }
-            if !typingTextModel.pastedImages.isEmpty {
-                HStack(spacing: 5) {
-                    ImagePreviews(pastedImages: $typingTextModel.pastedImages)
+            
+            if kind != .picture {
+                if !typingTextModel.pastedImages.isEmpty {
+                    HStack(spacing: 5) {
+                        ImagePreviews(pastedImages: $typingTextModel.pastedImages)
+                    }
                 }
-            }
-            if !typingTextModel.pastedVideos.isEmpty {
-                HStack(spacing: 5) {
-                    VideoPreviews(pastedVideos: $typingTextModel.pastedVideos)
+                if !typingTextModel.pastedVideos.isEmpty {
+                    HStack(spacing: 5) {
+                        VideoPreviews(pastedVideos: $typingTextModel.pastedVideos)
+                    }
                 }
             }
         }

@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 import UniformTypeIdentifiers
 
+// TODO: We don't have a image picker yet for iOS 15
 struct ComposePost15: View {
     public var replyTo: Event? = nil
     public var quotingEvent: Event? = nil
@@ -32,6 +33,8 @@ struct ComposePost15: View {
     @State private var quotingNRPost: NRPost?
     @State private var isTargeted: Bool = false
 //    @State private var textHeight:CGFloat = 0
+    
+    @ObservedObject var settings: SettingsStore = .shared
     
     private var waitingForReply: Bool {
         guard replyTo != nil else { return false }
@@ -82,20 +85,8 @@ struct ComposePost15: View {
                                 
                                 Spacer()
                             }
-//                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
+
                             .padding(.horizontal, 10)
-                            .sheet(isPresented: $videoPickerShown) {
-                                VideoPickerView(selectedVideoURL: $selectedVideoURL)
-                            }
-                            .onChange(of: selectedVideoURL, perform: { newValue in
-                                if let video = newValue {
-                                    vm.typingTextModel.pastedVideos.append(PostedVideoMeta(index: vm.typingTextModel.pastedVideos.count, videoURL: video))
-                                    selectedVideoURL = nil
-                                }
-                            })
-//                            .toolbar {
-//                                
-//                            }
                             .onAppear {
                                 signpost(NRState.shared, "New Post", .end, "New Post view ready")
                                 
@@ -126,12 +117,27 @@ struct ComposePost15: View {
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         NBNavigationStack {
-                            PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
-                                .environmentObject(themes)
+                            VStack(alignment: .leading) {
+                                PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                    .environmentObject(themes)
+                                
+                                if let nEvent = vm.previewNEvent, showAutoPilotPreview {
+                                    AutoPilotSendPreview(nEvent: nEvent)
+                                }
+                            }
                         }
                         .nbUseNavigationStack(.never)
                         .presentationBackgroundCompat(themes.theme.listBackground)
                     }
+                    .sheet(isPresented: $videoPickerShown) {
+                        VideoPickerView(selectedVideoURL: $selectedVideoURL)
+                    }
+                    .onChange(of: selectedVideoURL, perform: { newValue in
+                        if let video = newValue {
+                            vm.typingTextModel.pastedVideos.append(PostedVideoMeta(index: vm.typingTextModel.pastedVideos.count, videoURL: video))
+                            selectedVideoURL = nil
+                        }
+                    })
                 }
                 .overlay {
                     ZStack {
@@ -164,7 +170,8 @@ struct ComposePost15: View {
                                     PostedImageMeta(
                                         index: self.vm.typingTextModel.pastedImages.count,
                                         imageData: imageData,
-                                        type: .jpeg
+                                        type: .jpeg,
+                                        uniqueId: UUID().uuidString
                                     )
                                 )
                             }
@@ -179,7 +186,14 @@ struct ComposePost15: View {
         }
         .onAppear {
             vm.activeAccount = account()
-            if let replyTo {
+            
+            if kind == .picture {
+                var pictureEvent = NEvent(content: "")
+                pictureEvent.kind = .picture
+                vm.nEvent = pictureEvent
+                photoPickerShown = true
+            }
+            else if let replyTo {
                 vm.loadReplyTo(replyTo)
                 bg().perform {
                     let replyToNRPost = NRPost(event: replyTo)

@@ -55,6 +55,8 @@ struct ComposePost: View {
     @State private var isTargeted: Bool = false
 //    @State private var textHeight:CGFloat = 0
     
+    @ObservedObject var settings: SettingsStore = .shared
+    
     private var waitingForReply: Bool {
         guard replyTo != nil else { return false }
         return replyToNRPost == nil
@@ -82,69 +84,80 @@ struct ComposePost: View {
                 GeometryReader { geo in
                     ScrollViewReader { proxy in
                         ScrollView {
-                            VStack {
-                                if let replyToNRPost = replyToNRPost {
-                                    PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom, theme: themes.theme)
-                                        .onTapGesture { }
-                                        .disabled(true)
-                                }
-                                
-                                HStack(alignment: .top) {
-                                    InlineAccountSwitcher(activeAccount: account, onChange: { account in
-                                        vm.activeAccount = account
-                                    }).equatable()
+                            switch kind {
+                            case .picture:
+                                VStack(alignment: .leading) {
+                                    HStack(alignment: .top) {
+                                        InlineAccountSwitcher(activeAccount: account, onChange: { account in
+                                            vm.activeAccount = account
+                                        }).equatable()
+                                        
+                                        VStack(alignment: .leading, spacing: 0) {
+                                            PostHeaderView(pubkey: account.publicKey, name: account.anyName, couldBeImposter: 0, via: "Nostur", createdAt: Date.now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: false)
+                                        }
+                                    }
+                                    .padding(.top, 10)
+                                    .zIndex(200)
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
-                                        .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: .picture)
+//                                        .frame(height: max(50, (geo.size.height - 70)))
+//                                        .padding(.horizontal, -10)
                                         .id(textfield)
                                 }
-                                .padding(.top, 10)
                                 
-                                if let quotingNRPost = quotingNRPost {
-                                    QuotedNoteFragmentView(nrPost: quotingNRPost, theme: themes.theme)
-                                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width - 70, isScreenshot: false))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(themes.theme.lineColor.opacity(0.5), lineWidth: 1)
-                                        )
-                                        .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                                .padding(10)
+                                .onAppear {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        withAnimation {
+                                            proxy.scrollTo(textfield, anchor: .bottom)
+                                        }
+                                    }
                                 }
-                            }
-//                            .padding(.bottom, 100) // Need some extra space for expanding account switcher
-                            .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
-                            .onChange(of: ipm.newImage) { newImage in
-                                if let newImage {
-                                    vm.typingTextModel.pastedImages.append(
-                                        PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg)
-                                    )
-                                    ipm.newImage = nil
+                            default:
+                                VStack {
+                                    if let replyToNRPost = replyToNRPost {
+                                        PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom, theme: themes.theme)
+                                            .onTapGesture { }
+                                            .disabled(true)
+                                    }
+                                    
+                                    HStack(alignment: .top) {
+                                        InlineAccountSwitcher(activeAccount: account, onChange: { account in
+                                            vm.activeAccount = account
+                                        }).equatable()
+                                        
+                                        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
+                                            .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
+                                            .id(textfield)
+                                    }
+                                    .padding(.top, 10)
+                                    
+                                    if let quotingNRPost = quotingNRPost {
+                                        QuotedNoteFragmentView(nrPost: quotingNRPost, theme: themes.theme)
+                                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width - 70, isScreenshot: false))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(themes.theme.lineColor.opacity(0.5), lineWidth: 1)
+                                            )
+                                            .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                                    }
                                 }
-                            }
-                            
-                            .sheet(isPresented: $videoPickerShown) {
-                                VideoPickerView(selectedVideoURL: $selectedVideoURL)
-                            }
-                            .onChange(of: selectedVideoURL, perform: { newValue in
-                                if let video = newValue {
-                                    vm.typingTextModel.pastedVideos.append(PostedVideoMeta(index: vm.typingTextModel.pastedVideos.count, videoURL: video))
-                                    selectedVideoURL = nil
-                                }
-                            })
-                            
-                            .padding(10)
-                            .onAppear {
-                                signpost(NRState.shared, "New Post", .end, "New Post view ready")
                                 
-                                if let startTime = timeTrackers["NewNote"] {
-                                    let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-                                    print(String(format: "NewNote: Time elapsed: %.3f seconds", timeElapsed))
+                                .padding(10)
+                                .onAppear {
+                                    signpost(NRState.shared, "New Post", .end, "New Post view ready")
+                                    
+                                    if let startTime = timeTrackers["NewNote"] {
+                                        let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
+                                        print(String(format: "NewNote: Time elapsed: %.3f seconds", timeElapsed))
+                                    }
                                 }
-                            }
-                            .onAppear {
-    //                            textHeight = 300
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    withAnimation {
-                                        proxy.scrollTo(textfield)
+                                .onAppear {
+        //                            textHeight = 300
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        withAnimation {
+                                            proxy.scrollTo(textfield)
+                                        }
                                     }
                                 }
                             }
@@ -190,6 +203,32 @@ struct ComposePost: View {
                             .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                     }
+                    .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
+                    .onChange(of: ipm.newImage) { newImage in
+                        if let newImage {
+                            if kind == .picture { // Only 1 main picture for kind:20
+                                vm.typingTextModel.objectWillChange.send()
+                                vm.typingTextModel.pastedImages = [PostedImageMeta(index: 0, imageData: newImage, type: .jpeg, uniqueId: UUID().uuidString)]
+                            }
+                            else { // multiple images possible for others
+                                vm.typingTextModel.pastedImages.append(
+                                    PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg, uniqueId: UUID().uuidString)
+                                )
+                            }
+                            ipm.newImage = nil
+                        }
+                    }
+                    
+                    .sheet(isPresented: $videoPickerShown) {
+                        VideoPickerView(selectedVideoURL: $selectedVideoURL)
+                    }
+                    .onChange(of: selectedVideoURL, perform: { newValue in
+                        guard kind != .picture else { return }
+                        if let video = newValue {
+                            vm.typingTextModel.pastedVideos.append(PostedVideoMeta(index: vm.typingTextModel.pastedVideos.count, videoURL: video))
+                            selectedVideoURL = nil
+                        }
+                    })
                 }
                 .overlay {
                     ZStack {
@@ -218,13 +257,26 @@ struct ComposePost: View {
                     _ = provider.loadDataRepresentation(forTypeIdentifier:  UTType.image.identifier) { data, error in
                         if error == nil, let data, let imageData = UIImage(data: data) {
                             DispatchQueue.main.async {
-                                self.vm.typingTextModel.pastedImages.append(
-                                    PostedImageMeta(
-                                        index: self.vm.typingTextModel.pastedImages.count,
-                                        imageData: imageData,
-                                        type: .jpeg
+                                if kind == .picture { // Only 1 main picture for kind:20
+                                    self.vm.typingTextModel.pastedImages = [
+                                        PostedImageMeta(
+                                            index: 0,
+                                            imageData: imageData,
+                                            type: .jpeg,
+                                            uniqueId: UUID().uuidString
+                                        )
+                                    ]
+                                }
+                                else { // multiple images possible for others
+                                    self.vm.typingTextModel.pastedImages.append(
+                                        PostedImageMeta(
+                                            index: self.vm.typingTextModel.pastedImages.count,
+                                            imageData: imageData,
+                                            type: .jpeg,
+                                            uniqueId: UUID().uuidString
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
@@ -238,7 +290,14 @@ struct ComposePost: View {
         }
         .onAppear {
             vm.activeAccount = account()
-            if let replyTo {
+            
+            if kind == .picture {
+                var pictureEvent = NEvent(content: "")
+                pictureEvent.kind = .picture
+                vm.nEvent = pictureEvent
+                photoPickerShown = true
+            }
+            else if let replyTo {
                 vm.loadReplyTo(replyTo)
                 bg().perform {
                     let replyToNRPost = NRPost(event: replyTo)
@@ -273,7 +332,7 @@ struct ComposePost: View {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
-                        ComposePostCompat(onDismiss: { })
+                        ComposePostCompat(onDismiss: { }, kind: .picture)
                     }
                     .nbUseNavigationStack(.never)
                 }
