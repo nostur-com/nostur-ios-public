@@ -132,7 +132,7 @@
 		1F4186122A7CCF7000626DF3 /* WithNSecBunkerConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */; };
 		1F43CC4E2B949C73004EDE3B /* AskLoginSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */; };
 		1F43CC502B949C94004EDE3B /* Nip97LoginModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */; };
-		1F44363A2D3F2129009FB811 /* AnyPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4436392D3F2129009FB811 /* AnyPlayer.swift */; };
+		1F44363A2D3F2129009FB811 /* AnyPlayerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F4436392D3F2129009FB811 /* AnyPlayerModel.swift */; };
 		1F45C7E829EE8FF100F58772 /* BannerPicPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */; };
 		1F45C7EA29EF930F00F58772 /* ImageUploading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7E929EF930F00F58772 /* ImageUploading.swift */; };
 		1F45C7ED29EF997200F58772 /* ImgurMediaUploadService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F45C7EC29EF997200F58772 /* ImgurMediaUploadService.swift */; };
@@ -729,7 +729,7 @@
 		1F4186112A7CCECE00626DF3 /* WithNSecBunkerConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithNSecBunkerConnection.swift; sourceTree = "<group>"; };
 		1F43CC4D2B949C73004EDE3B /* AskLoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskLoginSheet.swift; sourceTree = "<group>"; };
 		1F43CC4F2B949C94004EDE3B /* Nip97LoginModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Nip97LoginModel.swift; sourceTree = "<group>"; };
-		1F4436392D3F2129009FB811 /* AnyPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyPlayer.swift; sourceTree = "<group>"; };
+		1F4436392D3F2129009FB811 /* AnyPlayerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyPlayerModel.swift; sourceTree = "<group>"; };
 		1F44A1F12BDD1EEF00C1D3DB /* NosturCloud 5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "NosturCloud 5.xcdatamodel"; sourceTree = "<group>"; };
 		1F45C7E729EE8FF100F58772 /* BannerPicPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerPicPicker.swift; sourceTree = "<group>"; };
 		1F45C7E929EF930F00F58772 /* ImageUploading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageUploading.swift; sourceTree = "<group>"; };
@@ -1546,7 +1546,7 @@
 		1F4436372D3F20E0009FB811 /* MainPlayer */ = {
 			isa = PBXGroup;
 			children = (
-				1F4436392D3F2129009FB811 /* AnyPlayer.swift */,
+				1F4436392D3F2129009FB811 /* AnyPlayerModel.swift */,
 				1FBBED7E2D3FF1FF00D3E1A4 /* AVPlayerViewControllerRepresentable.swift */,
 				1FBBED782D3FF19200D3E1A4 /* MainPlayerPreview.swift */,
 				1FBBED7A2D3FF1BC00D3E1A4 /* OverlayVideo.swift */,
@@ -2711,7 +2711,7 @@
 				1F15F0A52AAF9CB00004E706 /* GalleryViewModel.swift in Sources */,
 				1F1580D32AAD11A100E5CCAA /* View+onBecomingVisible.swift in Sources */,
 				1FCB52732A533027006D08DF /* Migration+CoreDataProperties.swift in Sources */,
-				1F44363A2D3F2129009FB811 /* AnyPlayer.swift in Sources */,
+				1F44363A2D3F2129009FB811 /* AnyPlayerModel.swift in Sources */,
 				1F33098C298AEE5D00D4D8CF /* View+withNavigationDestinations.swift in Sources */,
 				1F065A9D29A3E9E0003421D3 /* FetchThings.swift in Sources */,
 				1F4C1C282A07AB090010573F /* NEventView.swift in Sources */,

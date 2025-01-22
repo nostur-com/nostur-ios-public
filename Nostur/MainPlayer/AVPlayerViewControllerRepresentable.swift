@@ -13,8 +13,48 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     // MARK: - Bindings
     @Binding var player: AVPlayer
     @Binding var isPlaying: Bool
+    @Binding var showsPlaybackControls: Bool
+    
+
+    // MARK: - UIViewControllerRepresentable Methods
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        print("makeUIViewController")
+        let controller = AVPlayerViewController()
+        controller.player = player
+        controller.delegate = context.coordinator // Optional: if you want to handle delegate methods
+        controller.showsPlaybackControls = showsPlaybackControls
+        controller.canStartPictureInPictureAutomaticallyFromInline = true
+        controller.allowsPictureInPicturePlayback = true
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        // SwiftUI to UIKit
+        // Update properties of the UIViewController based on the latest SwiftUI state.
+        print("updateUIViewController")
+        uiViewController.player = player
+        if isPlaying {
+            if player.timeControlStatus != .playing {
+                player.play()
+            }
+        } else {
+            if player.timeControlStatus == .playing {
+                player.pause()
+            }
+        }
+        
+        uiViewController.showsPlaybackControls = showsPlaybackControls
+    }
+    
+    // MARK: - Coordinator Creation
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
     
     // MARK: - Coordinator
+    // Use the Coordinator to communicate events back to SwiftUI.
+    // Implement any delegate methods or communication logic within the Coordinator.
+    // UIKit to SwiftUI
     class Coordinator: NSObject, AVPlayerViewControllerDelegate {
         var parent: AVPlayerViewControllerRepresentable
         var timeObserverToken: Any?
@@ -62,32 +102,5 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
                 self.parent.isPlaying = false
             }
         }
-    }
-    
-    // MARK: - UIViewControllerRepresentable Methods
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let controller = AVPlayerViewController()
-        controller.player = player
-        controller.delegate = context.coordinator // Optional: if you want to handle delegate methods
-        controller.showsPlaybackControls = false
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        uiViewController.player = player
-        if isPlaying {
-            if player.timeControlStatus != .playing {
-                player.play()
-            }
-        } else {
-            if player.timeControlStatus == .playing {
-                player.pause()
-            }
-        }
-    }
-    
-    // MARK: - Coordinator Creation
-    func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
     }
 }

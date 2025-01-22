@@ -14,6 +14,7 @@ struct UIKitVideoPlayer: UIViewControllerRepresentable {
     var onVideoTap: (() -> Void)? // Optional callback for tap gesture
 
     func makeUIViewController(context: Context) -> AVPlayerViewController {
+        print("makeUIViewController111")
         let controller = AVPlayerViewController()
         controller.player = AnyPlayerModel.shared.player
         controller.showsPlaybackControls = false // Hide default controls
@@ -31,6 +32,7 @@ struct UIKitVideoPlayer: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        print("updateUIViewController111")
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
         

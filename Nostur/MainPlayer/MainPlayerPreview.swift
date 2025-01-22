@@ -13,6 +13,7 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
 @available(iOS 18.0, *)
 #Preview("Integrated media player bar") {
     @Previewable @State var offset: CGFloat = 69.0
+    @Previewable @ObservedObject var apm: AnyPlayerModel = .shared
     VStack {
         TabView {
             GeometryReader { geometry in
@@ -45,9 +46,9 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                 .tag("Messages")
                 .badge(1)
         }
-        .overlay(alignment: .bottom) {
+        .overlay(alignment: .bottomTrailing) {
             OverlayVideo()
-                .offset(y: -offset)
+//                .offset(y: apm.viewMode == .videostream ? 0 : -offset)
         }
         
     }
@@ -62,3 +63,4 @@ struct TabBarHeightKey: PreferenceKey {
         value = max(value, nextValue())
     }
 }
+

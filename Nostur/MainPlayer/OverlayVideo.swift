@@ -11,9 +11,19 @@ struct OverlayVideo: View {
     @ObservedObject var vm: AnyPlayerModel = .shared
     public var onVideoTap: (() -> Void)? = nil
     
-    let videoHeight: CGFloat = 100.0
-    let videoWidth: CGFloat = 178.0
-    let videoPaddingHorizontal: CGFloat = 12.0
+    static let aspect: CGFloat = 16/9
+    
+    
+    var videoHeight: CGFloat {
+        videoWidth / Self.aspect
+    }
+    var videoWidth: CGFloat {
+        if vm.viewMode != .overlay {
+            return UIScreen.main.bounds.width
+        }
+        return UIScreen.main.bounds.width * 0.75
+    }
+    let videoPaddingHorizontal: CGFloat = 0.0 // 12.0
     
     // State variables for dragging
     @State private var currentOffset = CGSize(width: 0.0, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
@@ -30,89 +40,98 @@ struct OverlayVideo: View {
         case .overlay:
             vm.viewMode = .videostream
         case .videostream, .audiostream:
-            vm.viewMode = .fullscreen
+            vm.viewMode = .overlay
+//            vm.viewMode = .fullscreen
         case .fullscreen:
-            vm.viewMode = .off
+            vm.viewMode = .overlay
+//            vm.viewMode = .off
         }
     }
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack(alignment: .topLeading) {
+            if vm.viewMode != .off {
+                ZStack(alignment: .topLeading) {
+                    Color.gray
+                        .opacity(0.25)
 
-                switch vm.viewMode {
-                case .off:
-                    Text("off")
-                        .foregroundColor(Color.red)
-                        .onTapGesture {
-                            self.tap()
-                        }
-                case .overlay:
                     VStack(spacing: 0) {
                         //                    Text("haa")
                         //                        .foregroundColor(.white)
-                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying)
+                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls)
+                            .overlay(alignment: .topTrailing) {
+                                if vm.viewMode != .overlay {
+                                    Image(systemName: "pip.enter")
+                                        .font(.title2)
+                                        .foregroundColor(Color.white)
+                                        .padding(.top, 15)
+                                        .padding(.trailing, 15)
+                                        .onTapGesture {
+                                            withAnimation {
+                                                vm.viewMode = .overlay
+                                            }
+                                        }
+                                }
+                            }
                             .onTapGesture {
-                                self.tap()
-                            }
-                        HStack(spacing: 20) {
-                            Button(action: {
-                                self.tap()
-                            }) {
-                                Image(systemName: "theatermasks")
-                                    .foregroundColor(.white)
-                                    .font(.title2)
-                            }
-                            
-                            Button(action: {
-                                vm.seekBackward()
-                            }) {
-                                Image(systemName: "gobackward.15")
-                                    .foregroundColor(.white)
-                                    .font(.title2)
-                            }
-                            
-                            Button(action: {
-                                if vm.isPlaying {
-                                    vm.pauseVideo()
+                                withAnimation {
+                                    self.tap()
                                 }
-                                else {
-                                    vm.playVideo()
+                            }
+                        if vm.viewMode == .overlay {
+                            HStack(spacing: 20) {
+                                Button(action: {
+                                    vm.seekBackward()
+                                }) {
+                                    Image(systemName: "gobackward.15")
+                                        .foregroundColor(.white)
+                                        .font(.title2)
                                 }
-                            }) {
-                                Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
-                                    .foregroundColor(.white)
-                                    .font(.title)
+                                
+                                Button(action: {
+                                    if vm.isPlaying {
+                                        vm.pauseVideo()
+                                    }
+                                    else {
+                                        vm.playVideo()
+                                    }
+                                }) {
+                                    Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
+                                        .foregroundColor(.white)
+                                        .font(.title)
+                                }
+                                
+                                Button(action: {
+                                    vm.seekForward()
+                                }) {
+                                    Image(systemName: "goforward.15")
+                                        .foregroundColor(.white)
+                                        .font(.title2)
+                                }
                             }
-                            
-                            Button(action: {
-                                vm.seekForward()
-                            }) {
-                                Image(systemName: "goforward.15")
-                                    .foregroundColor(.white)
-                                    .font(.title2)
-                            }
+                            .frame(height: CONTROLS_HEIGHT)
                         }
-                        .frame(height: CONTROLS_HEIGHT)
                     }
                     .background(Color.black)
                     .frame(
                         width: videoWidth * currentScale,
-                        height: (videoHeight * currentScale) + CONTROLS_HEIGHT
+                        height: (videoHeight * currentScale) + (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
-                    .padding(.horizontal, videoPaddingHorizontal)
+//                    .padding(.horizontal, videoPaddingHorizontal)
                     .offset(
-                        x: clampedOffsetX(geometry: geometry),
-                        y: clampedOffsetY(geometry: geometry) - CONTROLS_HEIGHT
+                        x: vm.viewMode == .videostream ? 0 : clampedOffsetX(geometry: geometry),
+                        y: vm.viewMode == .videostream ? 0 : clampedOffsetY(geometry: geometry) - CONTROLS_HEIGHT
                     )
                     .gesture(
                         // Combine Drag and Magnification Gestures
                         SimultaneousGesture(
                             DragGesture()
                                 .onChanged { value in
+                                    guard vm.viewMode == .overlay else { return }
                                     self.dragOffset = value.translation
                                 }
                                 .onEnded { value in
+                                    guard vm.viewMode == .overlay else { return }
                                     let newOffsetX = currentOffset.width + value.translation.width
                                     let newOffsetY = currentOffset.height + value.translation.height
                                     
@@ -131,6 +150,7 @@ struct OverlayVideo: View {
                                 },
                             MagnificationGesture()
                                 .onChanged { value in
+                                    guard vm.viewMode == .overlay else { return }
                                     let delta = value / self.scale
                                     self.scale = value
                                     var newScale = self.currentScale * delta
@@ -159,23 +179,36 @@ struct OverlayVideo: View {
                                     )
                                 }
                                 .onEnded { _ in
+                                    guard vm.viewMode == .overlay else { return }
                                     self.scale = 1.0
                                 }
                         )
                     )
-                case .audiostream, .videostream, .fullscreen:
-                    VStack(spacing: 0) {
-                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying)
-                        if (vm.viewMode == .fullscreen) {
-                            Text("fullscreen")
-                                .foregroundColor(Color.red)
-                        }
-                        Color.red
-                            .frame(height: 400)
-                            .onTapGesture {
-                                self.tap()
-                            }
-                    }
+                    
+                    
+    //                switch vm.viewMode {
+    //                case .off:
+    //                    Text("off")
+    //                        .foregroundColor(Color.red)
+    //                        .onTapGesture {
+    //                            self.tap()
+    //                        }
+    //                case .overlay:
+    //
+    //                case .audiostream, .videostream, .fullscreen:
+    //                    VStack(spacing: 0) {
+    //                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying)
+    //                        if (vm.viewMode == .fullscreen) {
+    //                            Text("fullscreen")
+    //                                .foregroundColor(Color.red)
+    //                        }
+    //                        Color.red
+    //                            .frame(height: 400)
+    //                            .onTapGesture {
+    //                                self.tap()
+    //                            }
+    //                    }
+    //                }
                 }
             }
         }
@@ -202,3 +235,4 @@ struct OverlayVideo: View {
         return clamp(value: currentOffset.height + dragOffset.height, min: 0, max: maxOffsetY)
     }
 }
+

@@ -14,11 +14,16 @@ class AnyPlayerModel: ObservableObject {
     // MARK: - State Variables
     @Published var player = AVPlayer(url: URL(string: "https://www.w3schools.com/html/mov_bbb.mp4")!)
     @Published var isPlaying = false
+    @Published var showsPlaybackControls = false
 //    @Published var showPlayer = true
     
     static let shared = AnyPlayerModel()
     
-    @Published var viewMode: AnyPlayerViewMode = .off
+    @Published var viewMode: AnyPlayerViewMode = .off {
+        didSet {
+            showsPlaybackControls = viewMode != .overlay
+        }
+    }
     @Published var url: URL?
 //    @Published var player = AVPlayer()
 //    @Published var isPlaying: Bool = false
@@ -29,6 +34,7 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     public func loadVideo(url: String) {
+        print("loadVideo \(url)")
         guard let url = URL(string: url) else { return }
         if url != self.url {
             self.url = url
