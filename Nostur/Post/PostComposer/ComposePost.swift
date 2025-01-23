@@ -313,7 +313,6 @@ struct ComposePost: View {
                 var pictureEvent = NEvent(content: "")
                 pictureEvent.kind = .picture
                 vm.nEvent = pictureEvent
-                photoPickerShown = true
             }
             else if let replyTo {
                 vm.loadReplyTo(replyTo)
