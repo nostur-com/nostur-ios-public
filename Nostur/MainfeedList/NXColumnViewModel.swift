@@ -1103,7 +1103,7 @@ class NXColumnViewModel: ObservableObject {
     // prefix / .shortId only
     public var allIdsSeen: Set<String> {
         get {
-            if case .picture(let feed) = config?.columnType {
+            if case .picture(_) = config?.columnType {
                 return _allIdsSeen
             }
             else {
@@ -1111,7 +1111,7 @@ class NXColumnViewModel: ObservableObject {
             }
         }
         set {
-            if case .picture(let feed) = config?.columnType {
+            if case .picture(_) = config?.columnType {
                 _allIdsSeen = newValue
             }
             else if SettingsStore.shared.appWideSeenTracker {
