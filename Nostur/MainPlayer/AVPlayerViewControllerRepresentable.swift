@@ -14,6 +14,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     @Binding var player: AVPlayer
     @Binding var isPlaying: Bool
     @Binding var showsPlaybackControls: Bool
+    @Binding var viewMode: AnyPlayerViewMode
     
 
     // MARK: - UIViewControllerRepresentable Methods
@@ -21,10 +22,25 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
         print("makeUIViewController")
         let controller = AVPlayerViewController()
         controller.player = player
+        controller.modalPresentationStyle = .fullScreen
         controller.delegate = context.coordinator // Optional: if you want to handle delegate methods
         controller.showsPlaybackControls = showsPlaybackControls
         controller.canStartPictureInPictureAutomaticallyFromInline = true
         controller.allowsPictureInPicturePlayback = true
+        controller.entersFullScreenWhenPlaybackBegins = true
+        controller.exitsFullScreenWhenPlaybackEnds = true
+
+//        controller.videoGravity = .resizeAspectFill
+        
+        
+        if viewMode == .fullscreen {
+            
+            player.playImmediately(atRate: 1.0)
+//            controller.videoGravity = .resizeAspectFill
+            player.play()
+//            controller.modalPresentationStyle = .fullScreen
+        }
+        
         return controller
     }
     
@@ -41,6 +57,11 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
             if player.timeControlStatus == .playing {
                 player.pause()
             }
+        }
+        
+        if viewMode == .fullscreen {
+//            uiViewController.videoGravity = .resizeAspectFill
+//            uiViewController.modalPresentationStyle = .fullScreen
         }
         
         uiViewController.showsPlaybackControls = showsPlaybackControls

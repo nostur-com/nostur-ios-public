@@ -33,34 +33,17 @@ struct OverlayVideo: View {
     @State private var currentScale: CGFloat = 1.0
     @State private var scale: CGFloat = 1.0
     
-    private func tap() {
-        switch vm.viewMode {
-        case .off:
-            vm.viewMode = .overlay
-        case .overlay:
-            vm.viewMode = .videostream
-        case .videostream, .audiostream:
-            vm.viewMode = .overlay
-//            vm.viewMode = .fullscreen
-        case .fullscreen:
-            vm.viewMode = .overlay
-//            vm.viewMode = .off
-        }
-    }
-    
     var body: some View {
         GeometryReader { geometry in
-            if vm.viewMode != .off {
+            if vm.url != nil {
                 ZStack(alignment: .topLeading) {
-                    Color.gray
-                        .opacity(0.25)
+//                    Color.gray
+//                        .opacity(0.25)
 
                     VStack(spacing: 0) {
-                        //                    Text("haa")
-                        //                        .foregroundColor(.white)
-                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls)
+                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
                             .overlay(alignment: .topTrailing) {
-                                if vm.viewMode != .overlay {
+                                if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
                                     Image(systemName: "pip.enter")
                                         .font(.title2)
                                         .foregroundColor(Color.white)
@@ -68,14 +51,14 @@ struct OverlayVideo: View {
                                         .padding(.trailing, 15)
                                         .onTapGesture {
                                             withAnimation {
-                                                vm.viewMode = .overlay
+                                                vm.toggleViewMode()
                                             }
                                         }
                                 }
                             }
                             .onTapGesture {
                                 withAnimation {
-                                    self.tap()
+                                    vm.toggleViewMode()
                                 }
                             }
                         if vm.viewMode == .overlay {
@@ -117,10 +100,10 @@ struct OverlayVideo: View {
                         width: videoWidth * currentScale,
                         height: (videoHeight * currentScale) + (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
-//                    .padding(.horizontal, videoPaddingHorizontal)
+    //                    .padding(.horizontal, videoPaddingHorizontal)
                     .offset(
-                        x: vm.viewMode == .videostream ? 0 : clampedOffsetX(geometry: geometry),
-                        y: vm.viewMode == .videostream ? 0 : clampedOffsetY(geometry: geometry) - CONTROLS_HEIGHT
+                        x: vm.viewMode == .detailstream ? 0 : clampedOffsetX(geometry: geometry),
+                        y: vm.viewMode == .detailstream ? 0 : clampedOffsetY(geometry: geometry) - CONTROLS_HEIGHT
                     )
                     .gesture(
                         // Combine Drag and Magnification Gestures
@@ -184,37 +167,9 @@ struct OverlayVideo: View {
                                 }
                         )
                     )
-                    
-                    
-    //                switch vm.viewMode {
-    //                case .off:
-    //                    Text("off")
-    //                        .foregroundColor(Color.red)
-    //                        .onTapGesture {
-    //                            self.tap()
-    //                        }
-    //                case .overlay:
-    //
-    //                case .audiostream, .videostream, .fullscreen:
-    //                    VStack(spacing: 0) {
-    //                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying)
-    //                        if (vm.viewMode == .fullscreen) {
-    //                            Text("fullscreen")
-    //                                .foregroundColor(Color.red)
-    //                        }
-    //                        Color.red
-    //                            .frame(height: 400)
-    //                            .onTapGesture {
-    //                                self.tap()
-    //                            }
-    //                    }
-    //                }
                 }
             }
         }
-//        .onChange(of: viewMode) { euh in
-//            scale = 2.0
-//        }
     }
     
     /// Clamps a value between a minimum and maximum.

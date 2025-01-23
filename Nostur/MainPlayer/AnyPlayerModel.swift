@@ -19,23 +19,24 @@ class AnyPlayerModel: ObservableObject {
     
     static let shared = AnyPlayerModel()
     
-    @Published var viewMode: AnyPlayerViewMode = .off {
+    @Published var viewMode: AnyPlayerViewMode = .overlay {
         didSet {
             showsPlaybackControls = viewMode != .overlay
         }
     }
     @Published var url: URL?
-//    @Published var player = AVPlayer()
-//    @Published var isPlaying: Bool = false
+    
+    public var availableViewModes: [AnyPlayerViewMode] = []
     
     private var cancellables = Set<AnyCancellable>()
     
     private init() { }
     
     @MainActor
-    public func loadVideo(url: String) {
+    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) {
         print("loadVideo \(url)")
         guard let url = URL(string: url) else { return }
+        self.availableViewModes = availableViewModes
         if url != self.url {
             self.url = url
             cancellables.forEach { $0.cancel() }
@@ -57,7 +58,20 @@ class AnyPlayerModel: ObservableObject {
                 .store(in: &cancellables)
             */
         }
-        self.viewMode = .overlay
+        self.viewMode =  availableViewModes.first ?? .fullscreen
+        if (self.viewMode == .fullscreen) {
+            isPlaying = true
+        }
+    }
+    
+    @MainActor
+    public func toggleViewMode() {
+        print("toggleViewMode: available \(availableViewModes.count)")
+        if let index = availableViewModes.firstIndex(of: viewMode) {
+            let nextIndex = (index + 1) % availableViewModes.count
+            viewMode = availableViewModes[nextIndex]
+            print("toggleViewMode: available \(availableViewModes.count) current: \(index) next: \(nextIndex)")
+        }
     }
     
     /// Starts video playback.
@@ -89,10 +103,8 @@ class AnyPlayerModel: ObservableObject {
 }
 
 enum AnyPlayerViewMode {
-    case off
     case overlay
-    case audiostream
-    case videostream
+    case detailstream
     case fullscreen
 }
 
