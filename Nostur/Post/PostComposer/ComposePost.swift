@@ -98,6 +98,34 @@ struct ComposePost: View {
                                     .padding(.top, 10)
                                     .zIndex(200)
                                     
+                                    if vm.typingTextModel.pastedImages.isEmpty {
+                                        HStack(alignment: .top) {
+                                            Spacer()
+                                            
+                                            Button {
+                                                cameraSheetShown = true
+                                            } label: {
+                                                Image(systemName: "camera")
+                                            }
+                                            .accessibilityHint(Text("Take a photo"))
+                                            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+
+                                            .padding()
+                                            
+                                            Button {
+                                                photoPickerShown = true
+                                            } label: {
+                                                Image(systemName: "photo")
+                                            }
+                                            .accessibilityHint(Text("Choose a photo"))
+                                            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                            .padding()
+                            
+                                            Spacer()
+                                        }
+                                        .font(.largeTitle)
+                                    }
+                                    
                                     Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: .picture)
 //                                        .frame(height: max(50, (geo.size.height - 70)))
 //                                        .padding(.horizontal, -10)
