@@ -145,6 +145,80 @@ public class OutboxLoader {
     }
 }
 
+// Takes a pubkey and tries to return a usable relay hint
+public func resolveRelayHint(forPubkey pubkey: String, receivedFromRelays: Set<String> = []) -> Set<String> {
+    // Possible sources:
+    // - Event "Received from:" Event.relays (passed in as receivedFromRelays).
+    // - Actual received connection stats: ConnectionPool.shared.connectionStats
+    // - Pubkey's kind 10002 write relays
+    
+    // PREFER: Write relay from pubkey's kind 10002 + actual received from in (some) Event.relays
+    
+    let kind10002: Event? = Event.fetchReplacableEvent(10002, pubkey: pubkey, context: context())
+    
+    let writeRelays: Set<String> = Set( kind10002?.fastTags.filter({ relay in
+        relay.0 == "r" && (relay.2 == nil || relay.2 == "write")
+    }).map { normalizeRelayUrl($0.1) } ?? [] )
+            
+    
+    if writeRelays.isEmpty { // Write from kind:10002 is required mininum, else don't continue
+        return []
+    }
+    
+    // Only CanonicalRelayUrls where pubkey is in RelayConnectionStats.receivedPubkeys
+    let connectionStatsRelayUrls: Set<String> = Set( ConnectionPool.shared.connectionStats.filter { _ , relayStats in
+        return relayStats.receivedPubkeys.contains(pubkey)
+    }.keys.map { normalizeRelayUrl($0) } )
+    
+    // Relays to always remove
+    let authRelays = Set(ConnectionPool.shared.connections.filter { $0.value.relayData.auth }.keys.map { String($0) })
+    
+    // find the relay with the most matches in the sets writeRelays, actualReceivedRelayUrls and receivedFromRelays:
+    
+    // WRITE + STATS + RECEIVED
+    let primaryMatches: Set<String> = writeRelays
+        .intersection(connectionStatsRelayUrls)
+        .intersection(receivedFromRelays)
+        .subtracting(authRelays)
+    
+    if !primaryMatches.isEmpty {
+        return primaryMatches.filter {  // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+            !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0") && $0 != "local" && $0 != "iCloud"
+        }
+    }
+    
+    // WRITE + RECEIVED
+    let secondaryMatches: Set<String> = writeRelays
+        .intersection(receivedFromRelays)
+        .subtracting(authRelays)
+    
+    if !secondaryMatches.isEmpty {
+        return secondaryMatches.filter {  // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+            !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0") && $0 != "local" && $0 != "iCloud"
+        }
+    }
+    
+    // WRITE + STATS
+    let moreMatches: Set<String> = writeRelays
+        .intersection(connectionStatsRelayUrls)
+        .subtracting(authRelays)
+    
+    if !moreMatches.isEmpty {
+        return moreMatches.filter {  // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+            !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0") && $0 != "local" && $0 != "iCloud"
+        }
+    }
+    
+    // WRITE?
+    if !writeRelays.isEmpty {
+        return writeRelays.filter {  // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+            !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0") && $0 != "local" && $0 != "iCloud"
+        }
+    }
+    
+    return []
+}
+
 
 extension Event {
     func toNostrEssentialsEvent() -> NostrEssentials.Event {
