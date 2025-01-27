@@ -134,6 +134,17 @@ extension Event {
     }
 
     var replies_: [Event] { Array(replies ?? []) }
+    
+    
+    var relays_: Set<String> {
+        get {
+            guard relays != "" else { return [] }
+            return Set(relays.split(separator: " ").map { String($0) })
+        }
+        set {
+            relays = newValue.joined(separator: " ")
+        }
+    }
 
     // Gets all parents. If until(id) is set, it will stop and wont traverse further, to prevent rendering duplicates
     static func getParentEvents(_ event:Event, fixRelations:Bool = false, until:String? = nil) -> [Event] {

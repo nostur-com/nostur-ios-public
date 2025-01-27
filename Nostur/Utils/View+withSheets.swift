@@ -445,7 +445,7 @@ private struct WithSheets: ViewModifier {
                 let relays = Array(nrPost.footerAttributes.relays).map { String($0) }
                     .filter {
                         // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
-                        !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0")
+                        !$0.contains("/localhost") && !$0.contains("ws:/") && !$0.contains("s:/127.0") && $0 != "local" && $0 != "iCloud"
                     }
                     .map { relay in
                         // first try to put just scheme+hostname as relay. because extra parameters in url can be irrelevant

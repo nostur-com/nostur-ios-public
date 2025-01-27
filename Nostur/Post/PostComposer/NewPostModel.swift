@@ -326,7 +326,8 @@ public final class NewPostModel: ObservableObject {
             if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
-            nEvent.tags.insert(NostrTag(["q", quotingEvent.id]), at: 0) // TODO: Add relay hint
+            let relayHint: String = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first ?? ""
+            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint, quotingEvent.pubkey]), at: 0)
             
             if !nEvent.pTags().contains(quotingEvent.pubkey) {
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
@@ -484,7 +485,8 @@ public final class NewPostModel: ObservableObject {
             if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
-            nEvent.tags.insert(NostrTag(["q", quotingEvent.id]), at: 0) // TODO: Add relay hint
+            let relayHint: String = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first ?? ""
+            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint, quotingEvent.pubkey]), at: 0) 
             
             if !nEvent.pTags().contains(quotingEvent.pubkey) { 
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))

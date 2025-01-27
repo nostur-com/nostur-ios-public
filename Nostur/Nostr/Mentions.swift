@@ -176,7 +176,7 @@ import NostrEssentials
 
 // Scan for any "nostr:note1..." or "nostr:nevent" and return as array of q tags
 // so they can be added to qTags
-func getQuoteTags(_ input:String) -> [String] {
+func getQuoteTags(_ input: String) -> [String] {
 
     let r = NostrRegexes.default
     
