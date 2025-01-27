@@ -63,7 +63,9 @@ class ProfilePostsViewModel: ObservableObject {
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfilePostsViewModel.newPostSaved")
                     let nrPost = NRPost(event: event, cancellationId: event.cancellationId) // TODO: TEST UNDO SEND
                     DispatchQueue.main.async {
-                        self?.posts.insert(nrPost, at: 0)
+                        withAnimation {
+                            self?.posts.insert(nrPost, at: 0)
+                        }
                 }
             }
         }
@@ -74,7 +76,9 @@ class ProfilePostsViewModel: ObservableObject {
             
             // Remove from view
             DispatchQueue.main.async {
-                self?.posts.removeAll(where: { $0.id == nrPost.id })
+                withAnimation {
+                    self?.posts.removeAll(where: { $0.id == nrPost.id })
+                }
             }
         }
         .store(in: &subscriptions)
@@ -154,8 +158,10 @@ class ProfilePostsViewModel: ObservableObject {
             
             DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self?.posts = posts
-                self?.state = .ready
+                withAnimation {
+                    self?.posts = posts
+                    self?.state = .ready
+                }
             }
             
             guard !posts.isEmpty else { return }
@@ -288,7 +294,9 @@ class ProfilePostsViewModel: ObservableObject {
             guard !posts.isEmpty else { return }
             
             DispatchQueue.main.async { [weak self] in
-                self?.posts.append(contentsOf: posts)
+                withAnimation {
+                    self?.posts.append(contentsOf: posts)
+                }
             }
             
             guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
