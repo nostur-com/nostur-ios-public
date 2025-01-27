@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import NostrEssentials
 
 struct LazyNoteMenuButton: View {
     @EnvironmentObject private var themes: Themes
@@ -116,8 +117,11 @@ struct LazyNoteMenuSheet: View {
                     .buttonStyle(.plain)
                     Divider()
                     Button {
-                        UIPasteboard.general.string = nrPost.mainEvent?.noteId
-                        dismiss()
+                        let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
+                        if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
+                            UIPasteboard.general.string = si.identifier
+                            dismiss()
+                        }
                     } label: {
                         Text("ID", comment:"Label for post identifier (ID)")
                             .padding(.horizontal, 5)
@@ -129,8 +133,11 @@ struct LazyNoteMenuSheet: View {
                             .scaleEffect(x: 1.75, y:1.7)
                     )
                     .onTapGesture {
-                        UIPasteboard.general.string = nrPost.mainEvent?.noteId
-                        dismiss()
+                        let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
+                        if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
+                            UIPasteboard.general.string = si.identifier
+                            dismiss()
+                        }
                     }
                     
                     Divider()
