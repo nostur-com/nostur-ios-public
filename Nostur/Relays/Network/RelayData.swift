@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NostrEssentials
 
 // Struct to pass around and avoid all the multi threading NSManagedContext problems
 public struct RelayData: Identifiable, Hashable, Equatable {
@@ -83,33 +84,4 @@ struct AccountRelayData: Codable, Identifiable, Hashable, Equatable {
     mutating func setUrl(_ newValue:String) {
         self.url = normalizeRelayUrl(newValue)
     }
-}
-
-
-// Removes trailing slash, but only if its not part of path
-// Makes url lowercased
-// Removes :80 or :443
-func normalizeRelayUrl(_ url:String) -> String {
-    let step1 = url.replacingOccurrences(of: "://", with: "")
-    
-    if (step1.components(separatedBy:"/").count - 1) == 1 && url.suffix(1) == "/" {
-        return url.dropLast(1)
-            .lowercased()
-            .replacingOccurrences(of: ":80", with: "")
-            .replacingOccurrences(of: ":443", with: "")
-    }
-    
-    return url
-        .lowercased()
-        .replacingOccurrences(of: ":80", with: "")
-        .replacingOccurrences(of: ":443", with: "")
-    
-    // wss://example.com -> wss://example.com
-    // wss://example.com/ -> wss://example.com
-    // wss://example.com/path -> wss://example.com/path
-    // wss://example.com/path/ -> wss://example.com/path/
-    // wss://example.com:443/ -> wss://example.com/path/
-    // example.com/ -> example.com/path/
-    // example.com/path/ -> example.com/path/
-    // example.com/path -> example.com/path/
 }

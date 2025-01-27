@@ -9,6 +9,7 @@ import LiveKit
 import SwiftUI
 import SwiftUIFlow
 import NavigationBackport
+import NostrEssentials
 
 struct LiveEventDetail: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass

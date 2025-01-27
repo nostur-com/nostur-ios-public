@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import NostrEssentials
 
 struct RelayEditView: View {
     @EnvironmentObject private var themes: Themes

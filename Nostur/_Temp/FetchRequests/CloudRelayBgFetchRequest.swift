@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import NostrEssentials
 
 class CloudRelayBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
     
