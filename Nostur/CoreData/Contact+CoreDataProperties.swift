@@ -448,6 +448,11 @@ extension Contact : Identifiable {
     }
     
     static func contactBy(pubkey:String, context:NSManagedObjectContext) -> Contact? {
+        if !Thread.isMainThread { // Try to get from following cache first (bg only for now)
+            if let contact = NRState.shared.loggedInAccount?.followingCache[pubkey]?.bgContact {
+                return contact
+            }
+        }
         
         let request = NSFetchRequest<Contact>(entityName: "Contact")
         request.entity = Contact.entity()
