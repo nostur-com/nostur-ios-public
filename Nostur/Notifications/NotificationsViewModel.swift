@@ -960,9 +960,9 @@ class OfflinePosts {
     static func checkForOfflinePosts(_ maxAgo:TimeInterval = 3600 * 24 * 3) { // 3 days
         DispatchQueue.main.async {
             guard ConnectionPool.shared.anyConnected else { return }
+            let pubkey = NRState.shared.activeAccountPublicKey
+            
             bg().perform {
-                guard let account = account() else { return }
-                let pubkey = account.publicKey
                 let xDaysAgo = Date.now.addingTimeInterval(-(maxAgo))
                 
                 let r1 = Event.fetchRequest()

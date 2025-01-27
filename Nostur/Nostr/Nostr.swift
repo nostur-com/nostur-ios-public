@@ -205,7 +205,7 @@ public struct NostrTag: Codable {
     var pubkey: String { tag[safe: 1] ?? "" }
     var value: String { tag[safe: 1] ?? "" }
     
-    public init(_ tag:[String]) {
+    public init(_ tag: [String]) {
         self.tag = tag
     }
 

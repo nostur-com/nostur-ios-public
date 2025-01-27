@@ -420,18 +420,6 @@ struct ProfileView: View {
                 selectedSubTab = tab
             }
         }
-        .task { [weak nrContact] in
-            bg().perform { [weak nrContact] in
-                guard let nrContact, let contact = nrContact.contact else { return }
-                let npub = contact.npub
-                DispatchQueue.main.async {
-                    self.npub = npub
-                }
-                if (NIP05Verifier.shouldVerify(contact)) {
-                    NIP05Verifier.shared.verify(contact)
-                }
-            }
-        }
         .onChange(of: nrContact.nip05) { [weak nrContact] nip05 in
             bg().perform {
                 guard let nrContact, let contact = nrContact.contact else { return }
@@ -497,8 +485,12 @@ struct ProfileView: View {
         }
         .task { [weak nrContact, weak backlog] in
             guard let backlog else { return }
-            bg().perform {
-                guard let contact = nrContact?.contact else { return }
+            bg().perform { [weak nrContact] in
+                guard let nrContact, let contact = nrContact.contact else { return }
+                let npub = contact.npub
+                DispatchQueue.main.async {
+                    self.npub = npub
+                }
                 EventRelationsQueue.shared.addAwaitingContact(contact)
                 if (contact.followsYou()) {
                     DispatchQueue.main.async {

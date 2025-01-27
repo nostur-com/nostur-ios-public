@@ -18,7 +18,7 @@ struct ProfileOverlayCardContainer: View {
     
     var body: some View {
         VStack {
-            if let error  {
+            if let error {
                 Text(error)
             }
             else if let contact {
@@ -33,7 +33,6 @@ struct ProfileOverlayCardContainer: View {
                         }
                         bg().perform {
                             if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                let isFollowing = isFollowing(pubkey)
                                 let nrContact = NRContact(contact: bgContact)
                                 
                                 DispatchQueue.main.async {
