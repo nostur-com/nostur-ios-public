@@ -1982,6 +1982,9 @@
     "Checked" : {
       "shouldTranslate" : false
     },
+    "Choose a photo" : {
+
+    },
     "Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues." : {
       "localizations" : {
         "nl" : {
@@ -3696,9 +3699,6 @@
         }
       }
     },
-    "fullscreen" : {
-
-    },
     "Gallery" : {
       "comment" : "Tab title for gallery feed\nTab title for the Gallery feed",
       "localizations" : {
@@ -5355,9 +5355,6 @@
           }
         }
       }
-    },
-    "off" : {
-
     },
     "OK" : {
       "localizations" : {
@@ -7613,6 +7610,9 @@
         }
       }
     },
+    "STOP" : {
+
+    },
     "Stream has ended" : {
       "localizations" : {
         "nl" : {
@@ -7647,6 +7647,9 @@
 
     },
     "Tab 5" : {
+
+    },
+    "Take a photo" : {
 
     },
     "Tap account to exclude" : {
