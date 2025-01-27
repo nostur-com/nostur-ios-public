@@ -33,7 +33,7 @@ struct Entry: View {
     }
     
     private var shouldDisablePostButton: Bool {
-        (kind == .picture && typingTextModel.pastedVideos.isEmpty) || typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty)
+        (kind == .picture && typingTextModel.pastedImages.isEmpty) || typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty)
     }
     
     init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil) {
