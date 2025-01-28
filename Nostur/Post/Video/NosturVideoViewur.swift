@@ -88,6 +88,13 @@ struct NosturVideoViewur: View {
                                     isPlaying = true
                                     didStart = true
                                     sendNotification(.startPlayingVideo, url.absoluteString)
+                                    
+                                    AnyPlayerModel
+                                        .shared
+                                        .loadVideo(
+                                            url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
+            //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                            availableViewModes: [.fullscreen, .overlay])
                                 }) {
                                     Image(systemName:"play.circle")
                                         .resizable()

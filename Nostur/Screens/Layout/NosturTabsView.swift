@@ -78,6 +78,9 @@ struct NosturTabsView: View {
                     .environment(\.horizontalSizeClass, .compact)
                     .withSheets() // Move .sheets to each (NB)NavigationStack?
                     .edgesIgnoringSafeArea(.all)
+                    .overlay(alignment: .center) {
+                        OverlayVideo()
+                    }
                 }
             }
             .frame(maxWidth: 600)

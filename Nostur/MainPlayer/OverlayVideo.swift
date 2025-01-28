@@ -27,18 +27,22 @@ struct OverlayVideo: View {
     
     // State variables for dragging
     @State private var currentOffset = CGSize(width: 0.0, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
-    @State private var dragOffset = CGSize.zero
+    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.25, height: .zero)
     
     // State variables for scaling
     @State private var currentScale: CGFloat = 1.0
     @State private var scale: CGFloat = 1.0
     
+    private var videoAlignment: Alignment {
+        if vm.viewMode == .fullscreen { return .center }
+        return .topLeading
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             if vm.url != nil {
-                ZStack(alignment: .topLeading) {
-//                    Color.gray
-//                        .opacity(0.25)
+                ZStack(alignment: videoAlignment) {
+                    Color.black.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
 
                     VStack(spacing: 0) {
                         AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
@@ -102,8 +106,8 @@ struct OverlayVideo: View {
                     )
     //                    .padding(.horizontal, videoPaddingHorizontal)
                     .offset(
-                        x: vm.viewMode == .detailstream ? 0 : clampedOffsetX(geometry: geometry),
-                        y: vm.viewMode == .detailstream ? 0 : clampedOffsetY(geometry: geometry) - CONTROLS_HEIGHT
+                        x: clampedOffsetX(geometry: geometry),
+                        y: clampedOffsetY(geometry: geometry) - CONTROLS_HEIGHT
                     )
                     .gesture(
                         // Combine Drag and Magnification Gestures
@@ -179,6 +183,9 @@ struct OverlayVideo: View {
     
     /// Calculates the clamped X offset to ensure the video stays within horizontal bounds.
     private func clampedOffsetX(geometry: GeometryProxy) -> CGFloat {
+        if vm.viewMode == .detailstream { return 0 }
+        if vm.viewMode == .fullscreen { return 0 }
+        
         let totalWidth = videoWidth * currentScale + 2 * videoPaddingHorizontal
         let maxOffsetX = geometry.size.width - totalWidth
         return clamp(value: currentOffset.width + dragOffset.width, min: 0, max: maxOffsetX)
@@ -186,6 +193,9 @@ struct OverlayVideo: View {
     
     /// Calculates the clamped Y offset to ensure the video stays within vertical bounds.
     private func clampedOffsetY(geometry: GeometryProxy) -> CGFloat {
+        if vm.viewMode == .detailstream { return 0 }
+        if vm.viewMode == .fullscreen { return 0 }
+        
         let maxOffsetY = geometry.size.height - (videoHeight * currentScale)
         return clamp(value: currentOffset.height + dragOffset.height, min: 0, max: maxOffsetY)
     }

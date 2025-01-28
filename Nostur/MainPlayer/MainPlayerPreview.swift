@@ -23,7 +23,8 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                             .shared
                             .loadVideo(
                                 url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
-                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+//                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                availableViewModes: [.fullscreen, .overlay])
                     }
                     
                     
@@ -55,7 +56,7 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                 .tag("Messages")
                 .badge(1)
         }
-        .overlay(alignment: .bottomTrailing) {
+        .overlay(alignment: .center) {
             OverlayVideo()
 //                .offset(y: apm.viewMode == .videostream ? 0 : -offset)
         }

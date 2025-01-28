@@ -9,7 +9,10 @@ import SwiftUI
 import Combine
 import AVKit
 
-struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
+struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
+    
+    typealias UIViewType = UIView
+    
     // MARK: - Bindings
     @Binding var player: AVPlayer
     @Binding var isPlaying: Bool
@@ -18,39 +21,32 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     
 
     // MARK: - UIViewControllerRepresentable Methods
-    func makeUIViewController(context: Context) -> AVPlayerViewController {
-        print("makeUIViewController")
-        let controller = AVPlayerViewController()
-        controller.player = player
-        controller.modalPresentationStyle = .fullScreen
-        controller.delegate = context.coordinator // Optional: if you want to handle delegate methods
-        controller.showsPlaybackControls = showsPlaybackControls
-        controller.canStartPictureInPictureAutomaticallyFromInline = true
-        controller.allowsPictureInPicturePlayback = true
-        controller.entersFullScreenWhenPlaybackBegins = true
-        controller.exitsFullScreenWhenPlaybackEnds = true
+    func makeUIView(context: Context) -> UIView {
+        let avpc = AVPlayerViewController()
+        avpc.player = player
+        avpc.exitsFullScreenWhenPlaybackEnds = false
+        avpc.videoGravity = .resizeAspect
+        avpc.allowsPictureInPicturePlayback = true
+        avpc.delegate = context.coordinator
+        avpc.showsPlaybackControls = true
+        avpc.canStartPictureInPictureAutomaticallyFromInline = true
+        avpc.updatesNowPlayingInfoCenter = true
+//        avpc.setValue(false, forKey: "canHidePlaybackControls")
+        context.coordinator.avpc = avpc
 
-//        controller.videoGravity = .resizeAspectFill
-        
-        
-        if viewMode == .fullscreen {
-            
-            player.playImmediately(atRate: 1.0)
-//            controller.videoGravity = .resizeAspectFill
-            player.play()
-//            controller.modalPresentationStyle = .fullScreen
-        }
-        
-        return controller
+        avpc.view.isUserInteractionEnabled = true
+        return avpc.view
     }
     
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+    func updateUIView(_ uiView: UIView, context: Context) {
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
         print("updateUIViewController")
-        uiViewController.player = player
+//        context.coordinator.avpc?.player = player
         if isPlaying {
             if player.timeControlStatus != .playing {
+                uiView.isUserInteractionEnabled = true
+                try? AVAudioSession.sharedInstance().setActive(true)
                 player.play()
             }
         } else {
@@ -64,7 +60,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
 //            uiViewController.modalPresentationStyle = .fullScreen
         }
         
-        uiViewController.showsPlaybackControls = showsPlaybackControls
+        context.coordinator.avpc?.showsPlaybackControls = showsPlaybackControls
     }
     
     // MARK: - Coordinator Creation
@@ -77,6 +73,7 @@ struct AVPlayerViewControllerRepresentable: UIViewControllerRepresentable {
     // Implement any delegate methods or communication logic within the Coordinator.
     // UIKit to SwiftUI
     class Coordinator: NSObject, AVPlayerViewControllerDelegate {
+        var avpc: AVPlayerViewController?
         var parent: AVPlayerViewControllerRepresentable
         var timeObserverToken: Any?
         
