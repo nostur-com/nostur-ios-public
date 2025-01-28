@@ -1705,11 +1705,11 @@ extension NXColumnViewModel {
     @MainActor
     private func getAllPostIds(_ nrPosts: [NRPost], prefixOnly: Bool = false) -> Set<String> {
         return nrPosts.reduce(Set<NRPostID>()) { partialResult, nrPost in
-            if nrPost.isRepost, let firstPost = nrPost.firstQuote {
+            if nrPost.isRepost, let firstQuoteId = nrPost.firstQuoteId {
                 // for repost add post + reposted post
                 return prefixOnly
-                    ? partialResult.union(Set([nrPost.shortId, firstPost.shortId]))
-                    : partialResult.union(Set([nrPost.id, firstPost.id]))
+                    ? partialResult.union(Set([nrPost.shortId, String(firstQuoteId.prefix(8))]))
+                    : partialResult.union(Set([nrPost.id, firstQuoteId]))
             } else {
                 return prefixOnly
                         ? partialResult.union(Set([nrPost.shortId] + nrPost.parentPosts.map { $0.shortId }))
@@ -1720,9 +1720,9 @@ extension NXColumnViewModel {
     
     private func getAllEventIds(_ events: [Event]) -> Set<String> {
         return events.reduce(Set<String>()) { partialResult, event in
-            if event.isRepost, let firstQuote = event.firstQuote_ {
+            if event.isRepost, let firstQuoteId = event.firstQuoteId {
                 // for repost add post + reposted post
-                return partialResult.union(Set([event.id, firstQuote.id]))
+                return partialResult.union(Set([event.id, firstQuoteId]))
             }
             else {
                 return partialResult.union(Set([event.id] + event.parentEvents.map { $0.id }))
