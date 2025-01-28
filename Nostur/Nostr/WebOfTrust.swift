@@ -102,6 +102,7 @@ class WebOfTrust: ObservableObject {
                 self?.guessMainAccount()
             }
         }
+        updateWoTonNewFollowing()
     }
     
     // For first time guessing the main account, user can change actual main account in Settings
@@ -197,14 +198,12 @@ class WebOfTrust: ObservableObject {
     
     private func updateWoTonNewFollowing() {
         receiveNotification(.followingAdded)
+            .debounce(for: .seconds(8.0), scheduler: RunLoop.main)
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
-//                guard NosturState.shared.account != nil else { return } // TODO: NEED THIS?
-                let pubkey = notification.object as! String
-                self.followingPubkeys.insert(pubkey)
-                guard SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.normal.rawValue else { return }
-                self.updateWoTwithFollowsOf(pubkey)
+
+                self.loadWoT(force: true)
             }
             .store(in: &subscriptions)
     }
