@@ -45,7 +45,7 @@ class ImageProcessing {
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100)
             $0.dataCache = dataCache
 //            $0.dataCachePolicy = .storeEncodedImages
-            $0.dataCachePolicy = .storeAll
+            $0.dataCachePolicy = .automatic
         }
         
         banner = ImagePipeline {
@@ -62,12 +62,12 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 10)
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeEncodedImages
+            $0.dataCachePolicy = .automatic
         }
         
         content = ImagePipeline {
 //            $0.isUsingPrepareForDisplay = true
-            $0.isProgressiveDecodingEnabled = true
+            $0.isProgressiveDecodingEnabled = false
             $0.dataLoader = DataLoader(configuration: {
                 // Disable disk caching built into URLSession
                 let conf = DataLoader.defaultConfiguration
@@ -80,7 +80,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeAll
+            $0.dataCachePolicy = .automatic
         }
         
         communities = ImagePipeline {
@@ -98,7 +98,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeAll
+            $0.dataCachePolicy = .automatic
         }
         
         badges = ImagePipeline {
@@ -115,7 +115,7 @@ class ImageProcessing {
             
             $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25, countLimit: 200)  // 100 MB
             $0.dataCache = dataCache
-            $0.dataCachePolicy = .storeEncodedImages
+            $0.dataCachePolicy = .automatic
         }
         
         video = ImagePipeline {
