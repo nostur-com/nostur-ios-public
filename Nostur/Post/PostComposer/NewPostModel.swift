@@ -321,13 +321,19 @@ public final class NewPostModel: ObservableObject {
         
         nEvent.tags.append(contentsOf: nostrTags)
         
-        // If we are quote reposting, include the quoted post as nostr:note1 at the end
+        // If we are quote reposting, include the quoted post as nostr:nevent at the end
         if let quotingEvent {
-            if let note1id = note1(quotingEvent.id) {
+            
+            let relayHint: String? = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first
+            
+            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotingEvent.id, kind: Int(quotingEvent.kind), pubkey: quotingEvent.pubkey, relays: [relayHint].compactMap { $0 }) {
+                nEvent.content = (nEvent.content + "\nnostr:" + si.identifier)
+            }
+            else if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
-            let relayHint: String = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first ?? ""
-            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint, quotingEvent.pubkey]), at: 0)
+            
+            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint ?? "", quotingEvent.pubkey]), at: 0)
             
             if !nEvent.pTags().contains(quotingEvent.pubkey) {
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
@@ -481,15 +487,21 @@ public final class NewPostModel: ObservableObject {
         
         nEvent.tags.append(contentsOf: nostrTags)
         
-        // If we are quote reposting, include the quoted post as nostr:note1 at the end
+        // If we are quote reposting, include the quoted post as nostr:nevent at the end
         if let quotingEvent {
-            if let note1id = note1(quotingEvent.id) {
+            
+            let relayHint: String? = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first
+            
+            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotingEvent.id, kind: Int(quotingEvent.kind), pubkey: quotingEvent.pubkey, relays: [relayHint].compactMap { $0 }) {
+                nEvent.content = (nEvent.content + "\nnostr:" + si.identifier)
+            }
+            else if let note1id = note1(quotingEvent.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
-            let relayHint: String = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first ?? ""
-            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint, quotingEvent.pubkey]), at: 0) 
             
-            if !nEvent.pTags().contains(quotingEvent.pubkey) { 
+            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint ?? "", quotingEvent.pubkey]), at: 0)
+            
+            if !nEvent.pTags().contains(quotingEvent.pubkey) {
                 nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
             }
         }
