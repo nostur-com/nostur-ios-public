@@ -11,23 +11,20 @@ struct OverlayVideo: View {
     @ObservedObject var vm: AnyPlayerModel = .shared
     public var onVideoTap: (() -> Void)? = nil
     
-    static let aspect: CGFloat = 16/9
-    
-    
     var videoHeight: CGFloat {
-        videoWidth / Self.aspect
+        videoWidth / vm.aspect
     }
     var videoWidth: CGFloat {
         if vm.viewMode != .overlay {
             return UIScreen.main.bounds.width
         }
-        return UIScreen.main.bounds.width * 0.75
+        return UIScreen.main.bounds.width * 0.5
     }
     let videoPaddingHorizontal: CGFloat = 0.0 // 12.0
     
     // State variables for dragging
     @State private var currentOffset = CGSize(width: 0.0, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
-    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.25, height: .zero)
+    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.5, height: .zero)
     
     // State variables for scaling
     @State private var currentScale: CGFloat = 1.0
@@ -40,30 +37,53 @@ struct OverlayVideo: View {
     
     var body: some View {
         GeometryReader { geometry in
-            if vm.url != nil {
+            if vm.url != nil || vm.nrAVAsset != nil {
                 ZStack(alignment: videoAlignment) {
                     Color.black.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
+                        .overlay(alignment: .topTrailing) {
+                            Image(systemName: "pip.enter")
+                                .font(.title2)
+                                .foregroundColor(Color.white)
+                                .padding(.top, 15)
+                                .padding(.trailing, 15)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    withAnimation {
+                                        vm.toggleViewMode()
+                                    }
+                                }
+                                .opacity(vm.availableViewModes.contains(.overlay) && vm.viewMode == .fullscreen ? 1.0 : 0)
+                        }
 
                     VStack(spacing: 0) {
                         AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
-                            .overlay(alignment: .topTrailing) {
-                                if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
-                                    Image(systemName: "pip.enter")
-                                        .font(.title2)
-                                        .foregroundColor(Color.white)
-                                        .padding(.top, 15)
-                                        .padding(.trailing, 15)
-                                        .onTapGesture {
-                                            withAnimation {
-                                                vm.toggleViewMode()
-                                            }
+                            .highPriorityGesture(
+                                TapGesture()
+                                    .onEnded { _ in
+                                        withAnimation {
+                                            vm.toggleViewMode()
                                         }
-                                }
-                            }
-                            .onTapGesture {
-                                withAnimation {
-                                    vm.toggleViewMode()
-                                }
+                                    }
+                            )
+//                            .onTapGesture {
+//                                withAnimation {
+//                                    vm.toggleViewMode()
+//                                }
+//                            }
+                            .padding(.top, vm.viewMode == .fullscreen ? 30.0 : 0.0)
+                            .overlay(alignment: .topLeading) {
+                                Image(systemName: "multiply")
+                                    .font(.title2)
+                                    .foregroundColor(Color.white)
+                                    .padding(.top, 10)
+                                    .padding(.leading, 10)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        withAnimation {
+                                            vm.close()
+                                        }
+                                    }
+                                    .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                             }
                         if vm.viewMode == .overlay {
                             HStack(spacing: 20) {
@@ -171,6 +191,11 @@ struct OverlayVideo: View {
                                 }
                         )
                     )
+                }
+                .onChange(of: vm.viewMode) { _ in
+                    if vm.viewMode != .overlay && scale != 1.0 {
+                        scale = 1.0
+                    }
                 }
             }
         }

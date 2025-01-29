@@ -10,6 +10,8 @@ import Combine
 import AVKit
 
 struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
+    // TODO: UIViewRepresentable or ViewControllerRepresentable?
+    // Moved from UIViewControllerRepresentable to UIViewRepresentable as hack to fix issues with UIViewControllerRepresentable in SwiftUI in UIViewControllerRepresentable (SmoothList/Table). Since we are no longer using that maybe move back to UIViewControllerRepresentable?
     
     typealias UIViewType = UIView
     
@@ -25,7 +27,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         let avpc = AVPlayerViewController()
         avpc.player = player
         avpc.exitsFullScreenWhenPlaybackEnds = false
-        avpc.videoGravity = .resizeAspect
+        avpc.videoGravity = .resizeAspectFill
         avpc.allowsPictureInPicturePlayback = true
         avpc.delegate = context.coordinator
         avpc.showsPlaybackControls = true

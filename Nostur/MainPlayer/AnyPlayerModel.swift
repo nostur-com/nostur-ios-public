@@ -9,12 +9,19 @@ import SwiftUI
 import Combine
 import AVKit
 
+struct NRAVAsset: Identifiable {
+    let id: String
+    let asset: AVAsset
+}
+
 class AnyPlayerModel: ObservableObject {
     
     // MARK: - State Variables
-    @Published var player = AVPlayer(url: URL(string: "https://www.w3schools.com/html/mov_bbb.mp4")!)
+    @Published var player = AVPlayer()
+//    @Published var player = AVPlayer(url: URL(string: "https://www.w3schools.com/html/mov_bbb.mp4")!)
     @Published var isPlaying = false
     @Published var showsPlaybackControls = false
+    public var aspect: CGFloat = 16/9
 //    @Published var showPlayer = true
     
     static let shared = AnyPlayerModel()
@@ -25,6 +32,7 @@ class AnyPlayerModel: ObservableObject {
         }
     }
     @Published var url: URL?
+    @Published var nrAVAsset: NRAVAsset?
     
     public var availableViewModes: [AnyPlayerViewMode] = []
     
@@ -33,31 +41,65 @@ class AnyPlayerModel: ObservableObject {
     private init() { }
     
     @MainActor
-    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) {
+    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], dimensions: CGSize? = nil) {
         print("loadVideo \(url)")
         guard let url = URL(string: url) else { return }
-        self.availableViewModes = availableViewModes
-        if url != self.url {
-            self.url = url
-            cancellables.forEach { $0.cancel() }
-            player = AVPlayer(url: url)
-            
-            // Observe the player's rate to determine if it's playing
-            player.publisher(for: \.rate, options: [.initial, .new])
-                .receive(on: DispatchQueue.main)
-                .map { $0 != 0 }
-                .assign(to: \.isPlaying, on: self)
-                .store(in: &cancellables)
-            
-            // Alternatively, observe timeControlStatus for more detailed control (iOS 10+)
-            /*
-            player?.publisher(for: \.timeControlStatus, options: [.initial, .new])
-                .receive(on: DispatchQueue.main)
-                .map { $0 == .playing }
-                .assign(to: \.isPlaying, on: self)
-                .store(in: &cancellables)
-            */
+        if let dimensions {
+            self.aspect = dimensions.width / dimensions.height
         }
+        self.availableViewModes = availableViewModes
+        self.nrAVAsset = nil
+        self.url = url
+        cancellables.forEach { $0.cancel() }
+        player = AVPlayer(playerItem: AVPlayerItem(url: url))
+        
+        // Observe the player's rate to determine if it's playing
+        player.publisher(for: \.rate, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .map { $0 != 0 }
+            .assign(to: \.isPlaying, on: self)
+            .store(in: &cancellables)
+        
+        // Alternatively, observe timeControlStatus for more detailed control (iOS 10+)
+        /*
+        player?.publisher(for: \.timeControlStatus, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .map { $0 == .playing }
+            .assign(to: \.isPlaying, on: self)
+            .store(in: &cancellables)
+        */
+        self.viewMode =  availableViewModes.first ?? .fullscreen
+        if (self.viewMode == .fullscreen) {
+            isPlaying = true
+        }
+    }
+    
+    public func loadVideo(nrAVAsset: NRAVAsset, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], dimensions: CGSize? = nil) {
+        print("loadVideo \(nrAVAsset.id)")
+        if let dimensions {
+            self.aspect = dimensions.width / dimensions.height
+        }
+        self.availableViewModes = availableViewModes
+        self.url = nil
+        self.nrAVAsset = nrAVAsset
+        cancellables.forEach { $0.cancel() }
+        player = AVPlayer(playerItem: AVPlayerItem(asset: nrAVAsset.asset))
+        
+        // Observe the player's rate to determine if it's playing
+        player.publisher(for: \.rate, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .map { $0 != 0 }
+            .assign(to: \.isPlaying, on: self)
+            .store(in: &cancellables)
+        
+        // Alternatively, observe timeControlStatus for more detailed control (iOS 10+)
+        /*
+        player?.publisher(for: \.timeControlStatus, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .map { $0 == .playing }
+            .assign(to: \.isPlaying, on: self)
+            .store(in: &cancellables)
+        */
         self.viewMode =  availableViewModes.first ?? .fullscreen
         if (self.viewMode == .fullscreen) {
             isPlaying = true
@@ -95,6 +137,15 @@ class AnyPlayerModel: ObservableObject {
         let newTime = CMTimeSubtract(currentTime, CMTimeMake(value: 15, timescale: 1))
         let clampedTime = CMTimeClampToRange(newTime, range: CMTimeRange(start: .zero, duration: player.currentItem?.duration ?? CMTime.indefinite))
         player.seek(to: clampedTime)
+    }
+    
+    @MainActor
+    public func close() {
+        self.player.pause()
+        self.nrAVAsset = nil
+        self.url = nil
+        isPlaying = false
+        cancellables.forEach { $0.cancel() }
     }
     
     deinit {

@@ -78,12 +78,12 @@ struct NosturTabsView: View {
                     .environment(\.horizontalSizeClass, .compact)
                     .withSheets() // Move .sheets to each (NB)NavigationStack?
                     .edgesIgnoringSafeArea(.all)
-                    .overlay(alignment: .center) {
-                        OverlayVideo()
-                    }
                 }
             }
             .frame(maxWidth: 600)
+            .overlay(alignment: .center) {
+                OverlayVideo()
+            }
             if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                 AvailableWidthContainer {
                     DetailPane()

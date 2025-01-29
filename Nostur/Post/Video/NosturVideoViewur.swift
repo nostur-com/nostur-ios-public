@@ -88,13 +88,10 @@ struct NosturVideoViewur: View {
                                     isPlaying = true
                                     didStart = true
                                     sendNotification(.startPlayingVideo, url.absoluteString)
-                                    
-                                    AnyPlayerModel
-                                        .shared
-                                        .loadVideo(
-                                            url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
-            //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                            availableViewModes: [.fullscreen, .overlay])
+
+                                    if let cVideo = cachedVideo {
+                                        AnyPlayerModel.shared.loadVideo(nrAVAsset: NRAVAsset(id: url.absoluteString, asset: cVideo.asset), dimensions: cVideo.dimensions)
+                                    }
                                 }) {
                                     Image(systemName:"play.circle")
                                         .resizable()
@@ -118,16 +115,17 @@ struct NosturVideoViewur: View {
                         }
                         .overlay {
                             if didStart, let asset = cachedVideo?.asset {
-                                VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
-                                    .onReceive(receiveNotification(.startPlayingVideo)) { notification in
-                                        let otherUrl = notification.object as! String
-                                        if url.absoluteString != otherUrl {
-                                            isPlaying = false
-                                        }
-                                    }
-                                    .onDisappear {
-                                        isPlaying = false
-                                    }
+                                Text("playing.....")
+//                                VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
+//                                    .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+//                                        let otherUrl = notification.object as! String
+//                                        if url.absoluteString != otherUrl {
+//                                            isPlaying = false
+//                                        }
+//                                    }
+//                                    .onDisappear {
+//                                        isPlaying = false
+//                                    }
                             }
                         }
 //                    .withoutAnimation()
@@ -242,7 +240,9 @@ struct NosturVideoViewur: View {
                         let scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                         let firstFrame = await getVideoFirstFrame(asset: asset)
                         
-                        let cachedVideo = CachedVideo(asset: asset, scaledDimensions: scaledDimensions, videoLength: videoLength, firstFrame: firstFrame)
+                        let cachedVideo = CachedVideo(asset: asset,
+                                                      dimensions: videoSize,
+                                                      scaledDimensions: scaledDimensions, videoLength: videoLength, firstFrame: firstFrame)
                         AVAssetCache.shared.set(url: url.absoluteString, asset: cachedVideo)
                         
                         DispatchQueue.main.async {
@@ -313,13 +313,15 @@ class AVAssetCache {
 
 class CachedVideo {
     let asset:AVAsset
-    var scaledDimensions:CGSize? = nil
+    var scaledDimensions: CGSize? = nil
+    var dimensions: CGSize? = nil
     var videoLength:String? = nil
     var firstFrame:UIImage? = nil
     
-    init(asset: AVAsset, scaledDimensions: CGSize? = nil, videoLength: String? = nil, firstFrame: UIImage? = nil) {
+    init(asset: AVAsset, dimensions: CGSize? = nil, scaledDimensions: CGSize? = nil, videoLength: String? = nil, firstFrame: UIImage? = nil) {
         self.asset = asset
         self.scaledDimensions = scaledDimensions
+        self.dimensions = dimensions
         self.videoLength = videoLength
         self.firstFrame = firstFrame
     }
