@@ -20,25 +20,40 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                 VStack {
                     HStack {
                         Button("birds") {
-                            AnyPlayerModel
-                                .shared
-                                .loadVideo(
-                                    url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
-    //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                    availableViewModes: [.fullscreen, .overlay])
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.fullscreen, .overlay])
+                            }
+                        }
+                        
+                        Button("portrait") {
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://m.primal.net/OErQ.mov",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.fullscreen, .overlay])
+                            }
                         }
                         
                         Button("lyn") {
-                            AnyPlayerModel
-                                .shared
-                                .loadVideo(
-                                    url: "https://m.primal.net/OEzS.mp4",
-    //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                    availableViewModes: [.fullscreen, .overlay])
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://m.primal.net/OEzS.mp4",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.fullscreen, .overlay])
+                            }
                         }
                         
-                        Button("STOP") {
-                            AnyPlayerModel.shared.url = nil
+                        Button("Close") {
+                            AnyPlayerModel.shared.close()
                         }
                     }
                     

@@ -14,12 +14,14 @@ struct OverlayVideo: View {
     var videoHeight: CGFloat {
         videoWidth / vm.aspect
     }
+    
     var videoWidth: CGFloat {
         if vm.viewMode != .overlay {
             return UIScreen.main.bounds.width
         }
         return UIScreen.main.bounds.width * 0.5
     }
+    
     let videoPaddingHorizontal: CGFloat = 0.0 // 12.0
     
     // State variables for dragging
@@ -37,7 +39,7 @@ struct OverlayVideo: View {
     
     var body: some View {
         GeometryReader { geometry in
-            if vm.url != nil || vm.nrAVAsset != nil {
+            if vm.cachedVideo != nil {
                 ZStack(alignment: videoAlignment) {
                     Color.black.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
                         .overlay(alignment: .topTrailing) {

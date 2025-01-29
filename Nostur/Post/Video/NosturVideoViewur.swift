@@ -90,7 +90,7 @@ struct NosturVideoViewur: View {
                                     sendNotification(.startPlayingVideo, url.absoluteString)
 
                                     if let cVideo = cachedVideo {
-                                        AnyPlayerModel.shared.loadVideo(nrAVAsset: NRAVAsset(id: url.absoluteString, asset: cVideo.asset), dimensions: cVideo.dimensions)
+                                        AnyPlayerModel.shared.loadVideo(cachedVideo: cVideo)
                                     }
                                 }) {
                                     Image(systemName:"play.circle")
@@ -240,7 +240,7 @@ struct NosturVideoViewur: View {
                         let scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                         let firstFrame = await getVideoFirstFrame(asset: asset)
                         
-                        let cachedVideo = CachedVideo(asset: asset,
+                        let cachedVideo = CachedVideo(url: url.absoluteString, asset: asset,
                                                       dimensions: videoSize,
                                                       scaledDimensions: scaledDimensions, videoLength: videoLength, firstFrame: firstFrame)
                         AVAssetCache.shared.set(url: url.absoluteString, asset: cachedVideo)
@@ -295,34 +295,41 @@ struct NosturVideoViewur_Previews: PreviewProvider {
 class AVAssetCache {
     static let shared = AVAssetCache()
     
-    private var cache:NSCache<NSString, CachedVideo>
+    private var cache: NSCache<NSString, CachedVideo>
 
     private init() {
         self.cache = NSCache<NSString, CachedVideo>()
         self.cache.countLimit = 5
     }
 
-    public func get(url:String) -> CachedVideo? {
+    public func get(url: String) -> CachedVideo? {
         return cache.object(forKey: url as NSString)
     }
     
-    public func set(url:String, asset:CachedVideo) {
+    public func set(url: String, asset: CachedVideo) {
         cache.setObject(asset, forKey: url as NSString)
     }
 }
 
-class CachedVideo {
-    let asset:AVAsset
-    var scaledDimensions: CGSize? = nil
-    var dimensions: CGSize? = nil
-    var videoLength:String? = nil
-    var firstFrame:UIImage? = nil
+class CachedVideo: Identifiable {
+    var id: String { url }
+    let url: String
+    let asset: AVAsset
+    let dimensions: CGSize
+    let scaledDimensions: CGSize
+    let videoLength: String
+    var firstFrame: UIImage? = nil
     
-    init(asset: AVAsset, dimensions: CGSize? = nil, scaledDimensions: CGSize? = nil, videoLength: String? = nil, firstFrame: UIImage? = nil) {
+    public init(url: String, asset: AVAsset, dimensions: CGSize, scaledDimensions: CGSize, videoLength: String, firstFrame: UIImage? = nil) {
+        self.url = url
         self.asset = asset
-        self.scaledDimensions = scaledDimensions
         self.dimensions = dimensions
+        self.scaledDimensions = scaledDimensions
         self.videoLength = videoLength
         self.firstFrame = firstFrame
+    }
+    
+    public var isPortrait: Bool {
+        dimensions.height > dimensions.width
     }
 }
