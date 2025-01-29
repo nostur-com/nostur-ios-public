@@ -439,6 +439,7 @@ public final class NewPostModel: ObservableObject {
     }
     
     public func showPreview(quotingEvent: Event? = nil, replyTo: Event? = nil) {
+        // TODO: Make _sendNow() more reusable and reuse those parts here so we can't forget to make chances twice and forget half.
         guard let account = activeAccount else { return }
         var nEvent = nEvent ?? NEvent(content: "")
         nEvent.publicKey = account.publicKey
