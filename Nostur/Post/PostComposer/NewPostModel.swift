@@ -257,6 +257,7 @@ public final class NewPostModel: ObservableObject {
         var pTags:[String] = []
         nEvent.createdAt = NTimestamp.init(date: Date())
         
+        // Handle images
         if !imetas.isEmpty {
             // send message with images
             for imeta in imetas {
@@ -277,6 +278,7 @@ public final class NewPostModel: ObservableObject {
                 nEvent.tags.append(NostrTag(imetaParts))
             }
         }
+        
         // Typed @mentions to nostr:npub
         if #available(iOS 16.0, *) {
             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
@@ -443,6 +445,15 @@ public final class NewPostModel: ObservableObject {
         var pTags: [String] = []
         nEvent.createdAt = NTimestamp.init(date: Date())
         
+        // Handle preview images
+        for index in typingTextModel.pastedImages.indices {
+            nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+        }
+        
+        for index in typingTextModel.pastedVideos.indices {
+            nEvent.content = nEvent.content + "\n-V-@!^@\(index)@^!@-V-"
+        }
+        
         // @mentions to nostr:npub
         if #available(iOS 16.0, *) {
             nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
@@ -513,19 +524,10 @@ public final class NewPostModel: ObservableObject {
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
         }
-        
-        for index in typingTextModel.pastedImages.indices {
-            nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
-        }
-        
-        for index in typingTextModel.pastedVideos.indices {
-            nEvent.content = nEvent.content + "\n-V-@!^@\(index)@^!@-V-"
-        }
-        
+
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
-    
         
         bg().perform { [weak self] in
             guard let self else { return }
