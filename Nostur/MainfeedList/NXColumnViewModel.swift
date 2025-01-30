@@ -219,6 +219,11 @@ class NXColumnViewModel: ObservableObject {
                 .sink { [weak self] _ in
                     guard let self, let feed else { return }
                     guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
+                    
+                    // Don't add duplicates to .lastRead but also keep the most recent one
+                    // so remove new markAsReadSyncQueue from existing lastRead and then prepend markAsReadSyncQueue to lastRead (move existing ids to the front again)
+                    // after that when we remove > 300 it is always less recent ones that are removed.
+                    feed.lastRead.removeAll { self.markAsReadSyncQueue.contains($0) }
                     feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
                     
                     // if size of feed.lastRead is > 300, remove all beyond index 300
