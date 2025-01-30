@@ -19,7 +19,7 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
             GeometryReader { geometry in
                 VStack {
                     HStack {
-                        Button("birds") {
+                        Button("Landscape") {
                             Task {
                                 await AnyPlayerModel
                                     .shared
@@ -30,7 +30,7 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                             }
                         }
                         
-                        Button("portrait") {
+                        Button("Portrait") {
                             Task {
                                 await AnyPlayerModel
                                     .shared
@@ -41,7 +41,7 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                             }
                         }
                         
-                        Button("lyn") {
+                        Button("Other") {
                             Task {
                                 await AnyPlayerModel
                                     .shared

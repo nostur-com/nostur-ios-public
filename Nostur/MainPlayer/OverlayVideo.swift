@@ -9,28 +9,26 @@ import SwiftUI
 
 struct OverlayVideo: View {
     @ObservedObject var vm: AnyPlayerModel = .shared
-    public var onVideoTap: (() -> Void)? = nil
     
-    var videoHeight: CGFloat {
+    private var videoHeight: CGFloat {
         videoWidth / vm.aspect
     }
     
-    var videoWidth: CGFloat {
+    private var videoWidth: CGFloat {
         if vm.viewMode != .overlay {
             return UIScreen.main.bounds.width
         }
         return UIScreen.main.bounds.width * 0.5
     }
     
-    let videoPaddingHorizontal: CGFloat = 0.0 // 12.0
-    
     // State variables for dragging
-    @State private var currentOffset = CGSize(width: 0.0, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
+    @State private var currentOffset = CGSize(width: UIScreen.main.bounds.width * 0.5, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
     @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.5, height: .zero)
     
     // State variables for scaling
     @State private var currentScale: CGFloat = 1.0
     @State private var scale: CGFloat = 1.0
+    @State private var nativeControlsVisible: Bool = false
     
     private var videoAlignment: Alignment {
         if vm.viewMode == .fullscreen { return .center }
@@ -45,9 +43,12 @@ struct OverlayVideo: View {
         GeometryReader { geometry in
             if vm.cachedVideo != nil {
                 ZStack(alignment: videoAlignment) {
-                    Color.black.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
+                    Color.blue.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
                         .overlay(alignment: .topTrailing) {
-                            Image(systemName: "pip.enter")
+                            // Full screen top bar - trailing buttons
+                            HStack {
+                                Group {
+                                    
                                     Menu(content: {
                                         Button("Save to Photo Library") {
                                             saveAVAssetToPhotos()
@@ -79,36 +80,51 @@ struct OverlayVideo: View {
                                         }
                                     }, primaryAction: saveAVAssetToPhotos)
                                     .disabled(isSaving)
+                                    
+                                    Button(action: {
+                                        withAnimation {
+                                            vm.toggleViewMode()
+                                        }
+                                    }) {
+                                        Image(systemName: "pip.enter")
+                                            .foregroundColor(Color.white)
+                                            .padding(5)
+                                    }
+                                    .opacity(vm.availableViewModes.contains(.overlay) && vm.viewMode == .fullscreen ? 1.0 : 0)
+                                }
                                 .font(.title2)
                                 .foregroundColor(Color.white)
-                                .padding(.top, 15)
-                                .padding(.trailing, 15)
+                            }
+                        }
+                        .overlay(alignment: .topLeading) {
+                            // Full screen top bar - leading buttons
+                            Image(systemName: "multiply")
+                                .font(.title2)
+                                .foregroundColor(Color.white)
+                                .padding(.top, 10)
+                                .padding(.leading, 10)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     withAnimation {
-                                        vm.toggleViewMode()
+                                        vm.close()
                                     }
                                 }
-                                .opacity(vm.availableViewModes.contains(.overlay) && vm.viewMode == .fullscreen ? 1.0 : 0)
+                                .opacity(vm.viewMode == .fullscreen ? 1.0 : 0)
                         }
 
                     VStack(spacing: 0) {
                         AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
-                            .highPriorityGesture(
-                                TapGesture()
-                                    .onEnded { _ in
-                                        withAnimation {
-                                            vm.toggleViewMode()
-                                        }
-                                    }
-                            )
-//                            .onTapGesture {
-//                                withAnimation {
-//                                    vm.toggleViewMode()
-//                                }
-//                            }
-                            .padding(.top, vm.viewMode == .fullscreen ? 30.0 : 0.0)
-                            .overlay(alignment: .topLeading) {
+                        
+                            // Need high priority gesture, else cannot go from .overlay to .fullscreen
+                            // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
+                            // so use custom .highPriorityGestureIf()
+                            .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
+                                withAnimation {
+                                    vm.toggleViewMode()
+                                }
+                            })
+                            .padding(.top, vm.viewMode == .fullscreen ? 0.0 : 0.0)
+                            .overlay(alignment: .topLeading) { // Close button for .overlay mode
                                 Image(systemName: "multiply")
                                     .font(.title2)
                                     .foregroundColor(Color.white)
@@ -122,11 +138,11 @@ struct OverlayVideo: View {
                                     }
                                     .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                             }
-                        if vm.viewMode == .overlay {
+                        
+                        
+                        if vm.viewMode == .overlay { // Video controls for .overlay mode
                             HStack(spacing: 20) {
-                                Button(action: {
-                                    vm.seekBackward()
-                                }) {
+                                Button(action: vm.seekBackward) {
                                     Image(systemName: "gobackward.15")
                                         .foregroundColor(.white)
                                         .font(.title2)
@@ -145,9 +161,7 @@ struct OverlayVideo: View {
                                         .font(.title)
                                 }
                                 
-                                Button(action: {
-                                    vm.seekForward()
-                                }) {
+                                Button(action: vm.seekForward) {
                                     Image(systemName: "goforward.15")
                                         .foregroundColor(.white)
                                         .font(.title2)
@@ -155,16 +169,19 @@ struct OverlayVideo: View {
                             }
                             .frame(height: CONTROLS_HEIGHT)
                         }
+//                        Spacer()
                     }
-                    .background(Color.black)
+                    .background {
+                        if vm.viewMode == .overlay { Color.green }
+                    }
+                    .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
                     .frame(
                         width: videoWidth * currentScale,
                         height: (videoHeight * currentScale) + (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
-    //                    .padding(.horizontal, videoPaddingHorizontal)
                     .offset(
                         x: clampedOffsetX(geometry: geometry),
-                        y: clampedOffsetY(geometry: geometry) - CONTROLS_HEIGHT
+                        y: clampedOffsetY(geometry: geometry) - (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
                     .gesture(
                         // Combine Drag and Magnification Gestures
@@ -183,7 +200,7 @@ struct OverlayVideo: View {
                                     currentOffset.width = clamp(
                                         value: newOffsetX,
                                         min: 0,
-                                        max: geometry.size.width - (videoWidth * currentScale + 2 * videoPaddingHorizontal)
+                                        max: geometry.size.width - (videoWidth * currentScale + 2)
                                     )
                                     currentOffset.height = clamp(
                                         value: newOffsetY,
@@ -214,7 +231,7 @@ struct OverlayVideo: View {
                                     currentOffset.width = clamp(
                                         value: currentOffset.width,
                                         min: 0,
-                                        max: geometry.size.width - (videoWidth * currentScale + 2 * videoPaddingHorizontal)
+                                        max: geometry.size.width - (videoWidth * currentScale + 2)
                                     )
                                     currentOffset.height = clamp(
                                         value: currentOffset.height,
@@ -248,7 +265,7 @@ struct OverlayVideo: View {
         if vm.viewMode == .detailstream { return 0 }
         if vm.viewMode == .fullscreen { return 0 }
         
-        let totalWidth = videoWidth * currentScale + 2 * videoPaddingHorizontal
+        let totalWidth = videoWidth * currentScale + 2
         let maxOffsetX = geometry.size.width - totalWidth
         return clamp(value: currentOffset.width + dragOffset.width, min: 0, max: maxOffsetX)
     }
@@ -297,6 +314,8 @@ struct OverlayVideo: View {
             }
         }
     }
+}
+
 
 import AVKit
 import Photos
