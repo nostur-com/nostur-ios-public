@@ -36,6 +36,10 @@ struct OverlayVideo: View {
         if vm.viewMode == .fullscreen { return .center }
         return .topLeading
     }
+        
+    // State variables for saving video
+    @State private var isSaving = false
+    @State private var didSave = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -44,6 +48,31 @@ struct OverlayVideo: View {
                     Color.black.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
                         .overlay(alignment: .topTrailing) {
                             Image(systemName: "pip.enter")
+                                    Menu(content: {
+                                        Button("Save to Photo Library") {
+                                            saveAVAssetToPhotos()
+                                        }
+                                    }, label: {
+                                        if isSaving {
+                                            ProgressView()
+                                                .foregroundColor(Color.white)
+                                                .tint(Color.white)
+                                                .padding(5)
+                                        }
+                                        else if didSave {
+                                            Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
+                                                .foregroundColor(Color.white)
+                                                .padding(5)
+                                                .offset(y: -2)
+                                        }
+                                        else {
+                                            Image(systemName: "square.and.arrow.down")
+                                                .foregroundColor(Color.white)
+                                                .padding(5)
+                                                .offset(y: -2)
+                                        }
+                                    }, primaryAction: saveAVAssetToPhotos)
+                                    .disabled(isSaving)
                                 .font(.title2)
                                 .foregroundColor(Color.white)
                                 .padding(.top, 15)
@@ -226,5 +255,103 @@ struct OverlayVideo: View {
         let maxOffsetY = geometry.size.height - (videoHeight * currentScale)
         return clamp(value: currentOffset.height + dragOffset.height, min: 0, max: maxOffsetY)
     }
+    
+    func saveAVAssetToPhotos() {
+        guard !didSave else { return }
+        isSaving = true
+
+        guard let avAsset = vm.cachedVideo?.asset else {
+            sendNotification(.anyStatus, ("Failed to get video", "APP_NOTICE"))
+            isSaving = false
+            return
+        }
+
+        exportAsset(avAsset) { exportedURL in
+            guard let url = exportedURL else {
+                sendNotification(.anyStatus, ("Failed to export video", "APP_NOTICE"))
+                isSaving = false
+                return
+            }
+
+            requestPhotoLibraryAccess { granted in
+                if granted {
+                    saveVideoToPhotoLibrary(videoURL: url) { success, error in
+                        if success {
+                            didSave = true
+                            sendNotification(.anyStatus, ("Saved to Photo Library", "APP_NOTICE"))
+                        } else {
+                            sendNotification(.anyStatus, ("Failed to save video: \(error?.localizedDescription ?? "Unknown error")", "APP_NOTICE"))
+                        }
+                        isSaving = false
+                    }
+                } else {
+                    sendNotification(.anyStatus, ("Photo Library access was denied.", "APP_NOTICE"))
+                    isSaving = false
+                }
+            }
+        }
+    }
+
+import AVKit
+import Photos
+
+func exportAsset(_ asset: AVAsset, completion: @escaping (URL?) -> Void) {
+    guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else {
+        completion(nil)
+        return
+    }
+
+    let exportDirectory = FileManager.default.temporaryDirectory
+    let exportURL = exportDirectory.appendingPathComponent("exportedVideo.mp4")
+
+    try? FileManager.default.removeItem(at: exportURL)
+
+    exportSession.outputURL = exportURL
+    exportSession.outputFileType = .mp4
+
+    exportSession.exportAsynchronously {
+        switch exportSession.status {
+        case .completed:
+            completion(exportURL)
+        case .failed:
+            print("Export failed: \(String(describing: exportSession.error))")
+            completion(nil)
+        case .cancelled:
+            print("Export cancelled")
+            completion(nil)
+        default:
+            print("Export other status: \(exportSession.status)")
+            completion(nil)
+        }
+    }
 }
 
+func requestPhotoLibraryAccess(completion: @escaping (Bool) -> Void) {
+    let status = PHPhotoLibrary.authorizationStatus()
+
+    switch status {
+    case .authorized, .limited:
+        completion(true)
+    case .notDetermined:
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { newStatus in
+            DispatchQueue.main.async {
+                completion(newStatus == .authorized || newStatus == .limited)
+            }
+        }
+    default:
+        completion(false)
+    }
+}
+
+
+func saveVideoToPhotoLibrary(videoURL: URL, completion: @escaping (Bool, Error?) -> Void) {
+    PHPhotoLibrary.shared().performChanges({
+        PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoURL)
+    }) { success, error in
+        DispatchQueue.main.async {
+            // Optionally delete the temporary file
+            try? FileManager.default.removeItem(at: videoURL)
+            completion(success, error)
+        }
+    }
+}

@@ -3255,7 +3255,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take pictures you want to post on nostr";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To use voice chats";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save a post screenshot to your Photo Library";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save screenshots or videos to your Photo Library";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -3308,7 +3308,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Take pictures you want to post on nostr";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To use voice chats";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save a post screenshot to your Photo Library";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "To save screenshots or videos to your Photo Library";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
