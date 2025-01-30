@@ -241,6 +241,21 @@ extension View {
             self
         }
     }
+    
+    @ViewBuilder
+    func highPriorityGestureIf(condition: Bool, onTap: @escaping () -> Void) -> some View {
+        if condition {
+            self.highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        onTap()
+                    }
+            )
+        }
+        else {
+            self
+        }
+    }
 
     @ViewBuilder
     func presentationDetents350l() -> some View {

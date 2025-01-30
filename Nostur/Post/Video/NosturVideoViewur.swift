@@ -89,8 +89,10 @@ struct NosturVideoViewur: View {
                                     didStart = true
                                     sendNotification(.startPlayingVideo, url.absoluteString)
 
-                                    if let cVideo = cachedVideo {
-                                        AnyPlayerModel.shared.loadVideo(cachedVideo: cVideo)
+                                    if !IS_CATALYST && !IS_IPAD { // Use new player for iOS
+                                        if let cVideo = cachedVideo {
+                                            AnyPlayerModel.shared.loadVideo(cachedVideo: cVideo)
+                                        }
                                     }
                                 }) {
                                     Image(systemName:"play.circle")
@@ -115,17 +117,29 @@ struct NosturVideoViewur: View {
                         }
                         .overlay {
                             if didStart, let asset = cachedVideo?.asset {
-                                Text("playing.....")
-//                                VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
-//                                    .onReceive(receiveNotification(.startPlayingVideo)) { notification in
-//                                        let otherUrl = notification.object as! String
-//                                        if url.absoluteString != otherUrl {
-//                                            isPlaying = false
-//                                        }
-//                                    }
-//                                    .onDisappear {
-//                                        isPlaying = false
-//                                    }
+                                if IS_CATALYST { // Use old player for DESKTOP
+                                    VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
+                                        .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+                                            let otherUrl = notification.object as! String
+                                            if url.absoluteString != otherUrl {
+                                                isPlaying = false
+                                            }
+                                        }
+                                        .onDisappear {
+                                            isPlaying = false
+                                        }
+                                }
+                                else {
+                                    Color.black
+                                        .overlay {
+                                            Image(systemName: "pip")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 100)
+                                                .foregroundColor(Color.gray)
+                                        }
+                                    
+                                }
                             }
                         }
 //                    .withoutAnimation()
@@ -275,20 +289,14 @@ struct NosturVideoViewur: View {
 }
 
 
-
-struct NosturVideoViewur_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        // Use ImageDecoderRegistory to add the decoder to the
+@available(iOS 18.0, *)
+#Preview("NosturVideoViewur") {
+    VStack {
         let _ = ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
+        let m3u8testUrl = URL(string: "https://cdn.stemstr.app/stream/87b5962ef9e37845c72ae0fa2748e8e5b1b257274e8e2e0a8cdd5d3b5e5ff596.m3u8")!
+        let videoUrl = URL(string: "https://m.primal.net/OErQ.mov")!
         
-        let content1 = "one image: https://cdn.stemstr.app/stream/87b5962ef9e37845c72ae0fa2748e8e5b1b257274e8e2e0a8cdd5d3b5e5ff596.m3u8 dunno"
-//        let content1 = "one image: https://nostur.com/test1.mp4 dunno"
-        
-        let urlsFromContent = getImgUrlsFromContent(content1)
-        
-        NosturVideoViewur(url:urlsFromContent[0],  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, autoload: true, theme: Themes.default.theme, didStart: .constant(false))
-            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+        NosturVideoViewur(url: videoUrl,  pubkey: "dunno", videoWidth: UIScreen.main.bounds.width, autoload: true, theme: Themes.default.theme, didStart: .constant(false))
     }
 }
 

@@ -388,6 +388,7 @@ let CI_BUILD_NUMBER = Bundle.main.infoDictionary?["CI_BUILD_NUMBER"] as? String 
 let NIP89_APP_REFERENCE = Bundle.main.infoDictionary?["NIP89_APP_REFERENCE"] as? String ?? ""
 let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad
 let IS_CATALYST = ProcessInfo.processInfo.isMacCatalystApp
+let IS_IPHONE = !ProcessInfo.processInfo.isMacCatalystApp && UIDevice.current.userInterfaceIdiom == .phone
 let IS_APPLE_TYRANNY = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") == "NO"
 //let IS_MAC = ProcessInfo.processInfo.isiOSAppOnMac
 
