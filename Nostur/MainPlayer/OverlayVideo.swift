@@ -52,6 +52,12 @@ struct OverlayVideo: View {
                                         Button("Save to Photo Library") {
                                             saveAVAssetToPhotos()
                                         }
+                                        Button("Copy video URL") {
+                                            if let url = vm.cachedVideo?.url {
+                                                UIPasteboard.general.string = url
+                                                sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
+                                            }
+                                        }
                                     }, label: {
                                         if isSaving {
                                             ProgressView()
