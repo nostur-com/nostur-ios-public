@@ -84,7 +84,7 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
     if let event {
         if let context = event.managedObjectContext {
 #if DEBUG
-            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey event.managedObjectContext")
+            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey event.managedObjectContext \(pubkey)")
 #endif
             if let contact = Contact.fetchByPubkey(pubkey, context: context) {
 #if DEBUG
@@ -97,7 +97,7 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
     }
     else if !Thread.isMainThread {
 #if DEBUG
-        L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey !Thread.isMainThread")
+        L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey !Thread.isMainThread \(pubkey)")
 #endif
         if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
             #if DEBUG
