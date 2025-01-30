@@ -325,6 +325,8 @@
 		1F9A55242A3C7EE400F67627 /* View+roundedCorner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */; };
 		1F9A55262A3C7FD300F67627 /* DetailTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9A55252A3C7FD300F67627 /* DetailTab.swift */; };
 		1F9AE7552A4E8BAC009D093E /* NSecBunkerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9AE7542A4E8BAB009D093E /* NSecBunkerManager.swift */; };
+		1F9BCD242D4B9CB10002D14B /* EmbeddedPost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9BCD232D4B9CB10002D14B /* EmbeddedPost.swift */; };
+		1F9BCD272D4B9E570002D14B /* NoteRowPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9BCD262D4B9E570002D14B /* NoteRowPreviews.swift */; };
 		1F9C85C22C7C88B300B45304 /* AccountQR.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9C85C12C7C88B300B45304 /* AccountQR.swift */; };
 		1F9DC3A82A28E35900119D73 /* NewFollowersNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */; };
 		1FA0599D2A7414320039643C /* RelayMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FA0599C2A7414320039643C /* RelayMessage.swift */; };
@@ -919,6 +921,8 @@
 		1F9A55232A3C7EE400F67627 /* View+roundedCorner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+roundedCorner.swift"; sourceTree = "<group>"; };
 		1F9A55252A3C7FD300F67627 /* DetailTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailTab.swift; sourceTree = "<group>"; };
 		1F9AE7542A4E8BAB009D093E /* NSecBunkerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSecBunkerManager.swift; sourceTree = "<group>"; };
+		1F9BCD232D4B9CB10002D14B /* EmbeddedPost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedPost.swift; sourceTree = "<group>"; };
+		1F9BCD262D4B9E570002D14B /* NoteRowPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteRowPreviews.swift; sourceTree = "<group>"; };
 		1F9C85C12C7C88B300B45304 /* AccountQR.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountQR.swift; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
 		1F9DC3A72A28E35900119D73 /* NewFollowersNotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFollowersNotificationView.swift; sourceTree = "<group>"; };
@@ -1197,12 +1201,13 @@
 		1F00E8C129C2626500797B78 /* Post */ = {
 			isa = PBXGroup;
 			children = (
-				1FD6C34B2C2CD9D30085A240 /* Related */,
 				1FC0F5A12A4AEAE8004E4DAA /* Article */,
 				1FD78EED2A0CB770003E7B3E /* Kinds */,
+				1F9BCD252D4B9E390002D14B /* NoteRow */,
 				1F685B502A0D1886009EEC9B /* NR */,
 				1FFED7FD2A39706B00A0B1E8 /* PostComposer */,
 				1F15F09A2AAF2FBB0004E706 /* PostFooter */,
+				1FD6C34B2C2CD9D30085A240 /* Related */,
 				1F38AFED2A2715250035641E /* Video */,
 				1F13BF9E2B4F870D00607D98 /* BigLinkPreview.swift */,
 				1F922FDD2A9775EB00C84867 /* Box.swift */,
@@ -1210,6 +1215,7 @@
 				1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */,
 				1F20939E2A43FDCA0085E7D2 /* DetailFooterFragment.swift */,
 				1F5E8A882A5FFD55001F86B9 /* EditableReplyingTo.swift */,
+				1F9BCD232D4B9CB10002D14B /* EmbeddedPost.swift */,
 				1F92D89B2ABBEED9002F300D /* EmbedById.swift */,
 				1F33EC3629B613F800615FB9 /* FullImageViewer.swift */,
 				1F2F54E42A02242900B6D7E4 /* HighlightRenderer.swift */,
@@ -1221,10 +1227,8 @@
 				1F39756E2AB622C1004F9D77 /* MultiFollowSheet.swift */,
 				1F4C1C272A07AB090010573F /* NEventView.swift */,
 				1F00F1FD2C85C850000E8C6D /* NXContentRenderer.swift */,
-				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
 				1FD49736298029600084F14E /* NoteTextRenderView.swift */,
 				1FF9B3AD2CA9F804004CD6F1 /* NaddrView.swift */,
-				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
 				1F71ACF72AAEE2780040EA3B /* OwnPostFooter.swift */,
 				1F8B6A702A20C6020060EDB3 /* PostActionNotification.swift */,
 				1FB130BC29C1930A004AC98D /* PostDetailView.swift */,
@@ -1904,6 +1908,15 @@
 			path = DetailPane;
 			sourceTree = "<group>";
 		};
+		1F9BCD252D4B9E390002D14B /* NoteRow */ = {
+			isa = PBXGroup;
+			children = (
+				1FB130B029C0DB07004AC98D /* NoteRow.swift */,
+				1F9BCD262D4B9E570002D14B /* NoteRowPreviews.swift */,
+			);
+			path = NoteRow;
+			sourceTree = "<group>";
+		};
 		1F9D69D92A3096E100628460 /* Playground */ = {
 			isa = PBXGroup;
 			children = (
@@ -2206,6 +2219,7 @@
 				1FC4D40C2998ED0E004E88CD /* FollowersList.swift */,
 				1F7483542A67823300CA7026 /* ImposterChecker.swift */,
 				1F7C8AEB2C93364000B13BB7 /* LiveEventPFP.swift */,
+				1F4C1C292A07B21F0010573F /* NProfileView.swift */,
 				1FDB74572BD6B71700649E0A /* PossibleImposterLabel.swift */,
 				1FE0C71429FAEA9F00381586 /* ProfileBanner.swift */,
 				1FC7A49A29F95AD400645FEF /* ProfileByPubkey.swift */,
@@ -2642,6 +2656,7 @@
 				1FA477232A780C0E00A4CCD3 /* Binding+not.swift in Sources */,
 				1F365FBB2AF2F561003A82CB /* Bookmark+CoreDataProperties.swift in Sources */,
 				1FB6E6F929E3B16A008BE8A6 /* NewListSheet.swift in Sources */,
+				1F9BCD242D4B9CB10002D14B /* EmbeddedPost.swift in Sources */,
 				1F96792D29BF611800E78173 /* EditPrivateNoteSheet.swift in Sources */,
 				1F056FA82A5C2F3B00578B35 /* CustomZapAmountEntry.swift in Sources */,
 				1F539DAD299D52E200F3B8CA /* AddExistingAccountSheet.swift in Sources */,
@@ -2817,6 +2832,7 @@
 				1FA70F932B053C9500BB636F /* CloudDMState+CoreDataClass.swift in Sources */,
 				1F05FA0A2A35FDEF00DAB8E8 /* NosturVideoViewur.swift in Sources */,
 				1F14BA7029854DFC00EACCD5 /* ProfileRow.swift in Sources */,
+				1F9BCD272D4B9E570002D14B /* NoteRowPreviews.swift in Sources */,
 				1FB7FF852C5FE05800EAAD07 /* NXQueuedSubscriptionIds.swift in Sources */,
 				1F4773A7296D4F5B0049454B /* AccountEditView.swift in Sources */,
 				1F20F4C52AAE331F002D8886 /* ArticlesFeed.swift in Sources */,
