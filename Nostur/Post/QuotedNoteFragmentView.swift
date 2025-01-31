@@ -58,7 +58,7 @@ struct QuotedNoteFragmentView: View {
                                 .lineLimit(1)
                                 .onTapGesture(perform: navigateToContact)
                                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                                    guard profile.pubkey == nrPost.pubkey else { return }
+                                    guard profile.pubkey == nrPost.pubkey, name != profile.name else { return }
                                     withAnimation {
                                         name = profile.name
                                     }

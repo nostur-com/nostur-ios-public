@@ -25,7 +25,7 @@ struct NRPostHeaderContainer: View {
         VStack(alignment: .leading) { // Name + menu "replying to"
             PostHeaderView(pubkey: nrPost.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: nrPost.contact?.similarToPubkey , via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                    guard profile.pubkey == nrPost.pubkey else { return }
+                    guard profile.pubkey == nrPost.pubkey, name != profile.name else { return }
                     withAnimation(.easeIn) {
                         name = profile.name
                     }
@@ -132,7 +132,7 @@ struct EventHeaderContainer: View {
         VStack(alignment: .leading) { // Name + menu "replying to"
             PostHeaderView(pubkey: event.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: similarToPubkey, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                    guard profile.pubkey == event.pubkey else { return }
+                    guard profile.pubkey == event.pubkey, name != profile.name else { return }
                     withAnimation(.easeIn) {
                         name = profile.name
                     }
