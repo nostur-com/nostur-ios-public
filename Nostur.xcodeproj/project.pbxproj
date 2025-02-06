@@ -481,7 +481,6 @@
 		1FD6C34F2C2CDEDF0085A240 /* PostZaps.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C34E2C2CDEDF0085A240 /* PostZaps.swift */; };
 		1FD6C4F82ACC41DB00885125 /* NWCWalletBalance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */; };
 		1FD6CA012C53E5900021E3A7 /* NestButtons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD6CA002C53E5900021E3A7 /* NestButtons.swift */; };
-		1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF02A0CB813003E7B3E /* Kind1.swift */; };
 		1FD78EF32A0CB878003E7B3E /* Highlight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF22A0CB878003E7B3E /* Highlight.swift */; };
 		1FD78EF52A0CBE18003E7B3E /* KindResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */; };
 		1FD78EF72A0CC365003E7B3E /* PostRowDeletable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */; };
@@ -1078,7 +1077,6 @@
 		1FD6C34E2C2CDEDF0085A240 /* PostZaps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostZaps.swift; sourceTree = "<group>"; };
 		1FD6C4F72ACC41DB00885125 /* NWCWalletBalance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NWCWalletBalance.swift; sourceTree = "<group>"; };
 		1FD6CA002C53E5900021E3A7 /* NestButtons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NestButtons.swift; sourceTree = "<group>"; };
-		1FD78EF02A0CB813003E7B3E /* Kind1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Kind1.swift; sourceTree = "<group>"; };
 		1FD78EF22A0CB878003E7B3E /* Highlight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Highlight.swift; sourceTree = "<group>"; };
 		1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KindResolver.swift; sourceTree = "<group>"; };
 		1FD78EF62A0CC365003E7B3E /* PostRowDeletable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostRowDeletable.swift; sourceTree = "<group>"; };
@@ -2282,7 +2280,6 @@
 			isa = PBXGroup;
 			children = (
 				1FD78EF22A0CB878003E7B3E /* Highlight.swift */,
-				1FD78EF02A0CB813003E7B3E /* Kind1.swift */,
 				1FB7FF862C5FFE9F00EAAD07 /* Kind1Both.swift */,
 				1F0A3C242A0C113700B30D7E /* Kind1063.swift */,
 				1FD78EF42A0CBE18003E7B3E /* KindResolver.swift */,
@@ -2557,7 +2554,6 @@
 				1FE31EE12A587F60008A4A6F /* ProfileOverlayCard.swift in Sources */,
 				1FE6947C2A8B5550004BB949 /* Search+FollowHashtagTile.swift in Sources */,
 				1FC82F3229AE0C0700B81CE5 /* Mentions.swift in Sources */,
-				1FD78EF12A0CB813003E7B3E /* Kind1.swift in Sources */,
 				1F0592DC2A505531003B4B3C /* DiscoverCommunities.swift in Sources */,
 				1FF78BB82A45421500CA3DDA /* PaddingsTesting.swift in Sources */,
 				1FF9B3AE2CA9F804004CD6F1 /* NaddrView.swift in Sources */,
