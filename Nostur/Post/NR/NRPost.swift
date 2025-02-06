@@ -289,7 +289,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005a"); isAwaiting = true
             }
             else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withReplies: withReplies, withRepliesCount: withRepliesCount))
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         } // why event.firstQuote_ doesn't work??
         else if let firstQuoteId = event.firstQuoteId, let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: bg()) {
@@ -301,7 +301,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005b"); isAwaiting = true
             }
             else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: false, withReplies: withReplies, withRepliesCount: withRepliesCount))
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         }
         else if !isAwaiting && event.firstQuoteId != nil {
