@@ -22,6 +22,7 @@ public class PreviewEnvironment {
     let kind0:Kind0Processor = .shared
     let npn:NewPostNotifier = NewPostNotifier.shared
     let cp:ConnectionPool = ConnectionPool.shared
+    let dm:DirectMessageViewModel = .default
     
     static let shared = PreviewEnvironment()
         
@@ -805,6 +806,9 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.dim)
                     .environmentObject(pe.npn)
                     .environmentObject(pe.cp)
+                    .environmentObject(pe.dm)
+                    .environmentObject(NetworkMonitor.shared)
+                    .environmentObject(NotificationsViewModel.shared)
                     .buttonStyle(NRButtonStyle(theme: pe.themes.theme))
                     .tint(pe.themes.theme.accent)
             }
