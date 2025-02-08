@@ -443,15 +443,29 @@ class NXColumnViewModel: ObservableObject {
                     feed.contactPubkeys
                 case .following(_):
                     (config.account?.followingPubkeys ?? []).union(Set([config.accountPubkey ?? ""]))
+                case .picture(_):
+                    (config.account?.followingPubkeys ?? []).union(Set([config.accountPubkey ?? ""]))
                 default:
                     []
                 }
-                
+
                 let currentIdsOnScreen = self.currentIdsOnScreen
                 let repliesEnabled = config.repliesEnabled
                 
                 let event = notification.object as! Event
                 bg().perform { [weak self] in
+                    
+                    // Only kind 20 on picture-only feed
+                    if case .picture(_) = config.columnType, event.kind != 20 {
+                        return
+                    }
+                    
+                    // No kind 20 on following feed
+                    if case .following(_) = config.columnType, event.kind == 20 {
+                        return
+                    }
+                    
+                    
                     guard pubkeys.contains(event.pubkey), !currentIdsOnScreen.contains(event.id) else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NXColumnViewModel.listenForOwnNewPostSaved")
                     // If we are not hiding replies, we render leafs + parents --> withParents: true
