@@ -1697,9 +1697,9 @@ extension NXColumnViewModel {
 #if DEBUG
                 L.og.debug("☘️☘️ \(config.name) - \(config.id) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description)")
 #endif
-                withAnimation {
-                    self.viewState = .posts(existingPosts + onlyNewAddedPosts)
-                }
+                
+                // No withAnimation { } at bottom or it will jump?
+                self.viewState = .posts(existingPosts + onlyNewAddedPosts)
             }
         }
         else { // Nothing on screen yet, put first posts on screen
