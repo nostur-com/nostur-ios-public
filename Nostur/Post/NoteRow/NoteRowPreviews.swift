@@ -18,9 +18,12 @@ import NukeVideo
         pe.loadReposts()
         pe.loadHighlights()
         pe.loadKind1063()
+        pe.parseMessages([
+            ###"["EVENT","R",{"kind":1,"created_at":1739053162,"pubkey":"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d","tags":[["-"],["client","Nostur"]],"id":"c899f14bdfd2aa6943ae6d9d55a55839f65f9bb0994d3e9c4022603df620ac7a","sig":"0dfe5d49a9555c22e6d3849eae9262fba20ddcc74335f3203faf85c1d660e8be2c95585145e66e729b2133f0f2cf1d719f160df33b039522aaa4c304ae4dd05b","content":"Turns out https://lockbox.fiatjaf.com/ is the best place to publish your stuff that you only want people who really understand Nostr to read (i.e. people who are using outbox-capable clients, or relay-browsers)."}]"###
+        ])
     }) {
         PreviewFeed { // CHANGE 1 == 2 to 1 == 1 to preview
-            let testMe: Set<Int> = [17]
+            let testMe: Set<Int> = [25]
             Group {
                 if testMe.contains(1), let p = PreviewFetcher.fetchNRPost("1920b9351f01dd92dad21a9eef04781b896cb45260dfc02d9e9c05bda6dfef77") {
                         // A POST WITH CODE IN QUOTE
@@ -219,6 +222,13 @@ import NukeVideo
 
                 if testMe.contains(24), let p = PreviewFetcher.fetchNRPost("fdf989cbe5d26d874a4afaf8a78861fcd3267619e7db467a549a6b33c6dbeeab") {
                     // REPOST POST WITH IMAGE
+                    Box {
+                        PostRowDeletable(nrPost: p)
+                    }
+                }
+                
+                if testMe.contains(25), let p = PreviewFetcher.fetchNRPost("c899f14bdfd2aa6943ae6d9d55a55839f65f9bb0994d3e9c4022603df620ac7a") {
+                    // RESTRICTED POST
                     Box {
                         PostRowDeletable(nrPost: p)
                     }
