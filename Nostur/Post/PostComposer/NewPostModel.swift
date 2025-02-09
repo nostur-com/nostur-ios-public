@@ -413,6 +413,8 @@ public final class NewPostModel: ObservableObject {
         
         if let replyTo {
             bg().perform {
+                guard !replyTo.isRestricted else { return } // Don't rebroadcast restricted posts
+                
                 let replyToNEvent = replyTo.toNEvent()
                 let replyToId = replyTo.id
                 DispatchQueue.main.async {
@@ -423,6 +425,8 @@ public final class NewPostModel: ObservableObject {
             }
         }
         if let quotingEvent {
+            guard !quotingEvent.isRestricted else { return } // Don't rebroadcast restricted posts
+            
             // quotingEvent is mainContext?
             let quotingNEvent = quotingEvent.toNEvent()
             let quotingEventId = quotingEvent.id
