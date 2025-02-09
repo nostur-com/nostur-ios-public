@@ -316,6 +316,10 @@ extension Event {
         return WebOfTrust.shared.isAllowed(pubkey)
     }
     
+    var isRestricted: Bool {
+        self.fastTags.first(where: { $0.0 == "-" }) != nil
+    }
+    
     var plainText: String {
         return NRTextParser.shared.copyPasteText(fastTags: self.fastTags, event: self, text: self.content ?? "").text
     }

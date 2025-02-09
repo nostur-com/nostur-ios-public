@@ -228,6 +228,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     let inWoT: Bool // This is just one of the inputs to determine spam or not, should have more inputs.
     let isSpam: Bool // Should use this in all views to hide or not
+    let isRestricted: Bool // NIP-70: Protected Events
     
     // article stuff
     var eventId: String? // d tag
@@ -339,6 +340,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         // Hide if ["client", ""31990:..." ..]
         // Also show if  ["proxy", "https:\/\/....", "activitypub"]
         self.via = self.fastTags.first(where: { $0.0 == "client" && $0.1.prefix(6) != "31990:" })?.1
+        self.isRestricted = event.isRestricted
         if self.via == nil {
             if let proxy = self.fastTags.first(where: { $0.0 == "proxy" && $0.2 != nil })?.2 {
                 self.via = String(format: "%@ (proxy)", proxy)
