@@ -23,7 +23,7 @@ struct NRPostHeaderContainer: View {
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(pubkey: nrPost.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: nrPost.contact?.similarToPubkey , via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
+            PostHeaderView(pubkey: nrPost.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: nrPost.contact?.similarToPubkey , via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == nrPost.pubkey, name != profile.name else { return }
                     withAnimation(.easeIn) {
@@ -130,7 +130,7 @@ struct EventHeaderContainer: View {
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(pubkey: event.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: similarToPubkey, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine)
+            PostHeaderView(pubkey: event.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: similarToPubkey, via: event.via, createdAt: Date(timeIntervalSince1970: TimeInterval(event.created_at)), displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: event.isRestricted)
                 .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                     guard profile.pubkey == event.pubkey, name != profile.name else { return }
                     withAnimation(.easeIn) {
@@ -234,6 +234,7 @@ struct PostHeaderView: View {
     public var agoText: String? = nil
     public let displayUserAgentEnabled: Bool
     public let singleLine: Bool
+    public var restricted: Bool = false
 
     var body: some View {
 //        #if DEBUG
@@ -246,6 +247,11 @@ struct PostHeaderView: View {
                 .lineLimit(1)
                 .layoutPriority(2)
                 .onTapGesture { onTap?() }
+            
+            if restricted {
+                RestrictedLabel()
+                    .infoText("The author has marked this post as restricted.\n\nA restricted post is intented to be sent only to specific relays and should not be rebroadcasted to other relays.")
+            }
 
             if couldBeImposter == 1 {
                 PossibleImposterLabel(possibleImposterPubkey: pubkey, followingPubkey: similarToPubkey)
@@ -286,5 +292,20 @@ struct PostHeaderView: View {
                 }
             }
         }
+    }
+}
+
+
+struct RestrictedLabel: View {
+    @EnvironmentObject private var themes: Themes
+    
+    var body: some View {
+        Text("restricted", comment: "Label shown on a restricted post").font(.system(size: 12.0))
+            .padding(.horizontal, 8)
+            .background(themes.theme.accent.opacity(0.8))
+            .foregroundColor(.white)
+            .cornerRadius(8)
+            .padding(.top, 3)
+            .layoutPriority(2)
     }
 }
