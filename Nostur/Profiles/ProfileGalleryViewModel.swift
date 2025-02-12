@@ -13,9 +13,9 @@ import CoreData
 // No need to sort by likes, gather all media from a pubkey
 class ProfileGalleryViewModel: ObservableObject {
     
-    @Published var state: GalleryState
-    private var backlog: Backlog
-    private var pubkey: String
+    @Published var state: GalleryState = .initializing
+    private var backlog = Backlog(timeout: 13.0, auto: true)
+    private var pubkey: String = ""
     private var didLoad = false
 
     private static let MAX_IMAGES_PER_POST = 10
@@ -29,12 +29,6 @@ class ProfileGalleryViewModel: ObservableObject {
     
     public func timeout() {
         self.state = .timeout
-    }
-    
-    public init(_ pubkey: String) {
-        self.pubkey = pubkey
-        self.state = .initializing
-        self.backlog = Backlog(timeout: 13.0, auto: true)
     }
     
     // STEP 1: FETCH POSTS FROM SINGLE AUTHOR FROM RELAY
@@ -113,14 +107,16 @@ class ProfileGalleryViewModel: ObservableObject {
     }
     
     @MainActor
-    public func load() {
+    public func load(_ pubkey: String) {
+        self.pubkey = pubkey
         self.state = .loading
         self.items = []
         self.fetchPostsFromRelays()
     }
     
     // for after account change
-    public func reload() {
+    public func reload(_ pubkey: String) {
+        self.pubkey = pubkey
         self.state = .loading
         self.backlog.clear()
         self.items = []

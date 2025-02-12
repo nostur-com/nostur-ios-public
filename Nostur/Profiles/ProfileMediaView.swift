@@ -9,16 +9,14 @@ import SwiftUI
 
 // MEDIA ON USER PROFILE SCREEN
 struct ProfileMediaView: View {
-    @StateObject private var vm: ProfileGalleryViewModel
+    public let pubkey: String
     
-    init(pubkey: String) {
-        _vm = StateObject(wrappedValue: ProfileGalleryViewModel(pubkey))
-    }
     @EnvironmentObject private var dim: DIMENSIONS
+    @StateObject private var vm = ProfileGalleryViewModel()
     
     private static let initialColumns = 3
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: initialColumns)
-    
+
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -29,7 +27,7 @@ struct ProfileMediaView: View {
                 .padding(10)
                 .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
                 .task(id: "profilegallery") {
-                    vm.load()
+                    vm.load(pubkey)
                     do {
                         try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
                         if vm.state == .initializing || vm.state == .loading {
@@ -74,14 +72,14 @@ struct ProfileMediaView: View {
                 }
             }
             else {
-                Button("Refresh") { vm.reload() }
+                Button("Refresh") { vm.reload(pubkey) }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-            }
+            } 
         case .timeout:
             VStack(alignment: .center) {
                 Text("Unable to fetch content")
-                Button("Try again") { vm.reload() }
+                Button("Try again") { vm.reload(pubkey) }
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .center)
