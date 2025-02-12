@@ -40,12 +40,12 @@ struct ProfileMediaView: View {
                 if #available(iOS 17, *) {
                     LazyVGrid(columns: gridColumns) {
                         ForEach(vm.items.indices, id:\.self) { index in
-                            GridItemView17(size: ((dim.listWidth / 3.0) - 20.0), item: vm.items[index])
+                            GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index])
                                 .onBecomingVisible {
                                     vm.fetchMoreIfNeeded(index)
                                 }
                                 .aspectRatio(contentMode: .fill)
-                                .frame(width: ((dim.listWidth / 3.0) - 20.0), height: ((dim.listWidth / 3.0) - 20.0))
+                                .frame(width: ((dim.listWidth / 3.0) - 0.0), height: ((dim.listWidth / 3.0) - 0.0))
                                 .clipped()
                                 .aspectRatio(1, contentMode: .fit)
                                 .id(index)
@@ -60,7 +60,7 @@ struct ProfileMediaView: View {
                 else {
                     LazyVGrid(columns: gridColumns) {
                         ForEach(vm.items.indices, id:\.self) { index in
-                            GridItemView(size: ((dim.listWidth / 3.0) - 20.0), item: vm.items[index])
+                            GridItemView(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index])
                                 .onBecomingVisible {
                                     vm.fetchMoreIfNeeded(index)
                                 }
