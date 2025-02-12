@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-struct OverlayVideo: View {
+struct OverlayVideo<Content: View>: View {
+    let content: Content
+    
     @ObservedObject var vm: AnyPlayerModel = .shared
     
     private var videoHeight: CGFloat {
@@ -39,9 +41,16 @@ struct OverlayVideo: View {
     @State private var isSaving = false
     @State private var didSave = false
     
+    init(@ViewBuilder _ content: ()->Content) {
+        self.content = content()
+    }
+    
     var body: some View {
+        #if DEBUG
+        let _ = Self._printChanges()
+        #endif
         GeometryReader { geometry in
-            if vm.cachedVideo != nil {
+            if vm.player != nil {
                 ZStack(alignment: videoAlignment) {
                     Color.blue.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
                         .overlay(alignment: .topTrailing) {
@@ -49,37 +58,39 @@ struct OverlayVideo: View {
                             HStack {
                                 Group {
                                     
-                                    Menu(content: {
-                                        Button("Save to Photo Library") {
-                                            saveAVAssetToPhotos()
-                                        }
-                                        Button("Copy video URL") {
-                                            if let url = vm.cachedVideo?.url {
-                                                UIPasteboard.general.string = url
-                                                sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
+                                    if !vm.isStream {
+                                        Menu(content: {
+                                            Button("Save to Photo Library") {
+                                                saveAVAssetToPhotos()
                                             }
-                                        }
-                                    }, label: {
-                                        if isSaving {
-                                            ProgressView()
-                                                .foregroundColor(Color.white)
-                                                .tint(Color.white)
-                                                .padding(5)
-                                        }
-                                        else if didSave {
-                                            Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
-                                                .foregroundColor(Color.white)
-                                                .padding(5)
-                                                .offset(y: -2)
-                                        }
-                                        else {
-                                            Image(systemName: "square.and.arrow.down")
-                                                .foregroundColor(Color.white)
-                                                .padding(5)
-                                                .offset(y: -2)
-                                        }
-                                    }, primaryAction: saveAVAssetToPhotos)
-                                    .disabled(isSaving)
+                                            Button("Copy video URL") {
+                                                if let url = vm.cachedVideo?.url {
+                                                    UIPasteboard.general.string = url
+                                                    sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
+                                                }
+                                            }
+                                        }, label: {
+                                            if isSaving {
+                                                ProgressView()
+                                                    .foregroundColor(Color.white)
+                                                    .tint(Color.white)
+                                                    .padding(5)
+                                            }
+                                            else if didSave {
+                                                Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
+                                                    .foregroundColor(Color.white)
+                                                    .padding(5)
+                                                    .offset(y: -2)
+                                            }
+                                            else {
+                                                Image(systemName: "square.and.arrow.down")
+                                                    .foregroundColor(Color.white)
+                                                    .padding(5)
+                                                    .offset(y: -2)
+                                            }
+                                        }, primaryAction: saveAVAssetToPhotos)
+                                        .disabled(isSaving)
+                                    }
                                     
                                     Button(action: {
                                         withAnimation {
@@ -138,7 +149,9 @@ struct OverlayVideo: View {
                                     }
                                     .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                             }
+                            .frame(height: videoHeight)
                         
+                        content
                         
                         if vm.viewMode == .overlay { // Video controls for .overlay mode
                             HStack(spacing: 20) {
@@ -177,7 +190,7 @@ struct OverlayVideo: View {
                     .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
                     .frame(
                         width: videoWidth * currentScale,
-                        height: (videoHeight * currentScale) + (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
+                        height: vm.viewMode == .detailstream ? UIScreen.main.bounds.height : (videoHeight * currentScale) + (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
                     .offset(
                         x: clampedOffsetX(geometry: geometry),

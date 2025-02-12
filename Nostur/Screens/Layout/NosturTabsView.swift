@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct NosturTabsView: View {
+    @EnvironmentObject private var npn: NewPostNotifier
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dm: DirectMessageViewModel
@@ -21,6 +23,7 @@ struct NosturTabsView: View {
     @State private var unread: Int = 0
     @State private var showTabBar = true
     @ObservedObject private var ss: SettingsStore = .shared
+    @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -82,7 +85,23 @@ struct NosturTabsView: View {
             }
             .frame(maxWidth: 600)
             .overlay(alignment: .center) {
-                OverlayVideo()
+                OverlayVideo {
+                    if let visibleNest = liveKitVoiceSession.visibleNest {
+                        NBNavigationStack {
+                            AvailableWidthContainer {
+                                StreamDetail(liveEvent: visibleNest)
+                                    .environmentObject(NRState.shared)
+                                    .environmentObject(themes)
+                                    .environmentObject(npn)
+                                    .presentationBackgroundCompat(themes.theme.listBackground)
+                            }
+                        }
+                        .nbUseNavigationStack(.never)
+                    }
+                    else {
+                        EmptyView()
+                    }
+                }
             }
             if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                 AvailableWidthContainer {

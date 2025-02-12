@@ -30,6 +30,17 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                             }
                         }
                         
+                        Button("Stream") {
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://customer-6unnmza1dd3hkffk.cloudflarestream.com/65153e9050c19d15228121dd5ece7942/manifest/video.m3u8",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.fullscreen, .overlay])
+                            }
+                        }
+                        
                         Button("Portrait") {
                             Task {
                                 await AnyPlayerModel
@@ -83,7 +94,9 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
                 .badge(1)
         }
         .overlay(alignment: .center) {
-            OverlayVideo()
+            OverlayVideo {
+                Text("TEST")
+            }
 //                .offset(y: apm.viewMode == .videostream ? 0 : -offset)
         }
         

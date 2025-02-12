@@ -48,6 +48,13 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     }
     @Published public var scheduledAt: Date?
     
+    public var streamHasEnded: Bool {
+        if let status, status == "ended" {
+            return true
+        }
+        return false
+    }
+    
     public var recordingUrl: String?
     public var liveKitConnectUrl: String?
     

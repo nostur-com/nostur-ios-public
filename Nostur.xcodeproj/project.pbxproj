@@ -82,6 +82,7 @@
 		1F2810BB2B1E150B00042928 /* NRBalloonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2810BA2B1E150B00042928 /* NRBalloonView.swift */; };
 		1F2810BD2B1E155F00042928 /* DMContentRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */; };
 		1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2884A92A77D11D0006766E /* FeedSettings.swift */; };
+		1F2929782D5D0DAE00205A1E /* StreamDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2929772D5D0DAE00205A1E /* StreamDetail.swift */; };
 		1F2AC53D2B12B75E00F70662 /* CashuToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53C2B12B75E00F70662 /* CashuToken.swift */; };
 		1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */; };
 		1F2AC5412B12F00E00F70662 /* DebugWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC5402B12F00E00F70662 /* DebugWindow.swift */; };
@@ -681,6 +682,7 @@
 		1F2810BA2B1E150B00042928 /* NRBalloonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NRBalloonView.swift; sourceTree = "<group>"; };
 		1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMContentRenderer.swift; sourceTree = "<group>"; };
 		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
+		1F2929772D5D0DAE00205A1E /* StreamDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamDetail.swift; sourceTree = "<group>"; };
 		1F2AC53C2B12B75E00F70662 /* CashuToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuToken.swift; sourceTree = "<group>"; };
 		1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuTokenView.swift; sourceTree = "<group>"; };
 		1F2AC5402B12F00E00F70662 /* DebugWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugWindow.swift; sourceTree = "<group>"; };
@@ -1353,6 +1355,7 @@
 				1F2DD5DB2C4D4B1B00562A5D /* LiveEventByNaddr.swift */,
 				1FA97AA02C3E97870091446A /* LiveEventCapsule.swift */,
 				1FA97A9E2C3E8E2F0091446A /* LiveEventDetail.swift */,
+				1F2929772D5D0DAE00205A1E /* StreamDetail.swift */,
 				1F2DD5DD2C4F07D900562A5D /* LiveEventRowView.swift */,
 				1FA97A9C2C3E85F70091446A /* LiveEventsBanner.swift */,
 				1FA97A9A2C3DEE010091446A /* LiveEventsModel.swift */,
@@ -2977,6 +2980,7 @@
 				1F740D9F29AF36C800EFCCA7 /* BadgesIssuedView.swift in Sources */,
 				1F7C65AD29A0A530009FF3EA /* ReadOnlyAccountInformationSheet.swift in Sources */,
 				1FE9D29A2A0E1D2A00256B90 /* NRContentTextRenderer.swift in Sources */,
+				1F2929782D5D0DAE00205A1E /* StreamDetail.swift in Sources */,
 				1FA1CA3A2AF6D49A000E529B /* CloudPrivateNote+CoreDataClass.swift in Sources */,
 				1F88491229B537B400145340 /* HighlightedTextEditor.UIKit.swift in Sources */,
 				1FA1CA3B2AF6D49A000E529B /* CloudPrivateNote+CoreDataProperties.swift in Sources */,

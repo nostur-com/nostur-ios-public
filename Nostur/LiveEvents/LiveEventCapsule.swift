@@ -59,6 +59,9 @@ struct LiveEventCapsule: View {
                    }
                    else {
                        LiveKitVoiceSession.shared.activeNest = liveEvent
+                       Task {
+                           await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay, .fullscreen])
+                       }
                    }
                }
                .simultaneously(with: DragGesture()

@@ -2472,6 +2472,9 @@
         }
       }
     },
+    "Copy video URL" : {
+
+    },
     "Could not convert data" : {
       "comment" : "Error message",
       "localizations" : {
@@ -4207,6 +4210,9 @@
         }
       }
     },
+    "Landscape" : {
+
+    },
     "Last 10 error messages" : {
       "localizations" : {
         "nl" : {
@@ -4282,6 +4288,7 @@
       }
     },
     "Leave" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4692,6 +4699,7 @@
       }
     },
     "Minimize" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5458,6 +5466,9 @@
         }
       }
     },
+    "Other" : {
+
+    },
     "Outrage feed may or may not be available in a future release" : {
       "localizations" : {
         "nl" : {
@@ -5578,9 +5589,6 @@
         }
       }
     },
-    "PLAY!!!" : {
-
-    },
     "Please read these Terms and Conditions (\"Terms\", \"Terms and Conditions\") carefully before using Nostur (the \"App\") operated by the independent developer (\"Developer\")." : {
       "comment" : "Terms and conditions paragraph",
       "localizations" : {
@@ -5601,6 +5609,9 @@
           }
         }
       }
+    },
+    "Portrait" : {
+
     },
     "possible imposter" : {
       "comment" : "Label shown on a profile",
@@ -6858,6 +6869,9 @@
         }
       }
     },
+    "restricted" : {
+      "comment" : "Label shown on a restricted post"
+    },
     "Retake" : {
       "localizations" : {
         "nl" : {
@@ -6931,6 +6945,9 @@
           }
         }
       }
+    },
+    "Save to Photo Library" : {
+
     },
     "Scanning relays for messages %lld/12 months ago..." : {
       "localizations" : {
@@ -7610,7 +7627,7 @@
         }
       }
     },
-    "STOP" : {
+    "Stream" : {
 
     },
     "Stream has ended" : {

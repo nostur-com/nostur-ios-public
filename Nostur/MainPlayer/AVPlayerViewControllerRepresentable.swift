@@ -16,7 +16,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     typealias UIViewType = UIView
     
     // MARK: - Bindings
-    @Binding var player: AVPlayer
+    @Binding var player: AVPlayer?
     @Binding var isPlaying: Bool
     @Binding var showsPlaybackControls: Bool
     @Binding var viewMode: AnyPlayerViewMode
@@ -25,7 +25,9 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     // MARK: - UIViewControllerRepresentable Methods
     func makeUIView(context: Context) -> UIView {
         let avpc = AVPlayerViewController()
-        avpc.player = player
+        if let player {
+            avpc.player = player
+        }
         avpc.exitsFullScreenWhenPlaybackEnds = false
         avpc.videoGravity = .resizeAspectFill
         avpc.allowsPictureInPicturePlayback = true
@@ -44,6 +46,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
         print("updateUIViewController")
+        guard let player else { return }
 //        context.coordinator.avpc?.player = player
         if isPlaying {
             if player.timeControlStatus != .playing {
@@ -87,31 +90,34 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         
         deinit {
             if let token = timeObserverToken {
-                parent.player.removeTimeObserver(token)
+                parent.player?.removeTimeObserver(token)
             }
             removeObservers()
         }
         
         // Add observers to monitor playback status
         func addObservers() {
-            parent.player.addObserver(self, forKeyPath: "timeControlStatus", options: [.new, .initial], context: nil)
+            guard let player = parent.player  else { return }
+            player.addObserver(self, forKeyPath: "timeControlStatus", options: [.new, .initial], context: nil)
             
             // Optionally, observe when the video finishes playing
             NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying),
-                                                   name: .AVPlayerItemDidPlayToEndTime, object: parent.player.currentItem)
+                                                   name: .AVPlayerItemDidPlayToEndTime, object: player.currentItem)
         }
         
         func removeObservers() {
-            parent.player.removeObserver(self, forKeyPath: "timeControlStatus")
+            guard let player = parent.player  else { return }
+            player.removeObserver(self, forKeyPath: "timeControlStatus")
             NotificationCenter.default.removeObserver(self)
         }
         
         // Observe changes in the player's status
         override func observeValue(forKeyPath keyPath: String?, of object: Any?,
                                    change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+            guard let player = parent.player  else { return }
             if keyPath == "timeControlStatus" {
                 DispatchQueue.main.async {
-                    self.parent.isPlaying = self.parent.player.timeControlStatus == .playing
+                    self.parent.isPlaying = player.timeControlStatus == .playing
                 }
             }
         }

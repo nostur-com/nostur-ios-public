@@ -1,5 +1,5 @@
 //
-//  LiveEventDetail.swift
+//  StreamDetail.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 10/07/2024.
@@ -11,13 +11,13 @@ import SwiftUIFlow
 import NavigationBackport
 import NostrEssentials
 
-struct LiveEventDetail: View {
+// Copy pasted from LiveEventDetail() and changed to render as content within OverlayVideo { }
+struct StreamDetail: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @ObservedObject public var liveEvent: NRLiveEvent
-    @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession = .shared
     
     @State private var didStart = false
     @State private var account: CloudAccount? = nil
@@ -43,12 +43,6 @@ struct LiveEventDetail: View {
     
     // TODO: Somehow get the width somewhere on parent views
     @State private var vc: ViewingContext?
-    
-    private var showModeratorControls: Bool {
-        if liveKitVoiceSession.listenAnonymously { return false }
-        guard let account else { return false }
-        return liveEvent.admins.contains(account.publicKey) || liveEvent.pubkey == account.publicKey
-    }
     
     @State private var recordings: [RecordingInfo]? = nil
     
@@ -88,13 +82,8 @@ struct LiveEventDetail: View {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                                 to: nil, from: nil, for: nil)
                             }
-                            .overlay(alignment: .topTrailing) {
-                                if showModeratorControls {
-                                    self.recordingsMenu
-                                }
-                            }
                             
-                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
+                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false)
                                 .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : (moreChatSpace ? 400 : 150), maxHeight: .infinity)
                                 .padding(.horizontal, 10)
                                 .environmentObject(vc)
@@ -102,14 +91,6 @@ struct LiveEventDetail: View {
                     }
                     .frame(minHeight: geo.size.height)
                 }
-            }
-            .safeAreaInset(edge: .bottom) {
-                VStack {
-                    nestButtonsView
-                        .padding(10)
-                        .layoutPriority(1)
-                }
-                .background(themes.theme.background)
             }
             .onAppear {
                 if let relaysTag = liveEvent.nEvent.fastTags.first(where: { $0.0 == "relays" }) {
@@ -131,9 +112,6 @@ struct LiveEventDetail: View {
                 
                 vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
-                if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
-                    account = Nostur.account()
-                }
             }
             .background(themes.theme.background)
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
@@ -158,99 +136,7 @@ struct LiveEventDetail: View {
             })
             .sheet(item: $selectedContact) { nrContact in
                 NBNavigationStack {
-                    VStack {
-                        SelectedParticipantView(nrContact: nrContact, showZapButton: !liveKitVoiceSession.listenAnonymously, aTag: liveEvent.id, showModeratorControls: showModeratorControls, selectedContact: $selectedContact)
-                        
-                        Spacer()
-                        
-                        // Moderator actions
-                        if showModeratorControls {
-                            HStack(alignment: .top) {
-
-                                if liveEvent.pubkeysOnStage.contains(nrContact.pubkey) {
-                                    VStack {
-                                        Button("Remove from stage", systemImage: "mic.fill.badge.xmark") {
-                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                                return
-                                            }
-                                            Task { @MainActor in
-                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, canPublish: false)
-                                            }
-                                            selectedContact = nil
-                                        }
-                                        .font(.title2)
-                                        .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                                        
-                                        Text("Remove from stage")
-                                            .font(.caption)
-                                    }
-                                }
-                                else {
-                                    VStack {
-                                        Button("Add to stage", systemImage: "mic.fill.badge.plus") {
-                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                                return
-                                            }
-                                            Task { @MainActor in
-                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, canPublish: true)
-                                            }
-                                            selectedContact = nil
-                                        }
-                                        .font(.title2)
-                                        .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                                        
-                                        Text("Add to stage")
-                                            .font(.caption)
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                                if liveEvent.admins.contains(nrContact.pubkey) {
-                                    VStack {
-                                        Button("Remove moderator", systemImage: "person.slash.fill") {
-                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                                return
-                                            }
-                                            Task { @MainActor in
-                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, isAdmin: false)
-                                            }
-                                            selectedContact = nil
-                                            
-                                        }
-                                        .font(.title2)
-                                        .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                                        
-                                        Text("Remove moderator")
-                                            .font(.caption)
-                                    }
-                                }
-                                else {
-                                    VStack {
-                                        Button("Make moderator", systemImage: "arrow.up.and.person.rectangle.portrait") {
-                                            guard case .account(let cloudAccount) = LiveKitVoiceSession.shared.accountType else {
-                                                return
-                                            }
-                                            Task { @MainActor in
-                                                try? await liveEvent.updatePermissions(account: cloudAccount, participantPubKey: nrContact.pubkey, isAdmin: true)
-                                            }
-                                            selectedContact = nil
-                                        }
-                                        .font(.title2)
-                                        .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
-                                        
-                                        Text("Make moderator")
-                                            .font(.caption)
-                                    }
-                                }
-                            }
-                                .padding(10)
-                        }
-                    }
+                    SelectedParticipantView(nrContact: nrContact, showZapButton: true, aTag: liveEvent.id, showModeratorControls: false, selectedContact: $selectedContact)
                     .environmentObject(themes)
                     .padding(10)
                     .toolbar {
@@ -281,14 +167,11 @@ struct LiveEventDetail: View {
                     .foregroundColor(.secondary)
             }
         }
-        else if liveEvent.totalParticipants > 0 || liveKitVoiceSession.isRecording {
+        else if liveEvent.totalParticipants > 0 {
             HStack {
                 if liveEvent.totalParticipants > 0 {
                     Text("\(liveEvent.totalParticipants) participants")
                         .foregroundColor(.secondary)
-                }
-                if liveKitVoiceSession.isRecording {
-                    RecView()
                 }
             }
         }
@@ -328,9 +211,9 @@ struct LiveEventDetail: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Share", systemImage: "square.and.arrow.up") {
                             if !IS_CATALYST && !IS_IPAD {
-                                LiveKitVoiceSession.shared.visibleNest = nil
+                                AnyPlayerModel.shared.toggleViewMode()
                             }
-                            NRState.shared.draft = "\(liveEvent.title ?? "Join") 👇\n\n" + "nostr:" + roomAddress
+                            NRState.shared.draft = "\(liveEvent.title ?? "Watching") 👇\n\n" + "nostr:" + roomAddress
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 sendNotification(.newTemplatePost)
                             }
@@ -338,12 +221,6 @@ struct LiveEventDetail: View {
                     }
                 }
         }
-//#if DEBUG
-//        Text("copy event json")
-//            .onTapGesture {
-//                UIPasteboard.general.string = liveEvent.eventJson
-//            }
-//#endif
     }
     
     @ViewBuilder
@@ -425,98 +302,16 @@ struct LiveEventDetail: View {
     }
     
     @ViewBuilder
-    private var nestButtonsView: some View {
-        if let scheduledAt = liveEvent.scheduledAt, liveEvent.status == "planned" {
-            ScheduleReminderButton(at: scheduledAt, reminderId: liveEvent.id)
-        }
-        else if liveEvent.streamHasEnded {
-            EmptyView()
-        }
-        else if case .connected = liveKitVoiceSession.state {
-            NestButtons(liveKitVoiceSession: liveKitVoiceSession)
-                .frame(height: 100)
-        }
-        else if case .connecting = liveKitVoiceSession.state {
-            Button { } label: {
-                Image(systemName: "hourglass")
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, alignment: .center)
-            }
-            .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.horizontal, 10)
-            .disabled(true)
-        }
-        else if let connectUrl = liveEvent.liveKitConnectUrl, case .disconnected = liveKitVoiceSession.state {
-            VStack(spacing: 25) {
-                Button {
-                    if liveKitVoiceSession.listenAnonymously {
-                        liveEvent.joinRoomAnonymously(keys: liveKitVoiceSession.anonymousKeys) { authToken in
-                            liveKitVoiceSession.connect(connectUrl, token: authToken, accountType: .anonymous(liveKitVoiceSession.anonymousKeys), nrLiveEvent: liveEvent)
-                        }
-                    }
-                    else {
-                        guard let account = account else { return }
-                        
-                        liveEvent.joinRoom(account: account) { authToken in
-                            liveKitVoiceSession.connect(connectUrl, token: authToken, accountType: .account(account), nrLiveEvent: liveEvent)
-                        }
-                    }
-                } label: {
-                    HStack {
-                        if liveKitVoiceSession.listenAnonymously {
-                            ZStack {
-                                Circle()
-                                    .foregroundColor(Color.gray)
-                                    .frame(height: 26)
-                                Image(systemName: "sunglasses.fill")
-                                    .foregroundColor(Color.black)
-                            }
-                        }
-                        else if let account {
-                            MiniPFP(pictureUrl: account.pictureUrl, size: 20.0)
-                        }
-                        Text("Start listening")
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
-                .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
-                .frame(maxWidth: .infinity, alignment: .center)
-                .disabled(liveKitVoiceSession.room.connectionState != .disconnected)
-                
-                Toggle(isOn: $liveKitVoiceSession.listenAnonymously) {
-                    Text("Listen anonymously")
-                }
-            }
-            .padding(.horizontal, 10)
-        }
-        else if case .error(let error) = liveKitVoiceSession.state {
-            Text(error)
-        }
-        else if let webUrl = liveEvent.webUrl, let webUrlURL = URL(string: webUrl) {
-            Button {
-                UIApplication.shared.open(webUrlURL)
-            } label: {
-                Text("View on web")
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-            .buttonStyle(NosturButton(height: 36))
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.horizontal, 10)
-        }
-    }
-    
-    @ViewBuilder
     private var videoStreamView: some View {
         if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: videoWidth * 9/16, videoWidth: videoWidth, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+            EmptyView()
         }
         else if liveEvent.streamHasEnded {
             EmptyView()
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
-                NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: videoWidth * 9/16, videoWidth: videoWidth, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+                EmptyView()
             }
             else if liveEvent.liveKitConnectUrl == nil {
                 Button {
@@ -529,139 +324,6 @@ struct LiveEventDetail: View {
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 10)
             }
-        }
-    }
-    
-    @ViewBuilder
-    private var recordingsMenu: some View {
-        Menu {
-            if (liveEvent.status == "live" || liveEvent.status == "planned") && liveEvent.pubkey == account?.publicKey {
-                Button("Close room", systemImage: "xmark.app") {
-                    guard let account, account.publicKey == liveEvent.pubkey else { return }
-                    
-                    var closedNEvent = liveEvent.nEvent
-                    closedNEvent.createdAt = NTimestamp(date: .now)
-                    closedNEvent.tags = closedNEvent.tags.map { tag in
-                        if tag.type == "status" {
-                            return NostrTag(["status", "ended"])
-                        }
-                        else if tag.type == "ends" {
-                            return NostrTag(["ends", Int(Date.now.timeIntervalSince1970).description])
-                        }
-                        return tag
-                    }
-                    if !closedNEvent.tags.contains(where: { $0.type == "ends" }) {
-                        closedNEvent.tags.append(NostrTag(["ends", Int(Date.now.timeIntervalSince1970).description]))
-                    }
-                    if account.isNC {
-                        NSecBunkerManager.shared.requestSignature(forEvent: closedNEvent, usingAccount: account) { signedClosedNEvent in
-                            Unpublisher.shared.publishNow(signedClosedNEvent, skipDB: true)
-                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
-                            liveEvent.status = "ended"
-                        }
-                    }
-                    else {
-                        if let signedClosedNEvent = try? account.signEvent(closedNEvent) {
-                            Unpublisher.shared.publishNow(signedClosedNEvent, skipDB: true)
-                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
-                            liveEvent.status = "ended"
-                        }
-                    }
-                    
-                }
-            }
-            else if liveEvent.status == "ended" && liveEvent.pubkey == account?.publicKey {
-                Button("Restart room", systemImage: "restart.circle") {
-                    guard let account, account.publicKey == liveEvent.pubkey else { return }
-                    
-                    var restartedNEvent = liveEvent.nEvent
-                    restartedNEvent.createdAt = NTimestamp(date: .now)
-                    restartedNEvent.tags = restartedNEvent.tags.compactMap { tag in
-                        if tag.type == "status" {
-                            return NostrTag(["status", "live"])
-                        }
-                        else if tag.type == "ends" {
-                            return nil
-                        }
-                        return tag
-                    }
-
-                    if account.isNC {
-                        NSecBunkerManager.shared.requestSignature(forEvent: restartedNEvent, usingAccount: account) { signedRestartedNEvent in
-                            Unpublisher.shared.publishNow(signedRestartedNEvent, skipDB: true)
-                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
-                            liveEvent.status = "live"
-                        }
-                    }
-                    else {
-                        if let signedRestartedNEvent = try? account.signEvent(restartedNEvent) {
-                            Unpublisher.shared.publishNow(signedRestartedNEvent, skipDB: true)
-                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
-                            liveEvent.status = "live"
-                        }
-                    }
-                    
-                }
-            }
-                
-            Text("Recordings")
-                .font(.footnote)
-            if !liveKitVoiceSession.isRecording {
-                Button("Start recording", systemImage: "record.circle") {
-                    guard let account else { return }
-                    Task { @MainActor in
-                        try? await liveEvent.startRecording(account: account)
-                        if let recordings = try? await liveEvent.listRecordings(account: account) {
-                            Task { @MainActor in
-                                self.recordings = recordings
-                            }
-                        }
-                    }
-                }
-            }
-            if let recordings {
-                ForEach(recordings) { recording in
-                    Button("\(recording.stopped != nil ? "Recorded" : "Recording since") \(Date(timeIntervalSince1970: TimeInterval(recording.started)).formatted(date: .omitted, time: .shortened))", systemImage: recording.stopped != nil ? "arrow.down.circle" : "stop.circle") {
-                        guard let account else { return }
-                        if recording.stopped == nil {
-                            // stop
-                            Task { @MainActor in
-                                try? await liveEvent.stopRecording(account: account, recordingId: recording.id)
-                                
-                                // refresh list
-                                if let recordings = try? await liveEvent.listRecordings(account: account) {
-                                    Task { @MainActor in
-                                        self.recordings = recordings
-                                    }
-                                }
-                            }
-                        }
-                        else {
-                            // download
-                            L.og.debug("Download recording.......")
-                            guard let url = URL(string: recording.url) else { return }
-                            UIApplication.shared.open(url)
-                        }
-                        
-                    }
-                    .foregroundColor(recording.stopped != nil ? Color.red : Color.primary)
-                }
-            }
-            else {
-                ProgressView()
-                    .task {
-                        guard let account else { return }
-                        if let recordings = try? await liveEvent.listRecordings(account: account) {
-                            Task { @MainActor in
-                                self.recordings = recordings
-                            }
-                        }
-                    }
-            }
-        } label: {
-            Image(systemName: "gearshape.fill")
-                .font(.title2)
-                .padding()
         }
     }
 }
@@ -694,7 +356,7 @@ struct LiveEventDetail: View {
         NBNavigationStack {
             if let liveEvent = PreviewFetcher.fetchEvent("75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7") {
                 let nrLiveEvent = NRLiveEvent(event: liveEvent)
-                LiveEventDetail(liveEvent: nrLiveEvent)
+                StreamDetail(liveEvent: nrLiveEvent)
             }
         }
     }
