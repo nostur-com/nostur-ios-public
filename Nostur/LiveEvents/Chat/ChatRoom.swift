@@ -60,7 +60,9 @@ let _ = Self._printChanges()
                                 }
                                 else {
                                     ForEach(vm.messages, id:\.id) { rowContent in
-                                        ChatRow(content: rowContent, theme: themes.theme)
+                                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                                            ChatRow(content: rowContent, theme: themes.theme)
+                                        }
 //                                            .debugDimensions("ChatRow")
 //                                            .frame(width: 650)
 //#if DEBUG
