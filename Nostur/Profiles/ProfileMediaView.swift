@@ -14,6 +14,7 @@ struct ProfileMediaView: View {
     init(pubkey: String) {
         _vm = StateObject(wrappedValue: ProfileGalleryViewModel(pubkey))
     }
+    @EnvironmentObject private var dim: DIMENSIONS
     
     private static let initialColumns = 3
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: initialColumns)
@@ -41,19 +42,19 @@ struct ProfileMediaView: View {
                 if #available(iOS 17, *) {
                     LazyVGrid(columns: gridColumns) {
                         ForEach(vm.items.indices, id:\.self) { index in
-                            GeometryReader { geo in
-                                GridItemView17(size: geo.size.width, item: vm.items[index])
-                                    .onBecomingVisible {
-                                        vm.fetchMoreIfNeeded(index)
-                                    }
-                            }
-                            .clipped()
-                            .aspectRatio(1, contentMode: .fit)
-                            .id(index)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
-                            }
+                            GridItemView17(size: ((dim.listWidth / 3.0) - 20.0), item: vm.items[index])
+                                .onBecomingVisible {
+                                    vm.fetchMoreIfNeeded(index)
+                                }
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: ((dim.listWidth / 3.0) - 20.0), height: ((dim.listWidth / 3.0) - 20.0))
+                                .clipped()
+                                .aspectRatio(1, contentMode: .fit)
+                                .id(index)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
+                                }
                            
                         }
                     }
@@ -61,15 +62,13 @@ struct ProfileMediaView: View {
                 else {
                     LazyVGrid(columns: gridColumns) {
                         ForEach(vm.items.indices, id:\.self) { index in
-                            GeometryReader { geo in
-                                GridItemView(size: geo.size.width, item: vm.items[index])
-                                    .onBecomingVisible {
-                                        vm.fetchMoreIfNeeded(index)
-                                    }
-                            }
-                            .clipped()
-                            .id(index)
-                            .aspectRatio(1, contentMode: .fit)
+                            GridItemView(size: ((dim.listWidth / 3.0) - 20.0), item: vm.items[index])
+                                .onBecomingVisible {
+                                    vm.fetchMoreIfNeeded(index)
+                                }
+                                .clipped()
+                                .aspectRatio(1, contentMode: .fit)
+                                .id(index)
                         }
                     }
                 }
@@ -101,7 +100,17 @@ struct ProfileMediaView_Previews: PreviewProvider {
             pe.loadMedia()
         }) {
             NBNavigationStack {
-                ProfileMediaView(pubkey: pubkey)
+                List {
+                    Section {
+                        ProfileMediaView(pubkey: pubkey)
+                    }
+                    .listRowSpacing(10.0)
+                    .listRowInsets(EdgeInsets())
+                    .listSectionSeparator(.hidden)
+                    .listRowSeparator(.hidden)
+                }
+                .listRowSpacing(10.0)
+                .listStyle(.plain)
             }
         }
     }

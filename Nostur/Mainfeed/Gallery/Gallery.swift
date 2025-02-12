@@ -248,12 +248,9 @@ struct GridItemView17: View {
             }
             else if let image = state.image {
                 image
-                //                            .interpolation(.none)
                     .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
                     .scaledToFill()
                     .frame(width: size, height: size)
-                    .clipped()
-//                    .transaction { t in t.animation = nil }
                     .overlay(alignment:.topLeading) {
                         if state.isLoading { // does this conflict with showing preview images??
                             ImageProgressView(state: state)
@@ -274,7 +271,6 @@ struct GridItemView17: View {
             }
         }
         .pipeline(ImageProcessing.shared.content)
-        .frame(width: size, height: size)
     }
 }
 
