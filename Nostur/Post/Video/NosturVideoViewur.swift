@@ -34,6 +34,7 @@ struct NosturVideoViewur: View {
     @State private var isPlaying = false
     @State private var isMuted = false
     @State private var isStream = false
+    @State private var overrideLowDataMode = false
     
     static let aspect: CGFloat = 16/9
     
@@ -55,12 +56,12 @@ struct NosturVideoViewur: View {
                .background(theme.lineColor.opacity(0.5))
             }
             else if isStream {
-                if SettingsStore.shared.lowDataMode {
+                if SettingsStore.shared.lowDataMode && !overrideLowDataMode {
                     Text(url.absoluteString)
                         .foregroundColor(theme.accent)
                         .underline()
                         .onTapGesture {
-                            openURL(url)
+                            overrideLowDataMode = true
                         }
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 }
@@ -151,12 +152,15 @@ struct NosturVideoViewur: View {
 //                    .debugDimensions("videoShown")
 #endif
                 }
-                else if SettingsStore.shared.lowDataMode {
+                else if SettingsStore.shared.lowDataMode && !overrideLowDataMode {
                     Text(url.absoluteString)
                         .foregroundColor(theme.accent)
                         .underline()
                         .onTapGesture {
-                            openURL(url)
+                            overrideLowDataMode = true
+                            Task.detached(priority: .background) {
+                                await loadVideo()
+                            }
                         }
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 }
