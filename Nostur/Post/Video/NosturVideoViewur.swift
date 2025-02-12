@@ -89,7 +89,9 @@ struct NosturVideoViewur: View {
                                     didStart = true
                                     sendNotification(.startPlayingVideo, url.absoluteString)
 
-                                    if !IS_CATALYST && !IS_IPAD { // Use new player for iOS
+                                    // if is iPad
+                                    
+                                    if IS_IPHONE { // Use new player for iOS
                                         if let cVideo = cachedVideo {
                                             AnyPlayerModel.shared.loadVideo(cachedVideo: cVideo)
                                         }
