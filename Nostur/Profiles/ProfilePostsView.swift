@@ -36,10 +36,11 @@ struct ProfilePostsView: View {
                 }
         case .ready:
             ForEach(vm.posts) { nrPost in
-                Box(nrPost: nrPost) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: themes.theme)
+                ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                    Box(nrPost: nrPost) {
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: themes.theme)
+                    }
                 }
-                .id(nrPost.id)
                 .onBecomingVisible {
                     // SettingsStore.shared.fetchCounts should be true for below to work
                     vm.prefetch(nrPost)

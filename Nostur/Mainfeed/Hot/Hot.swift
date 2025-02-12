@@ -40,11 +40,13 @@ struct Hot: View {
                     }
             case .ready:
                 List(hotVM.hotPosts) { nrPost in
-                    PostOrThread(nrPost: nrPost)
-                        .onBecomingVisible {
-                            // SettingsStore.shared.fetchCounts should be true for below to work
-                            hotVM.prefetch(nrPost)
-                        }
+                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                        PostOrThread(nrPost: nrPost)
+                            .onBecomingVisible {
+                                // SettingsStore.shared.fetchCounts should be true for below to work
+                                hotVM.prefetch(nrPost)
+                            }
+                    }
                     .listRowSeparator(.hidden)
                     .listRowBackground(themes.theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))

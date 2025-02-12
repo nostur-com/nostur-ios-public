@@ -78,10 +78,11 @@ struct ProfileZaps: View {
                 .font(.system(size: 20))
         }
         ForEach(nrPosts) { nrPost in
-            Box(nrPost: nrPost) {
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+            ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                Box(nrPost: nrPost) {
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                }
             }
-            .id(nrPost.id)
             .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
 //                    .fixedSize(horizontal: false, vertical: true)
         }

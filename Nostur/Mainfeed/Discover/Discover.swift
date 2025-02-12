@@ -40,14 +40,16 @@ struct Discover: View {
                     }
             case .ready:
                 List(discoverVM.discoverPosts) { nrPost in
-                    PostOrThread(nrPost: nrPost)
-                        .onBecomingVisible {
-                            // SettingsStore.shared.fetchCounts should be true for below to work
-                            discoverVM.prefetch(nrPost)
-                        }
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
-                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                        PostOrThread(nrPost: nrPost)
+                            .onBecomingVisible {
+                                // SettingsStore.shared.fetchCounts should be true for below to work
+                                discoverVM.prefetch(nrPost)
+                            }
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(themes.theme.listBackground)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)

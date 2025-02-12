@@ -145,8 +145,10 @@ struct FeedListViewTester: View {
     var body: some View {
         HStack {
             ForEach(columnConfigs) { config in
-                AvailableWidthContainer {
-                    NXColumnView(config: config, isVisible: true)
+                ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                    AvailableWidthContainer {
+                        NXColumnView(config: config, isVisible: true)
+                    }
                 }
             }
         }
