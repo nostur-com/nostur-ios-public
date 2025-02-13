@@ -33,12 +33,14 @@ struct NotificationsMentions: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            
             List {
                 ForEach (model.mentions) { nrPost in
-                    Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                    ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯
+                        Box(nrPost: nrPost) {
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                        }
                     }
+                    .id(nrPost.id) // <-- must use .id or can't .scrollTo
                     .listRowSeparator(.hidden)
                     .listRowBackground(themes.theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))

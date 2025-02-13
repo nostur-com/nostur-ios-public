@@ -52,6 +52,7 @@ struct NewPostsBy: View {
                                 vm.prefetch(nrPost)
                             }
                     }
+                    .id(nrPost.id) // <-- must use .id or can't .scrollTo
                     .listRowSeparator(.hidden)
                     .listRowBackground(themes.theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
