@@ -40,23 +40,25 @@ struct PrivateNotesView: View {
         ScrollViewReader { proxy in
             if !privateNotes.isEmpty && (!events.isEmpty || noEvents) && (!contacts.isEmpty || noContacts) {
                 List(privateNotes) { pn in
-                    LazyPrivateNote(pn: pn, events: events, contacts: contacts)
-                        .id(pn.objectID)
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive, action: {
-                                viewContext.delete(pn)
-                                viewContext.transactionAuthor = "removeCloudPrivateNote"
-                                DataProvider.shared().save()
-                                viewContext.transactionAuthor = nil
-                            }) {
-                            Label("Remove", systemImage: "trash")
-                          }
-                          .tint(.red)
-                        }
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
-                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .padding(.bottom, GUTTER)
+                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                        LazyPrivateNote(pn: pn, events: events, contacts: contacts)
+                    }
+                    .id(pn.objectID) // <-- must use .id or can't .scrollTo
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive, action: {
+                            viewContext.delete(pn)
+                            viewContext.transactionAuthor = "removeCloudPrivateNote"
+                            DataProvider.shared().save()
+                            viewContext.transactionAuthor = nil
+                        }) {
+                        Label("Remove", systemImage: "trash")
+                      }
+                      .tint(.red)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(themes.theme.listBackground)
+                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .padding(.bottom, GUTTER)
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
@@ -175,7 +177,7 @@ import NavigationBackport
         pe.loadPrivateNotes()
     }) {
         VStack {
-            BookmarksView(navPath: .constant(NBNavigationPath()), bookmarkFilters: [.orange])
+            BookmarksView(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
         }
     }
 }

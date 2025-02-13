@@ -83,6 +83,7 @@
 		1F2810BD2B1E155F00042928 /* DMContentRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */; };
 		1F2884AA2A77D11D0006766E /* FeedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2884A92A77D11D0006766E /* FeedSettings.swift */; };
 		1F2929782D5D0DAE00205A1E /* StreamDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2929772D5D0DAE00205A1E /* StreamDetail.swift */; };
+		1F2929832D5D4A4D00205A1E /* BookmarksFeedModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2929822D5D4A4D00205A1E /* BookmarksFeedModel.swift */; };
 		1F2AC53D2B12B75E00F70662 /* CashuToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53C2B12B75E00F70662 /* CashuToken.swift */; };
 		1F2AC53F2B12B99300F70662 /* CashuTokenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */; };
 		1F2AC5412B12F00E00F70662 /* DebugWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2AC5402B12F00E00F70662 /* DebugWindow.swift */; };
@@ -683,6 +684,7 @@
 		1F2810BC2B1E155F00042928 /* DMContentRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DMContentRenderer.swift; sourceTree = "<group>"; };
 		1F2884A92A77D11D0006766E /* FeedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedSettings.swift; sourceTree = "<group>"; };
 		1F2929772D5D0DAE00205A1E /* StreamDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamDetail.swift; sourceTree = "<group>"; };
+		1F2929822D5D4A4D00205A1E /* BookmarksFeedModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksFeedModel.swift; sourceTree = "<group>"; };
 		1F2AC53C2B12B75E00F70662 /* CashuToken.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuToken.swift; sourceTree = "<group>"; };
 		1F2AC53E2B12B99300F70662 /* CashuTokenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CashuTokenView.swift; sourceTree = "<group>"; };
 		1F2AC5402B12F00E00F70662 /* DebugWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugWindow.swift; sourceTree = "<group>"; };
@@ -1939,8 +1941,9 @@
 		1FAC42B32C03CB0E00362997 /* MultiFeeds */ = {
 			isa = PBXGroup;
 			children = (
-				1FCD6C9E2C224ADA00C82E21 /* MentionsFeedModel.swift */,
+				1F2929822D5D4A4D00205A1E /* BookmarksFeedModel.swift */,
 				1FAC42B42C03CB3900362997 /* GroupedReactionsFeedModel.swift */,
+				1FCD6C9E2C224ADA00C82E21 /* MentionsFeedModel.swift */,
 				1FAC42B62C03D1C300362997 /* RepostsFeedModel.swift */,
 				1FAC42B82C048EDB00362997 /* ZapsFeedModel.swift */,
 			);
@@ -3007,6 +3010,7 @@
 				1F685B522A0D18D2009EEC9B /* NRContact.swift in Sources */,
 				1FF30DEF2A05784F00B0F011 /* SearchBox.swift in Sources */,
 				1F8836E82AA5A82000F252C1 /* DMs.swift in Sources */,
+				1F2929832D5D4A4D00205A1E /* BookmarksFeedModel.swift in Sources */,
 				1F2DD5DE2C4F07D900562A5D /* LiveEventRowView.swift in Sources */,
 				1F46A7322C5BFA4500511A79 /* NXUnreadCounterView.swift in Sources */,
 				1F88490F29B537B400145340 /* URL.swift in Sources */,

@@ -11,6 +11,7 @@ import CoreData
 import NavigationBackport
 
 struct BookmarksView: View {
+    @ObservedObject var vm: BookmarksFeedModel
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var ns: NRState
     
@@ -20,85 +21,77 @@ struct BookmarksView: View {
     }
     
     @Binding public var navPath: NBNavigationPath
-    public var bookmarkFilters: Set<Color>
     
     @ObservedObject private var settings: SettingsStore = .shared
-    
-    @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt, order: .reverse)])
-    private var bookmarks: FetchedResults<Bookmark>
-    
-    private var filteredBookmarks: [Bookmark] {
-        bookmarks
-            .filter {
-                bookmarkFilters.contains($0.color)
-            }
-    }
-    
-    @State private var events: [Event] = [] // bg events
+
     @State private var bookmarkSnapshot: Int = 0
-    @State private var noEvents = false
+    @State private var didLoad = false
+
     
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
-                List(filteredBookmarks) { bookmark in
-                    ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯
-                        LazyBookmark(bookmark, events: events)
-                    }
-                        .id(bookmark.objectID)
+            if !vm.nrBookmarks.isEmpty {
+                List {
+                    ForEach (vm.nrBookmarks) { nrBookmark in
+                        ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
+                            Box(nrPost: nrBookmark) {
+                                PostRowDeletable(nrPost: nrBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                            }
+                        }
+                        .id(nrBookmark.id) // <-- must use .id or can't .scrollTo
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive, action: {
-                                guard let eventId = bookmark.eventId else { return }
                                 bg().perform {
-                                    Bookmark.removeBookmark(eventId: eventId, context: bg())
+                                    Bookmark.removeBookmark(eventId: nrBookmark.id, context: bg())
                                     bg().transactionAuthor = "removeBookmark"
                                     DataProvider.shared().save()
                                     bg().transactionAuthor = nil
                                 }
                             }) {
-                            Label("Remove", systemImage: "trash")
-                          }
-                          .tint(.red)
+                                Label("Remove", systemImage: "trash")
+                            }
+                            .tint(.red)
                         }
                         .listRowSeparator(.hidden)
                         .listRowBackground(themes.theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                         .padding(.bottom, GUTTER)
+                    }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
                 .padding(0)
                 
-                .preference(key: BookmarksCountPreferenceKey.self, value: filteredBookmarks.count.description)
+                .preference(key: BookmarksCountPreferenceKey.self, value: vm.nrBookmarks.count.description)
                 .onReceive(receiveNotification(.didTapTab)) { notification in
-                    guard selectedSubTab == "Bookmarks", let first = filteredBookmarks.first else { return }
-                    if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                    guard selectedSubTab == "Bookmarks", let first = vm.nrBookmarks.first else { return }
+                    if !vm.nrBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
-                                proxy.scrollTo(first.objectID)
+                                proxy.scrollTo(first.id)
                             }
                         }
                     }
                 }
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
-                    guard selectedSubTab == "Bookmarks", let first = filteredBookmarks.first else { return }
-                    if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                    guard selectedSubTab == "Bookmarks", let first = vm.nrBookmarks.first else { return }
+                    if !vm.nrBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
-                                proxy.scrollTo(first.objectID)
+                                proxy.scrollTo(first.id)
                             }
                         }
                     }
                 }
                 .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                    guard selectedSubTab == "Bookmarks", let first = filteredBookmarks.first else { return }
-                    if !filteredBookmarks.isEmpty && (!events.isEmpty || noEvents) {
+                    guard selectedSubTab == "Bookmarks", let first = vm.nrBookmarks.first else { return }
+                    if !vm.nrBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
-                                proxy.scrollTo(first.objectID)
+                                proxy.scrollTo(first.id)
                             }
                         }
                     }
@@ -110,19 +103,19 @@ struct BookmarksView: View {
                     .padding(.top, 40)
             }
         }
+        .onAppear {
+            guard !didLoad else { return }
+            vm.load()
+            didLoad = true
+        }
         .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
-        .onReceive(bookmarks.publisher.collect()) { bookmarks in
-            let currentSnapshot = bookmarks.map(\.eventId).hashValue
-            if currentSnapshot != bookmarkSnapshot {
-                // Update the snapshot to the current state.
-                bookmarkSnapshot = currentSnapshot
-                if bookmarks.count != events.count {
-                    load()
-                }
-            }
-        }
+        
+        .onReceive(ViewUpdates.shared.bookmarkUpdates, perform: { update in
+            vm.load()
+        })
+        
         .simultaneousGesture(
             DragGesture().onChanged({
                 if 0 < $0.translation.height {
@@ -133,39 +126,6 @@ struct BookmarksView: View {
                 }
             }))
     }
-    
-    private func load() {
-        
-        var uniqueEventIds = Set<String>()
-        let sortedBookmarks = bookmarks.sorted {
-            ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
-        }
-        
-        let duplicates = sortedBookmarks
-            .filter { bookmark in
-                guard let eventId = bookmark.eventId else { return false }
-                return !uniqueEventIds.insert(eventId).inserted
-            }
-        
-        L.cloud.debug("Deleting: \(duplicates.count) duplicate bookmarks")
-        duplicates.forEach {
-            DataProvider.shared().viewContext.delete($0)
-        }
-        if !duplicates.isEmpty {
-            DataProvider.shared().save()
-        }
-        
-        let bookmarkEventIds = bookmarks.compactMap { $0.eventId }
-        
-        bg().perform {
-            let fr2 = Event.fetchRequest()
-            fr2.predicate = NSPredicate(format: "id IN %@", bookmarkEventIds )
-            events = (try? bg().fetch(fr2)) ?? []
-            if events.count == 0 {
-                noEvents = true
-            }
-        }
-    }
 }
 
 #Preview("Bookmarks") {
@@ -174,99 +134,8 @@ struct BookmarksView: View {
         pe.loadBookmarks()
     }) {
         VStack {
-            BookmarksView(navPath: .constant(NBNavigationPath()), bookmarkFilters: [.orange])
+            BookmarksView(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
         }
-    }
-}
-
-struct LazyBookmark: View {
-    @EnvironmentObject private var themes: Themes
-    @ObservedObject private var settings: SettingsStore = .shared
-    
-    private var bookmark: Bookmark
-    private var events: [Event] // bg events
-    
-    @State private var viewState: ViewState = .loading
-    @State private var nrPost: NRPost?
-    
-    enum ViewState {
-        case loading
-        case ready(NRPost)
-        case error(String)
-    }
-    
-    init(_ bookmark: Bookmark, events: [Event]) {
-        self.bookmark = bookmark
-        self.events = events
-    }
-    
-    var body: some View {
-        Box(nrPost: nrPost) {
-            switch viewState {
-            case .loading:
-                ProgressView()
-                    .frame(height: 175)
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .task {
-                        guard let eventId = bookmark.eventId else { viewState = .error("Cannot find post"); return }
-                        let json = bookmark.json
-                        let bgContext = bg()
-                        bgContext.perform {
-                            if let event = events.first(where: { $0.id == eventId }) {
-                                let nrPost = NRPost(event: event)
-                                DispatchQueue.main.async {
-                                    self.nrPost = nrPost
-                                    self.viewState = .ready(nrPost)
-                                }
-                            }
-                            else {
-                                let decoder = JSONDecoder()
-                                if let json = json, let jsonData = json.data(using: .utf8, allowLossyConversion: false) {
-                                    if let nEvent = try? decoder.decode(NEvent.self, from: jsonData) {
-                                        let savedEvent = Event.saveEvent(event: nEvent, relays: "iCloud", context: bgContext)
-                                        try? bgContext.save()
-                                        let nrPost = NRPost(event: savedEvent)
-                                        L.cloud.debug("Decoded and saved from iCloud: \(nEvent.id) ")
-                                        DispatchQueue.main.async {
-                                            self.nrPost = nrPost
-                                            self.viewState = .ready(nrPost)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-            case .ready(let nrPost):
-                if nrPost.kind == 443 {
-                    VStack {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                        HStack(spacing: 0) {
-                            self.replyButton
-                                .foregroundColor(themes.theme.footerButtons)
-                                .padding(.leading, 10)
-                                .padding(.vertical, 5)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    navigateTo(nrPost)
-                                }
-                            Spacer()
-                        }
-                    }
-                }
-                else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
-                }
-            case .error(let message):
-                Text(message)
-            }
-        }
-    }
-    
-    @ViewBuilder
-    private var replyButton: some View {
-        Image("ReplyIcon")
-        Text("Comments")
     }
 }
 

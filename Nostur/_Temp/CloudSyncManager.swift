@@ -58,8 +58,8 @@ class CloudSyncManager {
     // -- MARK: Bookmark
     func handleBookmarkInsert(_ bookmark: Bookmark) {
         guard let eventId = bookmark.eventId else { return }
-        viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: true))
         Task { @MainActor in
+            viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: true))
             if let accountCache = NRState.shared.loggedInAccount?.accountCache {
                 bg().perform {
                     accountCache.addBookmark(eventId, color: bookmark.color)
@@ -71,8 +71,8 @@ class CloudSyncManager {
     func handleBookmarkDelete(_ bookmark: Bookmark) {
         // Handle Bookmark delete
         guard let eventId = bookmark.eventId else { return }
-        viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: false))
         Task { @MainActor in
+            viewUpdates.bookmarkUpdates.send(BookmarkUpdate(id: eventId, isBookmarked: false))
             if let accountCache = NRState.shared.loggedInAccount?.accountCache {
                 bg().perform {
                     accountCache.removeBookmark(eventId)

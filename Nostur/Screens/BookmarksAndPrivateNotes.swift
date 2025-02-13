@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct BookmarksAndPrivateNotes: View {
+    @StateObject private var bookmarksVM = BookmarksFeedModel()
     @EnvironmentObject private var fa: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @State private var navPath = NBNavigationPath()
@@ -25,8 +26,6 @@ struct BookmarksAndPrivateNotes: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var bookmarksCount: String?
     @State private var privateNotesCount: String?
-    
-    @State private var bookmarkFilters: Set<Color> = [.red, .blue, .purple, .green, .orange]
     @State private var showBookmarkFilterOptions = false
     
     var body: some View {
@@ -42,7 +41,7 @@ struct BookmarksAndPrivateNotes: View {
                         secondaryText: bookmarksCount,
                         selected: selectedSubTab == "Bookmarks",
                         tools: {
-                            Image(systemName: bookmarkFilters.count < 5 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                            Image(systemName: bookmarksVM.bookmarkFilters.count < 5 ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                                 .padding(.leading, 8)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
@@ -58,7 +57,7 @@ struct BookmarksAndPrivateNotes: View {
                 AvailableWidthContainer {
                     switch selectedSubTab {
                         case "Bookmarks":
-                            BookmarksView(navPath: $navPath, bookmarkFilters: bookmarkFilters)
+                            BookmarksView(vm: bookmarksVM, navPath: $navPath)
                         case "Private Notes":
                             PrivateNotesView(navPath: $navPath)
                         default:
@@ -71,50 +70,6 @@ struct BookmarksAndPrivateNotes: View {
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
-            
-            .onChange(of: bookmarkFilters) { newFilters in
-                
-                let bookmarkFiltersStringArray = newFilters.map {
-                    return switch $0 {
-                    case .orange:
-                        "orange"
-                    case .red:
-                        "red"
-                    case .blue:
-                        "blue"
-                    case .purple:
-                        "purple"
-                    case .green:
-                        "green"
-                    default:
-                        "orange"
-                    }
-                }
-                
-                UserDefaults.standard.set(bookmarkFiltersStringArray, forKey: "bookmark_filters")
-            }
-            
-            .onAppear {
-                bookmarkFilters = Set<Color>((UserDefaults.standard.array(forKey: "bookmark_filters") as? [String] ?? ["red", "blue", "purple", "green", "orange"])
-                    .map {
-                        return switch $0 {
-                            case "red":
-                                Color.red
-                            case "blue":
-                                Color.blue
-                            case "purple":
-                                Color.purple
-                            case "green":
-                                Color.green
-                            case "orange":
-                                Color.orange
-                            default:
-                                Color.orange
-                            
-                        }
-                    })
-            }
-            
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard !IS_IPAD || horizontalSizeClass == .compact else { return }
@@ -134,7 +89,7 @@ struct BookmarksAndPrivateNotes: View {
                 showBookmarkFilterOptions = false
             }, content: {
                 NBNavigationStack {
-                    BookmarkFilters(onlyShow: $bookmarkFilters)
+                    BookmarkFilters(onlyShow: $bookmarksVM.bookmarkFilters)
                         .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
