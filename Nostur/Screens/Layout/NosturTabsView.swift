@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+@_spi(Advanced) import SwiftUIIntrospect
 
 struct NosturTabsView: View {
     @EnvironmentObject private var npn: NewPostNotifier
@@ -93,15 +94,23 @@ struct NosturTabsView: View {
                                     .environmentObject(NRState.shared)
                                     .environmentObject(themes)
                                     .environmentObject(npn)
-                                    .presentationBackgroundCompat(themes.theme.listBackground)
+//                                    .scrollContentBackgroundHidden()
+                            }
+//                            .scrollContentBackgroundHidden()
+                        }
+                        .introspect(.navigationStack, on: .iOS(.v16...)) {
+                            $0.viewControllers.forEach { controller in
+                                controller.view.backgroundColor = .clear
                             }
                         }
+//                        .scrollContentBackgroundHidden()
                         .nbUseNavigationStack(.never)
                     }
                     else {
                         EmptyView()
                     }
                 }
+                .edgesIgnoringSafeArea(.bottom)
             }
             if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                 AvailableWidthContainer {

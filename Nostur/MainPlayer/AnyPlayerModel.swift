@@ -56,9 +56,11 @@ class AnyPlayerModel: ObservableObject {
         cancellables.forEach { $0.cancel() }
         
         if nrLiveEvent.streamHasEnded, let recordingUrl = nrLiveEvent.recordingUrl, let url = URL(string: recordingUrl) {
+            isStream = false
             player = AVPlayer(playerItem: AVPlayerItem(url: url))
         }
         else if let url = nrLiveEvent.url {
+            isStream = true
             player = AVPlayer(playerItem: AVPlayerItem(url: url))
         }
         

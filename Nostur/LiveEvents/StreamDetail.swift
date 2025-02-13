@@ -76,7 +76,7 @@ struct StreamDetail: View {
                                     }
                                 
                                 videoStreamView
-                                    .background(themes.theme.background)
+//                                    .background(themes.theme.background)
                             }
                             .onTapGesture {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
@@ -113,7 +113,7 @@ struct StreamDetail: View {
                 vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
             }
-            .background(themes.theme.background)
+            .background(.ultraThinMaterial)
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
             .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
@@ -170,7 +170,7 @@ struct StreamDetail: View {
         else if liveEvent.totalParticipants > 0 {
             HStack {
                 if liveEvent.totalParticipants > 0 {
-                    Text("\(liveEvent.totalParticipants) participants")
+                    Text("\(liveEvent.totalParticipants) viewers")
                         .foregroundColor(.secondary)
                 }
             }
@@ -189,12 +189,12 @@ struct StreamDetail: View {
             .font(.title)
             .fontWeightBold()
             .lineLimit(2)
-            .onVisibilityChange(perform: { isVisible in
-                guard (!isVisible && !moreChatSpace) || (isVisible && moreChatSpace) else { return }
-                withAnimation {
-                    moreChatSpace = !isVisible
-                }
-            })
+//            .onVisibilityChange(perform: { isVisible in
+//                guard (!isVisible && !moreChatSpace) || (isVisible && moreChatSpace) else { return }
+//                withAnimation {
+//                    moreChatSpace = !isVisible
+//                }
+//            })
         
         if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary, !moreChatSpace {
             Text(summary)

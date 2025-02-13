@@ -52,12 +52,13 @@ struct OverlayVideo<Content: View>: View {
         GeometryReader { geometry in
             if vm.player != nil {
                 ZStack(alignment: videoAlignment) {
-                    Color.blue.opacity(vm.viewMode == .fullscreen ? 1.0 : 0.0)
+                    Color.blue.opacity(vm.viewMode != .overlay ? 0.1 : 0.0)
                         .overlay(alignment: .topTrailing) {
                             // Full screen top bar - trailing buttons
                             HStack {
                                 Group {
                                     
+                                    // SAVE BUTTON
                                     if !vm.isStream {
                                         Menu(content: {
                                             Button("Save to Photo Library") {
@@ -92,6 +93,7 @@ struct OverlayVideo<Content: View>: View {
                                         .disabled(isSaving)
                                     }
                                     
+                                    // PIP BUTTON
                                     Button(action: {
                                         withAnimation {
                                             vm.toggleViewMode()
@@ -101,7 +103,7 @@ struct OverlayVideo<Content: View>: View {
                                             .foregroundColor(Color.white)
                                             .padding(5)
                                     }
-                                    .opacity(vm.availableViewModes.contains(.overlay) && vm.viewMode == .fullscreen ? 1.0 : 0)
+                                    .opacity(vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay ? 1.0 : 0)
                                 }
                                 .font(.title2)
                                 .foregroundColor(Color.white)
@@ -182,11 +184,13 @@ struct OverlayVideo<Content: View>: View {
                             }
                             .frame(height: CONTROLS_HEIGHT)
                         }
-//                        Spacer()
+                        else {
+                            Spacer()
+                        }
                     }
-                    .background {
-                        if vm.viewMode == .overlay { Color.green }
-                    }
+//                    .background {
+//                        if vm.viewMode == .overlay { Color.green }
+//                    }
                     .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
                     .frame(
                         width: videoWidth * currentScale,
@@ -259,6 +263,7 @@ struct OverlayVideo<Content: View>: View {
                         )
                     )
                 }
+                .ultraThinMaterialIfDetail(vm.viewMode)
                 .onChange(of: vm.viewMode) { _ in
                     if vm.viewMode != .overlay && scale != 1.0 {
                         scale = 1.0
@@ -390,6 +395,19 @@ func saveVideoToPhotoLibrary(videoURL: URL, completion: @escaping (Bool, Error?)
             // Optionally delete the temporary file
             try? FileManager.default.removeItem(at: videoURL)
             completion(success, error)
+        }
+    }
+}
+
+
+extension View {
+  @ViewBuilder
+    func ultraThinMaterialIfDetail(_ viewMode: AnyPlayerViewMode) -> some View {
+        if viewMode == .detailstream {
+            background(.ultraThinMaterial)
+        }
+        else {
+            background(Color.clear)
         }
     }
 }

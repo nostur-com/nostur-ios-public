@@ -36,7 +36,7 @@ let _ = Self._printChanges()
                             case .initializing:
                                 CenteredProgressView()
                                     .listRowSeparator(.hidden)
-                                    .listRowBackground(theme.background)
+                                    .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
                                     .onAppear {
                                         try? vm.start(aTag: aTag)
@@ -44,7 +44,7 @@ let _ = Self._printChanges()
                             case .loading:
                                 CenteredProgressView()
                                     .listRowSeparator(.hidden)
-                                    .listRowBackground(theme.background)
+                                    .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
                             case .ready:
                                 if vm.messages.isEmpty {
@@ -56,10 +56,10 @@ let _ = Self._printChanges()
                                         .centered()
                                         .listRowInsets(.init())
                                         .listRowSeparator(.hidden)
-                                        .listRowBackground(theme.background)
+                                        .listRowBackground(.init(Color.clear))
                                 }
                                 else {
-                                    ForEach(vm.messages, id:\.id) { rowContent in
+                                    ForEach(vm.messages) { rowContent in
                                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                                             ChatRow(content: rowContent, theme: themes.theme)
                                         }
@@ -91,23 +91,23 @@ let _ = Self._printChanges()
                                     }
                                     .listRowInsets(.init())
                                     .listRowSeparator(.hidden)
-                                    .listRowBackground(theme.background)
+                                    .listRowBackground(.init(Color.clear))
                                 }
                             case .timeout:
                                 VStack {
                                     Text("timeout")
                                 }
                                     .listRowSeparator(.hidden)
-                                    .listRowBackground(theme.background)
+                                    .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
                             case .error(let string):
                                 Text(string)
                                     .listRowSeparator(.hidden)
-                                    .listRowBackground(theme.background)
+                                    .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
                             }
                         }
-                        .scrollContentBackgroundCompat(.hidden)
+                        .scrollContentBackgroundHidden()
                         .listStyle(.plain)
                         .safeAreaScroll()
                         .scaleEffect(x: 1, y: -1, anchor: .center)
