@@ -842,29 +842,49 @@ extension Event {
                 fatalError("Should only be called from bg()")
             }
         #endif
-        if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id), event.managedObjectContext != nil { // <-- maybe fix: error: fatal: Failed to re-registered lost fault. fault 0x60 with oid 0xa7 <x-coredata://3DA0D6F2-/Event/p65> has a moc of 0x0 but we expected 0x60
-            guard !event.isDeleted else { return }
-
-            CoreDataRelationFixer.shared.addTask({
-                let existingRelays = event.relays.split(separator: " ").map { String($0) }
-                let newRelays = relays.split(separator: " ").map { String($0) }
-                let uniqueRelays = Set(existingRelays + newRelays)
-                if uniqueRelays.count > existingRelays.count {
-                    event.relays = uniqueRelays.joined(separator: " ")
-                }
-            })
-        }
-        else if let event = try? Event.fetchEvent(id: id, context: context) {
-            guard !event.isDeleted else { return }
+        
+        func safeUpdateRelays(for event: Event) {
+            // Verify context is still valid
+            guard let eventContext = event.managedObjectContext,
+                  eventContext.persistentStoreCoordinator != nil
+            else {
+                return
+            }
             
-            CoreDataRelationFixer.shared.addTask({
-                let existingRelays = event.relays.split(separator: " ").map { String($0) }
-                let newRelays = relays.split(separator: " ").map { String($0) }
-                let uniqueRelays = Set(existingRelays + newRelays)
-                if uniqueRelays.count > existingRelays.count {
-                    event.relays = uniqueRelays.joined(separator: " ")
+            // Ensure event still exists in context
+            guard !event.isDeleted,
+                  (try? eventContext.existingObject(with: event.objectID)) != nil else {
+                return
+            }
+            
+            CoreDataRelationFixer.shared.addTask {
+                do {
+                    // Refetch event to ensure fresh state
+                    guard let freshEvent = try eventContext.existingObject(with: event.objectID) as? Event else {
+                        return
+                    }
+                    
+                    let existingRelays = freshEvent.relays.split(separator: " ").map { String($0) }
+                    let newRelays = relays.split(separator: " ").map { String($0) }
+                    let uniqueRelays = Set(existingRelays + newRelays)
+                    
+                    if uniqueRelays.count > existingRelays.count {
+                        freshEvent.relays = uniqueRelays.joined(separator: " ")
+                    }
+                } catch {
+                    print("Failed to update relays: \(error)")
                 }
-            })
+            }
+        }
+        
+        // Try getting event from queue first
+        if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id),
+           event.managedObjectContext != nil {
+            safeUpdateRelays(for: event)
+        }
+        // Fallback to fetching from context
+        else if let event = try? Event.fetchEvent(id: id, context: context) {
+            safeUpdateRelays(for: event)
         }
     }
     
