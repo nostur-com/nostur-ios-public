@@ -29,7 +29,13 @@ class AnyPlayerModel: ObservableObject {
         }
     }
 
-    @Published var nrLiveEvent: NRLiveEvent?
+    @Published var nrLiveEvent: NRLiveEvent? {
+        didSet {
+            if nrLiveEvent == nil {
+                LiveKitVoiceSession.shared.visibleNest = nil
+            }
+        }
+    }
     @Published var cachedVideo: CachedVideo?
     @Published var isStream = false
     
@@ -45,7 +51,7 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen]) async {
         
-        
+        sendNotification(.stopPlayingVideo)
         self.nrLiveEvent = nrLiveEvent
         self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
@@ -81,6 +87,7 @@ class AnyPlayerModel: ObservableObject {
     public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) async {
         guard let url = URL(string: url) else { return }
         
+        sendNotification(.stopPlayingVideo)
         self.nrLiveEvent = nil
         self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
@@ -138,6 +145,7 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     public func loadVideo(cachedVideo: CachedVideo, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) {
         
+        sendNotification(.stopPlayingVideo)
         self.nrLiveEvent = nil
         self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
         self.availableViewModes = availableViewModes
@@ -193,6 +201,7 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     public func close() {
+        sendNotification(.stopPlayingVideo)
         self.player?.pause()
         self.player = nil
         self.nrLiveEvent = nil

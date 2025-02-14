@@ -192,6 +192,10 @@ extension Notification.Name {
     static var startPlayingVideo: Notification.Name {
         return Notification.Name("startPlayingVideo")
     }
+    
+    static var stopPlayingVideo: Notification.Name {
+        return Notification.Name("stopPlayingVideo")
+    }
 
     static var hideSideBar: Notification.Name {
         return Notification.Name("hideSideBar")

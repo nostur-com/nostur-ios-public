@@ -19,7 +19,6 @@ struct StreamDetail: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject public var liveEvent: NRLiveEvent
     
-    @State private var didStart = false
     @State private var account: CloudAccount? = nil
     
     

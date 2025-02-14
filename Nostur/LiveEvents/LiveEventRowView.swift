@@ -28,7 +28,6 @@ struct LiveEventRowView: View {
     
     @State private var showMiniProfile = false
     @State private var didLoad = false
-    @State private var didStart = false
     
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: 3)
     

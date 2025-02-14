@@ -141,6 +141,9 @@ struct NosturVideoViewur: View {
                                                 .frame(width: 100)
                                                 .foregroundColor(Color.gray)
                                         }
+                                        .onReceive(receiveNotification(.stopPlayingVideo)) { _ in
+                                            didStart = false
+                                        }
                                     
                                 }
                             }
