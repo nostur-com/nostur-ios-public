@@ -24,6 +24,10 @@ struct LightningInvoice: View {
             if let bolt11 = bolt11 {
                 Text("Bitcoin Lightning Invoice ⚡️", comment:"Title of a card that displays a lightning invoice").font(.caption)
                 Divider()
+                if let description = bolt11.description {
+                    Text(description).font(.caption)
+                        .padding(.bottom, 10)
+                }
                 Text("\(bolt11.amount != nil ? (Double(bolt11.amount!.int64)/divider).clean.description : "any") \(divider == 1 ? "sats" : "BTC") \(fiatPrice)")
                     .font(.title3).padding(.bottom, 10)
                     .onTapGesture {
@@ -159,7 +163,9 @@ struct LightningInvoice_Previews: PreviewProvider {
             pe.loadPosts()
         }) {
             VStack {
-                let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
+//                let invoice = "lnbc469970n1p373e49pp5ey9mxfcy9k62clpjvqwsrju64p0378cll0mzehtccj2ulqnamkzqdqvw3jhxarfdenscqzpgxqyz5vqsp5m8zsyfs936f2vfkshvdfhntmr596079hwryr2r8dpr8ahy6hu6hq9qyyssqlcvvw6gmq09hwzw2kxfe03enc25plxzfmupxwx4xr8hddn972nzq7m0jf9sxenw23qg6nv55678nrnnr4fe3wkwm6pczmaxs0r7yftgqd6lgya"
+                
+                let invoice = "lnbc210n1pn6743vdp0f3jkzunwypek7mt9w35xjmn8yphx2aeqv4mx2uneypjxz7gnp4qtlkcwuavxr56fwplcqhl9sffrj78aw2c9tttkugc6g8unnq3wldwpp5n5v0w8stws5v9pw9mq2qrwrwxrfwxqphzlvgv6ph5dvhj0a5wprssp5jt3u7hydqyjj99rgg7gcj7ev8g9p64e98xnp4jg5d8egdg078crs9qyysgqcqpcxqyz5vqrzjqw9fu4j39mycmg440ztkraa03u5qhtuc5zfgydsv6ml38qd4azymlapyqqqqqqq86qqqqqlgqqqq86qqjqdrm6tcs55paj35nr32lw09qyz4qf2kzkrnnh2qjsf2ur7uaqqx6qf94kxsdzq0vpvn8790tndaee2rpyxgelzp4cvtmsd8y0f0f4n6cqrekyjg"
                 
                 VStack {
                     if let nrPost = { () -> NRPost? in
