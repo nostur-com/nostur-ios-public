@@ -137,7 +137,7 @@ struct OverlayVideo<Content: View>: View {
                         
                     VStack(spacing: 0) {
                         NBNavigationStack {
-                            VStack(spacing: 10) {
+                            VStack(spacing: 0) {
                                 AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
                                 
                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
@@ -148,7 +148,7 @@ struct OverlayVideo<Content: View>: View {
                                             vm.toggleViewMode()
                                         }
                                     })
-                                    .padding(.top, vm.viewMode == .detailstream ? TOOLBAR_HEIGHT : 0.0)
+//                                    .padding(.top, vm.viewMode == .detailstream ? TOOLBAR_HEIGHT : 0.0)
                                     .overlay(alignment: .topLeading) { // Close button for .overlay mode
                                         Image(systemName: "multiply")
                                             .font(.title2)
@@ -250,6 +250,11 @@ struct OverlayVideo<Content: View>: View {
                             .environmentObject(themes)
                             .environmentObject(NewPostNotifier.shared)
                         }
+                        .introspect(.navigationStack, on: .iOS(.v16...)) {
+                            $0.viewControllers.forEach { controller in
+                                controller.view.backgroundColor = .clear
+                            }
+                        }
                         
                         if vm.viewMode == .overlay { // Video controls for .overlay mode
                             HStack(spacing: 30) {
@@ -280,7 +285,7 @@ struct OverlayVideo<Content: View>: View {
                                 }
                             }
                             .frame(height: CONTROLS_HEIGHT)
-                            .padding(.top, 10)
+                            .padding(.vertical, 10)
                         }
                         else {
                             Spacer()
