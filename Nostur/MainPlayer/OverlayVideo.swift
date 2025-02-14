@@ -6,26 +6,32 @@
 //
 
 import SwiftUI
+import NavigationBackport
+@_spi(Advanced) import SwiftUIIntrospect
 
 struct OverlayVideo<Content: View>: View {
     let content: Content
     
+    @EnvironmentObject private var themes: Themes
     @ObservedObject var vm: AnyPlayerModel = .shared
     
     private var videoHeight: CGFloat {
-        videoWidth / vm.aspect
+        if vm.viewMode == .detailstream {
+            return UIScreen.main.bounds.height / 3
+        }
+        return videoWidth / vm.aspect
     }
     
     private var videoWidth: CGFloat {
         if vm.viewMode != .overlay {
             return UIScreen.main.bounds.width
         }
-        return UIScreen.main.bounds.width * 0.5
+        return UIScreen.main.bounds.width * 0.65
     }
     
     // State variables for dragging
-    @State private var currentOffset = CGSize(width: UIScreen.main.bounds.width * 0.5, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
-    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.5, height: .zero)
+    @State private var currentOffset = CGSize(width: UIScreen.main.bounds.width * 0.65, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
+    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.65, height: .zero)
     
     // State variables for scaling
     @State private var currentScale: CGFloat = 1.0
@@ -52,24 +58,138 @@ struct OverlayVideo<Content: View>: View {
         GeometryReader { geometry in
             if vm.player != nil {
                 ZStack(alignment: videoAlignment) {
-                    Color.blue.opacity(vm.viewMode != .overlay ? 0.1 : 0.0)
-                        .overlay(alignment: .topTrailing) {
-                            // Full screen top bar - trailing buttons
-                            HStack {
-                                Group {
-                                    
+                    if vm.viewMode == .fullscreen {
+                        NBNavigationStack {
+                            Color.black
+                                .toolbar {
                                     // SAVE BUTTON
-                                    if !vm.isStream {
+                                    ToolbarItem(placement: .topBarTrailing) {
+                                        if !vm.isStream && vm.viewMode != .overlay {
+                                            Menu(content: {
+                                                Button("Save to Photo Library") {
+                                                    saveAVAssetToPhotos()
+                                                }
+                                                Button("Copy video URL") {
+                                                    if let url = vm.cachedVideo?.url {
+                                                        UIPasteboard.general.string = url
+                                                        sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
+                                                    }
+                                                }
+                                            }, label: {
+                                                if isSaving {
+                                                    ProgressView()
+                                                        .foregroundColor(Color.white)
+                                                        .tint(Color.white)
+                                                        .padding(5)
+                                                }
+                                                else if didSave {
+                                                    Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
+                                                        .foregroundColor(Color.white)
+                                                        .padding(5)
+                                                        .offset(y: -2)
+                                                }
+                                                else {
+                                                    Image(systemName: "square.and.arrow.down")
+                                                        .foregroundColor(Color.white)
+                                                        .padding(5)
+                                                        .offset(y: -6)
+                                                }
+                                            }, primaryAction: saveAVAssetToPhotos)
+                                            .disabled(isSaving)
+                                            .font(.title2)
+                                            .foregroundColor(Color.white)
+                                        }
+                                    }
+                                    
+                                    // CLOSE BUTTON
+                                    ToolbarItem(placement: .topBarLeading) {
+                                        if vm.viewMode != .overlay {
+                                            Button("Close", systemImage: "multiply") {
+                                                withAnimation {
+                                                    vm.close()
+                                                }
+                                            }
+                                            .font(.title2)
+                                            .buttonStyle(.borderless)
+                                            .foregroundColor(Color.white)
+                                        }
+                                    }
+                                    
+                                    // PIP BUTTON
+                                    ToolbarItem(placement: .topBarTrailing) {
+                                        if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
+                                            Button("Share", systemImage: "pip.enter") {
+                                                withAnimation {
+                                                    vm.toggleViewMode()
+                                                }
+                                            }
+                                            .font(.title2)
+                                            .buttonStyle(.borderless)
+                                            .foregroundColor(Color.white)
+                                        }
+                                    }
+                                }
+                                .environmentObject(NRState.shared)
+                                .environmentObject(themes)
+                                .environmentObject(NewPostNotifier.shared)
+                        }
+                    }
+                        
+                    VStack(spacing: 0) {
+                        NBNavigationStack {
+                            VStack(spacing: 10) {
+                                AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
+                                
+                                    // Need high priority gesture, else cannot go from .overlay to .fullscreen
+                                    // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
+                                    // so use custom .highPriorityGestureIf()
+                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
+                                        withAnimation {
+                                            vm.toggleViewMode()
+                                        }
+                                    })
+                                    .padding(.top, vm.viewMode == .detailstream ? TOOLBAR_HEIGHT : 0.0)
+                                    .overlay(alignment: .topLeading) { // Close button for .overlay mode
+                                        Image(systemName: "multiply")
+                                            .font(.title2)
+                                            .foregroundColor(Color.white)
+                                            .padding(.top, 10)
+                                            .padding(.leading, 10)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                withAnimation {
+                                                    vm.close()
+                                                }
+                                            }
+                                            .opacity(vm.viewMode == .overlay ? 1.0 : 0)
+                                    }
+                                    .frame(maxHeight: videoHeight)
+//                                        .frame(height: videoHeight)
+                                    .animation(.smooth, value: vm.viewMode)
+                                
+                                if vm.viewMode == .detailstream {
+                                    content
+                                }
+                            }
+                            .toolbar {
+                                // SAVE BUTTON
+                                ToolbarItem(placement: .topBarTrailing) {
+                                    if !vm.isStream && vm.viewMode == .detailstream {
                                         Menu(content: {
                                             Button("Save to Photo Library") {
                                                 saveAVAssetToPhotos()
                                             }
+                                            .tint(Color.white)
+                                            .foregroundColor(Color.white)
+                                            
                                             Button("Copy video URL") {
                                                 if let url = vm.cachedVideo?.url {
                                                     UIPasteboard.general.string = url
                                                     sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
                                                 }
                                             }
+                                            .foregroundColor(Color.white)
+                                            
                                         }, label: {
                                             if isSaving {
                                                 ProgressView()
@@ -79,88 +199,64 @@ struct OverlayVideo<Content: View>: View {
                                             }
                                             else if didSave {
                                                 Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
+                                                    .tint(Color.white)
                                                     .foregroundColor(Color.white)
                                                     .padding(5)
                                                     .offset(y: -2)
                                             }
                                             else {
                                                 Image(systemName: "square.and.arrow.down")
+                                                    .tint(Color.white)
                                                     .foregroundColor(Color.white)
                                                     .padding(5)
-                                                    .offset(y: -2)
+                                                    .offset(y: -6)
                                             }
                                         }, primaryAction: saveAVAssetToPhotos)
                                         .disabled(isSaving)
+                                        .font(.title2)
+                                        .foregroundColor(Color.white)
                                     }
-                                    
-                                    // PIP BUTTON
-                                    Button(action: {
-                                        withAnimation {
-                                            vm.toggleViewMode()
+                                }
+                                
+                                // CLOSE BUTTON
+                                ToolbarItem(placement: .topBarLeading) {
+                                    if vm.viewMode == .detailstream {
+                                        Button("Close", systemImage: "multiply") {
+                                            withAnimation {
+                                                vm.close()
+                                            }
                                         }
-                                    }) {
-                                        Image(systemName: "pip.enter")
-                                            .foregroundColor(Color.white)
-                                            .padding(5)
-                                    }
-                                    .opacity(vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay ? 1.0 : 0)
-                                }
-                                .font(.title2)
-                                .foregroundColor(Color.white)
-                            }
-                        }
-                        .overlay(alignment: .topLeading) {
-                            // Full screen top bar - leading buttons
-                            Image(systemName: "multiply")
-                                .font(.title2)
-                                .foregroundColor(Color.white)
-                                .padding(.top, 10)
-                                .padding(.leading, 10)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    withAnimation {
-                                        vm.close()
+                                        .font(.title2)
+                                        .buttonStyle(.borderless)
+                                        .foregroundColor(Color.white)
                                     }
                                 }
-                                .opacity(vm.viewMode == .fullscreen ? 1.0 : 0)
-                        }
-
-                    VStack(spacing: 0) {
-                        AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
-                        
-                            // Need high priority gesture, else cannot go from .overlay to .fullscreen
-                            // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
-                            // so use custom .highPriorityGestureIf()
-                            .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
-                                withAnimation {
-                                    vm.toggleViewMode()
-                                }
-                            })
-                            .padding(.top, vm.viewMode == .fullscreen ? 0.0 : 0.0)
-                            .overlay(alignment: .topLeading) { // Close button for .overlay mode
-                                Image(systemName: "multiply")
-                                    .font(.title2)
-                                    .foregroundColor(Color.white)
-                                    .padding(.top, 10)
-                                    .padding(.leading, 10)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        withAnimation {
-                                            vm.close()
+                                
+                                // PIP BUTTON
+                                ToolbarItem(placement: .topBarTrailing) {
+                                    if vm.availableViewModes.contains(.overlay) && vm.viewMode == .detailstream {
+                                        Button("Share", systemImage: "pip.enter") {
+                                            withAnimation {
+                                                vm.toggleViewMode()
+                                            }
                                         }
+                                        .font(.title2)
+                                        .buttonStyle(.borderless)
+                                        .foregroundColor(Color.white)
                                     }
-                                    .opacity(vm.viewMode == .overlay ? 1.0 : 0)
+                                }
                             }
-                            .frame(height: videoHeight)
-                        
-                        content
+                            .environmentObject(NRState.shared)
+                            .environmentObject(themes)
+                            .environmentObject(NewPostNotifier.shared)
+                        }
                         
                         if vm.viewMode == .overlay { // Video controls for .overlay mode
-                            HStack(spacing: 20) {
+                            HStack(spacing: 30) {
                                 Button(action: vm.seekBackward) {
                                     Image(systemName: "gobackward.15")
-                                        .foregroundColor(.white)
-                                        .font(.title2)
+                                        .foregroundColor(Color.white)
+                                        .font(.title)
                                 }
                                 
                                 Button(action: {
@@ -172,26 +268,26 @@ struct OverlayVideo<Content: View>: View {
                                     }
                                 }) {
                                     Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
-                                        .foregroundColor(.white)
+                                        .foregroundColor(Color.white)
                                         .font(.title)
                                 }
                                 
                                 Button(action: vm.seekForward) {
                                     Image(systemName: "goforward.15")
-                                        .foregroundColor(.white)
-                                        .font(.title2)
+//                                            .foregroundColor(.white)
+                                        .font(.title)
+                                        .foregroundColor(Color.white)
                                 }
                             }
                             .frame(height: CONTROLS_HEIGHT)
+                            .padding(.top, 10)
                         }
                         else {
                             Spacer()
                         }
                     }
-//                    .background {
-//                        if vm.viewMode == .overlay { Color.green }
-//                    }
-                    .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
+                    .ultraThinMaterialIfDetail(vm.viewMode)
+//                        .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
                     .frame(
                         width: videoWidth * currentScale,
                         height: vm.viewMode == .detailstream ? UIScreen.main.bounds.height : (videoHeight * currentScale) + (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
@@ -263,7 +359,6 @@ struct OverlayVideo<Content: View>: View {
                         )
                     )
                 }
-                .ultraThinMaterialIfDetail(vm.viewMode)
                 .onChange(of: vm.viewMode) { _ in
                     if vm.viewMode != .overlay && scale != 1.0 {
                         scale = 1.0
@@ -401,13 +496,14 @@ func saveVideoToPhotoLibrary(videoURL: URL, completion: @escaping (Bool, Error?)
 
 
 extension View {
-  @ViewBuilder
+    
+    @ViewBuilder
     func ultraThinMaterialIfDetail(_ viewMode: AnyPlayerViewMode) -> some View {
         if viewMode == .detailstream {
-            background(.ultraThinMaterial)
+            self.background(.ultraThinMaterial)
         }
         else {
-            background(Color.clear)
+            self.background(Color.black)
         }
     }
 }

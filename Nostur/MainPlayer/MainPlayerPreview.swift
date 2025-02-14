@@ -10,6 +10,7 @@ import SwiftUI
 import NavigationBackport
 
 let CONTROLS_HEIGHT: CGFloat = 36.0
+let TOOLBAR_HEIGHT: CGFloat = 56.0
 
 @available(iOS 18.0, *)
 #Preview("Integrated media player bar") {
@@ -39,103 +40,102 @@ let CONTROLS_HEIGHT: CGFloat = 36.0
         ])
         pe.loadChats()
     }) {
-        NBNavigationStack {
-            VStack {
-                TabView {
-                    GeometryReader { geometry in
-                        VStack {
-                            HStack {
-                                Button("Landscape") {
-                                    Task {
-                                        await AnyPlayerModel
-                                            .shared
-                                            .loadVideo(
-                                                url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
-                //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                                availableViewModes: [.fullscreen, .overlay])
-                                    }
-                                }
-                                
-                                Button("Stream") {
-                                    Task {
-                                        await AnyPlayerModel
-                                            .shared
-                                            .loadVideo(
-                                                url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
-                //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                                availableViewModes: [.detailstream, .overlay])
-                                    }
-                                }
-                                
-                                Button("Portrait") {
-                                    Task {
-                                        await AnyPlayerModel
-                                            .shared
-                                            .loadVideo(
-                                                url: "https://m.primal.net/OErQ.mov",
-                //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                                availableViewModes: [.fullscreen, .overlay])
-                                    }
-                                }
-                                
-                                Button("Other") {
-                                    Task {
-                                        await AnyPlayerModel
-                                            .shared
-                                            .loadVideo(
-                                                url: "https://m.primal.net/OEzS.mp4",
-                //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                                availableViewModes: [.fullscreen, .overlay])
-                                    }
-                                }
-                                
-                                Button("Close") {
-                                    AnyPlayerModel.shared.close()
-                                }
-                            }
-                            
-                            Text("Tab 1")
-                        }
-                            .tabItem { Label("", systemImage: "house") }
-                            .tag("Main")
-                            .preference(key: TabBarHeightKey.self, value: geometry.size.height)
-                    }
-                    
-                    Text("Tab 2")
-                        .tabItem { Label("", systemImage: "bookmark") }
-                        .tag("Bookmarks")
-                    
-                    Text("Tab 3")
-                        .tabItem { Label("", systemImage: "magnifyingglass") }
-                        .tag("Search")
-                    
-                    Text("Tab 4")
-                        .tabItem { Label("", systemImage: "bell.fill") }
-                        .tag("Notifications")
-                        .badge(2)
-                    
-                    Text("Tab 5")
-                        .tabItem { Label("", systemImage: "envelope.fill") }
-                        .tag("Messages")
-                        .badge(1)
-                }
-                .overlay(alignment: .center) {
-                    OverlayVideo {
-                        if apm.isStream {
-                            if let liveEvent = PreviewFetcher.fetchEvent("75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7") {
-                                let nrLiveEvent = NRLiveEvent(event: liveEvent)
-                                StreamDetail(liveEvent: nrLiveEvent)
+        TabView {
+            GeometryReader { geometry in
+                VStack {
+                    HStack {
+                        Button("Landscape") {
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.fullscreen, .overlay])
                             }
                         }
+                        
+                        Button("Stream") {
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.detailstream, .overlay])
+                            }
+                        }
+                        
+                        Button("Portrait") {
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://m.primal.net/OErQ.mov",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.fullscreen, .overlay])
+                            }
+                        }
+                        
+                        Button("Other") {
+                            Task {
+                                await AnyPlayerModel
+                                    .shared
+                                    .loadVideo(
+                                        url: "https://m.primal.net/OEzS.mp4",
+        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                        availableViewModes: [.fullscreen, .overlay])
+                            }
+                        }
+                        
+                        Button("Close") {
+                            AnyPlayerModel.shared.close()
+                        }
                     }
-                    .edgesIgnoringSafeArea(.bottom)
-        //                .offset(y: apm.viewMode == .videostream ? 0 : -offset)
+                    
+                    Text("Tab 1")
                 }
-                
+                    .tabItem { Label("", systemImage: "house") }
+                    .tag("Main")
+                    .preference(key: TabBarHeightKey.self, value: geometry.size.height)
             }
-            .onPreferenceChange(TabBarHeightKey.self) { tabBarHeight in
-                print("Tab Bar Height: \(UIScreen.main.bounds.height - tabBarHeight)")
+            
+            Text("Tab 2")
+                .tabItem { Label("", systemImage: "bookmark") }
+                .tag("Bookmarks")
+            
+            Text("Tab 3")
+                .tabItem { Label("", systemImage: "magnifyingglass") }
+                .tag("Search")
+            
+            Text("Tab 4")
+                .tabItem { Label("", systemImage: "bell.fill") }
+                .tag("Notifications")
+                .badge(2)
+            
+            Text("Tab 5")
+                .tabItem { Label("", systemImage: "envelope.fill") }
+                .tag("Messages")
+                .badge(1)
+        }
+        .overlay(alignment: .center) {
+            OverlayVideo {
+                if apm.isStream {
+                    if let liveEvent = PreviewFetcher.fetchEvent("75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7") {
+                        let nrLiveEvent = NRLiveEvent(event: liveEvent)
+                        AvailableWidthContainer {
+                            StreamDetail(liveEvent: nrLiveEvent)
+                                .environmentObject(NRState.shared)
+                                .environmentObject(PreviewEnvironment.shared.themes)
+                                .environmentObject(PreviewEnvironment.shared.npn)
+                        }
+                    }
+                }
             }
+            .edgesIgnoringSafeArea(.bottom)
+        }
+        .onPreferenceChange(TabBarHeightKey.self) { tabBarHeight in
+            print("Tab Bar Height: \(UIScreen.main.bounds.height - tabBarHeight)")
         }
     }
 }

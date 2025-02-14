@@ -88,23 +88,21 @@ struct NosturTabsView: View {
             .overlay(alignment: .center) {
                 OverlayVideo {
                     if let visibleNest = liveKitVoiceSession.visibleNest {
-                        NBNavigationStack {
-                            AvailableWidthContainer {
-                                StreamDetail(liveEvent: visibleNest)
-                                    .environmentObject(NRState.shared)
-                                    .environmentObject(themes)
-                                    .environmentObject(npn)
-//                                    .scrollContentBackgroundHidden()
-                            }
-//                            .scrollContentBackgroundHidden()
+                        AvailableWidthContainer {
+                            StreamDetail(liveEvent: visibleNest)
+//                                .environmentObject(NRState.shared)
+//                                .environmentObject(themes)
+//                                .environmentObject(npn)
+                            //                                    .scrollContentBackgroundHidden()
                         }
-                        .introspect(.navigationStack, on: .iOS(.v16...)) {
-                            $0.viewControllers.forEach { controller in
-                                controller.view.backgroundColor = .clear
-                            }
-                        }
-//                        .scrollContentBackgroundHidden()
-                        .nbUseNavigationStack(.never)
+                        //                            .scrollContentBackgroundHidden()
+                        
+                        //                        .introspect(.navigationStack, on: .iOS(.v16...)) {
+                        //                            $0.viewControllers.forEach { controller in
+                        //                                controller.view.backgroundColor = .clear
+                        //                            }
+                        //                        }
+                        //                        .scrollContentBackgroundHidden()
                     }
                     else {
                         EmptyView()
@@ -229,6 +227,31 @@ struct NoInternetConnectionBanner: View {
         }
         else {
             EmptyView()
+        }
+    }
+}
+
+
+struct WithNavigationIf<Content: View>: View {
+    
+    let condition: Bool
+    let content: Content
+        
+    init(condition: Bool, @ViewBuilder _ content: () -> Content) {
+        self.condition = condition
+        self.content = content()
+    }
+    
+    var body: some View {
+        ZStack {
+            if condition {
+                NBNavigationStack {
+                    content
+                }
+            }
+            else {
+                content
+            }
         }
     }
 }
