@@ -28,7 +28,12 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         
         avpc.player = player
         avpc.exitsFullScreenWhenPlaybackEnds = false
-        avpc.videoGravity = .resizeAspect
+//        if viewMode == .fullscreen {
+//            avpc.videoGravity = .resizeAspectFill
+//        }
+//        else {
+//            avpc.videoGravity = .resizeAspect
+//        }
         avpc.allowsPictureInPicturePlayback = true
         avpc.delegate = context.coordinator
         avpc.showsPlaybackControls = true
@@ -45,7 +50,6 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
         print("updateUIViewController")
-//        context.coordinator.avpc?.player = player
         if isPlaying {
             if player.timeControlStatus != .playing {
                 uiView.isUserInteractionEnabled = true
@@ -59,14 +63,14 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
             }
         }
         
-        if viewMode == .fullscreen && context.coordinator.avpc?.videoGravity != .resizeAspectFill {
-            context.coordinator.avpc?.videoGravity = .resizeAspectFill
-        }
-        else {
-            context.coordinator.avpc?.videoGravity = .resizeAspect
-        }
+//        if viewMode == .fullscreen && context.coordinator.avpc?.videoGravity != .resizeAspectFill {
+//            context.coordinator.avpc?.videoGravity = .resizeAspectFill
+//        }
+//        else {
+//            context.coordinator.avpc?.videoGravity = .resizeAspect
+//        }
         
-        context.coordinator.avpc?.showsPlaybackControls = showsPlaybackControls
+//        context.coordinator.avpc?.showsPlaybackControls = showsPlaybackControls
     }
     
     // MARK: - Coordinator Creation
@@ -81,7 +85,6 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     class Coordinator: NSObject, AVPlayerViewControllerDelegate {
         var avpc: AVPlayerViewController?
         var parent: AVPlayerViewControllerRepresentable
-        var timeObserverToken: Any?
         
         init(parent: AVPlayerViewControllerRepresentable) {
             self.parent = parent

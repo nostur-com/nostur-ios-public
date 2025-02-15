@@ -49,6 +49,9 @@ class AnyPlayerModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     private init() {
+        player.preventsDisplaySleepDuringVideoPlayback = false
+        player.actionAtItemEnd = .pause
+        
         player.publisher(for: \.rate, options: [.initial, .new])
             .receive(on: DispatchQueue.main)
             .map { $0 != 0 }
@@ -56,6 +59,7 @@ class AnyPlayerModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    // LIVE EVENT STREAM
     @MainActor
     public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen]) async {
         
@@ -63,7 +67,6 @@ class AnyPlayerModel: ObservableObject {
         
         self.isShown = true
         self.nrLiveEvent = nrLiveEvent
-        self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
         self.cachedVideo = nil
         self.thumbnailUrl = nrLiveEvent.thumbUrl
@@ -78,10 +81,11 @@ class AnyPlayerModel: ObservableObject {
         }
 
         // Don't reuse existing viewMode
-        self.viewMode = availableViewModes.first ?? .fullscreen
+        self.viewMode = availableViewModes.first ?? .detailstream
         isPlaying = true
     }
     
+    // VIDEO URL
     @MainActor
     public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) async {
         guard let url = URL(string: url) else { return }
@@ -124,7 +128,7 @@ class AnyPlayerModel: ObservableObject {
                 self.aspect = dimensions.width / dimensions.height
                 player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
                 self.cachedVideo = cachedVideo
-                print("Video width: \(dimensions.width), height: \(dimensions.height)")
+                print("Video width: \(dimensions.width), height: \(dimensions.height), UIScreen.height: \(UIScreen.main.bounds.height)")
             }
         }
         
@@ -135,6 +139,7 @@ class AnyPlayerModel: ObservableObject {
         isPlaying = true
     }
     
+    // CACHED VIDEO
     @MainActor
     public func loadVideo(cachedVideo: CachedVideo, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) {
         
@@ -145,6 +150,7 @@ class AnyPlayerModel: ObservableObject {
         self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
         self.availableViewModes = availableViewModes
         self.cachedVideo = cachedVideo
+        self.isStream = false
         
         player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
 
@@ -167,13 +173,13 @@ class AnyPlayerModel: ObservableObject {
     
     /// Starts video playback.
     func playVideo() {
-        player.play()
+//        player.play()
         isPlaying = true
     }
     
     /// Pauses video playback.
     func pauseVideo() {
-        player.pause()
+//        player.pause()
         isPlaying = false
     }
     
@@ -194,8 +200,10 @@ class AnyPlayerModel: ObservableObject {
     public func close() {
         sendNotification(.stopPlayingVideo)
         self.player.pause()
+        self.player.replaceCurrentItem(with: nil)
         self.nrLiveEvent = nil
         self.cachedVideo = nil
+        self.aspect = 16/9 // reset
         isPlaying = false
         isShown = false
     }

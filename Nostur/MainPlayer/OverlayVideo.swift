@@ -10,7 +10,7 @@ import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
 
 let CONTROLS_HEIGHT: CGFloat = 60.0
-let TOOLBAR_HEIGHT: CGFloat = 56.0
+let TOOLBAR_HEIGHT: CGFloat = 116.0
 
 struct OverlayVideo<Content: View>: View {
     let content: Content
@@ -29,12 +29,38 @@ struct OverlayVideo<Content: View>: View {
         if vm.viewMode != .overlay {
             return UIScreen.main.bounds.width
         }
-        return UIScreen.main.bounds.width * 0.65
+        return UIScreen.main.bounds.width * 0.45
+    }
+    
+    private var avPlayerHeight: CGFloat {
+        if vm.viewMode == .overlay {
+            return videoHeight
+        }
+        if vm.viewMode == .detailstream {
+            return UIScreen.main.bounds.height / 3
+        }
+        return videoHeight
+    }
+    
+    private var frameHeight: CGFloat {
+        
+        // OVERLAY HEIGHT
+        if vm.viewMode == .overlay {
+            return (min(videoHeight, UIScreen.main.bounds.height - CONTROLS_HEIGHT) * currentScale) + CONTROLS_HEIGHT
+        }
+        
+        // STREAMDETAIL HEIGHT
+        if vm.viewMode == .detailstream {
+            return UIScreen.main.bounds.height
+        }
+        
+        // FULLSCREEN 
+        return UIScreen.main.bounds.height - TOOLBAR_HEIGHT
     }
     
     // State variables for dragging
-    @State private var currentOffset = CGSize(width: UIScreen.main.bounds.width * 0.65, height: UIScreen.main.bounds.height - 100.0) // Initial Y offset
-    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.65, height: .zero)
+    @State private var currentOffset = CGSize(width: UIScreen.main.bounds.width * 0.45, height: UIScreen.main.bounds.height - 280.0) // Initial Y offset
+    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.45, height: .zero)
     
     // State variables for scaling
     @State private var currentScale: CGFloat = 1.0
@@ -63,7 +89,7 @@ struct OverlayVideo<Content: View>: View {
                 ZStack(alignment: videoAlignment) {
                     if vm.viewMode == .fullscreen {
                         NBNavigationStack {
-                            Color.blue
+                            Color.black
                                 .toolbar {
                                     // SAVE BUTTON
                                     ToolbarItem(placement: .topBarTrailing) {
@@ -135,6 +161,10 @@ struct OverlayVideo<Content: View>: View {
                                 .environmentObject(NRState.shared)
                                 .environmentObject(themes)
                                 .environmentObject(NewPostNotifier.shared)
+                                .onDisappear {
+                                    isSaving = false
+                                    didSave = false
+                                }
                         }
                     }
                         
@@ -146,11 +176,11 @@ struct OverlayVideo<Content: View>: View {
                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
                                     // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
                                     // so use custom .highPriorityGestureIf()
-//                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
-//                                        withAnimation {
-//                                            vm.toggleViewMode()
-//                                        }
-//                                    })
+                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
+                                        withAnimation {
+                                            vm.toggleViewMode()
+                                        }
+                                    })
 //                                    .padding(.top, vm.viewMode == .detailstream ? TOOLBAR_HEIGHT : 0.0)
                                     .overlay(alignment: .topLeading) { // Close button for .overlay mode
                                         Image(systemName: "multiply")
@@ -166,7 +196,7 @@ struct OverlayVideo<Content: View>: View {
                                             }
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
-                                    .frame(maxHeight: videoHeight) // Add +20 for Video controls padding (in .overlay)
+                                    .frame(maxHeight: avPlayerHeight) // Add +20 for Video controls padding (in .overlay)
 //                                        .frame(height: videoHeight)
                                     .animation(.smooth, value: vm.viewMode)
                                 
@@ -294,10 +324,10 @@ struct OverlayVideo<Content: View>: View {
                         }
                     }
                     .ultraThinMaterialIfDetail(vm.viewMode)
-//                        .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
+//                    .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
                     .frame(
                         width: videoWidth * currentScale,
-                        height: vm.viewMode == .detailstream ? UIScreen.main.bounds.height : (videoHeight * currentScale) + (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
+                        height: frameHeight
                     )
                     .offset(
                         x: clampedOffsetX(geometry: geometry),
@@ -367,7 +397,7 @@ struct OverlayVideo<Content: View>: View {
                     )
                 }
                 .onChange(of: vm.viewMode) { _ in
-                    print("UIScreen.main.bounds: \(UIScreen.main.bounds.width)x\(UIScreen.main.bounds.height)")
+//                    print("UIScreen.main.bounds: \(UIScreen.main.bounds.width)x\(UIScreen.main.bounds.height)")
                     if vm.viewMode != .overlay && scale != 1.0 {
                         scale = 1.0
                     }
@@ -489,7 +519,6 @@ func requestPhotoLibraryAccess(completion: @escaping (Bool) -> Void) {
     }
 }
 
-
 func saveVideoToPhotoLibrary(videoURL: URL, completion: @escaping (Bool, Error?) -> Void) {
     PHPhotoLibrary.shared().performChanges({
         PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoURL)
@@ -501,7 +530,6 @@ func saveVideoToPhotoLibrary(videoURL: URL, completion: @escaping (Bool, Error?)
         }
     }
 }
-
 
 extension View {
     

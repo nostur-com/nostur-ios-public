@@ -18,7 +18,7 @@ struct StreamDetail: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @ObservedObject public var liveEvent: NRLiveEvent
-    @ObservedObject var apm: AnyPlayerModel = .shared
+//    @ObservedObject var apm: AnyPlayerModel = .shared
     
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: 4)
     @State private var rows = [GridItem(.fixed(80)), GridItem(.fixed(80))]
@@ -206,21 +206,19 @@ struct StreamDetail: View {
                 .frame(maxWidth: 140)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        if apm.viewMode != .overlay {
-                            Button("Share", systemImage: "square.and.arrow.up") {
-                                if !IS_CATALYST && !IS_IPAD {
-                                    AnyPlayerModel.shared.toggleViewMode()
-                                }
-                                NRState.shared.draft = "\(liveEvent.title ?? "Watching") 👇\n\n" + "nostr:" + roomAddress
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                    sendNotification(.newTemplatePost)
-                                }
+                        Button("Share", systemImage: "square.and.arrow.up") {
+                            if !IS_CATALYST && !IS_IPAD {
+                                AnyPlayerModel.shared.toggleViewMode()
                             }
-                            .buttonStyle(.borderless)
-                            .foregroundColor(Color.white)
-                            .font(.title2)
-                            .offset(y: -5)
+                            NRState.shared.draft = "\(liveEvent.title ?? "Watching") 👇\n\n" + "nostr:" + roomAddress
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                sendNotification(.newTemplatePost)
+                            }
                         }
+                        .buttonStyle(.borderless)
+                        .foregroundColor(Color.white)
+                        .font(.title2)
+                        .offset(y: -5)
                     }
                 }
         }
