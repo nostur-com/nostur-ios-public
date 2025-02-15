@@ -66,6 +66,7 @@ struct AnimatedNumber15: View {
             .frame(height: Self.numberHeight)
             .clipped()
             .onAppear {
+                guard currentNumber != number else { return }
                 currentNumber = number
             }
             .onChange(of: number) { newNumber in
@@ -142,6 +143,7 @@ struct AnimatedNumberString15: View {
             .frame(height: Self.numberHeight)
             .clipped()
             .onAppear {
+                guard currentNumber != number else { return }
                 currentNumber = number
             }
             .onChange(of: number) { newNumber in

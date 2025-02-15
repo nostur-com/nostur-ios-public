@@ -62,6 +62,7 @@ struct LazyFollowedBy: View {
             }
         }
         .onAppear {
+            guard !didLoad else { return }
             self.load()
         }
         .onDisappear {
