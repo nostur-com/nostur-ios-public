@@ -739,9 +739,6 @@ struct RelayMasteryLink: View {
                     .foregroundColor(.secondary)
             }
         })
-        .onAppear {
-            
-        }
     }
 }
 

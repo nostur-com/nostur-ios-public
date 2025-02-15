@@ -45,18 +45,12 @@ struct ProfileMediaView: View {
                                 .onBecomingVisible {
                                     vm.fetchMoreIfNeeded(index)
                                 }
-                                .onAppear {
-                                    L.og.debug("GridItemView17.onAppear {} \(index)")
-                                }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
                                 }
                             if (index+1) < vm.items.count {
                                 GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index + 1])
-                                    .onAppear {
-                                        L.og.debug("GridItemView17.onAppear {} \(index+1)")
-                                    }
                                     .contentShape(Rectangle())
                                     .onTapGesture {
                                         sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index + 1))
@@ -64,9 +58,6 @@ struct ProfileMediaView: View {
                             }
                             if (index+2) < vm.items.count {
                                 GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index + 2])
-                                    .onAppear {
-                                        L.og.debug("GridItemView17.onAppear {} \(index+2)")
-                                    }
                                     .contentShape(Rectangle())
                                     .onTapGesture {
                                         sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index + 2))
