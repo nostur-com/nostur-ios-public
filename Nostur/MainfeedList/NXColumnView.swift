@@ -40,7 +40,7 @@ struct NXColumnView: View {
         .onAppear {
             guard !didLoad else { return }
             didLoad = true
-            L.og.debug("☘️☘️ \(config.name) - \(config.id) .onAppear")
+            L.og.debug("☘️☘️ \(config.name) .onAppear")
             viewModel.isVisible = isVisible
             viewModel.availableWidth = dim.availableNoteRowWidth
             if let relaysData = config.feed?.relaysData {
@@ -53,12 +53,12 @@ struct NXColumnView: View {
             viewModel.load(config)
         }
         .onChange(of: isVisible) { newValue in
-            L.og.debug("☘️☘️ \(config.name) - \(config.id) .onChange(of: isVisible) newValue: \(newValue)")
+            L.og.debug("☘️☘️ \(config.name) .onChange(of: isVisible) newValue: \(newValue)")
             guard viewModel.isVisible != newValue else { return }
             viewModel.isVisible = newValue
         }
         .onChange(of: config) { newValue in
-            L.og.debug("☘️☘️ \(config.name) - \(config.id) .onChange(of: config)")
+            L.og.debug("☘️☘️ \(config.name) .onChange(of: config)")
             guard viewModel.config != newValue else { return }
             if let relaysData = newValue.feed?.relaysData {
                 for relay in relaysData {
@@ -70,7 +70,9 @@ struct NXColumnView: View {
             viewModel.load(newValue)
         }
         .onChange(of: dim.availableNoteRowWidth) { newValue in
-            L.og.debug("☘️☘️ \(config.name) - \(config.id) .onChange(of: availableNoteRowWidth)")
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) .onChange(of: availableNoteRowWidth)")
+#endif
             guard viewModel.availableWidth != newValue else { return }
             viewModel.availableWidth = newValue
         }

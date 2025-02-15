@@ -80,7 +80,9 @@ struct NXPostsFeed: View {
             .scrollContentBackgroundHidden()
             .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
                 guard let scrollToIndex else { return }
-                L.og.debug("☘️☘️ \(vm.config?.id ?? "?") NXPostsFeed onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
+#if DEBUG
+                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
+#endif
                 
                 if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
                     if let collectionView,

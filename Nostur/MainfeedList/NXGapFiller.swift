@@ -45,13 +45,13 @@ class NXGapFiller {
         
         // Check connection?
         guard ConnectionPool.shared.anyConnected else {
-            L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") Not connected, skipping fetchGap")
+            L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap")
             return
         }
         
         // Check if paused
         guard !columnVM.isPaused else {
-            L.og.debug("☘️☘️🔴🔴 \(columnVM.id ?? "?") paused, skipping fetchGap")
+            L.og.debug("☘️☘️ \(config.name) 🔴🔴 paused, skipping fetchGap")
             return
         }
                 
@@ -63,7 +63,7 @@ class NXGapFiller {
                 subscriptionId: subId,
                 reqCommand: { [weak self] _ in
                     guard let self else { return }
-                    L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
+                    L.og.debug("☘️☘️ \(config.name) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
                     cmd()
                 },
                 processResponseCommand: { [weak self] _, _, _ in
