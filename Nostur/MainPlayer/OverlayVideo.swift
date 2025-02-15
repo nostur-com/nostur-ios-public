@@ -9,6 +9,9 @@ import SwiftUI
 import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
 
+let CONTROLS_HEIGHT: CGFloat = 60.0
+let TOOLBAR_HEIGHT: CGFloat = 56.0
+
 struct OverlayVideo<Content: View>: View {
     let content: Content
     
@@ -60,7 +63,7 @@ struct OverlayVideo<Content: View>: View {
                 ZStack(alignment: videoAlignment) {
                     if vm.viewMode == .fullscreen {
                         NBNavigationStack {
-                            Color.black
+                            Color.blue
                                 .toolbar {
                                     // SAVE BUTTON
                                     ToolbarItem(placement: .topBarTrailing) {
@@ -143,11 +146,11 @@ struct OverlayVideo<Content: View>: View {
                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
                                     // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
                                     // so use custom .highPriorityGestureIf()
-                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
-                                        withAnimation {
-                                            vm.toggleViewMode()
-                                        }
-                                    })
+//                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
+//                                        withAnimation {
+//                                            vm.toggleViewMode()
+//                                        }
+//                                    })
 //                                    .padding(.top, vm.viewMode == .detailstream ? TOOLBAR_HEIGHT : 0.0)
                                     .overlay(alignment: .topLeading) { // Close button for .overlay mode
                                         Image(systemName: "multiply")
@@ -163,7 +166,7 @@ struct OverlayVideo<Content: View>: View {
                                             }
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
-                                    .frame(maxHeight: videoHeight)
+                                    .frame(maxHeight: videoHeight) // Add +20 for Video controls padding (in .overlay)
 //                                        .frame(height: videoHeight)
                                     .animation(.smooth, value: vm.viewMode)
                                 
@@ -285,7 +288,6 @@ struct OverlayVideo<Content: View>: View {
                                 }
                             }
                             .frame(height: CONTROLS_HEIGHT)
-                            .padding(.vertical, 10)
                         }
                         else {
                             Spacer()
@@ -301,7 +303,7 @@ struct OverlayVideo<Content: View>: View {
                         x: clampedOffsetX(geometry: geometry),
                         y: clampedOffsetY(geometry: geometry) - (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
-                    .gesture(
+                    .highPriorityGesture(
                         // Combine Drag and Magnification Gestures
                         SimultaneousGesture(
                             DragGesture()
@@ -357,14 +359,15 @@ struct OverlayVideo<Content: View>: View {
                                         max: geometry.size.height - (videoHeight * currentScale)
                                     )
                                 }
-                                .onEnded { _ in
-                                    guard vm.viewMode == .overlay else { return }
-                                    self.scale = 1.0
-                                }
+//                                .onEnded { _ in
+//                                    guard vm.viewMode == .overlay else { return }
+//                                    self.scale = 1.0
+//                                }
                         )
                     )
                 }
                 .onChange(of: vm.viewMode) { _ in
+                    print("UIScreen.main.bounds: \(UIScreen.main.bounds.width)x\(UIScreen.main.bounds.height)")
                     if vm.viewMode != .overlay && scale != 1.0 {
                         scale = 1.0
                     }

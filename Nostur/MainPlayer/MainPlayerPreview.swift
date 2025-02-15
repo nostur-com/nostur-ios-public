@@ -9,9 +9,6 @@
 import SwiftUI
 import NavigationBackport
 
-let CONTROLS_HEIGHT: CGFloat = 36.0
-let TOOLBAR_HEIGHT: CGFloat = 56.0
-
 @available(iOS 18.0, *)
 #Preview("Integrated media player bar") {
     @Previewable @State var offset: CGFloat = 69.0
@@ -42,58 +39,61 @@ let TOOLBAR_HEIGHT: CGFloat = 56.0
     }) {
         TabView {
             GeometryReader { geometry in
-                VStack {
-                    HStack {
-                        Button("Landscape") {
-                            Task {
-                                await AnyPlayerModel
-                                    .shared
-                                    .loadVideo(
-                                        url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
-        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                        availableViewModes: [.fullscreen, .overlay])
+                ZStack(alignment: .top) {
+                    Color.blue.opacity(0.2)
+                    VStack {
+                        HStack {
+                            Button("Landscape") {
+                                Task {
+                                    await AnyPlayerModel
+                                        .shared
+                                        .loadVideo(
+                                            url: "https://static.vecteezy.com/system/resources/previews/016/465/804/mp4/silhouettes-flock-of-seagulls-over-the-sea-during-amazing-sky-video.mp4",
+            //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                            availableViewModes: [.fullscreen, .overlay])
+                                }
+                            }
+                            
+                            Button("Stream") {
+                                Task {
+                                    await AnyPlayerModel
+                                        .shared
+                                        .loadVideo(
+                                            url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
+            //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                            availableViewModes: [.detailstream, .overlay])
+                                }
+                            }
+                            
+                            Button("Portrait") {
+                                Task {
+                                    await AnyPlayerModel
+                                        .shared
+                                        .loadVideo(
+                                            url: "https://m.primal.net/OErQ.mov",
+            //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                            availableViewModes: [.fullscreen, .overlay])
+                                }
+                            }
+                            
+                            Button("Other") {
+                                Task {
+                                    await AnyPlayerModel
+                                        .shared
+                                        .loadVideo(
+                                            url: "https://m.primal.net/OEzS.mp4",
+            //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
+                                            availableViewModes: [.fullscreen, .overlay])
+                                }
+                            }
+                            
+                            Button("Close") {
+                                AnyPlayerModel.shared.close()
                             }
                         }
                         
-                        Button("Stream") {
-                            Task {
-                                await AnyPlayerModel
-                                    .shared
-                                    .loadVideo(
-                                        url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
-        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                        availableViewModes: [.detailstream, .overlay])
-                            }
-                        }
-                        
-                        Button("Portrait") {
-                            Task {
-                                await AnyPlayerModel
-                                    .shared
-                                    .loadVideo(
-                                        url: "https://m.primal.net/OErQ.mov",
-        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                        availableViewModes: [.fullscreen, .overlay])
-                            }
-                        }
-                        
-                        Button("Other") {
-                            Task {
-                                await AnyPlayerModel
-                                    .shared
-                                    .loadVideo(
-                                        url: "https://m.primal.net/OEzS.mp4",
-        //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                        availableViewModes: [.fullscreen, .overlay])
-                            }
-                        }
-                        
-                        Button("Close") {
-                            AnyPlayerModel.shared.close()
-                        }
+                        Text("Tab 1")
                     }
-                    
-                    Text("Tab 1")
                 }
                     .tabItem { Label("", systemImage: "house") }
                     .tag("Main")
@@ -141,7 +141,7 @@ let TOOLBAR_HEIGHT: CGFloat = 56.0
 }
 
 struct TabBarHeightKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
+    static let defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = max(value, nextValue())
     }
