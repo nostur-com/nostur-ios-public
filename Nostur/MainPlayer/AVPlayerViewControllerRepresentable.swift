@@ -52,15 +52,18 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
                 try? AVAudioSession.sharedInstance().setActive(true)
                 player.play()
             }
-        } else {
+        }
+        else {
             if player.timeControlStatus == .playing {
                 player.pause()
             }
         }
         
-        if viewMode == .fullscreen {
-//            uiViewController.videoGravity = .resizeAspectFill
-//            uiViewController.modalPresentationStyle = .fullScreen
+        if viewMode == .fullscreen && context.coordinator.avpc?.videoGravity != .resizeAspectFill {
+            context.coordinator.avpc?.videoGravity = .resizeAspectFill
+        }
+        else {
+            context.coordinator.avpc?.videoGravity = .resizeAspect
         }
         
         context.coordinator.avpc?.showsPlaybackControls = showsPlaybackControls
