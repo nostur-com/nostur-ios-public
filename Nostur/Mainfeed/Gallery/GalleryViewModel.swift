@@ -354,14 +354,14 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
 
 struct GalleryItem: Identifiable, Equatable {
 
-    let id:UUID
-    let pubkey:String? // for blocklist filtering
-    let url:URL
-    let event:Event? // bg
-    let eventId:String? // need the id in main context
-    var pfpPictureURL:URL?
+    let id: UUID
+    let pubkey: String? // for blocklist filtering
+    let url: URL
+    let event: Event? // bg
+    let eventId: String? // need the id in main context
+    var pfpPictureURL: URL?
         
-    init(url:URL, event:Event? = nil) {
+    init(url: URL, event: Event? = nil) {
         self.url = url
         self.event = event
         self.eventId = event?.id
