@@ -86,48 +86,6 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         init(parent: AVPlayerViewControllerRepresentable) {
             self.parent = parent
             super.init()
-//            addObservers()
         }
-//        
-//        deinit {
-//            if let token = timeObserverToken {
-//                parent.player?.removeTimeObserver(token)
-//            }
-//            removeObservers()
-//        }
-        
-//        // Add observers to monitor playback status
-//        func addObservers() {
-//            guard let player = parent.player  else { return }
-//            player.addObserver(self, forKeyPath: "timeControlStatus", options: [.new, .initial], context: nil)
-//            
-//            // Optionally, observe when the video finishes playing
-//            NotificationCenter.default.addObserver(self, selector: #selector(playerDidFinishPlaying),
-//                                                   name: .AVPlayerItemDidPlayToEndTime, object: player.currentItem)
-//        }
-        
-//        func removeObservers() {
-//            guard let player = parent.player  else { return }
-//            player.removeObserver(self, forKeyPath: "timeControlStatus")
-//            NotificationCenter.default.removeObserver(self)
-//        }
-        
-        // Observe changes in the player's status
-//        override func observeValue(forKeyPath keyPath: String?, of object: Any?,
-//                                   change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-//            guard let player = parent.player  else { return }
-//            if keyPath == "timeControlStatus" {
-//                DispatchQueue.main.async { [weak self] in
-//                    self?.parent.isPlaying = player.timeControlStatus == .playing
-//                }
-//            }
-//        }
-        
-//        // Handle video playback completion
-//        @objc func playerDidFinishPlaying(notification: Notification) {
-//            DispatchQueue.main.async { [weak self] in
-//                self?.parent.isPlaying = false
-//            }
-//        }
     }
 }
