@@ -56,7 +56,7 @@ struct OverlayVideo<Content: View>: View {
         let _ = Self._printChanges()
         #endif
         GeometryReader { geometry in
-            if vm.player != nil {
+            if vm.isShown {
                 ZStack(alignment: videoAlignment) {
                     if vm.viewMode == .fullscreen {
                         NBNavigationStack {

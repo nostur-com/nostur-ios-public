@@ -14,9 +14,11 @@ class AnyPlayerModel: ObservableObject {
     static let shared = AnyPlayerModel()
     
     // MARK: - State Variables
-    @Published var player: AVPlayer? = nil
+    @Published var player = AVPlayer()
     @Published var isPlaying = false
     @Published var showsPlaybackControls = false
+    
+    @Published var isShown = false
     
     public var aspect: CGFloat = 16/9
     public var isPortrait: Bool {
@@ -46,41 +48,38 @@ class AnyPlayerModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
-    private init() { }
+    private init() {
+        player.publisher(for: \.rate, options: [.initial, .new])
+            .receive(on: DispatchQueue.main)
+            .map { $0 != 0 }
+            .assign(to: \.isPlaying, on: self)
+            .store(in: &cancellables)
+    }
     
     @MainActor
     public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen]) async {
         
         sendNotification(.stopPlayingVideo)
+        
+        self.isShown = true
         self.nrLiveEvent = nrLiveEvent
         self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
-        self.player = nil
         self.cachedVideo = nil
         self.thumbnailUrl = nrLiveEvent.thumbUrl
         
-        cancellables.forEach { $0.cancel() }
-        
         if nrLiveEvent.streamHasEnded, let recordingUrl = nrLiveEvent.recordingUrl, let url = URL(string: recordingUrl) {
             isStream = false
-            player = AVPlayer(playerItem: AVPlayerItem(url: url))
+            player.replaceCurrentItem(with: AVPlayerItem(url: url))
         }
         else if let url = nrLiveEvent.url {
             isStream = true
-            player = AVPlayer(playerItem: AVPlayerItem(url: url))
+            player.replaceCurrentItem(with: AVPlayerItem(url: url))
         }
-        
-        // Observe the player's rate to determine if it's playing
-        player?.publisher(for: \.rate, options: [.initial, .new])
-            .receive(on: DispatchQueue.main)
-            .map { $0 != 0 }
-            .assign(to: \.isPlaying, on: self)
-            .store(in: &cancellables)
-        
-        self.viewMode =  availableViewModes.first ?? .fullscreen
-//        if (self.viewMode == .fullscreen) {
-            isPlaying = true
-//        }
+
+        // Don't reuse existing viewMode
+        self.viewMode = availableViewModes.first ?? .fullscreen
+        isPlaying = true
     }
     
     @MainActor
@@ -88,25 +87,25 @@ class AnyPlayerModel: ObservableObject {
         guard let url = URL(string: url) else { return }
         
         sendNotification(.stopPlayingVideo)
+        
+        self.isShown = true
         self.nrLiveEvent = nil
         self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
-        self.player = nil
         self.cachedVideo = nil
 
-        cancellables.forEach { $0.cancel() }
         
         self.isStream = url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" || url.absoluteString.suffix(3) == "mp3"
         
         if isStream {
-            player = AVPlayer(playerItem: AVPlayerItem(url: url))
+            player.replaceCurrentItem(with: AVPlayerItem(url: url))
         }
         
         // If we already have cache, load video / dimensions / aspect from there
         else if let cachedVideo = AVAssetCache.shared.get(url: url.absoluteString) {
             self.cachedVideo = cachedVideo
             self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
-            player = AVPlayer(playerItem: AVPlayerItem(asset: cachedVideo.asset))
+            player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
             print("Video width: \(cachedVideo.dimensions.width), height: \(cachedVideo.dimensions.height)")
         }
         else { // else we need to get it from .tracks etc
@@ -123,44 +122,36 @@ class AnyPlayerModel: ObservableObject {
                 AVAssetCache.shared.set(url: url.absoluteString, asset: cachedVideo)
                 
                 self.aspect = dimensions.width / dimensions.height
-                player = AVPlayer(playerItem: AVPlayerItem(asset: asset))
+                player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
                 self.cachedVideo = cachedVideo
                 print("Video width: \(dimensions.width), height: \(dimensions.height)")
             }
         }
         
-        // Observe the player's rate to determine if it's playing
-        player?.publisher(for: \.rate, options: [.initial, .new])
-            .receive(on: DispatchQueue.main)
-            .map { $0 != 0 }
-            .assign(to: \.isPlaying, on: self)
-            .store(in: &cancellables)
-        
-        self.viewMode =  availableViewModes.first ?? .fullscreen
-        if (self.viewMode == .fullscreen) {
-            isPlaying = true
+        // Reuse existing viewMode if already playing
+        if !isPlaying || !availableViewModes.contains(viewMode) {
+            self.viewMode = availableViewModes.first ?? .fullscreen
         }
+        isPlaying = true
     }
     
     @MainActor
     public func loadVideo(cachedVideo: CachedVideo, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) {
         
         sendNotification(.stopPlayingVideo)
+        
+        self.isShown = true
         self.nrLiveEvent = nil
         self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
         self.availableViewModes = availableViewModes
         self.cachedVideo = cachedVideo
-        cancellables.forEach { $0.cancel() }
-        player = AVPlayer(playerItem: AVPlayerItem(asset: cachedVideo.asset))
         
-        // Observe the player's rate to determine if it's playing
-        player?.publisher(for: \.rate, options: [.initial, .new])
-            .receive(on: DispatchQueue.main)
-            .map { $0 != 0 }
-            .assign(to: \.isPlaying, on: self)
-            .store(in: &cancellables)
+        player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
 
-        self.viewMode =  availableViewModes.first ?? .fullscreen
+        // Reuse existing viewMode if already playing
+        if !isPlaying || !availableViewModes.contains(viewMode) {
+            self.viewMode = availableViewModes.first ?? .fullscreen
+        }
         if (self.viewMode == .fullscreen) {
             isPlaying = true
         }
@@ -176,23 +167,23 @@ class AnyPlayerModel: ObservableObject {
     
     /// Starts video playback.
     func playVideo() {
-        player?.play()
+        player.play()
+        isPlaying = true
     }
     
     /// Pauses video playback.
     func pauseVideo() {
-        player?.pause()
+        player.pause()
+        isPlaying = false
     }
     
     func seekForward() {
-        guard let player else { return }
         let currentTime = player.currentTime()
         let newTime = CMTimeAdd(currentTime, CMTimeMake(value: 15, timescale: 1))
         player.seek(to: newTime)
     }
         
     func seekBackward() {
-        guard let player else { return }
         let currentTime = player.currentTime()
         let newTime = CMTimeSubtract(currentTime, CMTimeMake(value: 15, timescale: 1))
         let clampedTime = CMTimeClampToRange(newTime, range: CMTimeRange(start: .zero, duration: player.currentItem?.duration ?? CMTime.indefinite))
@@ -202,16 +193,16 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     public func close() {
         sendNotification(.stopPlayingVideo)
-        self.player?.pause()
-        self.player = nil
+        self.player.pause()
         self.nrLiveEvent = nil
         self.cachedVideo = nil
         isPlaying = false
-        cancellables.forEach { $0.cancel() }
+        isShown = false
     }
     
     deinit {
         cancellables.forEach { $0.cancel() }
+        cancellables.removeAll()
     }
 }
 
