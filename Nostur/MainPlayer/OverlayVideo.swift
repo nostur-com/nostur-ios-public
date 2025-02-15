@@ -334,66 +334,90 @@ struct OverlayVideo<Content: View>: View {
                         y: clampedOffsetY(geometry: geometry) - (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
                     .highPriorityGesture(
+                        DragGesture()
+                            .onChanged { value in
+                                guard vm.viewMode == .overlay else { return }
+                                self.dragOffset = value.translation
+                            }
+                            .onEnded { value in
+                                guard vm.viewMode == .overlay else { return }
+                                let newOffsetX = currentOffset.width + value.translation.width
+                                let newOffsetY = currentOffset.height + value.translation.height
+                                
+                                // Update currentOffset with clamped values
+                                currentOffset.width = clamp(
+                                    value: newOffsetX,
+                                    min: 0,
+                                    max: geometry.size.width - (videoWidth * currentScale + 2)
+                                )
+                                currentOffset.height = clamp(
+                                    value: newOffsetY,
+                                    min: 0,
+                                    max: geometry.size.height - (videoHeight * currentScale)
+                                )
+                                dragOffset = .zero
+                            }
+                        
+                        
                         // Combine Drag and Magnification Gestures
-                        SimultaneousGesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    guard vm.viewMode == .overlay else { return }
-                                    self.dragOffset = value.translation
-                                }
-                                .onEnded { value in
-                                    guard vm.viewMode == .overlay else { return }
-                                    let newOffsetX = currentOffset.width + value.translation.width
-                                    let newOffsetY = currentOffset.height + value.translation.height
-                                    
-                                    // Update currentOffset with clamped values
-                                    currentOffset.width = clamp(
-                                        value: newOffsetX,
-                                        min: 0,
-                                        max: geometry.size.width - (videoWidth * currentScale + 2)
-                                    )
-                                    currentOffset.height = clamp(
-                                        value: newOffsetY,
-                                        min: 0,
-                                        max: geometry.size.height - (videoHeight * currentScale)
-                                    )
-                                    dragOffset = .zero
-                                },
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    guard vm.viewMode == .overlay else { return }
-                                    let delta = value / self.scale
-                                    self.scale = value
-                                    var newScale = self.currentScale * delta
-                                    
-                                    // Calculate maximum and minimum scales based on geometry
-                                    let maxScaleWidth = geometry.size.width / videoWidth
-                                    let maxScaleHeight = geometry.size.height / videoHeight
-                                    let maxScale = min(maxScaleWidth, maxScaleHeight, 3.0) // 3.0 is an arbitrary upper limit
-                                    let minScale: CGFloat = 0.5 // 50% of original size
-                                    
-                                    // Clamp the new scale
-                                    newScale = clamp(value: newScale, min: minScale, max: maxScale)
-                                    
-                                    self.currentScale = newScale
-                                    
-                                    // Adjust currentOffset to ensure the video stays within bounds after scaling
-                                    currentOffset.width = clamp(
-                                        value: currentOffset.width,
-                                        min: 0,
-                                        max: geometry.size.width - (videoWidth * currentScale + 2)
-                                    )
-                                    currentOffset.height = clamp(
-                                        value: currentOffset.height,
-                                        min: 0,
-                                        max: geometry.size.height - (videoHeight * currentScale)
-                                    )
-                                }
-//                                .onEnded { _ in
+//                        SimultaneousGesture(
+//                            DragGesture()
+//                                .onChanged { value in
 //                                    guard vm.viewMode == .overlay else { return }
-//                                    self.scale = 1.0
+//                                    self.dragOffset = value.translation
 //                                }
-                        )
+//                                .onEnded { value in
+//                                    guard vm.viewMode == .overlay else { return }
+//                                    let newOffsetX = currentOffset.width + value.translation.width
+//                                    let newOffsetY = currentOffset.height + value.translation.height
+//                                    
+//                                    // Update currentOffset with clamped values
+//                                    currentOffset.width = clamp(
+//                                        value: newOffsetX,
+//                                        min: 0,
+//                                        max: geometry.size.width - (videoWidth * currentScale + 2)
+//                                    )
+//                                    currentOffset.height = clamp(
+//                                        value: newOffsetY,
+//                                        min: 0,
+//                                        max: geometry.size.height - (videoHeight * currentScale)
+//                                    )
+//                                    dragOffset = .zero
+//                                },
+//                            MagnificationGesture()
+//                                .onChanged { value in
+//                                    guard vm.viewMode == .overlay else { return }
+//                                    let delta = value / self.scale
+//                                    self.scale = value
+//                                    var newScale = self.currentScale * delta
+//                                    
+//                                    // Calculate maximum and minimum scales based on geometry
+//                                    let maxScaleWidth = geometry.size.width / videoWidth
+//                                    let maxScaleHeight = geometry.size.height / videoHeight
+//                                    let maxScale = min(maxScaleWidth, maxScaleHeight, 3.0) // 3.0 is an arbitrary upper limit
+//                                    let minScale: CGFloat = 0.5 // 50% of original size
+//                                    
+//                                    // Clamp the new scale
+//                                    newScale = clamp(value: newScale, min: minScale, max: maxScale)
+//                                    
+//                                    self.currentScale = newScale
+//                                    
+//                                    // Adjust currentOffset to ensure the video stays within bounds after scaling
+//                                    currentOffset.width = clamp(
+//                                        value: currentOffset.width,
+//                                        min: 0,
+//                                        max: geometry.size.width - (videoWidth * currentScale + 2)
+//                                    )
+//                                    currentOffset.height = clamp(
+//                                        value: currentOffset.height,
+//                                        min: 0,
+//                                        max: geometry.size.height - (videoHeight * currentScale)
+//                                    )
+//                                }
+////                                .onEnded { _ in
+////                                    guard vm.viewMode == .overlay else { return }
+////                                    self.scale = 1.0
+////                                }
                     )
                 }
                 .onChange(of: vm.viewMode) { _ in
