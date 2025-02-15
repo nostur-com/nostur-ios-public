@@ -39,7 +39,13 @@ struct NXPostsFeed: View {
                         .onBecomingVisible {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             vm.prefetch(nrPost)
-                            vm.allIdsSeen.insert(nrPost.shortId)
+                            if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
+                                vm.allIdsSeen.insert(nrPost.shortId)
+                            }
+                            else {
+                                let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
+                                vm.allIdsSeen.formUnion(leafIds)
+                            }
                         }
                         .onAppear {
                             onPostAppear(nrPost)
