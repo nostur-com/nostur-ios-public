@@ -37,38 +37,47 @@ struct ProfileMediaView: View {
                 }
         case .ready:
             if !vm.items.isEmpty {
-                if #available(iOS 17, *) {
-                    LazyVGrid(columns: gridColumns) {
-                        ForEach(vm.items.indices, id:\.self) { index in
+                // No longer LazyVGrid here, because in List its not Lazy. We can just make 3 by 1 rows here, container List will make it lazy.
+                ForEach(Array(stride(from: 0, to: vm.items.count, by: 3)), id: \.self) { index in
+                    HStack {
+                        Group {
                             GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index])
                                 .onBecomingVisible {
                                     vm.fetchMoreIfNeeded(index)
                                 }
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: ((dim.listWidth / 3.0) - 0.0), height: ((dim.listWidth / 3.0) - 0.0))
-                                .clipped()
-                                .aspectRatio(1, contentMode: .fit)
-                                .id(index)
+                                .onAppear {
+                                    L.og.debug("GridItemView17.onAppear {} \(index)")
+                                }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
                                 }
-                           
+                            if (index+1) < vm.items.count {
+                                GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index + 1])
+                                    .onAppear {
+                                        L.og.debug("GridItemView17.onAppear {} \(index+1)")
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index + 1))
+                                    }
+                            }
+                            if (index+2) < vm.items.count {
+                                GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index + 2])
+                                    .onAppear {
+                                        L.og.debug("GridItemView17.onAppear {} \(index+2)")
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index + 2))
+                                    }
+                            }
                         }
-                    }
-                }
-                else {
-                    LazyVGrid(columns: gridColumns) {
-                        ForEach(vm.items.indices, id:\.self) { index in
-                            GridItemView(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index])
-                                .onBecomingVisible {
-                                    vm.fetchMoreIfNeeded(index)
-                                }
-                                .clipped()
-                                .aspectRatio(1, contentMode: .fit)
-                                .id(index)
-                        }
-                    }
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: ((dim.listWidth / 3.0) - 0.0), height: ((dim.listWidth / 3.0) - 0.0))
+                        .clipped()
+                        .aspectRatio(1, contentMode: .fit)
+                    } 
                 }
             }
             else {
