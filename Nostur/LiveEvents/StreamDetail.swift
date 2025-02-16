@@ -45,7 +45,7 @@ struct StreamDetail: View {
     
     @State private var roomAddress: String? = nil
     
-    @State private var moreChatSpace: Bool = false
+    @State private var toggleReadMore: Bool = false
     
     var body: some View {
         #if DEBUG
@@ -81,7 +81,7 @@ struct StreamDetail: View {
                             }
                             
                             ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false)
-                                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : (moreChatSpace ? 400 : 150), maxHeight: .infinity)
+                                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
                                 .padding(.horizontal, 10)
                                 .environmentObject(vc)
                         }
@@ -158,47 +158,46 @@ struct StreamDetail: View {
     
     @ViewBuilder
     private var headerView: some View {
-        if liveEvent.streamHasEnded {
-            HStack {
-                Text("Session has ended")
-                    .foregroundColor(.secondary)
-            }
-        }
-        else if liveEvent.totalParticipants > 0 {
-            HStack {
-                if liveEvent.totalParticipants > 0 {
-                    Text("\(liveEvent.totalParticipants) viewers")
-                        .foregroundColor(.secondary)
-                }
-            }
-        }
-        else if let scheduledAt = liveEvent.scheduledAt {
-            HStack {
-                Image(systemName: "calendar")
-                Text(scheduledAt.formatted())
-            }
-                .padding(.top, 10)
-                .font(.footnote)
-                .foregroundColor(themes.theme.secondary)
-        }
-        
         Text(liveEvent.title ?? " ")
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
             .font(.title)
             .fontWeightBold()
             .lineLimit(2)
-//            .onVisibilityChange(perform: { isVisible in
-//                guard (!isVisible && !moreChatSpace) || (isVisible && moreChatSpace) else { return }
-//                withAnimation {
-//                    moreChatSpace = !isVisible
-//                }
-//            })
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    if liveEvent.streamHasEnded {
+                        Text("Session has ended")
+                            .foregroundColor(.secondary)
+                    }
+                    else if liveEvent.totalParticipants > 0 {
+                        Text("\(liveEvent.totalParticipants) viewers")
+                            .foregroundColor(.secondary)
+                    }
+                    else if let scheduledAt = liveEvent.scheduledAt {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text(scheduledAt.formatted())
+                        }
+                            .font(.footnote)
+                            .foregroundColor(themes.theme.secondary)
+                    }
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
         
-        if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary, !moreChatSpace {
+        if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary {
             Text(summary)
-                .lineLimit(20)
+                .lineLimit(!toggleReadMore ? 2 : 200)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    toggleReadMore.toggle()
+                }
         }
         
-        if let roomAddress, !moreChatSpace {
+        if let roomAddress {
             CopyableTextView(text: roomAddress, copyText: "nostr:" + roomAddress)
                 .foregroundColor(Color.gray)
                 .lineLimit(1)
@@ -270,7 +269,7 @@ struct StreamDetail: View {
         }
         
         // OTHERS PRESENT (ROOM PRESENCE 10312)
-        if !liveEvent.listeners.isEmpty && !moreChatSpace {
+        if !liveEvent.listeners.isEmpty {
             ScrollView(.horizontal) {
                 HFlow(alignment: .top) {
                     ForEach(liveEvent.listeners.indices, id: \.self) { index in
