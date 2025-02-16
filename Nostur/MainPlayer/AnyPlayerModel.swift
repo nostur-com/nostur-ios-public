@@ -188,13 +188,11 @@ class AnyPlayerModel: ObservableObject {
     
     /// Starts video playback.
     func playVideo() {
-//        player.play()
         isPlaying = true
     }
     
     /// Pauses video playback.
     func pauseVideo() {
-//        player.pause()
         isPlaying = false
     }
     

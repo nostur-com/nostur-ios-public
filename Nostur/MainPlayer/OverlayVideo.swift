@@ -201,7 +201,6 @@ struct OverlayVideo<Content: View>: View {
                                             vm.toggleViewMode()
                                         }
                                     })
-//                                    .padding(.top, vm.viewMode == .detailstream ? TOOLBAR_HEIGHT : 0.0)
                                     .overlay(alignment: .topLeading) { // Close button for .overlay mode
                                         Image(systemName: "multiply")
                                             .font(.title2)
@@ -216,9 +215,6 @@ struct OverlayVideo<Content: View>: View {
                                             }
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
-                                    .frame(maxHeight: avPlayerHeight) // Add +20 for Video controls padding (in .overlay)
-//                                        .frame(height: videoHeight)
-                                    .animation(.smooth, value: vm.viewMode)
                                 
                                 if vm.viewMode == .detailstream {
                                     content
