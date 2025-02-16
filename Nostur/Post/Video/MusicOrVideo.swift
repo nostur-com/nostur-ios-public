@@ -16,6 +16,7 @@ struct MusicOrVideo: View {
     public var contentPadding: CGFloat
     public var videoWidth: CGFloat
     public var thumbnail: URL?
+    public var nrPost: NRPost?
     
     enum LoadingState {
         case initializing
@@ -77,9 +78,17 @@ struct MusicOrVideo: View {
                             }
                             .overlay {
                                 Button(action: {
-                                    isPlaying = true
-                                    didStart = true
                                     sendNotification(.startPlayingVideo, url.absoluteString)
+                                    
+                                    if IS_IPHONE { // Use new player for iOS
+                                        Task {
+                                            await AnyPlayerModel.shared.loadVideo(url: url.absoluteString, availableViewModes: [.overlay], nrPost: nrPost)
+                                        }
+                                    }
+                                    else {
+                                        isPlaying = true
+                                        didStart = true
+                                    }
                                 }) {
                                     Image(systemName:"play.circle")
                                         .resizable()
@@ -110,9 +119,18 @@ struct MusicOrVideo: View {
                         Color.black
                             .overlay {
                                 Button(action: {
-                                    isPlaying = true
-                                    didStart = true
+                                    
                                     sendNotification(.startPlayingVideo, url.absoluteString)
+                                    
+                                    if IS_IPHONE { // Use new player for iOS
+                                        Task {
+                                            await AnyPlayerModel.shared.loadVideo(url: url.absoluteString, availableViewModes: [.overlay], nrPost: nrPost)
+                                        }
+                                    }
+                                    else {
+                                        isPlaying = true
+                                        didStart = true
+                                    }
                                 }) {
                                     Image(systemName:"play.circle")
                                         .resizable()
@@ -124,7 +142,7 @@ struct MusicOrVideo: View {
                             }
                     }
                 }
-                .overlay(alignment:.topTrailing) {
+                .overlay(alignment: .topTrailing) {
                     Image(systemName: "music.note")
                         .foregroundColor(.white)
                         .fontWeightBold()
