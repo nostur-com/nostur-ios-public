@@ -24,6 +24,7 @@ struct NosturVideoViewur: View {
     public var theme: Theme
     @Binding public var didStart: Bool
     public var thumbnail: URL?
+    public var nrPost: NRPost?
     
     @State private var videoState:VideoLoadingState = .initial
     @State private var videoShown = true
@@ -66,7 +67,7 @@ struct NosturVideoViewur: View {
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 }
                 else {
-                    MusicOrVideo(url: url, isPlaying: $isPlaying, isMuted: $isMuted, didStart: $didStart, fullWidth: fullWidth, contentPadding: contentPadding, videoWidth: videoWidth, thumbnail: thumbnail)
+                    MusicOrVideo(url: url, isPlaying: $isPlaying, isMuted: $isMuted, didStart: $didStart, fullWidth: fullWidth, contentPadding: contentPadding, videoWidth: videoWidth, thumbnail: thumbnail, nrPost: nrPost)
                 }
             }
             else if videoShown {
@@ -89,12 +90,10 @@ struct NosturVideoViewur: View {
                                     isPlaying = true
                                     didStart = true
                                     sendNotification(.startPlayingVideo, url.absoluteString)
-
-                                    // if is iPad
                                     
                                     if IS_IPHONE { // Use new player for iOS
                                         if let cVideo = cachedVideo {
-                                            AnyPlayerModel.shared.loadVideo(cachedVideo: cVideo)
+                                            AnyPlayerModel.shared.loadVideo(cachedVideo: cVideo, nrPost: nrPost)
                                         }
                                     }
                                 }) {

@@ -16,6 +16,7 @@ class AnyPlayerModel: ObservableObject {
     // MARK: - State Variables
     @Published var player = AVPlayer()
     @Published var isPlaying = false
+    @Published var didFinishPlaying = false // to show Like/Zap
     @Published var showsPlaybackControls = false
     
     @Published var isShown = false
@@ -38,6 +39,7 @@ class AnyPlayerModel: ObservableObject {
             }
         }
     }
+    @Published var nrPost: NRPost? = nil
     @Published var cachedVideo: CachedVideo?
     @Published var isStream = false
     
@@ -57,14 +59,23 @@ class AnyPlayerModel: ObservableObject {
             .map { $0 != 0 }
             .assign(to: \.isPlaying, on: self)
             .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
+            .sink { [self] _ in
+                player.seek(to: CMTime.zero)
+                didFinishPlaying = true
+            }
+            .store(in: &cancellables)
     }
     
     // LIVE EVENT STREAM
     @MainActor
-    public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen]) async {
+    public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen], nrPost: NRPost? = nil) async {
         
         sendNotification(.stopPlayingVideo)
         
+        self.nrPost = nil
+        self.didFinishPlaying = false
         self.isShown = true
         self.nrLiveEvent = nrLiveEvent
         self.availableViewModes = availableViewModes
@@ -87,11 +98,13 @@ class AnyPlayerModel: ObservableObject {
     
     // VIDEO URL
     @MainActor
-    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) async {
+    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil) async {
         guard let url = URL(string: url) else { return }
         
         sendNotification(.stopPlayingVideo)
         
+        self.nrPost = nrPost
+        self.didFinishPlaying = false
         self.isShown = true
         self.nrLiveEvent = nil
         self.aspect = 16/9 // reset
@@ -141,10 +154,12 @@ class AnyPlayerModel: ObservableObject {
     
     // CACHED VIDEO
     @MainActor
-    public func loadVideo(cachedVideo: CachedVideo, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay]) {
+    public func loadVideo(cachedVideo: CachedVideo, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil) {
         
         sendNotification(.stopPlayingVideo)
         
+        self.nrPost = nrPost
+        self.didFinishPlaying = false
         self.isShown = true
         self.nrLiveEvent = nil
         self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
@@ -202,8 +217,10 @@ class AnyPlayerModel: ObservableObject {
         self.player.pause()
         self.player.replaceCurrentItem(with: nil)
         self.nrLiveEvent = nil
+        self.nrPost = nil
         self.cachedVideo = nil
         self.aspect = 16/9 // reset
+        self.didFinishPlaying = false
         isPlaying = false
         isShown = false
     }

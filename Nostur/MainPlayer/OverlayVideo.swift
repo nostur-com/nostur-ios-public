@@ -172,7 +172,27 @@ struct OverlayVideo<Content: View>: View {
                         NBNavigationStack {
                             VStack(spacing: 0) {
                                 AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
-                                
+                                    .frame(maxHeight: avPlayerHeight)
+                                    .animation(.smooth, value: vm.viewMode)
+                                    .overlay {
+                                        if let nrPost = vm.nrPost, vm.didFinishPlaying {
+                                            ZStack {
+                                                Color.black.opacity(0.65)
+                                                HStack {
+                                                    LikeButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
+                                                        .foregroundColor(themes.theme.footerButtons)
+                                                    if IS_NOT_APPSTORE { // Only available in non app store version
+                                                        ZapButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
+                                                            .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                                                            .disabled(!(nrPost.contact?.anyLud ?? false))
+                                                    }
+                                                    else {
+                                                        EmptyView()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
                                     // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
                                     // so use custom .highPriorityGestureIf()

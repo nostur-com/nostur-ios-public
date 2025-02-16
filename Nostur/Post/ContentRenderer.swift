@@ -172,7 +172,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart, nrPost: nrPost)
                         //                            .fixedSize(horizontal: false, vertical: true)
                             .frame(width: scaledDimensions.width, height: scaledDimensions.height)
 //                            .debugDimensions("sd.video")
@@ -198,7 +198,7 @@ struct ContentRenderer: View { // VIEW things
                         //                            .debugDimensions()
 #endif
                         
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart)
+                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart, nrPost: nrPost)
 //                            .debugDimensions("video")
                         //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             .padding(.horizontal, fullWidth ? -10 : 0)
