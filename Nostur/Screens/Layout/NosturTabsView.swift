@@ -90,19 +90,7 @@ struct NosturTabsView: View {
                     if let visibleNest = liveKitVoiceSession.visibleNest {
                         AvailableWidthContainer {
                             StreamDetail(liveEvent: visibleNest)
-//                                .environmentObject(NRState.shared)
-//                                .environmentObject(themes)
-//                                .environmentObject(npn)
-                            //                                    .scrollContentBackgroundHidden()
                         }
-                        //                            .scrollContentBackgroundHidden()
-                        
-                        //                        .introspect(.navigationStack, on: .iOS(.v16...)) {
-                        //                            $0.viewControllers.forEach { controller in
-                        //                                controller.view.backgroundColor = .clear
-                        //                            }
-                        //                        }
-                        //                        .scrollContentBackgroundHidden()
                     }
                     else {
                         EmptyView()
