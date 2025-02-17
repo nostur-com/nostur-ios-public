@@ -82,7 +82,8 @@ struct StreamDetail: View {
                             
                             ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false)
                                 .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
-                                .padding(.horizontal, 10)
+                                .padding(.horizontal, 5)
+                                .padding(.bottom, 15)
                                 .environmentObject(vc)
                         }
                     }
@@ -160,10 +161,9 @@ struct StreamDetail: View {
     private var headerView: some View {
         Text(liveEvent.title ?? " ")
             .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .font(.title)
+            .font(.title2)
             .fontWeightBold()
-            .lineLimit(2)
+            .lineLimit(1)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     if liveEvent.streamHasEnded {
@@ -190,14 +190,13 @@ struct StreamDetail: View {
             Text(summary)
                 .lineLimit(!toggleReadMore ? 2 : 200)
                 .padding(.horizontal, 10)
-                .padding(.vertical, 5)
                 .contentShape(Rectangle())
                 .onTapGesture {
                     toggleReadMore.toggle()
                 }
         }
         
-        if let roomAddress {
+        if let roomAddress { // TODO: Move to toolbar dropdown for more chat space
             CopyableTextView(text: roomAddress, copyText: "nostr:" + roomAddress)
                 .foregroundColor(Color.gray)
                 .lineLimit(1)
