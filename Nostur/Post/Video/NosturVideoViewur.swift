@@ -119,7 +119,7 @@ struct NosturVideoViewur: View {
                         }
                         .overlay {
                             if didStart, let asset = cachedVideo?.asset {
-                                if IS_CATALYST { // Use old player for DESKTOP
+                                if !IS_IPHONE { // Use old player for DESKTOP
                                     VideoViewurRepresentable(url: url, asset: asset, isPlaying: $isPlaying, isMuted: $isMuted)
                                         .onReceive(receiveNotification(.startPlayingVideo)) { notification in
                                             let otherUrl = notification.object as! String
