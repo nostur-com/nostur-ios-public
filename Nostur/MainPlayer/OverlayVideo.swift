@@ -165,6 +165,7 @@ struct OverlayVideo<Content: View>: View {
                                     isSaving = false
                                     didSave = false
                                 }
+                                .background(Color.black) // Needed for toolbar bg
                         }
                     }
                         
