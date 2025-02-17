@@ -78,7 +78,7 @@ struct Repost: View {
             }
             else {
                 theme.background
-                    .frame(height: 175)
+                    .frame(height: 475)
             }
         }
 //        .transaction { t in t.animation = nil }
