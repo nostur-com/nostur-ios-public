@@ -119,7 +119,7 @@ struct LazyNoteMenuSheet: View {
                     Button {
                         let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
                         if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
-                            UIPasteboard.general.string = si.identifier
+                            UIPasteboard.general.string = "nostr:\(si.identifier)"
                             dismiss()
                         }
                     } label: {
@@ -135,7 +135,7 @@ struct LazyNoteMenuSheet: View {
                     .onTapGesture {
                         let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
                         if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
-                            UIPasteboard.general.string = si.identifier
+                            UIPasteboard.general.string = "nostr:\(si.identifier)"
                             dismiss()
                         }
                     }
