@@ -18,12 +18,30 @@ class NRTextParser { // TEXT things
     static let shared = NRTextParser()
     private let context = bg()
     
+    private let paragraphStyle = NSMutableParagraphStyle()
+    private var attributes: [NSAttributedString.Key: NSObject]
+    private var lastColor = Themes.default.theme.primary
+    private let emptyString = NSAttributedString(string: "")
+    
     private init() { 
         self.hashtagIcons = Self.prepareHashtagIcons()
+        self.paragraphStyle.lineBreakMode = .byWordWrapping
+        self.attributes = [
+            .font: UIFont.preferredFont(forTextStyle: .body),
+            .foregroundColor: UIColor(lastColor),
+            .paragraphStyle: paragraphStyle
+        ]
     }
 
     func parseText(fastTags: [FastTag], event: Event? = nil, text: String, primaryColor: Color? = nil) -> AttributedStringWithPs {
-        let fontColor = primaryColor ?? Themes.default.theme.primary
+        
+        if text == "\n" {
+            return AttributedStringWithPs(input: text, output: NSAttributedString(string: text), pTags: [], event: event)
+        }
+        
+        if let primaryColor, primaryColor != lastColor {
+            self.attributes[.foregroundColor] = UIColor(primaryColor)
+        }
 
         // Remove image links + Handle naddr1...
         // because they get rendered as embeds in PostDetail.
@@ -49,16 +67,6 @@ class NRTextParser { // TEXT things
         do {
             let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
             
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.lineBreakMode = .byWordWrapping
-            
-            let attributes: [NSAttributedString.Key: NSObject] = [
-                .font: UIFont.preferredFont(forTextStyle: .body),
-//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
-                .foregroundColor: UIColor(fontColor),
-                .paragraphStyle: paragraphStyle
-            ]
-            
             mutableAttributedString.addHashtagIcons()
             
             mutableAttributedString.addAttributes(
@@ -66,22 +74,10 @@ class NRTextParser { // TEXT things
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
                         
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
-            
-            return a
+            return AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
         }
         catch {
             let mutableAttributedString = NSMutableAttributedString(string: newerTextWithPs.text)
-            
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.lineBreakMode = .byWordWrapping
-            
-            let attributes: [NSAttributedString.Key: NSObject] = [
-                .font: UIFont.preferredFont(forTextStyle: .body),
-//                .font: UIFontMetrics.default.scaledFont(for: UIFont.preferredFont(forTextStyle: .body)),
-                .foregroundColor: UIColor(fontColor),
-                .paragraphStyle: paragraphStyle
-            ]
             
             mutableAttributedString.addHashtagIcons()
             
@@ -90,10 +86,9 @@ class NRTextParser { // TEXT things
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
 #if DEBUG
-            L.og.error("NRTextParser: \(error)")
+            L.og.error("NRTextParser: \(error), text was: \(newerTextWithPs.text), event: \(event?.id ?? "?")")
 #endif
-            let a = AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
-            return a
+            return AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event:event)
         }
     }
     
