@@ -72,6 +72,7 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen], nrPost: NRPost? = nil) async {
         
+        try? AVAudioSession.sharedInstance().setActive(true)
         sendNotification(.stopPlayingVideo)
         
         self.nrPost = nil
@@ -101,6 +102,7 @@ class AnyPlayerModel: ObservableObject {
     public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil) async {
         guard let url = URL(string: url) else { return }
         
+        try? AVAudioSession.sharedInstance().setActive(true)
         sendNotification(.stopPlayingVideo)
         
         self.nrPost = nrPost
@@ -156,6 +158,7 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     public func loadVideo(cachedVideo: CachedVideo, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil) {
         
+        try? AVAudioSession.sharedInstance().setActive(true)
         sendNotification(.stopPlayingVideo)
         
         self.nrPost = nrPost
