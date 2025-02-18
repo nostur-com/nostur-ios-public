@@ -284,8 +284,14 @@ struct LiveEventDetail: View {
         else if liveEvent.totalParticipants > 0 || liveKitVoiceSession.isRecording {
             HStack {
                 if liveEvent.totalParticipants > 0 {
-                    Text("\(liveEvent.totalParticipants) participants")
-                        .foregroundColor(.secondary)
+                    if liveEvent.liveKitConnectUrl == nil {
+                        Text("\(liveEvent.totalParticipants) viewers")
+                            .foregroundColor(.secondary)
+                    }
+                    else {
+                        Text("\(liveEvent.totalParticipants) participants")
+                            .foregroundColor(.secondary)
+                    }
                 }
                 if liveKitVoiceSession.isRecording {
                     RecView()
