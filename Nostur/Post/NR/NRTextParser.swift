@@ -26,6 +26,8 @@ class NRTextParser { // TEXT things
     private init() { 
         self.hashtagIcons = Self.prepareHashtagIcons()
         self.paragraphStyle.lineBreakMode = .byWordWrapping
+        self.paragraphStyle.lineHeightMultiple = 0.96
+
         self.attributes = [
             .font: UIFont.preferredFont(forTextStyle: .body),
             .foregroundColor: UIColor(lastColor),
