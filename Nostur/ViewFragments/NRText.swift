@@ -160,6 +160,7 @@ struct NRTextFixed: UIViewRepresentable {
     @Binding var accentColor: Color
     @Binding var textWidth: CGFloat
     @Binding var textHeight: CGFloat
+    private let textCutOffFixerHeight: CGFloat // to fix text cutoff need to add  some height  always as workaround
     
     init(text attributedString: Binding<NSAttributedString>, plain: Bool = false, fontColor: Binding<Color>, accentColor: Binding<Color>, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>) {
         _attributedString = attributedString
@@ -168,6 +169,7 @@ struct NRTextFixed: UIViewRepresentable {
         _accentColor = accentColor
         _textWidth = textWidth
         _textHeight = textHeight
+        textCutOffFixerHeight = 4 // Need to add 4 or sometimes text cuts off, not sure why
     }
     
     func makeUIView(context: Context) -> UITextView {
@@ -208,7 +210,7 @@ struct NRTextFixed: UIViewRepresentable {
                     with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
                     options: [.usesLineFragmentOrigin, .usesFontLeading],
                     context: nil
-                ).height
+                ).height + textCutOffFixerHeight
             }
         }
         else {
@@ -240,7 +242,7 @@ struct NRTextFixed: UIViewRepresentable {
                         with: CGSize(width: self.textWidth, height: .greatestFiniteMagnitude),
                         options: [.usesLineFragmentOrigin, .usesFontLeading],
                         context: nil
-                    ).height
+                    ).height + textCutOffFixerHeight
                 }
             }
             else {
