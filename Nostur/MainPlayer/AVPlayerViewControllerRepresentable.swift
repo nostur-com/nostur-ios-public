@@ -39,7 +39,6 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         avpc.showsPlaybackControls = true
         avpc.canStartPictureInPictureAutomaticallyFromInline = true
         avpc.updatesNowPlayingInfoCenter = true
-//        avpc.setValue(false, forKey: "canHidePlaybackControls")
         context.coordinator.avpc = avpc
 
         avpc.view.isUserInteractionEnabled = true
