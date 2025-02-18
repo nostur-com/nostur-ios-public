@@ -441,12 +441,13 @@ struct Maintenance {
         // only if contacts > 15000
         // only if WoT size > 7000
         // only older than 2 months (updated_at)
+        // not our own accounts
         
         guard WebOfTrust.shared.allowedKeysCount > 7000 else { return }
         
         // Keep imposter cache
         let frContactsWoT = Contact.fetchRequest()
-        frContactsWoT.predicate = NSPredicate(format: "updated_at < %i AND couldBeImposter == -1", Int64(monthsAgo.timeIntervalSince1970))
+        frContactsWoT.predicate = NSPredicate(format: "updated_at < %i AND couldBeImposter == -1 AND NOT pubkey IN %@", Int64(monthsAgo.timeIntervalSince1970), ownAccountPubkeys)
         
         // to keep that have private note
         let privateNotePubkeys = Set(CloudPrivateNote.fetchAll(context: context).filter { $0.pubkey != nil }.map { $0.pubkey })
