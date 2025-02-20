@@ -75,6 +75,7 @@ struct OverlayVideo<Content: View>: View {
     // State variables for saving video
     @State private var isSaving = false
     @State private var didSave = false
+    @State private var bookmarkState = false
     
     init(@ViewBuilder _ content: ()->Content) {
         self.content = content()
@@ -105,7 +106,7 @@ struct OverlayVideo<Content: View>: View {
                                         }
                                     }
                                     
-                                    // PIP BUTTON
+                                    // BOOKMARK BUTTON
                                     ToolbarItem(placement: .topBarTrailing) {
                                         if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
                                             Button("Bookmark", systemImage: bookmarkState ? "bookmark.fill" : "bookmark") {
@@ -467,6 +468,29 @@ struct OverlayVideo<Content: View>: View {
 //                    print("UIScreen.main.bounds: \(UIScreen.main.bounds.width)x\(UIScreen.main.bounds.height)")
                     if vm.viewMode != .overlay && scale != 1.0 {
                         scale = 1.0
+                    }
+                }
+                
+                
+                .onAppear {
+                    guard let nrPost = vm.nrPost else { return }
+                    if let accountCache = accountCache(), accountCache.getBookmarkColor(nrPost.id) != nil {
+                        bookmarkState = true
+                    }
+                    else if Bookmark.hasBookmark(eventId: nrPost.id, context: viewContext()) {
+                        bookmarkState = true
+                    }
+                    else {
+                        bookmarkState = false
+                    }
+                }
+                .onChange(of: bookmarkState) { newState in
+                    guard let nrPost = vm.nrPost else { return }
+                    if newState {
+                        Bookmark.addBookmark(nrPost)
+                    }
+                    else {
+                        Bookmark.removeBookmark(nrPost)
                     }
                 }
             }

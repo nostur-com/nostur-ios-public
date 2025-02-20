@@ -26,6 +26,13 @@ extension Bookmark {
         return (try? context.fetch(fr)) ?? []
     }
     
+    static func hasBookmark(eventId: String, context: NSManagedObjectContext) -> Bool {
+        let fr = Bookmark.fetchRequest()
+        fr.predicate = NSPredicate(format: "eventId == %@", eventId)
+        
+        return (try? context.fetch(fr).first) != nil        
+    }
+    
     static func fetchColor(eventId: String, context: NSManagedObjectContext) -> Color {
         let fr = Bookmark.fetchRequest()
         fr.predicate = NSPredicate(format: "eventId == %@", eventId)
