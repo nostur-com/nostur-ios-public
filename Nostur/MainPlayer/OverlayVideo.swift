@@ -314,17 +314,30 @@ struct OverlayVideo<Content: View>: View {
                                         .font(.title)
                                 }
                                 
-                                Button(action: {
-                                    if vm.isPlaying {
-                                        vm.pauseVideo()
+                                if vm.didFinishPlaying {
+                                    Button("Replay", systemImage: "memories") {
+                                        vm.replay()
                                     }
-                                    else {
-                                        vm.playVideo()
+//                                    .tint(Color.white)
+//                                    .accentColor(Color.white)
+                                    .foregroundColor(Color.white)
+                                    .font(.title)
+                                    .labelStyle(.iconOnly)
+                                    .buttonStyle(.plain)
+                                }
+                                else {
+                                    Button(action: {
+                                        if vm.isPlaying {
+                                            vm.pauseVideo()
+                                        }
+                                        else {
+                                            vm.playVideo()
+                                        }
+                                    }) {
+                                        Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
+                                            .foregroundColor(Color.white)
+                                            .font(.title)
                                     }
-                                }) {
-                                    Image(systemName: vm.isPlaying ? "pause.fill" : "play.fill")
-                                        .foregroundColor(Color.white)
-                                        .font(.title)
                                 }
                                 
                                 Button(action: vm.seekForward) {
@@ -333,6 +346,7 @@ struct OverlayVideo<Content: View>: View {
                                         .font(.title)
                                         .foregroundColor(Color.white)
                                 }
+                                    .opacity(vm.didFinishPlaying ? 0.0 : 1.0)
                             }
                             .frame(height: CONTROLS_HEIGHT)
                         }

@@ -62,7 +62,6 @@ class AnyPlayerModel: ObservableObject {
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .sink { [self] _ in
-                player.seek(to: CMTime.zero)
                 didFinishPlaying = true
             }
             .store(in: &cancellables)
@@ -211,6 +210,14 @@ class AnyPlayerModel: ObservableObject {
         let newTime = CMTimeSubtract(currentTime, CMTimeMake(value: 15, timescale: 1))
         let clampedTime = CMTimeClampToRange(newTime, range: CMTimeRange(start: .zero, duration: player.currentItem?.duration ?? CMTime.indefinite))
         player.seek(to: clampedTime)
+        didFinishPlaying = false
+    }
+    
+    @MainActor
+    func replay() {
+        didFinishPlaying = false
+        player.seek(to: .zero)
+        isPlaying = true
     }
     
     @MainActor
