@@ -188,23 +188,25 @@ class AnyPlayerModel: ObservableObject {
         }
     }
     
-    /// Starts video playback.
+    @MainActor
     func playVideo() {
         configureAudioSession()
         isPlaying = true
     }
     
-    /// Pauses video playback.
+    @MainActor
     func pauseVideo() {
         isPlaying = false
     }
     
+    @MainActor
     func seekForward() {
         let currentTime = player.currentTime()
         let newTime = CMTimeAdd(currentTime, CMTimeMake(value: 15, timescale: 1))
         player.seek(to: newTime)
     }
         
+    @MainActor
     func seekBackward() {
         let currentTime = player.currentTime()
         let newTime = CMTimeSubtract(currentTime, CMTimeMake(value: 15, timescale: 1))

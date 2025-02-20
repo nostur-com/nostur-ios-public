@@ -1896,6 +1896,9 @@
         }
       }
     },
+    "Bookmark" : {
+
+    },
     "Bookmarks" : {
       "comment" : "Navigation title for Bookmarks screen\nSide bar navigation button\nTab to switch to bookmarks",
       "localizations" : {
@@ -6620,6 +6623,9 @@
           }
         }
       }
+    },
+    "Replay" : {
+
     },
     "Replies" : {
       "comment" : "Tab title",

@@ -53,7 +53,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
-        print("updateUIViewController")
+//        print("updateUIViewController")
         if isPlaying {
             if player.timeControlStatus != .playing {
                 uiView.isUserInteractionEnabled = true

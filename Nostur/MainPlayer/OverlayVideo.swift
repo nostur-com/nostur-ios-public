@@ -91,6 +91,32 @@ struct OverlayVideo<Content: View>: View {
                         NBNavigationStack {
                             Color.black
                                 .toolbar {
+                                    // CLOSE BUTTON
+                                    ToolbarItem(placement: .topBarLeading) {
+                                        if vm.viewMode != .overlay {
+                                            Button("Close", systemImage: "multiply") {
+                                                withAnimation {
+                                                    vm.close()
+                                                }
+                                            }
+                                            .font(.title2)
+                                            .buttonStyle(.borderless)
+                                            .foregroundColor(Color.white)
+                                        }
+                                    }
+                                    
+                                    // PIP BUTTON
+                                    ToolbarItem(placement: .topBarTrailing) {
+                                        if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
+                                            Button("Bookmark", systemImage: bookmarkState ? "bookmark.fill" : "bookmark") {
+                                                bookmarkState.toggle()
+                                            }
+                                            .font(.title2)
+                                            .buttonStyle(.borderless)
+                                            .foregroundColor(Color.white)
+                                        }
+                                    }
+                                    
                                     // SAVE BUTTON
                                     ToolbarItem(placement: .topBarTrailing) {
                                         if !vm.isStream && vm.viewMode != .overlay {
@@ -126,20 +152,6 @@ struct OverlayVideo<Content: View>: View {
                                             }, primaryAction: saveAVAssetToPhotos)
                                             .disabled(isSaving)
                                             .font(.title2)
-                                            .foregroundColor(Color.white)
-                                        }
-                                    }
-                                    
-                                    // CLOSE BUTTON
-                                    ToolbarItem(placement: .topBarLeading) {
-                                        if vm.viewMode != .overlay {
-                                            Button("Close", systemImage: "multiply") {
-                                                withAnimation {
-                                                    vm.close()
-                                                }
-                                            }
-                                            .font(.title2)
-                                            .buttonStyle(.borderless)
                                             .foregroundColor(Color.white)
                                         }
                                     }
@@ -222,6 +234,20 @@ struct OverlayVideo<Content: View>: View {
                                 }
                             }
                             .toolbar {
+                                // CLOSE BUTTON
+                                ToolbarItem(placement: .topBarLeading) {
+                                    if vm.viewMode == .detailstream {
+                                        Button("Close", systemImage: "multiply") {
+                                            withAnimation {
+                                                vm.close()
+                                            }
+                                        }
+                                        .font(.title2)
+                                        .buttonStyle(.borderless)
+                                        .foregroundColor(Color.white)
+                                    }
+                                }
+                                
                                 // SAVE BUTTON
                                 ToolbarItem(placement: .topBarTrailing) {
                                     if !vm.isStream && vm.viewMode == .detailstream {
@@ -264,20 +290,6 @@ struct OverlayVideo<Content: View>: View {
                                         }, primaryAction: saveAVAssetToPhotos)
                                         .disabled(isSaving)
                                         .font(.title2)
-                                        .foregroundColor(Color.white)
-                                    }
-                                }
-                                
-                                // CLOSE BUTTON
-                                ToolbarItem(placement: .topBarLeading) {
-                                    if vm.viewMode == .detailstream {
-                                        Button("Close", systemImage: "multiply") {
-                                            withAnimation {
-                                                vm.close()
-                                            }
-                                        }
-                                        .font(.title2)
-                                        .buttonStyle(.borderless)
                                         .foregroundColor(Color.white)
                                     }
                                 }
