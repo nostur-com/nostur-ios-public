@@ -189,19 +189,34 @@ struct OverlayVideo<Content: View>: View {
                                     .frame(maxHeight: avPlayerHeight)
                                     .animation(.smooth, value: vm.viewMode)
                                     .overlay {
-                                        if let nrPost = vm.nrPost, vm.didFinishPlaying {
+                                        if vm.didFinishPlaying {
                                             ZStack {
                                                 Color.black.opacity(0.65)
-                                                HStack {
-                                                    LikeButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
-                                                        .foregroundColor(themes.theme.footerButtons)
-                                                    if IS_NOT_APPSTORE { // Only available in non app store version
-                                                        ZapButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
-                                                            .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                                                            .disabled(!(nrPost.contact?.anyLud ?? false))
+                                                VStack {
+                                                    
+                                                    if vm.viewMode != .overlay {
+                                                        Button("Replay", systemImage: "memories") {
+                                                            vm.replay()
+                                                        }
+                                                        .foregroundColor(Color.white)
+                                                        .font(.largeTitle)
+                                                        .labelStyle(.iconOnly)
+                                                        .buttonStyle(.plain)
                                                     }
-                                                    else {
-                                                        EmptyView()
+                                                    
+                                                    if let nrPost = vm.nrPost {
+                                                        HStack {
+                                                            LikeButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
+                                                                .foregroundColor(themes.theme.footerButtons)
+                                                            if IS_NOT_APPSTORE { // Only available in non app store version
+                                                                ZapButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
+                                                                    .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                                                                    .disabled(!(nrPost.contact?.anyLud ?? false))
+                                                            }
+                                                            else {
+                                                                EmptyView()
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -331,8 +346,6 @@ struct OverlayVideo<Content: View>: View {
                                     Button("Replay", systemImage: "memories") {
                                         vm.replay()
                                     }
-//                                    .tint(Color.white)
-//                                    .accentColor(Color.white)
                                     .foregroundColor(Color.white)
                                     .font(.title)
                                     .labelStyle(.iconOnly)
