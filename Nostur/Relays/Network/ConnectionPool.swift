@@ -647,10 +647,6 @@ public class ConnectionPool: ObservableObject {
             })
             .prefix(self.maxPreferredRelays) // SANITY
         {
-#if DEBUG
-            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
-#endif
-            
             if let conn = self.outboxConnections[req.key] {
                 if !conn.relayData.read {
                     conn.relayData.setRead(true)
@@ -668,6 +664,9 @@ public class ConnectionPool: ObservableObject {
                     filters: req.value.filters
                 ).json()
                 else { return }
+#if DEBUG
+            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+#endif
                 conn.sendMessage(message)
             }
             else {
@@ -682,6 +681,9 @@ public class ConnectionPool: ObservableObject {
                         filters: req.value.filters
                     ).json()
                     else { return }
+#if DEBUG
+            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+#endif
                     connection.sendMessage(message)
                 }
             }

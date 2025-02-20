@@ -293,9 +293,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             
             #if DEBUG
-            if text == "" {
-                L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-            }
             L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
             #endif
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
@@ -388,7 +385,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         // TODO: Should we handle different from didBecomeInvalidWithError or not???
         if let error {
 #if DEBUG
-            L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(error.localizedDescription)")
+            let code = (error as NSError).code
+            L.sockets.debug("🔴🔴 didCompleteWithError: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(code.description) - \(error.localizedDescription)")
 #endif
             self.didReceiveError(error)
         }
@@ -468,9 +466,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     // 54 The operation couldn’t be completed. Connection reset by peer
                     return
                 }
-                
-                L.sockets.debug("🏎️🏎️🔌🔴🔴 Error \(self.url): \(code.description) \(error.localizedDescription)")
-                
+
                 self.stats.errors += 1
                 self.stats.addErrorMessage(error.localizedDescription)
                 
