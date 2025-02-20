@@ -182,7 +182,7 @@ struct ContentRenderer: View { // VIEW things
                                 }
                             }
                             .padding(.horizontal, fullWidth ? -10 : 0)
-                            .padding(.vertical, 10)
+                            .padding(.vertical, 0)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
                             .id(index)
 //                            .withoutAnimation()
