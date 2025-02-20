@@ -160,7 +160,7 @@ struct OverlayVideo<Content: View>: View {
                                     // PIP BUTTON
                                     ToolbarItem(placement: .topBarTrailing) {
                                         if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
-                                            Button("Share", systemImage: "pip.enter") {
+                                            Button("Picture-in-Picture", systemImage: "pip.enter") {
                                                 withAnimation {
                                                     vm.toggleViewMode()
                                                 }
@@ -298,7 +298,7 @@ struct OverlayVideo<Content: View>: View {
                                 // PIP BUTTON
                                 ToolbarItem(placement: .topBarTrailing) {
                                     if vm.availableViewModes.contains(.overlay) && vm.viewMode == .detailstream {
-                                        Button("Share", systemImage: "pip.enter") {
+                                        Button("Picture-in-picture", systemImage: "pip.enter") {
                                             withAnimation {
                                                 vm.toggleViewMode()
                                             }
