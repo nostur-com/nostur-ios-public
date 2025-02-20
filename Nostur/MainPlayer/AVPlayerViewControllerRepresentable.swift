@@ -26,7 +26,9 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let avpc = AVPlayerViewController()
         
+        player.isMuted = false
         avpc.player = player
+
         avpc.exitsFullScreenWhenPlaybackEnds = false
 //        if viewMode == .fullscreen {
 //            avpc.videoGravity = .resizeAspectFill
@@ -42,6 +44,9 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         context.coordinator.avpc = avpc
 
         avpc.view.isUserInteractionEnabled = true
+        
+        try? AVAudioSession.sharedInstance().setActive(true)
+        
         return avpc.view
     }
     
@@ -52,8 +57,8 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         if isPlaying {
             if player.timeControlStatus != .playing {
                 uiView.isUserInteractionEnabled = true
-                try? AVAudioSession.sharedInstance().setActive(true)
                 player.play()
+                try? AVAudioSession.sharedInstance().setActive(true)
             }
         }
         else {

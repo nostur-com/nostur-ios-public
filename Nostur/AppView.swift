@@ -288,17 +288,17 @@ struct AppView: View {
 
     }
     
-    func configureAudioSession() {
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-        } catch {
-            L.og.error("Failed to configure audio session: \(error.localizedDescription)")
-        }
-    }
-    
     @State private var didLoad = false
     private func loadAccounts() {
         NRState.shared.loadAccountsState()
         didLoad = true
+    }
+}
+
+func configureAudioSession() {
+    do {
+        try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+    } catch {
+        L.og.error("Failed to configure audio session: \(error.localizedDescription)")
     }
 }

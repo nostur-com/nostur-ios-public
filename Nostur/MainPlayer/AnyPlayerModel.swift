@@ -191,6 +191,7 @@ class AnyPlayerModel: ObservableObject {
     
     /// Starts video playback.
     func playVideo() {
+        configureAudioSession()
         isPlaying = true
     }
     
