@@ -375,7 +375,7 @@ extension PreviewEnvironment {
                                         "c7dccba4fe4426a7b1ea239a5637ba40fab9862c8c86b3330fe65e9f667435f6",
                                         "7bdef7be22dd8e59f4600e044aa53a1cf975a9dc7d27df5833bc77db784a5805"]
             NRState.shared.loadAccount(account)
-            SettingsStore.shared.webOfTrustLevel = "WOT_OFF"
+            WebOfTrust.shared.webOfTrustLevel = SettingsStore.WebOfTrustLevel.off.rawValue
 //            return account
         }
         return true
