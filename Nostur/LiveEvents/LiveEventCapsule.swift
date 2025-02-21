@@ -58,9 +58,13 @@ struct LiveEventCapsule: View {
                        navigateTo(liveEvent)
                    }
                    else {
-                       LiveKitVoiceSession.shared.activeNest = liveEvent
-                       Task {
-                           await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
+                       if liveEvent.isLiveKit {
+                           LiveKitVoiceSession.shared.activeNest = liveEvent
+                       }
+                       else {
+                           Task {
+                               await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
+                           }
                        }
                    }
                }

@@ -37,6 +37,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     public var liveKitBaseUrl: String?
     public var streamingUrl: String?
     public var webUrl: String?
+    public var isLiveKit: Bool = false
     @Published public var status: String? {
         didSet {
             if status == "live" {
@@ -104,6 +105,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.liveKitJoinUrl = event.liveKitJoinUrl()
         self.liveKitBaseUrl = event.liveKitBaseUrl()
         self.streamingUrl = event.streamingUrl()
+        self.isLiveKit = event.isLiveKit()
         self.webUrl = event.webUrl()
         self.status = event.streamStatus()
         self.recordingUrl = event.recordingUrl()
