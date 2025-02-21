@@ -60,7 +60,6 @@ private struct VisibilityChange: ViewModifier {
                 Color.clear
                     .preference(
                         key: VisibleKey.self,
-                        // See discussion!
                         value: UIScreen.main.bounds.intersects(proxy.frame(in: .global))
                     )
                     .onPreferenceChange(VisibleKey.self) { isVisible in
@@ -75,7 +74,7 @@ private struct VisibilityChange: ViewModifier {
     }
 
     struct VisibleKey: PreferenceKey {
-        static var defaultValue: Bool = false
+        static let defaultValue: Bool = false
         static func reduce(value: inout Bool, nextValue: () -> Bool) { }
     }
 }

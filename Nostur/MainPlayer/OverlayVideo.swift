@@ -88,6 +88,7 @@ struct OverlayVideo<Content: View>: View {
         GeometryReader { geometry in
             if vm.isShown {
                 ZStack(alignment: videoAlignment) {
+                    // -- MARK: Fullscreen toolbar
                     if vm.viewMode == .fullscreen {
                         NBNavigationStack {
                             Color.black
@@ -185,10 +186,11 @@ struct OverlayVideo<Content: View>: View {
                     VStack(spacing: 0) {
                         NBNavigationStack {
                             VStack(spacing: 0) {
+                                // -- MARK: Actual video/stream ( .overlay + full + stream)
                                 AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
                                     .frame(maxHeight: avPlayerHeight)
                                     .animation(.smooth, value: vm.viewMode)
-                                    .overlay {
+                                    .overlay { // MARK: Overlay after finished playing
                                         if vm.didFinishPlaying {
                                             ZStack {
                                                 Color.black.opacity(0.65)
@@ -247,11 +249,11 @@ struct OverlayVideo<Content: View>: View {
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
                                 
-                                if vm.viewMode == .detailstream {
+                                if vm.viewMode == .detailstream { // MARK: Content for .detailstream mode
                                     content
                                 }
                             }
-                            .toolbar {
+                            .toolbar { // MARK: Toolbar for detailstream
                                 // CLOSE BUTTON
                                 ToolbarItem(placement: .topBarLeading) {
                                     if vm.viewMode == .detailstream {
@@ -336,7 +338,7 @@ struct OverlayVideo<Content: View>: View {
                             }
                         }
                         
-                        if vm.viewMode == .overlay { // Video controls for .overlay mode
+                        if vm.viewMode == .overlay { // MARK: Video controls for .overlay mode
                             HStack(spacing: 30) {
                                 Button(action: vm.seekBackward) {
                                     Image(systemName: "gobackward.15")

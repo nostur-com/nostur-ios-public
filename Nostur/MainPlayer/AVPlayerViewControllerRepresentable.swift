@@ -53,7 +53,6 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
-//        print("updateUIViewController")
         if isPlaying {
             if player.timeControlStatus != .playing {
                 uiView.isUserInteractionEnabled = true
@@ -66,15 +65,6 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
                 player.pause()
             }
         }
-        
-//        if viewMode == .fullscreen && context.coordinator.avpc?.videoGravity != .resizeAspectFill {
-//            context.coordinator.avpc?.videoGravity = .resizeAspectFill
-//        }
-//        else {
-//            context.coordinator.avpc?.videoGravity = .resizeAspect
-//        }
-        
-//        context.coordinator.avpc?.showsPlaybackControls = showsPlaybackControls
     }
     
     // MARK: - Coordinator Creation

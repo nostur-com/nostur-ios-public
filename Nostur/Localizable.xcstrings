@@ -1220,6 +1220,9 @@
         }
       }
     },
+    "add" : {
+
+    },
     "Add" : {
       "localizations" : {
         "nl" : {
@@ -1984,6 +1987,9 @@
           }
         }
       }
+    },
+    "Chat Room" : {
+
     },
     "Checked" : {
       "shouldTranslate" : false
@@ -5526,6 +5532,12 @@
         }
       }
     },
+    "Picture-in-picture" : {
+
+    },
+    "Picture-in-Picture" : {
+
+    },
     "Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
 
     },
@@ -8318,6 +8330,9 @@
           }
         }
       }
+    },
+    "Type a message" : {
+
     },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",

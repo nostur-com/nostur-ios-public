@@ -73,7 +73,7 @@ struct ProfileBanner: View {
                             image
                                 .resizable()
                                 .scaledToFill()
-                                .frame(width:width, height: BANNER_HEIGHT)
+                                .frame(width: width, height: BANNER_HEIGHT)
                                 .clipped()
                                 .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                         }
