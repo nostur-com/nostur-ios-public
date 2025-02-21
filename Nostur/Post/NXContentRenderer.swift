@@ -14,7 +14,7 @@ import Combine
 // WIP Rewrite where we remove Core Data "Event" as much as possible
 
 class ViewingContext: ObservableObject {
-    public var availableWidth: CGFloat
+    @Published public var availableWidth: CGFloat
     public var fullWidthImages: Bool
     public var theme: Theme
     
