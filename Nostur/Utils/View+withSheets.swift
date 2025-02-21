@@ -76,20 +76,26 @@ private struct WithSheets: ViewModifier {
                 fullImage = item
             }
             .fullScreenCover(item: $fullImage) { f in
-                FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem, mediaPostPreview: $mediaPostPreview)
-                    .environmentObject(themes)
-                    .environmentObject(dim)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                NBNavigationStack {
+                    FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem, mediaPostPreview: $mediaPostPreview)
+                        .environmentObject(themes)
+                        .environmentObject(dim)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                }
+                .nbUseNavigationStack(.never)
             }
             .onReceive(receiveNotification(.fullScreenView17)) { notification in
                 let item = notification.object as! FullScreenItem17
                 fullImage17 = item
             }
             .fullScreenCover(item: $fullImage17) { f in
-                GalleryFullScreenSwiper(initialIndex: f.index, items: f.items)
-                    .environmentObject(themes)
-                    .environmentObject(dim)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                NBNavigationStack {
+                    GalleryFullScreenSwiper(initialIndex: f.index, items: f.items)
+                        .environmentObject(themes)
+                        .environmentObject(dim)
+                        .presentationBackgroundCompat(themes.theme.background)
+                }
+                .nbUseNavigationStack(.never)
             }
         
             .onReceive(receiveNotification(.editingPrivateNote)) { notification in
@@ -127,6 +133,7 @@ private struct WithSheets: ViewModifier {
                     NewPrivateNoteSheet(contact: contact)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
+                        .presentationBackgroundCompat(themes.theme.background)
                 }
                 .nbUseNavigationStack(.never)
             }
@@ -141,9 +148,9 @@ private struct WithSheets: ViewModifier {
                         .environmentObject(dim)
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.background)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
             })
         
             .onReceive(receiveNotification(.showImposterDetails), perform: { notification in
@@ -155,9 +162,9 @@ private struct WithSheets: ViewModifier {
                     PossibleImposterDetail(possibleImposterPubkey: imposterDetails.pubkey, followingPubkey: imposterDetails.similarToPubkey)
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.background)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
             })
         
             .onReceive(receiveNotification(.reportContact), perform: { notification in
@@ -168,9 +175,9 @@ private struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     ReportContactSheet(contact: reportContact.contact)
                         .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.background)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
             })
         
             .onReceive(receiveNotification(.requestConfirmationChangedFollows)) { notification in
@@ -238,6 +245,7 @@ private struct WithSheets: ViewModifier {
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                                 .environmentObject(themes)
+                                .presentationBackgroundCompat(themes.theme.background)
                         }
                     }
                     else {
@@ -245,10 +253,10 @@ private struct WithSheets: ViewModifier {
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
+                            .presentationBackgroundCompat(themes.theme.background)
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
             }
         
             .sheet(item: $quoteOrRepostEvent) { event in
@@ -259,9 +267,9 @@ private struct WithSheets: ViewModifier {
                             .environmentObject(dim)
                             .presentationDetents200()
                             .presentationDragIndicatorVisible()
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                     }
                     .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 else {
                     QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
@@ -281,6 +289,7 @@ private struct WithSheets: ViewModifier {
                             ComposePostCompat(quotingEvent: quotePostEvent, onDismiss: { self.quotePostEvent = nil })
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
+                                .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                         .environmentObject(themes)
                     }
@@ -289,10 +298,10 @@ private struct WithSheets: ViewModifier {
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
             }
         
             .onReceive(receiveNotification(.showZapSheet)) { notification in
@@ -315,9 +324,9 @@ private struct WithSheets: ViewModifier {
                     AddRemoveToListsheet(contact: contact)
                         .environmentObject(themes)
                         .environment(\.managedObjectContext, viewContext)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
             }
         
         // New highlight
@@ -330,9 +339,9 @@ private struct WithSheets: ViewModifier {
                     HighlightComposer(highlight: newHighlight)
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
             }
         
         // Lazy note context menu (because Menu() on every post is slow???)
