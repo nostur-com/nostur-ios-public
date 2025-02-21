@@ -93,9 +93,43 @@ struct StreamDetail: View {
                 }
                 .frame(minHeight: geo.size.height)
             }
+            .toolbar {
+                // VIEWERS / PARTICIPANTS / ...
+                ToolbarItem(placement: .principal) {
+                    if liveEvent.streamHasEnded {
+                        Text("Session has ended")
+                            .foregroundColor(.secondary)
+                    }
+                    else if liveEvent.totalParticipants > 0 {
+                        Text("\(liveEvent.totalParticipants) viewers")
+                            .foregroundColor(.secondary)
+                    }
+                    else if let scheduledAt = liveEvent.scheduledAt {
+                        HStack {
+                            Image(systemName: "calendar")
+                            Text(scheduledAt.formatted())
+                        }
+                            .font(.footnote)
+                            .foregroundColor(themes.theme.secondary)
+                    }
+                }
+                
+                // SHARE BUTTON
+                ToolbarItem(placement: .topBarTrailing) {
+                    if let roomAddress {
+                        Button("Share", systemImage: "square.and.arrow.up") {
+                            if !IS_CATALYST && !IS_IPAD {
+                                AnyPlayerModel.shared.toggleViewMode()
                             }
+                            NRState.shared.draft = "\(liveEvent.title ?? "Watching") 👇\n\n" + "nostr:" + roomAddress
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                sendNotification(.newTemplatePost)
                             }
                         }
+                        .buttonStyle(.borderless)
+                        .foregroundColor(Color.white)
+                        .font(.title2)
+                        .offset(y: -5)
                     }
                 }
             }
@@ -174,27 +208,6 @@ struct StreamDetail: View {
             .font(.title2)
             .fontWeightBold()
             .lineLimit(1)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    if liveEvent.streamHasEnded {
-                        Text("Session has ended")
-                            .foregroundColor(.secondary)
-                    }
-                    else if liveEvent.totalParticipants > 0 {
-                        Text("\(liveEvent.totalParticipants) viewers")
-                            .foregroundColor(.secondary)
-                    }
-                    else if let scheduledAt = liveEvent.scheduledAt {
-                        HStack {
-                            Image(systemName: "calendar")
-                            Text(scheduledAt.formatted())
-                        }
-                            .font(.footnote)
-                            .foregroundColor(themes.theme.secondary)
-                    }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
         
         if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary {
             Text(summary)
@@ -212,23 +225,6 @@ struct StreamDetail: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: 140)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Share", systemImage: "square.and.arrow.up") {
-                            if !IS_CATALYST && !IS_IPAD {
-                                AnyPlayerModel.shared.toggleViewMode()
-                            }
-                            NRState.shared.draft = "\(liveEvent.title ?? "Watching") 👇\n\n" + "nostr:" + roomAddress
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                sendNotification(.newTemplatePost)
-                            }
-                        }
-                        .buttonStyle(.borderless)
-                        .foregroundColor(Color.white)
-                        .font(.title2)
-                        .offset(y: -5)
-                    }
-                }
         }
     }
     
