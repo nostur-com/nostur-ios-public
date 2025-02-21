@@ -8,18 +8,16 @@
 import SwiftUI
 import NavigationBackport
 
-struct ChatRoom<Content: View>: View {
+struct ChatRoom: View {
         
     private let aTag: String
     private let theme: Theme
     private let anonymous: Bool
-    private let content: Content?
     
-    init(aTag: String, theme: Theme, anonymous: Bool, @ViewBuilder content: ()->Content) {
+    init(aTag: String, theme: Theme, anonymous: Bool) {
         self.aTag = aTag
         self.theme = theme
         self.anonymous = anonymous
-        self.content = content()
     }
     
     @StateObject private var vm = ChatRoomViewModel()
@@ -210,7 +208,7 @@ let _ = Self._printChanges()
 //        ])
     }){
         Box {
-            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false) { }
+            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false)
                 .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, theme: Themes.default.theme, viewType: .row))
         }
     }
@@ -228,7 +226,7 @@ let _ = Self._printChanges()
         pe.loadChats()
     }){
         Box {
-            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false) { }
+            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false)
                 .padding(10)
                 .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, theme: Themes.default.theme, viewType: .row))
         }
