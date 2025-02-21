@@ -270,7 +270,7 @@ struct OverlayVideo<Content: View>: View {
                                         }
                                         .font(.title2)
                                         .buttonStyle(.borderless)
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(themes.theme.accent)
                                     }
                                 }
                                 
@@ -282,7 +282,7 @@ struct OverlayVideo<Content: View>: View {
                                                 saveAVAssetToPhotos()
                                             }
                                             .tint(Color.white)
-                                            .foregroundColor(Color.white)
+                                            .foregroundColor(themes.theme.accent)
                                             
                                             Button("Copy video URL") {
                                                 if let url = vm.cachedVideo?.url {
@@ -290,33 +290,33 @@ struct OverlayVideo<Content: View>: View {
                                                     sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
                                                 }
                                             }
-                                            .foregroundColor(Color.white)
+                                            .foregroundColor(themes.theme.accent)
                                             
                                         }, label: {
                                             if isSaving {
                                                 ProgressView()
                                                     .foregroundColor(Color.white)
-                                                    .tint(Color.white)
+                                                    .tint(themes.theme.accent)
                                                     .padding(5)
                                             }
                                             else if didSave {
                                                 Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
-                                                    .tint(Color.white)
-                                                    .foregroundColor(Color.white)
+                                                    .tint(themes.theme.accent)
+                                                    .foregroundColor(themes.theme.accent)
                                                     .padding(5)
                                                     .offset(y: -2)
                                             }
                                             else {
                                                 Image(systemName: "square.and.arrow.down")
-                                                    .tint(Color.white)
-                                                    .foregroundColor(Color.white)
+                                                    .tint(themes.theme.accent)
+                                                    .foregroundColor(themes.theme.accent)
                                                     .padding(5)
                                                     .offset(y: -6)
                                             }
                                         }, primaryAction: saveAVAssetToPhotos)
                                         .disabled(isSaving)
                                         .font(.title2)
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(themes.theme.accent)
                                     }
                                 }
                                 
@@ -330,7 +330,7 @@ struct OverlayVideo<Content: View>: View {
                                         }
                                         .font(.title2)
                                         .buttonStyle(.borderless)
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(themes.theme.accent)
                                     }
                                 }
                             }
