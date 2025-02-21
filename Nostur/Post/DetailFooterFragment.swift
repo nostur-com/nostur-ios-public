@@ -54,13 +54,8 @@ struct DetailFooterFragment: View {
             
             Spacer()
             
-            Text(nrPost.createdAt.formatted(date: .omitted, time: .shortened))
+            Text(nrPost.createdAt.formatted())
                 .lineLimit(1)
-            Text(nrPost.createdAt.formatted(
-                .dateTime
-                    .day().month(.defaultDigits)
-            ))
-            .lineLimit(1)
         }
         .onAppear {
             loadTally(footerAttributes.zapTally)
