@@ -85,6 +85,7 @@ struct ProfileBanner: View {
                                     endPoint: .top
                                 )
                                 .frame(width: width, height: BANNER_HEIGHT)
+                                .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                             }
                         }
                     }
@@ -99,7 +100,7 @@ struct ProfileBanner: View {
                         endPoint: .top
                     )
                     .frame(width: width, height: BANNER_HEIGHT)
-                    //                        .scaleEffect(1 + max(0,offset / BANNER_HEIGHT ), anchor: .bottom)
+                    .scaleEffect(1 + max(0, geoBanner.frame(in:.global).minY / BANNER_HEIGHT ), anchor: .bottom)
                 }
             }
         }
