@@ -199,11 +199,14 @@ class AnyPlayerModel: ObservableObject {
     func playVideo() {
         configureAudioSession()
         isPlaying = true
+        player.play()
+        try? AVAudioSession.sharedInstance().setActive(true)
     }
     
     @MainActor
     func pauseVideo() {
         isPlaying = false
+        player.pause()
     }
     
     @MainActor

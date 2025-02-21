@@ -53,17 +53,8 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
-        if isPlaying {
-            if player.timeControlStatus != .playing {
-                uiView.isUserInteractionEnabled = true
-                player.play()
-                try? AVAudioSession.sharedInstance().setActive(true)
-            }
-        }
-        else {
-            if player.timeControlStatus == .playing {
-                player.pause()
-            }
+        if isPlaying && player.timeControlStatus == .paused {
+            player.play()
         }
     }
     
