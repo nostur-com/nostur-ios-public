@@ -20,7 +20,8 @@ struct OverlayVideo<Content: View>: View {
     
     private var videoHeight: CGFloat {
         if vm.viewMode == .detailstream {
-            return UIScreen.main.bounds.height / 3
+            // 3rd of screen height or video height if smaller
+            return min(UIScreen.main.bounds.height / 3, videoWidth / vm.aspect)
         }
         return min(videoWidth / vm.aspect, UIScreen.main.bounds.height - 160) // TODO: Fix magic number 160 or make sure its correct. This fixes "close" button and toolbar missing because video height is too high
     }
@@ -37,7 +38,8 @@ struct OverlayVideo<Content: View>: View {
             return videoHeight
         }
         if vm.viewMode == .detailstream {
-            return UIScreen.main.bounds.height / 3
+            // 3rd of screen height or video height if smaller
+            return min(UIScreen.main.bounds.height / 3, videoWidth / vm.aspect)
         }
         return videoHeight
     }
