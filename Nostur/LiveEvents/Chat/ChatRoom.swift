@@ -375,6 +375,12 @@ struct ChatMessageRow: View {
                 if !nrChat.missingPs.isEmpty {
                     bg().perform {
                         QueuedFetcher.shared.enqueue(pTags: nrChat.missingPs)
+                        if let nrContact = nrChat.contact {
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                        }
+                        else {
+                            navigateTo(ContactPath(key: nrChat.pubkey))
+                        }
                     }
                 }
             }
