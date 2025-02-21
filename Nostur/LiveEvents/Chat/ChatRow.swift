@@ -16,7 +16,7 @@ struct ChatRow: View {
     var body: some View {
         switch content {
             case .chatConfirmedZap(let confirmedZap):
-                VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 0) {
                     HStack {
                         
                         HStack {
@@ -76,7 +76,6 @@ struct ChatRow: View {
                     NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, didStart: $didStart)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .frame(maxHeight: 450, alignment: .top)
-//                        .padding(.leading, 10)
                         .onAppear {
             //                        if !zapFromAttributes.missingPs.isEmpty {
             //                            bg().perform {

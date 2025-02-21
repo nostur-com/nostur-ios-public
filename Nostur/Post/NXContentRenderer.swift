@@ -76,7 +76,6 @@ struct NXContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-//            Text("vc.availableWidth: \(vc.availableWidth.description)")
             switch viewState {
             case .loading:
                 ProgressView()
@@ -165,16 +164,6 @@ struct NXContentRenderer: View { // VIEW things
                             }
                             .id(index)
                     case .text(let attributedStringWithPs): // For text notes
-                        //                    Color.red
-                        //                        .frame(height: 50)
-                        //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
-                        //                    Text(verbatim: attributedStringWithPs.input)
-                        //                        .font(.system(.body, design: .monospaced))
-                        //                        .onTapGesture {
-                        //                            guard !isDetail else { return }
-                        //                            navigateTo(nrPost)
-                        //                        }
-                        //                        .id(index)
                         NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: vc.availableWidth, isScreenshot: vc.isScreenshot, isPreview: vc.isPreview)
                             .equatable()
                             .onTapGesture {

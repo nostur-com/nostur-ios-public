@@ -488,7 +488,6 @@ struct OverlayVideo<Content: View>: View {
                     )
                 }
                 .onChange(of: vm.viewMode) { _ in
-//                    print("UIScreen.main.bounds: \(UIScreen.main.bounds.width)x\(UIScreen.main.bounds.height)")
                     if vm.viewMode != .overlay && scale != 1.0 {
                         scale = 1.0
                     }

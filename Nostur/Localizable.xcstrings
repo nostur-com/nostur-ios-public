@@ -1220,9 +1220,6 @@
         }
       }
     },
-    "add" : {
-
-    },
     "Add" : {
       "localizations" : {
         "nl" : {
@@ -1988,9 +1985,6 @@
         }
       }
     },
-    "Chat Room" : {
-
-    },
     "Checked" : {
       "shouldTranslate" : false
     },
@@ -2121,6 +2115,9 @@
           }
         }
       }
+    },
+    "Collapse" : {
+
     },
     "Color Blue" : {
       "extractionState" : "stale",
@@ -3393,6 +3390,9 @@
           }
         }
       }
+    },
+    "Expand" : {
+
     },
     "Expired" : {
       "comment" : "Button of an expired lightning invoice (disabled)",
@@ -8330,9 +8330,6 @@
           }
         }
       }
-    },
-    "Type a message" : {
-
     },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",

@@ -60,40 +60,6 @@ struct LiveEventsBanner: View {
                 }
             }
         })
-//        .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in
-//            NBNavigationStack {
-//                LiveEventDetail(liveEvent: visibleNest)
-//                    .toolbar {
-//                        ToolbarItem(placement: .cancellationAction) {
-//                            if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
-//                                Button("Leave") {
-//                                    LiveKitVoiceSession.shared.activeNest = nil
-//                                    LiveKitVoiceSession.shared.visibleNest = nil
-//                                }
-//                            }
-//                            else {
-//                                Button("Close") {
-//                                    LiveKitVoiceSession.shared.activeNest = nil
-//                                    LiveKitVoiceSession.shared.visibleNest = nil
-//                                }
-//                            }
-//                        }
-//                        
-//                        ToolbarItem(placement: .primaryAction) {
-//                            if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
-//                                Button("Minimize") {
-//                                    LiveKitVoiceSession.shared.visibleNest = nil
-//                                }
-//                            }
-//                        }
-//                    }
-//                    .environmentObject(NRState.shared)
-//                    .environmentObject(themes)
-//                    .environmentObject(npn)
-//                    .presentationBackgroundCompat(themes.theme.listBackground)
-//            }
-//            .nbUseNavigationStack(.never)
-//        }
     }
     
     private func remove(_ aTag: String) {
