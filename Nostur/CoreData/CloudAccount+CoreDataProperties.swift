@@ -101,7 +101,6 @@ extension CloudAccount {
         }
     }
     
-    // 20.00 ms    0.1%    10.00 ms                 CloudAccount.privateFollowingPubkeys.getter
     var followingPubkeys: Set<String> {
         get {
             if !followingPubkeysCache.isEmpty { return followingPubkeysCache }

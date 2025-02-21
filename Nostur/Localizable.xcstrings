@@ -4300,7 +4300,6 @@
       }
     },
     "Leave" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4711,7 +4710,6 @@
       }
     },
     "Minimize" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
