@@ -204,24 +204,24 @@ struct FullImageViewer: View {
                 }
             }
         }
-        .overlay(alignment: .topTrailing) {
-            HStack {
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button("Close", systemImage: "multiply") {
+                    dismiss()
+                }
+                .font(.title2)
+                .buttonStyle(.borderless)
+                .foregroundColor(themes.theme.accent)
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
                 if let sharableImage {
                     ShareMediaButton(sharableImage: sharableImage)
                 }
                 else if let sharableGif {
                     ShareGifButton(sharableGif: sharableGif)
                 }
-                Image(systemName: "xmark.circle.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 30, height: 30)
-                    .onTapGesture {
-                        dismiss()
-                    }
-                    .zIndex(10)
             }
-            .padding(10)
         }
     }
 }
