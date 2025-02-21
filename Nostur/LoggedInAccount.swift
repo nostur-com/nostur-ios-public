@@ -171,7 +171,8 @@ class LoggedInAccount: ObservableObject {
             FollowingGuardian.shared.didReceiveContactListThisSession = false
         }
         
-        let follows = account.getFollowingPublicKeys(includeBlocked: true) // if we do this in bg.perform it loads too late for other views
+        let follows = account.getFollowingPublicKeys(includeBlocked: true)
+            .union(account.privateFollowingPubkeys) // if we do this in bg.perform it loads too late for other views
         self.viewFollowingPublicKeys = follows
         
         // Remove currently active "Following" subscriptions from connected sockets
@@ -234,6 +235,7 @@ class LoggedInAccount: ObservableObject {
         self.bg.perform { [weak self] in
             guard let self, let bgAccount = self.bgAccount else { return }
             self.followingPublicKeys = bgAccount.getFollowingPublicKeys(includeBlocked: true)
+                .union(account.privateFollowingPubkeys)
             self.followingCache = bgAccount.loadFollowingCache()
         
             DispatchQueue.main.async { [weak self] in
