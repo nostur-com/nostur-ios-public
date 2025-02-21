@@ -243,14 +243,9 @@ extension View {
     }
     
     @ViewBuilder
-    func highPriorityGestureIf(condition: Bool, onTap: @escaping () -> Void) -> some View {
+    func highPriorityGestureIf<T>(condition: Bool, gesture: T) -> some View where T : Gesture {
         if condition {
-            self.highPriorityGesture(
-                TapGesture()
-                    .onEnded { _ in
-                        onTap()
-                    }
-            )
+            self.highPriorityGesture(gesture)
         }
         else {
             self

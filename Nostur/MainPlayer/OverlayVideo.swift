@@ -225,11 +225,13 @@ struct OverlayVideo<Content: View>: View {
                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
                                     // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
                                     // so use custom .highPriorityGestureIf()
-                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, onTap: {
-                                        withAnimation {
-                                            vm.toggleViewMode()
+                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture: TapGesture()
+                                            .onEnded {
+                                                withAnimation {
+                                                    vm.toggleViewMode()
+                                                }
                                         }
-                                    })
+                                    )
                                     .overlay(alignment: .topLeading) { // Close button for .overlay mode
                                         Image(systemName: "multiply")
                                             .font(.title2)
@@ -390,7 +392,7 @@ struct OverlayVideo<Content: View>: View {
                         x: clampedOffsetX(geometry: geometry),
                         y: clampedOffsetY(geometry: geometry) - (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
-                    .highPriorityGesture(
+                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture:
                         DragGesture()
                             .onChanged { value in
                                 guard vm.viewMode == .overlay else { return }
