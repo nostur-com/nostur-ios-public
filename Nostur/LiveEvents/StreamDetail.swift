@@ -52,44 +52,54 @@ struct StreamDetail: View {
         let _ = Self._printChanges()
         #endif
             GeometryReader { geo in
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if let vc {
-                            VStack {
-                                headerView
-                                
-                                participantsView
-                                    .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
-                                        let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
-                                        guard zapCustomizerSheetInfo.zapAtag != nil else { return }
-                                        self.showZapSheet = true
-                                        self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
-                                    }
-                                    .onReceive(receiveNotification(.showZapSheet)) { notification in
-                                        let paymentInfo = notification.object as! PaymentInfo
-                                        guard paymentInfo.zapAtag != nil else { return }
-                                        self.paymentInfo = paymentInfo
-                                        self.showNonNWCZapSheet = true
-                                    }
-                                
-                                videoStreamView
-//                                    .background(themes.theme.background)
-                            }
-                            .onTapGesture {
-                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                                                to: nil, from: nil, for: nil)
-                            }
+                VStack(spacing: 0) {
+                    if let vc {
+                        VStack {
+                            videoStreamView
+                                    .background(themes.theme.background)
+                        }
+                        .onTapGesture {
+                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                            to: nil, from: nil, for: nil)
+                        }
+                        
+                        ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false) {
                             
-                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false)
-                                .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
-                                .padding(.horizontal, 5)
-                                .padding(.bottom, 15)
-                                .environmentObject(vc)
+                            // Top Section above Chat rows:
+                            
+                            headerView
+                            
+                            participantsView
+                                .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
+                                    let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
+                                    guard zapCustomizerSheetInfo.zapAtag != nil else { return }
+                                    self.showZapSheet = true
+                                    self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+                                }
+                                .onReceive(receiveNotification(.showZapSheet)) { notification in
+                                    let paymentInfo = notification.object as! PaymentInfo
+                                    guard paymentInfo.zapAtag != nil else { return }
+                                    self.paymentInfo = paymentInfo
+                                    self.showNonNWCZapSheet = true
+                                }
+                            
+                            
+                        }
+                            .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
+                            .padding(.horizontal, 5)
+                            .padding(.bottom, 15)
+                            .environmentObject(vc)
+                    }
+                }
+                .frame(minHeight: geo.size.height)
+            }
+                            }
+                            }
                         }
                     }
-                    .frame(minHeight: geo.size.height)
                 }
             }
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if let relaysTag = liveEvent.nEvent.fastTags.first(where: { $0.0 == "relays" }) {
                     var relays: [String] = [normalizeRelayUrl(relaysTag.1)]

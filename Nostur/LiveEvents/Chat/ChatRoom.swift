@@ -8,13 +8,19 @@
 import SwiftUI
 import NavigationBackport
 
-struct ChatRoom: View {
+struct ChatRoom<Content: View>: View {
+        
+    private let aTag: String
+    private let theme: Theme
+    private let anonymous: Bool
+    private let content: Content?
     
-    @EnvironmentObject private var themes: Themes
-    
-    public let aTag: String
-    public let theme: Theme
-    public let anonymous: Bool
+    init(aTag: String, theme: Theme, anonymous: Bool, @ViewBuilder content: ()->Content) {
+        self.aTag = aTag
+        self.theme = theme
+        self.anonymous = anonymous
+        self.content = content()
+    }
     
     @StateObject private var vm = ChatRoomViewModel()
     @Namespace private var bottom
@@ -61,7 +67,7 @@ let _ = Self._printChanges()
                                 else {
                                     ForEach(vm.messages) { rowContent in
                                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                                            ChatRow(content: rowContent, theme: themes.theme)
+                                            ChatRow(content: rowContent, theme: theme)
                                         }
 //                                            .debugDimensions("ChatRow")
 //                                            .frame(width: 650)
@@ -106,6 +112,15 @@ let _ = Self._printChanges()
                                     .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
                             }
+                            
+                            // HEADER: (flip flip)
+                            Section {
+                                content
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(.init(Color.clear))
+                                    .listRowInsets(.none)
+                            }
+                            .scaleEffect(x: 1, y: -1, anchor: .center)
                         }
                         .scrollContentBackgroundHidden()
                         .listStyle(.plain)
@@ -119,6 +134,9 @@ let _ = Self._printChanges()
                         .onTapGesture {
                             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                                 to: nil, from: nil, for: nil)
+                        }
+                        .onAppear {
+                            try? vm.start(aTag: aTag)
                         }
                         
                         if !anonymous {
@@ -247,7 +265,7 @@ let _ = Self._printChanges()
 //        ])
     }){
         Box {
-            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false)
+            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false) { }
         }
     }
 }
@@ -264,7 +282,7 @@ let _ = Self._printChanges()
         pe.loadChats()
     }){
         Box {
-            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false)
+            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false) { }
                 .padding(10)
         }
     }
