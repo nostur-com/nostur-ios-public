@@ -337,19 +337,30 @@ struct ChatMessageRow: View {
                         .onTapGesture {
                             if let nrContact = nrChat.contact {
                                 navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                    .onTapGesture {
+                        if IS_IPHONE {
+                            if AnyPlayerModel.shared.viewMode == .detailstream {
+                                AnyPlayerModel.shared.viewMode = .overlay
                             }
-                            else {
-                                navigateTo(ContactPath(key: nrChat.pubkey))
+                            else if LiveKitVoiceSession.shared.visibleNest != nil {
+                                LiveKitVoiceSession.shared.visibleNest = nil
                             }
                         }
                     Text(nrChat.anyName ?? "...")
                         .foregroundColor(themes.theme.accent)
-                        .onTapGesture {
-                            if let nrContact = nrChat.contact {
-                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                        if let nrContact = nrChat.contact {
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                        }
+                        else {
+                            navigateTo(ContactPath(key: nrChat.pubkey))
+                        }
+                    .onTapGesture {
+                        if IS_IPHONE {
+                            if AnyPlayerModel.shared.viewMode == .detailstream {
+                                AnyPlayerModel.shared.viewMode = .overlay
                             }
-                            else {
-                                navigateTo(ContactPath(key: nrChat.pubkey))
+                            else if LiveKitVoiceSession.shared.visibleNest != nil {
+                                LiveKitVoiceSession.shared.visibleNest = nil
                             }
                         }
                     Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
