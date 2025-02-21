@@ -39,93 +39,60 @@ let _ = Self._printChanges()
                     VStack(spacing: 0) {
                         List {
                             switch vm.state {
-                            case .initializing:
-                                CenteredProgressView()
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(.init(Color.clear))
-                                    .scaleEffect(x: 1, y: -1, anchor: .center)
-                                    .onAppear {
-                                        try? vm.start(aTag: aTag)
-                                    }
-                            case .loading:
-                                CenteredProgressView()
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(.init(Color.clear))
-                                    .scaleEffect(x: 1, y: -1, anchor: .center)
-                            case .ready:
-                                if vm.messages.isEmpty {
-                                    VStack {
-                                        Spacer()
-                                        Text("Welcome to the chat")
-                                    }
+                                case .initializing:
+                                    CenteredProgressView()
+                                        .listRowSeparator(.hidden)
+                                        .listRowBackground(.init(Color.clear))
+                                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                                case .loading:
+                                    CenteredProgressView()
+                                        .listRowSeparator(.hidden)
+                                        .listRowBackground(.init(Color.clear))
+                                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                                case .ready:
+                                    if vm.messages.isEmpty {
+                                        VStack {
+                                            Spacer()
+                                            Text("Welcome to the chat")
+                                            Spacer()
+                                        }
                                         .scaleEffect(x: 1, y: -1, anchor: .center)
                                         .centered()
                                         .listRowInsets(.init())
                                         .listRowSeparator(.hidden)
                                         .listRowBackground(.init(Color.clear))
-                                }
-                                else {
-                                    ForEach(vm.messages) { rowContent in
-                                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                                            ChatRow(content: rowContent, theme: theme)
-                                        }
-//                                            .debugDimensions("ChatRow")
-//                                            .frame(width: 650)
-//#if DEBUG
-////                                            .background(Color.red)
-//                                            .overlay {
-//                                                VStack {
-//                                                    Text(rowContent.nxEvent.kind.description)
-//                                                    Text(rowContent.nxEvent.pubkey)
-//                                                    Text(rowContent.id)
-//                                                }
-//                                                    .onTapGesture {
-//                                                        UIPasteboard.general.string = rowContent.id
-//                                                    }
-//                                            }
-//#endif
-//#if DEBUG
-//                                            .overlay(alignment: .topTrailing) {
-//                                                Text(nrChat.nEvent.kind.id.description)
-//                                                    .onTapGesture {
-//                                                        UIPasteboard.general.string = nrChat.nEvent.eventJson()
-//                                                    }
-//                                            }
-//#endif
+                                    }
+                                    else {
+                                        ForEach(vm.messages) { rowContent in
+                                            ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                                                ChatRow(content: rowContent, theme: theme)
+                                            }
                                             .padding(.vertical, 5)
                                             .scaleEffect(x: 1, y: -1, anchor: .center)
+                                        }
+                                        .listRowInsets(.init())
+                                        .listRowSeparator(.hidden)
+                                        .listRowBackground(.init(Color.clear))
                                     }
-                                    .listRowInsets(.init())
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(.init(Color.clear))
-                                }
-                            case .timeout:
-                                VStack {
-                                    Text("timeout")
-                                }
+                                case .timeout:
+                                    VStack {
+                                        Text("timeout")
+                                    }
                                     .listRowSeparator(.hidden)
                                     .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
-                            case .error(let string):
-                                Text(string)
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(.init(Color.clear))
-                                    .scaleEffect(x: 1, y: -1, anchor: .center)
-                            }
-                            
-                            // HEADER: (flip flip)
-                            Section {
-                                content
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(.init(Color.clear))
-                                    .listRowInsets(.none)
-                            }
-                            .scaleEffect(x: 1, y: -1, anchor: .center)
+                                case .error(let string):
+                                    Text(string)
+                                        .listRowSeparator(.hidden)
+                                        .listRowBackground(.init(Color.clear))
+                                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                                }
                         }
                         .scrollContentBackgroundHidden()
                         .listStyle(.plain)
                         .safeAreaScroll()
                         .scaleEffect(x: 1, y: -1, anchor: .center)
+                        .padding(.top, 30)
                         .onChange(of: vm.state) { newValue in
                             if newValue == .ready {
                                 proxy.scrollTo(bottom)
@@ -244,10 +211,11 @@ let _ = Self._printChanges()
     }){
         Box {
             ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false) { }
+                .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, theme: Themes.default.theme, viewType: .row))
         }
     }
 }
-#Preview {
+#Preview("Chats and 1 zap") {
     PreviewContainer({ pe in
         pe.parseMessages([
             ###"["EVENT","e",{"kind":30311,"id":"75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7","pubkey":"cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5","created_at":1721669595,"tags":[["d","82d27633-1dd1-4b38-8f9d-f6ab9b31fc83"],["title","Fiatjaf \u0026 utxo play dominion"],["summary","Come watch this very exciting game"],["image","https://dvr.zap.stream/zap-stream-dvr/82d27633-1dd1-4b38-8f9d-f6ab9b31fc83/thumb.jpg?AWSAccessKeyId=2gmV0suJz4lt5zZq6I5J\u0026Expires=33278578238\u0026Signature=X4Jo1oAm5pIg0YZ40CobUUdpD2A%3D"],["status","ended"],["p","e2ccf7cf20403f3f2a4a55b328f0de3be38558a7d5f33632fdaaefc726c1c8eb","","host"],["relays","wss://relay.snort.social","wss://nos.lol","wss://relay.damus.io","wss://relay.nostr.band","wss://nostr.land","wss://nostr-pub.wellorder.net","wss://nostr.wine","wss://relay.nostr.bg","wss://nostr.oxtr.dev"],["starts","1721664799"],["service","https://api.zap.stream/api/nostr"],["recording","https://data.zap.stream/recording/82d27633-1dd1-4b38-8f9d-f6ab9b31fc83.m3u8"],["ends","1721669595"]],"content":"","sig":"3f03a0de44dd2eec8dd045d5dd2242d1558f2af7719955e9ceb300c4ee14f26e4a170b13db923fb313bf4fd5d2c60be344f7901ea3ef5dd7f0fcb8df908b8b21"}]"###,
@@ -262,6 +230,7 @@ let _ = Self._printChanges()
         Box {
             ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false) { }
                 .padding(10)
+                .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, theme: Themes.default.theme, viewType: .row))
         }
     }
 }
@@ -274,69 +243,9 @@ struct ChatMessageRow: View {
     @State private var didStart = false
     
     var body: some View {
-        switch nrChat.nEvent.kind {
-//        case .zapNote:
-//            if let zapFromAttributes = nrChat.zapFromAttributes {
-//                VStack(alignment: .leading, spacing: 0) {
-//                    HStack {
-//                        HStack {
-//                            Image(systemName: "bolt.fill").foregroundColor(.yellow)
-//                                .onTapGesture {
-//                                    UIPasteboard.general.string = "zapFrom:\n\(zapFromAttributes.nEvent.eventJson())\n\nzap:\n\(nrChat.nEvent.eventJson())"
-//                                }
-//                            Text((nrChat.sats?.satsFormatted ?? "") + " sats")
-//                                .fontWeightBold()
-//                        }
-//                        .padding(.vertical, 5)
-//                        .padding(.horizontal, 10)
-//                        .foregroundColor(Color.white)
-//                        .background {
-//                            themes.theme.accent
-//                                .clipShape(Capsule())
-//                        }
-//                        MiniPFP(pictureUrl: zapFromAttributes.contact?.pictureUrl)
-//                            .onTapGesture {
-//                                if let nrContact = zapFromAttributes.contact {
-//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-//                                }
-//                                else {
-//                                    navigateTo(ContactPath(key: zapFromAttributes.pubkey))
-//                                }
-//                            }
-//                        Text(zapFromAttributes.anyName ?? "...")
-//                            .onTapGesture {
-//                                if let nrContact = zapFromAttributes.contact {
-//                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-//                                }
-//                                else {
-//                                    navigateTo(ContactPath(key: zapFromAttributes.pubkey))
-//                                }
-//                            }
-//                        Ago(zapFromAttributes.created_at)
-//                            .foregroundColor(themes.theme.secondary)
-//                    }
-//                    .foregroundColor(themes.theme.accent)
-//                    ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth - 10, forceAutoload: false, theme: themes.theme, didStart: $didStart)
-//                        .frame(maxWidth: .infinity, alignment: .leading)
-//                        .frame(maxHeight: 450, alignment: .top)
-//                        .padding(.leading, 10)
-//                    
-//                }
-//                .onAppear {
-//                    if !zapFromAttributes.missingPs.isEmpty {
-//                        bg().perform {
-//                            QueuedFetcher.shared.enqueue(pTags: zapFromAttributes.missingPs)
-//                        }
-//                    }
-//                }
-//            }
-        default:
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    MiniPFP(pictureUrl: nrChat.contact?.pictureUrl)
-                        .onTapGesture {
-                            if let nrContact = nrChat.contact {
-                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                MiniPFP(pictureUrl: nrChat.contact?.pictureUrl)
                     .onTapGesture {
                         if IS_IPHONE {
                             if AnyPlayerModel.shared.viewMode == .detailstream {
@@ -346,35 +255,6 @@ struct ChatMessageRow: View {
                                 LiveKitVoiceSession.shared.visibleNest = nil
                             }
                         }
-                    Text(nrChat.anyName ?? "...")
-                        .foregroundColor(themes.theme.accent)
-                        if let nrContact = nrChat.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                        }
-                        else {
-                            navigateTo(ContactPath(key: nrChat.pubkey))
-                        }
-                    .onTapGesture {
-                        if IS_IPHONE {
-                            if AnyPlayerModel.shared.viewMode == .detailstream {
-                                AnyPlayerModel.shared.viewMode = .overlay
-                            }
-                            else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                LiveKitVoiceSession.shared.visibleNest = nil
-                            }
-                        }
-                    Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
-                }
-                ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(maxHeight: 450, alignment: .top)
-                
-//                Text("dim.listWidth: \(dim.listWidth.description)")
-            }
-            .onAppear {
-                if !nrChat.missingPs.isEmpty {
-                    bg().perform {
-                        QueuedFetcher.shared.enqueue(pTags: nrChat.missingPs)
                         if let nrContact = nrChat.contact {
                             navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
                         }
@@ -382,6 +262,35 @@ struct ChatMessageRow: View {
                             navigateTo(ContactPath(key: nrChat.pubkey))
                         }
                     }
+                Text(nrChat.anyName ?? "...")
+                    .foregroundColor(themes.theme.accent)
+                    .onTapGesture {
+                        if IS_IPHONE {
+                            if AnyPlayerModel.shared.viewMode == .detailstream {
+                                AnyPlayerModel.shared.viewMode = .overlay
+                            }
+                            else if LiveKitVoiceSession.shared.visibleNest != nil {
+                                LiveKitVoiceSession.shared.visibleNest = nil
+                            }
+                        }
+                        
+                        if let nrContact = nrChat.contact {
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                        }
+                        else {
+                            navigateTo(ContactPath(key: nrChat.pubkey))
+                        }
+                    }
+                Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
+            }
+            ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxHeight: 450, alignment: .top)
+        }
+        .onAppear {
+            if !nrChat.missingPs.isEmpty {
+                bg().perform {
+                    QueuedFetcher.shared.enqueue(pTags: nrChat.missingPs)
                 }
             }
         }

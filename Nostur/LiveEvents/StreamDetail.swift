@@ -46,11 +46,14 @@ struct StreamDetail: View {
     @State private var roomAddress: String? = nil
     
     @State private var toggleReadMore: Bool = false
+    @State private var contentExpanded: Bool = false
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
+        if apm.viewMode == .detailstream {
             GeometryReader { geo in
                 VStack(spacing: 0) {
                     if let vc {
@@ -63,35 +66,54 @@ struct StreamDetail: View {
                                                             to: nil, from: nil, for: nil)
                         }
                         
-                        ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false) {
-                            
-                            // Top Section above Chat rows:
-                            
-                            headerView
-                            
-                            participantsView
-                                .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
-                                    let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
-                                    guard zapCustomizerSheetInfo.zapAtag != nil else { return }
-                                    self.showZapSheet = true
-                                    self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
-                                }
-                                .onReceive(receiveNotification(.showZapSheet)) { notification in
-                                    let paymentInfo = notification.object as! PaymentInfo
-                                    guard paymentInfo.zapAtag != nil else { return }
-                                    self.paymentInfo = paymentInfo
-                                    self.showNonNWCZapSheet = true
-                                }
-                            
-                            
-                        }
+                        ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false) { }
                             .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
                             .padding(.horizontal, 5)
                             .padding(.bottom, 15)
                             .environmentObject(vc)
+                        
+                            .overlay(alignment: .top) {
+                                VStack {
+                                    headerView
+                                        .frame(maxWidth: .infinity)
+                                    
+                                    if contentExpanded {
+                                        participantsView
+                                            .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
+                                                let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo
+                                                guard zapCustomizerSheetInfo.zapAtag != nil else { return }
+                                                self.showZapSheet = true
+                                                self.zapCustomizerSheetInfo = zapCustomizerSheetInfo
+                                            }
+                                            .onReceive(receiveNotification(.showZapSheet)) { notification in
+                                                let paymentInfo = notification.object as! PaymentInfo
+                                                guard paymentInfo.zapAtag != nil else { return }
+                                                self.paymentInfo = paymentInfo
+                                                self.showNonNWCZapSheet = true
+                                            }
+                                    }
+                                }
+                                .background(.ultraThinMaterial)
+                                .overlay(alignment: !contentExpanded ? .topTrailing : .bottomTrailing) {
+                                    Button {
+                                        contentExpanded.toggle()
+                                    } label: {
+                                        Image(systemName: !contentExpanded ? "chevron.down" : "chevron.up")
+                                            .padding()
+                                            .contentShape(Rectangle())
+                                    }
+                                    .accessibilityHint(contentExpanded ? "Collapse" : "Expand")
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            
+                            
                     }
                 }
                 .frame(minHeight: geo.size.height)
+                .onAppear {
+                    vc = ViewingContext(availableWidth: UIScreen.main.bounds.width - 10, fullWidthImages: false, theme: themes.theme, viewType: .row)
+                }
             }
             .toolbar {
                 // VIEWERS / PARTICIPANTS / ...
@@ -127,7 +149,7 @@ struct StreamDetail: View {
                             }
                         }
                         .buttonStyle(.borderless)
-                        .foregroundColor(Color.white)
+                        .foregroundColor(themes.theme.accent)
                         .font(.title2)
                         .offset(y: -5)
                     }
@@ -151,8 +173,6 @@ struct StreamDetail: View {
                         roomAddress = bech32
                     }
                 }
-                
-                vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
             }
             .background(.ultraThinMaterial)
@@ -199,17 +219,24 @@ struct StreamDetail: View {
                 .presentationDetents45ml()
             }
             .withLightningEffect()
+        }
+        else {
+            EmptyView()
+        }
     }
     
     @ViewBuilder
     private var headerView: some View {
         Text(liveEvent.title ?? " ")
-            .padding(.horizontal, 10)
+            .padding(10)
             .font(.title2)
             .fontWeightBold()
-            .lineLimit(1)
+            .lineLimit(contentExpanded ? 3 : 1)
+            .onTapGesture {
+                contentExpanded.toggle()
+            }
         
-        if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary {
+        if let summary = liveEvent.summary, (liveEvent.title ?? "") != summary && contentExpanded {
             Text(summary)
                 .lineLimit(!toggleReadMore ? 2 : 200)
                 .padding(.horizontal, 10)
@@ -219,7 +246,7 @@ struct StreamDetail: View {
                 }
         }
         
-        if let roomAddress { // TODO: Move to toolbar dropdown for more chat space
+        if let roomAddress, contentExpanded { // TODO: Move to toolbar dropdown for more chat space
             CopyableTextView(text: roomAddress, copyText: "nostr:" + roomAddress)
                 .foregroundColor(Color.gray)
                 .lineLimit(1)

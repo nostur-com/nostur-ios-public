@@ -25,6 +25,7 @@ struct NosturTabsView: View {
     @State private var showTabBar = true
     @ObservedObject private var ss: SettingsStore = .shared
     @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
@@ -87,9 +88,9 @@ struct NosturTabsView: View {
             .frame(maxWidth: 600)
             .overlay(alignment: .center) {
                 OverlayVideo {
-                    if let visibleNest = liveKitVoiceSession.visibleNest {
+                    if let nrLiveEvent = apm.nrLiveEvent {
                         AvailableWidthContainer {
-                            StreamDetail(liveEvent: visibleNest)
+                            StreamDetail(liveEvent: nrLiveEvent)
                         }
                     }
                     else {

@@ -29,6 +29,9 @@ class AnyPlayerModel: ObservableObject {
     @Published var viewMode: AnyPlayerViewMode = .overlay {
         didSet {
             showsPlaybackControls = viewMode != .overlay
+            if viewMode == .detailstream {
+                LiveKitVoiceSession.shared.objectWillChange.send() // Force update
+            }
         }
     }
 
@@ -185,6 +188,10 @@ class AnyPlayerModel: ObservableObject {
         if let index = availableViewModes.firstIndex(of: viewMode) {
             let nextIndex = (index + 1) % availableViewModes.count
             viewMode = availableViewModes[nextIndex]
+            
+            if viewMode == .detailstream {
+                LiveKitVoiceSession.shared.objectWillChange.send() // Force update
+            }
         }
     }
     
