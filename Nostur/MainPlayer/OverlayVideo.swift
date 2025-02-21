@@ -197,13 +197,17 @@ struct OverlayVideo<Content: View>: View {
                                                 VStack {
                                                     
                                                     if vm.viewMode != .overlay {
-                                                        Button("Replay", systemImage: "memories") {
-                                                            vm.replay()
-                                                        }
-                                                        .foregroundColor(Color.white)
-                                                        .font(.largeTitle)
-                                                        .labelStyle(.iconOnly)
-                                                        .buttonStyle(.plain)
+                                                        Image(systemName: "memories")
+                                                            .resizable()
+                                                            .scaledToFit()
+                                                            .frame(width: 70, height: 70)
+                                                            .foregroundColor(Color.white)
+                                                            .contentShape(Rectangle())
+                                                            .accessibilityHint("Replay")
+                                                            .onTapGesture {
+                                                                vm.replay()
+                                                            }
+                                                            .padding(.bottom, 30)
                                                     }
                                                     
                                                     if let nrPost = vm.nrPost {
