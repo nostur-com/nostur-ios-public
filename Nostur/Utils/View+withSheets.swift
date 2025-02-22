@@ -23,6 +23,7 @@ private struct WithSheets: ViewModifier {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.dismiss) private var dismiss
     
     
     // Sheet contents (item based)
@@ -66,6 +67,8 @@ private struct WithSheets: ViewModifier {
     @State private var miniProfileSheetInfo: MiniProfileSheetInfo? = nil
     @State private var miniProfileAnimateIn = false
     @State private var mediaPostPreview = true
+    @State private var sharableImage: UIImage? = nil
+    @State private var sharableGif: Data? = nil
     
     @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: 600, isScreenshot: true)
     
@@ -77,10 +80,36 @@ private struct WithSheets: ViewModifier {
             }
             .fullScreenCover(item: $fullImage) { f in
                 NBNavigationStack {
-                    FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem, mediaPostPreview: $mediaPostPreview)
+                    FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem, mediaPostPreview: $mediaPostPreview, sharableImage: $sharableImage, sharableGif: $sharableGif)
                         .environmentObject(themes)
                         .environmentObject(dim)
                         .presentationBackgroundCompat(themes.theme.listBackground)
+                        .onAppear(perform: {
+                            sharableImage = nil
+                            sharableGif = nil
+                        })
+                        .onDisappear(perform: {
+                            sharableImage = nil
+                            sharableGif = nil
+                        })
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button("Close", systemImage: "multiply") {
+                                    dismiss()
+                                }
+                                .font(.title2)
+                                .buttonStyle(.borderless)
+                                .foregroundColor(themes.theme.accent)
+                            }
+                            ToolbarItem(placement: .topBarTrailing) {
+                                if let sharableImage {
+                                    ShareMediaButton(sharableImage: sharableImage)
+                                }
+                                else if let sharableGif {
+                                    ShareGifButton(sharableGif: sharableGif)
+                                }
+                            }
+                        }
                 }
                 .nbUseNavigationStack(.never)
             }

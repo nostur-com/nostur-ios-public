@@ -11,23 +11,25 @@ import NukeUI
 
 struct FullImageViewer: View {
     @Environment(\.openURL) private var openURL
-    @EnvironmentObject private var themes:Themes
-    @EnvironmentObject var dim:DIMENSIONS
-    @Environment(\.dismiss) var dismiss
-    var fullImageURL:URL
-    var galleryItem:GalleryItem? = nil
+    @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.dismiss) private var dismiss
+    
+    public var fullImageURL: URL
+    public var galleryItem: GalleryItem? = nil
+    @Binding public var mediaPostPreview: Bool
+    @Binding public var sharableImage: UIImage?
+    @Binding public var sharableGif: Data?
+    
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var position: CGSize = .zero
     @State private var newPosition: CGSize = .zero
-    @State var isPlaying = true
+    @State private var isPlaying = true
     @State private var gestureStartTime: Date?
-    @State private var sharableImage:UIImage? = nil
-    @State private var sharableGif:Data? = nil
     @State private var post:NRPost? = nil
     @State private var showMiniProfile = false
     @State private var miniProfileAnimateIn = true
-    @Binding public var mediaPostPreview: Bool
     
     var body: some View {
         
@@ -99,6 +101,10 @@ struct FullImageViewer: View {
                                             .onTapGesture {
                                                 openURL(fullImageURL)
                                             }
+                                            .onAppear {
+                                                sharableGif = nil
+                                                sharableImage = nil
+                                            }
                                     }
                                     else {
                                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
@@ -106,6 +112,8 @@ struct FullImageViewer: View {
                                             .background(themes.theme.lineColor.opacity(0.2))
                                             .onAppear {
                                                 L.og.debug("Failed to load image: \(fullImageURL) - \(state.error?.localizedDescription ?? "")")
+                                                sharableGif = nil
+                                                sharableImage = nil
                                             }
                                     }
                                 }
@@ -124,6 +132,7 @@ struct FullImageViewer: View {
                                         }
                                         .onAppear {
                                             sharableGif = data
+                                            sharableImage = nil
                                         }
                                 }
                                 else if let image = state.image {
@@ -142,6 +151,11 @@ struct FullImageViewer: View {
                                         .onAppear {
                                             if let image = state.imageContainer?.image {
                                                 sharableImage = image
+                                                sharableGif = nil
+                                            }
+                                            else {
+                                                sharableGif = nil
+                                                sharableImage = nil
                                             }
                                         }
                                 }
@@ -153,9 +167,17 @@ struct FullImageViewer: View {
                                             .padding(10)
                                     }
                                     .background(themes.theme.background)
+                                    .onAppear {
+                                        sharableGif = nil
+                                        sharableImage = nil
+                                    }
                                 }
                                 else {
                                     themes.theme.background
+                                        .onAppear {
+                                            sharableGif = nil
+                                            sharableImage = nil
+                                        }
                                 }
                             }
                             .pipeline(ImageProcessing.shared.content)
@@ -201,25 +223,6 @@ struct FullImageViewer: View {
                 }
                 .onDisappear {
                     miniProfileAnimateIn = false
-                }
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button("Close", systemImage: "multiply") {
-                    dismiss()
-                }
-                .font(.title2)
-                .buttonStyle(.borderless)
-                .foregroundColor(themes.theme.accent)
-            }
-            
-            ToolbarItem(placement: .topBarTrailing) {
-                if let sharableImage {
-                    ShareMediaButton(sharableImage: sharableImage)
-                }
-                else if let sharableGif {
-                    ShareGifButton(sharableGif: sharableGif)
                 }
             }
         }
@@ -376,27 +379,31 @@ let imageRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:
 
 let mediaRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:mp4|mov|m4a|m3u8|mp3|png|jpe?g|gif|webp|bmp|avif)(\\?\\S+){0,1}\\b")
 
-struct FullImageViewer_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.parseMessages([###"["EVENT","45460918-9bec-47a2-9d58-a5afdc339ad6",{"content":"{\"banner\":\"https://media3.giphy.com/media/X8MAQUfW29L1GUQSAG/giphy.gif?cid=5e2148863ad49cbaa45cff0fd739f428ee080952fed3dcba&rid=giphy.gif&ct=g\",\"lud06\":\"LNURL1DP68GURN8GHJ7AMPD3KX2AR0VEEKZAR0WD5XJTNRDAKJ7TNHV4KXCTTTDEHHWM30D3H82UNVWQHK6ETPW3UKV6TWV5CNX3ZPU6Y\",\"website\":\"endthefud.org\",\"reactions\":false,\"nip05\":\"lau@nostr.report\",\"picture\":\"https://nostr.build/i/p/6752p.jpeg\",\"display_name\":\"Lau\",\"about\":\"NostReport⚡️#Rita's daddy Noderunner #bitcoin Egodead Psychonaut\",\"name\":\"Lau\"}","created_at":1688661897,"id":"9f21a3230733128c62bc6aafbc31cffa8bf2b0db15de14f8522dfe0fa4d247bb","kind":0,"pubkey":"5a9c48c8f4782351135dd89c5d8930feb59cb70652ffd37d9167bf922f2d1069","sig":"badb9d852daeb1478081bdb475fca95add12825a6f6289f57bcfb0abdb09f28e9f1b1fe5343ad259aa32d56015eeef9ce1e456dc0c2cdbbc84e074d2bbcec2b4","tags":[]}]"###])
-            pe.loadMedia()
-        }) {
-            if let p = PreviewFetcher.fetchEvent("bf0ca9422b83a35fd3384d4149314bfff9f05e025b5138c9db85d90a41b03ad9"), let content = p.content {
-                let images = getImgUrlsFromContent(content)
-                if let first = images.first {
-                    let galleryItem = GalleryItem(url: first, event: p)
-                    FullImageViewer(fullImageURL: first, galleryItem: galleryItem, mediaPostPreview: .constant(true))
-                }
-                else {
-                    Text(verbatim: "no image")
-                }
+@available(iOS 18.0, *)
+#Preview {
+    @Previewable @State var mediaPostPreview = true
+    @Previewable @State var sharableImage: UIImage? = nil
+    @Previewable @State var sharableGif: Data? = nil
+
+    PreviewContainer({ pe in
+        pe.parseMessages([###"["EVENT","45460918-9bec-47a2-9d58-a5afdc339ad6",{"content":"{\"banner\":\"https://media3.giphy.com/media/X8MAQUfW29L1GUQSAG/giphy.gif?cid=5e2148863ad49cbaa45cff0fd739f428ee080952fed3dcba&rid=giphy.gif&ct=g\",\"lud06\":\"LNURL1DP68GURN8GHJ7AMPD3KX2AR0VEEKZAR0WD5XJTNRDAKJ7TNHV4KXCTTTDEHHWM30D3H82UNVWQHK6ETPW3UKV6TWV5CNX3ZPU6Y\",\"website\":\"endthefud.org\",\"reactions\":false,\"nip05\":\"lau@nostr.report\",\"picture\":\"https://nostr.build/i/p/6752p.jpeg\",\"display_name\":\"Lau\",\"about\":\"NostReport⚡️#Rita's daddy Noderunner #bitcoin Egodead Psychonaut\",\"name\":\"Lau\"}","created_at":1688661897,"id":"9f21a3230733128c62bc6aafbc31cffa8bf2b0db15de14f8522dfe0fa4d247bb","kind":0,"pubkey":"5a9c48c8f4782351135dd89c5d8930feb59cb70652ffd37d9167bf922f2d1069","sig":"badb9d852daeb1478081bdb475fca95add12825a6f6289f57bcfb0abdb09f28e9f1b1fe5343ad259aa32d56015eeef9ce1e456dc0c2cdbbc84e074d2bbcec2b4","tags":[]}]"###])
+        pe.loadMedia()
+    }) {
+        if let p = PreviewFetcher.fetchEvent("bf0ca9422b83a35fd3384d4149314bfff9f05e025b5138c9db85d90a41b03ad9"), let content = p.content {
+            let images = getImgUrlsFromContent(content)
+            if let first = images.first {
+                let galleryItem = GalleryItem(url: first, event: p)
+                FullImageViewer(fullImageURL: first, galleryItem: galleryItem, mediaPostPreview: $mediaPostPreview, sharableImage: $sharableImage, sharableGif: $sharableGif)
             }
             else {
-                Text(verbatim: "eeuh")
+                Text(verbatim: "no image")
             }
+        }
+        else {
+            Text(verbatim: "eeuh")
         }
     }
 }
+
 
 
