@@ -56,7 +56,7 @@ class ChatRoomViewModel: ObservableObject {
             self.state = .error("3 or less parts")
             throw Errors.invalidATagError("3 or less parts")
         }
-        guard let kindString = elements[safe: 0], let kind = Int64(kindString) else {
+        guard let kindString = elements[safe: 0], let _ = Int64(kindString) else {
             self.state = .error("no kind")
             throw Errors.invalidATagError("no kind")
         }

@@ -333,7 +333,7 @@ struct StreamDetail: View {
     
     @ViewBuilder
     private var videoStreamView: some View {
-        if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
+        if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let _ = URL(string: recordingUrl) {
             EmptyView()
         }
         else if liveEvent.streamHasEnded {

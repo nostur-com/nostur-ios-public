@@ -57,7 +57,7 @@ struct FollowButton: View {
         
         // TODO: Should also pass and check account on .followsChanged
         .onReceive(receiveNotification(.followsChanged)) { notification in
-            guard let follows = notification.object as? Set<String> else { return }
+            guard notification.object is Set<String> else { return }
             
             guard let la = NRState.shared.loggedInAccount else { return }
             followState = getFollowState(la.account, pubkey: pubkey)
