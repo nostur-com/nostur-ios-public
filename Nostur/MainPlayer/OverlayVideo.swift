@@ -12,8 +12,7 @@ import NavigationBackport
 let CONTROLS_HEIGHT: CGFloat = 60.0
 let TOOLBAR_HEIGHT: CGFloat = 116.0
 
-struct OverlayVideo<Content: View>: View {
-    let content: Content
+struct OverlayVideo: View {
     
     @EnvironmentObject private var themes: Themes
     @ObservedObject var vm: AnyPlayerModel = .shared
@@ -78,10 +77,6 @@ struct OverlayVideo<Content: View>: View {
     @State private var isSaving = false
     @State private var didSave = false
     @State private var bookmarkState = false
-    
-    init(@ViewBuilder _ content: ()->Content) {
-        self.content = content()
-    }
     
     var body: some View {
         #if DEBUG
@@ -255,8 +250,15 @@ struct OverlayVideo<Content: View>: View {
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
                                 
-                                if vm.viewMode == .detailstream { // MARK: Content for .detailstream mode
-                                    content
+                                if vm.viewMode == .detailstream {
+                                    if let nrLiveEvent = vm.nrLiveEvent {
+                                        AvailableWidthContainer {
+                                            StreamDetail(liveEvent: nrLiveEvent)
+                                        }
+                                    }
+                                    else {
+                                        EmptyView()
+                                    }
                                 }
                             }
                             .toolbar { // MARK: Toolbar for detailstream

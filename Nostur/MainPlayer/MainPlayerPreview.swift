@@ -119,20 +119,8 @@ import NavigationBackport
                 .badge(1)
         }
         .overlay(alignment: .center) {
-            OverlayVideo {
-                if apm.isStream {
-                    if let liveEvent = PreviewFetcher.fetchEvent("75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7") {
-                        let nrLiveEvent = NRLiveEvent(event: liveEvent)
-                        AvailableWidthContainer {
-                            StreamDetail(liveEvent: nrLiveEvent)
-                                .environmentObject(NRState.shared)
-                                .environmentObject(PreviewEnvironment.shared.themes)
-                                .environmentObject(PreviewEnvironment.shared.npn)
-                        }
-                    }
-                }
-            }
-            .edgesIgnoringSafeArea(.bottom)
+            OverlayVideo()
+                .edgesIgnoringSafeArea(.bottom)
         }
         .onPreferenceChange(TabBarHeightKey.self) { tabBarHeight in
             print("Tab Bar Height: \(UIScreen.main.bounds.height - tabBarHeight)")

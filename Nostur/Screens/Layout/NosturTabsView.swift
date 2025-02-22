@@ -10,7 +10,6 @@ import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
 
 struct NosturTabsView: View {
-    @EnvironmentObject private var npn: NewPostNotifier
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dm: DirectMessageViewModel
@@ -22,12 +21,9 @@ struct NosturTabsView: View {
     }
 
     @State private var unread: Int = 0
-    @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
-    @ObservedObject private var apm: AnyPlayerModel = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
-    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -85,17 +81,8 @@ struct NosturTabsView: View {
             }
             .frame(maxWidth: 600)
             .overlay(alignment: .center) {
-                OverlayVideo {
-                    if let nrLiveEvent = apm.nrLiveEvent {
-                        AvailableWidthContainer {
-                            StreamDetail(liveEvent: nrLiveEvent)
-                        }
-                    }
-                    else {
-                        EmptyView()
-                    }
-                }
-                .edgesIgnoringSafeArea(.bottom)
+                OverlayVideo()
+                    .edgesIgnoringSafeArea(.bottom)
             }
             if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                 AvailableWidthContainer {
@@ -146,13 +133,6 @@ struct NosturTabsView: View {
                 self.unread = unread
             }
         }
-//        .overlay(alignment: .topLeading) {
-//            VStack {
-//                Text("h: \(horizontalSizeClass.debugDescription)")
-//                Text("v: \(verticalSizeClass.debugDescription)")
-//                Spacer()
-//            }
-//        }
     }
 
     private func tabTapped(_ tabName:String, oldTab:String) {

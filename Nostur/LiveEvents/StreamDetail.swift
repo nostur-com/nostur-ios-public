@@ -18,7 +18,7 @@ struct StreamDetail: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @ObservedObject public var liveEvent: NRLiveEvent
-//    @ObservedObject var apm: AnyPlayerModel = .shared
+
     
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: 4)
     @State private var rows = [GridItem(.fixed(80)), GridItem(.fixed(80))]
@@ -106,8 +106,6 @@ struct StreamDetail: View {
                                     .buttonStyle(.plain)
                                 }
                             }
-                            
-                            
                     }
                 }
                 .frame(minHeight: geo.size.height)
