@@ -249,6 +249,9 @@ struct OverlayVideo: View {
                                             }
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
+                                    .onDisappear {
+                                        UIApplication.shared.isIdleTimerDisabled = false
+                                    }
                                 
                                 if vm.viewMode == .detailstream {
                                     if let nrLiveEvent = vm.nrLiveEvent {
