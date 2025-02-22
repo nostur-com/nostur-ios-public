@@ -42,8 +42,13 @@ class ChatRoomViewModel: ObservableObject {
     
     private var renderMessages = PassthroughSubject<Void, Never>()
     
+    private var didStart = false
+    
     @MainActor
     public func start(aTag: String) throws {
+        guard !didStart else { return }
+        self.didStart = true
+        L.og.debug("vm.start()")
         self.aTag = aTag
        
         let elements = aTag.split(separator: ":")

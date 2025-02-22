@@ -10,22 +10,17 @@ import NavigationBackport
 
 struct ChatRoom: View {
         
-    private let aTag: String
-    private let theme: Theme
-    private let anonymous: Bool
-    
-    init(aTag: String, theme: Theme, anonymous: Bool) {
-        self.aTag = aTag
-        self.theme = theme
-        self.anonymous = anonymous
-    }
-    
-    @StateObject private var vm = ChatRoomViewModel()
-    @Namespace private var bottom
+    public let aTag: String
+    public let theme: Theme
+    public let anonymous: Bool
+    @ObservedObject public var chatVM: ChatRoomViewModel
+
     @State private var message: String = ""
     @State private var account: CloudAccount? = nil
     @State private var timer: Timer?
     @State private var selectedContact: NRContact? = nil
+    
+    @Namespace private var bottom
     
     var body: some View {
 #if DEBUG
@@ -33,84 +28,82 @@ let _ = Self._printChanges()
 #endif
         ScrollViewReader { proxy in
             if let account {
-                AvailableWidthContainer {
-                    VStack(spacing: 0) {
-                        List {
-                            switch vm.state {
-                                case .initializing:
-                                    CenteredProgressView()
-                                        .listRowSeparator(.hidden)
-                                        .listRowBackground(.init(Color.clear))
-                                        .scaleEffect(x: 1, y: -1, anchor: .center)
-                                case .loading:
-                                    CenteredProgressView()
-                                        .listRowSeparator(.hidden)
-                                        .listRowBackground(.init(Color.clear))
-                                        .scaleEffect(x: 1, y: -1, anchor: .center)
-                                case .ready:
-                                    if vm.messages.isEmpty {
-                                        VStack {
-                                            Spacer()
-                                            Text("Welcome to the chat")
-                                            Spacer()
-                                        }
-                                        .scaleEffect(x: 1, y: -1, anchor: .center)
-                                        .centered()
-                                        .listRowInsets(.init())
-                                        .listRowSeparator(.hidden)
-                                        .listRowBackground(.init(Color.clear))
-                                    }
-                                    else {
-                                        ForEach(vm.messages) { rowContent in
-                                            ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                                                ChatRow(content: rowContent, theme: theme)
-                                            }
-                                            .padding(.vertical, 5)
-                                            .scaleEffect(x: 1, y: -1, anchor: .center)
-                                        }
-                                        .listRowInsets(.init())
-                                        .listRowSeparator(.hidden)
-                                        .listRowBackground(.init(Color.clear))
-                                    }
-                                case .timeout:
-                                    VStack {
-                                        Text("timeout")
-                                    }
+                VStack(spacing: 0) {
+                    List {
+                        switch chatVM.state {
+                            case .initializing:
+                                CenteredProgressView()
                                     .listRowSeparator(.hidden)
                                     .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
-                                case .error(let string):
-                                    Text(string)
-                                        .listRowSeparator(.hidden)
-                                        .listRowBackground(.init(Color.clear))
-                                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                            case .loading:
+                                CenteredProgressView()
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(.init(Color.clear))
+                                    .scaleEffect(x: 1, y: -1, anchor: .center)
+                            case .ready:
+                                if chatVM.messages.isEmpty {
+                                    VStack {
+                                        Spacer()
+                                        Text("Welcome to the chat")
+                                        Spacer()
+                                    }
+                                    .scaleEffect(x: 1, y: -1, anchor: .center)
+                                    .centered()
+                                    .listRowInsets(.init())
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(.init(Color.clear))
                                 }
-                        }
-                        .scrollContentBackgroundHidden()
-                        .listStyle(.plain)
-                        .safeAreaScroll()
-                        .scaleEffect(x: 1, y: -1, anchor: .center)
-                        .padding(.top, 30)
-                        .onChange(of: vm.state) { newValue in
-                            if newValue == .ready {
-                                proxy.scrollTo(bottom)
+                                else {
+                                    ForEach(chatVM.messages) { rowContent in
+                                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                                            ChatRow(content: rowContent, theme: theme)
+                                        }
+                                        .padding(.vertical, 5)
+                                        .scaleEffect(x: 1, y: -1, anchor: .center)
+                                    }
+                                    .listRowInsets(.init())
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(.init(Color.clear))
+                                }
+                            case .timeout:
+                                VStack {
+                                    Text("timeout")
+                                }
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(.init(Color.clear))
+                                .scaleEffect(x: 1, y: -1, anchor: .center)
+                            case .error(let string):
+                                Text(string)
+                                    .listRowSeparator(.hidden)
+                                    .listRowBackground(.init(Color.clear))
+                                    .scaleEffect(x: 1, y: -1, anchor: .center)
                             }
+                    }
+                    .scrollContentBackgroundHidden()
+                    .listStyle(.plain)
+                    .safeAreaScroll()
+                    .scaleEffect(x: 1, y: -1, anchor: .center)
+                    .padding(.top, 30)
+                    .onChange(of: chatVM.state) { newValue in
+                        if newValue == .ready {
+                            proxy.scrollTo(bottom)
                         }
-                        .onTapGesture {
-                            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                                                to: nil, from: nil, for: nil)
+                    }
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                            to: nil, from: nil, for: nil)
+                    }
+                    .onAppear {
+                        try? chatVM.start(aTag: aTag)
+                    }
+                    
+                    if !anonymous {
+                        HStack {
+                            MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
+                            ChatInputField(message: $message, startWithFocus: false, onSubmit: submitMessage)
                         }
-                        .onAppear {
-                            try? vm.start(aTag: aTag)
-                        }
-                        
-                        if !anonymous {
-                            HStack {
-                                MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
-                                ChatInputField(message: $message, startWithFocus: false, onSubmit: submitMessage)
-                            }
-                            .padding(.bottom, 15)
-                        }
+                        .padding(.bottom, 15)
                     }
                 }
             }
@@ -122,8 +115,8 @@ let _ = Self._printChanges()
         }
         .onDisappear {
             stopTimer()
-            vm.closeLiveSubscription()
-            vm.removeChatsFromExistingIdsCache()
+            chatVM.closeLiveSubscription()
+            chatVM.removeChatsFromExistingIdsCache()
         }
         
         
@@ -168,7 +161,7 @@ let _ = Self._printChanges()
     
     private func startTimer() { // Make sure real time sub for chat messages stays active
         timer = Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { _ in
-            vm.updateLiveSubscription()
+            chatVM.updateLiveSubscription()
         }
     }
     
@@ -178,7 +171,10 @@ let _ = Self._printChanges()
     }
 }
 
+@available(iOS 18.0, *)
 #Preview {
+    @Previewable @StateObject var chatVM = ChatRoomViewModel()
+
     PreviewContainer({ pe in
         pe.parseMessages([
             ###"["EVENT","profile",{"sig":"05d6005b8b94614e914cac88f42f6f8cb0e28d7ba87d3dba70b722d96d138344a31b4cc00452aa19f9bba5bc6efd992acbcea108c58f7793a68bb1e26207d170","kind":0,"id":"dac0c3514ebabf2461da6ef43e9394cf8ebe2df3d4c87f15e6b9d99e92b3241c","created_at":1720383483,"pubkey":"9bc2d34ddda83d942a1fdd36a7487f9aaec740db24ea79732d90e383d19d2948","content":"{\"picture\":\"https://void.cat/d/AYx2c8e34mRFtaZpDA7yKK.webp\",\"banner\":\"https://image.nostr.build/94318f86f4ed7942bce694761d5d3f59a3756a843dc30adb5a4860262982d3a9.jpg\",\"name\":\"SimplySarah\",\"display_name\":\"SimplySarah\",\"about\":\"Music, Food, Art, Travel 🎶🍴🎨✈️\",\"nip05\":\"simplysarah@iris.to\",\"lud16\":\"simplysarah@getalby.com\",\"created_at\":1718236977,\"displayName\":\"SimplySarah\",\"pubkey\":\"9bc2d34ddda83d942a1fdd36a7487f9aaec740db24ea79732d90e383d19d2948\",\"npub\":\"npub1n0pdxnwa4q7eg2slm5m2wjrln2hvwsxmyn48juedjr3c85va99yqc5pfp6\",\"website\":\"https://simplysarah.npub.pro\"}","tags":[["alt","User profile for SimplySarah"]]}]"###,
@@ -208,12 +204,16 @@ let _ = Self._printChanges()
 //        ])
     }){
         Box {
-            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false)
+            ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", theme: Themes.default.theme, anonymous: false, chatVM: chatVM)
                 .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, theme: Themes.default.theme, viewType: .row))
         }
     }
 }
+
+@available(iOS 18.0, *)
 #Preview("Chats and 1 zap") {
+    @Previewable @StateObject var chatVM = ChatRoomViewModel()
+    
     PreviewContainer({ pe in
         pe.parseMessages([
             ###"["EVENT","e",{"kind":30311,"id":"75558b5933f0b7002df3dbe5356df2ab1144f8c0595e8d60282382a2007d5ed7","pubkey":"cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5","created_at":1721669595,"tags":[["d","82d27633-1dd1-4b38-8f9d-f6ab9b31fc83"],["title","Fiatjaf \u0026 utxo play dominion"],["summary","Come watch this very exciting game"],["image","https://dvr.zap.stream/zap-stream-dvr/82d27633-1dd1-4b38-8f9d-f6ab9b31fc83/thumb.jpg?AWSAccessKeyId=2gmV0suJz4lt5zZq6I5J\u0026Expires=33278578238\u0026Signature=X4Jo1oAm5pIg0YZ40CobUUdpD2A%3D"],["status","ended"],["p","e2ccf7cf20403f3f2a4a55b328f0de3be38558a7d5f33632fdaaefc726c1c8eb","","host"],["relays","wss://relay.snort.social","wss://nos.lol","wss://relay.damus.io","wss://relay.nostr.band","wss://nostr.land","wss://nostr-pub.wellorder.net","wss://nostr.wine","wss://relay.nostr.bg","wss://nostr.oxtr.dev"],["starts","1721664799"],["service","https://api.zap.stream/api/nostr"],["recording","https://data.zap.stream/recording/82d27633-1dd1-4b38-8f9d-f6ab9b31fc83.m3u8"],["ends","1721669595"]],"content":"","sig":"3f03a0de44dd2eec8dd045d5dd2242d1558f2af7719955e9ceb300c4ee14f26e4a170b13db923fb313bf4fd5d2c60be344f7901ea3ef5dd7f0fcb8df908b8b21"}]"###,
@@ -226,7 +226,7 @@ let _ = Self._printChanges()
         pe.loadChats()
     }){
         Box {
-            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false)
+            ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:82d27633-1dd1-4b38-8f9d-f6ab9b31fc83", theme: Themes.default.theme, anonymous: false, chatVM: chatVM)
                 .padding(10)
                 .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, theme: Themes.default.theme, viewType: .row))
         }
@@ -237,6 +237,7 @@ let _ = Self._printChanges()
 struct ChatMessageRow: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
+    @EnvironmentObject private var vc: ViewingContext
     @ObservedObject public var nrChat: NRChatMessage
     @State private var didStart = false
     
@@ -281,7 +282,7 @@ struct ChatMessageRow: View {
                     }
                 Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
             }
-            ChatRenderer(nrChat: nrChat, availableWidth: dim.listWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart)
+            ChatRenderer(nrChat: nrChat, availableWidth: vc.availableWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(maxHeight: 450, alignment: .top)
         }

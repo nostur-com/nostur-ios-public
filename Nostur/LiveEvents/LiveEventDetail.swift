@@ -94,7 +94,7 @@ struct LiveEventDetail: View {
                                 }
                             }
                             
-                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously)
+                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously, chatVM: liveEvent.chatVM)
                                 .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : (moreChatSpace ? 400 : 150), maxHeight: .infinity)
                                 .padding(.horizontal, 10)
                                 .environmentObject(vc)

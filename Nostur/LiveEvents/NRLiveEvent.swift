@@ -67,6 +67,8 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     public var nEvent: NEvent
     
+    @Published public var chatVM = ChatRoomViewModel()
+    
     init(event: Event) {
         self.nEvent = event.toNEvent() // TODO: This is NEvent (MessageParser) to Event (Importer) back to NEvent (here), need to fix better
         #if DEBUG
