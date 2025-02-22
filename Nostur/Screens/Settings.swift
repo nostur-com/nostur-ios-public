@@ -158,14 +158,14 @@ struct Settings: View {
                         }
                     }
                 }
-                Toggle(isOn: $settings.autoHideBars) {
-                    VStack(alignment: .leading) {
-                        Text("Hide tab bars when scrolling", comment:"Setting on settings screen")
-                        Text("This gives more screen space when scrolling")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                    }
-                }
+//                Toggle(isOn: $settings.autoHideBars) {
+//                    VStack(alignment: .leading) {
+//                        Text("Hide tab bars when scrolling", comment:"Setting on settings screen")
+//                        Text("This gives more screen space when scrolling")
+//                            .font(.footnote)
+//                            .foregroundColor(.secondary)
+//                    }
+//                }
                 Toggle(isOn: $settings.statusBubble) {
                     VStack(alignment: .leading) {
                         Text("Loading indicator", comment:"Setting on settings screen")

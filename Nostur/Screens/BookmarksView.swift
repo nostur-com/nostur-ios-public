@@ -115,16 +115,6 @@ struct BookmarksView: View {
         .onReceive(ViewUpdates.shared.bookmarkUpdates, perform: { update in
             vm.load()
         })
-        
-        .simultaneousGesture(
-            DragGesture().onChanged({
-                if 0 < $0.translation.height {
-                    sendNotification(.scrollingUp)
-                }
-                else if 0 > $0.translation.height {
-                    sendNotification(.scrollingDown)
-                }
-            }))
     }
 }
 

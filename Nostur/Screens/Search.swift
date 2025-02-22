@@ -210,15 +210,6 @@ struct Search: View {
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)
             }
-            .simultaneousGesture(
-                   DragGesture().onChanged({
-                       if 0 < $0.translation.height {
-                           sendNotification(.scrollingUp)
-                       }
-                       else if 0 > $0.translation.height {
-                           sendNotification(.scrollingDown)
-                       }
-                   }))
         }
         .nbUseNavigationStack(.never)
     }

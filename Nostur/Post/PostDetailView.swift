@@ -126,15 +126,6 @@ struct PostDetailView: View, Equatable {
                     }
                     .background(themes.theme.listBackground)
                 }
-                .simultaneousGesture(
-                       DragGesture().onChanged({
-                           if 0 < $0.translation.height {
-                               sendNotification(.scrollingUp)
-                           }
-                           else if 0 > $0.translation.height {
-                               sendNotification(.scrollingDown)
-                           }
-                       }))
                 .onAppear {
                     guard !didLoad else { return }
                     didLoad = true

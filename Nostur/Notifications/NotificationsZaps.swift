@@ -138,15 +138,6 @@ struct NotificationsZaps: View {
             model.load(limit: 150)
             fetchNewer()
         }
-        .simultaneousGesture(
-               DragGesture().onChanged({
-                   if 0 < $0.translation.height {
-                       sendNotification(.scrollingUp)
-                   }
-                   else if 0 > $0.translation.height {
-                       sendNotification(.scrollingDown)
-                   }
-               }))
     }
     
     private func fetchNewer() {

@@ -118,15 +118,6 @@ struct NotificationsRepostsGrouped: View {
             guard let fl else { return }
             fl.nrPosts = fl.nrPosts.filter(notMuted)
         }
-        .simultaneousGesture(
-               DragGesture().onChanged({
-                   if 0 < $0.translation.height {
-                       sendNotification(.scrollingUp)
-                   }
-                   else if 0 > $0.translation.height {
-                       sendNotification(.scrollingDown)
-                   }
-               }))
     }
     
     private func load() {

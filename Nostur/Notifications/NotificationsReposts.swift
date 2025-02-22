@@ -112,15 +112,6 @@ struct NotificationsReposts: View {
             model.load(limit: 50)
             fetchNewer()
         }
-        .simultaneousGesture(
-               DragGesture().onChanged({
-                   if 0 < $0.translation.height {
-                       sendNotification(.scrollingUp)
-                   }
-                   else if 0 > $0.translation.height {
-                       sendNotification(.scrollingDown)
-                   }
-               }))
     }
     
     private func fetchNewer() {

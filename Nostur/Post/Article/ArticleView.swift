@@ -216,15 +216,6 @@ struct ArticleView: View {
                     }
                 }
             }
-            .simultaneousGesture(
-                   DragGesture().onChanged({
-                       if 0 < $0.translation.height {
-                           sendNotification(.scrollingUp)
-                       }
-                       else if 0 > $0.translation.height {
-                           sendNotification(.scrollingDown)
-                       }
-                   }))
             .navigationBarHidden(navTitleHidden)
         }
         else {

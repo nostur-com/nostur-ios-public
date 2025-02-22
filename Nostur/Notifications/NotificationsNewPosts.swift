@@ -122,15 +122,6 @@ struct NotificationsNewPosts: View {
             let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newPosts.rawValue)
         }
-        .simultaneousGesture(
-               DragGesture().onChanged({
-                   if 0 < $0.translation.height {
-                       sendNotification(.scrollingUp)
-                   }
-                   else if 0 > $0.translation.height {
-                       sendNotification(.scrollingDown)
-                   }
-               }))
         .nbNavigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
             NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
                 .environmentObject(themes)

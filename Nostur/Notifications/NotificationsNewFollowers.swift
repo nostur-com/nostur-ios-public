@@ -70,15 +70,6 @@ struct NotificationsFollowers: View {
             let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newFollowers.rawValue)
         }
-        .simultaneousGesture(
-               DragGesture().onChanged({
-                   if 0 < $0.translation.height {
-                       sendNotification(.scrollingUp)
-                   }
-                   else if 0 > $0.translation.height {
-                       sendNotification(.scrollingDown)
-                   }
-               }))
     }
     
     private func saveLastSeenFollowersCreatedAt() {

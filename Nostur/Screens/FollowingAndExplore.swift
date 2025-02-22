@@ -42,8 +42,7 @@ struct FollowingAndExplore: View {
     @StateObject private var discoverVM = DiscoverViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
-    
-    @State var tabsOffsetY: CGFloat = 0.0
+
     @State var didSend = false
     
     @State var columnConfigs: [NXColumnConfig] = []
@@ -189,22 +188,8 @@ struct FollowingAndExplore: View {
                         }
                     }
                     .frame(minWidth: dim.listWidth)
-                    .offset(y: tabsOffsetY)
-                    .onReceive(receiveNotification(.scrollingUp)) { _ in
-                        guard !IS_CATALYST && ss.autoHideBars else { return }
-                        withAnimation {
-                            tabsOffsetY = 0.0
-                        }
-                    }
-                    .onReceive(receiveNotification(.scrollingDown)) { _ in
-                        guard !IS_CATALYST  && ss.autoHideBars else { return }
-                        withAnimation {
-                            tabsOffsetY = -36.0
-                        }
-                    }
-                    .toolbarVisibleCompat(IS_CATALYST || tabsOffsetY == 0.0 ? .visible : .hidden)
                 }
-                .frame(width: dim.listWidth, height: max(44.0 + tabsOffsetY,0))
+                .frame(width: dim.listWidth, height: 44.0)
             }
             
             if enableLiveEvents {

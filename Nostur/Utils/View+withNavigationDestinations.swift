@@ -196,9 +196,7 @@ protocol IdentifiableDestination: Hashable, Identifiable {
     
 }
 
-func navigateTo(_ path: any IdentifiableDestination) {
-    sendNotification(.scrollingUp) // this makes the tab bars appear for navigating
-    
+func navigateTo(_ path: any IdentifiableDestination) {    
     if (type(of: path) == NRPost.self) {
         let nrPost = path as! NRPost
         if nrPost.kind == 30023 {

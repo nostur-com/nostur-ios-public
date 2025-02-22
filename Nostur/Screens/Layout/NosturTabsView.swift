@@ -22,8 +22,6 @@ struct NosturTabsView: View {
     }
 
     @State private var unread: Int = 0
-    @State private var showTabBar = true
-    @ObservedObject private var ss: SettingsStore = .shared
     @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
     @ObservedObject private var apm: AnyPlayerModel = .shared
     
@@ -46,39 +44,39 @@ struct NosturTabsView: View {
                             .environmentObject(la)
                             .tabItem { Label("", systemImage: "house") }
                             .tag("Main")
-                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                            .nosturTabsCompat(themes: themes)
                         
     //                    DiscoverCommunities()
     //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
     //                        .tag("Communities")
-                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                            .nosturTabsCompat(themes: themes)
 
                         BookmarksAndPrivateNotes()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "bookmark") }
                             .tag("Bookmarks")
-                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                            .nosturTabsCompat(themes: themes)
                         
                         
                         Search()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "magnifyingglass") }
                             .tag("Search")
-                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                            .nosturTabsCompat(themes: themes)
                         
                         NotificationsContainer()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "bell.fill") }
                             .tag("Notifications")
                             .badge(unread)
-                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                            .nosturTabsCompat(themes: themes)
 
                         DMContainer()
                             .environment(\.horizontalSizeClass, horizontalSizeClass)
                             .tabItem { Label("", systemImage: "envelope.fill") }
                             .tag("Messages")
                             .badge((dm.unread + dm.newRequests))
-                            .nosturTabsCompat(themes: themes, ss: ss, showTabBar: showTabBar)
+                            .nosturTabsCompat(themes: themes)
                     }
                     .environment(\.horizontalSizeClass, .compact)
                     .withSheets() // Move .sheets to each (NB)NavigationStack?
@@ -109,11 +107,6 @@ struct NosturTabsView: View {
         .background(themes.theme.listBackground)
         .withLightningEffect()
         .onChange(of: selectedTab) { newValue in
-            if !IS_CATALYST {
-                if newValue == "Main" {
-                    sendNotification(.scrollingUp) // To show the navigation/toolbar
-                }
-            }
             if newValue == "Notifications" {
                 
                 // If there is only one tab with unread notifications, go to that tab
@@ -143,20 +136,8 @@ struct NosturTabsView: View {
                 }
             }
         }
-        .onReceive(receiveNotification(.scrollingUp)) { _ in
-            guard !IS_CATALYST && ss.autoHideBars else { return }
-            withAnimation {
-                showTabBar = true
-            }
-        }
-        .onReceive(receiveNotification(.scrollingDown)) { _ in
-            guard !IS_CATALYST && ss.autoHideBars else { return }
-            withAnimation {
-                showTabBar = false
-            }
-        }
         .task {
-            if ss.receiveLocalNotifications {
+            if SettingsStore.shared.receiveLocalNotifications {
                 requestNotificationPermission()
             }
         }

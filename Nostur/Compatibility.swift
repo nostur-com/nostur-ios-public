@@ -309,12 +309,11 @@ extension View {
     }
     
     @ViewBuilder
-    func nosturTabsCompat(themes: Themes, ss: SettingsStore, showTabBar: Bool) -> some View {
+    func nosturTabsCompat(themes: Themes) -> some View {
         if #available(iOS 16.0, *) {
             self
                 .toolbarBackground(themes.theme.listBackground, for: .tabBar)
                 .toolbarBackground(.visible, for: .tabBar)
-                .toolbar(!ss.autoHideBars || showTabBar ? .visible : .hidden, for: .tabBar)
         }
         else {
             self
