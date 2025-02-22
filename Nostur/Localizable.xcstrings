@@ -3861,6 +3861,7 @@
     },
     "Hide tab bars when scrolling" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7774,9 +7775,6 @@
       },
       "shouldTranslate" : false
     },
-    "TEST" : {
-
-    },
     "Test Toggle" : {
       "localizations" : {
         "nl" : {
@@ -7973,6 +7971,7 @@
       }
     },
     "This gives more screen space when scrolling" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
