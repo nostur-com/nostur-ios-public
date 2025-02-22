@@ -58,9 +58,15 @@ struct LiveEventCapsule: View {
                        navigateTo(liveEvent)
                    }
                    else {
+                       // LOAD NEST
                        if liveEvent.isLiveKit {
                            LiveKitVoiceSession.shared.activeNest = liveEvent
                        }
+                       // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
+                       else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
+                           AnyPlayerModel.shared.viewMode = .detailstream
+                       }
+                       // LOAD NEW .DETAILSTREAM
                        else {
                            Task {
                                await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
