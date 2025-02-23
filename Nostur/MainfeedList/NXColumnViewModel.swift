@@ -602,6 +602,7 @@ class NXColumnViewModel: ObservableObject {
             
             let followingPubkeys: Set<String> = if let account = feed.account {
                 account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
                 NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
@@ -637,6 +638,7 @@ class NXColumnViewModel: ObservableObject {
             
             let followingPubkeys: Set<String> = if let account = feed.account {
                 account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else {
                 []
@@ -757,6 +759,7 @@ class NXColumnViewModel: ObservableObject {
         case .following(let feed):
             let pubkeys: Set<String> = if let account = feed.account {
                 account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
                 NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
@@ -782,6 +785,7 @@ class NXColumnViewModel: ObservableObject {
         case .picture(let feed):
             let pubkeys: Set<String> = if let account = feed.account {
                 account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else { [] }
             
@@ -861,7 +865,8 @@ class NXColumnViewModel: ObservableObject {
         switch config.columnType {
         case .following(let feed):
             let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys
+                account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
                 NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
@@ -902,7 +907,8 @@ class NXColumnViewModel: ObservableObject {
 
         case .picture(let feed):
             let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys
+                account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else { [] }
             
@@ -1010,6 +1016,7 @@ class NXColumnViewModel: ObservableObject {
         case .following(let feed):
             let pubkeys: Set<String> = if let account = feed.account {
                 account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
                 NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
@@ -1036,6 +1043,7 @@ class NXColumnViewModel: ObservableObject {
         case .picture(let feed):
             let pubkeys: Set<String> = if let account = feed.account {
                 account.followingPubkeys.union(Set([account.publicKey]))
+                    .union(account.privateFollowingPubkeys)
             }
             else { [] }
             
@@ -1822,8 +1830,10 @@ extension NXColumnViewModel {
         
         let pubkeys: Set<String> = switch config.columnType {
         case .following(let feed), .picture(let feed):
-            feed.account?.followingPubkeys ?? []
-        case .pubkeys(let feed): 
+            (feed.account?.followingPubkeys
+                .union(Set([feed.account!.publicKey]))
+                .union(feed.account!.privateFollowingPubkeys)) ?? []
+        case .pubkeys(let feed):
             feed.contactPubkeys
         case .someoneElses(_):
             config.pubkeys
