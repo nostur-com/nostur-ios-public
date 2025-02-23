@@ -95,6 +95,7 @@ private struct WithSheets: ViewModifier {
                         .toolbar {
                             ToolbarItem(placement: .topBarLeading) {
                                 Button("Close", systemImage: "multiply") {
+                                    fullImage = nil
                                     dismiss()
                                 }
                                 .font(.title2)
