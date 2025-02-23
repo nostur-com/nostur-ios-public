@@ -99,9 +99,9 @@ struct NXPostsFeed: View {
                             collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
                                                         at: .top,
                                                         animated: false)
-                            vmInner.scrollToIndex = nil
                             vmInner.isAtTop = false
                         }
+                        vmInner.scrollToIndex = nil
                     }
                 }
                 else { // iOS 15 UITableView
@@ -111,9 +111,9 @@ struct NXPostsFeed: View {
                     {
                         if tableView.contentOffset.y == 0 {
                             tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
-                            vmInner.scrollToIndex = nil
                             vmInner.isAtTop = false
                         }
+                        vmInner.scrollToIndex = nil
                     }
                 }
             }
