@@ -1654,7 +1654,6 @@ extension NXColumnViewModel {
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
                     vmInner.isAtTop = false
-//                    viewState = .posts(addedAndExistingPostsTruncated)
                     
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
