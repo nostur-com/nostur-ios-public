@@ -146,14 +146,14 @@ struct BookmarksView: View {
 
 
 struct BookmarksCountPreferenceKey: PreferenceKey {
-    static var defaultValue: String = ""
+    static let defaultValue: String = ""
     
     static func reduce(value: inout String, nextValue: () -> String) {
         value = nextValue()
     }
 }
 struct PrivateNotesCountPreferenceKey: PreferenceKey {
-    static var defaultValue: String = ""
+    static let defaultValue: String = ""
     
     static func reduce(value: inout String, nextValue: () -> String) {
         value = nextValue()
