@@ -24,11 +24,12 @@ struct NRContentTextRenderer: View, Equatable {
     public var isPreview = false
     public var primaryColor: Color? = nil
     public var accentColor: Color? = nil
+    public var onTap: (() -> Void)? = nil
     
     @EnvironmentObject private var dim: DIMENSIONS
     
     var body: some View {
-        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isScreenshot: isScreenshot, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor)
+        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isScreenshot: isScreenshot, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
     }
 }
 
@@ -39,6 +40,7 @@ struct NRContentTextRendererInner: View {
     private let isPreview: Bool
     private let primaryColor: Color
     private let accentColor: Color
+    private let onTap: (() -> Void)?
     
     @State private var text: NSAttributedString
     @State private var textPrimaryColor: Color
@@ -48,13 +50,14 @@ struct NRContentTextRendererInner: View {
     
     @EnvironmentObject private var dim: DIMENSIONS
     
-    init(attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isScreenshot: Bool = false, isPreview: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil) {
+    init(attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isScreenshot: Bool = false, isPreview: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
         self.attributedStringWithPs = attributedStringWithPs
         self.availableWidth = availableWidth
         self.isScreenshot = isScreenshot
         self.isPreview = isPreview
         self.primaryColor = primaryColor ?? Themes.default.theme.primary
         self.accentColor = accentColor ?? Themes.default.theme.accent
+        self.onTap = onTap
         
         _text = State(wrappedValue: attributedStringWithPs.output)
         _textPrimaryColor = State(wrappedValue: primaryColor ?? Themes.default.theme.primary)
@@ -85,7 +88,7 @@ struct NRContentTextRendererInner: View {
 //                        
 //                    }
                 
-                NRTextFixed(text: $text, fontColor: $textPrimaryColor, accentColor: $textAccentColor, textWidth: $textWidth, textHeight: $textHeight)
+                NRTextFixed(text: $text, fontColor: $textPrimaryColor, accentColor: $textAccentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: onTap)
 //                    .background(Color.red.opacity(0.2))
   
 //                    .overlay(alignment: .topLeading) {
@@ -152,6 +155,9 @@ struct NRContentTextRendererInner: View {
             }
             else {
                 NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
+                    .onTapGesture {
+                        onTap?()
+                    }
                     .onReceive(
                         Importer.shared.contactSaved
                             .receive(on: RunLoop.main)

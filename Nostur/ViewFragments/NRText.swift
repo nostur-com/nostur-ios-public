@@ -161,9 +161,11 @@ struct NRTextFixed: UIViewRepresentable {
     @Binding var textWidth: CGFloat
     @Binding var textHeight: CGFloat
     private let textCutOffFixerHeight: CGFloat // to fix text cutoff need to add  some height  always as workaround
+    public var onTap: (() -> Void)? = nil
     
-    init(text attributedString: Binding<NSAttributedString>, plain: Bool = false, fontColor: Binding<Color>, accentColor: Binding<Color>, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>) {
+    init(text attributedString: Binding<NSAttributedString>, plain: Bool = false, fontColor: Binding<Color>, accentColor: Binding<Color>, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, onTap: (() -> Void)? = nil) {
         _attributedString = attributedString
+        self.onTap = onTap
         self.plain = plain
         _fontColor = fontColor
         _accentColor = accentColor
@@ -204,6 +206,11 @@ struct NRTextFixed: UIViewRepresentable {
 //        view.layer.backgroundColor = UIColor.red.cgColor
 //        view.layer.borderColor = UIColor.lightGray.cgColor
 //        view.layer.borderWidth = 1.0
+        
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapResponse(tapGesture:)))
+
+        view.addGestureRecognizer(tap)
+        
         if #available(iOS 16.0, *) {
             DispatchQueue.main.async {
                 self.textHeight = attributedString.boundingRect(
@@ -219,7 +226,7 @@ struct NRTextFixed: UIViewRepresentable {
         
         return view
     }
-    
+
     func updateUIView(_ uiView: UITextView, context: Context) {
         
 //        if uiView.attributedText != self.attributedString {
@@ -274,6 +281,36 @@ struct NRTextFixed: UIViewRepresentable {
     
     func sizeThatFits(_ proposal: CGSize, uiView: UITextView) -> CGSize {
         return CGSize(width: textWidth, height: textHeight)
+    }
+    
+    func makeCoordinator() -> NRTextFixed.Coordinator {
+            Coordinator(self)
+    }
+
+    class Coordinator: NSObject, UITextViewDelegate {
+        var parent: NRTextFixed
+
+        init(_ parent: NRTextFixed) {
+            self.parent = parent
+        }
+
+        @objc func tapResponse(tapGesture: UITapGestureRecognizer) {
+            
+            let textView = tapGesture.view as! UITextView
+            let tapLocation = tapGesture.location(in: textView)
+            guard let textPosition = textView.closestPosition(to: tapLocation) else {
+                self.parent.onTap?()
+                return
+            }
+            let attr = textView.textStyling(at: textPosition, in: .forward)
+
+            if let url = attr?[NSAttributedString.Key.link] as? URL {
+                UIApplication.shared.open(url)
+            }
+            else {
+                self.parent.onTap?()
+            }
+        }
     }
 }
 

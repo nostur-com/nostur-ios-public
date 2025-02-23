@@ -137,12 +137,11 @@ struct ContentRenderer: View { // VIEW things
 //                            navigateTo(nrPost)
 //                        }
 //                        .id(index)
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview)
-                        .equatable()
-                        .onTapGesture {
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview, onTap: {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
-                        }
+                    })
+                        .equatable()
                         .id(index)
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
