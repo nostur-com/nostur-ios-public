@@ -53,8 +53,18 @@ struct AnyKind: View {
                 case 20:
                     if let imageUrl = nrPost.imageUrls.first {
                         VStack {
-                            PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth)
+                            PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth, imageUrls: nrPost.imageUrls)
                                 .padding(.horizontal, -10)
+                                .overlay(alignment: .bottomTrailing) {
+                                    if nrPost.imageUrls.count > 1 {
+                                        Text("\(nrPost.imageUrls.count - 1) more")
+                                            .fontWeightBold()
+                                            .foregroundColor(.white)
+                                            .padding(5)
+                                            .background(.black)
+                                            .allowsHitTesting(false)
+                                    }
+                                }
                             
                             ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: imageWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
                                 .padding(.vertical, 10)

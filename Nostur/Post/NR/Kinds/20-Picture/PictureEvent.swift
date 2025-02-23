@@ -20,11 +20,13 @@ struct PictureEventView: View {
     
     public var availableWidth: CGFloat?
     
+    public var imageUrls: [URL]? = nil
+    
     static let aspect: CGFloat = 16/9
     
     @State private var didStart = false
     
     var body: some View {
-        SingleMediaViewer(url: imageUrl, pubkey: "", imageWidth: availableWidth ?? dim.availableNoteRowImageWidth(), fullWidth: true, autoload: autoload, contentPadding: 0, contentMode: .aspectFit, upscale: true, theme: theme)
+        SingleMediaViewer(url: imageUrl, pubkey: "", imageWidth: availableWidth ?? dim.availableNoteRowImageWidth(), fullWidth: true, autoload: autoload, contentPadding: 0, contentMode: .aspectFit, upscale: true, theme: theme, imageUrls: imageUrls)
     }
 }
