@@ -27,48 +27,48 @@ struct BookmarksView: View {
     @State private var bookmarkSnapshot: Int = 0
     @State private var didLoad = false
 
-    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            if !vm.nrBookmarks.isEmpty {
+            if !vm.nrLazyBookmarks.isEmpty {
                 List {
-                    ForEach (vm.nrBookmarks) { nrBookmark in
-                        ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
-                            Box(nrPost: nrBookmark) {
-                                PostRowDeletable(nrPost: nrBookmark, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                    Section {
+                        ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
+                            ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
+                                LazyBookmark(nrLazyBookmark: nrLazyBookmark)
                             }
+                            .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(themes.theme.listBackground)
+                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                            .padding(.top, GUTTER)
                         }
-                        .id(nrBookmark.id) // <-- must use .id or can't .scrollTo
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive, action: {
-                                bg().perform {
-                                    Bookmark.removeBookmark(eventId: nrBookmark.id, context: bg())
-                                    bg().transactionAuthor = "removeBookmark"
-                                    DataProvider.shared().save()
-                                    bg().transactionAuthor = nil
-                                }
-                            }) {
-                                Label("Remove", systemImage: "trash")
-                            }
-                            .tint(.red)
+                        .onDelete { indexSet in
+                            deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
                         }
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
-                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .padding(.bottom, GUTTER)
+                    } header: {
+                        
+                        SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(themes.theme.listBackground)
+                                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                                .padding(.horizontal, 10)
+                             
                     }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
+                .toolbar {
+                    EditButton()
+                }
                 .padding(0)
                 
-                .preference(key: BookmarksCountPreferenceKey.self, value: vm.nrBookmarks.count.description)
+                .preference(key: BookmarksCountPreferenceKey.self, value: vm.nrLazyBookmarks.count.description)
                 .onReceive(receiveNotification(.didTapTab)) { notification in
-                    guard selectedSubTab == "Bookmarks", let first = vm.nrBookmarks.first else { return }
-                    if !vm.nrBookmarks.isEmpty {
+                    guard selectedSubTab == "Bookmarks", let first = vm.nrLazyBookmarks.first else { return }
+                    if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
                                 proxy.scrollTo(first.id)
@@ -77,8 +77,8 @@ struct BookmarksView: View {
                     }
                 }
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
-                    guard selectedSubTab == "Bookmarks", let first = vm.nrBookmarks.first else { return }
-                    if !vm.nrBookmarks.isEmpty {
+                    guard selectedSubTab == "Bookmarks", let first = vm.nrLazyBookmarks.first else { return }
+                    if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
                                 proxy.scrollTo(first.id)
@@ -87,8 +87,8 @@ struct BookmarksView: View {
                     }
                 }
                 .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                    guard selectedSubTab == "Bookmarks", let first = vm.nrBookmarks.first else { return }
-                    if !vm.nrBookmarks.isEmpty {
+                    guard selectedSubTab == "Bookmarks", let first = vm.nrLazyBookmarks.first else { return }
+                    if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
                                 proxy.scrollTo(first.id)
@@ -115,6 +115,21 @@ struct BookmarksView: View {
         .onReceive(ViewUpdates.shared.bookmarkUpdates, perform: { update in
             vm.load()
         })
+    }
+    
+    private func deleteBookmark(section: [NRLazyBookmark], offsets: IndexSet) {
+        withAnimation {
+            vm.nrLazyBookmarks.remove(atOffsets: offsets)
+        }
+        // Delete from db
+        for index in offsets {
+            let bookmark = section[index]
+            let bgContext = bg()
+            bgContext.perform {
+                Bookmark.removeBookmark(eventId: bookmark.id, context: bgContext)
+                try? bgContext.save()
+            }
+        }
     }
 }
 
@@ -144,3 +159,58 @@ struct PrivateNotesCountPreferenceKey: PreferenceKey {
         value = nextValue()
     }
 }
+
+
+struct LazyBookmark: View {
+    
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var settings: SettingsStore = .shared
+    @ObservedObject public var nrLazyBookmark: NRLazyBookmark
+
+    var body: some View {
+        Box(nrPost: nrLazyBookmark.nrPost) {
+            if let nrPost = nrLazyBookmark.nrPost {
+                if nrPost.kind == 443 {
+                    VStack {
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                        HStack(spacing: 0) {
+                            self.replyButton
+                                .foregroundColor(themes.theme.footerButtons)
+                                .padding(.leading, 10)
+                                .padding(.vertical, 5)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    navigateTo(nrPost)
+                                }
+                            Spacer()
+                        }
+                    }
+                }
+                else {
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                }
+            }
+            else {
+                ProgressView()
+                    .frame(height: 175)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .task {
+                        bg().perform {
+                            let nrPost = NRPost(event: nrLazyBookmark.bgEvent)
+                            Task { @MainActor in
+                                nrLazyBookmark.nrPost = nrPost
+                            }
+                        }
+                    }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var replyButton: some View {
+        Image("ReplyIcon")
+        Text("Comments")
+    }
+}
+

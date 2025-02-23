@@ -7044,6 +7044,9 @@
         }
       }
     },
+    "Search in bookmarks..." : {
+      "comment" : "Placeholder text in bookmarks search input box"
+    },
     "Search..." : {
       "comment" : "Placeholder text in a search input box",
       "localizations" : {

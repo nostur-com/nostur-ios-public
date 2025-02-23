@@ -9,27 +9,28 @@ import SwiftUI
 import Combine
 
 
+class NRLazyBookmark: ObservableObject, Identifiable {
+    public let id: String
+    public let bgEvent: Event
+    @Published var nrPost: NRPost? = nil
+    
+    private var colorString: String? = nil
+    
+    public let searchableText: String
+    
+    init(id: String, bgEvent: Event, colorString: String? = nil) {
+        self.id = id
+        self.bgEvent = bgEvent
+        self.colorString = colorString
+        self.searchableText = (bgEvent.contact?.anyName ?? "") + " " + bgEvent.plainText // if slow, use .content?
+    }
+}
+
 class BookmarksFeedModel: ObservableObject {
     
-    @Published public var bookmarkFilters: Set<Color> {
+    @Published public var bookmarkFilters: Set<String> {
         didSet {
-            let bookmarkFiltersStringArray = bookmarkFilters.map {
-                return switch $0 {
-                case .orange:
-                    "orange"
-                case .red:
-                    "red"
-                case .blue:
-                    "blue"
-                case .purple:
-                    "purple"
-                case .green:
-                    "green"
-                default:
-                    "orange"
-                }
-            }
-            
+            let bookmarkFiltersStringArray = bookmarkFilters.map { $0 }
             UserDefaults.standard.set(bookmarkFiltersStringArray, forKey: "bookmark_filters")
             Task { @MainActor in
                 self.load()
@@ -37,28 +38,38 @@ class BookmarksFeedModel: ObservableObject {
         }
     }
     
-    @Published public var nrBookmarks: [NRPost] = []
+    @Published public var nrLazyBookmarks: [NRLazyBookmark] = []
+    @Published public var searchText: String = ""
+    
+    public var filteredNrLazyBookmarks: [NRLazyBookmark] {
+        guard !debouncedSearchText.isEmpty else { return nrLazyBookmarks }
+        let tokens = debouncedSearchText.split(separator: " ")
+        return nrLazyBookmarks.filter {
+            // contains all tokens
+            for token in tokens {
+                guard !$0.searchableText.localizedCaseInsensitiveContains(token) else { continue }
+                return false
+            }
+            return true
+        }
+    }
+    
+    private var debouncedSearchText: String = ""
+    
+    private var searchSubscription: AnyCancellable?
+    
     private var subscriptions: Set<AnyCancellable> = []
     
     public init() {
-        bookmarkFilters = Set<Color>((UserDefaults.standard.array(forKey: "bookmark_filters") as? [String] ?? ["red", "blue", "purple", "green", "orange"])
-            .map {
-                return switch $0 {
-                    case "red":
-                        Color.red
-                    case "blue":
-                        Color.blue
-                    case "purple":
-                        Color.purple
-                    case "green":
-                        Color.green
-                    case "orange":
-                        Color.orange
-                    default:
-                        Color.orange
-                    
-                }
-            })
+        bookmarkFilters = Set<String>((UserDefaults.standard.array(forKey: "bookmark_filters") as? [String] ?? ["red", "blue", "purple", "green", "orange"]))
+        
+        searchSubscription = $searchText
+                    .removeDuplicates()
+                    .debounce(for: .seconds(0.35), scheduler: RunLoop.main)
+                    .sink(receiveValue: { [weak self] value in
+                        self?.objectWillChange.send()
+                        self?.debouncedSearchText = value
+                    })
     }
     
     @MainActor
@@ -72,7 +83,7 @@ class BookmarksFeedModel: ObservableObject {
             r1.sortDescriptors = [NSSortDescriptor(keyPath:\Bookmark.createdAt, ascending: false)]
    
             let bookmarks = ((try? bgContext.fetch(r1)) ?? [])
-                .filter { bookmarkFilters.contains($0.color) }
+                .filter { bookmarkFilters.contains($0.color_ ?? "orange") }
             
             var uniqueEventIds = Set<String>()
             let sortedBookmarks = bookmarks.sorted {
@@ -100,9 +111,9 @@ class BookmarksFeedModel: ObservableObject {
             let events = (try? bg().fetch(fr2)) ?? []
             let decoder = JSONDecoder()
             
-            let nrBookmarks = sortedBookmarks.compactMap { bookmark in
+            let nrLazyBookmarks = sortedBookmarks.compactMap { bookmark in
                 if let event = events.first(where: { $0.id == bookmark.eventId }) {
-                    return NRPost(event: event)
+                    return NRLazyBookmark(id: event.id, bgEvent: event, colorString: bookmark.color_)
                 }
                 else {
                     if let json = bookmark.json, let jsonData = json.data(using: .utf8, allowLossyConversion: false) {
@@ -110,7 +121,7 @@ class BookmarksFeedModel: ObservableObject {
                             let savedEvent = Event.saveEvent(event: nEvent, relays: "iCloud", context: bgContext)
                             try? bgContext.save()
                             L.cloud.debug("Decoded and saved from iCloud: \(nEvent.id) ")
-                            return NRPost(event: savedEvent)
+                            return NRLazyBookmark(id: nEvent.id, bgEvent: savedEvent, colorString: bookmark.color_)
                         }
                     }
                     return nil
@@ -118,7 +129,7 @@ class BookmarksFeedModel: ObservableObject {
             }
             
             DispatchQueue.main.async { [weak self] in
-                self?.nrBookmarks = nrBookmarks
+                self?.nrLazyBookmarks = nrLazyBookmarks
             }
         }
         

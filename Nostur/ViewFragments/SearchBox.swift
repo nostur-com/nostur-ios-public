@@ -10,8 +10,9 @@ import SwiftUI
 struct SearchBox: View {
     @EnvironmentObject private var themes: Themes
     @StateObject var debounceObject = DebounceObject()
-    var prompt:String
-    @Binding var text:String
+    var prompt: String
+    @Binding var text: String
+    var autoFocus: Bool = true
     @FocusState private var isFocused: Bool
     
     var body: some View {
@@ -22,20 +23,21 @@ struct SearchBox: View {
         .disableAutocorrection(true)
         .focused($isFocused)
         .onAppear {
+            guard autoFocus else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 isFocused = true
             }
         }
-        .padding(5)
+        .padding(10)
         .padding(.leading, 25)
         .padding(.trailing, 25)
         .background {
-            themes.theme.listBackground.opacity(0.5)
+            themes.theme.background.opacity(0.5)
                 .overlay(alignment:.leading) {
                     Image(systemName: "magnifyingglass")
                         .imageScale(.medium)
                         .foregroundColor(Color.secondary)
-                        .padding(.leading, 5)
+                        .padding(.leading, 10)
                 }
         }
         .overlay(alignment:.trailing) {

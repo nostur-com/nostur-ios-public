@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BookmarkFilters: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var onlyShow: Set<Color>
+    @Binding var onlyShow: Set<String>
     
     var body: some View {
         VStack {
@@ -17,38 +17,38 @@ struct BookmarkFilters: View {
             HStack {
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.red)
-                    .opacity(onlyShow.contains(.red) ? 1.0 : 0.2)
+                    .opacity(onlyShow.contains("red") ? 1.0 : 0.2)
                     .contentShape(Rectangle())
                     .padding(10)
-                    .onTapGesture { self.toggle(.red) }
+                    .onTapGesture { self.toggle("red") }
                 
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.blue)
-                    .opacity(onlyShow.contains(.blue) ? 1.0 : 0.2)
+                    .opacity(onlyShow.contains("blue") ? 1.0 : 0.2)
                     .contentShape(Rectangle())
                     .padding(10)
-                    .onTapGesture { self.toggle(.blue) }
+                    .onTapGesture { self.toggle("blue") }
                 
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.purple)
-                    .opacity(onlyShow.contains(.purple) ? 1.0 : 0.2)
+                    .opacity(onlyShow.contains("purple") ? 1.0 : 0.2)
                     .contentShape(Rectangle())
                     .padding(10)
-                    .onTapGesture { self.toggle(.purple) }
+                    .onTapGesture { self.toggle("purple") }
                 
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.green)
-                    .opacity(onlyShow.contains(.green) ? 1.0 : 0.2)
+                    .opacity(onlyShow.contains("green") ? 1.0 : 0.2)
                     .contentShape(Rectangle())
                     .padding(10)
-                    .onTapGesture { self.toggle(.green) }
+                    .onTapGesture { self.toggle("green") }
                 
                 Image(systemName: "bookmark.fill")
                     .foregroundColor(.orange)
-                    .opacity(onlyShow.contains(.orange) ? 1.0 : 0.2)
+                    .opacity(onlyShow.contains("orange") ? 1.0 : 0.2)
                     .contentShape(Rectangle())
                     .padding(10)
-                    .onTapGesture { self.toggle(.orange) }
+                    .onTapGesture { self.toggle("orange") }
             }
             Text("Tap to toggle")
                 .font(.caption)
@@ -63,7 +63,7 @@ struct BookmarkFilters: View {
         }
     }
     
-    private func toggle(_ color: Color) {
+    private func toggle(_ color: String) {
         if onlyShow.contains(color) {
             onlyShow.remove(color)
         }
