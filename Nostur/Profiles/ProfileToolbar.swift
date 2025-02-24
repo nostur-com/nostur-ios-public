@@ -6,13 +6,50 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct ProfileToolbar: View {
+    public let pubkey: String
+    public let nrContact: NRContact
+    @ObservedObject var scrollPosition: ScrollPosition
+    @Binding var editingAccount: CloudAccount?
+    public let themes: Themes
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .leading) {
+            HStack(spacing: 2) {
+                PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 25)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(themes.theme.background, lineWidth: 1)
+                    )
+                Text("\(nrContact.anyName) ").font(.headline)
+                
+                Spacer()
+                
+                if pubkey == NRState.shared.activeAccountPublicKey {
+                    Button {
+                        guard let account = account() else { return }
+                        guard isFullAccount(account) else { showReadOnlyMessage(); return }
+                        editingAccount = account
+                    } label: {
+                        Text("Edit profile", comment: "Button to edit own profile")
+                    }
+                    .buttonStyle(NosturButton())
+                    .layoutPriority(2)
+                    //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                }
+                else {
+                    FollowButton(pubkey: nrContact.pubkey)
+                        .layoutPriority(2)
+                    //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                }
+                
+            }
+            
+        }
+        .offset(y: max(2, scrollPosition.position.y))
+        .frame(height: 40)
+        .clipped()
     }
-}
-
-#Preview {
-    ProfileToolbar()
 }

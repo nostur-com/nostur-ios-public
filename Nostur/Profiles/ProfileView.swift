@@ -11,44 +11,25 @@ import NukeUI
 import NavigationBackport
 
 struct ProfileView: View {
-    private let pubkey: String
-    private var tab: String?
+    @StateObject private var vm = ProfileViewModel()
+    @StateObject private var imposterVM = CouldBeImposterViewModel()
+    @StateObject private var lastSeenVM = LastSeenViewModel()
     
-    @EnvironmentObject private var npn: NewPostNotifier
+    @ObservedObject public var nrContact: NRContact
+    public var tab: String?
+    
+    
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
-    @ObservedObject private var fg: FollowingGuardian = .shared
-    @ObservedObject private var nrContact: NRContact
-    
+
     @State private var profilePicViewerIsShown = false
     @State private var selectedSubTab = "Posts"
-    @State private var backlog = Backlog(timeout: 4.0, auto: true)
-    @State private var lastSeen: String? = nil
-    @State private var isFollowingYou = false
+
     @State private var editingAccount: CloudAccount?
-    @State private var similarPFP = false
     @State private var showingNewNote = false
-    @State private var fixedPfp: URL?
-    @State private var npub = ""
-    
-    @State private var showArticlesTab = false
     
     @State private var scrollPosition = ScrollPosition()
-    
-    init(nrContact: NRContact, tab: String? = nil) {
-        self.nrContact = nrContact
-        self.pubkey = nrContact.pubkey
-        self.tab = tab
-    }
-    
-    var couldBeImposter: Bool {
-        guard let la = NRState.shared.loggedInAccount else { return false }
-        guard la.account.publicKey != pubkey else { return false }
-        guard !la.isFollowing(pubkey: pubkey) else { return false }
-        guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }
-        return similarPFP
-    }
     
     var body: some View {
         #if DEBUG
@@ -79,9 +60,8 @@ struct ProfileView: View {
                                 .onPreferenceChange(ScrollOffset.self) { position in
                                     self.scrollPosition.position = position
                                 }
-                            //                            .scaleEffect(min(1,max(0.5,geoBanner.frame(in:.global).minY / 70 + 1.3)), anchor:.bottom)
                                 .overlay(alignment: .bottomTrailing) {
-                                    if let fixedPfp {
+                                    if let fixedPfp = vm.fixedPfp {
                                         FixedPFP(picture: fixedPfp)
                                     }
                                 }
@@ -96,7 +76,7 @@ struct ProfileView: View {
                         
                         Spacer()
                         
-                        if npn.isEnabled(for: nrContact.pubkey) {
+                        if vm.newPostsNotificationsEnabled {
                             Image(systemName: "bell")
                                 .resizable()
                                 .frame(width: 20, height: 20)
@@ -109,7 +89,7 @@ struct ProfileView: View {
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
-                                .onTapGesture { npn.toggle(nrContact.pubkey) }
+                                .onTapGesture { vm.newPostsNotificationsEnabled = false }
                                 .padding([.trailing, .top], 5)
                         }
                         else {
@@ -125,7 +105,7 @@ struct ProfileView: View {
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
-                                .onTapGesture { npn.toggle(nrContact.pubkey) }
+                                .onTapGesture { vm.newPostsNotificationsEnabled = true }
                                 .padding([.trailing, .top], 5)
                         }
                         
@@ -144,7 +124,7 @@ struct ProfileView: View {
                             ProfileLightningButton(contact: nrContact.mainContact)
                         }
                         
-                        if pubkey == NRState.shared.activeAccountPublicKey {
+                        if nrContact.pubkey == NRState.shared.activeAccountPublicKey {
                             Button {
                                 guard let account = account() else { return }
                                 guard isFullAccount(account) else { showReadOnlyMessage(); return }
@@ -163,7 +143,7 @@ struct ProfileView: View {
                     
                     HStack(spacing: 0) {
                         Text("\(nrContact.anyName) ").font(.system(size: 24, weight:.bold))
-                        if couldBeImposter {
+                        if imposterVM.couldBeImposter {
                             PossibleImposterLabel(possibleImposterPubkey: nrContact.pubkey, followingPubkey: nrContact.similarToPubkey)
                         }
                         else if nrContact.nip05verified, let nip05 = nrContact.nip05 {
@@ -183,14 +163,14 @@ struct ProfileView: View {
                         }
                     }
                     
-                    CopyableTextView(text: npub)
+                    CopyableTextView(text: vm.npub)
                         .lineLimit(1)
                         .frame(width: 140, alignment: .leading)
                     
-                    Text(verbatim: lastSeen ?? "Last seen:")
+                    Text(verbatim: lastSeenVM.lastSeen ?? "Last seen:")
                         .font(.caption).foregroundColor(.primary)
                         .lineLimit(1)
-                        .opacity(lastSeen != nil ? 1.0 : 0)
+                        .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
                     
                     HStack {
                         if let mainContact = nrContact.mainContact {
@@ -198,34 +178,20 @@ struct ProfileView: View {
                         }
                         Menu {
                             Button {
-                                UIPasteboard.general.string = self.npub
+                                UIPasteboard.general.string = vm.npub
                             } label: {
                                 Label(String(localized:"Copy npub", comment:"Menu action"), systemImage: "doc.on.clipboard")
                             }
                             Button {
-                                bg().perform {
-                                    let kind0 = Event.fetchRequest()
-                                    kind0.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                                    kind0.predicate = NSPredicate(format: "pubkey == %@ AND kind == 0", nrContact.pubkey)
-                                    
-                                    if let event = try? bg().fetch(kind0).first {
-                                        let json = event.toNEvent().eventJson()
-                                        DispatchQueue.main.async {
-                                            UIPasteboard.general.string = json
-                                        }
-                                    }
-                                }
+                                vm.copyProfileSource(nrContact)
                             } label: {
                                 Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
                             }
-                            
                             Button {
                                 sendNotification(.addRemoveToListsheet, nrContact.mainContact)
                             } label: {
                                 Label(String(localized:"Add/Remove from feeds", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
                             }
-                            
-                            
                             Button {
                                 block(pubkey: nrContact.pubkey, name: nrContact.anyName)
                             } label: {
@@ -237,14 +203,13 @@ struct ProfileView: View {
                             } label: {
                                 Label(String(localized:"Report \(nrContact.anyName)", comment:"Menu action"), systemImage: "flag")
                             }
-                            
-                            
                         } label: {
                             Image(systemName: "ellipsis")
                                 .fontWeightBold()
                                 .padding(5)
                         }
-                        if (isFollowingYou) {
+                        
+                        if (vm.isFollowingYou) {
                             Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 7)
@@ -259,7 +224,7 @@ struct ProfileView: View {
                     NRTextDynamic("\(String(nrContact.about ?? ""))\n")
                     
                     HStack(alignment: .center, spacing: 10) {
-                        ProfileFollowingCount(pubkey: pubkey)
+                        ProfileFollowingCount(pubkey: nrContact.pubkey)
                         
                         Text("**♾️** Followers", comment: "Label for followers count")
                             .onTapGesture {
@@ -281,26 +246,26 @@ struct ProfileView: View {
             Section(content: {
                 switch selectedSubTab {
                 case "Posts":
-                    ProfilePostsView(pubkey: pubkey, type: .posts)
+                    ProfilePostsView(pubkey: nrContact.pubkey, type: .posts)
                         .background(themes.theme.listBackground)
                 case "Replies":
-                    ProfilePostsView(pubkey: pubkey, type: .replies)
+                    ProfilePostsView(pubkey: nrContact.pubkey, type: .replies)
                         .background(themes.theme.listBackground)
                 case "Articles":
-                    ProfilePostsView(pubkey: pubkey, type: .articles)
+                    ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
                         .background(themes.theme.listBackground)
                 case "Following":
-                    ProfileFollowingList(pubkey: pubkey)
+                    ProfileFollowingList(pubkey: nrContact.pubkey)
                         .background(themes.theme.listBackground)
                 case "Media":
-                    ProfileMediaView(pubkey: pubkey)
+                    ProfileMediaView(pubkey: nrContact.pubkey)
                         .background(themes.theme.listBackground)
                 case "Likes":
-                    ProfileLikesView(pubkey: pubkey)
+                    ProfileLikesView(pubkey: nrContact.pubkey)
                         .background(themes.theme.listBackground)
                 case "Zaps":
                     if #available(iOS 16.0, *), let mainContact = nrContact.mainContact {
-                        ProfileZaps(pubkey: pubkey, contact: mainContact)
+                        ProfileZaps(pubkey: nrContact.pubkey, contact: mainContact)
                             .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
                             .background(themes.theme.listBackground)
                     }
@@ -308,7 +273,7 @@ struct ProfileView: View {
                         EmptyView()
                     }
                 case "Relays":
-                    ProfileRelays(pubkey: pubkey, name: nrContact.anyName)
+                    ProfileRelays(pubkey: nrContact.pubkey, name: nrContact.anyName)
                         .background(themes.theme.listBackground)
                 case "Followers":
                     FollowersList(pubkey: nrContact.pubkey)
@@ -329,7 +294,7 @@ struct ProfileView: View {
                             title: String(localized:"Replies", comment:"Tab title"),
                             selected: selectedSubTab == "Replies")
                         Spacer()
-                        if showArticlesTab {
+                        if vm.showArticlesTab {
                             TabButton(
                                 action: { selectedSubTab = "Articles" },
                                 title: String(localized:"Articles", comment:"Tab title"),
@@ -375,15 +340,9 @@ struct ProfileView: View {
         .background(themes.theme.listBackground)
         .listRowSpacing(10.0)
         .listStyle(.plain)
-        .toolbar(content: {
-            ProfileToolbar(pubkey: pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount, themes: themes)
-        })
-        //        .onReceive(receiveNotification(.newFollowingListFromRelay)) { notification in // TODO: MOVE TO FOLLOWING LIST TAB
-        //            let nEvent = notification.object as! NEvent
-        //            if nEvent.publicKey == contact.pubkey {
-        //                contact.objectWillChange.send()
-        //            }
-        //        }
+        .toolbar {
+            ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount, themes: themes)
+        }
         .overlay(alignment: .bottomTrailing) {
             NewNoteButton(showingNewNote: $showingNewNote)
                 .padding([.top, .leading, .bottom], 10)
@@ -419,228 +378,24 @@ struct ProfileView: View {
             if let tab = tab {
                 selectedSubTab = tab
             }
+            vm.load(nrContact)
+            lastSeenVM.checkLastSeen(nrContact.pubkey)
+            imposterVM.runCheck(nrContact)
         }
-        .onChange(of: nrContact.nip05) { [weak nrContact] nip05 in
+        .onChange(of: nrContact.nip05) { nip05 in
             bg().perform {
-                guard let nrContact, let contact = nrContact.contact else { return }
-                if (NIP05Verifier.shouldVerify(contact)) {
-                    NIP05Verifier.shared.verify(contact)
-                }
+                guard let contact = nrContact.contact, NIP05Verifier.shouldVerify(contact) else { return }
+                NIP05Verifier.shared.verify(contact)
             }
         }
         .fullScreenCover(isPresented: $profilePicViewerIsShown) {
             ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl: nrContact.pictureUrl!)
                 .environmentObject(themes)
         }
-        .task { [weak nrContact] in
-            guard let nrContact else { return }
-            guard !SettingsStore.shared.lowDataMode else { return }
-            guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-            
-            bg().perform {
-                if let fixedPfp = nrContact.contact?.fixedPfp,
-                   fixedPfp != nrContact.contact?.picture,
-                   let fixedPfpUrl = URL(string: fixedPfp),
-                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
-                {
-                    DispatchQueue.main.async {
-                        withAnimation {
-                            self.fixedPfp = fixedPfpUrl
-                        }
-                    }
-                }
-            }
-            
-            ImposterChecker.shared.runImposterCheck(nrContact: nrContact) { imposterYes in
-                self.similarPFP = true
-            }
-        }
-        .task { [weak backlog] in
-            guard let backlog else { return }
-            let contactPubkey = pubkey
-            let reqTask = ReqTask(prefix: "SEEN-", reqCommand: { taskId in
-                req(RM.getLastSeen(pubkey: contactPubkey, subscriptionId: taskId))
-            }, processResponseCommand: { taskId, _, _ in
-                bg().perform {
-                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: bg()) {
-                        let agoString = last.date.agoString
-                        DispatchQueue.main.async {
-                            lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")
-                        }
-                    }
-                }
-            }, timeoutCommand: { taskId in
-                bg().perform {
-                    if let last = Event.fetchLastSeen(pubkey: contactPubkey, context: bg()) {
-                        let agoString = last.date.agoString
-                        DispatchQueue.main.async {
-                            lastSeen = String(localized: "Last seen: \(agoString) ago", comment:"Label on profile showing when last seen, example: Last seen: 10m ago")
-                        }
-                    }
-                }
-            })
-            
-            backlog.add(reqTask)
-            reqTask.fetch()
-        }
-        .task { [weak nrContact, weak backlog] in
-            guard let backlog else { return }
-            bg().perform { [weak nrContact] in
-                guard let nrContact, let contact = nrContact.contact else { return }
-                let npub = contact.npub
-                DispatchQueue.main.async {
-                    self.npub = npub
-                }
-                EventRelationsQueue.shared.addAwaitingContact(contact)
-                if (contact.followsYou()) {
-                    DispatchQueue.main.async {
-                        isFollowingYou = true
-                    }
-                }
-                
-                let task = ReqTask(
-                    reqCommand: { [weak contact] (taskId) in
-                        guard let contact else { return }
-                        req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3,30008,10002]))
-                    },
-                    processResponseCommand: { [weak contact] (taskId, _, _) in
-                        bg().perform {
-                            guard let contact else { return }
-                            if (contact.followsYou()) {
-                                DispatchQueue.main.async {
-                                    isFollowingYou = true
-                                }
-                            }
-                        }
-                    },
-                    timeoutCommand: { [weak contact] taskId in
-                        bg().perform {
-                            guard let contact else { return }
-                            if (contact.followsYou()) {
-                                DispatchQueue.main.async {
-                                    isFollowingYou = true
-                                }
-                            }
-                        }
-                    })
-                
-                backlog.add(task)
-                task.fetch()
-                
-                if (NIP05Verifier.shouldVerify(contact)) {
-                    NIP05Verifier.shared.verify(contact)
-                }
-                
-                guard contact.anyLud else { return }
-                let lud16orNil = contact.lud16
-                let lud06orNil = contact.lud06
-                Task { [weak contact] in
-                    do {
-                        if let lud16 = lud16orNil, lud16 != "" {
-                            let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
-                                await bg().perform {
-                                    guard let contact else { return }
-                                    contact.zapperPubkeys.insert(zapperPubkey)
-                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
-                                }
-                            }
-                        }
-                        else if let lud06 = lud06orNil, lud06 != "" {
-                            let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
-                                await bg().perform {
-                                    guard let contact else { return }
-                                    contact.zapperPubkeys.insert(zapperPubkey)
-                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
-                                }
-                            }
-                        }
-                    }
-                    catch {
-                        L.og.error("⚡️🔴 problem in lnurlp \(error)")
-                    }
-                }
-            }
-        }
-        .task { [weak backlog] in
-            guard let backlog else { return }
-            let contactPubkey = pubkey
-            let reqTask = ReqTask(prefix: "HASART-", reqCommand: { taskId in
-                req(RM.getUserProfileKinds(pubkey: contactPubkey, subscriptionId: taskId, kinds: [30023]) )
-            }, processResponseCommand: { taskId, _, _ in
-                bg().perform {
-                    if Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) != nil {
-                        DispatchQueue.main.async {
-                            withAnimation {
-                                self.showArticlesTab = true
-                            }
-                        }
-                    }
-                }
-            }, timeoutCommand: { taskId in
-                bg().perform {
-                    if Event.fetchMostRecentEventBy(pubkey: contactPubkey, andKind: 30023, context: bg()) != nil {
-                        DispatchQueue.main.async {
-                            withAnimation {
-                                self.showArticlesTab = true
-                            }
-                        }
-                    }
-                }
-            })
-            
-            backlog.add(reqTask)
-            reqTask.fetch()
-        }
     }
 }
 
-struct ProfileToolbar: View {
-    public let pubkey: String
-    public let nrContact: NRContact
-    @ObservedObject var scrollPosition: ScrollPosition
-    @Binding var editingAccount: CloudAccount?
-    public let themes: Themes
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            HStack(spacing: 2) {
-                PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 25)
-                    .overlay(
-                        Circle()
-                            .strokeBorder(themes.theme.background, lineWidth: 1)
-                    )
-                Text("\(nrContact.anyName) ").font(.headline)
-                
-                Spacer()
-                
-                if pubkey == NRState.shared.activeAccountPublicKey {
-                    Button {
-                        guard let account = account() else { return }
-                        guard isFullAccount(account) else { showReadOnlyMessage(); return }
-                        editingAccount = account
-                    } label: {
-                        Text("Edit profile", comment: "Button to edit own profile")
-                    }
-                    .buttonStyle(NosturButton())
-                    .layoutPriority(2)
-                    //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
-                }
-                else {
-                    FollowButton(pubkey: nrContact.pubkey)
-                        .layoutPriority(2)
-                    //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
-                }
-                
-            }
-            
-        }
-        .offset(y: max(2, scrollPosition.position.y))
-        .frame(height: 40)
-        .clipped()
-    }
-}
+
 
 #Preview("ProfileView") {
     PreviewContainer({ pe in
@@ -661,8 +416,6 @@ class ScrollPosition: ObservableObject {
 }
 
 struct ScrollOffset: PreferenceKey {
-    static var defaultValue: CGPoint = .zero
-    
-    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) {
-    }
+    static let defaultValue: CGPoint = .zero
+    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) { }
 }
