@@ -8,13 +8,13 @@
 import SwiftUI
 import CoreData
 
-struct ProfileLikesView: View {
+struct ProfileReactionsView: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
-    @StateObject private var vm: ProfileLikesViewModel
+    @StateObject private var vm: ProfileReactionsViewModel
     
     init(pubkey: String) {
-        _vm = StateObject(wrappedValue: ProfileLikesViewModel(pubkey))
+        _vm = StateObject(wrappedValue: ProfileReactionsViewModel(pubkey))
     }
     
     var body: some View {
@@ -24,7 +24,7 @@ struct ProfileLikesView: View {
                 .padding(10)
                 .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
                 .onAppear { vm.load() }
-                .task(id: "profilelikes") {
+                .task(id: "profileReactions") {
                     do {
                         try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
                         vm.state = .timeout
@@ -35,6 +35,13 @@ struct ProfileLikesView: View {
                 ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                     Box(nrPost: nrPost) {
                         PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                    }
+                    .overlay(alignment: .topLeading) {
+                        if let reaction = vm.reactionsMap[nrPost.id] {
+                            Text(reaction == "+" ? "❤️" : reaction)
+                                .padding(.top, 5)
+                                .padding(.leading, 5)
+                        }
                     }
                 }
 //                    .id(nrPost.id)
@@ -64,7 +71,7 @@ struct ProfileLikesView: View {
         pe.loadRepliesAndReactions()
     }) {
         ScrollView {
-            ProfileLikesView(pubkey: pubkey)
+            ProfileReactionsView(pubkey: pubkey)
         }
     }
 }

@@ -297,9 +297,9 @@ struct ProfileOverlayCard: View {
                         sendNotification(.dismissMiniProfile)
                     }
                     Spacer()
-                    Button(String(localized:"Likes", comment:"Tab title")) {
+                    Button(String(localized:"Reactions", comment:"Tab title")) {
                         dismiss()
-                        navigateTo(NRContactPath(nrContact: contact, tab:"Likes"))
+                        navigateTo(NRContactPath(nrContact: contact, tab:"Reactions"))
                         sendNotification(.dismissMiniProfile)
                     }
                     Spacer()

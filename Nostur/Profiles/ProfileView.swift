@@ -260,8 +260,8 @@ struct ProfileView: View {
                 case "Media":
                     ProfileMediaView(pubkey: nrContact.pubkey)
                         .background(themes.theme.listBackground)
-                case "Likes":
-                    ProfileLikesView(pubkey: nrContact.pubkey)
+                case "Reactions":
+                    ProfileReactionsView(pubkey: nrContact.pubkey)
                         .background(themes.theme.listBackground)
                 case "Zaps":
                     if #available(iOS 16.0, *), let mainContact = nrContact.mainContact {
@@ -312,9 +312,9 @@ struct ProfileView: View {
                             selected: selectedSubTab == "Media")
                         Spacer()
                         TabButton(
-                            action: { selectedSubTab = "Likes" },
-                            title: String(localized:"Likes", comment:"Tab title"),
-                            selected: selectedSubTab == "Likes")
+                            action: { selectedSubTab = "Reactions" },
+                            title: String(localized:"Reactions", comment:"Tab title"),
+                            selected: selectedSubTab == "Reactions")
                         Spacer()
                         if #available(iOS 16.0, *) {
                             TabButton(

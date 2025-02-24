@@ -1,5 +1,5 @@
 //
-//  ProfileLikesViewModel.swift
+//  ProfileReactionsViewModel.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 07/09/2023.
@@ -9,11 +9,12 @@ import SwiftUI
 import NostrEssentials
 import Combine
 
-class ProfileLikesViewModel: ObservableObject {
+class ProfileReactionsViewModel: ObservableObject {
     
     @Published var state: State
     private var pubkey: String
-    private var likedIds: Set<String>
+    private var reactedIds: Set<String>
+    public var reactionsMap: [String: String] = [:] // post id - reaction mapping
     private var backlog: Backlog
     private static let POSTS_LIMIT = 25 // TODO: ADD PAGINATION
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
@@ -23,7 +24,7 @@ class ProfileLikesViewModel: ObservableObject {
     @Published var posts: [NRPost] = [] {
         didSet {
             guard !posts.isEmpty else { return }
-            L.og.info("Profile Likes: loaded \(self.posts.count) posts")
+            L.og.info("Profile Reactions: loaded \(self.posts.count) posts")
         }
     }
         
@@ -34,7 +35,7 @@ class ProfileLikesViewModel: ObservableObject {
     public init(_ pubkey: String) {
         self.pubkey = pubkey
         self.state = .initializing
-        self.likedIds = []
+        self.reactedIds = []
         self.backlog = Backlog(timeout: 8.0, auto: true)
         
         receiveNotification(.blockListUpdated)
@@ -46,11 +47,11 @@ class ProfileLikesViewModel: ObservableObject {
             .store(in: &self.subscriptions)
     }
     
-    // STEP 1: FETCH LIKES FROM FOLLOWS FROM RELAYS
-    private func fetchLikesFromRelays(_ onComplete: (() -> ())? = nil) {
+    // STEP 1: FETCH REACTIONS FROM FOLLOWS FROM RELAYS
+    private func fetchReactionsFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.5,
-            subscriptionId: "PROFILELIKES",
+            subscriptionId: "PROFILEREACTIONS",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 if let cm = NostrEssentials
@@ -67,52 +68,55 @@ class ProfileLikesViewModel: ObservableObject {
                     req(cm)
                 }
                 else {
-                    L.og.error("Profile Likes: Problem generating request")
+                    L.og.error("Profile Reactions: Problem generating request")
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 self?.backlog.clear()
-                self?.fetchLikesFromDB(onComplete)
+                self?.fetchReactionsFromDB(onComplete)
 
-                L.og.info("Profile Likes: ready to process relay response")
+                L.og.info("Profile Reactions: ready to process relay response")
             },
             timeoutCommand: { [weak self] taskId in
                 self?.backlog.clear()
-                self?.fetchLikesFromDB(onComplete)
-                L.og.info("Profile Likes: timeout ")
+                self?.fetchReactionsFromDB(onComplete)
+                L.og.info("Profile Reactions: timeout ")
             })
 
         backlog.add(reqTask)
         reqTask.fetch()
     }
     
-    // STEP 2: FETCH RECEIVED LIKES FROM DB, SORT MOST LIKED POSTS (WE ONLY HAVE IDs HERE)
-    private func fetchLikesFromDB(_ onComplete: (() -> ())? = nil) {
+    // STEP 2: FETCH RECEIVED REACTIONS FROM DB
+    private func fetchReactionsFromDB(_ onComplete: (() -> ())? = nil) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind == 7 AND pubkey == %@", self.pubkey)
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let likes = try? bg().fetch(fr) else { return }
-//            let likesSorted = likes
+            guard let reactions = try? bg().fetch(fr) else { return }
                 
-            for like in likes
+            for reaction in reactions
                 .sorted(by: { $0.created_at > $1.created_at })
                 .prefix(Self.POSTS_LIMIT)
             {
-                guard let reactionToId = like.reactionToId else { continue }
-                self.likedIds.insert(reactionToId)
+                guard let reactionToId = reaction.reactionToId else { continue }
+                self.reactedIds.insert(reactionToId)
+                let reactionContent = reaction.content ?? "+"
+                Task { @MainActor in // need to access from main later
+                    self.reactionsMap[reactionToId] = reactionContent
+                }
             }
             self.fetchPostsFromRelays(onComplete)
         }
     }
     
-    // STEP 3: FETCH MOST LIKED POSTS FROM RELAYS
+    // STEP 3: FETCH MOST REACTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         bg().perform { [weak self] in
             guard let self else { return }
-            let onlyNewIds = self.likedIds
+            let onlyNewIds = self.reactedIds
                 .filter { postId in
                     Importer.shared.existingIds[postId] == nil
                 }
@@ -120,9 +124,9 @@ class ProfileLikesViewModel: ObservableObject {
         
 
             guard !onlyNewIds.isEmpty else {
-                L.og.debug("Profile Likes: fetchPostsFromRelays: empty ids")
-                if (self.likedIds.count > 0) {
-                    L.og.debug("Profile Likes: but we can render the duplicates")
+                L.og.debug("Profile Reactions: fetchPostsFromRelays: empty ids")
+                if (self.reactedIds.count > 0) {
+                    L.og.debug("Profile Reactions: but we can render the duplicates")
                     DispatchQueue.main.async { [weak self] in
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
@@ -134,11 +138,11 @@ class ProfileLikesViewModel: ObservableObject {
                 return
             }
             
-            L.og.debug("Profile Likes: fetching \(self.likedIds.count) posts, skipped \(self.likedIds.count - onlyNewIds.count) duplicates")
+            L.og.debug("Profile Reactions: fetching \(self.reactedIds.count) posts, skipped \(self.reactedIds.count - onlyNewIds.count) duplicates")
             
             let reqTask = ReqTask(
                 debounceTime: 0.5,
-                subscriptionId: "PROFILE-LIKED-POSTS",
+                subscriptionId: "PROFILE-REACTED-POSTS",
                 reqCommand: { taskId in
                     if let cm = NostrEssentials
                                 .ClientMessage(type: .REQ,
@@ -153,18 +157,18 @@ class ProfileLikesViewModel: ObservableObject {
                         req(cm)
                     }
                     else {
-                        L.og.error("Profile Likes: Problem generating posts request")
+                        L.og.error("Profile Reactions: Problem generating posts request")
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Profile Likes: ready to process relay response")
+                    L.og.info("Profile Reactions: ready to process relay response")
                 },
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Profile Likes: timeout ")
+                    L.og.info("Profile Reactions: timeout ")
                 })
 
             self.backlog.add(reqTask)
@@ -173,19 +177,19 @@ class ProfileLikesViewModel: ObservableObject {
         }
     }
     
-    // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED AND PUT ON SCREEN
+    // STEP 4: FETCH RECEIVED POSTS FROM DB
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let blockedPubkeys = blocks()
         bg().perform { [weak self] in
             guard let self else { return }
-            guard !self.likedIds.isEmpty else {
+            guard !self.reactedIds.isEmpty else {
                 L.og.debug("fetchPostsFromDB: empty ids")
                 onComplete?()
                 return
             }
             
             var nrPosts: [NRPost] = []
-            for postId in self.likedIds {
+            for postId in self.reactedIds {
                 if let event = try? Event.fetchEvent(id: postId, context: bg()) {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     nrPosts.append(NRPost(event: event))
@@ -229,28 +233,28 @@ class ProfileLikesViewModel: ObservableObject {
     
     public func load() {
         self.state = .loading
-        self.likedIds = []
+        self.reactedIds = []
         self.posts = []
-        self.fetchLikesFromRelays()
+        self.fetchReactionsFromRelays()
     }
     
     // for after account change
     public func reload() {
         self.state = .loading
-        self.likedIds = []
+        self.reactedIds = []
         self.backlog.clear()
         self.posts = []
-        self.fetchLikesFromRelays()
+        self.fetchReactionsFromRelays()
     }
     
     // pull to refresh
     public func refresh() async {
         self.state = .loading
-        self.likedIds = []
+        self.reactedIds = []
         self.backlog.clear()
         
         await withCheckedContinuation { [weak self] continuation in
-            self?.fetchLikesFromRelays {
+            self?.fetchReactionsFromRelays {
                 continuation.resume()
             }
         }
