@@ -63,8 +63,8 @@ class Themes: ObservableObject {
     public func loadGreen() {
         selectedTheme = "green"
         theme = Theme(
-            primary: Color.primary,
-            secondary: Color.secondary,
+            primary: Color("defaultPrimary"),
+            secondary: Color("defaultSecondary"),
             accent: Color("greenAccentColor"),
             background: Color("greenBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -79,8 +79,8 @@ class Themes: ObservableObject {
         selectedTheme = "pink"
         
         theme = Theme(
-            primary: Color.primary,
-            secondary: Color.secondary,
+            primary: Color("defaultPrimary"),
+            secondary: Color("defaultSecondary"),
             accent: Color("pinkAccentColor"),
             background: Color("pinkBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -94,8 +94,8 @@ class Themes: ObservableObject {
     public func loadOrange() {
         selectedTheme = "orange"
         theme = Theme(
-            primary: Color.primary,
-            secondary: Color.secondary,
+            primary: Color("defaultPrimary"),
+            secondary: Color("defaultSecondary"),
             accent: Color("orangeAccentColor"),
             background: Color("orangeBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -110,8 +110,8 @@ class Themes: ObservableObject {
         selectedTheme = "purple"
         
         theme = Theme(
-            primary: Color.primary,
-            secondary: Color.secondary,
+            primary: Color("defaultPrimary"),
+            secondary: Color("defaultSecondary"),
             accent: Color("purpleAccentColor"),
             background: Color("purpleBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -125,8 +125,8 @@ class Themes: ObservableObject {
     public func loadRed() {
         selectedTheme = "red"
         theme = Theme(
-            primary: Color.primary,
-            secondary: Color.secondary,
+            primary: Color("defaultPrimary"),
+            secondary: Color("defaultSecondary"),
             accent: Color("redAccentColor"),
             background: Color("redBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -140,8 +140,8 @@ class Themes: ObservableObject {
     public func loadBlue() {
         selectedTheme = "blue"
         theme = Theme(
-            primary: Color.primary,
-            secondary: Color.secondary,
+            primary: Color("defaultPrimary"),
+            secondary: Color("defaultSecondary"),
             accent: Color("blueAccentColor"),
             background: Color("blueBackground"),
             secondaryBackground: Color(.secondarySystemBackground),

@@ -37,12 +37,13 @@ class NRTextParser { // TEXT things
 
     func parseText(fastTags: [FastTag], event: Event? = nil, text: String, primaryColor: Color? = nil) -> AttributedStringWithPs {
         
-        if text == "\n" {
-            return AttributedStringWithPs(input: text, output: NSAttributedString(string: text), pTags: [], event: event)
+        if let primaryColor, primaryColor != lastColor { // need this before "\n" check or DM colors are broken
+            self.lastColor = primaryColor
+            self.attributes[.foregroundColor] = UIColor(primaryColor)
         }
         
-        if let primaryColor, primaryColor != lastColor {
-            self.attributes[.foregroundColor] = UIColor(primaryColor)
+        if text == "\n" {
+            return AttributedStringWithPs(input: text, output: emptyString, pTags: [], event: event)
         }
 
         // Remove image links + Handle naddr1...
