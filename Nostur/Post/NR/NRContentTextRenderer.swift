@@ -43,8 +43,6 @@ struct NRContentTextRendererInner: View {
     private let onTap: (() -> Void)?
     
     @State private var text: NSAttributedString
-    @State private var textPrimaryColor: Color
-    @State private var textAccentColor: Color
     @State private var textWidth: CGFloat
     @State private var textHeight: CGFloat
     
@@ -60,8 +58,6 @@ struct NRContentTextRendererInner: View {
         self.onTap = onTap
         
         _text = State(wrappedValue: attributedStringWithPs.output)
-        _textPrimaryColor = State(wrappedValue: primaryColor ?? Themes.default.theme.primary)
-        _textAccentColor = State(wrappedValue: accentColor ?? Themes.default.theme.accent)
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
     }
@@ -88,7 +84,7 @@ struct NRContentTextRendererInner: View {
 //                        
 //                    }
                 
-                NRTextFixed(text: $text, fontColor: $textPrimaryColor, accentColor: $textAccentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: onTap)
+                NRTextFixed(text: $text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: onTap)
 //                    .background(Color.red.opacity(0.2))
   
 //                    .overlay(alignment: .topLeading) {
@@ -143,14 +139,14 @@ struct NRContentTextRendererInner: View {
                         guard newWidth != textWidth else { return }
                         textWidth = newWidth
                     }
-                    .onChange(of: accentColor) { newAccentColor in
-                        guard newAccentColor != textAccentColor else { return }
-                        textAccentColor = newAccentColor
-                    }
-                    .onChange(of: primaryColor) { newPrimaryColor in
-                        guard newPrimaryColor != textPrimaryColor else { return }
-                        textPrimaryColor = newPrimaryColor
-                    }
+//                    .onChange(of: accentColor) { newAccentColor in
+//                        guard newAccentColor != textAccentColor else { return }
+//                        textAccentColor = newAccentColor
+//                    }
+//                    .onChange(of: primaryColor) { newPrimaryColor in
+//                        guard newPrimaryColor != textPrimaryColor else { return }
+//                        textPrimaryColor = newPrimaryColor
+//                    }
                     .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             else {

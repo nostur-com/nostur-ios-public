@@ -164,7 +164,7 @@ struct NXContentRenderer: View { // VIEW things
                             }
                             .id(index)
                     case .text(let attributedStringWithPs): // For text notes
-                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: vc.availableWidth, isScreenshot: vc.isScreenshot, isPreview: vc.isPreview)
+                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: vc.availableWidth, isScreenshot: vc.isScreenshot, isPreview: vc.isPreview, primaryColor: vc.theme.primary, accentColor: vc.theme.accent)
                             .equatable()
                             .onTapGesture {
                                 guard !vc.isDetail else { return }

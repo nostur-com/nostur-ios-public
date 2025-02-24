@@ -9,7 +9,8 @@ import Foundation
 import SwiftUI
 import Combine
 
-public struct Theme {
+public struct Theme: Equatable, Identifiable {
+    public var id = "Default"
     public var primary = Color("defaultPrimary")
     public var secondary = Color("defaultSecondary")
     public var accent = Color("defaultAccentColor")
@@ -21,6 +22,10 @@ public struct Theme {
     // Need to remove/redo/rename these:
     public var lineColor = Color("defaultLineColor")
     public var footerButtons = Color("defaultFooterButtonsColor")
+    
+    static public func == (lhs: Theme, rhs: Theme) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 class Themes: ObservableObject {
@@ -63,6 +68,7 @@ class Themes: ObservableObject {
     public func loadGreen() {
         selectedTheme = "green"
         theme = Theme(
+            id: "Green",
             primary: Color("defaultPrimary"),
             secondary: Color("defaultSecondary"),
             accent: Color("greenAccentColor"),
@@ -79,6 +85,7 @@ class Themes: ObservableObject {
         selectedTheme = "pink"
         
         theme = Theme(
+            id: "Pink",
             primary: Color("defaultPrimary"),
             secondary: Color("defaultSecondary"),
             accent: Color("pinkAccentColor"),
@@ -94,6 +101,7 @@ class Themes: ObservableObject {
     public func loadOrange() {
         selectedTheme = "orange"
         theme = Theme(
+            id: "Orange",
             primary: Color("defaultPrimary"),
             secondary: Color("defaultSecondary"),
             accent: Color("orangeAccentColor"),
@@ -110,6 +118,7 @@ class Themes: ObservableObject {
         selectedTheme = "purple"
         
         theme = Theme(
+            id: "Purple",
             primary: Color("defaultPrimary"),
             secondary: Color("defaultSecondary"),
             accent: Color("purpleAccentColor"),
@@ -125,6 +134,7 @@ class Themes: ObservableObject {
     public func loadRed() {
         selectedTheme = "red"
         theme = Theme(
+            id: "Red",
             primary: Color("defaultPrimary"),
             secondary: Color("defaultSecondary"),
             accent: Color("redAccentColor"),
@@ -140,6 +150,7 @@ class Themes: ObservableObject {
     public func loadBlue() {
         selectedTheme = "blue"
         theme = Theme(
+            id: "Blue",
             primary: Color("defaultPrimary"),
             secondary: Color("defaultSecondary"),
             accent: Color("blueAccentColor"),

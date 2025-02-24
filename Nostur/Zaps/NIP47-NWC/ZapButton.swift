@@ -10,7 +10,8 @@ import SwiftUI
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View, Equatable {
     static func == (lhs: ZapButton, rhs: ZapButton) -> Bool {
-        lhs.nrPost.id == rhs.nrPost.id
+        lhs.nrPost.id == rhs.nrPost.id &&
+        lhs.theme == rhs.theme
     }
     
     private let nrPost: NRPost

@@ -137,7 +137,7 @@ struct ContentRenderer: View { // VIEW things
 //                            navigateTo(nrPost)
 //                        }
 //                        .id(index)
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview, onTap: {
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreview: nrPost.isPreview, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                     })

@@ -115,7 +115,7 @@ extension View {
                     }
                 default:
                     PostDetailView(nrPost: nrPost)
-                        .equatable()
+//                        .equatable()
 //                        .debugDimensions("nbNavigationDestination.PostDetailView", alignment: .topLeading)
                 }
             }
@@ -163,8 +163,8 @@ extension View {
                 switch (path) {
                     case .Post(let post):
                         PostDetailView(nrPost: post)
-                            .equatable()
-                            .debugDimensions("nbNavigationDestination2.PostDetailView", alignment: .topLeading)
+//                            .equatable()
+//                            .debugDimensions("nbNavigationDestination2.PostDetailView", alignment: .topLeading)
                     case .Blocklist:
                         BlockListView()
                     case .PostReactions(let eventId):

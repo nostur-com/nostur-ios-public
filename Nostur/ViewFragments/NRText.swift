@@ -156,19 +156,19 @@ struct NRTextFixed: UIViewRepresentable {
     
     @Binding var attributedString: NSAttributedString
     private let plain: Bool
-    @Binding var fontColor: Color
-    @Binding var accentColor: Color
+    private var fontColor: Color
+    private var accentColor: Color
     @Binding var textWidth: CGFloat
     @Binding var textHeight: CGFloat
     private let textCutOffFixerHeight: CGFloat // to fix text cutoff need to add  some height  always as workaround
     public var onTap: (() -> Void)? = nil
     
-    init(text attributedString: Binding<NSAttributedString>, plain: Bool = false, fontColor: Binding<Color>, accentColor: Binding<Color>, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, onTap: (() -> Void)? = nil) {
+    init(text attributedString: Binding<NSAttributedString>, plain: Bool = false, fontColor: Color, accentColor: Color, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, onTap: (() -> Void)? = nil) {
         _attributedString = attributedString
         self.onTap = onTap
         self.plain = plain
-        _fontColor = fontColor
-        _accentColor = accentColor
+        self.fontColor = fontColor
+        self.accentColor = accentColor
         _textWidth = textWidth
         _textHeight = textHeight
         textCutOffFixerHeight = 4 // Need to add 4 or sometimes text cuts off, not sure why
@@ -183,6 +183,7 @@ struct NRTextFixed: UIViewRepresentable {
         view.isScrollEnabled = false
         view.textColor = UIColor(fontColor)
         view.tintColor = UIColor(accentColor)
+        view.linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor(accentColor)]
         view.adjustsFontForContentSizeCategory = false
         view.isSelectable = true
         view.isEditable = false
@@ -229,11 +230,20 @@ struct NRTextFixed: UIViewRepresentable {
 
     func updateUIView(_ uiView: UITextView, context: Context) {
         
-        if uiView.textColor != UIColor(fontColor) {
+        if uiView.textColor != UIColor(fontColor) || uiView.tintColor != UIColor(accentColor) {
             uiView.textColor = UIColor(fontColor)
-        }
-        if uiView.tintColor != UIColor(accentColor) {
             uiView.tintColor = UIColor(accentColor)
+            
+            let mutableAttributedString = NSMutableAttributedString(attributedString: attributedString)
+            let attributes: [NSAttributedString.Key: NSObject] = [
+                .foregroundColor: UIColor(fontColor)
+            ]
+            mutableAttributedString.addAttributes(
+                attributes,
+                range: NSRange(location: 0, length: mutableAttributedString.length)
+            )
+            uiView.linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor(accentColor)]
+            uiView.attributedText = attributedString
         }
         
         if (self.attributedString != uiView.attributedText) {
@@ -355,7 +365,7 @@ struct NRTextFixedTester: View {
                 .frame(width: textWidth, height: textHeight)
                 .fixedSize(horizontal: false, vertical: true)
             
-            NRTextFixed(text: $text, fontColor: $primaryColor, accentColor: $accentColor, textWidth: $textWidth, textHeight: $textHeight)
+            NRTextFixed(text: $text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight)
             .onAppear {
                 textWidth = dim.listWidth - 20
                 text = NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output

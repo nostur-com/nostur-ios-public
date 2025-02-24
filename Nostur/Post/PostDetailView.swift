@@ -79,13 +79,13 @@ struct NoteById: View {
     }
 }
 
-struct PostDetailView: View, Equatable {
+struct PostDetailView: View {
     
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.nrPost.id == rhs.nrPost.id && lhs.didLoad == rhs.didLoad
-    }
+//    static func == (lhs: Self, rhs: Self) -> Bool {
+//        lhs.nrPost.id == rhs.nrPost.id && lhs.didLoad == rhs.didLoad
+//    }
     
-    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var themes: Themes = .default
     private let nrPost: NRPost
     private var navTitleHidden: Bool = false
     @State private var didLoad = false
@@ -106,6 +106,8 @@ struct PostDetailView: View, Equatable {
                             // Around parents + detail (not replies)
                             .padding(10)
                             .background(themes.theme.background)
+//                            .background(themes.theme.background)
+//                            .background(Color.blue)
                         
                         if (nrPost.kind == 443) {
                             Text("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
@@ -124,7 +126,8 @@ struct PostDetailView: View, Equatable {
                             ThreadReplies(nrPost: nrPost)
                         }
                     }
-                    .background(themes.theme.listBackground)
+//                    .background(themes.theme.listBackground)
+//                    .background(Color.red)
                 }
                 .onAppear {
                     guard !didLoad else { return }
@@ -173,7 +176,7 @@ let THREAD_LINE_OFFSET = 24.0
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
-    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var themes: Themes = .default
     @ObservedObject private var nrPost: NRPost
     @EnvironmentObject private var dim: DIMENSIONS
     
