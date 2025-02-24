@@ -1653,8 +1653,6 @@ extension NXColumnViewModel {
                 if vmInner.isAtTop {
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
-                    vmInner.isAtTop = false
-                    
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
                     // Update unread count
@@ -1676,6 +1674,7 @@ extension NXColumnViewModel {
                         if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
                             if vmInner.scrollToIndex != restoreToIndex {
                                 vmInner.scrollToIndex = restoreToIndex
+                                vmInner.isAtTop = false
                             }
                             #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
