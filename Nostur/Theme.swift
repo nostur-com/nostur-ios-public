@@ -25,7 +25,7 @@ public struct Theme {
 
 class Themes: ObservableObject {
     
-    @Published var theme:Theme = Theme()
+    @Published var theme: Theme = Theme()
     
     static let `default` = Themes()
     

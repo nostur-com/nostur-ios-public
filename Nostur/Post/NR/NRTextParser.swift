@@ -77,7 +77,7 @@ class NRTextParser { // TEXT things
                 range: NSRange(location: 0, length: mutableAttributedString.length)
             )
                         
-            return AttributedStringWithPs(input:text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
+            return AttributedStringWithPs(input: text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
         }
         catch {
             let mutableAttributedString = NSMutableAttributedString(string: newerTextWithPs.text)

@@ -229,12 +229,8 @@ struct NRTextFixed: UIViewRepresentable {
 
     func updateUIView(_ uiView: UITextView, context: Context) {
         
-//        if uiView.attributedText != self.attributedString {
-//            uiView.attributedText = self.attributedString
-//        }
-        
-        if uiView.textColor != UIColor(self.fontColor) {
-            uiView.textColor = UIColor(self.fontColor)
+        if uiView.textColor != UIColor(fontColor) {
+            uiView.textColor = UIColor(fontColor)
         }
         if uiView.tintColor != UIColor(accentColor) {
             uiView.tintColor = UIColor(accentColor)
