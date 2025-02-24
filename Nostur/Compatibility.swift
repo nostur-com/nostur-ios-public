@@ -251,6 +251,16 @@ extension View {
             self
         }
     }
+    
+    @ViewBuilder
+    func gestureIf<T>(condition: Bool, gesture: T) -> some View where T : Gesture {
+        if condition {
+            self.gesture(gesture)
+        }
+        else {
+            self
+        }
+    }
 
     @ViewBuilder
     func presentationDetents350l() -> some View {

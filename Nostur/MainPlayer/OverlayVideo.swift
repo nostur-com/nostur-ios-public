@@ -190,7 +190,18 @@ struct OverlayVideo: View {
                                     .overlay { // MARK: Overlay after finished playing
                                         if vm.didFinishPlaying {
                                             ZStack {
-                                                Color.black.opacity(0.65)
+                                                Color.black.opacity(0.75)
+                                                    .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                                                        .onEnded({ value in
+                                                            if value.translation.height > 0 {
+                                                                if vm.availableViewModes.contains(.overlay) {
+                                                                    vm.viewMode = .overlay
+                                                                }
+                                                                else {
+                                                                    vm.close()
+                                                                }
+                                                            }
+                                                        }))
                                                 VStack {
                                                     
                                                     if vm.viewMode != .overlay {
@@ -242,11 +253,13 @@ struct OverlayVideo: View {
                                             .padding(.top, 10)
                                             .padding(.leading, 10)
                                             .contentShape(Rectangle())
-                                            .onTapGesture {
-                                                withAnimation {
-                                                    vm.close()
-                                                }
-                                            }
+                                            .highPriorityGesture(
+                                                TapGesture()
+                                                .onEnded({ _ in
+                                                    withAnimation {
+                                                        vm.close()
+                                                    }
+                                                }))
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
                                     .onDisappear {
@@ -405,6 +418,17 @@ struct OverlayVideo: View {
                         x: clampedOffsetX(geometry: geometry),
                         y: clampedOffsetY(geometry: geometry) - (vm.viewMode == .overlay ? CONTROLS_HEIGHT : 0)
                     )
+                    .gestureIf(condition: vm.viewMode == .fullscreen, gesture: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
+                        .onEnded({ value in
+                            if value.translation.height > 0 { // swipe down
+                                if vm.availableViewModes.contains(.overlay) {
+                                    vm.viewMode = .overlay
+                                }
+                                else {
+                                    vm.close()
+                                }
+                            }
+                        }))
                     .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture:
                         DragGesture()
                             .onChanged { value in

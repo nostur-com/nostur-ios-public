@@ -47,6 +47,10 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         
         try? AVAudioSession.sharedInstance().setActive(true)
         
+        let swipeDown = UISwipeGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.respondToSwipeGesture))
+        swipeDown.direction = UISwipeGestureRecognizer.Direction.down
+        avpc.view.addGestureRecognizer(swipeDown)
+        
         return avpc.view
     }
     
@@ -74,6 +78,17 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         init(parent: AVPlayerViewControllerRepresentable) {
             self.parent = parent
             super.init()
+        }
+        
+        @objc func respondToSwipeGesture(_ swipe: UISwipeGestureRecognizer) {
+            if AnyPlayerModel.shared.availableViewModes.contains(.overlay) {
+                AnyPlayerModel.shared.viewMode = .overlay
+            }
+            else {
+                Task { @MainActor in
+                    AnyPlayerModel.shared.close()
+                }
+            }
         }
     }
 }
