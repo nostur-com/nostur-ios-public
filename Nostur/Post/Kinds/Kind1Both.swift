@@ -88,12 +88,23 @@ struct Kind1Both: View {
                     }
                     .onTapGesture {
                         if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
-                            if IS_CATALYST {
+                            if IS_CATALYST || IS_IPAD {
                                 navigateTo(liveEvent)
                             }
                             else {
-                                Task { @MainActor in
+                                // LOAD NEST
+                                if liveEvent.isLiveKit {
                                     LiveKitVoiceSession.shared.activeNest = liveEvent
+                                }
+                                // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
+                                else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
+                                    AnyPlayerModel.shared.viewMode = .detailstream
+                                }
+                                // LOAD NEW .DETAILSTREAM
+                                else {
+                                    Task {
+                                        await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
+                                    }
                                 }
                             }
                         }
@@ -248,12 +259,23 @@ struct Kind1Both: View {
                     LiveEventPFP(pubkey: nrPost.pubkey, nrContact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
                         .onTapGesture {
                             if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
-                                if IS_CATALYST {
+                                if IS_CATALYST || IS_IPAD {
                                     navigateTo(liveEvent)
                                 }
                                 else {
-                                    Task { @MainActor in
+                                    // LOAD NEST
+                                    if liveEvent.isLiveKit {
                                         LiveKitVoiceSession.shared.activeNest = liveEvent
+                                    }
+                                    // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
+                                    else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
+                                        AnyPlayerModel.shared.viewMode = .detailstream
+                                    }
+                                    // LOAD NEW .DETAILSTREAM
+                                    else {
+                                        Task {
+                                            await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
+                                        }
                                     }
                                 }
                             }
