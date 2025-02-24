@@ -38,6 +38,7 @@ class BookmarksFeedModel: ObservableObject {
         }
     }
     
+    @Published public var isLoading = true
     @Published public var nrLazyBookmarks: [NRLazyBookmark] = []
     @Published public var searchText: String = ""
     
@@ -130,6 +131,7 @@ class BookmarksFeedModel: ObservableObject {
             
             DispatchQueue.main.async { [weak self] in
                 self?.nrLazyBookmarks = nrLazyBookmarks
+                self?.isLoading = false
             }
         }
         

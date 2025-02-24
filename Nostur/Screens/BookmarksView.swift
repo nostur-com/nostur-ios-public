@@ -32,7 +32,10 @@ struct BookmarksView: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            if !vm.nrLazyBookmarks.isEmpty {
+            if vm.isLoading {
+                CenteredProgressView()
+            }
+            else if !vm.nrLazyBookmarks.isEmpty {
                 List {
                     Section {
                         ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
