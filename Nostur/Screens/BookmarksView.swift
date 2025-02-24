@@ -46,7 +46,8 @@ struct BookmarksView: View {
                             .listRowSeparator(.hidden)
                             .listRowBackground(themes.theme.listBackground)
                             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                            .padding(.top, GUTTER)
+                            .padding(.bottom, GUTTER)
+                            
                         }
                         .onDelete { indexSet in
                             deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
@@ -54,12 +55,13 @@ struct BookmarksView: View {
                     } header: {
                         
                         SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
-                                .listRowSeparator(.hidden)
-                                .listRowBackground(themes.theme.listBackground)
-                                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                                .padding(.horizontal, 10)
-                             
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(themes.theme.listBackground)
+                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        //                                .padding(.horizontal, 10)
+                        
                     }
+//                    .padding(.top, -30)
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
@@ -198,7 +200,7 @@ struct LazyBookmark: View {
                     .frame(height: 175)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .task {
+                    .task(id: nrLazyBookmark.id) {
                         bg().perform {
                             let nrPost = NRPost(event: nrLazyBookmark.bgEvent)
                             Task { @MainActor in

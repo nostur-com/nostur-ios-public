@@ -4370,6 +4370,7 @@
     },
     "Likes" : {
       "comment" : "Tab title",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6165,6 +6166,9 @@
           }
         }
       }
+    },
+    "Reactions" : {
+      "comment" : "Tab title"
     },
     "read" : {
       "localizations" : {
