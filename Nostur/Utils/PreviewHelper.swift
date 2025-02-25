@@ -457,10 +457,18 @@ extension PreviewEnvironment {
         context.performAndWait {
             self.parseMessages(testKind0Events())
         }
-    }   
-    func loadChats() {
+    }
+    
+    func loadLiveEvent() {
+        context.performAndWait {
+            self.parseMessages(testLiveEvent())
+            self.parseMessages(testLiveEventProfiles())
+        }
+    }
+    
+    func loadNoDBChats() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let messages = testChats()
+            let messages = testChatsNzaps()
             for text in messages {
                 guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory") else { continue }
                 guard message.event != nil else { continue }
