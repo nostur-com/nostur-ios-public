@@ -89,7 +89,7 @@ struct ProfileView: View {
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
-                                .onTapGesture { vm.newPostsNotificationsEnabled = false }
+                                .onTapGesture { vm.toggleNewPostNotifications(nrContact.pubkey) }
                                 .padding([.trailing, .top], 5)
                         }
                         else {
@@ -105,7 +105,7 @@ struct ProfileView: View {
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
-                                .onTapGesture { vm.newPostsNotificationsEnabled = true }
+                                .onTapGesture { vm.toggleNewPostNotifications(nrContact.pubkey) }
                                 .padding([.trailing, .top], 5)
                         }
                         

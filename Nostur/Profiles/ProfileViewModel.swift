@@ -14,14 +14,7 @@ class ProfileViewModel: ObservableObject {
     @Published var fixedPfp: URL?
     @Published var npub = ""
     
-    @Published var newPostsNotificationsEnabled: Bool = false {
-        didSet {
-            Task { @MainActor in
-                guard let pubkey = self.pubkey else { return }
-                NewPostNotifier.shared.toggle(pubkey)
-            }
-        }
-    }
+    @Published var newPostsNotificationsEnabled: Bool = false
     
     private let backlog = Backlog(timeout: 4.0, auto: true)
     private var pubkey: String?
@@ -62,6 +55,12 @@ class ProfileViewModel: ObservableObject {
                 }
             }
         }
+    }
+    
+    @MainActor
+    public func toggleNewPostNotifications(_ pubkey: String) {
+        newPostsNotificationsEnabled = !NewPostNotifier.shared.isEnabled(for: pubkey)
+        NewPostNotifier.shared.toggle(pubkey)
     }
     
     @MainActor
