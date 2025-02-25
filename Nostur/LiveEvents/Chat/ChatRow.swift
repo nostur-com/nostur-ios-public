@@ -16,16 +16,18 @@ struct ChatRow: View {
     var body: some View {
         switch content {
             case .chatConfirmedZap(let confirmedZap):
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         
-                        HStack {
+                        HStack(spacing: 3) {
                             Image(systemName: "bolt.fill").foregroundColor(.yellow)
-                            Text(confirmedZap.amount.satsFormatted + " sats")
+                            Text(confirmedZap.amount.satsFormatted)
                                 .fontWeightBold()
                         }
-                        .padding(.vertical, 5)
-                        .padding(.horizontal, 10)
+                        .padding(.leading, 7)
+                        .padding(.trailing, 8)
+                        
+                        .padding(.vertical, 2)
                         .foregroundColor(Color.white)
                         .background {
                             theme.accent
@@ -85,15 +87,17 @@ struct ChatRow: View {
                         }
                 }
             case .chatPendingZap(let pendingZap):
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        HStack {
+                        HStack(spacing: 3) {
                             Image(systemName: "bolt.badge.clock.fill").foregroundColor(.yellow.opacity(0.75))
                             Text(pendingZap.amount.satsFormatted + " sats")
                                 .fontWeightBold()
                         }
-                        .padding(.vertical, 5)
-                        .padding(.horizontal, 10)
+                        .padding(.leading, 7)
+                        .padding(.trailing, 8)
+                        
+                        .padding(.vertical, 2)
                         .foregroundColor(Color.white)
                         .background {
                             theme.accent
