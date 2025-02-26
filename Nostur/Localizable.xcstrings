@@ -5308,6 +5308,9 @@
       },
       "shouldTranslate" : false
     },
+    "Nothing found" : {
+
+    },
     "Notices" : {
       "localizations" : {
         "nl" : {
@@ -6558,6 +6561,9 @@
           }
         }
       }
+    },
+    "Reload" : {
+
     },
     "Remember this amount for all zaps" : {
       "comment" : "Toggle on zap screen to set selected amount as default for all zaps",

@@ -255,7 +255,7 @@ struct ProfileView: View {
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
                         .background(themes.theme.listBackground)
                 case "Interactions":
-                    ProfileInteractionsView(pubkey: nrContact.pubkey)
+                    ProfileInteractionsView(nrContact: nrContact)
                         .background(themes.theme.listBackground)
                 case "Following":
                     ProfileFollowingList(pubkey: nrContact.pubkey)

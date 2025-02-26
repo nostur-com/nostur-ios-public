@@ -1,5 +1,5 @@
 //
-//  ProfileInteractionsReactionsVM.swift
+//  ProfileInteractionsZapsVM.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 26/02/2025.
@@ -9,15 +9,15 @@ import SwiftUI
 import NostrEssentials
 import Combine
 
-class ProfileInteractionsReactionsVM: ObservableObject {
+class ProfileInteractionsZapsVM: ObservableObject {
     
     @Published var state: State
     private var accountPubkey: String?
     private var pubkey: String
-    private var reactedIds: Set<String>
-    public var reactionsMap: [String: String] = [:] // post id - reaction mapping
+    private var zappedEventIds: Set<String>
+    public var zapsMap: [String: (String, String?)] = [:] // post id: (amount, content)
     private var backlog: Backlog
-    private static let POSTS_LIMIT = 100 // TODO: ADD PAGINATION
+    private static let POSTS_LIMIT = 250 // TODO: ADD PAGINATION
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
@@ -25,7 +25,7 @@ class ProfileInteractionsReactionsVM: ObservableObject {
     @Published var posts: [NRPost] = [] {
         didSet {
             guard !posts.isEmpty else { return }
-            L.og.info("Profile Interactions - Reactions: loaded \(self.posts.count) posts")
+            L.og.info("Profile Interactions - Zaps: loaded \(self.posts.count) posts")
         }
     }
         
@@ -37,16 +37,16 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
         self.pubkey = pubkey
         self.state = .initializing
-        self.reactedIds = []
+        self.zappedEventIds = []
         self.backlog = Backlog(timeout: 8.0, auto: true)
     }
     
-    // STEP 1: FETCH INTERACTIONS (REACTIONS) FROM RELAYS
-    private func fetchInteractionsFromRelays(_ onComplete: (() -> ())? = nil) {
+    // STEP 1: FETCH ZAPS FROM RELAYS
+    private func fetchZapsFromRelays(_ onComplete: (() -> ())? = nil) {
         guard let accountPubkey = self.accountPubkey else { return }
         let reqTask = ReqTask(
             debounceTime: 0.5,
-            subscriptionId: "PROFILEINTERACTIONS-R",
+            subscriptionId: "PROFILEINTERACTIONS-ZAPS",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 if let cm = NostrEssentials
@@ -54,66 +54,70 @@ class ProfileInteractionsReactionsVM: ObservableObject {
                                            subscriptionId: taskId,
                                            filters: [
                                             Filters(
-                                                authors: [self.pubkey],
-                                                kinds: Set([7]),
-                                                tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
-                                                limit: 2500
+                                                kinds: Set([9735]),
+                                                tagFilters: [
+                                                    TagFilter(tag: "p", values: [accountPubkey]),
+                                                    TagFilter(tag: "P", values: [self.pubkey])
+                                                ],
+                                                limit: 500
                                             )
                                            ]
                             ).json() {
                     req(cm)
                 }
                 else {
-                    L.og.error("Profile Interactions - Reactions: Problem generating request")
+                    L.og.error("Profile Interactions - Zaps: Problem generating request")
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 self?.backlog.clear()
-                self?.fetchReactionsFromDB(onComplete)
+                self?.fetchZapsFromDB(onComplete)
 
-                L.og.info("Profile Interactions - Reactions: ready to process relay response")
+                L.og.info("Profile Interactions - Zaps: ready to process relay response")
             },
             timeoutCommand: { [weak self] taskId in
                 self?.backlog.clear()
-                self?.fetchReactionsFromDB(onComplete)
-                L.og.info("Profile Interactions: timeout ")
+                self?.fetchZapsFromDB(onComplete)
+                L.og.info("Profile Interactions - Zaps: timeout ")
             })
 
         backlog.add(reqTask)
         reqTask.fetch()
     }
     
-    // STEP 2: FETCH RECEIVED REACTIONS FROM DB
-    private func fetchReactionsFromDB(_ onComplete: (() -> ())? = nil) {
+    // STEP 2: FETCH ZAPS FROM DB
+    private func fetchZapsFromDB(_ onComplete: (() -> ())? = nil) {
         guard let accountPubkey = self.accountPubkey else { return }
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 7 AND pubkey == %@ AND otherPubkey = %@", self.pubkey, accountPubkey)
+        fr.predicate = NSPredicate(format: "kind == 9735 AND otherPubkey = %@ AND zapFromRequest.pubkey == %@", accountPubkey, self.pubkey)
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let reactions = try? bg().fetch(fr) else { return }
+            guard let zaps = try? bg().fetch(fr) else { return }
                 
-            for reaction in reactions
+            for zap in zaps
                 .sorted(by: { $0.created_at > $1.created_at })
                 .prefix(Self.POSTS_LIMIT)
             {
-                guard let reactionToId = reaction.reactionToId else { continue }
-                self.reactedIds.insert(reactionToId)
-                let reactionContent = reaction.content ?? "+"
-                Task { @MainActor in // need to access from main later
-                    self.reactionsMap[reactionToId] = reactionContent
+                guard let zappedEventId = zap.zappedEventId else { continue }
+                guard !zappedEventId.contains(":") else { continue } // no easy way to query article aTags like kind:1 ids, so skip
+                
+                self.zappedEventIds.insert(zappedEventId)
+                let zapInfo: (String, String?) = (zap.naiveSats.satsFormatted, zap.zapFromRequest?.content)
+                Task { @MainActor in
+                    self.zapsMap[zappedEventId] = zapInfo
                 }
             }
             self.fetchPostsFromRelays(onComplete)
         }
     }
     
-    // STEP 3: FETCH REACTED POSTS FROM RELAYS
+    // STEP 3: FETCH ZAPPED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         bg().perform { [weak self] in
             guard let self else { return }
-            let onlyNewIds = self.reactedIds
+            let onlyNewIds = self.zappedEventIds
                 .filter { postId in
                     Importer.shared.existingIds[postId] == nil
                 }
@@ -121,9 +125,9 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         
 
             guard !onlyNewIds.isEmpty else {
-                L.og.debug("Profile Interactions - Reactions: fetchPostsFromRelays: empty ids")
-                if (self.reactedIds.count > 0) {
-                    L.og.debug("Profile Interactions - Reactions: but we can render the duplicates")
+                L.og.debug("Profile Interactions - Zaps: fetchPostsFromRelays: empty ids")
+                if (self.zappedEventIds.count > 0) {
+                    L.og.debug("Profile Interactions - Zaps: but we can render the duplicates")
                     DispatchQueue.main.async { [weak self] in
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
@@ -135,11 +139,11 @@ class ProfileInteractionsReactionsVM: ObservableObject {
                 return
             }
             
-            L.og.debug("Profile Interactions - Reactions: fetching \(self.reactedIds.count) posts, skipped \(self.reactedIds.count - onlyNewIds.count) duplicates")
+            L.og.debug("Profile Interactions - Zaps: fetching \(self.zappedEventIds.count) posts, skipped \(self.zappedEventIds.count - onlyNewIds.count) duplicates")
             
             let reqTask = ReqTask(
                 debounceTime: 0.5,
-                subscriptionId: "PROFILEINTERACTIONS-R-P",
+                subscriptionId: "PROFILEINTERACTIONS-ZAPPED-POSTS",
                 reqCommand: { taskId in
                     if let cm = NostrEssentials
                                 .ClientMessage(type: .REQ,
@@ -147,25 +151,25 @@ class ProfileInteractionsReactionsVM: ObservableObject {
                                                filters: [
                                                 Filters(
                                                     ids: Set(onlyNewIds),
-                                                    limit: 9999
+                                                    limit: Self.REQ_IDS_LIMIT
                                                 )
                                                ]
                                 ).json() {
                         req(cm)
                     }
                     else {
-                        L.og.error("Profile Reactions: Problem generating posts request")
+                        L.og.error("Profile Interactions - Zaps: Problem generating posts request")
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Profile Reactions: ready to process relay response")
+                    L.og.info("Profile Interactions - Zaps: ready to process relay response")
                 },
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Profile Reactions: timeout ")
+                    L.og.info("Profile Interactions - Zaps: timeout ")
                 })
 
             self.backlog.add(reqTask)
@@ -179,24 +183,25 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         guard let accountPubkey = self.accountPubkey else { return }
         bg().perform { [weak self] in
             guard let self else { return }
-            guard !self.reactedIds.isEmpty else {
+            guard !self.zappedEventIds.isEmpty else {
                 L.og.debug("fetchPostsFromDB: empty ids")
                 onComplete?()
                 return
             }
-            
+                        
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey = %@ AND id IN %@", accountPubkey, self.reactedIds)
+            fr.predicate = NSPredicate(format: "pubkey = %@ AND id IN %@", accountPubkey, self.zappedEventIds)
             
             let nrPosts: [NRPost] = ((try? bg().fetch(fr)) ?? [])
                 .map { event in
                     NRPost(event: event)
                 }
 
+            
             DispatchQueue.main.async { [weak self] in
                 onComplete?()
                 self?.posts = Array(nrPosts
-                    .sorted(by: { $0.createdAt > $1.createdAt })
+                    .sorted(by: { $0.createdAt > $1.createdAt }) // TODO: Should actually sort by repost.createdAt (kind 6)
                     .prefix(Self.POSTS_LIMIT))
                         
                 self?.state = .ready
@@ -214,6 +219,7 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         }
     }
     
+    
     public func prefetch(_ post:NRPost) {
         guard SettingsStore.shared.fetchCounts else { return }
         guard !self.prefetchedIds.contains(post.id) else { return }
@@ -229,29 +235,28 @@ class ProfileInteractionsReactionsVM: ObservableObject {
     
     public func load() {
         self.state = .loading
-        self.reactedIds = []
+        self.zappedEventIds = []
         self.posts = []
-        self.fetchInteractionsFromRelays()
+        self.fetchZapsFromRelays()
     }
     
     // for after account change
     public func reload() {
-        self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
         self.state = .loading
+        self.zappedEventIds = []
         self.backlog.clear()
-        self.reactedIds = []
         self.posts = []
-        self.fetchInteractionsFromRelays()
+        self.fetchZapsFromRelays()
     }
     
     // pull to refresh
     public func refresh() async {
-        self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
         self.state = .loading
+        self.zappedEventIds = []
         self.backlog.clear()
         
         await withCheckedContinuation { [weak self] continuation in
-            self?.fetchInteractionsFromRelays {
+            self?.fetchZapsFromRelays {
                 continuation.resume()
             }
         }

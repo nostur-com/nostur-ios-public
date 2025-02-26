@@ -9,13 +9,12 @@ import SwiftUI
 import NostrEssentials
 import Combine
 
-class ProfileInteractionsReactionsVM: ObservableObject {
+class ProfileInteractionsRepostsVM: ObservableObject {
     
     @Published var state: State
     private var accountPubkey: String?
     private var pubkey: String
-    private var reactedIds: Set<String>
-    public var reactionsMap: [String: String] = [:] // post id - reaction mapping
+    private var repostedIds: Set<String>
     private var backlog: Backlog
     private static let POSTS_LIMIT = 100 // TODO: ADD PAGINATION
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
@@ -25,7 +24,7 @@ class ProfileInteractionsReactionsVM: ObservableObject {
     @Published var posts: [NRPost] = [] {
         didSet {
             guard !posts.isEmpty else { return }
-            L.og.info("Profile Interactions - Reactions: loaded \(self.posts.count) posts")
+            L.og.info("Profile Interactions - Reposts: loaded \(self.posts.count) posts")
         }
     }
         
@@ -37,16 +36,16 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
         self.pubkey = pubkey
         self.state = .initializing
-        self.reactedIds = []
+        self.repostedIds = []
         self.backlog = Backlog(timeout: 8.0, auto: true)
     }
     
-    // STEP 1: FETCH INTERACTIONS (REACTIONS) FROM RELAYS
+    // STEP 1: FETCH INTERACTIONS (REPOSTS) FROM RELAYS
     private func fetchInteractionsFromRelays(_ onComplete: (() -> ())? = nil) {
         guard let accountPubkey = self.accountPubkey else { return }
         let reqTask = ReqTask(
             debounceTime: 0.5,
-            subscriptionId: "PROFILEINTERACTIONS-R",
+            subscriptionId: "PROFILEINTERACTIONS-6",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 if let cm = NostrEssentials
@@ -55,7 +54,7 @@ class ProfileInteractionsReactionsVM: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: [self.pubkey],
-                                                kinds: Set([7]),
+                                                kinds: Set([6]),
                                                 tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
                                                 limit: 2500
                                             )
@@ -64,56 +63,52 @@ class ProfileInteractionsReactionsVM: ObservableObject {
                     req(cm)
                 }
                 else {
-                    L.og.error("Profile Interactions - Reactions: Problem generating request")
+                    L.og.error("Profile Interactions - Reposts: Problem generating request")
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 self?.backlog.clear()
-                self?.fetchReactionsFromDB(onComplete)
+                self?.fetchRepostsFromDB(onComplete)
 
-                L.og.info("Profile Interactions - Reactions: ready to process relay response")
+                L.og.info("Profile Interactions - Reposts: ready to process relay response")
             },
             timeoutCommand: { [weak self] taskId in
                 self?.backlog.clear()
-                self?.fetchReactionsFromDB(onComplete)
-                L.og.info("Profile Interactions: timeout ")
+                self?.fetchRepostsFromDB(onComplete)
+                L.og.info("Profile Interactions - Reposts: timeout ")
             })
 
         backlog.add(reqTask)
         reqTask.fetch()
     }
     
-    // STEP 2: FETCH RECEIVED REACTIONS FROM DB
-    private func fetchReactionsFromDB(_ onComplete: (() -> ())? = nil) {
+    // STEP 2: FETCH RECEIVED REPOSTS FROM DB
+    private func fetchRepostsFromDB(_ onComplete: (() -> ())? = nil) {
         guard let accountPubkey = self.accountPubkey else { return }
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 7 AND pubkey == %@ AND otherPubkey = %@", self.pubkey, accountPubkey)
+        fr.predicate = NSPredicate(format: "kind == 6 AND pubkey == %@ AND otherPubkey = %@", self.pubkey, accountPubkey)
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let reactions = try? bg().fetch(fr) else { return }
+            guard let reposts = try? bg().fetch(fr) else { return }
                 
-            for reaction in reactions
+            for repost in reposts
                 .sorted(by: { $0.created_at > $1.created_at })
                 .prefix(Self.POSTS_LIMIT)
             {
-                guard let reactionToId = reaction.reactionToId else { continue }
-                self.reactedIds.insert(reactionToId)
-                let reactionContent = reaction.content ?? "+"
-                Task { @MainActor in // need to access from main later
-                    self.reactionsMap[reactionToId] = reactionContent
-                }
+                guard let firstQuoteId = repost.firstQuoteId else { continue }
+                self.repostedIds.insert(firstQuoteId)
             }
             self.fetchPostsFromRelays(onComplete)
         }
     }
     
-    // STEP 3: FETCH REACTED POSTS FROM RELAYS
+    // STEP 3: FETCH REPOSTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         bg().perform { [weak self] in
             guard let self else { return }
-            let onlyNewIds = self.reactedIds
+            let onlyNewIds = self.repostedIds
                 .filter { postId in
                     Importer.shared.existingIds[postId] == nil
                 }
@@ -121,9 +116,9 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         
 
             guard !onlyNewIds.isEmpty else {
-                L.og.debug("Profile Interactions - Reactions: fetchPostsFromRelays: empty ids")
-                if (self.reactedIds.count > 0) {
-                    L.og.debug("Profile Interactions - Reactions: but we can render the duplicates")
+                L.og.debug("Profile Interactions - Reposts: fetchPostsFromRelays: empty ids")
+                if (self.repostedIds.count > 0) {
+                    L.og.debug("Profile Interactions - Reposts: but we can render the duplicates")
                     DispatchQueue.main.async { [weak self] in
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
@@ -135,11 +130,11 @@ class ProfileInteractionsReactionsVM: ObservableObject {
                 return
             }
             
-            L.og.debug("Profile Interactions - Reactions: fetching \(self.reactedIds.count) posts, skipped \(self.reactedIds.count - onlyNewIds.count) duplicates")
+            L.og.debug("Profile Interactions - Reposts: fetching \(self.repostedIds.count) posts, skipped \(self.repostedIds.count - onlyNewIds.count) duplicates")
             
             let reqTask = ReqTask(
                 debounceTime: 0.5,
-                subscriptionId: "PROFILEINTERACTIONS-R-P",
+                subscriptionId: "PROFILEINTERACTIONS-6-P",
                 reqCommand: { taskId in
                     if let cm = NostrEssentials
                                 .ClientMessage(type: .REQ,
@@ -154,18 +149,18 @@ class ProfileInteractionsReactionsVM: ObservableObject {
                         req(cm)
                     }
                     else {
-                        L.og.error("Profile Reactions: Problem generating posts request")
+                        L.og.error("Profile Reposts: Problem generating posts request")
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Profile Reactions: ready to process relay response")
+                    L.og.info("Profile Reposts: ready to process relay response")
                 },
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Profile Reactions: timeout ")
+                    L.og.info("Profile Reposts: timeout ")
                 })
 
             self.backlog.add(reqTask)
@@ -179,14 +174,14 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         guard let accountPubkey = self.accountPubkey else { return }
         bg().perform { [weak self] in
             guard let self else { return }
-            guard !self.reactedIds.isEmpty else {
+            guard !self.repostedIds.isEmpty else {
                 L.og.debug("fetchPostsFromDB: empty ids")
                 onComplete?()
                 return
             }
             
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "pubkey = %@ AND id IN %@", accountPubkey, self.reactedIds)
+            fr.predicate = NSPredicate(format: "pubkey = %@ AND id IN %@", accountPubkey, self.repostedIds)
             
             let nrPosts: [NRPost] = ((try? bg().fetch(fr)) ?? [])
                 .map { event in
@@ -229,7 +224,7 @@ class ProfileInteractionsReactionsVM: ObservableObject {
     
     public func load() {
         self.state = .loading
-        self.reactedIds = []
+        self.repostedIds = []
         self.posts = []
         self.fetchInteractionsFromRelays()
     }
@@ -239,7 +234,7 @@ class ProfileInteractionsReactionsVM: ObservableObject {
         self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
         self.state = .loading
         self.backlog.clear()
-        self.reactedIds = []
+        self.repostedIds = []
         self.posts = []
         self.fetchInteractionsFromRelays()
     }

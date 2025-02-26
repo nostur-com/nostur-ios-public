@@ -10,13 +10,22 @@ import SwiftUI
 struct ProfileInteractionsView: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
+    @ObservedObject private var nrContact: NRContact
+    
     @StateObject private var conversationsVM: ProfileInteractionsConversationsVM
     @StateObject private var reactionsVM: ProfileInteractionsReactionsVM
+    @StateObject private var zapsVM: ProfileInteractionsZapsVM
+    @StateObject private var repostsVM: ProfileInteractionsRepostsVM
+    
+    
     @State private var selectedType = "Conversations"
     
-    init(pubkey: String) {
-        _conversationsVM = StateObject(wrappedValue: ProfileInteractionsConversationsVM(pubkey))
-        _reactionsVM = StateObject(wrappedValue: ProfileInteractionsReactionsVM(pubkey))
+    init(nrContact: NRContact) {
+        self.nrContact = nrContact
+        _conversationsVM = StateObject(wrappedValue: ProfileInteractionsConversationsVM(nrContact.pubkey))
+        _reactionsVM = StateObject(wrappedValue: ProfileInteractionsReactionsVM(nrContact.pubkey))
+        _zapsVM = StateObject(wrappedValue: ProfileInteractionsZapsVM(nrContact.pubkey))
+        _repostsVM = StateObject(wrappedValue: ProfileInteractionsRepostsVM(nrContact.pubkey))
     }
     
     var body: some View {
@@ -54,8 +63,8 @@ struct ProfileInteractionsView: View {
                     }
                 case .timeout:
                     VStack(alignment: .center) {
-                        Text("Unable to fetch content")
-                        Button("Try again") { conversationsVM.reload() }
+                        Text("Nothing found")
+                        Button("Reload") { conversationsVM.reload() }
                     }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -99,8 +108,116 @@ struct ProfileInteractionsView: View {
                     }
                 case .timeout:
                     VStack(alignment: .center) {
-                        Text("Unable to fetch content")
-                        Button("Try again") { reactionsVM.reload() }
+                        Text("Nothing found")
+                        Button("Reload") { reactionsVM.reload() }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+            case "Reposts":
+                switch repostsVM.state {
+                case .initializing, .loading:
+                    ProgressView()
+                        .padding(10)
+                        .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
+                        .onAppear { repostsVM.load() }
+                        .task(id: "profileInteractions") {
+                            do {
+                                try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
+                                repostsVM.state = .timeout
+                            } catch { }
+                        }
+                case .ready:
+                    ForEach(repostsVM.posts) { nrPost in
+                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                            Box(nrPost: nrPost) {
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                            }
+                        }
+                        //                    .id(nrPost.id)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            repostsVM.prefetch(nrPost)
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    }
+                case .timeout:
+                    VStack(alignment: .center) {
+                        Text("Nothing found")
+                        Button("Reload") { repostsVM.reload() }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+            case "Zaps":
+                switch zapsVM.state {
+                case .initializing, .loading:
+                    ProgressView()
+                        .padding(10)
+                        .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
+                        .onAppear { zapsVM.load() }
+                        .task(id: "profileInteractions") {
+                            do {
+                                try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
+                                zapsVM.state = .timeout
+                            } catch { }
+                        }
+                case .ready:
+                    ForEach(zapsVM.posts) { nrPost in
+                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                            Box(nrPost: nrPost) {
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                    .padding(.top, 20) // bit more padding so we have some space to put zap
+                            }
+                        }
+                        //                    .id(nrPost.id)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            zapsVM.prefetch(nrPost)
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        .overlay(alignment: .topLeading) {
+                            if let zap = zapsVM.zapsMap[nrPost.id] {
+                                HStack(spacing: 5) {
+                                    Circle()
+                                        .foregroundColor(randomColor(seed: nrContact.pubkey))
+                                        .frame(width: 20.0, height: 20.0)
+                                        .overlay {
+                                            if let pfpURL = nrContact.pictureUrl {
+                                                MiniPFP(pictureUrl: pfpURL, size: 20.0)
+                                                    .animation(.easeIn, value: pfpURL)
+                                            }
+                                        }
+                                    Image(systemName: "bolt.fill")
+                                        .foregroundColor(.yellow)
+                                    
+                                    Text(zap.0)
+                                        .foregroundColor(.white)
+                                        .fontWeightBold()
+                                    
+                                    if let content = zap.1 {
+                                        Text(content)
+                                            .foregroundColor(.white)
+                                            .font(.footnote)
+                                            .lineLimit(1)
+                                    }
+                                }
+                                .padding(4)
+                                .background(themes.theme.accent)
+                                .clipShape(Capsule())
+                            }
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    }
+                case .timeout:
+                    VStack(alignment: .center) {
+                        Text("Nothing found")
+                        Button("Reload") { zapsVM.reload() }
                     }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -125,25 +242,5 @@ struct ProfileInteractionsView: View {
             .listRowBackground(themes.theme.listBackground)
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
-    }
-}
-
-#Preview {
-    let pubkey = "2779f3d9f42c7dee17f0e6bcdcf89a8f9d592d19e3b1bbd27ef1cffd1a7f98d1"
-    
-    return PreviewContainer({ pe in
-        pe.loadContacts()
-        pe.parseMessages(testInteractions())
-    }) {
-        List {
-            ProfileInteractionsView(pubkey: pubkey)
-                .listRowSpacing(10.0)
-                .listRowInsets(EdgeInsets())
-                .listSectionSeparator(.hidden)
-                .listRowSeparator(.hidden)
-        }
-        .environment(\.defaultMinListRowHeight, 50)
-        .listStyle(.plain)
-        .scrollContentBackgroundHidden()
     }
 }
