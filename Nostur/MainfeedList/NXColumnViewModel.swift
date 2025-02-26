@@ -1393,6 +1393,7 @@ class NXColumnViewModel: ObservableObject {
     
     private var prefetchedIds: Set<String> = []
     
+    // TODO: Add Debounce/Throttle here!
     @MainActor
     public func prefetch(_ post: NRPost) {
         guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }

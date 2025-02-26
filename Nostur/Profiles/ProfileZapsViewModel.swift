@@ -2,7 +2,7 @@
 //  ProfileZapsViewModel.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 07/09/2023.
+//  Created by Fabian Lachman on 26/02/2025.
 //
 
 import SwiftUI
