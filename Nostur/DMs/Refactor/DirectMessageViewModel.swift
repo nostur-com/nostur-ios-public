@@ -67,38 +67,37 @@ class DirectMessageViewModel: ObservableObject {
     private var subscriptions = Set<AnyCancellable>()
     
     private init() {
-        bg().perform { [weak self] in
-            guard let self else { return }
-            self._reloadAccepted
-                .debounce(for: 1.0, scheduler: RunLoop.main)
-                .sink { [weak self] _ in
-                    self?.loadAcceptedConversations()
-                }
-                .store(in: &self.subscriptions)
-            
-            self._reloadMessageRequests
-                .debounce(for: 0.5, scheduler: RunLoop.main)
-                .sink { [weak self] _ in
-                    self?.loadMessageRequests()
-                }
-                .store(in: &self.subscriptions)
-            
-            self._reloadMessageRequestsNotWot
-                .debounce(for: 0.5, scheduler: RunLoop.main)
-                .sink { [weak self] _ in
-                    self?.loadOutSideWoT()
-                }
-                .store(in: &self.subscriptions)
-            
-            receiveNotification(.blockListUpdated)
-                .sink { [weak self] _ in
-                    self?.showNotWoT = false
-                    self?.reloadAccepted()
-                    self?.reloadMessageRequests()
-                    self?.reloadMessageRequestsNotWot()
-                }
-                .store(in: &self.subscriptions)
-        }
+        self._reloadAccepted
+            .debounce(for: 1.5, scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.loadAcceptedConversations()
+            }
+            .store(in: &self.subscriptions)
+        
+        self._reloadMessageRequests
+            .debounce(for: 2.0, scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.loadMessageRequests()
+            }
+            .store(in: &self.subscriptions)
+        
+        self._reloadMessageRequestsNotWot
+            .debounce(for: 2.5, scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.loadOutSideWoT()
+            }
+            .store(in: &self.subscriptions)
+        
+        receiveNotification(.blockListUpdated)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.showNotWoT = false
+                self?.reloadAccepted()
+                self?.reloadMessageRequests()
+                self?.reloadMessageRequestsNotWot()
+            }
+            .store(in: &self.subscriptions)
+        
         if IS_CATALYST {
             setupBadgeNotifications()
         }
