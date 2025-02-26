@@ -10,64 +10,120 @@ import SwiftUI
 struct ProfileInteractionsView: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
-    @StateObject private var vm: ProfileInteractionsViewModel
+    @StateObject private var conversationsVM: ProfileInteractionsConversationsVM
+    @StateObject private var reactionsVM: ProfileInteractionsReactionsVM
     @State private var selectedType = "Conversations"
     
     init(pubkey: String) {
-        _vm = StateObject(wrappedValue: ProfileInteractionsViewModel(pubkey))
+        _conversationsVM = StateObject(wrappedValue: ProfileInteractionsConversationsVM(pubkey))
+        _reactionsVM = StateObject(wrappedValue: ProfileInteractionsReactionsVM(pubkey))
     }
     
     var body: some View {
         Section {
-            switch vm.state {
-            case .initializing, .loading:
-                ProgressView()
-                    .padding(10)
-                    .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
-                    .onAppear { vm.load() }
-                    .task(id: "profileInteractions") {
-                        do {
-                            try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                            vm.state = .timeout
-                        } catch { }
-                    }
-            case .ready:
-                ForEach(vm.posts) { nrPost in
-                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                        Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+            switch selectedType {
+            case "Conversations":
+                switch conversationsVM.state {
+                case .initializing, .loading:
+                    ProgressView()
+                        .padding(10)
+                        .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
+                        .onAppear { conversationsVM.load() }
+                        .task(id: "profileInteractions") {
+                            do {
+                                try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
+                                conversationsVM.state = .timeout
+                            } catch { }
                         }
+                case .ready:
+                    ForEach(conversationsVM.posts) { nrPost in
+                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                            Box(nrPost: nrPost) {
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                            }
+                        }
+                        //                    .id(nrPost.id)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            conversationsVM.prefetch(nrPost)
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
-                    //                    .id(nrPost.id)
-                    .onBecomingVisible {
-                        // SettingsStore.shared.fetchCounts should be true for below to work
-                        vm.prefetch(nrPost)
+                case .timeout:
+                    VStack(alignment: .center) {
+                        Text("Unable to fetch content")
+                        Button("Try again") { conversationsVM.reload() }
                     }
-                    .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(themes.theme.listBackground)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
-            case .timeout:
-                VStack(alignment: .center) {
-                    Text("Unable to fetch content")
-                    Button("Try again") { vm.reload() }
+            case "Reactions":
+                switch reactionsVM.state {
+                case .initializing, .loading:
+                    ProgressView()
+                        .padding(10)
+                        .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
+                        .onAppear { reactionsVM.load() }
+                        .task(id: "profileInteractions") {
+                            do {
+                                try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
+                                reactionsVM.state = .timeout
+                            } catch { }
+                        }
+                case .ready:
+                    ForEach(reactionsVM.posts) { nrPost in
+                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                            Box(nrPost: nrPost) {
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                            }
+                        }
+                        //                    .id(nrPost.id)
+                        .onBecomingVisible {
+                            // SettingsStore.shared.fetchCounts should be true for below to work
+                            reactionsVM.prefetch(nrPost)
+                        }
+                        .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
+                        .overlay(alignment: .topLeading) {
+                            if let reaction = reactionsVM.reactionsMap[nrPost.id] {
+                                Text(reaction == "+" ? "❤️" : reaction)
+                                    .padding(.top, 5)
+                                    .padding(.leading, 5)
+                            }
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    }
+                case .timeout:
+                    VStack(alignment: .center) {
+                        Text("Unable to fetch content")
+                        Button("Try again") { reactionsVM.reload() }
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .center)
+            default:
+                Text("🧩")
             }
+            
         } header: {
             Picker("Type", selection: $selectedType) {
                 Text("Conversations")
                     .tag("Conversations")
                 Text("Reactions")
-                    .tag("Reactios")
+                    .tag("Reactions")
                 Text("Zaps")
                     .tag("Zaps")
                 Text("Reposts")
                     .tag("Reposts")
             }
             .pickerStyle(.segmented)
+            .listRowSeparator(.hidden)
+            .listRowBackground(themes.theme.listBackground)
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
     }
 }

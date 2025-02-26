@@ -1,5 +1,5 @@
 //
-//  ProfileInteractionsViewModel.swift
+//  ProfileInteractionsConversationsVM.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 26/02/2025.
@@ -9,7 +9,7 @@ import SwiftUI
 import NostrEssentials
 import Combine
 
-class ProfileInteractionsViewModel: ObservableObject {
+class ProfileInteractionsConversationsVM: ObservableObject {
     
     @Published var state: State
     private var accountPubkey: String?
@@ -24,7 +24,7 @@ class ProfileInteractionsViewModel: ObservableObject {
     @Published var posts: [NRPost] = [] {
         didSet {
             guard !posts.isEmpty else { return }
-            L.og.info("Profile Interactions: loaded \(self.posts.count) posts")
+            L.og.info("Profile Interactions - Conversations: loaded \(self.posts.count) posts")
         }
     }
         
@@ -70,12 +70,12 @@ class ProfileInteractionsViewModel: ObservableObject {
                 self?.backlog.clear()
                 self?.fetchInteractionsFromDB(onComplete)
 
-                L.og.info("Profile Interactions: ready to process relay response")
+                L.og.info("Profile Interactions - Conversations: ready to process relay response")
             },
             timeoutCommand: { [weak self] taskId in
                 self?.backlog.clear()
                 self?.fetchInteractionsFromDB(onComplete)
-                L.og.info("Profile Interactions: timeout ")
+                L.og.info("Profile Interactions - Conversations: timeout ")
             })
 
         backlog.add(reqTask)
