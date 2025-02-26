@@ -100,6 +100,8 @@ class ProfileZapsViewModel: ObservableObject {
                 .prefix(Self.POSTS_LIMIT)
             {
                 guard let zappedEventId = zap.zappedEventId else { continue }
+                guard !zappedEventId.contains(":") else { continue } // no easy way to query article aTags like kind:1 ids, so skip
+                
                 self.zappedEventIds.insert(zappedEventId)
                 let zapInfo: (String, String?) = (zap.naiveSats.satsFormatted, zap.zapFromRequest?.content)
                 Task { @MainActor in
