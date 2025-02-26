@@ -488,6 +488,7 @@ public class ConnectionPool: ObservableObject {
                     
                     if message.relayType == .READ && !limitToRelayIds.contains(connection.url) && !connection.relayData.read { continue }
                     if message.relayType == .SEARCH && !connection.relayData.search { continue }
+                    if message.relayType == .SEARCH && connection.relayData.read { continue } // no need to lookup on relays that we already read from (Search/Lookup is always in addition to .READ)
                     
                     if (!connection.isSocketConnected) {
                         if (!connection.isSocketConnecting) {
