@@ -37,31 +37,25 @@ struct BookmarksView: View {
             }
             else if !vm.nrLazyBookmarks.isEmpty {
                 List {
-                    Section {
-                        ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
-                            ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
-                                LazyBookmark(nrLazyBookmark: nrLazyBookmark)
-                            }
-                            .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(themes.theme.listBackground)
-                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                            .padding(.bottom, GUTTER)
-                            
+                    SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+
+                    ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
+                        ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
+                            LazyBookmark(nrLazyBookmark: nrLazyBookmark)
                         }
-                        .onDelete { indexSet in
-                            deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
-                        }
-                    } header: {
-                        
-                        SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(themes.theme.listBackground)
-                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        //                                .padding(.horizontal, 10)
+                        .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .padding(.bottom, GUTTER)
                         
                     }
-//                    .padding(.top, -30)
+                    .onDelete { indexSet in
+                        deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
+                    }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
