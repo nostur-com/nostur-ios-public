@@ -264,14 +264,8 @@ struct ProfileView: View {
                     ProfileReactionsView(pubkey: nrContact.pubkey)
                         .background(themes.theme.listBackground)
                 case "Zaps":
-                    if #available(iOS 16.0, *), let mainContact = nrContact.mainContact {
-                        ProfileZaps(pubkey: nrContact.pubkey, contact: mainContact)
-                            .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .top)
-                            .background(themes.theme.listBackground)
-                    }
-                    else {
-                        EmptyView()
-                    }
+                    ProfileZapsView(nrContact: nrContact)
+                        .background(themes.theme.listBackground)
                 case "Relays":
                     ProfileRelays(pubkey: nrContact.pubkey, name: nrContact.anyName)
                         .background(themes.theme.listBackground)
