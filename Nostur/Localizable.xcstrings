@@ -2418,6 +2418,9 @@
         }
       }
     },
+    "Conversations" : {
+
+    },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
       "localizations" : {
@@ -4100,6 +4103,9 @@
         }
       }
     },
+    "Interactions" : {
+      "comment" : "Tab title"
+    },
     "Internet connection unavailable" : {
       "localizations" : {
         "nl" : {
@@ -4791,6 +4797,7 @@
     },
     "Most received recently on" : {
       "comment" : "Heading above posts which received the most zaps",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6804,6 +6811,9 @@
         }
       }
     },
+    "Reposts" : {
+
+    },
     "Request delete" : {
       "localizations" : {
         "nl" : {
@@ -6943,6 +6953,7 @@
     },
     "Sats" : {
       "comment" : "Heading (short for Satoshis)",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7681,6 +7692,9 @@
         }
       }
     },
+    "Tab" : {
+
+    },
     "Tab 1" : {
 
     },
@@ -8337,6 +8351,9 @@
           }
         }
       }
+    },
+    "Type" : {
+
     },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",
@@ -9088,7 +9105,7 @@
       }
     },
     "Zaps" : {
-      "comment" : "Heading\nTab title",
+      "comment" : "Tab title",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9122,6 +9139,7 @@
     },
     "Zaps received recently" : {
       "comment" : "Heading",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

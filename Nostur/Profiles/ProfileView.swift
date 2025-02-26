@@ -254,6 +254,9 @@ struct ProfileView: View {
                 case "Articles":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
                         .background(themes.theme.listBackground)
+                case "Interactions":
+                    ProfileInteractionsView(pubkey: nrContact.pubkey)
+                        .background(themes.theme.listBackground)
                 case "Following":
                     ProfileFollowingList(pubkey: nrContact.pubkey)
                         .background(themes.theme.listBackground)
@@ -295,6 +298,11 @@ struct ProfileView: View {
                                 selected: selectedSubTab == "Articles")
                             Spacer()
                         }
+                        TabButton(
+                            action: { selectedSubTab = "Interactions" },
+                            title: String(localized:"Interactions", comment:"Tab title"),
+                            selected: selectedSubTab == "Interactions")
+                        Spacer()
                         TabButton(
                             action: { selectedSubTab = "Following" },
                             title: String(localized:"Following", comment:"Tab title"),

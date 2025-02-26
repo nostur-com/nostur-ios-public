@@ -47,7 +47,7 @@ class ProfileReactionsViewModel: ObservableObject {
             .store(in: &self.subscriptions)
     }
     
-    // STEP 1: FETCH REACTIONS FROM FOLLOWS FROM RELAYS
+    // STEP 1: FETCH REACTIONS FROM RELAYS
     private func fetchReactionsFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.5,
@@ -110,7 +110,7 @@ class ProfileReactionsViewModel: ObservableObject {
         }
     }
     
-    // STEP 3: FETCH MOST REACTED POSTS FROM RELAYS
+    // STEP 3: FETCH REACTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Skip ids we already have, so we can fit more into the default 500 limit

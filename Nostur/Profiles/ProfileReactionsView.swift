@@ -68,6 +68,7 @@ struct ProfileReactionsView: View {
     return PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadPosts()
+        pe.parseMessages(testSnowden())
         pe.loadRepliesAndReactions()
     }) {
         ScrollView {
