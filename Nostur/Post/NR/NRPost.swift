@@ -779,10 +779,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                         }
                     case .firstQuote:
                         let nrFirstQuote = NRPost(event: relationUpdate.event, withReplyTo: true, withReplies: self.withReplies)
-                        self.firstQuote = nrFirstQuote
                         DispatchQueue.main.async {
                             self.objectWillChange.send()
-                            self.firstQuote = nrFirstQuote
+                            self.noteRowAttributes.firstQuote = nrFirstQuote
                         }
                     case .replyToRootInverse:
                         let nrReply = NRPost(event: relationUpdate.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
