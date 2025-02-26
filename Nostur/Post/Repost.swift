@@ -21,6 +21,10 @@ struct Repost: View {
     
     @StateObject private var vm = FetchVM<NRPost>(timeout: 5.0, debounceTime: 0.05)
     @State private var relayHint: String?
+//#if DEBUG
+//    @State private var kind6Source: String?
+//#endif
+    
     init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, grouped: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.noteRowAttributes = nrPost.noteRowAttributes
@@ -40,6 +44,12 @@ struct Repost: View {
     
     var body: some View {
         VStack(alignment: .leading) {
+//#if DEBUG
+//            CopyableTextView(text: "copy kind 6", copyText: kind6Source)
+//                .onAppear {
+//                    kind6Source = nrPost.mainEvent?.toNEvent().eventJson()
+//                }
+//#endif
             RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
             if let firstQuote = noteRowAttributes.firstQuote {
                 // CASE - WE HAVE REPOSTED POST ALREADY
@@ -155,12 +165,6 @@ struct Repost: View {
     }
 }
 
-//struct Repost_Previews: PreviewProvider {
-//    static var previews: some View {
-//        Repost()
-//    }
-//}
-
 struct RepostHeader: View {
     let repostedHeader:String
     let pubkey:String
@@ -178,16 +182,10 @@ struct RepostHeader: View {
                 }
         }
         .foregroundColor(.gray)
-//                .transaction { t in
-//                    t.animation = nil
-//                }
         .onTapGesture {
             navigateTo(ContactPath(key: pubkey))
         }
         .padding(.leading, 30)
-//        .debugDimensions("RepostedHeader")
-//        .frame(idealHeight: 20.0)
         .transaction { t in t.animation = nil }
-//                .fixedSize(horizontal: false, vertical: true)
     }
 }

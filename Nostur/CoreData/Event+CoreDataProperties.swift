@@ -1477,7 +1477,6 @@ extension Event {
                     CoreDataRelationFixer.shared.addTask({
                         waitingEvent.firstQuote = savedEvent
                     })
-//                    waitingEvent.firstQuoteUpdated.send(savedEvent)
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))
                 }
             }
