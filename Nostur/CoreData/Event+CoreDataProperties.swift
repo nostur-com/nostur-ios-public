@@ -57,12 +57,10 @@ extension Event {
     
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
+    @NSManaged public var aTag: String
     
     // A referenced A tag 
     @NSManaged public var otherAtag: String?
-    
-    // Calculate this events aTag
-    var aTag: String { (String(kind) + ":" + pubkey  + ":" + dTag) }
     
     // For events with multiple versions (like NIP-33)
     // Most recent version should be nil
@@ -1402,11 +1400,12 @@ extension Event {
         // Handle replacable event (NIP-33)
         if (event.kind.id >= 30000 && event.kind.id < 40000) {
             savedEvent.dTag = event.tags.first(where: { $0.type == "d" })?.value ?? ""
+            savedEvent.aTag = (String(savedEvent.kind) + ":" + event.publicKey  + ":" +  savedEvent.dTag)
             // update older events:
             // 1. set pointer to most recent (this one)
             // 2. set "is_update" flag on this one so it doesn't show up as new in feed
             let r = Event.fetchRequest()
-            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at)
+            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at) // TODO: because we cache .aTag now, we could query using that instead maybe. need to check performance
             
             
             var existingArticleIds = Set<String>() // need to repoint all replies to older articles to the newest id
