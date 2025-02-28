@@ -24,7 +24,6 @@ struct AppScene: Scene {
     private let cloudSyncManager: CloudSyncManager = .shared
     
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
-    private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
     private let nrcc: LRUCache2<String, NRContact> = NRContactCache.shared
     private let evc: LRUCache2<String, Event> = EventCache.shared
     private let lpc: LinkPreviewCache = .shared
@@ -92,7 +91,6 @@ struct RefreshingAppScene: Scene {
     private let cloudSyncManager: CloudSyncManager = .shared
     
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
-    private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
     private let nrcc: LRUCache2<String, NRContact> = NRContactCache.shared
     private let evc: LRUCache2<String, Event> = EventCache.shared
     private let lpc: LinkPreviewCache = .shared
@@ -180,7 +178,6 @@ struct SimpleScene: Scene {
     private let networkMonitor: NetworkMonitor = .shared
     private let importer: Importer = .shared
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
-    private let fuc: LRUCache2<String, Date> = FailedURLCache.shared
     private let nrcc: LRUCache2<String, NRContact> = NRContactCache.shared
     private let evc: LRUCache2<String, Event> = EventCache.shared
     private let lpc: LinkPreviewCache = .shared

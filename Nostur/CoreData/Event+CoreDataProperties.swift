@@ -1524,15 +1524,3 @@ extension Event {
         return (try? context.fetch(fr)) ?? []
     }
 }
-
-
-extension DataProvider {
-    func fetchEvent(id:String, context:NSManagedObjectContext? = nil) throws -> Event? {
-        let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
-        request.predicate = NSPredicate(format: "id == %@", id)
-        request.fetchLimit = 1
-        request.fetchBatchSize = 1
-        return try (context ?? viewContext).fetch(request).first
-    }
-}

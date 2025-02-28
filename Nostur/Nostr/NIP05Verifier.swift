@@ -34,7 +34,7 @@ class NIP05Verifier {
             .filter { contact in
                 let nip05trimmed = contact.nip05!.trimmingCharacters(in: .whitespacesAndNewlines)
                 let nip05parts = nip05trimmed.split(separator: "@", maxSplits: 1, omittingEmptySubsequences: true)
-                return nip05parts.count == 2 && FailedURLCache.shared.retrieveObject(at: String(nip05parts[1])) == nil
+                return nip05parts.count == 2
             }
             .compactMap({ contact in 
                 let nip05trimmed = contact.nip05!.trimmingCharacters(in: .whitespacesAndNewlines)

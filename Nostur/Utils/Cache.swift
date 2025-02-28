@@ -9,13 +9,6 @@ import SwiftUI
 
 typealias EventId = String
 
-struct FailedURLCache {
-    static let shared: LRUCache2<String, Date> = {
-        let cache = LRUCache2<String, Date>(countLimit: 500)
-        return cache
-    }()
-}
-
 struct PubkeyUsernameCache {
     static let shared: LRUCache2<String, String> = {
         let cache = LRUCache2<String, String>(countLimit: 2500)

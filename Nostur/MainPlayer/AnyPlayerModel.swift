@@ -130,7 +130,7 @@ class AnyPlayerModel: ObservableObject {
             self.cachedVideo = cachedVideo
             self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
             player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
-            print("Video width: \(cachedVideo.dimensions.width), height: \(cachedVideo.dimensions.height)")
+//            print("Video width: \(cachedVideo.dimensions.width), height: \(cachedVideo.dimensions.height)")
         }
         else { // else we need to get it from .tracks etc
             let asset = AVAsset(url: url)
@@ -148,7 +148,7 @@ class AnyPlayerModel: ObservableObject {
                 self.aspect = dimensions.width / dimensions.height
                 player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
                 self.cachedVideo = cachedVideo
-                print("Video width: \(dimensions.width), height: \(dimensions.height), UIScreen.height: \(UIScreen.main.bounds.height)")
+//                print("Video width: \(dimensions.width), height: \(dimensions.height), UIScreen.height: \(UIScreen.main.bounds.height)")
             }
         }
         
