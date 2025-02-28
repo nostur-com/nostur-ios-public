@@ -91,7 +91,7 @@ struct FullImageViewer: View {
         
         GeometryReader { geo in
             ZStack {
-                themes.theme.background
+                themes.theme.listBackground
                 LazyImage(request: ImageRequest(url: fullImageURL, options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [])) { state in
                                 if state.error != nil {
                                     if SettingsStore.shared.lowDataMode {

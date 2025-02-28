@@ -123,7 +123,7 @@ private struct WithSheets: ViewModifier {
                     GalleryFullScreenSwiper(initialIndex: f.index, items: f.items)
                         .environmentObject(themes)
                         .environmentObject(dim)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             }
