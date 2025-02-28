@@ -57,7 +57,7 @@ extension Event {
     
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
-    @NSManaged public var aTag: String
+
     
     // A referenced A tag 
     @NSManaged public var otherAtag: String?
@@ -73,6 +73,9 @@ extension Event {
     // Now we use it for:
     // - "is_update": to not show same article over and over in feed when it gets updates
     @NSManaged public var flags: String
+    
+    // Calculate this events aTag
+    var aTag: String { (String(kind) + ":" + pubkey  + ":" + dTag) }
     
     var contact_: Contact? {
         guard contact == nil else { return contact }
@@ -1400,7 +1403,6 @@ extension Event {
         // Handle replacable event (NIP-33)
         if (event.kind.id >= 30000 && event.kind.id < 40000) {
             savedEvent.dTag = event.tags.first(where: { $0.type == "d" })?.value ?? ""
-            savedEvent.aTag = (String(savedEvent.kind) + ":" + event.publicKey  + ":" +  savedEvent.dTag)
             // update older events:
             // 1. set pointer to most recent (this one)
             // 2. set "is_update" flag on this one so it doesn't show up as new in feed

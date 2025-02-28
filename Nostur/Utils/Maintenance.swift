@@ -53,7 +53,7 @@ struct Maintenance {
         await context.perform {
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)
-            Self.runSetAtagForReplacableEvents(context: context)
+//            Self.runSetAtagForReplacableEvents(context: context) // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
             Self.runMigrateDMState(context: context)
@@ -1388,30 +1388,31 @@ struct Maintenance {
     }
     
     // Run once to fill aTag
-    static func runSetAtagForReplacableEvents(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.runSetAtagForReplacableEvents, context: context) else { return }
-        
-        // 1. For each replacable event, save the atag
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind >= 30000 AND kind < 40000")
-        
-        guard let replacableEvents = try? context.fetch(fr) else {
-            L.maintenance.error("runSetAtagForReplacableEvents: Could not fetch replacable events")
-            return
-        }
-        
-        L.maintenance.info("runSetAtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
-        
-        for event in replacableEvents {
-            event.aTag = (String(event.kind) + ":" + event.pubkey  + ":" + event.dTag)
-            if event.aTag != "" {
-                L.maintenance.info("runSetAtagForReplacableEvents: aTag set to: \(event.aTag) for \(event.id)")
-            }
-        }
-    
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.runSetAtagForReplacableEvents.rawValue
-    }
+    // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
+//    static func runSetAtagForReplacableEvents(context: NSManagedObjectContext) {
+//        guard !Self.didRun(migrationCode: migrationCode.runSetAtagForReplacableEvents, context: context) else { return }
+//        
+//        // 1. For each replacable event, save the atag
+//        let fr = Event.fetchRequest()
+//        fr.predicate = NSPredicate(format: "kind >= 30000 AND kind < 40000")
+//        
+//        guard let replacableEvents = try? context.fetch(fr) else {
+//            L.maintenance.error("runSetAtagForReplacableEvents: Could not fetch replacable events")
+//            return
+//        }
+//        
+//        L.maintenance.info("runSetAtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
+//        
+//        for event in replacableEvents {
+//            event.aTag = (String(event.kind) + ":" + event.pubkey  + ":" + event.dTag)
+//            if event.aTag != "" {
+//                L.maintenance.info("runSetAtagForReplacableEvents: aTag set to: \(event.aTag) for \(event.id)")
+//            }
+//        }
+//    
+//        let migration = Migration(context: context)
+//        migration.migrationCode = migrationCode.runSetAtagForReplacableEvents.rawValue
+//    }
     
     // All available migrations
     enum migrationCode:String {
@@ -1489,6 +1490,7 @@ struct Maintenance {
         case putReferencedAtag = "putReferencedAtag"
         
         // make aTag field for easy lookups
-        case runSetAtagForReplacableEvents = "runSetAtagForReplacableEvents"
+        // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
+//        case runSetAtagForReplacableEvents = "runSetAtagForReplacableEvents"
     }
 }
