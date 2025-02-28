@@ -36,11 +36,14 @@ struct NosturVideoViewur: View {
     @State private var isMuted = false
     @State private var isStream = false
     @State private var overrideLowDataMode = false
+    @State private var showFirstFrame = false
+    @State private var autoplay = false
     
     static let aspect: CGFloat = 16/9
     
     var body: some View {
         VStack {
+            // NON-HTTPS NOTICE
             if url.absoluteString.prefix(7) == "http://" && !loadNonHttpsAnyway {
                 VStack {
                     Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
@@ -56,6 +59,8 @@ struct NosturVideoViewur: View {
                .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                .background(theme.lineColor.opacity(0.5))
             }
+            
+            // STREAM (BUG)?
             else if isStream {
                 if SettingsStore.shared.lowDataMode && !overrideLowDataMode {
                     Text(url.absoluteString)
@@ -70,7 +75,11 @@ struct NosturVideoViewur: View {
                     MusicOrVideo(url: url, isPlaying: $isPlaying, isMuted: $isMuted, didStart: $didStart, fullWidth: fullWidth, contentPadding: contentPadding, videoWidth: videoWidth, thumbnail: thumbnail, nrPost: nrPost)
                 }
             }
+            
+            // FIRST FRAME.  OR ACTUAL VIDEO AFTER PRESS PLAY
             else if videoShown {
+                
+                // ACTUAL VIDEO
                 if let scaledDimensionsFromCache = cachedVideo?.scaledDimensions,
                     let videoLength = cachedVideo?.videoLength {
                     let scaledDimensions = Nostur.scaledToFit(scaledDimensionsFromCache, scale: 1.0, maxWidth: videoWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
@@ -154,18 +163,50 @@ struct NosturVideoViewur: View {
 //                    .debugDimensions("videoShown")
 #endif
                 }
+                
+                // FIRST FRAME ONLY
+                else if showFirstFrame {
+                    FirstFrameViewur(videoURL: url, videoWidth: videoWidth)
+                        .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
+                        .background(theme.lineColor.opacity(0.5))
+                        .overlay(alignment: .center) {
+                            Button(action: {
+                                showFirstFrame = false
+//                                autoplay = true
+                                isPlaying = true
+                                didStart = true
+//                                sendNotification(.startPlayingVideo, url.absoluteString)
+                                Task.detached(priority: .background) {
+                                    await loadVideo()
+                                }
+                            }) {
+                                Image(systemName:"play.circle")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+//                                        .centered()
+                                    .contentShape(Rectangle())
+//                                        .withoutAnimation()
+                            }
+                        }
+                }
+                
+                // LOAD DATA MODE: URL ONLY
                 else if SettingsStore.shared.lowDataMode && !overrideLowDataMode {
                     Text(url.absoluteString)
                         .foregroundColor(theme.accent)
                         .underline()
                         .onTapGesture {
                             overrideLowDataMode = true
-                            Task.detached(priority: .background) {
-                                await loadVideo()
-                            }
+                            showFirstFrame = true
+//                            Task.detached(priority: .background) {
+//                                await loadVideo()
+//                            }
                         }
                         .padding(.horizontal, fullWidth ? 10 : 0)
                 }
+                
+                // LOADING ACTUAL VIDEO % PROGRESS
                 else if videoState == .loading {
                     HStack(spacing: 5) {
                         ProgressView()
@@ -181,6 +222,8 @@ struct NosturVideoViewur: View {
                     .frame(width: videoWidth, height: (height ?? (videoWidth / Self.aspect)))
                     .background(theme.lineColor.opacity(0.5))
                 }
+                
+                // LOADING CANCELLED OR ERROR
                 else {
                     if videoState == .cancelled {
                         Text("Cancelled")
@@ -196,6 +239,8 @@ struct NosturVideoViewur: View {
                     }
                 }
             }
+            
+            // TAP TO LOAD VIDEO
             else if videoState == .initial {
                 Text("Tap to load video", comment:"Button to load a video in a post")
                     .centered()
@@ -213,6 +258,8 @@ struct NosturVideoViewur: View {
             }
         }
         .onAppear {
+            
+            // SHOW VIDEO ON APPEAR OR NOT?
             videoShown = !SettingsStore.shared.restrictAutoDownload || autoload
             if videoShown {
                 if url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" || url.absoluteString.suffix(3) == "mp3" {
@@ -224,9 +271,10 @@ struct NosturVideoViewur: View {
                     }
                     else {
                         guard !SettingsStore.shared.lowDataMode else { return }
-                        Task.detached(priority: .background) {
-                            await loadVideo()
-                        }
+                        showFirstFrame = true
+//                        Task.detached(priority: .background) {
+//                            await loadVideo()
+//                        }
                     }
                 }
             }
@@ -312,10 +360,13 @@ class AVAssetCache {
     static let shared = AVAssetCache()
     
     private var cache: NSCache<NSString, CachedVideo>
+    private var firstFrameCache: NSCache<NSString, UIImage>
 
     private init() {
         self.cache = NSCache<NSString, CachedVideo>()
         self.cache.countLimit = 5
+        self.firstFrameCache = NSCache<NSString, UIImage>()
+        self.firstFrameCache.countLimit = 10
     }
 
     public func get(url: String) -> CachedVideo? {
@@ -324,6 +375,14 @@ class AVAssetCache {
     
     public func set(url: String, asset: CachedVideo) {
         cache.setObject(asset, forKey: url as NSString)
+    }
+    
+    public func getFirstFrame(url: String) -> UIImage? {
+        return firstFrameCache.object(forKey: url as NSString)
+    }
+    
+    public func set(url: String, firstFrame: UIImage) {
+        firstFrameCache.setObject(firstFrame, forKey: url as NSString)
     }
 }
 
