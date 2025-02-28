@@ -56,6 +56,8 @@ class AnyPlayerModel: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
+    public var currentlyPlayingUrl: String? = nil // when loading EmbeddedVideoView, check if we are currently playing the same already
+    
     private init() {
         player.preventsDisplaySleepDuringVideoPlayback = false
         player.actionAtItemEnd = .pause
@@ -131,6 +133,7 @@ class AnyPlayerModel: ObservableObject {
             self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
             player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
 //            print("Video width: \(cachedVideo.dimensions.width), height: \(cachedVideo.dimensions.height)")
+            self.currentlyPlayingUrl = url.absoluteString
         }
         else { // else we need to get it from .tracks etc
             let asset = AVAsset(url: url)
@@ -148,6 +151,7 @@ class AnyPlayerModel: ObservableObject {
                 self.aspect = dimensions.width / dimensions.height
                 player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
                 self.cachedVideo = cachedVideo
+                self.currentlyPlayingUrl = url.absoluteString
 //                print("Video width: \(dimensions.width), height: \(dimensions.height), UIScreen.height: \(UIScreen.main.bounds.height)")
             }
         }
@@ -176,6 +180,7 @@ class AnyPlayerModel: ObservableObject {
         self.isStream = false
         
         player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
+        self.currentlyPlayingUrl = cachedVideo.url
 
         // Reuse existing viewMode if already playing
         if !isPlaying || !availableViewModes.contains(viewMode) {
