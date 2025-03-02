@@ -37,16 +37,13 @@ func getVideoDimensions(asset: AVAsset) async -> CGSize? {
     return correctedSize
 }
 
-func getVideoLength(asset:AVAsset) async -> String? {
+func getDuration(asset:AVAsset) async -> CMTime? {
     guard let duration = try? await asset.load(.duration) else {
-        L.og.debug("getVideoLength: Unable to load udration")
+        L.og.debug("getVideoLength: Unable to load duration")
         return nil
     }
     
-    let seconds = CMTimeGetSeconds(duration)
-    let secondsText = String(format: "%02d", Int(seconds) % 60)
-    let minutesText = String(format: "%02d", Int(seconds) / 60)
-    return "\(minutesText):\(secondsText)"
+    return duration
 }
 
 func getVideoFirstFrame(asset: AVAsset) async -> UIImage? {

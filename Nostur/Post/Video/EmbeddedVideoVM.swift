@@ -59,6 +59,12 @@ class EmbeddedVideoVM: ObservableObject {
         // Do we have the fully cached video?
         if let cachedVideo = AVAssetCache.shared.get(url: videoUrlString) {
             self.viewState = .loadedFullVideo(cachedVideo)
+            if let cachedFirstFrame = AVAssetCache.shared.getFirstFrame(url: videoUrlString) {
+                self.cachedFirstFrame = cachedFirstFrame
+            }
+            else if let firstFrame = cachedVideo.firstFrame {
+                self.cachedFirstFrame = CachedFirstFrame(url: videoUrlString, uiImage: firstFrame, dimensions: cachedVideo.dimensions, duration: cachedVideo.duration)
+            }
         }
         // Do we have the first frame cached?
         else if let cachedFirstFrame = AVAssetCache.shared.getFirstFrame(url: videoUrlString) {
@@ -90,6 +96,7 @@ class EmbeddedVideoVM: ObservableObject {
         }
         else { // Play in old embedded player
             self.viewState = .loadedFullVideo(cachedVideo)
+            self.isPlaying = true
         }
     }
     
@@ -105,6 +112,7 @@ class EmbeddedVideoVM: ObservableObject {
         }
         else { // open stream url view in old embedded player
             self.viewState = .streaming(videoUrl)
+            self.isPlaying = true
         }
     }
     
@@ -402,9 +410,15 @@ class EmbeddedVideoVM: ObservableObject {
                             nil
                         }
                         
+                        let duration: CMTime? = if case .loadedFirstFrame(let cachedFirstFrame) = viewState {
+                            cachedFirstFrame.duration
+                        } else {
+                            nil
+                        }
+                        
                         let cachedVideo = CachedVideo(url: videoUrlString, asset: asset,
                                                       dimensions: videoSize,
-                                                      scaledDimensions: scaledDimensions, videoLength: "--:--", firstFrame: firstFrame)
+                                                      scaledDimensions: scaledDimensions, duration: duration, firstFrame: firstFrame)
                         AVAssetCache.shared.set(url: videoUrlString, asset: cachedVideo)
                         
                         Task { @MainActor [weak self] in

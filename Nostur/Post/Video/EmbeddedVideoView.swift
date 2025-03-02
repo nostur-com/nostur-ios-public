@@ -22,6 +22,7 @@ struct EmbeddedVideoView: View {
     public let autoload: Bool
     public let theme: Theme
     @Binding var didStart: Bool
+    public var thumbnail: URL?
     
     var body: some View {
         switch vm.viewState {
@@ -29,7 +30,20 @@ struct EmbeddedVideoView: View {
             theme.listBackground
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
-                    Text("initial")
+                    if let thumbnail {
+                        SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                    }
+                }
+                .overlay {
+                    HStack(spacing: 5) {
+                        ProgressView()
+                        Text(0, format:.percent)
+                            .frame(width: 48, alignment: .leading)
+                        Image(systemName: "multiply.circle.fill")
+                            .onTapGesture {
+                                vm.cancel()
+                            }
+                    }
                 }
                 .onAppear {
                     vm.load(url, nrPost: nrPost)
@@ -112,32 +126,50 @@ struct EmbeddedVideoView: View {
         case .loadedFullVideo(let cachedVideo):
             theme.listBackground
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
-                .overlay {
-                    if let firstFrame = (vm.cachedFirstFrame?.uiImage ?? cachedVideo.firstFrame) {
-                        Image(uiImage: firstFrame)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
-                            .overlay(alignment: .bottomLeading) {
-                                Text(cachedVideo.videoLength)
-                                    .foregroundColor(.white)
-                                    .fontWeight(.bold)
-                                    .padding(3)
-                                    .background(.black)
-                                    .padding(5)
+                .overlay(alignment: .center) {
+                    if didStart {
+                        VideoViewurRepresentable(url: url, asset: cachedVideo.asset, isPlaying: $vm.isPlaying, isMuted: $vm.isMuted)
+                            .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+                                let otherUrl = notification.object as! String
+                                if url.absoluteString != otherUrl {
+                                    vm.isPlaying = false
+                                }
+                            }
+                            .onDisappear {
+                                vm.isPlaying = false
                             }
                     }
-                }
-                .overlay(alignment: .center) {
-                    Button(action: {
-                        vm.startPlaying()
-                    }) {
-                        Image(systemName:"play.circle")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .contentShape(Rectangle())
+                    else {
+                        ZStack {
+                            if let firstFrame = (vm.cachedFirstFrame?.uiImage ?? cachedVideo.firstFrame) {
+                                Image(uiImage: firstFrame)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                                    .overlay(alignment: .bottomLeading) {
+                                        if let durationString = cachedVideo.durationString {
+                                            Text(durationString)
+                                                .foregroundColor(.white)
+                                                .fontWeight(.bold)
+                                                .padding(3)
+                                                .background(.black)
+                                                .padding(5)
+                                        }
+                                    }
+                            }
+                            
+                            Button(action: {
+                                vm.startPlaying()
+                            }) {
+                                Image(systemName:"play.circle")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
+                                    .contentShape(Rectangle())
+                            }
+                        }
                     }
+                    
                 }
         case .streaming(let streamingUrl):
             theme.listBackground

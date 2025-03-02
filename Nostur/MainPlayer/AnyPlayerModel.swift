@@ -141,10 +141,10 @@ class AnyPlayerModel: ObservableObject {
             let size = track.naturalSize.applying(track.preferredTransform)
             let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
             
-            if let videoLength = await getVideoLength(asset: asset) {
+            if let duration = await getDuration(asset: asset) {
                 let firstFrame = await getVideoFirstFrame(asset: asset)
                 
-                let cachedVideo = CachedVideo(url: url.absoluteString, asset: asset, dimensions: dimensions, scaledDimensions: dimensions, videoLength: videoLength, firstFrame: firstFrame)
+                let cachedVideo = CachedVideo(url: url.absoluteString, asset: asset, dimensions: dimensions, scaledDimensions: dimensions, duration: duration, firstFrame: firstFrame)
                 
                 AVAssetCache.shared.set(url: url.absoluteString, asset: cachedVideo)
                 
