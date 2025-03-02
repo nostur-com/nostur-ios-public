@@ -123,7 +123,7 @@ struct PostDetailView: View {
                         }
                         else if didLoad {
                             // NORMAL REPLIES TO A POST
-                            ThreadReplies(nrPost: nrPost)
+//                            ThreadReplies(nrPost: nrPost)
                         }
                     }
 //                    .background(themes.theme.listBackground)

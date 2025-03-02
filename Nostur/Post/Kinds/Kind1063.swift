@@ -69,7 +69,7 @@ struct Kind1063: View {
                     
             }
             if is1063Video(nrPost) {
-                NosturVideoViewur(url: URL(string: url)!, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, contentPadding: 0, theme: theme, didStart: $didStart)
+                EmbeddedVideoView(url: URL(string: url)!, pubkey: nrPost.pubkey, availableWidth: availableWidth, autoload: shouldAutoload, theme: theme, didStart: $didStart)
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)

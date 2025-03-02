@@ -19,7 +19,6 @@ struct ContentRenderer: View { // VIEW things
     private let availableWidth: CGFloat
     private let contentElements: [ContentElement]
     private let forceAutoload: Bool
-    @Binding var didStart: Bool
     @StateObject private var childDIM: DIMENSIONS
     
     init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false)) {
@@ -159,54 +158,56 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                         .id(index)
                 case .video(let mediaContent):
-                    if let dimensions = mediaContent.dimensions {
-                        // for video, dimensions are points not pixels? Scale set to 1.0 always
-                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1.0, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                        
-#if DEBUG
-                        //                        Text(".video.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
-                        //                            .frame(maxWidth: .infinity)
-                        //                            .background(.red)
-                        //                            .foregroundColor(.white)
-                        //                            .debugDimensions()
-#endif
-                        
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart, nrPost: nrPost)
-                        //                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-//                            .debugDimensions("sd.video")
-                            .background {
-                                if SettingsStore.shared.lowDataMode {
-                                    theme.lineColor.opacity(0.2)
-                                }
-                            }
-                            .padding(.horizontal, fullWidth ? -10 : 0)
-                            .padding(.vertical, 0)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .id(index)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
-                    }
-                    else {
-                        
-#if DEBUG
-                        //                        Text(".video.availableWidth: \(Int(availableWidth))")
-                        //                            .frame(maxWidth: .infinity)
-                        //                            .background(.red)
-                        //                            .foregroundColor(.white)
-                        //                            .debugDimensions()
-#endif
-                        
-                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart, nrPost: nrPost)
-//                            .debugDimensions("video")
-                        //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            .padding(.horizontal, fullWidth ? -10 : 0)
-                            .padding(.vertical, 0)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .id(index)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
-                    }
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, availableWidth: availableWidth, autoload: shouldAutoload, theme: theme)
+                        .id(index)
+//                    if let dimensions = mediaContent.dimensions {
+//                        // for video, dimensions are points not pixels? Scale set to 1.0 always
+//                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1.0, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                        
+//#if DEBUG
+//                        //                        Text(".video.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
+//                        //                            .frame(maxWidth: .infinity)
+//                        //                            .background(.red)
+//                        //                            .foregroundColor(.white)
+//                        //                            .debugDimensions()
+//#endif
+//                        
+//                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart, nrPost: nrPost)
+//                        //                            .fixedSize(horizontal: false, vertical: true)
+//                            .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+////                            .debugDimensions("sd.video")
+//                            .background {
+//                                if SettingsStore.shared.lowDataMode {
+//                                    theme.lineColor.opacity(0.2)
+//                                }
+//                            }
+//                            .padding(.horizontal, fullWidth ? -10 : 0)
+//                            .padding(.vertical, 0)
+//                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+//                            .id(index)
+////                            .withoutAnimation()
+////                            .transaction { t in t.animation = nil }
+//                    }
+//                    else {
+//                        
+//#if DEBUG
+//                        //                        Text(".video.availableWidth: \(Int(availableWidth))")
+//                        //                            .frame(maxWidth: .infinity)
+//                        //                            .background(.red)
+//                        //                            .foregroundColor(.white)
+//                        //                            .debugDimensions()
+//#endif
+//                        
+//                        NosturVideoViewur(url: mediaContent.url, pubkey: nrPost.pubkey, videoWidth: availableWidth, autoload: shouldAutoload, fullWidth: fullWidth, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, didStart: $didStart, nrPost: nrPost)
+////                            .debugDimensions("video")
+//                        //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                            .padding(.horizontal, fullWidth ? -10 : 0)
+//                            .padding(.vertical, 0)
+//                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+//                            .id(index)
+////                            .withoutAnimation()
+////                            .transaction { t in t.animation = nil }
+//                    }
                     
                 case .image(let mediaContent):
                     if let dimensions = mediaContent.dimensions {

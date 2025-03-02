@@ -105,29 +105,30 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .video(let mediaContent):
-                    if let dimensions = mediaContent.dimensions {
-                        // for video, dimensions are points not pixels? Scale set to 1.0 always
-                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1.0, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                        
-                        NosturVideoViewur(url: mediaContent.url, pubkey: pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: false, fullWidth: false, contentPadding: 0, theme: theme, didStart: $didStart)
-                            .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-                            .background {
-                                if SettingsStore.shared.lowDataMode {
-                                    theme.lineColor.opacity(0.2)
-                                }
-                            }
-                            .padding(.horizontal, 0)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                    }
-                    else {
-                        NosturVideoViewur(url: mediaContent.url, pubkey: pubkey, videoWidth: availableWidth, autoload: false, fullWidth: false, contentPadding: 0, theme: theme, didStart: $didStart)
-                            .padding(.horizontal, 0)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                    }
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: availableWidth, autoload: false, theme: theme, didStart: $didStart)
+//                    if let dimensions = mediaContent.dimensions {
+//                        // for video, dimensions are points not pixels? Scale set to 1.0 always
+//                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1.0, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+//                        
+//                        NosturVideoViewur(url: mediaContent.url, pubkey: pubkey, height:scaledDimensions.height, videoWidth: availableWidth, autoload: false, fullWidth: false, contentPadding: 0, theme: theme, didStart: $didStart)
+//                            .frame(width: scaledDimensions.width, height: scaledDimensions.height)
+//                            .background {
+//                                if SettingsStore.shared.lowDataMode {
+//                                    theme.lineColor.opacity(0.2)
+//                                }
+//                            }
+//                            .padding(.horizontal, 0)
+//                            .padding(.vertical, 10)
+//                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+//                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+//                    }
+//                    else {
+//                        NosturVideoViewur(url: mediaContent.url, pubkey: pubkey, videoWidth: availableWidth, autoload: false, fullWidth: false, contentPadding: 0, theme: theme, didStart: $didStart)
+//                            .padding(.horizontal, 0)
+//                            .padding(.vertical, 10)
+//                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
+//                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+//                    }
                     
                 case .image(let mediaContent):
                     if let dimensions = mediaContent.dimensions {

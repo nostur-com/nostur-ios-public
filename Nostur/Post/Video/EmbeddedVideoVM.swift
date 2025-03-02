@@ -14,6 +14,9 @@ import NukeVideo
 class EmbeddedVideoVM: ObservableObject {
     @Published var viewState: ViewState = .initial
     @Published var downloadProgress: Int = 0
+    @Published var didStart = false
+    @Published var isPlaying = false
+    @Published var isMuted = false
     private var downloadTask: AsyncImageTask?
     
     private var videoUrl: URL?
