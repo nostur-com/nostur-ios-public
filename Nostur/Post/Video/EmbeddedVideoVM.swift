@@ -10,12 +10,14 @@ import AVFoundation
 import NukeUI
 import Nuke
 import NukeVideo
+import Combine
 
 class EmbeddedVideoVM: ObservableObject {
     @Published var viewState: ViewState = .initial
     @Published var downloadProgress: Int = 0
     @Published var didStart = false
-    @Published var isPlaying = false
+    @Published var timeControlStatus: AVPlayer.TimeControlStatus = .paused
+    
     @Published var isMuted = false
     private var downloadTask: AsyncImageTask?
     
@@ -33,10 +35,12 @@ class EmbeddedVideoVM: ObservableObject {
     
     public var cachedFirstFrame: CachedFirstFrame?
     
-    private var isStream: Bool {
+    public var isStream: Bool {
         guard let videoUrlString else { return false }
-        return videoUrlString.suffix(4) == "m3u8" || videoUrlString.suffix(3) == "m4a" || videoUrlString.suffix(3) == "mp3"
+        return videoUrlString.suffix(4) == "m3u8"
     }
+    
+    @Published var isAudio: Bool = false
     
     
     public func load(_ url: URL, nrPost: NRPost? = nil, autoLoad: Bool = false, metaDimensions: CGSize? = nil, availableWidth: CGFloat? = nil, availableHeight: CGFloat = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT) {
@@ -52,6 +56,8 @@ class EmbeddedVideoVM: ObservableObject {
         }
         
         guard let videoUrlString, let videoUrl else { return }
+        
+        self.isAudio = videoUrlString.suffix(3) == "m4a" || videoUrlString.suffix(3) == "mp3"
         
         // Already playing this url? Show PIP icon
         if AnyPlayerModel.shared.isPlaying, let currentlyPlayingUrl = AnyPlayerModel.shared.currentlyPlayingUrl, currentlyPlayingUrl == videoUrlString {
@@ -82,6 +88,14 @@ class EmbeddedVideoVM: ObservableObject {
         else if SettingsStore.shared.lowDataMode {
             self.viewState = .lowDataMode(videoUrlString)
         }
+        else if isAudio { // Load audio as stream (don't download/cache)
+            self.viewState = .streaming(videoUrl)
+        }
+        else if isStream { // For streams, try to get type of steam first
+            Task {
+                await loadStream(videoUrl)
+            }
+        }
         else { // OK, lets load first frame
             Task {
                 await loadFirstFrame(videoUrl)
@@ -99,7 +113,7 @@ class EmbeddedVideoVM: ObservableObject {
         }
         else { // Play in old embedded player
             self.viewState = .loadedFullVideo(cachedVideo)
-            self.isPlaying = true
+            self.timeControlStatus = .playing
         }
     }
     
@@ -115,7 +129,7 @@ class EmbeddedVideoVM: ObservableObject {
         }
         else { // open stream url view in old embedded player
             self.viewState = .streaming(videoUrl)
-            self.isPlaying = true
+            self.timeControlStatus = .playing
         }
     }
     
@@ -126,7 +140,7 @@ class EmbeddedVideoVM: ObservableObject {
             playCachedVideo(cachedVideo)
         }
         
-        if isStream {
+        if isStream || isAudio {
             playStreamUrl(videoUrl)
         }
         else { // start downloading video
@@ -143,16 +157,47 @@ class EmbeddedVideoVM: ObservableObject {
     }
     
     @MainActor
-    public func didStopPlaying() {
-        if let cachedFirstFrame {
+    public func restoreToFirstFrame(cachedFirstFrame cachedFirstFrameFromPIP: CachedFirstFrame? = nil, cachedVideo cachedVideoFromPIP: CachedVideo? = nil) {
+        if isAudio {
+            guard let videoUrl else { return }
+            self.viewState = .streaming(videoUrl)
+        }
+        else if let cachedFirstFrameFromPIP {
             self.downloadProgress = 0
-            self.viewState = .loadedFirstFrame(cachedFirstFrame)
+            self.viewState = .loadedFirstFrame(cachedFirstFrameFromPIP)
+        }
+        else if let cachedVideoFromPIP {
+            self.downloadProgress = 0
+            self.viewState = .loadedFullVideo(cachedVideoFromPIP)
+        }
+        else if isStream {
+            guard let videoUrl else { return }
+            self.viewState = .streaming(videoUrl)
         }
     }
     
     @MainActor
     public func loadNonHttpsAnyway() {
         
+    }
+    
+    private func loadStream(_ videoURL: URL) async {
+        let streamType: StreamType? = try? await fetchStreamType(videoURL)
+        
+        Task { @MainActor in
+            if streamType == .unknown { // probably audio
+                self.isAudio = true
+            }
+            self.viewState = .streaming(videoURL)
+        }
+    }
+    
+    private func fetchStreamType(_ videoURL: URL) async throws -> StreamType {
+        return try await withCheckedThrowingContinuation { continuation in
+            Nostur.fetchStreamType(url: videoURL) { result in
+                continuation.resume(with: result)
+            }
+        }
     }
     
     private func loadFirstFrame(_ videoURL: URL) async {
@@ -468,4 +513,44 @@ private class NoRedirectDelegate: NSObject, URLSessionTaskDelegate {
         // Return nil to prevent automatic redirect
         completionHandler(nil)
     }
+}
+
+// Fetch and parse meta og tags
+func fetchStreamType(url: URL, completion: @escaping (Result<StreamType, Error>) -> Void) {
+    let request = URLRequest(url: url)
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let data = data, error == nil else {
+            completion(.failure(error!))
+            return
+        }
+        guard let content = String(data: data, encoding: .utf8) else {
+            completion(.failure(NSError(domain: "Invalid", code: 0, userInfo: nil)))
+            return
+        }
+        
+        DispatchQueue.global().async {
+            completion(.success(detectStreamType(content)))
+        }
+    }
+    task.resume()
+}
+
+public enum StreamType {
+    case video
+//    case audio
+    case unknown
+}
+
+func detectStreamType(_ content:String) -> StreamType {
+    let content = content.prefix(400)
+    if content.contains("RESOLUTION=") {
+        return .video
+    }
+    else if content.contains("FRAME-RATE=") {
+        return .video
+    }
+    else if content.contains("PLAYLIST-TYPE:VOD") {
+        return .video
+    }
+    return .unknown // probably audio
 }

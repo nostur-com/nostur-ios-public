@@ -106,7 +106,7 @@ struct OverlayVideo: View {
                                     
                                     // BOOKMARK BUTTON
                                     ToolbarItem(placement: .topBarTrailing) {
-                                        if vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
+                                        if let nrPost = vm.nrPost, vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
                                             Button("Bookmark", systemImage: bookmarkState ? "bookmark.fill" : "bookmark") {
                                                 bookmarkState.toggle()
                                             }
@@ -524,7 +524,10 @@ struct OverlayVideo: View {
                 
                 
                 .onAppear {
-                    guard let nrPost = vm.nrPost else { return }
+                    guard let nrPost = vm.nrPost else {
+                        bookmarkState = false
+                        return
+                    }
                     if let accountCache = accountCache(), accountCache.getBookmarkColor(nrPost.id) != nil {
                         bookmarkState = true
                     }

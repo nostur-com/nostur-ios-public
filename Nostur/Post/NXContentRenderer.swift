@@ -187,55 +187,8 @@ struct NXContentRenderer: View { // VIEW things
                             .padding(.vertical, 10)
                             .id(index)
                     case .video(let mediaContent):
-                        EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey, availableWidth: vc.availableWidth, autoload: shouldAutoload, theme: vc.theme, didStart: $didStart)
-//                        if let dimensions = mediaContent.dimensions {
-//                            // for video, dimensions are points not pixels? Scale set to 1.0 always
-//                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: 1.0, maxWidth: vc.availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-//
-//    #if DEBUG
-//                            //                        Text(".video.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
-//                            //                            .frame(maxWidth: .infinity)
-//                            //                            .background(.red)
-//                            //                            .foregroundColor(.white)
-//                            //                            .debugDimensions()
-//    #endif
-//
-//                            NosturVideoViewur(url: mediaContent.url, pubkey: nxEvent.pubkey, height:scaledDimensions.height, videoWidth: vc.availableWidth, autoload: shouldAutoload, fullWidth: vc.fullWidthImages, contentPadding: nxEvent.kind == 30023 ? 10 : 0, theme: vc.theme, didStart: $didStart)
-//                            //                            .fixedSize(horizontal: false, vertical: true)
-//                                .frame(width: scaledDimensions.width, height: scaledDimensions.height)
-//    //                            .debugDimensions("sd.video")
-//                                .background {
-//                                    if SettingsStore.shared.lowDataMode {
-//                                        vc.theme.lineColor.opacity(0.2)
-//                                    }
-//                                }
-//                                .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
-//                                .padding(.vertical, 10)
-//                                .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-//                                .id(index)
-//    //                            .withoutAnimation()
-//    //                            .transaction { t in t.animation = nil }
-//                        }
-//                        else {
-//
-//    #if DEBUG
-//                            //                        Text(".video.availableWidth: \(Int(availableWidth))")
-//                            //                            .frame(maxWidth: .infinity)
-//                            //                            .background(.red)
-//                            //                            .foregroundColor(.white)
-//                            //                            .debugDimensions()
-//    #endif
-//
-//                            NosturVideoViewur(url: mediaContent.url, pubkey: nxEvent.pubkey, videoWidth: vc.availableWidth, autoload: shouldAutoload, fullWidth: vc.fullWidthImages, contentPadding: nxEvent.kind == 30023 ? 10 : 0, theme: vc.theme, didStart: $didStart)
-//    //                            .debugDimensions("video")
-//                            //                            .frame(maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-//                                .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
-//                                .padding(.vertical, 10)
-//                                .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-//                                .id(index)
-//    //                            .withoutAnimation()
-//    //                            .transaction { t in t.animation = nil }
-//                        }
+                        EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey, availableWidth: vc.availableWidth + (vc.fullWidthImages ? 20 : 0), autoload: shouldAutoload, theme: vc.theme, didStart: $didStart)
+                            .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 
                     case .image(let mediaContent):
                         if let dimensions = mediaContent.dimensions {

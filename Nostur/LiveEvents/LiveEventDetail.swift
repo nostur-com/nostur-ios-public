@@ -515,14 +515,14 @@ struct LiveEventDetail: View {
     @ViewBuilder
     private var videoStreamView: some View {
         if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: videoWidth * 9/16, videoWidth: videoWidth, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
         }
         else if liveEvent.streamHasEnded {
             EmptyView()
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
-                NosturVideoViewur(url: url,  pubkey: liveEvent.pubkey, height: videoWidth * 9/16, videoWidth: videoWidth, autoload: true, theme: Themes.default.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
             }
             else if liveEvent.liveKitConnectUrl == nil {
                 Button {

@@ -52,6 +52,11 @@ struct EmbeddedVideoView: View {
             theme.listBackground
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
+                    if let thumbnail {
+                        SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                    }
+                }
+                .overlay {
                     HStack(spacing: 5) {
                         ProgressView()
                         Text(percent, format:.percent)
@@ -86,6 +91,9 @@ struct EmbeddedVideoView: View {
                 .overlay(alignment: .center) {
                     if vm.downloadProgress == 0 {
                         Button(action: {
+                            if (!IS_IPHONE) {
+                                didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
+                            }
                             vm.startPlaying()
                         }) {
                             Image(systemName:"play.circle")
@@ -117,26 +125,26 @@ struct EmbeddedVideoView: View {
                         .frame(width: 100)
                         .foregroundColor(Color.gray)
                 }
-                .onReceive(receiveNotification(.stopPlayingVideo)) { _ in
-                    vm.didStopPlaying()
+                .onReceive(receiveNotification(.didEndPIP)) { notification in
+                    guard let (otherUrl, cachedFirstFrame, cachedVideo) = notification.object as? (String, CachedFirstFrame?, CachedVideo?) else { return }
+                    if url.absoluteString == otherUrl {
+                        vm.restoreToFirstFrame(cachedFirstFrame: cachedFirstFrame, cachedVideo: cachedVideo)
+                    }
                 }
-//                .onReceive(receiveNotification(.stopPlayingVideo)) { _ in
-//                    didStart = false
-//                }
         case .loadedFullVideo(let cachedVideo):
             theme.listBackground
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay(alignment: .center) {
                     if didStart {
-                        VideoViewurRepresentable(url: url, asset: cachedVideo.asset, isPlaying: $vm.isPlaying, isMuted: $vm.isMuted)
+                        EmbeddedAVPlayerRepresentable(url: url, asset: cachedVideo.asset, timeControlStatus: $vm.timeControlStatus, isMuted: $vm.isMuted)
                             .onReceive(receiveNotification(.startPlayingVideo)) { notification in
                                 let otherUrl = notification.object as! String
                                 if url.absoluteString != otherUrl {
-                                    vm.isPlaying = false
+                                    vm.timeControlStatus = .paused
                                 }
                             }
                             .onDisappear {
-                                vm.isPlaying = false
+                                vm.timeControlStatus = .paused
                             }
                     }
                     else {
@@ -159,6 +167,9 @@ struct EmbeddedVideoView: View {
                             }
                             
                             Button(action: {
+                                if (!IS_IPHONE) {
+                                    didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
+                                }
                                 vm.startPlaying()
                             }) {
                                 Image(systemName:"play.circle")
@@ -173,9 +184,53 @@ struct EmbeddedVideoView: View {
                 }
         case .streaming(let streamingUrl):
             theme.listBackground
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
-                    Text("streaming")
+                    EmbeddedAVPlayerRepresentable(url: streamingUrl, timeControlStatus: $vm.timeControlStatus, isMuted: $vm.isMuted)
+                        .overlay {
+                            if !didStart {
+                                Color.black
+                                    .overlay {
+                                        if let thumbnail {
+                                            SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                                        }
+                                    }
+                                    .overlay {
+                                        Button(action: {
+                                            if (!IS_IPHONE) {
+                                                didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
+                                            }
+                                            vm.startPlaying()
+                                        }) {
+                                            Image(systemName:"play.circle")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 45, height: 45)
+                                                .centered()
+                                                .contentShape(Rectangle())
+                                        }
+                                    }
+                            }
+                        }
+                        .onReceive(receiveNotification(.startPlayingVideo)) { notification in
+                            let otherUrl = notification.object as! String
+                            if url.absoluteString != otherUrl {
+                                vm.timeControlStatus = .paused
+                            }
+                        }
+                        .onDisappear {
+                            vm.timeControlStatus = .paused
+                        }
+                }
+                .overlay(alignment: .topTrailing) {
+                    if vm.isAudio {
+                        Image(systemName: "music.note")
+                            .foregroundColor(.white)
+                            .fontWeightBold()
+                            .padding(3)
+                            .background(.black)
+                            .padding(5)
+                    }
                 }
         default:
             Text("default")

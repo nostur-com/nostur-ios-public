@@ -57,6 +57,7 @@ class AnyPlayerModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     public var currentlyPlayingUrl: String? = nil // when loading EmbeddedVideoView, check if we are currently playing the same already
+    public var cachedFirstFrame: CachedFirstFrame? = nil // to restore .playingInPIP view back to first frame
     
     private init() {
         player.preventsDisplaySleepDuringVideoPlayback = false
@@ -88,15 +89,18 @@ class AnyPlayerModel: ObservableObject {
         self.nrLiveEvent = nrLiveEvent
         self.availableViewModes = availableViewModes
         self.cachedVideo = nil
+        self.cachedFirstFrame = nil
         self.thumbnailUrl = nrLiveEvent.thumbUrl
         
         if nrLiveEvent.streamHasEnded, let recordingUrl = nrLiveEvent.recordingUrl, let url = URL(string: recordingUrl) {
             isStream = false
             player.replaceCurrentItem(with: AVPlayerItem(url: url))
+            self.currentlyPlayingUrl = url.absoluteString
         }
         else if let url = nrLiveEvent.url {
             isStream = true
             player.replaceCurrentItem(with: AVPlayerItem(url: url))
+            self.currentlyPlayingUrl = url.absoluteString
         }
 
         // Don't reuse existing viewMode
@@ -106,7 +110,7 @@ class AnyPlayerModel: ObservableObject {
     
     // VIDEO URL
     @MainActor
-    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil) async {
+    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil, cachedFirstFrame: CachedFirstFrame? = nil) async {
         guard let url = URL(string: url) else { return }
         
         try? AVAudioSession.sharedInstance().setActive(true)
@@ -119,16 +123,16 @@ class AnyPlayerModel: ObservableObject {
         self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
         self.cachedVideo = nil
+        self.cachedFirstFrame = cachedFirstFrame
 
         
         self.isStream = url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" || url.absoluteString.suffix(3) == "mp3"
         
         if isStream {
             player.replaceCurrentItem(with: AVPlayerItem(url: url))
+            self.currentlyPlayingUrl = url.absoluteString
         }
-        
-        // If we already have cache, load video / dimensions / aspect from there
-        else if let cachedVideo = AVAssetCache.shared.get(url: url.absoluteString) {
+        else if let cachedVideo = AVAssetCache.shared.get(url: url.absoluteString) { // If we already have cache, load video / dimensions / aspect from there
             self.cachedVideo = cachedVideo
             self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
             player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
@@ -177,6 +181,7 @@ class AnyPlayerModel: ObservableObject {
         self.aspect = cachedVideo.dimensions.width / cachedVideo.dimensions.height
         self.availableViewModes = availableViewModes
         self.cachedVideo = cachedVideo
+        self.cachedFirstFrame = nil
         self.isStream = false
         
         player.replaceCurrentItem(with: AVPlayerItem(asset: cachedVideo.asset))
@@ -242,7 +247,7 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     public func close() {
-        sendNotification(.stopPlayingVideo)
+        sendNotification(.didEndPIP, (currentlyPlayingUrl, self.cachedFirstFrame, self.cachedVideo))
         self.player.pause()
         self.player.replaceCurrentItem(with: nil)
         self.nrLiveEvent = nil
