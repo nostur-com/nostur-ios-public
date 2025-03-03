@@ -194,7 +194,8 @@ struct LazyBookmark: View {
                     .frame(height: 175)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .task(id: nrLazyBookmark.id) {
+                    .onAppear {
+                        guard nrLazyBookmark.nrPost == nil else { return }
                         bg().perform {
                             let nrPost = NRPost(event: nrLazyBookmark.bgEvent)
                             Task { @MainActor in

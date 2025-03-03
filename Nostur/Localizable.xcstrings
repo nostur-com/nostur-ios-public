@@ -1971,6 +1971,7 @@
       }
     },
     "Cancelled" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2816,6 +2817,9 @@
         }
       }
     },
+    "default" : {
+
+    },
     "Default" : {
       "localizations" : {
         "nl" : {
@@ -3450,6 +3454,7 @@
       }
     },
     "Failed to load video" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7690,6 +7695,9 @@
         }
       }
     },
+    "streaming" : {
+
+    },
     "Swipe to unblock/unmute" : {
       "comment" : "Informational text",
       "localizations" : {
@@ -7755,6 +7763,7 @@
     },
     "Tap to load video" : {
       "comment" : "Button to load a video in a post",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8448,6 +8457,7 @@
       }
     },
     "Unable to load stream" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
