@@ -99,7 +99,8 @@ struct EmbeddedVideoView: View {
                             Image(systemName:"play.circle")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 80, height: 80)
+                                .frame(width: 65, height: 65)
+                                .foregroundColor(theme.accent)
                                 .contentShape(Rectangle())
                         }
                     }
@@ -117,12 +118,12 @@ struct EmbeddedVideoView: View {
                 }
         case .playingInPIP:
             Color.black
-                .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     Image(systemName: "pip")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 100)
+                        .frame(width: 65)
                         .foregroundColor(Color.gray)
                 }
                 .onReceive(receiveNotification(.didEndPIP)) { notification in
@@ -175,7 +176,8 @@ struct EmbeddedVideoView: View {
                                 Image(systemName:"play.circle")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 80, height: 80)
+                                    .frame(width: 65, height: 65)
+                                    .foregroundColor(theme.accent)
                                     .contentShape(Rectangle())
                             }
                         }
@@ -189,25 +191,38 @@ struct EmbeddedVideoView: View {
                     EmbeddedAVPlayerRepresentable(url: streamingUrl, timeControlStatus: $vm.timeControlStatus, isMuted: $vm.isMuted)
                         .overlay {
                             if !didStart {
-                                Color.black
+                                theme.listBackground
                                     .overlay {
                                         if let thumbnail {
                                             SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
                                         }
                                     }
                                     .overlay {
-                                        Button(action: {
-                                            if (!IS_IPHONE) {
-                                                didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
+                                        if vm.downloadProgress == 0 {
+                                            Button(action: {
+                                                if (!IS_IPHONE) {
+                                                    didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
+                                                }
+                                                vm.startPlaying()
+                                            }) {
+                                                Image(systemName:"play.circle")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 65, height: 65)
+                                                    .foregroundColor(theme.accent)
+                                                    .contentShape(Rectangle())
                                             }
-                                            vm.startPlaying()
-                                        }) {
-                                            Image(systemName:"play.circle")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 45, height: 45)
-                                                .centered()
-                                                .contentShape(Rectangle())
+                                        }
+                                        else {
+                                            HStack(spacing: 5) {
+                                                ProgressView()
+                                                Text(vm.downloadProgress, format:.percent)
+                                                    .frame(width: 48, alignment: .leading)
+                                                Image(systemName: "multiply.circle.fill")
+                                                    .onTapGesture {
+                                                        vm.cancel()
+                                                    }
+                                            }
                                         }
                                     }
                             }
