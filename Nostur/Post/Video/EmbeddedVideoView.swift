@@ -299,7 +299,7 @@ struct EmbeddedVideoView: View {
                     }
                 }
         default:
-            Text("default")
+            Text("📽️")
         }
     }
 }

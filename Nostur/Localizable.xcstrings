@@ -852,6 +852,9 @@
         }
       }
     },
+    "📽️" : {
+
+    },
     "🤫 Following" : {
       "comment" : "Follow/Unfollow button when the state is 'Following silent'",
       "localizations" : {
