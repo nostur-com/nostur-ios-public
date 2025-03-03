@@ -16,6 +16,7 @@ class AVAssetCache {
     
     private var cache: NSCache<NSString, CachedVideo>
     private var firstFrameCache: NSCache<NSString, CachedFirstFrame>
+    public var failedFirstFrameUrls = FIFOLimitedSet(maxSize: 20)
 
     private init() {
         self.cache = NSCache<NSString, CachedVideo>()

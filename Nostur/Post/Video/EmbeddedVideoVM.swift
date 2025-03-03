@@ -96,6 +96,11 @@ class EmbeddedVideoVM: ObservableObject {
                 await loadStream(videoUrl)
             }
         }
+        else if AVAssetCache.shared.failedFirstFrameUrls.contains(videoUrlString) {
+            // Don't try to load first frame again if we already failed recently
+            self.viewState = .streaming(videoUrl)
+            
+        }
         else { // OK, lets load first frame
             Task {
                 await loadFirstFrame(videoUrl)
@@ -303,6 +308,9 @@ class EmbeddedVideoVM: ObservableObject {
 #if DEBUG
                 L.og.debug("🎞️ Error loading first frame: \(error.localizedDescription) at \(videoURL.absoluteString)")
 #endif
+                // Can't get first frame, handle as streaming...
+                AVAssetCache.shared.failedFirstFrameUrls.insert(videoURL.absoluteString)
+                self.viewState = .streaming(videoURL)
             }
         }
     }
