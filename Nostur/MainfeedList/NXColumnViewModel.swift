@@ -1806,9 +1806,9 @@ extension NXColumnViewModel {
             else { // or if empty screen: refreshedAt (since)
                 self.refreshedAt
             }
-            
+#if DEBUG
             L.og.debug("☘️☘️ \(config.name) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0")
-            
+#endif
             // Don't go older than 24 hrs ago
             let maxAgo = Int64(Date().addingTimeInterval(-24 * 60 * 60).timeIntervalSince1970)
             

@@ -47,7 +47,9 @@ class NewPostNotifier: ObservableObject {
     @MainActor
     public func runCheck() {
         guard !NRState.shared.appIsInBackground else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, app in background."); return }
+#if DEBUG
         L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
+#endif
         if let lastCheck = lastCheck {
             guard (Date.now.timeIntervalSince1970 - lastCheck.timeIntervalSince1970) > 60
             else {

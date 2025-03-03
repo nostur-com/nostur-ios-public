@@ -86,7 +86,9 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
             }
             
             guard !SettingsStore.shared.lowDataMode else { return }
+#if DEBUG
             L.og.debug("☘️☘️ Prefetching \(imageRequests.count) + \(imageRequestsPFP.count)")
+#endif
             if !imageRequests.isEmpty {
                 ImageProcessing.shared.contentPrefetcher.startPrefetching(with: imageRequests)
             }

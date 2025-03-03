@@ -568,7 +568,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self.outQueue.removeAll(where: { $0.id == out.id })
             }
         }
+#if DEBUG
         L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url)")
+#endif
     }
     
     // didCloseWith

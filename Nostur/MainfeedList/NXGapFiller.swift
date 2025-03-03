@@ -63,7 +63,9 @@ class NXGapFiller {
                 subscriptionId: subId,
                 reqCommand: { [weak self] _ in
                     guard let self else { return }
+#if DEBUG
                     L.og.debug("☘️☘️ \(config.name) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
+#endif
                     cmd()
                 },
                 processResponseCommand: { [weak self] _, _, _ in

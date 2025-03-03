@@ -53,12 +53,16 @@ struct NXColumnView: View {
             viewModel.load(config)
         }
         .onChange(of: isVisible) { newValue in
+#if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onChange(of: isVisible) newValue: \(newValue)")
+#endif
             guard viewModel.isVisible != newValue else { return }
             viewModel.isVisible = newValue
         }
         .onChange(of: config) { newValue in
+#if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onChange(of: config)")
+#endif
             guard viewModel.config != newValue else { return }
             if let relaysData = newValue.feed?.relaysData {
                 for relay in relaysData {

@@ -500,7 +500,9 @@ public class ConnectionPool: ObservableObject {
                         self.queue.async(flags: .barrier) { [weak connection] in
                             connection?.nreqSubscriptions.insert(subscriptionId!)
                         }
+#if DEBUG
                         L.sockets.debug("⬇️⬇️ \(connection.url) .nreqSubscriptions.insert: \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
+#endif
                     }
                     connection.sendMessage(message.message)
                 }
