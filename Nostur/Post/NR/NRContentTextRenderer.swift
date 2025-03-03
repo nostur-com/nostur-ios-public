@@ -61,7 +61,7 @@ struct NRContentTextRendererInner: View {
         self.accentColor = accentColor ?? Themes.default.theme.accent
         self.onTap = onTap
         
-        _text = State(wrappedValue: isDetail ? attributedStringWithPs.output :  attributedStringWithPs.output.prefix(800))
+        _text = State(wrappedValue: isDetail ? attributedStringWithPs.output :  attributedStringWithPs.output.prefix(NRTEXT_LIMIT))
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
     }
@@ -128,7 +128,7 @@ struct NRContentTextRendererInner: View {
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
                             let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
-                            let output = isDetail ? reparsed.output : reparsed.output.prefix(800)
+                            let output = isDetail ? reparsed.output : reparsed.output.prefix(NRTEXT_LIMIT)
                             if self.text != output {
 //                                L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {
@@ -185,3 +185,6 @@ struct NRContentTextRendererInner: View {
         }
     }
 }
+
+
+let NRTEXT_LIMIT = IS_CATALYST ? 1600 : 800
