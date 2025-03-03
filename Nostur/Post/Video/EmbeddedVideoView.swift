@@ -184,6 +184,52 @@ struct EmbeddedVideoView: View {
                     }
                     
                 }
+        case .noPreviewFound(let streamingUrl):
+            theme.listBackground
+                .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
+                .overlay {
+                    if let thumbnail {
+                        SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                    }
+                }
+                .overlay {
+                    if vm.downloadProgress == 0 {
+                        Button(action: {
+                            if (!IS_IPHONE) {
+                                didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
+                            }
+                            vm.startPlaying()
+                        }) {
+                            Image(systemName:"play.circle")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 65, height: 65)
+                                .foregroundColor(theme.accent)
+                                .contentShape(Rectangle())
+                        }
+                    }
+                    else {
+                        HStack(spacing: 5) {
+                            ProgressView()
+                            Text(vm.downloadProgress, format:.percent)
+                                .frame(width: 48, alignment: .leading)
+                            Image(systemName: "multiply.circle.fill")
+                                .onTapGesture {
+                                    vm.cancel()
+                                }
+                        }
+                    }
+                }
+                .overlay(alignment: .topTrailing) {
+                    if vm.isAudio {
+                        Image(systemName: "music.note")
+                            .foregroundColor(.white)
+                            .fontWeightBold()
+                            .padding(3)
+                            .background(.black)
+                            .padding(5)
+                    }
+                }
         case .streaming(let streamingUrl):
             theme.listBackground
                 .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))

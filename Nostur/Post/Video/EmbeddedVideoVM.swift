@@ -98,7 +98,7 @@ class EmbeddedVideoVM: ObservableObject {
         }
         else if AVAssetCache.shared.failedFirstFrameUrls.contains(videoUrlString) {
             // Don't try to load first frame again if we already failed recently
-            self.viewState = .streaming(videoUrl)
+            self.viewState = .noPreviewFound(videoUrl)
             
         }
         else { // OK, lets load first frame
@@ -312,7 +312,7 @@ class EmbeddedVideoVM: ObservableObject {
 #endif
                 // Can't get first frame, handle as streaming...
                 AVAssetCache.shared.failedFirstFrameUrls.insert(videoURL.absoluteString)
-                self.viewState = .streaming(videoURL)
+                self.viewState = .noPreviewFound(videoURL)
             }
         }
     }
@@ -511,6 +511,7 @@ extension EmbeddedVideoVM {
         case lowDataMode(String)
         case loadedFirstFrame(CachedFirstFrame)
         case loadedFullVideo(CachedVideo)
+        case noPreviewFound(URL)
         case streaming(URL)
         case playingInPIP
         case error(String)
