@@ -149,6 +149,7 @@ class EmbeddedVideoVM: ObservableObject {
             playStreamUrl(videoUrl)
         }
         else { // start downloading video
+            self.downloadProgress = 1 // Need to be off 0 else looks like tapping play button is delayed (first view update would be 3% or higher)
             Task.detached(priority: .background) { [weak self] in
                 guard let self else { return }
                 await self.downloadVideo()
@@ -159,6 +160,7 @@ class EmbeddedVideoVM: ObservableObject {
     @MainActor
     public func cancel() {
         downloadTask?.cancel()
+        downloadProgress = 0
     }
     
     @MainActor
