@@ -69,6 +69,8 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     @Published public var chatVM = ChatRoomViewModel()
     
+    var isNSFW: Bool = false
+    
     init(event: Event) {
         self.nEvent = event.toNEvent() // TODO: This is NEvent (MessageParser) to Event (Importer) back to NEvent (here), need to fix better
         #if DEBUG
@@ -124,6 +126,17 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         else {
             nil
         }
+        self.isNSFW = self.hasNSFWContent()
+    }
+    
+    private func hasNSFWContent() -> Bool {
+        return nEvent.fastTags.contains(where: { tag in
+            // contains nsfw hashtag?
+            tag.0 == "t" && tag.1.lowercased() == "nsfw" ||
+            // contains content-warning tag
+            tag.0 == "content-warning"
+        })
+        // TODO: check labels/reports
     }
     
     public func loadReplacableData(_ params: (nEvent: NEvent,

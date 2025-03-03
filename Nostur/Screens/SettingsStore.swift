@@ -584,6 +584,26 @@ final class SettingsStore: ObservableObject {
         }
     }
     
+    @MainActor
+    static func shouldAutodownload(_ nrPost: NRLiveEvent, la laOrNil: LoggedInAccount? = nil) -> Bool {
+        let la: LoggedInAccount? = laOrNil ?? NRState.shared.loggedInAccount
+        guard let la else { return false }
+
+        if la.isFollowing(pubkey: nrPost.pubkey) { return true }
+
+        switch SettingsStore.shared.autoDownloadFrom {
+        case AutodownloadLevel.all.rawValue:
+            return true
+        case AutodownloadLevel.onlyWoT.rawValue:
+            guard WebOfTrust.shared.tresholdReached else { return true }
+            return WebOfTrust.shared.isAllowed(nrPost.pubkey)
+        case AutodownloadLevel.onlyWoTstrict.rawValue:
+            return la.isFollowing(pubkey: nrPost.pubkey)
+        default:
+            return true
+        }
+    }
+    
     static func shouldAutodownload(_ nrChat: NRChatMessage) -> Bool {
         if nrChat.following { return true }
         switch SettingsStore.shared.autoDownloadFrom {

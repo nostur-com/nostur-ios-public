@@ -17,6 +17,10 @@ struct LiveEventRowView: View {
     private var theme: Theme
     private var forceAutoload: Bool
     
+    private var shouldAutoload: Bool {
+        return !liveEvent.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(liveEvent))
+    }
+    
     init(liveEvent: NRLiveEvent, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false, theme: Theme = Themes.default.theme) {
         self.liveEvent = liveEvent
         self.fullWidth = fullWidth
@@ -60,7 +64,7 @@ struct LiveEventRowView: View {
             }
             
             if let image = liveEvent.thumbUrl {
-                SingleMediaViewer(url: image, pubkey: liveEvent.pubkey, imageWidth: dim.articleRowImageWidth(), fullWidth: true, contentMode: .aspectFill, upscale: true)
+                SingleMediaViewer(url: image, pubkey: liveEvent.pubkey, imageWidth: dim.articleRowImageWidth(), fullWidth: true, autoload: shouldAutoload, contentMode: .aspectFill, upscale: true)
 //                        .frame(width: dim.listWidth)
 //                        .frame(minHeight: 100)
 //                    .padding(.horizontal, -20) // on article preview always use full width style
