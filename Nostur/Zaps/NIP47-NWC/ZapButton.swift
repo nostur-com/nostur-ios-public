@@ -104,7 +104,7 @@ struct ZapButtonInner: View {
             .onReceive(receiveNotification(.sendCustomZap)) { notification in
                 // Complete custom zap
                 let customZap = notification.object as! CustomZap
-                guard customZap.customZapId == customZapId else { return }
+                guard customZapId != nil && customZap.customZapId == customZapId else { return }
                 customAmount = customZap.amount
                 zapMessage = customZap.publicNote
                 triggerStrike = true

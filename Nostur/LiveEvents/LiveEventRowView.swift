@@ -44,7 +44,8 @@ struct LiveEventRowView: View {
                     ForEach(liveEvent.onStage.indices, id: \.self) { index in
                         NestParticipantView(nrContact: liveEvent.onStage[index],
                                             role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
-                                            aTag: liveEvent.id
+                                            aTag: liveEvent.id,
+                                            disableZaps: true
                         )
                         .id(liveEvent.onStage[index].pubkey)
                     }
@@ -56,7 +57,8 @@ struct LiveEventRowView: View {
                     ForEach(liveEvent.listeners.indices, id: \.self) { index in
                         NestParticipantView(nrContact: liveEvent.listeners[index],
                                             role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
-                                            aTag: liveEvent.id
+                                            aTag: liveEvent.id,
+                                            disableZaps: true
                         )
                         .id(liveEvent.listeners[index].pubkey)
                     }

@@ -13,6 +13,7 @@ struct NestParticipantView: View {
     @ObservedObject public var nrContact: NRContact
     public var role: String? = nil
     public let aTag: String
+    public var disableZaps: Bool = false // This view can be loaded in multiple places at the same time, but it should only receive lightning strike in 1 place, pass disableZaps: true to avoid duplicate zaps
     
     public var showControls = true
     
@@ -26,6 +27,7 @@ struct NestParticipantView: View {
             ZappablePFP(pubkey: nrContact.pubkey, contact: nrContact, zapAtag: aTag)
                 .onReceive(receiveNotification(.sendCustomZap)) { notification in
                     // Complete custom zap
+                    guard !disableZaps else { return }
                     let customZap = notification.object as! CustomZap
                     guard customZap.customZapId == "LIVE-\(nrContact.pubkey)" else { return }
                     customAmount = customZap.amount
@@ -33,7 +35,7 @@ struct NestParticipantView: View {
                     triggerStrike = true
                 }
                 .overlay {
-                    if triggerStrike {
+                    if triggerStrike && !disableZaps {
                         GeometryReader { geo in
                             Color.clear
                                 .onAppear {

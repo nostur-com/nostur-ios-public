@@ -112,7 +112,7 @@ struct ProfileZapButton: View {
                                    .onReceive(receiveNotification(.sendCustomZap)) { notification in
                                        // Complete custom zap
                                        let customZap = notification.object as! CustomZap
-                                       guard customZap.customZapId == customZapId else { return }
+                                       guard customZapId != nil && customZap.customZapId == customZapId else { return }
                                        
                                        let point = CGPoint(x: geo.frame(in: .global).origin.x + 55, y: geo.frame(in: .global).origin.y + 10)
                                        self.triggerZap(strikeLocation: point, contact:contact, zapMessage:customZap.publicNote, amount: customZap.amount)
