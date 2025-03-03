@@ -43,7 +43,7 @@ class EmbeddedVideoVM: ObservableObject {
     @Published var isAudio: Bool = false
     
     
-    public func load(_ url: URL, nrPost: NRPost? = nil, autoLoad: Bool = false, metaDimensions: CGSize? = nil, availableWidth: CGFloat? = nil, availableHeight: CGFloat = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT) {
+    public func load(_ url: URL, nrPost: NRPost? = nil, autoLoad: Bool = false, metaDimensions: CGSize? = nil, availableWidth: CGFloat? = nil, availableHeight: CGFloat = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, allowNonHttps: Bool = false) {
         self.videoUrl = url
         self.videoUrlString = url.absoluteString
         self.metaDimensions = metaDimensions
@@ -81,7 +81,7 @@ class EmbeddedVideoVM: ObservableObject {
             self.cachedFirstFrame = cachedFirstFrame // need to keep it to revert back to after PIP
         }
         // Warning if no https
-        else if videoUrlString.prefix(7) == "http://" {
+        else if (videoUrlString.prefix(7) == "http://" && !allowNonHttps) {
             self.viewState = .noHttpsWarning(videoUrlString)
         }
         // Don't load if we are in low data mode

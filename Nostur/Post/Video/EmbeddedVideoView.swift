@@ -48,6 +48,37 @@ struct EmbeddedVideoView: View {
                 .onAppear {
                     vm.load(url, nrPost: nrPost)
                 }
+        case .noHttpsWarning(let videoUrlString):
+            theme.listBackground
+                .frame(width: availableWidth, height: 95.0)
+                .overlay(alignment: .top) {
+                    VStack(alignment: .center) {
+                        Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
+                            .fontWeightBold()
+                        Text(videoUrlString)
+                            .fontItalic()
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Button(String(localized: "Load anyway", comment: "Button to show the blocked content anyway")) {
+                            if (!IS_IPHONE) {
+                                didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
+                            }
+                            vm.startPlaying()
+                        }
+                        .padding(.bottom, 10)
+                    }
+                    .padding(10)
+                }
+                .overlay(alignment: .topTrailing) {
+                    if vm.isAudio {
+                        Image(systemName: "music.note")
+                            .foregroundColor(.white)
+                            .fontWeightBold()
+                            .padding(3)
+                            .background(.black)
+                            .padding(5)
+                    }
+                }
         case .loading(let percent):
             theme.listBackground
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
