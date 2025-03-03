@@ -184,11 +184,16 @@ struct EmbeddedVideoView: View {
                     }
                     
                 }
-        case .noPreviewFound(let streamingUrl):
+        case .noPreviewFound(let videoUrlString), .lowDataMode(let videoUrlString):
             theme.listBackground
                 .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
-                    if let thumbnail {
+                    if SettingsStore.shared.lowDataMode {
+                        Text(videoUrlString)
+                            .lineLimit(3)
+                            .truncationMode(.middle)
+                    }
+                    else if let thumbnail {
                         SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
                     }
                 }
