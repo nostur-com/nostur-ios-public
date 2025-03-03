@@ -13,6 +13,7 @@ struct NRContentTextRenderer: View, Equatable {
     
     static func == (lhs: NRContentTextRenderer, rhs: NRContentTextRenderer) -> Bool {
         lhs.attributedStringWithPs.id == rhs.attributedStringWithPs.id &&
+        lhs.isDetail == rhs.isDetail &&
         lhs.primaryColor == rhs.primaryColor &&
         lhs.accentColor == rhs.accentColor &&
         lhs.availableWidth == rhs.availableWidth
@@ -21,6 +22,7 @@ struct NRContentTextRenderer: View, Equatable {
     public let attributedStringWithPs: AttributedStringWithPs
     public var availableWidth: CGFloat? = nil
     public var isScreenshot = false
+    public var isDetail = false
     public var isPreview = false
     public var primaryColor: Color? = nil
     public var accentColor: Color? = nil
@@ -29,7 +31,7 @@ struct NRContentTextRenderer: View, Equatable {
     @EnvironmentObject private var dim: DIMENSIONS
     
     var body: some View {
-        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isScreenshot: isScreenshot, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
+        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isScreenshot: isScreenshot, isDetail: isDetail, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
     }
 }
 
@@ -37,6 +39,7 @@ struct NRContentTextRendererInner: View {
     private let attributedStringWithPs: AttributedStringWithPs
     private let availableWidth: CGFloat
     private let isScreenshot: Bool
+    private let isDetail: Bool
     private let isPreview: Bool
     private let primaryColor: Color
     private let accentColor: Color
@@ -48,16 +51,17 @@ struct NRContentTextRendererInner: View {
     
     @EnvironmentObject private var dim: DIMENSIONS
     
-    init(attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isScreenshot: Bool = false, isPreview: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
+    init(attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isScreenshot: Bool = false, isDetail: Bool = false, isPreview: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
         self.attributedStringWithPs = attributedStringWithPs
         self.availableWidth = availableWidth
         self.isScreenshot = isScreenshot
+        self.isDetail = isDetail
         self.isPreview = isPreview
         self.primaryColor = primaryColor ?? Themes.default.theme.primary
         self.accentColor = accentColor ?? Themes.default.theme.accent
         self.onTap = onTap
         
-        _text = State(wrappedValue: attributedStringWithPs.output)
+        _text = State(wrappedValue: isDetail ? attributedStringWithPs.output :  attributedStringWithPs.output.prefix(800))
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
     }
@@ -124,10 +128,11 @@ struct NRContentTextRendererInner: View {
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
                             let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
-                            if self.text != reparsed.output {
+                            let output = isDetail ? reparsed.output : reparsed.output.prefix(800)
+                            if self.text != output {
 //                                L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {
-                                    self.text = reparsed.output
+                                    self.text = output
                                 }
                             }
                         }
