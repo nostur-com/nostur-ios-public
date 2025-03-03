@@ -81,6 +81,12 @@ struct EmbeddedAVPlayerRepresentable: UIViewRepresentable {
         }
     }
     
+    static func dismantleUIView(_ uiView: Self.UIViewType, coordinator: Self.Coordinator) {
+        coordinator.avpc?.player?.pause()
+        coordinator.avpc?.player?.replaceCurrentItem(with: nil)
+        coordinator.avpc?.player = nil
+    }
+    
     class Coordinator: NSObject, AVPlayerViewControllerDelegate {
         var avpc: AVPlayerViewController?
         var parent: EmbeddedAVPlayerRepresentable
@@ -94,7 +100,9 @@ struct EmbeddedAVPlayerRepresentable: UIViewRepresentable {
         }
         
         deinit {
+            avpc?.player?.pause()
             avpc?.player?.replaceCurrentItem(with: nil)
+            avpc?.player = nil
             cancellable?.cancel()
         }
     }
