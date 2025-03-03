@@ -57,24 +57,21 @@ public class ConnectionPool: ObservableObject {
     
     public func updateAnyConnected() {
         queue.async { [unowned self] in
-            if self.connections.contains(where: { $0.value.isConnected }) {
-                Task { @MainActor in
+            let relayConnections = self.connections.values
+            Task { @MainActor in
+                if relayConnections.contains(where: { $0.isConnected }) {
                     if !self.anyConnected {
                         self.objectWillChange.send()
                         self.anyConnected = true
                     }
                 }
-            }
-            else {
-                Task { @MainActor in
-                    if self.anyConnected {
-                        self.objectWillChange.send()
-                        self.anyConnected = false
-                        
-                        self.queue.async { [unowned self] in
-                            for connection in self.connections.values {
-                                connection.resetExponentialBackOff()
-                            }
+                else if self.anyConnected {
+                    self.objectWillChange.send()
+                    self.anyConnected = false
+                    
+                    for connection in relayConnections {
+                        self.queue.async { 
+                            connection.resetExponentialBackOff()
                         }
                     }
                 }
