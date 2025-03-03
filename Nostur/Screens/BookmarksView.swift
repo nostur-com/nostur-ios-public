@@ -35,26 +35,33 @@ struct BookmarksView: View {
             if vm.isLoading {
                 CenteredProgressView()
             }
-            else if !vm.nrLazyBookmarks.isEmpty {
+            else {
                 List {
-                    SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
-                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-
-                    ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
-                        ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
-                            LazyBookmark(nrLazyBookmark: nrLazyBookmark)
-                        }
-                        .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
-                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .padding(.bottom, GUTTER)
+                    if !vm.nrLazyBookmarks.isEmpty {
+                        SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(themes.theme.listBackground)
+                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                         
+                        ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
+                            ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
+                                LazyBookmark(nrLazyBookmark: nrLazyBookmark)
+                            }
+                            .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(themes.theme.listBackground)
+                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                            .padding(.bottom, GUTTER)
+                            
+                        }
+                        .onDelete { indexSet in
+                            deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
+                        }
                     }
-                    .onDelete { indexSet in
-                        deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
+                    else {
+                        Text("When you bookmark a post it will show up here.")
+                            .hCentered()
+                            .padding(.top, 40)
                     }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
@@ -96,11 +103,6 @@ struct BookmarksView: View {
                     }
                 }
             }
-            else {
-                Text("When you bookmark a post it will show up here.")
-                    .hCentered()
-                    .padding(.top, 40)
-            }
         }
         .onAppear {
             guard !didLoad else { return }
@@ -110,7 +112,6 @@ struct BookmarksView: View {
         .navigationTitle(String(localized:"Bookmarks", comment:"Navigation title for Bookmarks screen"))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
-        
         .onReceive(ViewUpdates.shared.bookmarkUpdates, perform: { update in
             vm.load()
         })
@@ -194,15 +195,15 @@ struct LazyBookmark: View {
                     .frame(height: 175)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .onAppear {
-                        guard nrLazyBookmark.nrPost == nil else { return }
-                        bg().perform {
-                            let nrPost = NRPost(event: nrLazyBookmark.bgEvent)
-                            Task { @MainActor in
-                                nrLazyBookmark.nrPost = nrPost
-                            }
-                        }
-                    }
+            }
+        }
+        .onAppear {
+            guard nrLazyBookmark.nrPost == nil else { return }
+            bg().perform {
+                let nrPost = NRPost(event: nrLazyBookmark.bgEvent)
+                Task { @MainActor in
+                    nrLazyBookmark.nrPost = nrPost
+                }
             }
         }
     }
