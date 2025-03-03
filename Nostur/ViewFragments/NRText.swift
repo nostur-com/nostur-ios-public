@@ -320,6 +320,15 @@ struct NRTextFixed: UIViewRepresentable {
     }
 }
 
+extension NSAttributedString {
+    func prefix(_ maxLength: Int) -> NSAttributedString {
+        // Ensure we don't exceed the string's length
+        let endIndex = min(maxLength, self.length)
+        // Extract the substring from the start (location 0) to endIndex
+        return self.attributedSubstring(from: NSRange(location: 0, length: endIndex))
+    }
+}
+
 extension NSMutableAttributedString {
     
     func addHashtagIcons() {
