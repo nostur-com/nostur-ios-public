@@ -722,7 +722,14 @@
       }
     },
     "%lld more" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nog %lld"
+          }
+        }
+      }
     },
     "%lld participants" : {
       "localizations" : {
@@ -775,7 +782,14 @@
       }
     },
     "%lld viewers" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld kijkers"
+          }
+        }
+      }
     },
     "+%lld" : {
       "localizations" : {
@@ -887,7 +901,7 @@
       }
     },
     "🧩" : {
-
+      "shouldTranslate" : false
     },
     "😂" : {
       "localizations" : {
@@ -1284,7 +1298,15 @@
       "shouldTranslate" : false
     },
     "Add a caption" : {
-      "comment" : "Placeholder text for adding a caption"
+      "comment" : "Placeholder text for adding a caption",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg omschrijving toe"
+          }
+        }
+      }
     },
     "Add back" : {
       "comment" : "Button to add back 'possible imposter' label from a contact (only visible right after removing)",
@@ -1906,7 +1928,14 @@
       }
     },
     "Bookmark" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bladwijzer"
+          }
+        }
+      }
     },
     "Bookmarks" : {
       "comment" : "Navigation title for Bookmarks screen\nSide bar navigation button\nTab to switch to bookmarks",
@@ -1999,7 +2028,14 @@
       "shouldTranslate" : false
     },
     "Choose a photo" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies een foto"
+          }
+        }
+      }
     },
     "Choose a popular relay so people can easily find your posts and choose an alternative relay, preferably your own, where people can always find your posts in case the popular relay has issues." : {
       "localizations" : {
@@ -2127,7 +2163,14 @@
       }
     },
     "Collapse" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inklappen"
+          }
+        }
+      }
     },
     "Color Blue" : {
       "extractionState" : "stale",
@@ -2426,7 +2469,14 @@
       }
     },
     "Conversations" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesprekken"
+          }
+        }
+      }
     },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
@@ -2495,7 +2545,14 @@
       }
     },
     "Copy video URL" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer video URL"
+          }
+        }
+      }
     },
     "Could not convert data" : {
       "comment" : "Error message",
@@ -2821,7 +2878,14 @@
       }
     },
     "default" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "standaard"
+          }
+        }
+      }
     },
     "Default" : {
       "localizations" : {
@@ -3408,7 +3472,14 @@
       }
     },
     "Expand" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uitklappen"
+          }
+        }
+      }
     },
     "Expired" : {
       "comment" : "Button of an expired lightning invoice (disabled)",
@@ -4115,7 +4186,15 @@
       }
     },
     "Interactions" : {
-      "comment" : "Tab title"
+      "comment" : "Tab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interacties"
+          }
+        }
+      }
     },
     "Internet connection unavailable" : {
       "localizations" : {
@@ -4244,7 +4323,7 @@
       }
     },
     "Landscape" : {
-
+      "shouldTranslate" : false
     },
     "Last 10 error messages" : {
       "localizations" : {
@@ -4438,7 +4517,15 @@
       }
     },
     "Load anyway" : {
-      "comment" : "Button to show the blocked content anyway"
+      "comment" : "Button to show the blocked content anyway",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toch laden"
+          }
+        }
+      }
     },
     "Load default" : {
       "localizations" : {
@@ -5320,7 +5407,14 @@
       "shouldTranslate" : false
     },
     "Nothing found" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niks gevonden"
+          }
+        }
+      }
     },
     "Notices" : {
       "localizations" : {
@@ -5506,7 +5600,14 @@
       }
     },
     "Other" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OVerig"
+          }
+        }
+      }
     },
     "Outrage feed may or may not be available in a future release" : {
       "localizations" : {
@@ -5560,13 +5661,20 @@
       }
     },
     "Picture-in-picture" : {
-
+      "shouldTranslate" : false
     },
     "Picture-in-Picture" : {
-
+      "shouldTranslate" : false
     },
     "Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto’s, Hot, Discover, Gallery, en Artikelen feed zijn niet zichtbaar tot je meer dan 10 mensen volgt"
+          }
+        }
+      }
     },
     "Picture, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
       "extractionState" : "stale",
@@ -5601,7 +5709,14 @@
       }
     },
     "Pictures-only feed from people you follow" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto’s feed van mensen die jij volgt"
+          }
+        }
+      }
     },
     "Pin" : {
       "localizations" : {
@@ -5656,7 +5771,7 @@
       }
     },
     "Portrait" : {
-
+      "shouldTranslate" : false
     },
     "possible imposter" : {
       "comment" : "Label shown on a profile",
@@ -6192,7 +6307,15 @@
       }
     },
     "Reactions" : {
-      "comment" : "Tab title"
+      "comment" : "Tab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reacties"
+          }
+        }
+      }
     },
     "read" : {
       "localizations" : {
@@ -7005,7 +7128,14 @@
       }
     },
     "Save to Photo Library" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opslaan in Foto’s"
+          }
+        }
+      }
     },
     "Scanning relays for messages %lld/12 months ago..." : {
       "localizations" : {
@@ -7083,7 +7213,15 @@
       }
     },
     "Search in bookmarks..." : {
-      "comment" : "Placeholder text in bookmarks search input box"
+      "comment" : "Placeholder text in bookmarks search input box",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zoeken in bladwijzers…"
+          }
+        }
+      }
     },
     "Search..." : {
       "comment" : "Placeholder text in a search input box",
@@ -7689,7 +7827,7 @@
       }
     },
     "Stream" : {
-
+      "shouldTranslate" : false
     },
     "Stream has ended" : {
       "localizations" : {
@@ -7716,25 +7854,32 @@
       }
     },
     "Tab" : {
-
+      "shouldTranslate" : false
     },
     "Tab 1" : {
-
+      "shouldTranslate" : false
     },
     "Tab 2" : {
-
+      "shouldTranslate" : false
     },
     "Tab 3" : {
-
+      "shouldTranslate" : false
     },
     "Tab 4" : {
-
+      "shouldTranslate" : false
     },
     "Tab 5" : {
-
+      "shouldTranslate" : false
     },
     "Take a photo" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak een foto"
+          }
+        }
+      }
     },
     "Tap account to exclude" : {
       "localizations" : {
@@ -8377,7 +8522,7 @@
       }
     },
     "Type" : {
-
+      "shouldTranslate" : false
     },
     "Type your message..." : {
       "comment" : "Placeholder for input field for new direct message",
@@ -8603,10 +8748,10 @@
       }
     },
     "User does not have a lightning address set" : {
-
+      "shouldTranslate" : false
     },
     "Users wallet does not support nostr" : {
-
+      "shouldTranslate" : false
     },
     "Uses iCloud to sync across devices" : {
       "comment" : "Setting on settings screen",
@@ -8623,7 +8768,14 @@
       "shouldTranslate" : false
     },
     "Verify again" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw verifiëren"
+          }
+        }
+      }
     },
     "Verify message signatures" : {
       "comment" : "Setting on settings screen",
@@ -8637,10 +8789,10 @@
       }
     },
     "Verifying..." : {
-
+      "shouldTranslate" : false
     },
     "Verifying... Done." : {
-
+      "shouldTranslate" : false
     },
     "View on web" : {
       "localizations" : {
