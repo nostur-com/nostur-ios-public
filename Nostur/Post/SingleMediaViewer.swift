@@ -86,6 +86,7 @@ struct SingleMediaViewer: View {
                             //                            .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(height: scaledDimensions.height)
+                                .contentShape(Rectangle())
                                 .onTapGesture {
                                     if let tapUrl {
                                         openURL(tapUrl)
@@ -128,6 +129,7 @@ struct SingleMediaViewer: View {
                             //                            .background(Color.green)
                             //                            .withoutAnimation()
                                 .frame(height: scaledDimensions.height)
+                                .contentShape(Rectangle())
                                 .onTapGesture {
                                     if let tapUrl {
                                         openURL(tapUrl)

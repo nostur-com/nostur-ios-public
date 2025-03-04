@@ -121,6 +121,7 @@ struct FullImageViewer: View {
                                     GIFImage(data: data, isPlaying: .constant(true))
                                         .aspectRatio(contentMode: .fit)
                                         .frame(width: geo.size.width, height: geo.size.height)
+                                        .contentShape(Rectangle())
                                         .scaleEffect(scale)
                                         .offset(position)
                                         .simultaneousGesture(magnifyAndDragGesture)
