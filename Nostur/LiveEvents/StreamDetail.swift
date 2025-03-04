@@ -216,7 +216,6 @@ struct StreamDetail: View {
                 .presentationBackgroundCompat(themes.theme.background)
                 .presentationDetents45ml()
             }
-//            .withLightningEffect()
         }
         else {
             EmptyView()
