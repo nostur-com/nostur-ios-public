@@ -32,6 +32,7 @@ struct EmbeddedVideoView: View {
                 .overlay {
                     if let thumbnail {
                         SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                            .allowsHitTesting(false)
                     }
                 }
                 .overlay {
@@ -85,6 +86,7 @@ struct EmbeddedVideoView: View {
                 .overlay {
                     if let thumbnail {
                         SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                            .allowsHitTesting(false)
                     }
                 }
                 .overlay {
@@ -226,6 +228,7 @@ struct EmbeddedVideoView: View {
                     }
                     else if let thumbnail {
                         SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                            .allowsHitTesting(false)
                     }
                 }
                 .overlay {
@@ -277,6 +280,7 @@ struct EmbeddedVideoView: View {
                                     .overlay {
                                         if let thumbnail {
                                             SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
+                                                .allowsHitTesting(false)
                                         }
                                     }
                                     .overlay {
