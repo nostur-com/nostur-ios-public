@@ -106,6 +106,12 @@ let _ = Self._printChanges()
                         .padding(.bottom, 15)
                     }
                 }
+                    .overlay(alignment: .topTrailing) {
+                        if !chatVM.topZaps.isEmpty {
+                            ChatTopZaps(messages: chatVM.topZaps)
+                                .padding(5)
+                        }
+                    }
             }
         }
 

@@ -38,6 +38,7 @@ class ChatRoomViewModel: ObservableObject {
 //    private var backlog = Backlog()
     
     @Published public var messages: [ChatRowContent] = []
+    @Published public var topZaps: [ChatConfirmedZap] = []
     private var bgMessages: [ChatRowContent] = []
     
     private var renderMessages = PassthroughSubject<Void, Never>()
@@ -137,6 +138,7 @@ class ChatRoomViewModel: ObservableObject {
 
             self.bgMessages = rows
             self.renderMessages.send()
+            self.updateTopZaps()
             onComplete?()
         }
     }
@@ -245,6 +247,7 @@ class ChatRoomViewModel: ObservableObject {
                         self.bgMessages = messages
                     }
                     self.renderMessages.send()
+                    self.updateTopZaps()
                 }
             }
             .store(in: &subscriptions)
@@ -294,6 +297,46 @@ class ChatRoomViewModel: ObservableObject {
         bg().perform {
             for id in ids {
                 Importer.shared.existingIds[id] = nil
+            }
+        }
+    }
+    
+    private func updateTopZaps() {
+        let bgContext = bg()
+        bgContext.perform { [weak self] in
+            guard let self else { return }
+            
+            let combinedZaps = self.bgMessages
+                .compactMap { content in
+                    if case .chatConfirmedZap(let zap) = content {
+                        return zap
+                    }
+                    return nil
+                }
+                .reduce(into: [String: ChatConfirmedZap]()) { result, zap in
+                    if let existing = result[zap.zapRequestPubkey] {
+                        // Combine amounts for same pubkey
+                        result[zap.zapRequestPubkey] = ChatConfirmedZap(
+                            id: existing.id,
+                            zapRequestId: existing.zapRequestId,
+                            zapRequestPubkey: existing.zapRequestPubkey,
+                            zapRequestCreatedAt: existing.zapRequestCreatedAt,
+                            amount: existing.amount + zap.amount,
+                            nxEvent: existing.nxEvent,
+                            content: existing.content,
+                            contact: existing.contact
+                        )
+                    } else {
+                        result[zap.zapRequestPubkey] = zap
+                    }
+                }
+                .values
+                .sorted { $0.amount > $1.amount }
+                .prefix(4)
+                .map { $0 }
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.topZaps = combinedZaps
             }
         }
     }
