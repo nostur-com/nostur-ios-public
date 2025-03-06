@@ -543,7 +543,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     }
     
     private var contactSavedSubscription: AnyCancellable?
-    private var removeMissingPsSubscription: AnyCancellable?
     private var postDeletedSubscription: AnyCancellable?
     private var repliesSubscription: AnyCancellable?
     private var repliesCountSubscription: AnyCancellable?
@@ -660,20 +659,28 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 guard let self = self else { return false }
                 return self.missingPs.contains(pubkey)
             })
-            .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
+                self.missingPs.remove(pubkey)
                 
-                if self.pubkey == pubkey && self.contact == nil {
-                    bg().perform { [weak self] in
-                        if let nrContact = NRContact.fetch(pubkey) {
-                            DispatchQueue.main.async {
-                                self?.objectWillChange.send()
-                                self?.contact = nrContact
-                                
-                                if self?.kind == 6 {
+                if self.pubkey == pubkey {
+                    if let nrContact = self.contact, kind == 6 {
+                        DispatchQueue.main.async {
+                            self.objectWillChange.send()
+                            self.repostedHeader = String(localized:"\(nrContact.anyName) reposted", comment: "Heading for reposted post: '(Name) reposted'")
+                        }
+                    }
+                    else {
+                        bg().perform { [weak self] in
+                            if let nrContact = NRContact.fetch(pubkey) {
+                                DispatchQueue.main.async {
                                     self?.objectWillChange.send()
-                                    self?.repostedHeader = String(localized:"\(self?.contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
+                                    self?.contact = nrContact
+                                    
+                                    if self?.kind == 6 {
+                                        self?.objectWillChange.send()
+                                        self?.repostedHeader = String(localized:"\(nrContact.anyName) reposted", comment: "Heading for reposted post: '(Name) reposted'")
+                                    }
                                 }
                             }
                         }
@@ -698,18 +705,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     }
                 }
                 
-            }
-       
-        // Remove from missingPs so we don't fetch again at any .onAppear
-        removeMissingPsSubscription = Importer.shared.contactSaved
-            .subscribe(on: DispatchQueue.global())
-            .filter({ [weak self] pubkey in
-                guard let self = self else { return false }
-                return self.missingPs.contains(pubkey)
-            })
-            .sink { [weak self] pubkey in
-                guard let self = self else { return }
-                self.missingPs.remove(pubkey)
+                if self.missingPs.isEmpty {
+                    contactSavedSubscription?.cancel()
+                    contactSavedSubscription = nil
+                }
             }
     }
 
@@ -1316,22 +1315,35 @@ class NoteRowAttributes: ObservableObject {
 
 class PFPAttributes: ObservableObject {
     @Published var contact: NRContact? = nil
-    private var contactSavedSubscription: AnyCancellable?
+    private var contactUpdatedSubscription: AnyCancellable?
+    private let pubkey: String
+    
+    public var anyName: String {
+        contact?.anyName ?? String(pubkey.suffix(11))
+    }
+    
+    public var pfpURL: URL? {
+        contact?.pictureUrl
+    }
+    
+    public var didRanContactUpdated = false
     
     init(contact: NRContact? = nil, pubkey: String) {
         self.contact = contact
+        self.pubkey = pubkey
         
         if contact == nil {
-            contactSavedSubscription = ViewUpdates.shared.contactUpdated
+            contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
                 .filter { pubkey == $0.pubkey }
                 .sink(receiveValue: { [weak self] contact in
                     let nrContact = NRContact.fetch(contact.pubkey, contact: contact)
                     DispatchQueue.main.async { [weak self] in
                         self?.objectWillChange.send()
                         self?.contact = nrContact
+                        self?.didRanContactUpdated = true
                     }
-                    self?.contactSavedSubscription?.cancel()
-                    self?.contactSavedSubscription = nil
+                    self?.contactUpdatedSubscription?.cancel()
+                    self?.contactUpdatedSubscription = nil
                 })
         }
     }
