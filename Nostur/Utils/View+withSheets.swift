@@ -197,12 +197,11 @@ struct WithSheets: ViewModifier {
             })
         
             .onReceive(receiveNotification(.reportContact), perform: { notification in
-                let contact = notification.object as! Contact
-                reportContact = ReportContact(contact: contact)
+                reportContact = notification.object as! ReportContact
             })
             .sheet(item: $reportContact, content: { reportContact in
                 NBNavigationStack {
-                    ReportContactSheet(contact: reportContact.contact)
+                    ReportContactSheet(reportContact: reportContact)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.background)
                 }

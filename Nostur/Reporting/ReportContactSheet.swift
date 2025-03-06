@@ -84,8 +84,8 @@ struct ReportContactSheet_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             NBNavigationStack {
-                if let contact = PreviewFetcher.fetchContact() {
-                    ReportContactSheet(contact: contact)
+                if let nrContact = PreviewFetcher.fetchNRContact() {
+                    ReportContactSheet(reportContact: ReportContact(nrContact: nrContact))
                 }
             }
         }
