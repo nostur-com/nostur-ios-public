@@ -11,8 +11,8 @@ import Combine
 
 public struct Theme: Equatable, Identifiable {
     public var id = "Default"
-    public var primary = Color("defaultPrimary")
-    public var secondary = Color("defaultSecondary")
+    public var primary = Color.primary
+    public var secondary = Color.secondary
     public var accent = Color("defaultAccentColor")
     public var background = Color("defaultBackground")
     public var secondaryBackground = Color("defaultSecondaryBackground")
@@ -69,8 +69,8 @@ class Themes: ObservableObject {
         selectedTheme = "green"
         theme = Theme(
             id: "Green",
-            primary: Color("defaultPrimary"),
-            secondary: Color("defaultSecondary"),
+            primary: Color.primary,
+            secondary: Color.secondary,
             accent: Color("greenAccentColor"),
             background: Color("greenBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -86,8 +86,8 @@ class Themes: ObservableObject {
         
         theme = Theme(
             id: "Pink",
-            primary: Color("defaultPrimary"),
-            secondary: Color("defaultSecondary"),
+            primary: Color.primary,
+            secondary: Color.secondary,
             accent: Color("pinkAccentColor"),
             background: Color("pinkBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -102,8 +102,8 @@ class Themes: ObservableObject {
         selectedTheme = "orange"
         theme = Theme(
             id: "Orange",
-            primary: Color("defaultPrimary"),
-            secondary: Color("defaultSecondary"),
+            primary: Color.primary,
+            secondary: Color.secondary,
             accent: Color("orangeAccentColor"),
             background: Color("orangeBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -119,8 +119,8 @@ class Themes: ObservableObject {
         
         theme = Theme(
             id: "Purple",
-            primary: Color("defaultPrimary"),
-            secondary: Color("defaultSecondary"),
+            primary: Color.primary,
+            secondary: Color.secondary,
             accent: Color("purpleAccentColor"),
             background: Color("purpleBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -135,8 +135,8 @@ class Themes: ObservableObject {
         selectedTheme = "red"
         theme = Theme(
             id: "Red",
-            primary: Color("defaultPrimary"),
-            secondary: Color("defaultSecondary"),
+            primary: Color.primary,
+            secondary: Color.secondary,
             accent: Color("redAccentColor"),
             background: Color("redBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
@@ -151,8 +151,8 @@ class Themes: ObservableObject {
         selectedTheme = "blue"
         theme = Theme(
             id: "Blue",
-            primary: Color("defaultPrimary"),
-            secondary: Color("defaultSecondary"),
+            primary: Color.primary,
+            secondary: Color.secondary,
             accent: Color("blueAccentColor"),
             background: Color("blueBackground"),
             secondaryBackground: Color(.secondarySystemBackground),
