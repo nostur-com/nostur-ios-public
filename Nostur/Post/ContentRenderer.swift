@@ -40,8 +40,8 @@ struct ContentRenderer: View { // VIEW things
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(contentElements.indices, id:\.self) { index in
-                switch contentElements[index] {
+            ForEach(contentElements) { element in
+                switch element {
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
@@ -49,7 +49,6 @@ struct ContentRenderer: View { // VIEW things
                     //                        .fixedSize(horizontal: false, vertical: true)
 //                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
-                        .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
@@ -58,7 +57,6 @@ struct ContentRenderer: View { // VIEW things
                         .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
-                        .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .naddr1(let identifier):
@@ -67,25 +65,20 @@ struct ContentRenderer: View { // VIEW things
                         .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
-                        .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey, theme: theme)
                             .padding(.vertical, 10)
-                            .id(index)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                     }
                     else {
                         EmptyView()
-                            .id(index)
                     }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
-                        .id(index)
-//                        .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
@@ -99,11 +92,9 @@ struct ContentRenderer: View { // VIEW things
                                 guard !isDetail else { return }
                                 navigateTo(nrPost)
                             }
-                            .id(index)
                     }
                     else {
                         EmptyView()
-                            .id(index)
                     }
                 case .noteHex(let hex):
                     EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
@@ -117,7 +108,6 @@ struct ContentRenderer: View { // VIEW things
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
-                        .id(index)
                 case .code(let code): // For text notes
                     Text(verbatim: code)
                         .font(.system(.body, design: .monospaced))
@@ -125,7 +115,6 @@ struct ContentRenderer: View { // VIEW things
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
-                        .id(index)
                 case .text(let attributedStringWithPs): // For text notes
 //                    Color.red
 //                        .frame(height: 50)
@@ -136,32 +125,26 @@ struct ContentRenderer: View { // VIEW things
 //                            guard !isDetail else { return }
 //                            navigateTo(nrPost)
 //                        }
-//                        .id(index)
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isDetail: isDetail, isPreview: nrPost.isPreview, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                     })
-                        .equatable()
-                        .id(index)
+                    .equatable()
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
-                        .id(index)
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, theme: theme)
                         .padding(.vertical, 10)
-                        .id(index)
                 case .cashu(let text):
                     CashuTokenView(token: text, theme: theme)
                         .padding(.vertical, 10)
-                        .id(index)
                 case .video(let mediaContent):
                     EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
                         .padding(.horizontal, fullWidth ? -10 : 0)
-                        .id(index)                    
                 case .image(let mediaContent):
                     if let dimensions = mediaContent.dimensions {
                         let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: isDetail ? 5000.0 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
@@ -186,7 +169,6 @@ struct ContentRenderer: View { // VIEW things
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
 //                                .debugDimensions("smv.frame")
-                                .id(index)
     //                            .withoutAnimation()
     //                            .transaction { t in t.animation = nil }
                         }
@@ -203,7 +185,6 @@ struct ContentRenderer: View { // VIEW things
                                 .padding(.horizontal, fullWidth ? -10 : 0)
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                                .id(index)
     //                            .withoutAnimation()
     //                            .transaction { t in t.animation = nil }
                         }
@@ -226,7 +207,6 @@ struct ContentRenderer: View { // VIEW things
                             .padding(.vertical, 0)
                             .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
 //                            .debugDimensions("image.frame")
-                            .id(index)
 //                            .background(Color.yellow)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
@@ -234,7 +214,6 @@ struct ContentRenderer: View { // VIEW things
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
                         .padding(.vertical, 10)
-                        .id(index)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .postPreviewImage(let postedImageMeta):
@@ -244,7 +223,6 @@ struct ContentRenderer: View { // VIEW things
                         .frame(maxWidth: 600)
                         .padding(.top, 10)
                         .frame(maxWidth: .infinity, alignment: .center)
-                        .id(index)
                 case .postPreviewVideo(let postedVideoMeta):
                     if let thumbnail = postedVideoMeta.thumbnail {
                         Image(uiImage: thumbnail)
@@ -253,7 +231,6 @@ struct ContentRenderer: View { // VIEW things
                             .frame(maxWidth: 600)
                             .padding(.top, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
-                            .id(index)
                             .overlay(alignment: .center) {
                                 Image(systemName:"play.circle")
                                     .resizable()
@@ -272,7 +249,6 @@ struct ContentRenderer: View { // VIEW things
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
-                        .id(index)
                 }
             }
         }
