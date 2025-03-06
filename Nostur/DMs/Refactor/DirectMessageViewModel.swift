@@ -235,7 +235,7 @@ class DirectMessageViewModel: ObservableObject {
                 var nrContact:NRContact?
                 
                 if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(contact: contact)
+                    nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                 }
                 
                 guard let mostRecent = mostRecent else { return }
@@ -313,7 +313,7 @@ class DirectMessageViewModel: ObservableObject {
                 var nrContact:NRContact?
                 
                 if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(contact: contact)
+                    nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                 }
                 
                 guard let mostRecent = mostRecent else { return }
@@ -383,7 +383,7 @@ class DirectMessageViewModel: ObservableObject {
                 var nrContact:NRContact?
                 
                 if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(contact: contact)
+                    nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                 }
                 
                 guard let mostRecent = mostRecent else { return }

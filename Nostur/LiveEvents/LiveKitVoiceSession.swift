@@ -224,7 +224,7 @@ class LiveKitVoiceSession: ObservableObject {
             ctx.perform { [weak self] in
                 guard let self else { return }
                 if let contact = Contact.fetchByPubkey(participantPubkey, context: ctx) {
-                    let nrContact = NRContact(contact: contact)
+                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                     if nrContact.pubkey == self.anonymousPubkeyCached {
                         nrContact.name = "You"
                         nrContact.anyName = "You"
@@ -254,7 +254,7 @@ class LiveKitVoiceSession: ObservableObject {
                     EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "syncParticipants.001")
                     QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                     
-                    let nrContact = NRContact(contact: contact)
+                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                     if nrContact.pubkey == self.anonymousPubkeyCached {
                         nrContact.name = "You"
                         nrContact.anyName = "You"

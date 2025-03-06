@@ -33,7 +33,7 @@ struct ProfileOverlayCardContainer: View {
                         }
                         bg().perform {
                             if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                let nrContact = NRContact(contact: bgContact)
+                                let nrContact = NRContact(pubkey: bgContact.pubkey, contact: bgContact)
                                 
                                 DispatchQueue.main.async {
                                     self.contact = nrContact
@@ -49,7 +49,7 @@ struct ProfileOverlayCardContainer: View {
                                     processResponseCommand: { taskId, _, _ in
                                         bg().perform {
                                             if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                                let nrContact = NRContact(contact: bgContact)
+                                                let nrContact = NRContact(pubkey: bgContact.pubkey, contact: bgContact)
                                                 DispatchQueue.main.async {
                                                     self.contact = nrContact
                                                     NRContactCache.shared.setObject(for: pubkey, value: nrContact)
@@ -190,7 +190,7 @@ struct ProfileOverlayCard: View {
                                     UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
                                     sendNotification(.dismissMiniProfile)
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                        sendNotification(.triggerDM, (contact.pubkey, contact.mainContact))
+                                        sendNotification(.triggerDM, (contact.pubkey, contact))
                                     }
                                 } label: { Image(systemName: "envelope.fill") }
                                 .buttonStyle(NosturButton())

@@ -39,7 +39,7 @@ struct ProfileByPubkey: View {
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                    let nrContact = NRContact(contact: contact)
+                                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                                     vm.ready(nrContact) // 2A. DONE
                                     NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }
@@ -50,7 +50,7 @@ struct ProfileByPubkey: View {
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
                                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                    let nrContact = NRContact(contact: contact)
+                                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                                     vm.ready(nrContact)
                                     NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }

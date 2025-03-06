@@ -114,14 +114,14 @@ struct ProfileView: View {
                             Button {
                                 UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                    sendNotification(.triggerDM, (nrContact.pubkey, nrContact.mainContact))
+                                    sendNotification(.triggerDM, (nrContact.pubkey, nrContact))
                                 }
                             } label: { Image(systemName: "envelope.fill") }
                                 .buttonStyle(NosturButton())
                         }
                         
                         if nrContact.anyLud {
-                            ProfileLightningButton(contact: nrContact.mainContact)
+                            ProfileLightningButton(nrContact: nrContact)
                         }
                         
                         if nrContact.pubkey == NRState.shared.activeAccountPublicKey {
@@ -173,7 +173,7 @@ struct ProfileView: View {
                         .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
                     
                     HStack {
-                        if let mainContact = nrContact.mainContact {
+                        if let mainContact = Contact.fetchByPubkey(nrContact.pubkey, context: viewContext())  {
                             ContactPrivateNoteToggle(contact: mainContact)
                         }
                         Menu {
@@ -188,7 +188,7 @@ struct ProfileView: View {
                                 Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
                             }
                             Button {
-                                sendNotification(.addRemoveToListsheet, nrContact.mainContact)
+                                sendNotification(.addRemoveToListsheet, nrContact)
                             } label: {
                                 Label(String(localized:"Add/Remove from feeds", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
                             }
@@ -199,7 +199,7 @@ struct ProfileView: View {
                                     String(localized:"Block \(nrContact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
                             }
                             Button {
-                                sendNotification(.reportContact, nrContact.mainContact)
+                                sendNotification(.reportContact, ReportContact(nrContact: nrContact))
                             } label: {
                                 Label(String(localized:"Report \(nrContact.anyName)", comment:"Menu action"), systemImage: "flag")
                             }
@@ -363,12 +363,12 @@ struct ProfileView: View {
                 if let account = Nostur.account() {
                     if account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(directMention: nrContact.mainContact, onDismiss: { showingNewNote = false })
+                            ComposePostCompat(directMention: nrContact, onDismiss: { showingNewNote = false })
                                 .environmentObject(themes)
                         }
                     }
                     else {
-                        ComposePostCompat(directMention: nrContact.mainContact, onDismiss: { showingNewNote = false })
+                        ComposePostCompat(directMention: nrContact, onDismiss: { showingNewNote = false })
                             .environmentObject(themes)
                     }
                 }

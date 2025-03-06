@@ -398,7 +398,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                     
                     bg().perform {
                         if let contact = Contact.fetchByPubkey(event.publicKey, context: bg()) {
-                            let nrContact = NRContact(contact: contact)
+                            let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
                             DispatchQueue.main.async {
                                 guard self.participantsOrSpeakers.first(where: { $0.pubkey == event.publicKey }) == nil else { return }
                                 self.objectWillChange.send()
@@ -564,7 +564,7 @@ extension Event {
         
         // Get author
         let author: NRContact? = if let contact = self.contact {
-            NRContact(contact: contact)
+            NRContact(pubkey: contact.pubkey, contact: contact)
         } else {
             nil
         }
@@ -579,7 +579,7 @@ extension Event {
             .map { $0.1 }
             .compactMap { pubkey in
                 if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                    return NRContact(contact: contact)
+                    return NRContact(pubkey: contact.pubkey, contact: contact)
                 }
                 return nil
             }

@@ -17,17 +17,20 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(pubkey)
+        hasher.combine(anyName)
+        hasher.combine(pictureUrl)
+        hasher.combine(couldBeImposter)
     }
         
-    var id:String { pubkey }
-    let pubkey:String
+    var id: String { pubkey }
+    let pubkey: String
 
-    var anyName:String
+    @Published var anyName: String
     var fixedName:String?
     var fixedPfp:String?
     var display_name:String?
     var name:String?
-    var pictureUrl:URL?
+    @Published var pictureUrl: URL?
     var banner:String?
     var about:String?
     @Published var couldBeImposter: Int16 = -1 // -1: unchecked, 0:false 1:true
@@ -39,7 +42,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     var metaDataCreatedAt:Date
     var metadata_created_at:Int64
     
-    var anyLud = false
+    @Published var anyLud = false
     var lud06:String?
     var lud16:String?
     
@@ -49,37 +52,44 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     var contact: Contact? // Only touch this in BG context!!!
     
     var randomColor: Color
+    
+    var npub: String {
+        try! NIP19(prefix: "npub", hexString: pubkey).displayString
+    }
 
-    init(contact: Contact) {
+    init(pubkey: String, contact: Contact? = nil) {
+#if DEBUG
+        if Thread.isMainThread { fatalError("Must be bg thread!") }
+#endif
         self.contact = contact
-        self.pubkey = contact.pubkey
-        self.randomColor = Nostur.randomColor(seed: contact.pubkey)
-        self.anyName = contact.anyName
-        self.fixedName = contact.fixedName
-        self.fixedPfp = contact.fixedPfp
-        self.display_name = contact.display_name
-        self.name = contact.name
-        self.pictureUrl = if let picture = contact.picture {
+        self.pubkey = contact?.pubkey ?? pubkey
+        self.randomColor = Nostur.randomColor(seed: contact?.pubkey ?? pubkey)
+        self.anyName = contact?.anyName ?? "..."
+        self.fixedName = contact?.fixedName
+        self.fixedPfp = contact?.fixedPfp
+        self.display_name = contact?.display_name
+        self.name = contact?.name
+        self.pictureUrl = if let picture = contact?.picture {
             URL(string: picture)
         }
         else {
             nil
         }
-        self.banner = contact.banner
-        self.about = contact.about
-        self.couldBeImposter = contact.couldBeImposter
+        self.banner = contact?.banner
+        self.about = contact?.about
+        self.couldBeImposter = contact?.couldBeImposter ?? -1
         
-        self.nip05verified = contact.nip05veried
-        self.nip05 = contact.nip05
-        self.nip05nameOnly = contact.nip05nameOnly
-        self.metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
-        self.metadata_created_at = contact.metadata_created_at
+        self.nip05verified = contact?.nip05veried ?? false
+        self.nip05 = contact?.nip05
+        self.nip05nameOnly = contact?.nip05nameOnly ?? ""
+        self.metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact?.metadata_created_at ?? 0))
+        self.metadata_created_at = contact?.metadata_created_at ?? 0
         
-        self.anyLud = contact.anyLud
-        self.lud06 = contact.lud06
-        self.lud16 = contact.lud16
-        self.zapperPubkeys = contact.zapperPubkeys
-        self.zapState = contact.zapState
+        self.anyLud = contact?.anyLud ?? false
+        self.lud06 = contact?.lud06
+        self.lud16 = contact?.lud16
+        self.zapperPubkeys = contact?.zapperPubkeys ?? []
+        self.zapState = contact?.zapState
         
         listenForChanges()
         listenForNip05()
@@ -173,12 +183,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
             .store(in: &subscriptions)
     }
     
-    var mainContact: Contact? {
-        guard let contact = self.contact else { return nil }
-        return DataProvider.shared().viewContext.object(with: contact.objectID) as? Contact
-    }
-    
-    @MainActor public func setFixedName(_ name:String) {
+    @MainActor public func setFixedName(_ name: String) {
         guard name != self.fixedName else { return }
         self.objectWillChange.send()
         self.fixedName = name
@@ -187,7 +192,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         }
     }
     
-    @MainActor public func setFixedPfp(_ url:String) {
+    @MainActor public func setFixedPfp(_ url: String) {
         guard url != self.fixedPfp else { return }
         self.objectWillChange.send()
         self.fixedPfp = url
@@ -259,7 +264,7 @@ extension NRContact {
             return cachedNRContact
         }
         else if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-            let nrContact = NRContact(contact: contact)
+            let nrContact = NRContact(pubkey: pubkey, contact: contact)
             NRContactCache.shared.setObject(for: pubkey, value: nrContact)
             return nrContact
         }

@@ -94,7 +94,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         let uncachedPtags = pTags.filter { !cachedContactPubkeys.contains($0)  }
         
         let contactsFromDb = Contact.fetchByPubkeys(uncachedPtags).map { contact in
-            let nrContact = NRContact(contact: contact)
+            let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
             NRContactCache.shared.setObject(for: contact.pubkey, value: nrContact)
             return nrContact
         }
@@ -111,8 +111,8 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
                 missingPs.insert(nEvent.publicKey)
             }
         }
-        else if let contact = Contact.contactBy(pubkey: nEvent.publicKey, context: bg()) {
-            self.contact = NRContact(contact: contact)
+        else if let contact = Contact.fetchByPubkey(nEvent.publicKey, context: bg()) {
+            self.contact = NRContact(pubkey: nEvent.publicKey, contact: contact)
             anyName = contact.anyName
             if contact.metadata_created_at == 0 {
                 missingPs.insert(nEvent.publicKey)
