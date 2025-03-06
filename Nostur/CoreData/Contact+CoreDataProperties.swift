@@ -497,6 +497,7 @@ extension Contact : Identifiable {
         }
         let r = Contact.fetchRequest()
         r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        r.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         r.fetchLimit = 1
         r.fetchBatchSize = 1
         return try? context.fetch(r).first
@@ -512,6 +513,12 @@ extension Contact : Identifiable {
         let r = Contact.fetchRequest()
         r.predicate = NSPredicate(format: "pubkey IN %@", pubkeys)
         return (try? context.fetch(r)) ?? []
+    }
+    
+    static func addZapperPubkey(contactPubkey: String, zapperPubkey: String) {
+        shouldBeBg()
+        guard let contact = Self.fetchByPubkey(contactPubkey, context: bg()) else { return }
+        contact.zapperPubkeys.insert(zapperPubkey)
     }
 }
 

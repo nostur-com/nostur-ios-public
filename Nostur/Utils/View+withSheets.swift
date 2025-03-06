@@ -20,7 +20,6 @@ extension View {
 
 struct WithSheets: ViewModifier {
     @EnvironmentObject private var themes: Themes
-    @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
@@ -351,7 +350,7 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     AddRemoveToListsheet(nrContact: nrContact)
                         .environmentObject(themes)
-                        .environment(\.managedObjectContext, viewContext)
+                        .environment(\.managedObjectContext, viewContext())
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
