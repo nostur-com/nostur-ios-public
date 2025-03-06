@@ -122,6 +122,7 @@ public final class NewPostModel: ObservableObject {
     static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
     
     func sendNow(replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
+        Importer.shared.delayProcessing()
         if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty) {
             typingTextModel.uploading = true
             
@@ -249,6 +250,7 @@ public final class NewPostModel: ObservableObject {
     
     // TODO: NOTE: When updating this func, also update HighlightComposer.send or refactor.
     private func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
+        Importer.shared.delayProcessing()
         guard let account = activeAccount else { return }
         account.lastLoginAt = .now
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
