@@ -302,6 +302,7 @@ struct ProfilePicView_Previews: PreviewProvider {
 struct MiniPFP: View {
     public var pictureUrl: URL?
     public var size: CGFloat = 20.0
+    public var fallBackColor: Color? = nil
     
     var body: some View {
         if let pictureUrl {
@@ -321,7 +322,7 @@ struct MiniPFP: View {
                             .frame(width: size, height: size)
                     }
                 }
-                else { Color.systemBackground }
+                else { fallBackColor ?? Color.systemBackground }
             }
             .pipeline(ImageProcessing.shared.pfp)
             .drawingGroup()
@@ -330,13 +331,13 @@ struct MiniPFP: View {
             .background(
                 Circle()
                     .strokeBorder(.regularMaterial, lineWidth: 3)
-                    .background(Circle().fill(Color.systemBackground))
+                    .background(Circle().fill(fallBackColor ?? Color.systemBackground))
             )
         }
         else {
             Circle()
                 .strokeBorder(.regularMaterial, lineWidth: 3)
-                .background(Circle().fill(Color.systemBackground))
+                .background(Circle().fill(fallBackColor ?? Color.systemBackground))
                 .frame(width: size, height: size)
         }
     }
