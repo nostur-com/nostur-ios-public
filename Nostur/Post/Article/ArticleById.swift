@@ -29,7 +29,7 @@ struct ArticleById: View {
                 ProgressView()
                     .onAppear { [weak backlog] in
                         bg().perform {
-                            if let article = try? Event.fetchEvent(id: id, context: bg()) {
+                            if let article = Event.fetchEvent(id: id, context: bg()) {
                                 let article = NRPost(event: article)
                                 DispatchQueue.main.async {
                                     self.article = article
@@ -52,7 +52,7 @@ struct ArticleById: View {
                                                 }
                                                 backlog.clear()
                                             }
-                                            else if let article = try? Event.fetchEvent(id: id, context: bg()) {
+                                            else if let article = Event.fetchEvent(id: id, context: bg()) {
                                                 let article = NRPost(event: article)
                                                 DispatchQueue.main.async {
                                                     self.article = article

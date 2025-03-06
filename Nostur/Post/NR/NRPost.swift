@@ -293,7 +293,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         } // why event.firstQuote_ doesn't work??
-        else if let firstQuoteId = event.firstQuoteId, let firstQuote = try? Event.fetchEvent(id: firstQuoteId, context: bg()) {
+        else if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bg()) {
             if firstQuote.kind == 0 {
                 bg().delete(firstQuote)
                 event.firstQuote = nil
@@ -471,14 +471,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 switch self.contentElements[index] {
                 case .nevent1(let identifier):
                     guard let id = identifier.eventId else { continue }
-                    guard let event = try? Event.fetchEvent(id: id, context: bg()) else { continue }
+                    guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
                     self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
                 case .note1(let noteId):
                     guard let id = hex(noteId) else { continue }
-                    guard let event = try? Event.fetchEvent(id: id, context: bg()) else { continue }
+                    guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
                     self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
                 case .noteHex(let id):
-                    guard let event = try? Event.fetchEvent(id: id, context: bg()) else { continue }
+                    guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
                     self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
                 default:
                     continue
@@ -904,7 +904,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             guard self.replyTo == nil else { return }
             guard let replyToId = self.replyToId else { return }
             
-            if let replyTo = try? Event.fetchEvent(id: replyToId, context: bg()) {
+            if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
                 let nrReplyTo = NRPost(event: replyTo, withReplyTo: true)
                 DispatchQueue.main.async { [weak self] in
                     self?.objectWillChange.send()

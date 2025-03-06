@@ -212,7 +212,7 @@ class Importer {
                         if event.content == "" {
                             if let firstE = event.firstE() {
                                 // TODO: Should be able to use existingIds here...
-                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: bgContext)
+                                kind6firstQuote = Event.fetchEvent(id: firstE, context: bgContext)
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
@@ -444,7 +444,7 @@ class Importer {
                         if event.content == "" {
                             if let firstE = event.firstE() {
                                 // TODO: Should be able to use existingIds here...
-                                kind6firstQuote = try? Event.fetchEvent(id: firstE, context: bgContext)
+                                kind6firstQuote = Event.fetchEvent(id: firstE, context: bgContext)
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {

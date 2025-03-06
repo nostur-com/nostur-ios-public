@@ -246,7 +246,7 @@ extension Search {
                     
                     // If we don't have the event after X seconds, fetch from relay hint
                     guard vpnGuardOK() else { return }
-                    guard (try? Event.fetchEvent(id: noteHex, context: bg())) == nil
+                    guard Event.fetchEvent(id: noteHex, context: bg()) == nil
                     else { return }
                     
                     guard let relay = identifier.relays.first else { return }

@@ -176,7 +176,7 @@ class Zap {
                         L.og.info("Revert from queue")
                         event.zapState = nil
                     }
-                    else if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
+                    else if let event = Event.fetchEvent(id: eventId, context: bg()) {
                         L.og.info("Revert from DB")
                         event.zapState = nil
                     }

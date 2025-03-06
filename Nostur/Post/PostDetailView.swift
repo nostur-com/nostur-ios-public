@@ -27,7 +27,7 @@ struct NoteById: View {
                         req: { [weak vm] taskId in
                             bg().perform {
                                 guard let vm else { return }
-                                if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                                if let event = Event.fetchEvent(id: self.id, context: bg()) {
                                     vm.ready(NRPost(event: event, withFooter: false))
                                 }
                                 else {
@@ -40,7 +40,7 @@ struct NoteById: View {
                             if let event = event {
                                 vm.ready(NRPost(event: event, withFooter: false))
                             }
-                            else if let event = try? Event.fetchEvent(id: self.id, context: bg()) {
+                            else if let event = Event.fetchEvent(id: self.id, context: bg()) {
                                 vm.ready(NRPost(event: event, withFooter: false))
                             }
                             else if [.initializing, .loading].contains(vm.state) {

@@ -173,7 +173,7 @@ struct MutedConversations: View {
                 LazyVStack(spacing: GUTTER) {
                     ForEach(mutedRootIds) { mutedRootId in
                         Box {
-                            if let event = try? Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {
+                            if let event = Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {
                                 HStack(spacing: 10) {
                                     PFP(pubkey: event.pubkey, contact: event.contact, size: 25)
                                         .onTapGesture {

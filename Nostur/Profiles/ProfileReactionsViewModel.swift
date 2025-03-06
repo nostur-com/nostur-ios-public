@@ -190,7 +190,7 @@ class ProfileReactionsViewModel: ObservableObject {
             
             var nrPosts: [NRPost] = []
             for postId in self.reactedIds {
-                if let event = try? Event.fetchEvent(id: postId, context: bg()) {
+                if let event = Event.fetchEvent(id: postId, context: bg()) {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     nrPosts.append(NRPost(event: event))
                 }

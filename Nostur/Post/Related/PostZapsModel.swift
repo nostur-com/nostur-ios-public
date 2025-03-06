@@ -148,7 +148,7 @@ class PostZapsModel: ObservableObject {
             return (partialResult.0 + Int64(zap.sats), partialResult.1 + Int64(1))
         }
         
-        if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
+        if let event = Event.fetchEvent(id: eventId, context: bg()) {
             if event.zapsCount != tally.1 {
                 event.zapsCount = tally.1
                 event.zapTally = tally.0

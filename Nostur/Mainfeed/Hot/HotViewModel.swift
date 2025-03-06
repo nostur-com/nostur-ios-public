@@ -278,7 +278,7 @@ class HotViewModel: ObservableObject {
                     L.og.debug("🔝🔝 id:\(postId): \(likesAndReposts.count) -[LOG]-")
                 }
                 #endif
-                if let event = try? Event.fetchEvent(id: postId, context: bg()) {
+                if let event = Event.fetchEvent(id: postId, context: bg()) {
                     guard Self.HOT_KINDS.contains(event.kind) else { continue } // not DMs or other weird stuff
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies

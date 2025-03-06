@@ -282,7 +282,7 @@ class DiscoverViewModel: ObservableObject {
                 if (likesAndReposts.count > 3) {
                     L.og.debug("🔝🔝 id:\(postId): \(likesAndReposts.count)")
                 }
-                if let event = try? Event.fetchEvent(id: postId, context: bg()) {
+                if let event = Event.fetchEvent(id: postId, context: bg()) {
                     guard Self.DISCOVER_KINDS.contains(event.kind) else { continue } // not DMs or other weird stuff
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     guard !follows.contains(event.pubkey) else { continue } // not from someone we follow

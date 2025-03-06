@@ -41,7 +41,7 @@ struct NEventView: View {
                             req: { [weak vm, weak dim] taskId in
                                 bg().perform { [weak vm, weak dim] in // 1. CHECK LOCAL DB
                                     guard let vm, let dim else { return }
-                                    if let event = try? Event.fetchEvent(id: eventId, context: bg()) {
+                                    if let event = Event.fetchEvent(id: eventId, context: bg()) {
                                         vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                     }
                                     else { // 2. ELSE CHECK RELAY
@@ -54,7 +54,7 @@ struct NEventView: View {
                                 if let event = event {
                                     vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                                 }
-                                else if let event = try? Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
+                                else if let event = Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
                                     if vm.state == .altLoading, let relay = identifier.relays.first {
                                         L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
                                     }

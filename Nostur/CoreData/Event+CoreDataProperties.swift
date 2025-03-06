@@ -100,7 +100,7 @@ extension Event {
         }
         guard let replyToId = replyToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
-        if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
+        if let found = Event.fetchEvent(id: replyToId, context: ctx) {
             self.replyTo = found
             found.addToReplies(self)
             return found
@@ -115,7 +115,7 @@ extension Event {
         }
         guard let replyToId = replyToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
-        if let found = try? Event.fetchEvent(id: replyToId, context: ctx) {
+        if let found = Event.fetchEvent(id: replyToId, context: ctx) {
             self.replyTo = found
             found.addToReplies(self)
             return found
@@ -127,7 +127,7 @@ extension Event {
         guard firstQuote == nil else { return firstQuote }
         guard let firstQuoteId = firstQuoteId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
-        if let found = try? Event.fetchEvent(id: firstQuoteId, context: ctx) {
+        if let found = Event.fetchEvent(id: firstQuoteId, context: ctx) {
             self.firstQuote = found
             return found
         }
@@ -472,7 +472,7 @@ extension Event {
                     reaction.reactionToId = reactingToEvent.id
                 }
                 else {
-                    if let reactingToEvent = try? Event.fetchEvent(id: lastEtag, context: context) {
+                    if let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) {
                         guard !reactingToEvent.isDeleted else { break }
                         reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
@@ -491,7 +491,7 @@ extension Event {
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
         }
         else if let firstQuoteId = repost.firstQuoteId {
-            if let firstQuote = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstQuoteId) ?? (try? Event.fetchEvent(id: firstQuoteId, context: context))) {
+            if let firstQuote = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstQuoteId) ?? (Event.fetchEvent(id: firstQuoteId, context: context))) {
                 
                 firstQuote.repostsCount = (firstQuote.repostsCount + 1)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
@@ -522,7 +522,7 @@ extension Event {
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
         }
         else if let zappedEventId = zap.zappedEventId {
-            if let zappedEvent = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: zappedEventId) ?? (try? Event.fetchEvent(id: zappedEventId, context: context))) {
+            if let zappedEvent = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: zappedEventId) ?? (Event.fetchEvent(id: zappedEventId, context: context))) {
                 zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
                 zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
@@ -682,7 +682,7 @@ extension Event {
         return try? context.fetch(request).first
     }
     
-    static func fetchEvent(id: String, context: NSManagedObjectContext) throws -> Event? {
+    static func fetchEvent(id: String, context: NSManagedObjectContext) -> Event? {
         if !Thread.isMainThread {
             guard Importer.shared.existingIds[id]?.status == .SAVED else { return nil }
         }
@@ -698,7 +698,7 @@ extension Event {
         request.predicate = NSPredicate(format: "id == %@", id)
         request.fetchLimit = 1
         request.fetchBatchSize = 1
-        return try context.fetch(request).first
+        return try? context.fetch(request).first
     }
     
     static func fetchEventsBy(pubkey:String, andKind kind:Int, context:NSManagedObjectContext) -> [Event] {
@@ -811,7 +811,7 @@ extension Event {
     }
     
     static func saveZapRequest(event:NEvent, context:NSManagedObjectContext) -> Event? {
-        if let existingZapReq = try? Event.fetchEvent(id: event.id, context: context) {
+        if let existingZapReq = Event.fetchEvent(id: event.id, context: context) {
             return existingZapReq
         }
         
@@ -884,7 +884,7 @@ extension Event {
             safeUpdateRelays(for: event)
         }
         // Fallback to fetching from context
-        else if let event = try? Event.fetchEvent(id: id, context: context) {
+        else if let event = Event.fetchEvent(id: id, context: context) {
             safeUpdateRelays(for: event)
         }
     }
@@ -976,7 +976,7 @@ extension Event {
                     }
                     else {
                         CoreDataRelationFixer.shared.addTask({
-                            savedEvent.zappedEvent = try? Event.fetchEvent(id: firstE, context: context)
+                            savedEvent.zappedEvent = Event.fetchEvent(id: firstE, context: context)
                         })
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
@@ -999,7 +999,7 @@ extension Event {
                     }
                     else {
                         CoreDataRelationFixer.shared.addTask({
-                            savedEvent.zappedEvent = try? Event.fetchEvent(id: firstA, context: context)
+                            savedEvent.zappedEvent = Event.fetchEvent(id: firstA, context: context)
                         })
                     }
                     if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
@@ -1029,7 +1029,7 @@ extension Event {
                 // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                 // here savedEvent is not saved yet, so appears it can crash on context, even when its the same context
                 CoreDataRelationFixer.shared.addTask({
-                    savedEvent.reactionTo = try? Event.fetchEvent(id: lastE, context: context)
+                    savedEvent.reactionTo = Event.fetchEvent(id: lastE, context: context)
                 })
                 
                 if let otherPubkey =  savedEvent.reactionTo?.pubkey {
@@ -1068,7 +1068,7 @@ extension Event {
 //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
-                    else if let repostedEvent = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                    else if let repostedEvent = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                         CoreDataRelationFixer.shared.addTask({
                             savedEvent.firstQuote = repostedEvent
                         })
@@ -1127,7 +1127,7 @@ extension Event {
                 savedEvent.replyToId = replyToEtag.id
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let parent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (try? Event.fetchEvent(id: replyToEtag.id, context: context)) {
+                if let parent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (Event.fetchEvent(id: replyToEtag.id, context: context)) {
                     CoreDataRelationFixer.shared.addTask({
                         // TODO: Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
                         // (when opening from bookmarks)
@@ -1152,7 +1152,7 @@ extension Event {
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (try? Event.fetchEvent(id: replyToRootEtag.id, context: context)), !root.isDeleted {
+                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (Event.fetchEvent(id: replyToRootEtag.id, context: context)), !root.isDeleted {
                     
                     CoreDataRelationFixer.shared.addTask({
                         savedEvent.replyToRoot = root
@@ -1284,7 +1284,7 @@ extension Event {
             savedEvent.firstQuoteId = firstE.id
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+            if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 CoreDataRelationFixer.shared.addTask({
                     savedEvent.firstQuote = firstQuote
                 })
@@ -1302,7 +1302,7 @@ extension Event {
             savedEvent.firstQuoteId = firstE.id
             
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-            if let firstQuote = try? Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+            if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 CoreDataRelationFixer.shared.addTask({
                     savedEvent.firstQuote = firstQuote
                 })
@@ -1334,7 +1334,7 @@ extension Event {
         //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                             }
-                            else if let repostedEvent = try? Event.fetchEvent(id: firstE, context: context) {
+                            else if let repostedEvent = Event.fetchEvent(id: firstE, context: context) {
                                 savedEvent.firstQuote = repostedEvent
                                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
         //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)

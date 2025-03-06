@@ -268,7 +268,7 @@ class MessageParser {
                     if (SettingsStore.shared.nwcShowBalance) {
                         nwcSendBalanceRequest()
                     }
-                    if let ev = try? Event.fetchEvent(id: eventId, context: self.bgQueue) {
+                    if let ev = Event.fetchEvent(id: eventId, context: self.bgQueue) {
                         ev.zapState = nil
                     }
                 }

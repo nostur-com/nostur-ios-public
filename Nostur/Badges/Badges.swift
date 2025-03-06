@@ -221,7 +221,7 @@ extension Event {
                     }
                 }
                 if nTags[index].type == "e" && badgeCollector.0 != nil { // ["e", "<bravery badge award event id>", "wss://nostr.academy"],
-                    if let badgeAwardEvent = try? Event.fetchEvent(id: nTags[index].value, context: managedObjectContext!) {
+                    if let badgeAwardEvent = Event.fetchEvent(id: nTags[index].value, context: managedObjectContext!) {
                         // NIP-58: .Badge Awards referenced by the e tags should contain the same a tag.
                         guard let badgeAwardATag = badgeAwardEvent.firstA(), badgeAwardATag == badgeCollector.1!.value else {
                             badgeCollector = (nil, nil, nil)

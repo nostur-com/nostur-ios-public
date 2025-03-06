@@ -92,7 +92,7 @@ struct EmbedById: View {
             req: { [weak vm = self.vm, weak dim = self.dim] taskId in
                 bg().perform {
                     guard let vm, let dim else { return }
-                    if let event = try? Event.fetchEvent(id: id, context: bg()) {
+                    if let event = Event.fetchEvent(id: id, context: bg()) {
                         vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                     }
                     else {
@@ -105,7 +105,7 @@ struct EmbedById: View {
                 if let event = event {
                     vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                 }
-                else if let event = try? Event.fetchEvent(id: id, context: bg()) {
+                else if let event = Event.fetchEvent(id: id, context: bg()) {
                     vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                 }
                 else if [.initializing, .loading].contains(vm.state) {

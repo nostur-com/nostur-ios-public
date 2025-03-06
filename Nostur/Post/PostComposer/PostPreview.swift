@@ -118,7 +118,7 @@ func createPreviewEvent(_ event: NEvent) -> Event {
             previewEvent.replyToId = replyToEtag.id
             
             // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-            if let replyTo = try? Event.fetchEvent(id: replyToEtag.id, context: context) {
+            if let replyTo = Event.fetchEvent(id: replyToEtag.id, context: context) {
                 previewEvent.replyTo = replyTo
             }
         }
@@ -132,7 +132,7 @@ func createPreviewEvent(_ event: NEvent) -> Event {
                     previewEvent.replyToId = replyToRootEtag.id
                     
                     // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                    if let replyToRoot = try? Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                    if let replyToRoot = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                         previewEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                     }
                 }
@@ -153,7 +153,7 @@ func createPreviewEvent(_ event: NEvent) -> Event {
     if event.kind == .textNote, let firstE = event.firstMentionETag() {
         previewEvent.firstQuoteId = firstE.id
         // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-        if let firstQuote = try? Event.fetchEvent(id: previewEvent.firstQuoteId!, context: context) {
+        if let firstQuote = Event.fetchEvent(id: previewEvent.firstQuoteId!, context: context) {
             previewEvent.firstQuote = firstQuote
         }
     }

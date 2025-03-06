@@ -101,7 +101,7 @@ struct Repost: View {
                             prio: true,
                             req: { taskId in
                                 bg().perform { // 1. CHECK LOCAL DB
-                                    if let event = try? Event.fetchEvent(id: firstQuoteId, context: bg()) {
+                                    if let event = Event.fetchEvent(id: firstQuoteId, context: bg()) {
                                         let nrFirstQuote = NRPost(event: event, withFooter: false)
                                         Task { @MainActor in
                                             noteRowAttributes.firstQuote = nrFirstQuote // Maybe not need this? handled in nrPost?
@@ -121,7 +121,7 @@ struct Repost: View {
                                         noteRowAttributes.firstQuote = nrFirstQuote
                                     }
                                 }
-                                else if let event = try? Event.fetchEvent(id: firstQuoteId, context: bg()) { // 3. WE FOUND IT ON RELAY
+                                else if let event = Event.fetchEvent(id: firstQuoteId, context: bg()) { // 3. WE FOUND IT ON RELAY
                                     if vm.state == .altLoading, let relay = self.relayHint {
                                         L.og.debug("Event found on using relay hint: \(firstQuoteId) - \(relay)")
                                     }

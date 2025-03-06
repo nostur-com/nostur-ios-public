@@ -150,7 +150,7 @@ class Unpublisher {
         // Save or update event
         
         bgContext.perform {
-            if let dbEvent = try? Event.fetchEvent(id: nEvent.id, context: bgContext) {
+            if let dbEvent = Event.fetchEvent(id: nEvent.id, context: bgContext) {
                 // We already have it in db
                 
                 DispatchQueue.main.async {
