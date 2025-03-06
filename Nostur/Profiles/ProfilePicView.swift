@@ -12,7 +12,11 @@ import Nuke
 struct PFP: View, Equatable {
     
     static func == (lhs: PFP, rhs: PFP) -> Bool {
-        lhs.pubkey == rhs.pubkey
+        lhs.pubkey == rhs.pubkey &&
+        lhs.pictureUrl == rhs.pictureUrl &&
+        lhs.contact == rhs.contact &&
+        lhs.nrContact == rhs.nrContact &&
+        lhs.account == rhs.account
     }
     
     public var pubkey: String
@@ -20,7 +24,7 @@ struct PFP: View, Equatable {
     public var contact: Contact?
     public var nrContact: NRContact?
     public var account: CloudAccount?
-    public var size: CGFloat? = 50.0
+    public var size: CGFloat = 50.0
     public var forceFlat = false
 
     var body: some View {
@@ -34,7 +38,7 @@ struct PFP: View, Equatable {
             AccountPFP(account: account, size: size, forceFlat: forceFlat)
         }
         else {
-            InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: randomColor(seed: pubkey), forceFlat: forceFlat)
+            InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size, color: randomColor(seed: pubkey), forceFlat: forceFlat)
         }
     }
 }
@@ -42,14 +46,14 @@ struct PFP: View, Equatable {
 struct ContactPFP: View {
     
     @ObservedObject public var contact: Contact
-    private var pubkey:String { contact.pubkey }
-    private var pictureUrl:URL? { contact.pictureUrl }
-    var size:CGFloat?
+    private var pubkey: String { contact.pubkey }
+    private var pictureUrl: URL? { contact.pictureUrl }
+    public var size: CGFloat = 50.0
     public var forceFlat = false
-    private var color:Color { randomColor(seed: contact.pubkey) }
+    private var color: Color { randomColor(seed: contact.pubkey) }
     
     var body: some View {
-         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)
+         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size, color: color, forceFlat: forceFlat)
     }
 }
 
@@ -58,12 +62,12 @@ struct NRContactPFP: View {
     @ObservedObject public var nrContact: NRContact
     private var pubkey:String { nrContact.pubkey }
     private var pictureUrl:URL? { nrContact.pictureUrl }
-    public var size:CGFloat?
+    public var size: CGFloat = 50.0
     public var forceFlat = false
     private var color: Color { nrContact.randomColor }
     
     var body: some View {
-        InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)
+        InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size, color: color, forceFlat: forceFlat)
     }
 }
 
@@ -72,12 +76,12 @@ struct AccountPFP: View {
     @ObservedObject public var account: CloudAccount
     private var pubkey: String { account.publicKey }
     private var pictureUrl: URL? { account.pictureUrl }
-    public var size: CGFloat? = 50.0
+    public var size: CGFloat = 50.0
     public var forceFlat = false
     private var color: Color { randomColor(seed: account.publicKey) }
     
     var body: some View {
-         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size!, color: color, forceFlat: forceFlat)
+         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size, color: color, forceFlat: forceFlat)
     }
 }
 
