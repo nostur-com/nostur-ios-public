@@ -211,12 +211,11 @@ class Importer {
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         if event.content == "" {
                             if let firstE = event.firstE() {
-                                // TODO: Should be able to use existingIds here...
                                 kind6firstQuote = Event.fetchEvent(id: firstE, context: bgContext)
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: bgContext) { // TODO: check existingIds instead of .eventExists
+                            if !Event.eventExists(id: noteInNote.id, context: bgContext) { 
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
@@ -276,9 +275,7 @@ class Importer {
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
-                        do { try _ = Event.updateLikeCountCache(savedEvent, content: event.content, context: bgContext) } catch {
-                            L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
-                        }
+                        Event.updateLikeCountCache(savedEvent, content: event.content, context: bgContext)
                         if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
@@ -309,9 +306,7 @@ class Importer {
                     // UPDATE THINGS THAT THIS EVENT RELATES TO (MENTIONS)
                     if event.kind == .textNote {
                         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-                        do { try _ = Event.updateMentionsCountCache(event.tags, context: bgContext) } catch {
-                            L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
-                        }
+                        Event.updateMentionsCountCache(event.tags, context: bgContext)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPOSTS)
@@ -443,12 +438,11 @@ class Importer {
                     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
                         if event.content == "" {
                             if let firstE = event.firstE() {
-                                // TODO: Should be able to use existingIds here...
                                 kind6firstQuote = Event.fetchEvent(id: firstE, context: bgContext)
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: bgContext) { // TODO: check existingIds instead of .eventExists
+                            if !Event.eventExists(id: noteInNote.id, context: bgContext) {
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
@@ -505,9 +499,7 @@ class Importer {
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
-                        do { try _ = Event.updateLikeCountCache(savedEvent, content:event.content, context: bgContext) } catch {
-                            L.importing.error("🦋🦋🔴🔴🔴 problem updating Like Count Cache .id \(event.id)")
-                        }
+                        Event.updateLikeCountCache(savedEvent, content:event.content, context: bgContext)
                         if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
@@ -535,9 +527,7 @@ class Importer {
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
                     if event.kind == .textNote || event.kind == .repost {
                         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-                        do { try _ = Event.updateMentionsCountCache(event.tags, context: bgContext) } catch {
-                            L.importing.error("🦋🦋🔴🔴🔴 problem updateMentionsCountCache .id \(event.id)")
-                        }
+                        Event.updateMentionsCountCache(event.tags, context: bgContext)
                     }
                 }
                 if (bgContext.hasChanges) {
