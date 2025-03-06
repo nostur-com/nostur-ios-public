@@ -19,6 +19,7 @@ struct QuoteOrRepostChoiceSheet: View {
             Button {
                 guard let account = account() else { return }
                 guard isFullAccount(account) else { showReadOnlyMessage(); return }
+                Importer.shared.delayProcessing()
                 let accountPublicKey = account.publicKey
                 let cancellationId = UUID()
                 let bgContext = bg()
@@ -61,30 +62,34 @@ struct QuoteOrRepostChoiceSheet: View {
                 }
                 else {
                     // 1. create repost
-                    guard let bgEvent = quoteOrRepost.nrPost.event else { return }
-                    var repost = EventMessageBuilder.makeRepost(original: bgEvent, embedOriginal: true)
-                    repost.publicKey = accountPublicKey
-                    repost = repost.withId()
-                    
-                    Task { @MainActor in
-                        if let signedEvent = try? account.signEvent(repost) {
-                            bgContext.perform {
-                                let originalNEvent = bgEvent.toNEvent()
-                                let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
-                                savedEvent.cancellationId = cancellationId
-                                
-                                DataProvider.shared().bgSave()
-                                dismiss()
-                                if ([1,6,20,9802,30023,34235].contains(savedEvent.kind)) {
-                                    DispatchQueue.main.async {
-                                        sendNotification(.newPostSaved, savedEvent)
+                    bgContext.perform {
+                        guard let bgEvent = quoteOrRepost.nrPost.event else { return }
+                        var repost = EventMessageBuilder.makeRepost(original: bgEvent, embedOriginal: true)
+                        repost.publicKey = accountPublicKey
+                        repost = repost.withId()
+                        
+                        Task { @MainActor in
+                            if let signedEvent = try? account.signEvent(repost) {
+                                bgContext.perform {
+                                    let originalNEvent = bgEvent.toNEvent()
+                                    let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
+                                    savedEvent.cancellationId = cancellationId
+                                    
+                                    DataProvider.shared().bgSave()
+                                    dismiss()
+                                    if ([1,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                                        DispatchQueue.main.async {
+                                            sendNotification(.newPostSaved, savedEvent)
+                                        }
+                                    }
+                                    Unpublisher.shared.publishNow(originalNEvent) // publish original
+                                    _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+                                    Task { @MainActor in
+                                        sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: originalNEvent.id))
                                     }
                                 }
-                                Unpublisher.shared.publishNow(originalNEvent) // publish original
-                                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
-                                sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: originalNEvent.id))
+                                
                             }
-                            
                         }
                     }
                 }

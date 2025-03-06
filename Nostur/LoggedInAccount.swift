@@ -235,7 +235,7 @@ class LoggedInAccount: ObservableObject {
         self.bg.perform { [weak self] in
             guard let self, let bgAccount = self.bgAccount else { return }
             self.followingPublicKeys = bgAccount.getFollowingPublicKeys(includeBlocked: true)
-                .union(account.privateFollowingPubkeys)
+                .union(bgAccount.privateFollowingPubkeys)
             self.followingCache = bgAccount.loadFollowingCache()
         
             DispatchQueue.main.async { [weak self] in
