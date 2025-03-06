@@ -12,7 +12,6 @@ struct MultiFollowSheet: View {
     public let name: String
     public var onDismiss: (() -> Void)?
     
-    @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var themes: Themes
     
     private var accounts: [CloudAccount] { // Only accounts with private key
@@ -173,28 +172,34 @@ struct MultiFollowSheet: View {
         }
     }
     
-    private func follow(_ pubkey:String, account:CloudAccount) {
-        if let contact = Contact.contactBy(pubkey: pubkey, context: viewContext) {
-            contact.couldBeImposter = 0
-            account.followingPubkeys.insert(pubkey)
+    private func follow(_ pubkey: String, account: CloudAccount) {
+        account.followingPubkeys.insert(pubkey)
+        
+        bg().perform {
+            if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+                contact.couldBeImposter = 0
+            }
+            else {
+                // if nil, create new contact
+                let contact = Contact(context: bg())
+                contact.pubkey = pubkey
+                contact.couldBeImposter = 0
+            }
+            
+            Task { @MainActor in
+                account.publishNewContactList()
+                
+                if account == Nostur.account() {
+                    NRState.shared.loggedInAccount?.reloadFollows()
+                    sendNotification(.followingAdded, pubkey) // For WoT
+                }
+                DataProvider.shared().save()
+            }
         }
-        else {
-            // if nil, create new contact
-            let contact = Contact(context: viewContext)
-            contact.pubkey = pubkey
-            contact.couldBeImposter = 0
-            account.followingPubkeys.insert(pubkey)
-        }
-        if account == Nostur.account() {
-            NRState.shared.loggedInAccount?.reloadFollows()            
-            sendNotification(.followingAdded, pubkey) // For WoT
-        }
-        account.publishNewContactList()
-        DataProvider.shared().save()
     }
     
 
-    private func unfollow(_ pubkey: String, account:CloudAccount) {
+    private func unfollow(_ pubkey: String, account: CloudAccount) {
         account.followingPubkeys.remove(pubkey)
         if account == Nostur.account() {
             NRState.shared.loggedInAccount?.reloadFollows()
