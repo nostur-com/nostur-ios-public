@@ -232,11 +232,7 @@ class DirectMessageViewModel: ObservableObject {
                 ? 0
                 : allReceived.filter { $0.date > unreadSince }.count
                 
-                var nrContact:NRContact?
-                
-                if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-                }
+                let nrContact: NRContact? = NRContact.fetch(contactPubkey)
                 
                 guard let mostRecent = mostRecent else { return }
                 
@@ -310,12 +306,8 @@ class DirectMessageViewModel: ObservableObject {
                 
                 let unread = allReceived.filter { $0.date > unreadSince }.count
                 
-                var nrContact:NRContact?
-                
-                if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-                }
-                
+                let nrContact: NRContact? = NRContact.fetch(contactPubkey)
+
                 guard let mostRecent = mostRecent else { return }
                 
                 conversationRows
@@ -380,11 +372,7 @@ class DirectMessageViewModel: ObservableObject {
                 
                 let unread = allReceived.filter { $0.date > unreadSince }.count
                 
-                var nrContact:NRContact?
-                
-                if let contact = Contact.fetchByPubkey(contactPubkey, context: bg()) {
-                    nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-                }
+                let nrContact: NRContact? = NRContact.fetch(contactPubkey)
                 
                 guard let mostRecent = mostRecent else { return }
                 

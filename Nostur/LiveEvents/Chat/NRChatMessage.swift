@@ -89,15 +89,12 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         }
         
         let pTags = fastPs.map { $0.1 }
-        let cachedContacts = pTags.compactMap { NRContactCache.shared.retrieveObject(at: $0) }
+        let cachedContacts: [NRContact] = pTags.compactMap { NRContactCache.shared.retrieveObject(at: $0) }
         let cachedContactPubkeys = Set(cachedContacts.map { $0.pubkey })
         let uncachedPtags = pTags.filter { !cachedContactPubkeys.contains($0)  }
         
-        let contactsFromDb = Contact.fetchByPubkeys(uncachedPtags).map { contact in
-            let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-            NRContactCache.shared.setObject(for: contact.pubkey, value: nrContact)
-            return nrContact
-        }
+        let contactsFromDb: [NRContact] = Contact.fetchByPubkeys(uncachedPtags)
+            .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
         
         let referencedContacts = cachedContacts + contactsFromDb
         

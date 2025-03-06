@@ -38,10 +38,8 @@ struct ProfileByPubkey: View {
                         req: { _ in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
-                                if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
+                                if let nrContact = NRContact.fetch(pubkey) {
                                     vm.ready(nrContact) // 2A. DONE
-                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }
                                 else { req(RM.getUserMetadata(pubkey: pubkey)) } // 2B. FETCH IF WE DONT HAVE
                             }
@@ -49,10 +47,8 @@ struct ProfileByPubkey: View {
                         onComplete: { relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
-                                if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
+                                if let nrContact = NRContact.fetch(pubkey) {
                                     vm.ready(nrContact)
-                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }
                                 else { // 4. OR ELSE WE TIMEOUT
                                     vm.timeout()

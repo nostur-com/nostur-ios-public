@@ -641,7 +641,7 @@ public final class NewPostModel: ObservableObject {
             fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), NRState.shared.blockedPubkeys)
             
             let contactSearchResults: [NRContact] = Array(((try? bg().fetch(fr)) ?? []).prefix(60))
-                .map { NRContact(pubkey: $0.pubkey, contact: $0) }
+                .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
             
             Task { @MainActor [weak self] in
                 self?.contactSearchResults = contactSearchResults
@@ -664,10 +664,10 @@ public final class NewPostModel: ObservableObject {
             let existingPtags = replyToEvent.pTags()
             
             let availableContacts: [NRContact] = Set(Contact.fetchByPubkeys(existingPtags, context: bg()))
-                .map { NRContact(pubkey: $0.pubkey, contact: $0) }
+                .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
             
             let replyToNrContact: NRContact? = if let contact = replyToEvent.contact {
-                NRContact(pubkey: contact.pubkey, contact: contact)
+                NRContact.fetch(contact.pubkey, contact: contact)
             }
             else {
                 nil

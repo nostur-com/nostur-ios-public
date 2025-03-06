@@ -223,8 +223,7 @@ class LiveKitVoiceSession: ObservableObject {
             
             ctx.perform { [weak self] in
                 guard let self else { return }
-                if let contact = Contact.fetchByPubkey(participantPubkey, context: ctx) {
-                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
+                if let nrContact = NRContact.fetch(participantPubkey, context: ctx) {
                     if nrContact.pubkey == self.anonymousPubkeyCached {
                         nrContact.name = "You"
                         nrContact.anyName = "You"
@@ -254,25 +253,26 @@ class LiveKitVoiceSession: ObservableObject {
                     EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "syncParticipants.001")
                     QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                     
-                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-                    if nrContact.pubkey == self.anonymousPubkeyCached {
-                        nrContact.name = "You"
-                        nrContact.anyName = "You"
-                    }
-                    nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
-                        true
-                    }
-                    else {
-                        false
-                    }
-                    DispatchQueue.main.async {
-                        guard let nrLiveEvent = self.nrLiveEvent else { return }
-                        nrLiveEvent.objectWillChange.send()
-                        if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
-                            nrLiveEvent.participantsOrSpeakers.append(nrContact)
+                    if let nrContact = NRContact.fetch(contact.pubkey, contact: contact, context: ctx) {
+                        if nrContact.pubkey == self.anonymousPubkeyCached {
+                            nrContact.name = "You"
+                            nrContact.anyName = "You"
                         }
+                        nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
+                            true
+                        }
+                        else {
+                            false
+                        }
+                        DispatchQueue.main.async {
+                            guard let nrLiveEvent = self.nrLiveEvent else { return }
+                            nrLiveEvent.objectWillChange.send()
+                            if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
+                                nrLiveEvent.participantsOrSpeakers.append(nrContact)
+                            }
+                        }
+                        bgSave()
                     }
-                    bgSave()
                 }
             }
         }

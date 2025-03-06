@@ -259,11 +259,20 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
 
 
 extension NRContact {
-    static func fetch(_ pubkey: String) -> NRContact? {
+    
+    // Fetch from cache, or create from passed contact, or create by fetching from DB first
+    static func fetch(_ pubkey: String, contact: Contact? = nil, context: NSManagedObjectContext? = nil) -> NRContact? {
+        
+        // From cache
         if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
             return cachedNRContact
         }
-        else if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+        else if let contact { // From contact in param
+            let nrContact = NRContact(pubkey: pubkey, contact: contact)
+            NRContactCache.shared.setObject(for: pubkey, value: nrContact)
+            return nrContact
+        }
+        else if let contact = Contact.fetchByPubkey(pubkey, context: context ?? bg()) { // from DB
             let nrContact = NRContact(pubkey: pubkey, contact: contact)
             NRContactCache.shared.setObject(for: pubkey, value: nrContact)
             return nrContact

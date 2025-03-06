@@ -32,12 +32,9 @@ struct ProfileOverlayCardContainer: View {
                             return
                         }
                         bg().perform {
-                            if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                let nrContact = NRContact(pubkey: bgContact.pubkey, contact: bgContact)
-                                
+                            if let nrContact = NRContact.fetch(pubkey) {
                                 DispatchQueue.main.async {
                                     self.contact = nrContact
-                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                 }
                             }
                             else {
@@ -48,11 +45,9 @@ struct ProfileOverlayCardContainer: View {
                                     },
                                     processResponseCommand: { taskId, _, _ in
                                         bg().perform {
-                                            if let bgContact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                                                let nrContact = NRContact(pubkey: bgContact.pubkey, contact: bgContact)
+                                            if let nrContact = NRContact.fetch(pubkey) {
                                                 DispatchQueue.main.async {
                                                     self.contact = nrContact
-                                                    NRContactCache.shared.setObject(for: pubkey, value: nrContact)
                                                 }
                                                 self.backlog.clear()
                                             }

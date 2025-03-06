@@ -368,7 +368,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             anyName = cachedNRContact.contact?.anyName
         }
         else if let contact = event.contact_ {
-            self.pfpAttributes = PFPAttributes(contact: NRContact(pubkey: contact.pubkey, contact: contact), pubkey: pubkey)
+            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(contact.pubkey, contact: contact), pubkey: pubkey)
             anyName = contact.anyName
         }
         else {
@@ -425,8 +425,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1
             let highlightAuthorPubkey:String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
             
-            let highlightContact: NRContact? = if let highlightAuthorPubkey, let contact = Contact.fetchByPubkey(highlightAuthorPubkey, context: bg()) {
-                NRContact(pubkey: contact.pubkey, contact: contact)
+            let highlightContact: NRContact? = if let highlightAuthorPubkey {
+                NRContact.fetch(highlightAuthorPubkey)
             }
             else {
                 nil
@@ -664,11 +664,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
                 bg().perform { [weak self] in
-                    guard let contact = self?.event?.contact else { return }
-                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-                    DispatchQueue.main.async {
-                        self?.objectWillChange.send()
-                        self?.contact = nrContact
+                    if let nrContact = NRContact.fetch(pubkey) {
+                        DispatchQueue.main.async {
+                            self?.objectWillChange.send()
+                            self?.contact = nrContact
+                        }
                     }
                 }
                 if self.kind == 6 {
@@ -685,11 +685,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     
                     if self.kind == 9802 && self.highlightAttributes.authorPubkey == pubkey {
                         bg().perform {
-                            guard let contact = Contact.fetchByPubkey(pubkey, context: bg()) else { return }
-                            let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-                            DispatchQueue.main.async { [weak self] in
-                                self?.highlightAttributes.objectWillChange.send()
-                                self?.highlightAttributes.contact = nrContact
+                            if let nrContact = NRContact.fetch(pubkey) {
+                                DispatchQueue.main.async { [weak self] in
+                                    self?.highlightAttributes.objectWillChange.send()
+                                    self?.highlightAttributes.contact = nrContact
+                                }
                             }
                         }
                     }
@@ -1322,7 +1322,7 @@ class PFPAttributes: ObservableObject {
             contactSavedSubscription = ViewUpdates.shared.contactUpdated
                 .filter { pubkey == $0.pubkey }
                 .sink(receiveValue: { [weak self] contact in
-                    let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
+                    let nrContact = NRContact.fetch(contact.pubkey, contact: contact)
                     DispatchQueue.main.async { [weak self] in
                         self?.objectWillChange.send()
                         self?.contact = nrContact

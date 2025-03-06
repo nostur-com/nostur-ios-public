@@ -18,7 +18,7 @@ struct PubkeyUsernameCache {
 
 struct NRContactCache {
     static let shared: LRUCache2<String, NRContact> = {
-        let cache = LRUCache2<String, NRContact>(countLimit: 500)
+        let cache = LRUCache2<String, NRContact>(countLimit: 1000)
         return cache
     }()
 }

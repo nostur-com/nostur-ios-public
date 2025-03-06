@@ -21,7 +21,7 @@ class Conversation: Identifiable, Hashable, ObservableObject {
     
     var id:String { contactPubkey }
     let contactPubkey:String
-    var nrContact:NRContact?
+    var nrContact: NRContact?
     let mostRecentMessage:String
     let mostRecentDate:Date
     let mostRecentEvent:Event // bg context
@@ -61,7 +61,7 @@ class Conversation: Identifiable, Hashable, ObservableObject {
         ViewUpdates.shared.contactUpdated
             .filter { contactPubkey == $0.pubkey }
             .sink { [weak self] contact in
-                let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
+                let nrContact = NRContact.fetch(contact.pubkey, contact: contact)
                 Task { @MainActor [weak self] in
                     self?.objectWillChange.send()
                     self?.nrContact = nrContact
