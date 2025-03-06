@@ -46,7 +46,7 @@ struct NoteTextRenderView: View {
                     .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
                 
             case 9735:
-                if let zap = nrPost.mainEvent, let zapFrom = zap.zapFromRequest {
+                if let zap = Event.fetchEvent(id: nrPost.id, context: viewContext()), let zapFrom = zap.zapFromRequest {
                     ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom)
                 }
                 

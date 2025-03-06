@@ -84,16 +84,16 @@ struct LazyNoteMenuSheet: View {
                 }
                 Button {
                     dismiss()
-                    guard let contact = nrPost.mainEvent?.contact else { return }
+                    guard let nrContact = nrPost.contact else { return }
                     DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY + 0.35) { // Short delay freezes????
-                        sendNotification(.addRemoveToListsheet, contact)
+                        sendNotification(.addRemoveToListsheet, nrContact)
                     }
                 } label: {
                     Label(String(localized:"Add/Remove \(nrPost.anyName) from custom feed", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
                 }
                 Button {
                     dismiss()
-                    if let pn = nrPost.mainEvent?.privateNote {
+                    if let pn = Event.fetchEvent(id: nrPost.id, context: viewContext())?.privateNote {
                         DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
                             sendNotification(.editingPrivateNote, pn)
                         }
@@ -161,7 +161,7 @@ struct LazyNoteMenuSheet: View {
                     Divider()
                     Button {
                         dismiss()
-                        UIPasteboard.general.string = nrPost.mainEvent?.toNEvent().eventJson()
+                        UIPasteboard.general.string = Event.fetchEvent(id: nrPost.id, context: viewContext())?.toNEvent().eventJson()
                     } label: {
                         Text("source", comment: "The word 'source' as in source code")
                             .padding(.horizontal, 5)
@@ -174,7 +174,7 @@ struct LazyNoteMenuSheet: View {
                     )
                     .onTapGesture {
                         dismiss()
-                        UIPasteboard.general.string = nrPost.mainEvent?.toNEvent().eventJson()
+                        UIPasteboard.general.string = Event.fetchEvent(id: nrPost.id, context: viewContext())?.toNEvent().eventJson()
                     }
                 }
                 Button {
@@ -261,7 +261,7 @@ struct LazyNoteMenuSheet: View {
             
             Button {
                 dismiss()
-                guard let mainEvent = nrPost.mainEvent else { return }
+                guard let mainEvent = Event.fetchEvent(id: nrPost.id, context: viewContext()) else { return }
                 let nEvent = mainEvent.toNEvent()
                 
                 if nrPost.pubkey == NRState.shared.activeAccountPublicKey && mainEvent.flags == "nsecbunker_unsigned" && la.account.isNC {

@@ -216,7 +216,7 @@ struct ZapButtonInner: View {
                                 nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
                             }
                             // Old zap sheet
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
                             sendNotification(.showZapSheet, paymentInfo)
                             
                             //                            // Trigger custom zap
@@ -249,7 +249,7 @@ struct ZapButtonInner: View {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }

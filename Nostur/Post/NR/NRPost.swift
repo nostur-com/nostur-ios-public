@@ -935,11 +935,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     
-    var mainEvent: Event? {
-        guard let event else { return nil }
-        return DataProvider.shared().viewContext.object(with: event.objectID) as? Event
-    }
-    
     @MainActor public func like(_ reactionContent:String = "+", uuid: UUID) -> NEvent? {
         self.footerAttributes.objectWillChange.send()
         if (reactionContent == "+") {

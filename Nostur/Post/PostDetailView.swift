@@ -207,7 +207,7 @@ struct PostAndParent: View {
                 if replyTo.deletedById == nil {
                     switch replyTo.kind {
                     case 9735:
-                        if let zap = replyTo.mainEvent, let zapFrom = zap.zapFromRequest {
+                        if let zap = Event.fetchEvent(id: replyTo.id, context: viewContext()), let zapFrom = zap.zapFromRequest {
                             ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom)
                         }
                     case 0,3,4,5,7,1984,9734,30009,8,30008:
