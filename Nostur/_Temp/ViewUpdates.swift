@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 19/01/2024.
 //
 
-import Foundation
+import SwiftUI
 import Combine
 
 class ViewUpdates {

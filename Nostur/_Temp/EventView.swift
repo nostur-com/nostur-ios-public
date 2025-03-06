@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 import Combine
 
+// WIP - Not used anywhere yet
 struct EventView: View {
     
     @ObservedObject public var eventModel: EventViewModel

@@ -84,7 +84,7 @@ let _ = Self._printChanges()
                     .listStyle(.plain)
                     .safeAreaScroll()
                     .scaleEffect(x: 1, y: -1, anchor: .center)
-                    .padding(.top, 30)
+//                    .padding(.top, 30)
                     .onChange(of: chatVM.state) { newValue in
                         if newValue == .ready {
                             proxy.scrollTo(bottom)

@@ -45,7 +45,7 @@ class LoggedInAccount: ObservableObject {
         bg.perform { [weak self] in
             guard let self else { return }
             
-            let contact: Contact = Contact.contactBy(pubkey: pubkey, context: self.bg) ?? Contact(context: self.bg)
+            let contact: Contact = Contact.fetchByPubkey(pubkey, context: self.bg) ?? Contact(context: self.bg)
             contact.pubkey = pubkey
             contact.couldBeImposter = 0
             

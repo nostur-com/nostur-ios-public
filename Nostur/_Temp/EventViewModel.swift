@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 import Combine
 
+// WIP - Not used anywhere yet
 class EventViewModel: ObservableObject {
     let id: String
     let pubkey: String

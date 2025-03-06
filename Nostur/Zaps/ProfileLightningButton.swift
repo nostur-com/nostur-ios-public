@@ -18,7 +18,6 @@ struct ProfileLightningButton: View {
     @State private var paymentInfo: PaymentInfo?
     
     var body: some View {
-//        let _ = Self._printChanges()
         Button {
             buttonTapped()
         } label: {
@@ -31,14 +30,6 @@ struct ProfileLightningButton: View {
             }
         }
         .buttonStyle(NosturButton())
-//        .frame(width: 40, height: 30)
-//        .font(.caption.weight(.heavy))
-//        .background(themes.theme.background)
-//        .cornerRadius(20)
-//        .overlay {
-//            RoundedRectangle(cornerRadius: 20)
-//                .stroke(.gray, lineWidth: 1)
-//        }
         .sheet(isPresented: $payAmountSelectorShown) {
             PaymentAmountSelector(paymentInfo: paymentInfo!)
                 .environmentObject(themes)

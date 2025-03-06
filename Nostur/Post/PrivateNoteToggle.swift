@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContactPrivateNoteToggle: View {
-    @ObservedObject var contact:Contact
+    @ObservedObject var contact: Contact
     
     var body: some View {
         HStack {

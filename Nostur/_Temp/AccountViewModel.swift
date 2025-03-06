@@ -9,6 +9,7 @@ import SwiftUI
 import CoreData
 import Combine
 
+// WIP - Not used anywhere yet
 class AccountViewModel: ObservableObject, Identifiable {
     
     public var id: String { publicKey }

@@ -446,22 +446,7 @@ extension Contact : Identifiable {
             return allContacts.map { $0.pubkey }
         }
     }
-    
-    static func contactBy(pubkey:String, context:NSManagedObjectContext) -> Contact? {
-        if !Thread.isMainThread { // Try to get from following cache first (bg only for now)
-            if let contact = NRState.shared.loggedInAccount?.followingCache[pubkey]?.bgContact {
-                return contact
-            }
-        }
         
-        let request = NSFetchRequest<Contact>(entityName: "Contact")
-        request.entity = Contact.entity()
-        request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
-        request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
-        
-        return try? context.fetch(request).first    
-    }
-    
     static func npub(_ pubkey:String) -> String {
         return try! NIP19(prefix: "npub", hexString: pubkey).displayString
     }
@@ -503,7 +488,6 @@ extension Contact : Identifiable {
             contact.updated_at = Int64(Date().timeIntervalSince1970)
         }
     }
-    
     
     static func fetchByPubkey(_ pubkey: String, context: NSManagedObjectContext) -> Contact? {
         if !Thread.isMainThread { // Try to get from following cache first (bg only for now)
