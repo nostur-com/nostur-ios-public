@@ -237,8 +237,7 @@ struct PostAndParent: View {
                                 .padding(.vertical, 5)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    guard let event = nrPost.event else { return }
-                                    sendNotification(.createNewReply, EventNotification(event: event))
+                                    sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
                                 }
                             Spacer()
                         }

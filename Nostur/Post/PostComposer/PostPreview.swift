@@ -12,8 +12,8 @@ struct PostPreview: View {
     @StateObject private var dim = DIMENSIONS()
     @Environment(\.dismiss) private var dismissPostPreview
     public let nrPost: NRPost
-    public let replyTo: Event?
-    public let quotingEvent: Event?
+    public let replyTo: ReplyTo?
+    public let quotePost: QuotePost?
     @ObservedObject public var vm: NewPostModel
     @ObservedObject public var typingTextModel: TypingTextModel
     public let onDismiss: () -> Void
@@ -23,10 +23,10 @@ struct PostPreview: View {
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
     
-    init(nrPost: NRPost, replyTo: Event?, quotingEvent: Event?, vm: NewPostModel, onDismiss: @escaping () -> Void) {
+    init(nrPost: NRPost, replyTo: ReplyTo?, quotePost: QuotePost?, vm: NewPostModel, onDismiss: @escaping () -> Void) {
         self.nrPost = nrPost
         self.replyTo = replyTo
-        self.quotingEvent = quotingEvent
+        self.quotePost = quotePost
         self.vm = vm
         self.onDismiss = onDismiss
         self.typingTextModel = vm.typingTextModel
@@ -70,7 +70,7 @@ struct PostPreview: View {
                 Button {
                     typingTextModel.sending = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: {
+                        self.vm.sendNow(replyTo: replyTo, quotePost: quotePost, onDismiss: {
                             dismissPostPreview()
                             onDismiss()
                         })
@@ -176,7 +176,7 @@ struct PostPreview_Previews: PreviewProvider {
         }) {
             NBNavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("026e5287944b34bc4068fcf3882b307d3ba8581f5cd6bc6087142ff2594c4a2a") {
-                    PostPreview(nrPost: nrPost, replyTo:nil, quotingEvent: nil, vm: vm, onDismiss: { dismiss() })
+                    PostPreview(nrPost: nrPost, replyTo: nil, quotePost: nil, vm: vm, onDismiss: { dismiss() })
                 }
             }
         }

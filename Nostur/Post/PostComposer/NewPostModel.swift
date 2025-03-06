@@ -120,7 +120,7 @@ public final class NewPostModel: ObservableObject {
     static let typingRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
     static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
     
-    public func sendNow(replyTo:Event? = nil, quotingEvent:Event? = nil, onDismiss: @escaping () -> Void) {
+    func sendNow(replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
         if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty) {
             typingTextModel.uploading = true
             
@@ -184,7 +184,7 @@ public final class NewPostModel: ObservableObject {
                             guard let url = $0.downloadUrl else { return nil }
                             return Imeta(url: url, dim: $0.dim, hash: $0.sha256)
                         }
-                    self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: onDismiss)
+                    self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                     
                     // clean up video tmp files (compressed videos)
                     for videoURL in self.typingTextModel.compressedVideoFiles {
@@ -235,19 +235,19 @@ public final class NewPostModel: ObservableObject {
                     }, receiveValue: { urls in
                         if (self.typingTextModel.pastedImages.count == urls.count) {
                             let imetas = urls.map { Imeta(url: $0) }
-                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: onDismiss)
+                            self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                         }
                     })
                     .store(in: &subscriptions)
             }
         }
         else {
-            self._sendNow(imetas: [], replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: onDismiss)
+            self._sendNow(imetas: [], replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
         }
     }
     
     // TODO: NOTE: When updating this func, also update HighlightComposer.send or refactor.
-    private func _sendNow(imetas: [Imeta], replyTo: Event? = nil, quotingEvent: Event? = nil, onDismiss: @escaping () -> Void) {
+    private func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
         guard let account = activeAccount else { return }
         account.lastLoginAt = .now
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
@@ -310,9 +310,9 @@ public final class NewPostModel: ObservableObject {
             unselectedPtags.removeAll(where: { $0 == requiredP })
         }
         
-        if let replyTo, let replyToBg = replyTo.toMain()  {
+        if let replyTo, let replyToMain = replyTo.nrPost.event?.toMain()  {
             // pTags from replyTo.pTags
-            let replyToPTags = replyToBg.pTags() + [replyToBg.pubkey]
+            let replyToPTags = replyToMain.pTags() + [replyToMain.pubkey]
             pTags.append(contentsOf: replyToPTags)
         }
         
@@ -324,21 +324,21 @@ public final class NewPostModel: ObservableObject {
         nEvent.tags.append(contentsOf: nostrTags)
         
         // If we are quote reposting, include the quoted post as nostr:nevent at the end
-        if let quotingEvent {
+        if let quotePost, let quotePostMain = quotePost.nrPost.event?.toMain() {
             
-            let relayHint: String? = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first
+            let relayHint: String? = resolveRelayHint(forPubkey: quotePost.nrPost.pubkey, receivedFromRelays: quotePostMain.relays_).first
             
-            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotingEvent.id, kind: Int(quotingEvent.kind), pubkey: quotingEvent.pubkey, relays: [relayHint].compactMap { $0 }) {
+            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotePost.nrPost.id, kind: Int(quotePost.nrPost.kind), pubkey: quotePost.nrPost.pubkey, relays: [relayHint].compactMap { $0 }) {
                 nEvent.content = (nEvent.content + "\nnostr:" + si.identifier)
             }
-            else if let note1id = note1(quotingEvent.id) {
+            else if let note1id = note1(quotePost.nrPost.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
             
-            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint ?? "", quotingEvent.pubkey]), at: 0)
+            nEvent.tags.insert(NostrTag(["q", quotePost.nrPost.id, relayHint ?? "", quotePost.nrPost.pubkey]), at: 0)
             
-            if !nEvent.pTags().contains(quotingEvent.pubkey) {
-                nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
+            if !nEvent.pTags().contains(quotePost.nrPost.pubkey) {
+                nEvent.tags.append(NostrTag(["p", quotePost.nrPost.pubkey]))
             }
         }
         
@@ -411,12 +411,11 @@ public final class NewPostModel: ObservableObject {
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
         }
         
-        if let replyTo {
+        if let replyTo, !replyTo.nrPost.isRestricted { // Rebroadcast if not restricted
             bg().perform {
-                guard !replyTo.isRestricted else { return } // Don't rebroadcast restricted posts
-                
-                let replyToNEvent = replyTo.toNEvent()
-                let replyToId = replyTo.id
+                guard let bgEvent = replyTo.nrPost.event else { return }
+                let replyToNEvent = bgEvent.toNEvent()
+                let replyToId = bgEvent.id
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
                     // Republish post being replied to
@@ -424,13 +423,11 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
-        if let quotingEvent {
-            guard !quotingEvent.isRestricted else { return } // Don't rebroadcast restricted posts
-            
-            // quotingEvent is mainContext?
-            let quotingNEvent = quotingEvent.toNEvent()
-            let quotingEventId = quotingEvent.id
+        if let quotePost, !quotePost.nrPost.isRestricted { // Rebroadcast if not restricted
             bg().perform {
+                guard let bgEvent = quotePost.nrPost.event else { return }
+                let quotingNEvent = bgEvent.toNEvent()
+                let quotingEventId = bgEvent.id
                 DispatchQueue.main.async {
                     sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: quotingEventId))
                     // Republish post being quoted
@@ -442,7 +439,7 @@ public final class NewPostModel: ObservableObject {
         sendNotification(.didSend)
     }
     
-    public func showPreview(quotingEvent: Event? = nil, replyTo: Event? = nil) {
+    func showPreview(quotePost: QuotePost? = nil, replyTo: ReplyTo? = nil) {
         // TODO: Make _sendNow() more reusable and reuse those parts here so we can't forget to make chances twice and forget half.
         guard let account = activeAccount else { return }
         var nEvent = nEvent ?? NEvent(content: "")
@@ -490,9 +487,9 @@ public final class NewPostModel: ObservableObject {
             unselectedPtags.removeAll(where: { $0 == requiredP })
         }
         
-        if let replyTo, let replyToBg = replyTo.toMain()  {
+        if let replyTo, let replyToMain = replyTo.nrPost.event?.toMain() {
             // pTags from replyTo.pTags
-            let replyToPTags = replyToBg.pTags() + [replyToBg.pubkey]
+            let replyToPTags = replyToMain.pTags() + [replyToMain.pubkey]
             pTags.append(contentsOf: replyToPTags)
         }
         
@@ -504,21 +501,21 @@ public final class NewPostModel: ObservableObject {
         nEvent.tags.append(contentsOf: nostrTags)
         
         // If we are quote reposting, include the quoted post as nostr:nevent at the end
-        if let quotingEvent {
+        if let quotePost, let quotePostMain = quotePost.nrPost.event?.toMain() {
             
-            let relayHint: String? = resolveRelayHint(forPubkey: quotingEvent.pubkey, receivedFromRelays: quotingEvent.relays_).first
+            let relayHint: String? = resolveRelayHint(forPubkey: quotePost.nrPost.pubkey, receivedFromRelays: quotePostMain.relays_).first
             
-            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotingEvent.id, kind: Int(quotingEvent.kind), pubkey: quotingEvent.pubkey, relays: [relayHint].compactMap { $0 }) {
+            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotePost.nrPost.id, kind: Int(quotePost.nrPost.kind), pubkey: quotePost.nrPost.pubkey, relays: [relayHint].compactMap { $0 }) {
                 nEvent.content = (nEvent.content + "\nnostr:" + si.identifier)
             }
-            else if let note1id = note1(quotingEvent.id) {
+            else if let note1id = note1(quotePost.nrPost.id) {
                 nEvent.content = (nEvent.content + "\nnostr:" + note1id)
             }
             
-            nEvent.tags.insert(NostrTag(["q", quotingEvent.id, relayHint ?? "", quotingEvent.pubkey]), at: 0)
+            nEvent.tags.insert(NostrTag(["q", quotePost.nrPost.id, relayHint ?? "", quotePost.nrPost.pubkey]), at: 0)
             
-            if !nEvent.pTags().contains(quotingEvent.pubkey) {
-                nEvent.tags.append(NostrTag(["p", quotingEvent.pubkey]))
+            if !nEvent.pTags().contains(quotePost.nrPost.pubkey) {
+                nEvent.tags.append(NostrTag(["p", quotePost.nrPost.pubkey]))
             }
         }
         
@@ -652,52 +649,65 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    public func loadQuotingEvent(_ quotingEvent:Event) {
+    func loadQuotingEvent() {
         var newQuoteRepost = NEvent(content: typingTextModel.text)
         newQuoteRepost.kind = .textNote
         nEvent = newQuoteRepost
     }
     
-    public func loadReplyTo(_ replyTo: Event) {
+    func loadReplyTo(_ replyTo: ReplyTo) {
+        requiredP = replyTo.nrPost.pubkey
         var newReply = NEvent(content: typingTextModel.text)
         newReply.kind = .textNote
-        guard let replyTo = replyTo.toMain() else {
-            L.og.error("🔴🔴 Problem getting event from viewContext")
-            return
-        }
-        let existingPtags = replyTo.pTags()
-        let availableContacts = Set(Contact.fetchByPubkeys(existingPtags, context: DataProvider.shared().viewContext))
-        requiredP = replyTo.contact?.pubkey
-        self.availableContacts = Set([replyTo.contact].compactMap { $0 } + availableContacts)
-        typingTextModel.selectedMentions = Set([replyTo.contact].compactMap { $0 } + availableContacts)
-        
-        let root = TagsHelpers(replyTo.tags()).replyToRootEtag()
-        
-        if (root != nil) { // ADD "ROOT" + "REPLY"
-            let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
-            newReply.tags.append(newRootTag)
+        bg().perform {
+            guard let replyToEvent = replyTo.nrPost.event else { return }
+            let existingPtags = replyToEvent.pTags()
             
-            let newReplyTag = NostrTag(["e", replyTo.id, "", "reply"])
+            let availableContacts: [NRContact] = Set(Contact.fetchByPubkeys(existingPtags, context: bg()))
+                .map { NRContact(pubkey: $0.pubkey, contact: $0) }
             
-            newReply.tags.append(newReplyTag)
-        }
-        else { // ADD ONLY "ROOT"
-            let newRootTag = NostrTag(["e", replyTo.id, "", "root"])
-            newReply.tags.append(newRootTag)
-        }
-        
-        let rootA = replyTo.toNEvent().replyToRootAtag()
-        
-        if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
-            let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
-            newReply.tags.append(newRootATag)
-        }
-        else if replyTo.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
-            let newRootTag = NostrTag(["a", replyTo.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
-            newReply.tags.append(newRootTag)
-        }
+            let replyToNrContact: NRContact? = if let contact = replyToEvent.contact {
+                NRContact(pubkey: contact.pubkey, contact: contact)
+            }
+            else {
+                nil
+            }
+            
+            Task { @MainActor in
+                self.availableContacts = Set([replyToNrContact].compactMap { $0 } + availableContacts)
+                self.typingTextModel.selectedMentions = Set([replyToNrContact].compactMap { $0 } + availableContacts)
+            }
+            
+            let root = TagsHelpers(replyToEvent.tags()).replyToRootEtag()
+            
+            if (root != nil) { // ADD "ROOT" + "REPLY"
+                let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+                newReply.tags.append(newRootTag)
+                
+                let newReplyTag = NostrTag(["e", replyToEvent.id, "", "reply"])
+                
+                newReply.tags.append(newReplyTag)
+            }
+            else { // ADD ONLY "ROOT"
+                let newRootTag = NostrTag(["e", replyToEvent.id, "", "root"])
+                newReply.tags.append(newRootTag)
+            }
+            
+            let rootA = replyToEvent.toNEvent().replyToRootAtag()
+            
+            if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
+                let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+                newReply.tags.append(newRootATag)
+            }
+            else if replyToEvent.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
+                let newRootTag = NostrTag(["a", replyToEvent.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
+                newReply.tags.append(newRootTag)
+            }
 
-        nEvent = newReply
+            Task { @MainActor in
+                self.nEvent = newReply
+            }
+        }
     }
     
     func directMention(_ contact: NRContact) {

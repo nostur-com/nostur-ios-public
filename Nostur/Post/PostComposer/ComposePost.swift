@@ -13,27 +13,27 @@ import UniformTypeIdentifiers
 // TODO: Need to create better solution for typing @mentions
 
 struct ComposePostCompat: View {
-    public var replyTo: Event? = nil
-    public var quotingEvent: Event? = nil
+    public var replyTo: ReplyTo? = nil
+    public var quotePost: QuotePost? = nil
     public var directMention: NRContact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
     public var kind: NEventKind? = nil
     
     var body: some View {
         if #available(iOS 16.0, *) {
-            ComposePost(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss, kind: kind)
+            ComposePost(replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: onDismiss, kind: kind)
         }
         else {
-            ComposePost15(replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: onDismiss) // No image picker yet on iOS 15 so remove kind:20 detection
+            ComposePost15(replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: onDismiss) // No image picker yet on iOS 15 so remove kind:20 detection
         }
     }
 }
 
 @available(iOS 16.0, *)
 struct ComposePost: View {
-    public var replyTo: Event? = nil
-    public var quotingEvent: Event? = nil
-    public var directMention: Contact? = nil // For initiating a post from profile view
+    public var replyTo: ReplyTo? = nil
+    public var quotePost: QuotePost? = nil
+    public var directMention: NRContact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
     public var kind: NEventKind? = nil
     
@@ -56,16 +56,6 @@ struct ComposePost: View {
     
     @ObservedObject var settings: SettingsStore = .shared
     
-    private var waitingForReply: Bool {
-        guard replyTo != nil else { return false }
-        return replyToNRPost == nil
-    }
-    
-    private var waitingForQuote: Bool {
-        guard quotingEvent != nil else { return false }
-        return quotingNRPost == nil
-    }
-    
     private var showAutoPilotPreview: Bool {
         guard !SettingsStore.shared.lowDataMode, SettingsStore.shared.enableOutboxPreview else { return false } // Don't continue with additional outbox relays on low data mode, or settings toggle
         guard SettingsStore.shared.enableOutboxRelays, vpnGuardOK() else { return false } // Check if Enhanced Relay Routing toggle is turned on
@@ -79,7 +69,7 @@ struct ComposePost: View {
         let _ = Self._printChanges()
         #endif
         ZStack { // Needed because else we are stuck in ProgressView() forever
-            if let account = vm.activeAccount, !waitingForReply, !waitingForQuote {
+            if let account = vm.activeAccount {
                 GeometryReader { geo in
                     ScrollViewReader { proxy in
                         ScrollView {
@@ -126,7 +116,7 @@ struct ComposePost: View {
                                         .font(.largeTitle)
                                     }
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: .picture)
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: .picture)
 //                                        .frame(height: max(50, (geo.size.height - 70)))
 //                                        .padding(.horizontal, -10)
                                         .id(textfield)
@@ -159,13 +149,13 @@ struct ComposePost: View {
                                             vm.activeAccount = account
                                         }).equatable()
                                         
-                                        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
-                                            .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
+                                        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
+                                            .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                             .id(textfield)
                                     }
                                     .padding(.top, 10)
                                     
-                                    if let quotingNRPost = quotingNRPost {
+                                    if let quotingNRPost = quotePost?.nrPost {
                                         QuotedNoteFragmentView(nrPost: quotingNRPost, theme: themes.theme)
                                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width - 70, isScreenshot: false))
                                             .overlay(
@@ -211,7 +201,7 @@ struct ComposePost: View {
                         if #available(iOS 16, *) {
                             NavigationStack {
                                 VStack(alignment: .leading) {
-                                    PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                    PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
@@ -224,7 +214,7 @@ struct ComposePost: View {
                         else {
                             NBNavigationStack {
                                 VStack(alignment: .leading) {
-                                    PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                    PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
@@ -344,23 +334,11 @@ struct ComposePost: View {
             }
             else if let replyTo {
                 vm.loadReplyTo(replyTo)
-                bg().perform {
-                    let replyToNRPost = NRPost(event: replyTo)
-                    DispatchQueue.main.async {
-                        self.replyToNRPost = replyToNRPost
-                    }
-                }
+                self.replyToNRPost = replyTo.nrPost
             }
-            else if let quotingEvent {
-                vm.loadQuotingEvent(quotingEvent)
-                bg().perform {
-                    if let quotingEventBG = quotingEvent.toBG() {
-                        let quotingNRPost = NRPost(event: quotingEventBG)
-                        DispatchQueue.main.async {
-                            self.quotingNRPost = quotingNRPost
-                        }
-                    }
-                }
+            else if let quotePost {
+                vm.loadQuotingEvent()
+                self.quotingNRPost = quotePost.nrPost
             }
             ConnectionPool.shared.connectAllWrite()
         }
@@ -395,8 +373,8 @@ struct ComposePost: View {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
-                        if let replyTo = PreviewFetcher.fetchEvent("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
-                            ComposePostCompat(replyTo: replyTo, onDismiss: { })
+                        if let nrReplyTo = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
+                            ComposePostCompat(replyTo: ReplyTo(nrPost: nrReplyTo), onDismiss: { })
                         }
                     }
                 }

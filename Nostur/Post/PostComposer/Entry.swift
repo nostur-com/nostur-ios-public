@@ -17,9 +17,9 @@ struct Entry: View {
     @Binding var videoPickerShown: Bool
     @Binding var gifSheetShown: Bool
     @Binding var cameraSheetShown: Bool
-    private var replyTo: Event?
-    private var quotingEvent: Event?
-    private var directMention: Contact?
+    private var replyTo: ReplyTo?
+    private var quotePost: QuotePost?
+    private var directMention: NRContact?
     private var onDismiss: () -> Void
     private var replyToKind: Int64?
     private var kind: NEventKind?
@@ -36,9 +36,9 @@ struct Entry: View {
         (kind == .picture && typingTextModel.pastedImages.isEmpty) || typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty)
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: Event? = nil, quotingEvent: Event? = nil, directMention: Contact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil) {
         self.replyTo = replyTo
-        self.quotingEvent = quotingEvent
+        self.quotePost = quotePost
         self.directMention = directMention
         self.vm = vm
         self.typingTextModel = vm.typingTextModel
@@ -214,7 +214,7 @@ struct Entry: View {
                     
                     if kind != .picture {
                         Button(String(localized: "Preview", comment:"Preview button when creating a new post")) {
-                            vm.showPreview(quotingEvent: quotingEvent, replyTo: replyTo)
+                            vm.showPreview(quotePost: quotePost, replyTo: replyTo)
                         }
                         .disabled(typingTextModel.uploading)
                     }
@@ -222,7 +222,7 @@ struct Entry: View {
                     Button {
                         typingTextModel.sending = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            self.vm.sendNow(replyTo: replyTo, quotingEvent: quotingEvent, onDismiss: { onDismiss() })
+                            self.vm.sendNow(replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
                         }
                     } label: {
                         if (typingTextModel.uploading || typingTextModel.sending) {

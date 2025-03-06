@@ -12,13 +12,13 @@ import Combine
 import NavigationBackport
 
 
-public extension View {
+extension View {
     func withSheets() -> some View {
         modifier(WithSheets())
     }
 }
 
-private struct WithSheets: ViewModifier {
+struct WithSheets: ViewModifier {
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var dim: DIMENSIONS
@@ -45,9 +45,9 @@ private struct WithSheets: ViewModifier {
     @State private var deletePost: DeletePost? = nil
     
     // new post/quote post / new reply
-    @State private var replyToEvent: EventNotification? = nil
-    @State private var quoteOrRepostEvent: Event? = nil
-    @State private var quotePostEvent: Event? = nil
+    @State private var replyTo: ReplyTo? = nil
+    @State private var quoteOrRepost: QuoteOrRepost? = nil
+    @State private var quotePost: QuotePost? = nil
     
     // Zap sheet
     @State private var paymentInfo: PaymentInfo? = nil
@@ -143,7 +143,7 @@ private struct WithSheets: ViewModifier {
         
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
                 let id = notification.object as! String
-                post = try! Event.fetchEvent(id: id, context: viewContext)
+                post = Event.fetchEvent(id: id, context: viewContext())
             }
             .sheet(item: $post) { post in
                 NBNavigationStack {
@@ -156,7 +156,7 @@ private struct WithSheets: ViewModifier {
         
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
                 let pubkey = notification.object as! String
-                contact = Contact.fetchByPubkey(pubkey, context: viewContext)
+                contact = Contact.fetchByPubkey(pubkey, context: viewContext())
             }
             .sheet(item: $contact) { contact in
                 NBNavigationStack {
@@ -258,19 +258,19 @@ private struct WithSheets: ViewModifier {
         
             .onReceive(receiveNotification(.createNewReply)) { notification in
                 guard isFullAccount() else { showReadOnlyMessage(); return }
-                replyToEvent = notification.object as? EventNotification
+                replyTo = notification.object as? ReplyTo
             }
         
             .onReceive(receiveNotification(.createNewQuoteOrRepost)) { notification in
                 guard isFullAccount() else { showReadOnlyMessage(); return }
-                quoteOrRepostEvent = notification.object as? Event
+                quoteOrRepost = notification.object as? QuoteOrRepost
             }
         
-            .sheet(item: $replyToEvent) { eventNotification in
+            .sheet(item: $replyTo) { replyTo in
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(replyTo: eventNotification.event, onDismiss: { self.replyToEvent = nil })
+                            ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                                 .environmentObject(themes)
@@ -278,7 +278,7 @@ private struct WithSheets: ViewModifier {
                         }
                     }
                     else {
-                        ComposePostCompat(replyTo: eventNotification.event, onDismiss: { self.replyToEvent = nil })
+                        ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
@@ -288,10 +288,10 @@ private struct WithSheets: ViewModifier {
                 .nbUseNavigationStack(.never)
             }
         
-            .sheet(item: $quoteOrRepostEvent) { event in
+            .sheet(item: $quoteOrRepost) { quoteOrRepost in
                 if let account = account(), account.isNC {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                        QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
+                        QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .presentationDetents200()
@@ -301,7 +301,7 @@ private struct WithSheets: ViewModifier {
                     .environmentObject(themes)
                 }
                 else {
-                    QuoteOrRepostChoiceSheet(originalEvent:event, quotePostEvent:$quotePostEvent)
+                    QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
                         .environmentObject(NRState.shared)
                         .environmentObject(dim)
                         .presentationDetents200()
@@ -311,23 +311,23 @@ private struct WithSheets: ViewModifier {
                 }
             }
         
-            .sheet(item: $quotePostEvent) { quotePostEvent in
+            .sheet(item: $quotePost) { quotePost in
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(quotingEvent: quotePostEvent, onDismiss: { self.quotePostEvent = nil })
+                            ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
-                                .presentationBackgroundCompat(themes.theme.listBackground)
+                                .presentationBackgroundCompat(themes.theme.background)
                         }
                         .environmentObject(themes)
                     }
                     else {
-                        ComposePostCompat(quotingEvent: quotePostEvent, onDismiss: { self.quotePostEvent = nil })
+                        ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(themes.theme.background)
                     }
                 }
                 .nbUseNavigationStack(.never)
@@ -558,9 +558,19 @@ struct MiniProfileSheetInfo: Identifiable, Equatable {
     }
 }
 
-struct EventNotification: Identifiable {
+struct ReplyTo: Identifiable {
     let id = UUID()
-    let event:Event // bg
+    let nrPost: NRPost
+}
+
+struct QuoteOrRepost: Identifiable {
+    let id = UUID()
+    let nrPost: NRPost
+}
+
+struct QuotePost: Identifiable {
+    let id = UUID()
+    let nrPost: NRPost
 }
 
 import LinkPresentation

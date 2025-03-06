@@ -58,7 +58,6 @@ struct ReplyButton: View {
     }
     
     private func tap() {
-        guard let event = nrPost.event else { return }
-        sendNotification(.createNewReply, EventNotification(event: event))
+        sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
     }
 }

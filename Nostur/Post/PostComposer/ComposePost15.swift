@@ -11,8 +11,8 @@ import UniformTypeIdentifiers
 
 // TODO: We don't have a image picker yet for iOS 15
 struct ComposePost15: View {
-    public var replyTo: Event? = nil
-    public var quotingEvent: Event? = nil
+    public var replyTo: ReplyTo? = nil
+    public var quotePost: QuotePost? = nil
     public var directMention: NRContact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
     public var kind: NEventKind? = nil
@@ -42,7 +42,7 @@ struct ComposePost15: View {
     }
     
     private var waitingForQuote: Bool {
-        guard quotingEvent != nil else { return false }
+        guard quotePost != nil else { return false }
         return quotingNRPost == nil
     }
     
@@ -76,8 +76,8 @@ struct ComposePost15: View {
                                         vm.activeAccount = account
                                     }).equatable()
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotingEvent: quotingEvent, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
-                                        .frame(height: replyTo == nil && quotingEvent == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
+                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
+                                        .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
                                         .id(textfield)
                                 }
                                 
@@ -126,7 +126,7 @@ struct ComposePost15: View {
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         NBNavigationStack {
                             VStack(alignment: .leading) {
-                                PostPreview(nrPost: nrPost, replyTo: replyTo, quotingEvent: quotingEvent, vm: vm, onDismiss: { onDismiss() })
+                                PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                     .environmentObject(themes)
                                 
                                 if let nEvent = vm.previewNEvent, showAutoPilotPreview {
@@ -203,23 +203,11 @@ struct ComposePost15: View {
             }
             else if let replyTo {
                 vm.loadReplyTo(replyTo)
-                bg().perform {
-                    let replyToNRPost = NRPost(event: replyTo)
-                    DispatchQueue.main.async {
-                        self.replyToNRPost = replyToNRPost
-                    }
-                }
+                self.replyToNRPost = replyTo.nrPost
             }
-            else if let quotingEvent {
-                vm.loadQuotingEvent(quotingEvent)
-                bg().perform {
-                    if let quotingEventBG = quotingEvent.toBG() {
-                        let quotingNRPost = NRPost(event: quotingEventBG)
-                        DispatchQueue.main.async {
-                            self.quotingNRPost = quotingNRPost
-                        }
-                    }
-                }
+            else if let quotePost {
+                vm.loadQuotingEvent()
+                self.quotingNRPost = quotePost.nrPost
             }
             ConnectionPool.shared.connectAllWrite()
         }

@@ -35,8 +35,7 @@ struct RepostButton: View {
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard let mainEvent = nrPost.mainEvent else { return }
-                sendNotification(.createNewQuoteOrRepost, mainEvent)
+                sendNotification(.createNewQuoteOrRepost, QuoteOrRepost(nrPost: nrPost))
             }
     }
 }
