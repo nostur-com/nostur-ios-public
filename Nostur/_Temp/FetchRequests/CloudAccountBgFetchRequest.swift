@@ -86,5 +86,11 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
         if !duplicates.isEmpty {
             bgSave()
         }
+        
+        let accountsCount = accounts.count
+        Task { @MainActor in
+            guard accountsCount != NRState.shared.accounts.count else { return }
+            NRState.shared.loadAccountsState()
+        }
     }
 }
