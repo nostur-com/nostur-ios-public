@@ -663,21 +663,24 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
             .sink { [weak self] pubkey in
                 guard let self = self else { return }
-                bg().perform { [weak self] in
-                    if let nrContact = NRContact.fetch(pubkey) {
-                        DispatchQueue.main.async {
-                            self?.objectWillChange.send()
-                            self?.contact = nrContact
+                
+                if self.pubkey == pubkey && self.contact == nil {
+                    bg().perform { [weak self] in
+                        if let nrContact = NRContact.fetch(pubkey) {
+                            DispatchQueue.main.async {
+                                self?.objectWillChange.send()
+                                self?.contact = nrContact
+                                
+                                if self?.kind == 6 {
+                                    self?.objectWillChange.send()
+                                    self?.repostedHeader = String(localized:"\(self?.contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
+                                }
+                            }
                         }
                     }
                 }
-                if self.kind == 6 {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.objectWillChange.send()
-                        self?.repostedHeader = String(localized:"\(self?.contact?.anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
-                    }
-                }
-                else {
+
+                if self.kind != 6 {
                     if self.replyToId != nil {
                         self.rerenderReplyingToFragment()
                     }
