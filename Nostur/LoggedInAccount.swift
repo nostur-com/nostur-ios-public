@@ -94,10 +94,10 @@ class LoggedInAccount: ObservableObject {
         }
     }
     
-    @MainActor public func report(_ event:Event, reportType:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
+    @MainActor public func report(pubkey: String, eventId: String, reportType: ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
         guard account.isFullAccount else { NRState.shared.readOnlyAccountSheetShown = true; return nil }
         
-        let report = EventMessageBuilder.makeReportEvent(pubkey: event.pubkey, eventId: event.id, type: reportType, note: note, includeProfile: includeProfile)
+        let report = EventMessageBuilder.makeReportEvent(pubkey: pubkey, eventId: eventId, type: reportType, note: note, includeProfile: includeProfile)
 
         guard let signedEvent = try? account.signEvent(report) else {
             L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")

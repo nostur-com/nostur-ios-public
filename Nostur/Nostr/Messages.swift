@@ -454,10 +454,10 @@ struct EventMessageBuilder {
         return repost
     }
     
-    static func makeReactionEvent(reactingTo: Event, reactionContent: String = "+") -> NEvent {        
+    static func makeReactionEvent(reactingToId: String, reactingToPubkey: String, reactionContent: String = "+") -> NEvent {
         var reactionEvent = NEvent(content: reactionContent)
         reactionEvent.kind = .reaction
-        reactionEvent.tags = [NostrTag(["e", reactingTo.id]), NostrTag(["p", reactingTo.pubkey])]
+        reactionEvent.tags = [NostrTag(["e", reactingToId]), NostrTag(["p", reactingToPubkey])]
         
         return reactionEvent
     }
@@ -479,7 +479,7 @@ struct EventMessageBuilder {
         return event
     }
     
-    static func makeReportEvent(pubkey:String, eventId:String, type:ReportType, note:String = "", includeProfile:Bool = false) -> NEvent {
+    static func makeReportEvent(pubkey: String, eventId: String, type: ReportType, note: String = "", includeProfile: Bool = false) -> NEvent {
         var event = NEvent(content: note)
         event.kind = .report
         event.tags = [

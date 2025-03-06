@@ -935,7 +935,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     
-    @MainActor public func like(_ reactionContent:String = "+", uuid: UUID) -> NEvent? {
+    @MainActor public func like(_ reactionContent: String = "+", uuid: UUID) -> NEvent? {
         self.footerAttributes.objectWillChange.send()
         if (reactionContent == "+") {
             self.footerAttributes.liked = true
@@ -954,8 +954,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 }
             }
         }
-        guard let mainEvent else { return nil }
-        return EventMessageBuilder.makeReactionEvent(reactingTo: mainEvent, reactionContent: reactionContent)
+        return EventMessageBuilder.makeReactionEvent(reactingToId: id, reactingToPubkey: pubkey, reactionContent: reactionContent)
     }
     
     @MainActor public func unlike(_ reactionContent: String = "+") {
