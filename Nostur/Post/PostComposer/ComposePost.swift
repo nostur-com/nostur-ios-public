@@ -15,7 +15,7 @@ import UniformTypeIdentifiers
 struct ComposePostCompat: View {
     public var replyTo: Event? = nil
     public var quotingEvent: Event? = nil
-    public var directMention: Contact? = nil // For initiating a post from profile view
+    public var directMention: NRContact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
     public var kind: NEventKind? = nil
     

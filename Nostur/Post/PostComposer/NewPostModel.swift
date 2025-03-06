@@ -37,8 +37,8 @@ public final class TypingTextModel: ObservableObject {
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedVideos: [PostedVideoMeta] = []
     public var compressedVideoFiles: [URL] = [] // need a place to track tmp files created so we can clean up after upload
-    @Published var selectedMentions: Set<Contact> = [] // will become p-tags in the final post
-    @Published var unselectedMentions: Set<Contact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
+    @Published var selectedMentions: Set<NRContact> = [] // will become p-tags in the final post
+    @Published var unselectedMentions: Set<NRContact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
     @Published var sending = false
     @Published var uploading = false
     private var subscriptions = Set<AnyCancellable>()
@@ -68,13 +68,13 @@ public final class NewPostModel: ObservableObject {
     
     @Published var uploadError: String?
     var requiredP:String? = nil
-    @Published var availableContacts: Set<Contact> = [] // are available to toggle on/off for notifications
+    @Published var availableContacts: Set<NRContact> = [] // are available to toggle on/off for notifications
     
     @Published var previewNEvent: NEvent? // needed for AutoPilot preview (and probably should use this more and reduce use of Event)
     @Published var previewNRPost: NRPost?
     @Published var gifSheetShown = false
     
-    @Published var contactSearchResults: [Contact] = []
+    @Published var contactSearchResults: [NRContact] = []
     @Published var activeAccount: CloudAccount? = nil
     
     private var subscriptions = Set<AnyCancellable>()
@@ -89,7 +89,7 @@ public final class NewPostModel: ObservableObject {
             .store(in: &subscriptions)
     }
     
-    var filteredContactSearchResults:[Contact] {
+    var filteredContactSearchResults: [NRContact] {
         let wot = WebOfTrust.shared
         if WOT_FILTER_ENABLED() {
             return contactSearchResults
@@ -552,9 +552,9 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    public func selectContactSearchResult(_ contact: Contact) {
+    func selectContactSearchResult(_ nrContact: NRContact) {
         guard let textView = textView else { return }
-        let mentionName = contact.anyName
+        let mentionName = nrContact.anyName
         let mentionText = "\u{2063}\u{2064}\(mentionName)\u{2064}\u{2063} " // invisible characters to replace later
 
         if let selectedRange = textView.selectedTextRange {
@@ -595,8 +595,8 @@ public final class NewPostModel: ObservableObject {
             typingTextModel.text = currentText
             
             // Update the available contacts and selected mentions
-            availableContacts.insert(contact)
-            typingTextModel.selectedMentions.insert(contact)
+            availableContacts.insert(nrContact)
+            typingTextModel.selectedMentions.insert(nrContact)
             mentioning = false
             lastHit = mentionName
 
@@ -636,18 +636,20 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    private func searchContacts(_ mentionTerm:String) {
-        let fr = Contact.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
-        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), NRState.shared.blockedPubkeys)
-        
-        let contactSearchResults = Array(((try? DataProvider.shared().viewContext.fetch(fr)) ?? []).prefix(60))
-        
-        // check first to reduce rerendering, if both are already empty, don't re-set it.
-        if self.contactSearchResults.isEmpty && contactSearchResults.isEmpty {
-            return
+    private func searchContacts(_ mentionTerm: String) {
+        Importer.shared.delayProcessing()
+        bg().perform {
+            let fr = Contact.fetchRequest()
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
+            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), NRState.shared.blockedPubkeys)
+            
+            let contactSearchResults: [NRContact] = Array(((try? bg().fetch(fr)) ?? []).prefix(60))
+                .map { NRContact(pubkey: $0.pubkey, contact: $0) }
+            
+            Task { @MainActor [weak self] in
+                self?.contactSearchResults = contactSearchResults
+            }
         }
-        self.contactSearchResults = contactSearchResults
     }
     
     public func loadQuotingEvent(_ quotingEvent:Event) {
@@ -698,7 +700,7 @@ public final class NewPostModel: ObservableObject {
         nEvent = newReply
     }
     
-    public func directMention(_ contact: Contact) {
+    func directMention(_ contact: NRContact) {
         guard textView != nil else { return }
         guard let pubkey = account()?.publicKey, pubkey != contact.pubkey else { return }
         let mentionName = contact.anyName

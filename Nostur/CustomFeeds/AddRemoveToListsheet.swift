@@ -21,7 +21,7 @@ enum ListType: String, Identifiable, Hashable {
 struct AddRemoveToListsheet: View {
     
     @Environment(\.dismiss) var dismiss
-    @ObservedObject var contact: Contact
+    @ObservedObject var nrContact: NRContact
     
     // only contact lists, not relay lists
     @FetchRequest(
@@ -36,9 +36,9 @@ struct AddRemoveToListsheet: View {
                 LazyVStack {
                     ForEach(lists) { list in
                         HStack(spacing: 10) {
-                            if list.contactPubkeys.contains(contact.pubkey) {
+                            if list.contactPubkeys.contains(nrContact.pubkey) {
                                 Button {
-                                    list.contactPubkeys.remove(contact.pubkey)
+                                    list.contactPubkeys.remove(nrContact.pubkey)
                                 } label: {
                                     Image(systemName:  "checkmark.circle.fill")
                                         .padding(.vertical, 10)
@@ -46,7 +46,7 @@ struct AddRemoveToListsheet: View {
                             }
                             else {
                                 Button {
-                                    list.contactPubkeys.insert(contact.pubkey)
+                                    list.contactPubkeys.insert(nrContact.pubkey)
                                 } label: {
                                     Image(systemName:  "circle")
                                         .foregroundColor(Color.secondary)
@@ -57,11 +57,11 @@ struct AddRemoveToListsheet: View {
                                 .padding(.vertical, 10)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    if list.contactPubkeys.contains(contact.pubkey) {
-                                        list.contactPubkeys.remove(contact.pubkey)
+                                    if list.contactPubkeys.contains(nrContact.pubkey) {
+                                        list.contactPubkeys.remove(nrContact.pubkey)
                                     }
                                     else {
-                                        list.contactPubkeys.insert(contact.pubkey)
+                                        list.contactPubkeys.insert(nrContact.pubkey)
                                     }
                                 }
                         }
@@ -97,8 +97,8 @@ struct AddRemoveToListsheet_Previews: PreviewProvider {
             pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
-                if let contact = PreviewFetcher.fetchContact() {
-                    AddRemoveToListsheet(contact: contact)
+                if let nrContact = PreviewFetcher.fetchNRContact() {
+                    AddRemoveToListsheet(nrContact: nrContact)
                 }
             }
         }

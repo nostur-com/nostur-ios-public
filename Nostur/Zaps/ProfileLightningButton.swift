@@ -10,7 +10,7 @@ import SwiftUI
 struct ProfileLightningButton: View {
     @EnvironmentObject private var themes: Themes
     
-    public var contact: Contact?
+    public var nrContact: NRContact?
     public var zapEtag: String?
     
     @State private var isLoading = false
@@ -44,15 +44,15 @@ struct ProfileLightningButton: View {
                 .environmentObject(themes)
                 .presentationBackgroundCompat(themes.theme.listBackground)
         }
-        .opacity((contact?.anyLud ?? false) ? 1 : 0)
+        .opacity((nrContact?.anyLud ?? false) ? 1 : 0)
     }
     
     private func buttonTapped() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
-        guard (contact?.anyLud ?? false) else { return }
+        guard (nrContact?.anyLud ?? false) else { return }
         isLoading = true
         
-        if let lud16 = contact!.lud16 {
+        if let lud16 = nrContact!.lud16 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
@@ -66,9 +66,10 @@ struct ProfileLightningButton: View {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                contact!.zapperPubkeys.insert(zapperPubkey)
+                                Contact.addZapperPubkey(contactPubkey: nrContact!.pubkey, zapperPubkey: zapperPubkey)
+                                nrContact!.zapperPubkeys.insert(zapperPubkey)
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact, zapEtag: zapEtag)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapEtag: zapEtag)
                             payAmountSelectorShown = true
                             isLoading = false
                         }
@@ -80,7 +81,7 @@ struct ProfileLightningButton: View {
                 }
             }
         }
-        else if let lud06 = contact!.lud06 {
+        else if let lud06 = nrContact!.lud06 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
@@ -94,9 +95,10 @@ struct ProfileLightningButton: View {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                contact!.zapperPubkeys.insert(zapperPubkey)
+                                Contact.addZapperPubkey(contactPubkey: nrContact!.pubkey, zapperPubkey: zapperPubkey)
+                                nrContact!.zapperPubkeys.insert(zapperPubkey)
                             }
-                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: contact, zapEtag: zapEtag)
+                            paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapEtag: zapEtag)
                             payAmountSelectorShown = true
                             isLoading = false
                         }
@@ -116,8 +118,8 @@ struct ProfileLightningButton_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             PreviewFeed {
-                if let contact = PreviewFetcher.fetchContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
-                    ProfileLightningButton(contact: contact)
+                if let nrContact = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
+                    ProfileLightningButton(nrContact: nrContact)
                 }
             }
         }

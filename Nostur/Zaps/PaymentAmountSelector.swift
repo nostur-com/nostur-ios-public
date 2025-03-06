@@ -29,8 +29,8 @@ struct PaymentAmountSelector: View {
         }
         
         guard let account = account() else { return }
-        guard let anyLud = paymentInfo.contact?.anyLud, anyLud == true else { return }
-        let pubkey = paymentInfo.contact!.pubkey
+        guard let anyLud = paymentInfo.nrContact?.anyLud, anyLud == true else { return }
+        let pubkey = paymentInfo.nrContact!.pubkey
         let eventId = (paymentInfo.nrPost?.id ?? paymentInfo.zapEtag) ?? nil
         let aTag = paymentInfo.zapAtag ?? nil
         let relays = ConnectionPool.shared.connections.values
@@ -176,7 +176,7 @@ struct PaymentAmountSelector: View {
             if let errorMessage {
                 Text(errorMessage).fontWeight(.bold).foregroundColor(.red)
             }
-            ZapCustomizerSheet(name: (paymentInfo.nrPost?.anyName ?? paymentInfo.contact?.anyName) ?? "", supportsZap: paymentInfo.supportsZap, sendAction: { customZap in
+            ZapCustomizerSheet(name: (paymentInfo.nrPost?.anyName ?? paymentInfo.nrContact?.anyName) ?? "", supportsZap: paymentInfo.supportsZap, sendAction: { customZap in
                 amountSelected(amount:customZap.amount, zapMessage:customZap.publicNote)
             })
         }

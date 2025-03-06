@@ -26,7 +26,7 @@ struct DMs: View {
     
     @State private var showingNewDM = false
     @State private var showDMToggles = false
-    @State private var preloadNewDMInfo: (String, Contact)? = nil // pubkey and Contact
+    @State private var preloadNewDMInfo: (String, NRContact)? = nil // pubkey and Contact
     
     var body: some View {
         #if DEBUG
@@ -185,7 +185,7 @@ struct DMs: View {
                 .presentationBackgroundCompat(themes.theme.listBackground)
             }
             .onReceive(receiveNotification(.triggerDM)) { notification in
-                let preloadNewDMInfo = notification.object as! (String, Contact)
+                let preloadNewDMInfo = notification.object as! (String, NRContact)
                 self.preloadNewDMInfo = preloadNewDMInfo
                 showingNewDM = true
             }

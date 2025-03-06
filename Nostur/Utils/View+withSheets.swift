@@ -34,7 +34,7 @@ private struct WithSheets: ViewModifier {
     @State private var fullImage17: FullScreenItem17? = nil
     @State private var reportPost: ReportPost? = nil
     @State private var reportContact: ReportContact? = nil
-    @State private var addRemoveContactFromList: Contact? = nil
+    @State private var addRemoveContactFromList: NRContact? = nil
     @State private var imposterDetails: ImposterDetails? = nil
     
     // Confirmation dialogs
@@ -345,12 +345,12 @@ private struct WithSheets: ViewModifier {
             }
         
             .onReceive(receiveNotification(.addRemoveToListsheet)) { notification in
-                let contact = notification.object as! Contact
+                let contact = notification.object as! NRContact
                 addRemoveContactFromList = contact
             }
-            .sheet(item: $addRemoveContactFromList) { contact in
+            .sheet(item: $addRemoveContactFromList) { nrContact in
                 NBNavigationStack {
-                    AddRemoveToListsheet(contact: contact)
+                    AddRemoveToListsheet(nrContact: nrContact)
                         .environmentObject(themes)
                         .environment(\.managedObjectContext, viewContext)
                         .presentationBackgroundCompat(themes.theme.listBackground)
@@ -631,7 +631,7 @@ struct ReportPost: Identifiable {
 
 struct ReportContact: Identifiable {
     let id = UUID()
-    let contact:Contact
+    let nrContact: NRContact
 }
 
 struct ImposterDetails: Identifiable {

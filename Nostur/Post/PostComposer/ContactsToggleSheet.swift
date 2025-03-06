@@ -12,11 +12,11 @@ struct ContactsToggleSheet: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     public var requiredP: String? = nil
-    public var available: Set<Contact>
-    @Binding public var selected: Set<Contact>
-    @Binding public var unselected: Set<Contact>
+    public var available: Set<NRContact>
+    @Binding public var selected: Set<NRContact>
+    @Binding public var unselected: Set<NRContact>
     
-    private var contactList: [Contact] {
+    private var nrContactList: [NRContact] {
         Array(available)
             .sorted(by: { $0.pubkey == requiredP && $1.pubkey != requiredP })
     }
@@ -26,7 +26,7 @@ struct ContactsToggleSheet: View {
             Divider()
             LazyVStack(alignment: .leading, spacing: 10) {
                 // if we don't have requiredP in contactList, render placeholder here:
-                if let requiredP = requiredP, contactList.first(where: { $0.pubkey == requiredP }) == nil {
+                if let requiredP = requiredP, nrContactList.first(where: { $0.pubkey == requiredP }) == nil {
                     HStack(spacing: 10) {
                         Button { } label: {
                             Image(systemName:  "checkmark.circle.fill")
@@ -45,20 +45,20 @@ struct ContactsToggleSheet: View {
                 }
                 
                 // contacts to toggle (but disable toggle for requiredP)
-                ForEach(contactList) { contact in
+                ForEach(nrContactList) { nrContact in
                     HStack(spacing: 10) {
                         Button {
-                            guard contact.pubkey != requiredP else { return }
-                            if selected.contains(contact) {
-                                selected.remove(contact)
-                                unselected.insert(contact)
+                            guard nrContact.pubkey != requiredP else { return }
+                            if selected.contains(nrContact) {
+                                selected.remove(nrContact)
+                                unselected.insert(nrContact)
                             }
                             else {
-                                selected.insert(contact)
-                                unselected.remove(contact)
+                                selected.insert(nrContact)
+                                unselected.remove(nrContact)
                             }
                         } label: {
-                            if selected.contains(contact) {
+                            if selected.contains(nrContact) {
                                 Image(systemName:  "checkmark.circle.fill")
                                     .padding(.vertical, 10)
                             }
@@ -68,11 +68,11 @@ struct ContactsToggleSheet: View {
                                     .padding(.vertical, 10)
                             }
                         }
-                        PFP(pubkey: contact.pubkey, contact: contact)
-                        Text(contact.anyName)
+                        PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
+                        Text(nrContact.anyName)
                         //                                .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        if contact.pubkey == requiredP {
+                        if nrContact.pubkey == requiredP {
                             Spacer()
                             Text("required")
                                 .font(.system(size: 12.0))
@@ -80,17 +80,17 @@ struct ContactsToggleSheet: View {
                         }
                     }
                     .contentShape(Rectangle())
-                    .disabled(contact.pubkey == requiredP)
-                    .opacity(contact.pubkey == requiredP ? 0.5 : 1.0)
+                    .disabled(nrContact.pubkey == requiredP)
+                    .opacity(nrContact.pubkey == requiredP ? 0.5 : 1.0)
                     .onTapGesture {
-                        guard contact.pubkey != requiredP else { return }
-                        if selected.contains(contact) {
-                            selected.remove(contact)
-                            unselected.insert(contact)
+                        guard nrContact.pubkey != requiredP else { return }
+                        if selected.contains(nrContact) {
+                            selected.remove(nrContact)
+                            unselected.insert(nrContact)
                         }
                         else {
-                            selected.insert(contact)
-                            unselected.remove(contact)
+                            selected.insert(nrContact)
+                            unselected.remove(nrContact)
                         }
                     }
                     Divider()

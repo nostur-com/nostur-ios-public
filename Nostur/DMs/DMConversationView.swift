@@ -206,7 +206,9 @@ struct DMConversationView: View {
                                             Image(systemName: "person.badge.key.fill")
                                         }
                                         ContactPrivateNoteToggle(contact: contact)
-                                        ProfileLightningButton(contact: contact)
+                                        if let nrContact = conv.nrContact {
+                                            ProfileLightningButton(nrContact: nrContact)
+                                        }
                                     }
                                     
                                     Text("\n\(String(contact.about ?? ""))")

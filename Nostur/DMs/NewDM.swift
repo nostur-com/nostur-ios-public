@@ -11,7 +11,7 @@ struct NewDM: View {
     
     @Binding var showingNewDM: Bool
     @State private  var toPubkey: String?
-    @State private  var toContact: Contact?
+    @State private  var toContact: NRContact?
     @State private  var message: String = ""
     @Binding var tab: String
     @State private var preloaded = false
@@ -25,8 +25,15 @@ struct NewDM: View {
                 ContactsSearch(followingPubkeys:follows(),
                                prompt: "Search contact", onSelectContact: { selectedContact in
                     
-                    toContact = selectedContact
-                    toPubkey = selectedContact.pubkey
+                    let selectedContactPubkey = selectedContact.pubkey
+                    bg().perform {
+                        guard let bgContact = Contact.fetchByPubkey(selectedContactPubkey, context: bg()) else { return }
+                        let nrSelectedContact = NRContact(pubkey: bgContact.pubkey, contact: bgContact)
+                        Task { @MainActor in
+                            toContact = nrSelectedContact
+                            toPubkey = nrSelectedContact.pubkey
+                        }
+                    }
                 })
                 .navigationTitle(String(localized:"Send DM to", comment:"Navigation title for screen to select a contact to send a Direct Message to"))
                 .navigationBarTitleDisplayMode(.inline)
@@ -40,7 +47,7 @@ struct NewDM: View {
             }
         }
         .onReceive(receiveNotification(.preloadNewDMInfo)) { notification in
-            let preloadNewDMInfo = notification.object as! (String, Contact)
+            let preloadNewDMInfo = notification.object as! (String, NRContact)
             toContact = preloadNewDMInfo.1
             toPubkey = preloadNewDMInfo.0
             preloaded = true

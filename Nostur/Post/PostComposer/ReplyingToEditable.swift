@@ -10,12 +10,12 @@ import SwiftUI
 struct ReplyingToEditable: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var themes: Themes
-    public var requiredP:String? = nil
-    public var available:Set<Contact>
-    @Binding var selected:Set<Contact>
-    @Binding var unselected:Set<Contact>
+    public var requiredP: String? = nil
+    public var available: Set<NRContact>
+    @Binding var selected: Set<NRContact>
+    @Binding var unselected: Set<NRContact>
     
-    private var selectedSorted:[Contact] {
+    private var selectedSorted: [NRContact] {
         Array(selected)
             .sorted(by: { $0.pubkey == requiredP && $1.pubkey != requiredP })
     }
@@ -52,17 +52,17 @@ struct ReplyingToEditable: View {
 }
 
 struct ReplyingToEditableTester: View {
-    @State private var requiredP:String? = nil
-    @State private var available:Set<Contact> = []
-    @State private var selected:Set<Contact> = []
-    @State private var unselected:Set<Contact> = []
+    @State private var requiredP: String? = nil
+    @State private var available: Set<NRContact> = []
+    @State private var selected: Set<NRContact> = []
+    @State private var unselected: Set<NRContact> = []
     
     var body: some View {
         ReplyingToEditable(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
             .onAppear {
-                let contacts = PreviewFetcher.allContacts()
-                available = Set(contacts.prefix(6))
-                selected = Set(contacts.prefix(6))
+                let nrContacts = PreviewFetcher.allContacts().map { NRContact(pubkey: $0.pubkey, contact: $0) }
+                available = Set(nrContacts.prefix(6))
+                selected = Set(nrContacts.prefix(6))
             }
     }
 }

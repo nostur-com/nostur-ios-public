@@ -8,7 +8,7 @@
 import Foundation
 
 @available(iOS 16.0, *)
-func replaceMentionsWithNpubs(_ text: String, selected: Set<Contact> = []) -> String {
+func replaceMentionsWithNpubs(_ text: String, selected: Set<NRContact> = []) -> String {
     let blocked:Set<String> = blocks()
     let mentions = text.matches(of: /(?:^|\s)((@(\x{2063}\x{2064}[^\x{2063}\x{2064}]+\x{2064}\x{2063}|\w+)))/)
     var newText = text
@@ -63,7 +63,7 @@ func replaceMentionsWithNpubs(_ text: String, selected: Set<Contact> = []) -> St
     return newText
 }
 
-func replaceMentionsWithNpubs15(_ text: String, selected: Set<Contact> = []) -> String {
+func replaceMentionsWithNpubs15(_ text: String, selected: Set<NRContact> = []) -> String {
     let blocked: Set<String> = blocks()
     let regexPattern = "(?:^|\\s)((@(\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|\\w+)))"
     var newText = text

@@ -10,14 +10,14 @@ import SwiftUI
 struct ReportContactSheet: View {
     @EnvironmentObject private var themes:Themes
     @Environment(\.dismiss) var dismiss
-    let contact:Contact
+    let reportContact: ReportContact
     @State var reason = ReportType.impersonation
     @State var comment:String = ""
     
     var body: some View {
         VStack {
             Box {
-                ContactSearchResultRow(contact: contact)
+                NRContactSearchResultRow(nrContact: reportContact.nrContact)
             }
             .padding(10)
             .background(themes.theme.listBackground)
@@ -54,7 +54,7 @@ struct ReportContactSheet: View {
                 Button(String(localized: "Report.verb", comment: "Button to publish report")) {
                     guard let account = account() else { return }
                     if account.isNC {
-                        var report = EventMessageBuilder.makeReportContact(pubkey: contact.pubkey, type: reason, note: comment)
+                        var report = EventMessageBuilder.makeReportContact(pubkey: reportContact.nrContact.pubkey, type: reason, note: comment)
                         
                         report.publicKey = account.publicKey
                         report = report.withId()
@@ -64,7 +64,7 @@ struct ReportContactSheet: View {
                         })
                     }
                     else {
-                        guard let signedReport = NRState.shared.loggedInAccount?.reportContact(pubkey: contact.pubkey, reportType: reason, note: comment) else {
+                        guard let signedReport = NRState.shared.loggedInAccount?.reportContact(pubkey: reportContact.nrContact.pubkey, reportType: reason, note: comment) else {
                             return
                         }
                         Unpublisher.shared.publishNow(signedReport)

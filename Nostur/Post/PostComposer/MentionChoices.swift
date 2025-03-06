@@ -24,13 +24,13 @@ struct MentionChoices: View {
                 .padding(10)
                 ScrollView {
                     LazyVStack {
-                        ForEach(vm.filteredContactSearchResults) { contact in
-                            ContactSearchResultRow(contact: contact, onSelect: {
-                                vm.selectContactSearchResult(contact)
+                        ForEach(vm.filteredContactSearchResults) { nrContact in
+                            NRContactSearchResultRow(nrContact: nrContact, onSelect: {
+                                vm.selectContactSearchResult(nrContact)
                             })
                             HStack {
                                 Spacer()
-                                LazyFollowedBy(pubkey: contact.pubkey, alignment: .trailing, minimal: true)
+                                LazyFollowedBy(pubkey: nrContact.pubkey, alignment: .trailing, minimal: true)
                             }
                             Divider()
                         }

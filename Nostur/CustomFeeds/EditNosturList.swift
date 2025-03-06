@@ -19,16 +19,17 @@ struct EditNosturList: View {
     @State private var addContactsSheetShown = false
     @State private var editList: CloudFeed? = nil
     @State private var selectedContacts: Set<Contact> = []
+    @State private var listNRContacts: [NRContact] = []
     
     var body: some View {
-        List(list.contacts_) { contact in
-            ContactSearchResultRow(contact: contact)
+        List(listNRContacts) { nrContact in
+            NRContactSearchResultRow(nrContact: nrContact)
                 .padding()
-                .onTapGesture { navigateTo(ContactPath(key: contact.pubkey)) }
+                .onTapGesture { navigateTo(NRContactPath(nrContact: nrContact)) }
                 .listRowInsets(EdgeInsets())
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
-                        list.contactPubkeys.remove(contact.pubkey)
+                        list.contactPubkeys.remove(nrContact.pubkey)
                         DataProvider.shared().save()
                         sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                     } label: {
@@ -92,6 +93,16 @@ struct EditNosturList: View {
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
+        }
+        .onAppear {
+            let listContactPubkeys = list.contactPubkeys
+            bg().perform {
+                let listNRContacts: [NRContact] = Contact.fetchByPubkeys(listContactPubkeys)
+                    .map { NRContact(pubkey: $0.pubkey, contact: $0) }
+                Task { @MainActor in
+                    self.listNRContacts = listNRContacts
+                }
+            }
         }
     }
 }

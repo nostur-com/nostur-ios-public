@@ -345,7 +345,7 @@ struct SelectedParticipantView: View {
                                 nrContact.zapperPubkeys.insert(zapperPubkey)
                             }
                             // Old zap sheet
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)
                             
                             //                            // Trigger custom zap
@@ -378,7 +378,7 @@ struct SelectedParticipantView: View {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrContact.zapperPubkeys.insert(zapperPubkey)
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, contact: nrContact.mainContact, zapAtag: aTag, withPending: true)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }

@@ -48,18 +48,18 @@ class PaymentInfo: Identifiable {
     var callback = ""
     var supportsZap = false
     var nrPost: NRPost?
-    var contact: Contact?
+    var nrContact: NRContact?
     var zapEtag: String?
     var zapAtag: String?
     var withPending = false
     
-    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost: NRPost? = nil, contact: Contact? = nil, zapEtag: String? = nil, zapAtag: String? = nil, withPending: Bool = false) {
+    init(min: UInt64, max: UInt64, callback: String = "", supportsZap: Bool = false, nrPost: NRPost? = nil, nrContact: NRContact? = nil, zapEtag: String? = nil, zapAtag: String? = nil, withPending: Bool = false) {
         self.min = min
         self.max = max
         self.callback = callback
         self.supportsZap = supportsZap
         self.nrPost = nrPost
-        self.contact = contact
+        self.nrContact = nrContact
         self.zapEtag = zapEtag
         self.zapAtag = zapAtag
         self.withPending = withPending
@@ -90,7 +90,7 @@ extension LightningButton {
                                 nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
                             }
                             // Old zap sheet
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
                             sendNotification(.showZapSheet, paymentInfo)
                             
 //                            // Trigger custom zap
@@ -123,7 +123,7 @@ extension LightningButton {
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
                             }
-                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost:nrPost, contact: nrPost.contact!.mainContact)
+                            let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
                             sendNotification(.showZapSheet, paymentInfo)
                             isLoading = false
                         }

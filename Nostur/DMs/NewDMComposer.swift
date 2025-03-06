@@ -12,7 +12,7 @@ struct NewDMComposer: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @Binding var toPubkey: String?
-    @Binding var toContact: Contact?
+    @Binding var toContact: NRContact?
     @Binding var message: String
     @Binding var showingNewDM: Bool
     @Binding var tab: String
@@ -22,7 +22,7 @@ struct NewDMComposer: View {
         VStack {
             // TO (pubkey or contact)
             if let toContact {
-                ContactSearchResultRow(contact: toContact)
+                NRContactSearchResultRow(nrContact: toContact)
             }
             else if let toPubkey {
                 Text("Sending to: \(try! NIP19(prefix: "npub", hexString: toPubkey).displayString)")
@@ -87,8 +87,8 @@ import NavigationBackport
 
 struct NewDMComposer_Previews: PreviewProvider {
     
-    @State static var toPubkey:String? = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-    @State static var toContact:Contact? = nil
+    @State static var toPubkey: String? = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+    @State static var toContact: NRContact? = nil
     @State static var message = ""
     @State static var showingNewDM = true
     @State static var tab = "Accepted"

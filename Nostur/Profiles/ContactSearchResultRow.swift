@@ -90,7 +90,104 @@ struct ContactSearchResultRow: View {
             }
             
             if let fixedPfp = contact.fixedPfp,
-                fixedPfp != contact.picture,
+               fixedPfp != contact.picture,
+               let fixedPfpUrl = URL(string: fixedPfp),
+               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+            {
+                withAnimation {
+                    self.fixedPfp = fixedPfpUrl
+                }
+            }
+        }
+    }
+}
+
+struct NRContactSearchResultRow: View {
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject var nrContact: NRContact
+    var onSelect: (() -> Void)?
+    
+    @State var similarPFP = false
+    @State var similarToPubkey: String? = nil
+    @State var isFollowing = false
+    @State var fixedPfp: URL?
+    
+    var couldBeImposter: Bool {
+        guard let la = NRState.shared.loggedInAccount else { return false }
+        guard la.account.publicKey != nrContact.pubkey else { return false }
+        guard !la.isFollowing(pubkey: nrContact.pubkey) else { return false }
+        guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }
+        return similarPFP
+    }
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
+                .overlay(alignment: .bottomTrailing) {
+                    if let fixedPfp {
+                        FixedPFP(picture: fixedPfp)
+                    }
+                }
+            VStack(alignment: .leading) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(nrContact.anyName)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                        
+                        if couldBeImposter {
+                            PossibleImposterLabel(possibleImposterPubkey: nrContact.pubkey, followingPubkey: similarToPubkey ?? nrContact.similarToPubkey)
+                        }
+                        else if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
+                                .layoutPriority(3)
+                        }
+                        
+                        if let fixedName = nrContact.fixedName, fixedName != nrContact.anyName {
+                            HStack {
+                                Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
+                                    .lineLimit(1)
+                                Image(systemName: "multiply.circle.fill")
+                                    .onTapGesture {
+                                        nrContact.fixedName = nrContact.anyName
+                                        bg().perform {
+                                            nrContact.contact?.fixedName = nrContact.anyName                                        }
+                                    }
+                            }
+                        }
+                    }
+                    .multilineTextAlignment(.leading)
+                    Spacer()
+                }
+                Text(nrContact.about ?? "").foregroundColor(.primary)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if let onSelect {
+                onSelect()
+            }
+        }
+        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
+            isFollowing = Nostur.isFollowing(nrContact.pubkey)
+        }
+        .task { [weak nrContact] in
+            guard let nrContact else { return }
+            if (Nostur.isFollowing(nrContact.pubkey)) {
+                isFollowing = true
+            }
+            else {
+                ImposterChecker.shared.runImposterCheck(nrContact: nrContact) { imposterYes in
+                    self.similarPFP = true
+                    self.similarToPubkey = imposterYes.similarToPubkey
+                }
+            }
+            
+            if let fixedPfp = nrContact.fixedPfp,
+               fixedPfp != nrContact.pictureUrl?.absoluteString,
                let fixedPfpUrl = URL(string: fixedPfp),
                hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
             {
@@ -112,12 +209,12 @@ struct ContactSearchResultRow_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             VStack {
-                if let contact = PreviewFetcher.fetchContact(pubkey) {
-                    ContactSearchResultRow(contact: contact, onSelect: {})
+                if let nrContact = PreviewFetcher.fetchNRContact(pubkey) {
+                    NRContactSearchResultRow(nrContact: nrContact, onSelect: {})
                     
-                    ContactSearchResultRow(contact: contact, onSelect: {})
+                    NRContactSearchResultRow(nrContact: nrContact, onSelect: {})
                     
-                    ContactSearchResultRow(contact: contact, onSelect: {})
+                    NRContactSearchResultRow(nrContact: nrContact, onSelect: {})
                 }
              
                 Spacer()
