@@ -64,6 +64,11 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
         return anyName
     }
     
+    if let anyName = NRContactCache.shared.retrieveObject(at: pubkey)?.anyName {
+        PubkeyUsernameCache.shared.setObject(for: pubkey, value: anyName)
+        return anyName
+    }
+    
     if let event {
         if let contact = event.contact, contact.pubkey == pubkey {
             PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
