@@ -10,34 +10,20 @@ import SwiftUI
 struct NRPostHeaderContainer: View {
     private let nrPost: NRPost
     @ObservedObject var settings: SettingsStore = .shared
+    @ObservedObject var pfpAttributes: PFPAttributes
     private var singleLine: Bool = true
-    @State private var name: String
     @State private var couldBeImposter: Int16
 
     init(nrPost: NRPost, singleLine: Bool = true) {
         self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
         self.singleLine = singleLine
-        self.name = nrPost.pfpAttributes.contact?.anyName ?? String(nrPost.pubkey.suffix(11))
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(pubkey: nrPost.pubkey, name: name, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: nrPost.contact?.similarToPubkey , via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted)
-                .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                    guard profile.pubkey == nrPost.pubkey, name != profile.name else { return }
-                    withAnimation(.easeIn) {
-                        name = profile.name
-                    }
-                    
-                    // If post is on feed without kind-0 info, and then updated here,
-                    // opening detail will still have old nrPost without updated name
-                    // so update nrPost here
-                    // Before this wasn't necessary because we were listening from nrPost
-                    // now we are only listening on view, so update here
-                    // Maybe we should check for update on loading detail instead....
-                    nrPost.contact?.anyName = profile.name
-                }
+            PostHeaderView(pubkey: nrPost.pubkey, name: pfpAttributes.anyName, onTap: nameTapped, couldBeImposter: couldBeImposter, similarToPubkey: nrPost.contact?.similarToPubkey , via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted)
                 .onAppear {
                     guard let nrContact = nrPost.contact else {
                         bg().perform {

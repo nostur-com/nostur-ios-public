@@ -365,7 +365,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
             self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
-            anyName = cachedNRContact.contact?.anyName
+            anyName = cachedNRContact.anyName
         }
         else if let contact = event.contact_ {
             self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(contact.pubkey, contact: contact), pubkey: pubkey)

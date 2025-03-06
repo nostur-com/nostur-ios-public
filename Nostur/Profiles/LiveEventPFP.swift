@@ -10,7 +10,7 @@ import SwiftUI
 // Copy paste and altered from ZappablePFP
 struct LiveEventPFP: View {
     public let pubkey: String
-    public var nrContact: NRContact?
+    @ObservedObject public var pfpAttributes: PFPAttributes
     public var size: CGFloat = 50.0
     public var forceFlat = false
     
@@ -18,7 +18,7 @@ struct LiveEventPFP: View {
     @State private var opacity: Double = 0.0
     
     var body: some View {
-        PFP(pubkey: pubkey, nrContact: nrContact, size: size, forceFlat: forceFlat)
+        PFP(pubkey: pubkey, pictureUrl: pfpAttributes.pfpURL, size: size, forceFlat: forceFlat)
             .overlay(alignment: .center) {
                 Circle()
                     .stroke(lineWidth: 4.5)
@@ -73,8 +73,9 @@ struct LiveEventPFP: View {
     PreviewContainer({ pe in
         pe.loadContacts()
     }) {
-        if let contact = PreviewFetcher.fetchNRContact() {
-            LiveEventPFP(pubkey: contact.pubkey, nrContact: contact, size: 50, forceFlat: false)
+        if let nrContact = PreviewFetcher.fetchNRContact() {
+            let pfpAttributes = PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey)
+            LiveEventPFP(pubkey: nrContact.pubkey, pfpAttributes: pfpAttributes, size: 50, forceFlat: false)
         }
     }
 }

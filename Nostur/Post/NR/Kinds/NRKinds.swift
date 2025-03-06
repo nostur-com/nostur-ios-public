@@ -103,9 +103,17 @@ struct AnyKind: View {
 struct KnownKindView: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
-    @ObservedObject var nrPost: NRPost
-    public var hideFooter: Bool = false
-    public let theme: Theme
+    private let nrPost: NRPost
+    @ObservedObject var pfpAttributes: PFPAttributes
+    private let hideFooter: Bool
+    private let theme: Theme
+    
+    init(nrPost: NRPost, hideFooter: Bool = false, theme: Theme) {
+        self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
+        self.hideFooter = hideFooter
+        self.theme = theme
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -121,7 +129,7 @@ struct KnownKindView: View {
             
             HStack {
                 Spacer()
-                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: 25.0, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
+                ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
                     .onTapGesture {
                         if let nrContact = nrPost.contact {
                             navigateTo(nrContact)
@@ -131,27 +139,29 @@ struct KnownKindView: View {
                         }
                     }
                 
-                if let contact = nrPost.contact {
-                    Text(contact.anyName)
-                        .foregroundColor(.primary)
-                        .fontWeight(.bold)
-                        .lineLimit(1)
-                        .layoutPriority(2)
-                        .onTapGesture {
-                            navigateTo(contact)
-                        }                }
-                else {
-                    Text(nrPost.anyName)
-                        .onAppear {
-                            bg().perform {
-                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KnownKindView.001")
-                                QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                            }
+                Text(pfpAttributes.anyName)
+                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .lineLimit(1)
+                    .layoutPriority(2)
+                    .onTapGesture {
+                        if let nrContact = nrPost.contact {
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
                         }
-                        .onDisappear {
-                            QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                        else {
+                            navigateTo(ContactPath(key: nrPost.pubkey))
                         }
-                }
+                    }
+                    .onAppear {
+                        guard nrPost.contact == nil else { return }
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KnownKindView.001")
+                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                        }
+                    }
+                    .onDisappear {
+                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                    }
                 
                 Text(nrPost.createdAt.formatted(date: .omitted, time: .shortened))
                 Text(nrPost.createdAt.formatted(.dateTime.day().month(.defaultDigits)))
@@ -161,10 +171,6 @@ struct KnownKindView: View {
                 CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                     .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
                     .drawingGroup(opaque: true)
-//                        .withoutAnimation()
-//                        .transaction { t in
-//                            t.animation = nil
-//                        }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -11,8 +11,8 @@ import Combine
 // PFP with animation when zapped
 struct ZappablePFP: View {
     let pubkey: String
-    var contact: NRContact?
-    var size: CGFloat = 50.0
+    @ObservedObject public var pfpAttributes: PFPAttributes
+    var size: CGFloat
     var zapEtag: String?
     var zapAtag: String?
     var forceFlat: Bool?
@@ -20,8 +20,26 @@ struct ZappablePFP: View {
     @State private var animate = false
     @State private var opacity: Double = 0.0
     
+    init(pubkey: String, pfpAttributes: PFPAttributes, size: CGFloat = 50.0, zapEtag: String? = nil, zapAtag: String? = nil, forceFlat: Bool? = nil) {
+        self.pubkey = pubkey
+        self.pfpAttributes = pfpAttributes
+        self.size = size
+        self.zapEtag = zapEtag
+        self.zapAtag = zapAtag
+        self.forceFlat = forceFlat
+    }
+    
+    init(pubkey: String, contact: NRContact, size: CGFloat = 50.0, zapEtag: String? = nil, zapAtag: String? = nil, forceFlat: Bool? = nil) {
+        self.pubkey = pubkey
+        self.pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
+        self.size = size
+        self.zapEtag = zapEtag
+        self.zapAtag = zapAtag
+        self.forceFlat = forceFlat
+    }
+    
     var body: some View {
-        PFP(pubkey: pubkey, nrContact: contact, size: size, forceFlat: (forceFlat ?? false))
+        PFP(pubkey: pubkey, pictureUrl: pfpAttributes.pfpURL, size: size, forceFlat: (forceFlat ?? false))
             .overlay(alignment: .center) {
                 if isZapped {
                     Circle()
@@ -58,8 +76,14 @@ struct ZappablePFP: View {
                     }
                 }
             }
+            .onChange(of: pfpAttributes.contact) { contact in
+                guard let contact = pfpAttributes.contact else { return }
+                guard let zapState = contact.zapState else { return }
+
+                isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState)
+            }
             .onAppear {
-                guard let contact = contact else { return }
+                guard let contact = pfpAttributes.contact else { return }
                 guard let zapState = contact.zapState else { return }
 
                 isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState)
@@ -95,28 +119,32 @@ struct ZappablePreviews: View {
     var body: some View {
         VStack(spacing: 15.0) {
             if let contact = contact1 {
-                ZappablePFP(pubkey: contact.pubkey, contact: contact)
+                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
+                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }
             }
             
             if let contact = contact2 {
-                ZappablePFP(pubkey: contact.pubkey, contact: contact)
+                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
+                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }
             }
             
             if let contact = contact3 {
-                ZappablePFP(pubkey: contact.pubkey, contact: contact)
+                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
+                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }
             }
             
             if let contact = contact4 {
-                ZappablePFP(pubkey: contact.pubkey, contact: contact)
+                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
+                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }

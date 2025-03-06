@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Repost: View {
-    private let nrPost: NRPost
+    @ObservedObject private var nrPost: NRPost
     @ObservedObject private var noteRowAttributes: NoteRowAttributes
     private var hideFooter = true // For rendering in NewReply
     private var missingReplyTo = false // For rendering in thread, hide "Replying to.."
@@ -44,13 +44,20 @@ struct Repost: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-//#if DEBUG
-//            CopyableTextView(text: "copy kind 6", copyText: kind6Source)
-//                .onAppear {
-//                    kind6Source = nrPost.mainEvent?.toNEvent().eventJson()
-//                }
-//#endif
             RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
+                .onAppear {
+                    if !nrPost.missingPs.isEmpty {
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "Repost.001")
+                            QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+                        }
+                    }
+                }
+                .onDisappear {
+                    if !nrPost.missingPs.isEmpty {
+                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+                    }
+                }
             if let firstQuote = noteRowAttributes.firstQuote {
                 // CASE - WE HAVE REPOSTED POST ALREADY
                 if firstQuote.blocked {
@@ -166,8 +173,8 @@ struct Repost: View {
 }
 
 struct RepostHeader: View {
-    let repostedHeader:String
-    let pubkey:String
+    let repostedHeader: String
+    let pubkey: String
     
     var body: some View {
         HStack(spacing: 4) {
@@ -186,6 +193,5 @@ struct RepostHeader: View {
             navigateTo(ContactPath(key: pubkey))
         }
         .padding(.leading, 30)
-        .transaction { t in t.animation = nil }
     }
 }

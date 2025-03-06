@@ -245,7 +245,7 @@ struct MediaPostPreview: View {
     
     var body: some View {
         HStack(alignment: .center) {
-            ZappablePFP(pubkey: nrPost.pubkey, contact: pfpAttributes.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
 //                .transaction { t in t.animation = nil }
                 .onTapGesture {
@@ -255,38 +255,37 @@ struct MediaPostPreview: View {
                 }
             
             VStack(alignment: .leading) {
-                if let contact = nrPost.contact {
-                    Text(contact.anyName)
-                        .foregroundColor(.primary)
-                        .fontWeight(.bold)
-                        .lineLimit(1)
-                        .layoutPriority(2)
-                        .onTapGesture {
-                            if let nrContact = pfpAttributes.contact {
-                                navigateTo(nrContact)
-                            }
-                            else {
-                                navigateTo(ContactPath(key: nrPost.pubkey))
-                            }
+                
+                Text(pfpAttributes.anyName)
+                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .lineLimit(1)
+                    .layoutPriority(2)
+                    .onTapGesture {
+                        if let nrContact = nrPost.contact {
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
                         }
-                    
-                    if contact.nip05verified, let nip05 = contact.nip05 {
-                        NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                            .layoutPriority(3)
+                        else {
+                            navigateTo(ContactPath(key: nrPost.pubkey))
+                        }
                     }
-                }
-                else {
-                    Text(nrPost.anyName)
-                        .onAppear {
-                            bg().perform {
-                                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "FullImageVieweer.001")
-                                QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                            }
+                    .onAppear {
+                        guard nrPost.contact == nil else { return }
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "FullImageViewer.001")
+                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                         }
-                        .onDisappear {
-                            QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-                        }
+                    }
+                    .onDisappear {
+                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                    }                
+                
+                if let nrContact = pfpAttributes.contact, nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
+                            .layoutPriority(3)
                 }
+                
+                
                 Text("Posted on \(nrPost.createdAt.formatted(date: .abbreviated, time: .omitted))")
                     .onTapGesture {
                         dismiss()

@@ -397,6 +397,7 @@ struct PostAndParent: View {
 struct ParentPost: View {
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
+    @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
@@ -408,6 +409,7 @@ struct ParentPost: View {
     init(nrPost: NRPost, connect: ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
+        self.pfpAttributes = nrPost.pfpAttributes
         self.connect = connect
     }
     
@@ -430,7 +432,7 @@ struct ParentPost: View {
                 ZStack(alignment: .topLeading) {
                     VStack(spacing: 0) {
                         HStack(alignment:.top, spacing: 10) {
-                            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+                            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                                 .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                                 .onTapGesture {
                                     if !IS_APPLE_TYRANNY {
@@ -563,17 +565,22 @@ struct ParentPost: View {
 
 struct DetailPost: View {
     @ObservedObject public var nrPost: NRPost
-    
+    @ObservedObject public var pfpAttributes: PFPAttributes
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     @State private var showMiniProfile = false
     @State private var didStart = false
     
+    init(nrPost: NRPost) {
+        self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment:.top, spacing: 10) {
-                ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
+                ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
                     .frame(width: DIMENSIONS.POST_ROW_PFP_WIDTH, height: 50)
                     .onTapGesture {
                         if !IS_APPLE_TYRANNY {

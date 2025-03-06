@@ -9,15 +9,17 @@ import SwiftUI
 
 struct ConversationRowView: View {
     @ObservedObject private var conv: Conversation
+    @ObservedObject private var pfpAttributes: PFPAttributes
     private var unread: Int { conv.unread }
     
     init(_ conv: Conversation) {
         self.conv = conv
+        self.pfpAttributes = PFPAttributes(contact: conv.nrContact, pubkey: conv.contactPubkey)
     }
 
     var body: some View {
         HStack(alignment: .top) {
-            PFP(pubkey: conv.contactPubkey, nrContact: conv.nrContact)
+            PFP(pubkey: conv.contactPubkey, pictureUrl: pfpAttributes.pfpURL)
                 .onAppear {
                     if let nrContact = conv.nrContact, nrContact.metadata_created_at == 0, let contact = nrContact.contact {
                         EventRelationsQueue.shared.addAwaitingContact(contact)

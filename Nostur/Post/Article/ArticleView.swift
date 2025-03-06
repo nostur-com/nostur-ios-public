@@ -71,7 +71,7 @@ struct ArticleView: View {
                     }
                     
                     HStack {
-                        ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: dim.isScreenshot)
+                        ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: dim.isScreenshot)
                             .onTapGesture {
                                 if !IS_APPLE_TYRANNY {
                                     if let nrContact = article.pfpAttributes.contact {
@@ -277,7 +277,7 @@ struct ArticleView: View {
                     ViewThatFits(in: .horizontal) {
                         HStack {
                             Spacer()
-                            ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id, forceFlat: dim.isScreenshot)
+                            ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: 25.0, zapEtag: article.id, forceFlat: dim.isScreenshot)
                                 .onTapGesture {
                                     if !IS_APPLE_TYRANNY {
                                         if let nrContact = article.contact {
