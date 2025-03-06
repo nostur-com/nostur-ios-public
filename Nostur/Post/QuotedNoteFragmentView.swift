@@ -9,21 +9,21 @@ import SwiftUI
 
 struct QuotedNoteFragmentView: View {
     @ObservedObject private var nrPost: NRPost
+    @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var fullWidth: Bool
     private var theme: Theme
-    @State private var name: String
     @EnvironmentObject private var parentDIM: DIMENSIONS
     @State private var couldBeImposter: Int16
     
     init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload
         self.fullWidth = fullWidth
         self.theme = theme
-        self.name = nrPost.anyName
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
     
@@ -47,23 +47,17 @@ struct QuotedNoteFragmentView: View {
                     VStack(alignment: .leading) { // Name + menu "replying to"
                         HStack(spacing: 5) {
                             // profile image
-                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20, forceFlat: nrPost.isScreenshot)
+                            PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
                                 .onTapGesture(perform: navigateToContact)
                             
-                            Text(name) // Name
-                                .animation(.easeIn, value: name)
+                            Text(pfpAttributes.anyName) // Name
+                                .animation(.easeIn, value: pfpAttributes.anyName)
                                 .font(.system(size: 14))
                                 .foregroundColor(.primary)
                                 .fontWeightBold()
                                 .lineLimit(1)
                                 .onTapGesture(perform: navigateToContact)
-                                .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                                    guard profile.pubkey == nrPost.pubkey, name != profile.name else { return }
-                                    withAnimation {
-                                        name = profile.name
-                                    }
-                                }
-                            
+                                
                             if couldBeImposter == 1 {
                                 PossibleImposterLabel(possibleImposterPubkey: nrPost.pubkey, followingPubkey: nrPost.contact?.similarToPubkey)
                             }
