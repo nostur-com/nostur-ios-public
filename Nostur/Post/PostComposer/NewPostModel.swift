@@ -84,6 +84,7 @@ public final class NewPostModel: ObservableObject {
             .removeDuplicates()
             .debounce(for: .seconds(dueTime), scheduler: DispatchQueue.main)
             .sink(receiveValue: { [weak self] value in
+                Importer.shared.delayProcessing()
                 self?.textChanged(value)
             })
             .store(in: &subscriptions)
@@ -438,6 +439,7 @@ public final class NewPostModel: ObservableObject {
     func showPreview(quotePost: QuotePost? = nil, replyTo: ReplyTo? = nil) {
         // TODO: Make _sendNow() more reusable and reuse those parts here so we can't forget to make chances twice and forget half.
         guard let account = activeAccount else { return }
+        Importer.shared.delayProcessing()
         var nEvent = nEvent ?? NEvent(content: "")
         nEvent.publicKey = account.publicKey
         var pTags: [String] = []

@@ -325,6 +325,7 @@ struct ComposePost: View {
             }
         }
         .onAppear {
+            Importer.shared.delayProcessing()
             vm.activeAccount = account()
             
             if kind == .picture {

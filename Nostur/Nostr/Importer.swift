@@ -30,6 +30,8 @@ class Importer {
     var subscriptions = Set<AnyCancellable>()
     var addedRelayMessage = PassthroughSubject<Void, Never>()
     var addedPrioRelayMessage = PassthroughSubject<Void, Never>()
+    var shouldBeDelaying = false
+    var delayProcessingSub = PassthroughSubject<Void, Never>()
     var callbackSubscriptionIds = Set<String>()
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
     
@@ -53,7 +55,24 @@ class Importer {
         bgContext = bg()
         triggerImportWhenRelayMessagesAreAdded()
         sendReceivedNotifications()
+        setupDelayProcessing()
     }
+    
+    public func delayProcessing() {
+        shouldBeDelaying = true
+        delayProcessingSub.send()
+    }
+    
+    private func setupDelayProcessing() {
+        delayProcessingSub
+            .debounce(for: .seconds(5.0), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                self?.shouldBeDelaying = false
+                self?.addedRelayMessage.send()
+            }
+            .store(in: &subscriptions)
+    }
+    
     
     func sendReceivedNotifications() {
         sendReceivedNotification
@@ -123,6 +142,10 @@ class Importer {
     
     // 876.00 ms    5.3%    0 s                   closure #1 in Importer.importEvents()
     public func importEvents() {
+        guard !shouldBeDelaying else {
+            L.og.debug("🏎️🏎️ importEvents -- delaying")
+            return
+        }
         bgContext.perform { [unowned self] in
             if (self.isImporting) {
                 let itemsCount = MessageParser.shared.messageBucket.count
