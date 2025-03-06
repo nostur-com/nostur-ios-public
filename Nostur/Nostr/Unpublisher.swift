@@ -181,11 +181,7 @@ class Unpublisher {
                 let savedEvent = Event.saveEvent(event: nEvent, context: bgContext)
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if nEvent.kind == .reaction {
-                    do {
-                        try Event.updateReactionTo(savedEvent, context: bgContext)
-                    } catch {
-                        L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
-                    }
+                    Event.updateReactionTo(savedEvent, context: bgContext)
                     
                     if let accountCache = accountCache(), accountCache.pubkey == nEvent.publicKey {
                         if nEvent.content == "+" {

@@ -394,11 +394,7 @@ public final class NewPostModel: ObservableObject {
                 savedEvent.cancellationId = cancellationId
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                 if nEvent.kind == .reaction {
-                    do {
-                        try Event.updateReactionTo(savedEvent, context: bg()) // TODO: Revert this on 'undo'
-                    } catch {
-                        L.og.error("🦋🦋🔴🔴🔴 problem updating Like relation .id \(nEvent.id)")
-                    }
+                    Event.updateReactionTo(savedEvent, context: bg()) // TODO: Revert this on 'undo'
                 }
                 
                 DataProvider.shared().bgSave()

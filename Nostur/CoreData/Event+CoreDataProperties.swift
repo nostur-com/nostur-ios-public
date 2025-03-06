@@ -457,32 +457,20 @@ extension Event {
     // NIP-25: The generic reaction, represented by the content set to a + string, SHOULD be interpreted as a "like" or "upvote".
     // NIP-25: The content MAY be an emoji, in this case it MAY be interpreted as a "like" or "dislike", or the client MAY display this emoji reaction on the post.
     // TODO: 167.00 ms    1.5%    0 s          specialized static Event.updateLikeCountCache(_:content:context:)
-    static func updateLikeCountCache(_ reaction: Event, content: String, context: NSManagedObjectContext) throws -> Bool {
+    static func updateLikeCountCache(_ reaction: Event, content: String, context: NSManagedObjectContext) {
         switch content {
         case "-": // (down vote)
             break
         default:
             // # NIP-25: The last e tag MUST be the id of the note that is being reacted to.
-            if let lastEtag = reaction.lastE() {
-                if let reactingToEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: lastEtag) {
-                    guard !reactingToEvent.isDeleted else { break }
-                    reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                    reaction.reactionTo = reactingToEvent
-                    reaction.reactionToId = reactingToEvent.id
-                }
-                else {
-                    if let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) {
-                        guard !reactingToEvent.isDeleted else { break }
-                        reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                        reaction.reactionTo = reactingToEvent
-                        reaction.reactionToId = reactingToEvent.id
-                    }
-                }
-            }
+            guard let lastEtag = reaction.lastE() else { break }
+            guard let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) else { break }
+            
+            reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+            reaction.reactionTo = reactingToEvent
+            reaction.reactionToId = reactingToEvent.id
         }
-        return true
     }
     
     static func updateRepostsCountCache(_ repost: Event, context: NSManagedObjectContext)  {
@@ -491,28 +479,20 @@ extension Event {
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
         }
         else if let firstQuoteId = repost.firstQuoteId {
-            if let firstQuote = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstQuoteId) ?? (Event.fetchEvent(id: firstQuoteId, context: context))) {
-                
-                firstQuote.repostsCount = (firstQuote.repostsCount + 1)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
-            }
+            guard let firstQuote = Event.fetchEvent(id: firstQuoteId, context: context) else { return }
+            firstQuote.repostsCount = (firstQuote.repostsCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
         }
     }
     
     // To fix event.reactionTo but not count+1, because +1 is instant at tap, but this relation happens after 8 sec (unpublisher)
-    static func updateReactionTo(_ event: Event, context: NSManagedObjectContext) throws {
-        if let lastEtag = event.lastE() {
-            let request = NSFetchRequest<Event>(entityName: "Event")
-            request.entity = Event.entity()
-            request.predicate = NSPredicate(format: "id == %@", lastEtag)
-            request.fetchLimit = 1
-            
-            if let reactingToEvent = try context.fetch(request).first {
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                event.reactionTo = reactingToEvent
-                event.reactionToId = reactingToEvent.id
-            }
-        }
+    static func updateReactionTo(_ event: Event, context: NSManagedObjectContext) {
+        guard let lastEtag = event.lastE() else { return }
+        guard let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) else { return }
+        
+        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+        event.reactionTo = reactingToEvent
+        event.reactionToId = reactingToEvent.id
     }
     
     static func updateZapTallyCache(_ zap: Event, context: NSManagedObjectContext) {
@@ -522,11 +502,10 @@ extension Event {
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
         }
         else if let zappedEventId = zap.zappedEventId {
-            if let zappedEvent = (EventRelationsQueue.shared.getAwaitingBgEvent(byId: zappedEventId) ?? (Event.fetchEvent(id: zappedEventId, context: context))) {
-                zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
-                zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
-            }
+            guard let zappedEvent = Event.fetchEvent(id: zappedEventId, context: context) else { return }
+            zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
+            zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
         }
         
         // Repair things afterwards
@@ -564,27 +543,15 @@ extension Event {
     
     // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
     // TODO: REPLACE WITH q tag handling (NIP-18
-    static func updateMentionsCountCache(_ tags:[NostrTag], context: NSManagedObjectContext) throws -> Bool {
+    static func updateMentionsCountCache(_ tags:[NostrTag], context: NSManagedObjectContext) {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-        if let mentionEtags = TagsHelpers(tags).newerMentionEtags() {
-            for etag in mentionEtags {
-                if let mentioningEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: etag.id) {
-                    guard !mentioningEvent.isDeleted else { continue }
-                    mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
-                }
-                else {
-                    let request = NSFetchRequest<Event>(entityName: "Event")
-                    request.entity = Event.entity()
-                    request.predicate = NSPredicate(format: "id == %@", etag.id)
-                    request.fetchLimit = 1
-                    
-                    if let mentioningEvent = try context.fetch(request).first {
-                        mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
-                    }
-                }
+        guard let mentionEtags = TagsHelpers(tags).newerMentionEtags() else { return }
+        
+        for etag in mentionEtags {
+            if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
+                mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
             }
         }
-        return true
     }
     
     var fastPs: [(String, String, String?, String?, String?)] {
@@ -688,13 +655,18 @@ extension Event {
         }
         
         if !Thread.isMainThread {
-            if let eventfromCache = EventCache.shared.retrieveObject(at: id) {
+            if let bgEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id), !bgEvent.isDeleted {
+                return bgEvent
+            }
+        }
+        
+        if !Thread.isMainThread {
+            if let eventfromCache = EventCache.shared.retrieveObject(at: id), !eventfromCache.isDeleted {
                 return eventfromCache
             }
         }
                 
         let request = NSFetchRequest<Event>(entityName: "Event")
-        //        request.entity = Event.entity()
         request.predicate = NSPredicate(format: "id == %@", id)
         request.fetchLimit = 1
         request.fetchBatchSize = 1
@@ -764,28 +736,34 @@ extension Event {
     }
     
     static func eventExists(id: String, context: NSManagedObjectContext) -> Bool {
-        if Thread.isMainThread {
-            L.og.info("☠️☠️☠️☠️ eventExists")
-        }
-        let request = NSFetchRequest<Event>(entityName: "Event")
-        request.entity = Event.entity()
-        request.predicate = NSPredicate(format: "id == %@", id)
-        request.resultType = .countResultType
-        request.fetchLimit = 1
-        request.includesPropertyValues = false
-        
-        var count = 0
-        do {
-            count = try context.count(for: request)
-        } catch {
-            L.og.error("some error in eventExists() \(error)")
-            return false
-        }
-        
-        if count > 0 {
+        if Importer.shared.existingIds[id]?.status == .SAVED {
             return true
         }
+        
         return false
+        
+//        if Thread.isMainThread {
+//            L.og.info("☠️☠️☠️☠️ eventExists")
+//        }
+//        let request = NSFetchRequest<Event>(entityName: "Event")
+//        request.entity = Event.entity()
+//        request.predicate = NSPredicate(format: "id == %@", id)
+//        request.resultType = .countResultType
+//        request.fetchLimit = 1
+//        request.includesPropertyValues = false
+//        
+//        var count = 0
+//        do {
+//            count = try context.count(for: request)
+//        } catch {
+//            L.og.error("some error in eventExists() \(error)")
+//            return false
+//        }
+//        
+//        if count > 0 {
+//            return true
+//        }
+//        return false
     }
     
     
@@ -1060,19 +1038,11 @@ extension Event {
                 }
                 else {
                     // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
-                    if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                    if let repostedEvent = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                         CoreDataRelationFixer.shared.addTask({
                             savedEvent.firstQuote = repostedEvent
                         })
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
-                    }
-                    else if let repostedEvent = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                        CoreDataRelationFixer.shared.addTask({
-                            savedEvent.firstQuote = repostedEvent
-                        })
-                        repostedEvent.repostsCount += 1
 //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
@@ -1127,7 +1097,7 @@ extension Event {
                 savedEvent.replyToId = replyToEtag.id
                 
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let parent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToEtag.id) ?? (Event.fetchEvent(id: replyToEtag.id, context: context)) {
+                if let parent = Event.fetchEvent(id: replyToEtag.id, context: context) {
                     CoreDataRelationFixer.shared.addTask({
                         // TODO: Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
                         // (when opening from bookmarks)
@@ -1152,7 +1122,7 @@ extension Event {
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                if let root = EventRelationsQueue.shared.getAwaitingBgEvent(byId: replyToRootEtag.id) ?? (Event.fetchEvent(id: replyToRootEtag.id, context: context)), !root.isDeleted {
+                if let root = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     
                     CoreDataRelationFixer.shared.addTask({
                         savedEvent.replyToRoot = root
