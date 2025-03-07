@@ -8,7 +8,7 @@
 import Foundation
 import NostrEssentials
 
-func typeOfSearch(_ searchInput:String) -> TypeOfSearch {
+func typeOfSearch(_ searchInput: String) -> TypeOfSearch {
     let searchTrimmed = removeUriPrefix(searchInput.trimmingCharacters(in: .whitespacesAndNewlines))
     
     if (searchTrimmed.prefix(9) == "nprofile1") {
@@ -76,9 +76,9 @@ public enum TypeOfSearch {
 }
 
 public struct Nip05Parts {
-    var nip05url:URL?
-    let domain:String
-    let name:String
+    var nip05url: URL?
+    let domain: String
+    let name: String
 }
 
 extension Search {
@@ -127,7 +127,7 @@ extension Search {
         }
     }
     
-    func naddrSearch(_ term:String) {
+    func naddrSearch(_ term: String) {
         guard let naddr = try? ShareableIdentifier(term),
               let kind = naddr.kind,
               let pubkey = naddr.pubkey,
@@ -216,7 +216,7 @@ extension Search {
         }
     }
     
-    func neventSearch(_ term:String) {
+    func neventSearch(_ term: String) {
         guard let identifier = try? ShareableIdentifier(term),
               let noteHex = identifier.eventId
         else { return }
