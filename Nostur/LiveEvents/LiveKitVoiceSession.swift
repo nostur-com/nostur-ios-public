@@ -225,8 +225,10 @@ class LiveKitVoiceSession: ObservableObject {
                 guard let self else { return }
                 if let nrContact = NRContact.fetch(participantPubkey, context: ctx) {
                     if nrContact.pubkey == self.anonymousPubkeyCached {
-                        nrContact.name = "You"
-                        nrContact.anyName = "You"
+                        DispatchQueue.main.async {
+                            nrContact.name = "You"
+                            nrContact.anyName = "You"
+                        }
                     }
                     nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
                         true
@@ -255,8 +257,10 @@ class LiveKitVoiceSession: ObservableObject {
                     
                     if let nrContact = NRContact.fetch(contact.pubkey, contact: contact, context: ctx) {
                         if nrContact.pubkey == self.anonymousPubkeyCached {
-                            nrContact.name = "You"
-                            nrContact.anyName = "You"
+                            DispatchQueue.main.async {
+                                nrContact.name = "You"
+                                nrContact.anyName = "You"
+                            }
                         }
                         nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
                             true
