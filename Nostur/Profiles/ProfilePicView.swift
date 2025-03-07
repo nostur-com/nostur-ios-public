@@ -103,7 +103,7 @@ struct InnerPFP: View {
     // If animated PFP disabled or image is not .gif, render flat
     // else render animated gif
     
-    private enum RenderOption {
+    private enum RenderOption: Equatable {
         case noUrl
         case noHttps
         case flat(URL)
@@ -206,6 +206,7 @@ struct InnerPFP: View {
                 guard pubkey != newPubkey else { return }
                 self.updatedPictureUrl = nil
             }
+            .animation(.smooth, value: renderCase)
     }
 }
 
