@@ -10,7 +10,7 @@ import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
 
 let CONTROLS_HEIGHT: CGFloat = 60.0
-let TOOLBAR_HEIGHT: CGFloat = 116.0
+let TOOLBAR_HEIGHT: CGFloat = 160.0 // TODO: Fix magic number 160 or make sure its correct. This fixes "close" button and toolbar missing because video height is too high
 
 struct OverlayVideo: View {
     
@@ -22,7 +22,7 @@ struct OverlayVideo: View {
             // 3rd of screen height or video height if smaller
             return min(UIScreen.main.bounds.height / 3, videoWidth / vm.aspect)
         }
-        return min(videoWidth / vm.aspect, UIScreen.main.bounds.height - 160) // TODO: Fix magic number 160 or make sure its correct. This fixes "close" button and toolbar missing because video height is too high
+        return min(videoWidth / vm.aspect, UIScreen.main.bounds.height - TOOLBAR_HEIGHT)
     }
     
     private var videoWidth: CGFloat {
