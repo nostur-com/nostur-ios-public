@@ -56,7 +56,7 @@ class LiveKitVoiceSession: ObservableObject {
     func connect(_ url: String, token: String, accountType: NestAccountType, nrLiveEvent: NRLiveEvent, completion: (() -> Void)? = nil) {
         self.anonymousPubkeyCached = anonymousKeys.publicKeyHex
         self.state = .connecting
-        try? AVAudioSession.sharedInstance().setCategory(.playAndRecord, options: .duckOthers)
+//        try? AVAudioSession.sharedInstance().setCategory(.playback, options: .duckOthers)
         self.nrLiveEvent = nrLiveEvent
         self.accountType = accountType
         self.isRecording = false
