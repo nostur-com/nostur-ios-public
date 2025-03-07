@@ -15,28 +15,29 @@ struct Search: View {
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @State var nrPosts: [NRPost] = []
+    @State var contacts: [NRContact] = []
 
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-        predicate: NSPredicate(value: false),
-        animation: .none)
-    var contacts: FetchedResults<Contact>
-    
-    private var filteredContactSearchResults: [Contact] {
-        let wot = WebOfTrust.shared
-        if WOT_FILTER_ENABLED() {
-            return contacts
-                // WoT enabled, so put in-WoT before non-WoT
-                .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
-                // Put following before non-following
-                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
-        }
-        else {
-            // WoT disabled, just following before non-following
-            return contacts
-                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
-        }
-    }
+//    @FetchRequest(
+//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
+//        predicate: NSPredicate(value: false),
+//        animation: .none)
+//    var contacts: FetchedResults<Contact>
+//    
+//    private var filteredContactSearchResults: [Contact] {
+//        let wot = WebOfTrust.shared
+//        if WOT_FILTER_ENABLED() {
+//            return contacts
+//                // WoT enabled, so put in-WoT before non-WoT
+//                .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
+//                // Put following before non-following
+//                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
+//        }
+//        else {
+//            // WoT disabled, just following before non-following
+//            return contacts
+//                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
+//        }
+//    }
 
     @State var searching = false
     
@@ -49,7 +50,7 @@ struct Search: View {
 
     @State private var searchText = ""
     @State var searchTask: Task<Void, Never>? = nil
-    @State var backlog = Backlog()
+    @State var backlog = Backlog(timeout: 12)
     @ObservedObject var settings: SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -75,15 +76,29 @@ struct Search: View {
                             FollowHashtagTile(hashtag:String(searchText.trimmingCharacters(in: .whitespacesAndNewlines).dropFirst(1)), account:la.account)
                                 .padding([.top, .horizontal], 10)
                         }
-                        if (filteredContactSearchResults.isEmpty && nrPosts.isEmpty && searching) {
+                        if (contacts.isEmpty && nrPosts.isEmpty && searching) {
                             CenteredProgressView()
                         }
                         LazyVStack(spacing: GUTTER) {
-                            ForEach(filteredContactSearchResults.prefix(75)) { contact in
-                                ProfileRow(contact: contact)
-                                    .background(themes.theme.background)
+                            ForEach(contacts) { nrContact in
+                                VStack {
+                                    NRContactSearchResultRow(nrContact: nrContact, onSelect: {
+                                        navigateTo(NRContactPath(nrContact: nrContact))
+                                    })
+                                        
+                                    HStack {
+                                        Spacer()
+                                        LazyFollowedBy(pubkey: nrContact.pubkey, alignment: .trailing, minimal: true)
+                                    }
+                                }
+                                .padding(10)
+                                .background(themes.theme.background)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    navigateTo(NRContactPath(nrContact: nrContact))
+                                }
                             }
-                            ForEach(nrPosts.prefix(75)) { nrPost in
+                            ForEach(nrPosts) { nrPost in
                                 Box(nrPost: nrPost) {
                                     if nrPost.kind == 443 {
                                         VStack {
@@ -146,7 +161,8 @@ struct Search: View {
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: searchText) { searchInput in
                 nrPosts = []
-                contacts.nsPredicate = NSPredicate(value: false)
+                contacts = []
+
                 navPath.removeLast(navPath.count)
                 switch typeOfSearch(searchInput) {
                 case .nprofile1(let term):

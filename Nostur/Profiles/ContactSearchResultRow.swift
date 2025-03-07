@@ -152,7 +152,8 @@ struct NRContactSearchResultRow: View {
                                     .onTapGesture {
                                         nrContact.fixedName = nrContact.anyName
                                         bg().perform {
-                                            nrContact.contact?.fixedName = nrContact.anyName                                        }
+                                            nrContact.contact?.fixedName = nrContact.anyName
+                                        }
                                     }
                             }
                         }

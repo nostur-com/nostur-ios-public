@@ -89,9 +89,23 @@ extension Search {
         else { return }
         
         searching = true
-        contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
+        contacts = []
         nrPosts = []
-        req(RM.getUserMetadata(pubkey: pubkey), relayType: .SEARCH)
+        
+        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
+            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH)
+        }, processResponseCommand: { taskId, _, _ in
+            bg().perform {
+                guard let nrContact = NRContact.fetch(pubkey) else { return }
+                Task { @MainActor in
+                    self.contacts = [nrContact]
+                    searching = false
+                }
+            }
+        })
+        backlog.add(searchTask1)
+        searchTask1.fetch()
         
         guard !identifier.relays.isEmpty else { return }
         
@@ -103,7 +117,8 @@ extension Search {
                     guard vpnGuardOK() else { return }
                     if Contact.fetchByPubkey(pubkey, context: bg()) == nil {
                         if let relay = identifier.relays.first {
-                            ConnectionPool.shared.sendEphemeralMessage(RM.getUserMetadata(pubkey: pubkey), relay: relay)
+                            // Use searchTask1.subscription so it will still be processed by existing searchTask1 (timeout is 12 sec)
+                            ConnectionPool.shared.sendEphemeralMessage(RM.getUserMetadata(pubkey: pubkey, subscriptionId: searchTask1.subscriptionId), relay: relay)
                         }
                     }
                 }
@@ -120,7 +135,8 @@ extension Search {
         else { return }
         
         searching = true
-        contacts.nsPredicate = NSPredicate(value: false)
+        contacts = []
+        nrPosts = []
         
         bg().perform {
             if let article = Event.fetchReplacableEvent(
@@ -133,12 +149,14 @@ extension Search {
                 
                 Task { @MainActor in
                     self.nrPosts = [article]
+                    searching = false
                 }
             }
             else {
                 let reqTask = ReqTask(
                     prefix: "ARTICLESEARCH-",
                     reqCommand: { taskId in
+                        req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId), relayType: .READ)
                         req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId), relayType: .SEARCH)
                     },
                     processResponseCommand: { taskId, _, _ in
@@ -152,6 +170,7 @@ extension Search {
                                 let article = NRPost(event: article)
                                 Task { @MainActor in
                                     self.nrPosts = [article]
+                                    searching = false
                                 }
                                 
                                 backlog.clear()
@@ -203,34 +222,27 @@ extension Search {
         else { return }
         
         searching = true
-        contacts.nsPredicate = NSPredicate(value: false)
-        
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "id = %@", noteHex)
-        fr.fetchLimit = 1
+        contacts = []
         
         bg().perform {
-            guard let result = try? bg().fetch(fr).first
-            else { return }
-            
-            let nrPost = NRPost(event: result)
+            guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
+            let nrPost = NRPost(event: event)
             Task { @MainActor in
                 self.nrPosts = [nrPost]
+                searching = false
             }
         }
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .READ)
             req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH)
         }, processResponseCommand: { taskId, _, _ in
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "id = %@", noteHex)
-            fr.fetchLimit = 1
             bg().perform {
-                guard let result = try? bg().fetch(fr).first
-                else { return }
-                let nrPost = NRPost(event: result)
+                guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
+                let nrPost = NRPost(event: event)
                 Task { @MainActor in
                     self.nrPosts = [nrPost]
+                    searching = false
                 }
             }
         })
@@ -250,7 +262,9 @@ extension Search {
                     else { return }
                     
                     guard let relay = identifier.relays.first else { return }
-                    ConnectionPool.shared.sendEphemeralMessage(RM.getEvent(id: noteHex, subscriptionId:searchTask1.subscriptionId), relay: relay)
+                    
+                    // Use searchTask1.subscription so it will still be processed by existing searchTask1 (timeout is 12 sec)
+                    ConnectionPool.shared.sendEphemeralMessage(RM.getEvent(id: noteHex, subscriptionId: searchTask1.subscriptionId), relay: relay)
                 }
             }
             catch { }
@@ -263,138 +277,19 @@ extension Search {
         else { return }
         
         guard let pubkey = Keys.hex(npub: term) else { return }
-        contacts.nsPredicate = NSPredicate(format: "pubkey = %@", pubkey)
+        contacts = []
         nrPosts = []
-        req(RM.getUserMetadata(pubkey: pubkey), relayType: .SEARCH)
-    }
-    
-    func nametagSearch(_ term:String) {
-        let blockedPubkeys = blocks()
-        searching = true
-        contacts.nsPredicate = NSPredicate(format: "(name BEGINSWITH[cd] %@ OR fixedName BEGINSWITH[cd] %@ OR nip05 BEGINSWITH[cd] %@) AND NOT pubkey IN %@", term, term, term, blockedPubkeys)
-        nrPosts = []
-    }
-    
-    func hashtagSearch(_ term:String) {
-        let blockedPubkeys = blocks()
-        searching = true
-        contacts.nsPredicate = NSPredicate(value: false)
         
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind == 1 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
-        fr.fetchLimit = 150
-        bg().perform {
-            guard let results = try? bg().fetch(fr) else { return }
-            let nrPosts = results.map { NRPost(event: $0) }
-                .sorted(by: { $0.createdAt > $1.createdAt })
-            
-            Task { @MainActor in
-                self.nrPosts = nrPosts
-            }
-        }
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-            var tags = [term]
-            if tags[0] != tags[0].lowercased() {
-                tags.append(tags[0].lowercased())
-            }
-            
-            let filters = [Filters(tagFilter: TagFilter(tag: "t", values: tags))]
-            if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
-                req(message, relayType: .SEARCH)
-            }
+            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
+            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH)
         }, processResponseCommand: { taskId, _, _ in
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "kind == 1 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
-            fr.fetchLimit = 150
-            let existingIds = self.nrPosts.map { $0.id }
             bg().perform {
-                guard let results = try? bg().fetch(fr) else { return }
-                let nrPosts = results
-                    .filter { !existingIds.contains($0.id) }
-                    .map { NRPost(event: $0) }
-                
+                guard let nrContact = NRContact.fetch(pubkey) else { return }
                 Task { @MainActor in
-                    self.nrPosts = (self.nrPosts + nrPosts)
-                        .sorted(by: { $0.createdAt > $1.createdAt })
-                }
-            }
-        })
-        backlog.add(searchTask1)
-        searchTask1.fetch()
-    }
-    
-    func note1Search(_ term:String) {
-        do {
-            searching = true
-            let key = try NIP19(displayString: term)
-            contacts.nsPredicate = NSPredicate(value: false)
-            
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "id = %@", key.hexString)
-            fr.fetchLimit = 1
-            bg().perform {
-                guard let result = try? bg().fetch(fr).first else { return }
-                let nrPost = NRPost(event: result)
-                Task { @MainActor in
-                    self.nrPosts = [nrPost]
-                }
-            }
-            
-            let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-                req(RM.getEvent(id: key.hexString, subscriptionId: taskId), relayType: .SEARCH)
-            }, processResponseCommand: { taskId, _, _ in
-                let fr = Event.fetchRequest()
-                fr.predicate = NSPredicate(format: "id = %@", key.hexString)
-                fr.fetchLimit = 1
-                bg().perform {
-                    guard let result = try? bg().fetch(fr).first else { return }
-                    
-                    let nrPost = NRPost(event: result)
-                    Task { @MainActor in
-                        self.nrPosts = [nrPost]
-                    }
-                }
-            })
-            backlog.add(searchTask1)
-            searchTask1.fetch()
-        }
-        catch {
-            L.og.debug("note1 search fail \(error)")
-            searching = false
-        }
-    }
-    
-    func hexIdSearch(_ term:String) {
-        guard NostrRegexes.default.matchingStrings(term, regex: NostrRegexes.default.cache[.hexId]!).count == 1
-        else { return }
-        searching = true
-        contacts.nsPredicate = NSPredicate(format: "pubkey = %@", term)
-        req(RM.getUserMetadata(pubkey: term), relayType: .SEARCH)
-        
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "id = %@", term)
-        fr.fetchLimit = 1
-        bg().perform {
-            guard let result = try? bg().fetch(fr).first else { return }
-            let nrPost = NRPost(event: result)
-            Task { @MainActor in
-                self.nrPosts = [nrPost]
-            }
-        }
-        
-        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
-            req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .SEARCH)
-        }, processResponseCommand: { taskId, _, _ in
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "id = %@", term)
-            fr.fetchLimit = 1
-            bg().perform {
-                guard let result = try? bg().fetch(fr).first else { return }
-                let nrPost = NRPost(event: result)
-                Task { @MainActor in
-                    self.nrPosts = [nrPost]
+                    self.contacts = [nrContact]
+                    searching = false
                 }
             }
         })
@@ -412,27 +307,191 @@ extension Search {
         }
     }
     
-    func otherSearch(_ term:String) {
+    func nametagSearch(_ term: String) {
         let blockedPubkeys = blocks()
-        searching = false
-        contacts.nsPredicate = NSPredicate(format: "NOT pubkey IN %@ AND (name CONTAINS[cd] %@ OR display_name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@ OR nip05 CONTAINS[cd] %@)", blockedPubkeys, term, term, term, term)
+        searching = true
+        contacts = []
+        nrPosts = []
         
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind == 1 AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", blockedPubkeys, term, "lnbc")
-        fr.fetchLimit = 150
-        let existingIds = self.nrPosts.map { $0.id }
         bg().perform {
-            guard let results = try? bg().fetch(fr) else { return }
+            let fr = Contact.fetchRequest()
+            fr.predicate = NSPredicate(format: "(name BEGINSWITH[cd] %@ OR fixedName BEGINSWITH[cd] %@ OR nip05 BEGINSWITH[cd] %@) AND NOT pubkey IN %@", term, term, term, blockedPubkeys)
             
-            let nrPosts = results
-                .filter { !existingIds.contains($0.id) }
-                .map { NRPost(event: $0) }
+            if let contacts = try? bg().fetch(fr) {
+                let nrContacts: [NRContact] = contacts.compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                Task { @MainActor in
+                    self.contacts = nrContacts
+                    searching = false
+                }
+            }
+        }
+        
+    }
+    
+    func hashtagSearch(_ term: String) {
+        let blockedPubkeys = blocks()
+        searching = true
+        contacts = []
+        nrPosts = []
+        
+        bg().perform {
+            let fr = Event.fetchRequest()
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            fr.predicate = NSPredicate(format: "kind IN {1,20,9802} AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
+            fr.fetchLimit = 150
+            guard let results = try? bg().fetch(fr) else { return }
+            let nrPosts = results.map { NRPost(event: $0) }
+                .sorted(by: { $0.createdAt > $1.createdAt })
             
             Task { @MainActor in
-                self.nrPosts = (self.nrPosts + nrPosts)
-                    .sorted(by: { $0.createdAt > $1.createdAt })
+                self.nrPosts = nrPosts
             }
+        }
+        
+        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+            var tags = [term]
+            if tags[0] != tags[0].lowercased() {
+                tags.append(tags[0].lowercased())
+            }
+            
+            let filters = [Filters(kinds: [1,20,9802], tagFilter: TagFilter(tag: "t", values: tags))]
+            if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
+                req(message, relayType: .READ)
+                req(message, relayType: .SEARCH)
+            }
+        }, processResponseCommand: { taskId, _, _ in
+            let existingIds = self.nrPosts.map { $0.id }
+            bg().perform {
+                let fr = Event.fetchRequest()
+                fr.predicate = NSPredicate(format: "kind IN {1,20,9802} AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedT(term))
+                fr.fetchLimit = 150
+                guard let results = try? bg().fetch(fr) else { return }
+                let nrPosts = results
+                    .filter { !existingIds.contains($0.id) }
+                    .map { NRPost(event: $0) }
+                
+                Task { @MainActor in
+                    self.nrPosts = (self.nrPosts + nrPosts)
+                        .sorted(by: { $0.createdAt > $1.createdAt })
+                    
+                    searching = false
+                }
+            }
+        })
+        backlog.add(searchTask1)
+        searchTask1.fetch()
+    }
+    
+    func note1Search(_ term: String) {
+        guard let noteHex = (try? NIP19(displayString: term))?.hexString else { return }
+        
+        searching = true
+        contacts = []
+        
+        bg().perform {
+            guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
+            let nrPost = NRPost(event: event)
+            Task { @MainActor in
+                self.nrPosts = [nrPost]
+                searching = false
+            }
+        }
+        
+        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .READ)
+            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH)
+        }, processResponseCommand: { taskId, _, _ in
+            bg().perform {
+                guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
+                let nrPost = NRPost(event: event)
+                Task { @MainActor in
+                    self.nrPosts = [nrPost]
+                    searching = false
+                }
+            }
+        })
+        backlog.add(searchTask1)
+        searchTask1.fetch()
+        
+        Task {
+            do {
+                try await Task.sleep(nanoseconds: UInt64(5.5) * NSEC_PER_SEC)
+                Task { @MainActor in
+                    searching = false
+                }
+            }
+            catch { }
+        }
+    }
+    
+    func hexIdSearch(_ term: String) {
+        guard NostrRegexes.default.matchingStrings(term, regex: NostrRegexes.default.cache[.hexId]!).count == 1
+        else { return }
+        
+        searching = true
+        contacts = []
+        nrPosts = []
+        
+        bg().perform {
+            guard let event = Event.fetchEvent(id: term, context: bg()) else { return }
+            let nrPost = NRPost(event: event)
+            Task { @MainActor in
+                self.nrPosts = [nrPost]
+                searching = false
+            }
+        }
+        
+        bg().perform {
+            guard let nrContact = NRContact.fetch(term) else { return }
+            Task { @MainActor in
+                self.contacts = [nrContact]
+                searching = false
+            }
+        }
+        
+        let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
+            req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .READ)
+            req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .SEARCH)
+            
+            req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .READ)
+            req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .SEARCH)
+        }, processResponseCommand: { taskId, _, _ in
+            bg().perform {
+                guard let event = Event.fetchEvent(id: term, context: bg()) else { return }
+                let nrPost = NRPost(event: event)
+                Task { @MainActor in
+                    self.nrPosts = [nrPost]
+                    searching = false
+                }
+            }
+            bg().perform {
+                guard let nrContact = NRContact.fetch(term) else { return }
+                Task { @MainActor in
+                    self.contacts = [nrContact]
+                    searching = false
+                }
+            }
+        })
+        backlog.add(searchTask1)
+        searchTask1.fetch()
+        
+        Task {
+            do {
+                try await Task.sleep(nanoseconds: UInt64(5.5) * NSEC_PER_SEC)
+                Task { @MainActor in
+                    searching = false
+                }
+            }
+            catch { }
+        }
+    }
+    
+    func otherSearch(_ term: String) {
+        Task { @MainActor in
+            let (nrContacts, nrPosts) = await SearchModel.searchInNames(term)
+            self.nrPosts = nrPosts
+            self.contacts = nrContacts
+            searching = false
         }
     }
     
@@ -452,13 +511,13 @@ extension Search {
     func urlSearch(_ term: String) {
         let blockedPubkeys = blocks()
         searching = true
-        contacts.nsPredicate = NSPredicate(value: false)
+        contacts = []
         
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind == 443 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedR(term))
-        fr.fetchLimit = 150
         bg().perform {
+            let fr = Event.fetchRequest()
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            fr.predicate = NSPredicate(format: "kind == 443 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedR(term))
+            fr.fetchLimit = 150
             guard let results = try? bg().fetch(fr) else { return }
             let nrPosts = results
                 .uniqued(on: { $0.fastTags.first(where: { $0.0 == "r" && $0.1 == term })?.1 ?? UUID().uuidString })
@@ -485,15 +544,16 @@ extension Search {
                 
                 let filters = [Filters(kinds:[443], tagFilter: TagFilter(tag: "r", values: tags))]
                 if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
+                    req(message, relayType: .READ)
                     req(message, relayType: .SEARCH)
                 }
             },
             processResponseCommand: { taskId, _, _ in
-                let fr = Event.fetchRequest()
-                fr.predicate = NSPredicate(format: "kind == 443 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedR(term))
-                fr.fetchLimit = 150
-                let existingUrls = self.nrPosts.compactMap { $0.fastTags.first(where: { $0.0 == "r" })?.1 }
                 bg().perform {
+                    let fr = Event.fetchRequest()
+                    fr.predicate = NSPredicate(format: "kind == 443 AND NOT pubkey IN %@ AND tagsSerialized CONTAINS[cd] %@", blockedPubkeys, serializedR(term))
+                    fr.fetchLimit = 150
+                    let existingUrls = self.nrPosts.compactMap { $0.fastTags.first(where: { $0.0 == "r" })?.1 }
                     guard let results = try? bg().fetch(fr) else { return }
                     let nrPosts = results
                         .filter { kind443 in
@@ -529,6 +589,7 @@ extension Search {
                         let nrPost = NRPost(event: unpublishedKind443)
                         DispatchQueue.main.async {
                             self.nrPosts = [nrPost]
+                            searching = false
                         }
                     }
                     catch {

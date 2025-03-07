@@ -476,8 +476,8 @@ public class ConnectionPool: ObservableObject {
                 if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                 guard limitToRelayIds.isEmpty || limitToRelayIds.contains(connection.url) else { continue }
                 
-                guard connection.relayData.read || connection.relayData.write || limitToRelayIds.contains(connection.url) else {
-                    // Skip if relay is not selected for reading or writing events
+                guard connection.relayData.read || connection.relayData.write || limitToRelayIds.contains(connection.url) || (connection.relayData.search && message.relayType == .SEARCH) else {
+                    // Skip if relay is not selected for reading or writing events. Or message and relay should be .SEARCH
                     continue
                 }
                 
