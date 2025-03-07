@@ -10,7 +10,7 @@ import SwiftUIFlow
 
 struct ChatTopZaps: View {
     @EnvironmentObject private var themes: Themes
-    let messages: [ChatConfirmedZap]
+    let messages: [NRChatConfirmedZap]
     
     var body: some View {
         HStack {
@@ -23,26 +23,27 @@ struct ChatTopZaps: View {
 
 struct ChatZapPill: View {
     @EnvironmentObject private var themes: Themes
-    let zap: ChatConfirmedZap
+    private let zap: NRChatConfirmedZap
+    @ObservedObject private var pfpAttributes: PFPAttributes
     
-    @State private var pfpURL: URL?
+    init(zap: NRChatConfirmedZap) {
+        self.zap = zap
+        self.pfpAttributes = zap.pfpAttributes
+    }
     
     var body: some View {
         HStack(spacing: 5) {
-            Circle()
-                .foregroundColor(randomColor(seed: zap.zapRequestPubkey))
-                .frame(width: 20.0, height: 20.0)
-                .overlay {
-                    if let pfpURL {
-                        MiniPFP(pictureUrl: pfpURL, size: 20.0)
-                            .animation(.easeIn, value: pfpURL)
-                    }
-                }
+            MiniPFP(pictureUrl: pfpAttributes.pfpURL, size: 20.0, fallBackColor: randomColor(seed: zap.zapRequestPubkey))
+                .animation(.easeIn, value: pfpAttributes.pfpURL)
+            
+//                .frame(width: 20.0, height: 20.0)
             Text(zap.amount.satsFormatted)
                 .fontWeightBold()
                 .foregroundColor(themes.theme.accent)
                 .padding(.trailing, 5)
         }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
         .background(themes.theme.listBackground.opacity(0.5))
         .foregroundColor(themes.theme.primary)
         .font(.footnote)
@@ -63,16 +64,6 @@ struct ChatZapPill: View {
                 navigateTo(ContactPath(key: zap.zapRequestPubkey))
             }
         }
-        .onAppear {
-            guard let pfpURL = zap.contact?.pictureUrl, self.pfpURL != pfpURL else { return }
-            self.pfpURL = pfpURL
-        }
-        .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-            guard profile.pubkey == zap.zapRequestPubkey, pfpURL != profile.pictureUrl else { return }
-            withAnimation {
-                pfpURL = profile.pictureUrl
-            }
-        }
     }
 }
 
@@ -81,8 +72,8 @@ struct ChatZapPill: View {
         pe.loadContacts()
         pe.loadZaps()
     }) {
-        let messages: [ChatConfirmedZap] = [
-            ChatConfirmedZap(
+        let messages: [NRChatConfirmedZap] = [
+            NRChatConfirmedZap(
                 id: "1",
                 zapRequestId: "1",
                 zapRequestPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
@@ -92,7 +83,7 @@ struct ChatZapPill: View {
                 content: [.text(AttributedStringWithPs(input: "Hello", output: NSAttributedString(string: "Hello"), pTags: []))],
                 contact: nil
             ),
-            ChatConfirmedZap(
+            NRChatConfirmedZap(
                 id: "2",
                 zapRequestId: "2",
                 zapRequestPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",

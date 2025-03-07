@@ -38,10 +38,12 @@ class ChatRoomViewModel: ObservableObject {
 //    private var backlog = Backlog()
     
     @Published public var messages: [ChatRowContent] = []
-    @Published public var topZaps: [ChatConfirmedZap] = []
+    @Published public var topZaps: [NRChatConfirmedZap] = []
     private var bgMessages: [ChatRowContent] = []
     
     private var renderMessages = PassthroughSubject<Void, Never>()
+    private var fetchMissingPs = PassthroughSubject<Void, Never>()
+    private var alreadyFetchedMissingPs: Set<String> = []
     
     private var didStart = false
     
@@ -90,6 +92,19 @@ class ChatRoomViewModel: ObservableObject {
             }
             .store(in: &subscriptions)
         
+        fetchMissingPs
+            .debounce(for: .seconds(4.5), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                if let messages = self?.bgMessages {
+                    let allMissingPs: Set<String> = messages.map { $0.missingPs }.count > 0 ? Set(messages.flatMap(\.missingPs)) : []
+                    let missingPsToFetch: Set<String> = allMissingPs.subtracting(self?.alreadyFetchedMissingPs ?? [])
+                    L.og.debug("Fetching missingPs: \(missingPsToFetch)")
+                    QueuedFetcher.shared.enqueue(pTags: missingPsToFetch)
+                    self?.alreadyFetchedMissingPs.formUnion(missingPsToFetch)
+                }
+            }
+            .store(in: &subscriptions)
+        
         self.listenForChats()
         self.listenForBlocks()
         self.fetchFromDB { [weak self] in
@@ -113,7 +128,7 @@ class ChatRoomViewModel: ObservableObject {
             let rows: [ChatRowContent] = events.compactMap { event in
                 let row: ChatRowContent? = if event.kind == 9735, let nZapRequest = Event.extractZapRequest(tags: event.tags()) {
                     ChatRowContent.chatConfirmedZap(
-                        ChatConfirmedZap(
+                        NRChatConfirmedZap(
                             id: event.id,
                             zapRequestId: nZapRequest.id,
                             zapRequestPubkey: nZapRequest.publicKey,
@@ -122,8 +137,7 @@ class ChatRoomViewModel: ObservableObject {
                             ),
                             amount: Int64(event.naiveSats),
                             nxEvent: NXEvent(pubkey: event.pubkey, kind: Int(event.kind)),
-                            content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0,
-                            contact: NRContact.fetch(nZapRequest.publicKey)
+                            content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0
                         )
                     )
                 }
@@ -217,7 +231,7 @@ class ChatRoomViewModel: ObservableObject {
                 bg().perform {
                     let confirmedZap: ChatRowContent = if event.kind == .zapNote, let nZapRequest = Event.extractZapRequest(tags: event.tags) {
                         ChatRowContent.chatConfirmedZap(
-                            ChatConfirmedZap(
+                            NRChatConfirmedZap(
                                 id: event.id,
                                 zapRequestId: nZapRequest.id,
                                 zapRequestPubkey: nZapRequest.publicKey,
@@ -226,8 +240,7 @@ class ChatRoomViewModel: ObservableObject {
                                 ),
                                 amount: Int64(event.naiveSats),
                                 nxEvent: NXEvent(pubkey: event.publicKey, kind: event.kind.id),
-                                content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0,
-                                contact: NRContact.fetch(nZapRequest.publicKey)
+                                content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0
                             )
                         )
                     }
@@ -238,6 +251,9 @@ class ChatRoomViewModel: ObservableObject {
                         if case .chatPendingZap(let pendingZap) = row, pendingZap.id == confirmedZap.id {
                             return true
                         }
+                        if case .chatConfirmedZap(let existingZap) = row, existingZap.id == confirmedZap.id {
+                            return true
+                        }
                         return false
                     }) {
                         self.bgMessages[index] = confirmedZap
@@ -246,6 +262,7 @@ class ChatRoomViewModel: ObservableObject {
                         let messages: [ChatRowContent] = (self.bgMessages + [confirmedZap]).sorted(by: { $0.createdAt > $1.createdAt })
                         self.bgMessages = messages
                     }
+                    self.fetchMissingPs.send()
                     self.renderMessages.send()
                     self.updateTopZaps()
                 }
@@ -255,7 +272,7 @@ class ChatRoomViewModel: ObservableObject {
         receiveNotification(.receivedPendingZap)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let pendingZap = notification.object as! ChatPendingZap
+                let pendingZap = notification.object as! NRChatPendingZap
                 guard aTag == pendingZap.aTag else { return }
                 
                 bg().perform { [weak self] in
@@ -313,10 +330,10 @@ class ChatRoomViewModel: ObservableObject {
                     }
                     return nil
                 }
-                .reduce(into: [String: ChatConfirmedZap]()) { result, zap in
+                .reduce(into: [String: NRChatConfirmedZap]()) { result, zap in
                     if let existing = result[zap.zapRequestPubkey] {
                         // Combine amounts for same pubkey
-                        result[zap.zapRequestPubkey] = ChatConfirmedZap(
+                        result[zap.zapRequestPubkey] = NRChatConfirmedZap(
                             id: existing.id,
                             zapRequestId: existing.zapRequestId,
                             zapRequestPubkey: existing.zapRequestPubkey,

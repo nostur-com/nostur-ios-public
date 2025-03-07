@@ -1,29 +1,44 @@
 //
-//  ChatMessageRow.swift
+//  ChatPendingZapRow.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 25/02/2025.
+//  Created by Fabian Lachman on 07/03/2025.
 //
 
 import SwiftUI
 
-struct ChatMessageRow: View {
+struct ChatPendingZapRow: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var vc: ViewingContext
-    @ObservedObject private var nrChat: NRChatMessage
+    private var pendingZap: NRChatPendingZap
     @ObservedObject private var pfpAttributes: PFPAttributes
     
     @State private var didStart = false
     
-    init(nrChat: NRChatMessage) {
-        self.nrChat = nrChat
-        self.pfpAttributes = nrChat.pfpAttributes
+    init(pendingZap: NRChatPendingZap) {
+        self.pendingZap = pendingZap
+        self.pfpAttributes = pendingZap.pfpAttributes
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             HStack {
+                HStack(spacing: 3) {
+                    Image(systemName: "bolt.badge.clock.fill").foregroundColor(.yellow.opacity(0.75))
+                    Text(pendingZap.amount.satsFormatted + " sats")
+                        .fontWeightBold()
+                }
+                .padding(.leading, 7)
+                .padding(.trailing, 8)
+                
+                .padding(.vertical, 2)
+                .foregroundColor(Color.white)
+                .background {
+                    themes.theme.accent
+                        .clipShape(Capsule())
+                }
+                
                 MiniPFP(pictureUrl: pfpAttributes.pfpURL)
                     .onTapGesture {
                         if IS_IPHONE {
@@ -38,11 +53,10 @@ struct ChatMessageRow: View {
                             navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
                         }
                         else {
-                            navigateTo(ContactPath(key: nrChat.pubkey))
+                            navigateTo(ContactPath(key: pendingZap.pubkey))
                         }
                     }
                 Text(pfpAttributes.anyName)
-                    .foregroundColor(themes.theme.accent)
                     .onTapGesture {
                         if IS_IPHONE {
                             if AnyPlayerModel.shared.viewMode == .detailstream {
@@ -52,17 +66,19 @@ struct ChatMessageRow: View {
                                 LiveKitVoiceSession.shared.visibleNest = nil
                             }
                         }
-                        
                         if let nrContact = pfpAttributes.contact {
                             navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
                         }
                         else {
-                            navigateTo(ContactPath(key: nrChat.pubkey))
+                            navigateTo(ContactPath(key: pendingZap.pubkey))
                         }
                     }
-                Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
+                Ago(pendingZap.createdAt)
+                    .foregroundColor(themes.theme.secondary)
             }
-            ChatRenderer(nrChat: nrChat, availableWidth: vc.availableWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart)
+            .foregroundColor(themes.theme.accent)
+            
+            NXContentRenderer(nxEvent: pendingZap.nxEvent, contentElements: pendingZap.content, didStart: $didStart)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(maxHeight: 450, alignment: .top)
         }

@@ -8,170 +8,25 @@
 import SwiftUI
 
 struct ChatRow: View {
-    @State private var didStart = false
-    
     public let content: ChatRowContent
     public let theme: Theme
     
     var body: some View {
         switch content {
             case .chatConfirmedZap(let confirmedZap):
-            VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        
-                        HStack(spacing: 3) {
-                            Image(systemName: "bolt.fill").foregroundColor(.yellow)
-                            Text(confirmedZap.amount.satsFormatted)
-                                .fontWeightBold()
-                        }
-                        .padding(.leading, 7)
-                        .padding(.trailing, 8)
-                        
-                        .padding(.vertical, 2)
-                        .foregroundColor(Color.white)
-                        .background {
-                            theme.accent
-                                .clipShape(Capsule())
-                        }
-                        
-                        MiniPFP(pictureUrl: confirmedZap.contact?.pictureUrl)
-                            .onTapGesture {
-                                if IS_IPHONE {
-                                    if AnyPlayerModel.shared.viewMode == .detailstream {
-                                        AnyPlayerModel.shared.viewMode = .overlay
-                                    }
-                                    else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                        LiveKitVoiceSession.shared.visibleNest = nil
-                                    }
-                                }
-                                if let nrContact = confirmedZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
-                                }
-                            }
-                        
-                        Text(confirmedZap.contact?.anyName ?? "...")
-                            .onTapGesture {
-                                if IS_IPHONE {
-                                    if AnyPlayerModel.shared.viewMode == .detailstream {
-                                        AnyPlayerModel.shared.viewMode = .overlay
-                                    }
-                                    else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                        LiveKitVoiceSession.shared.visibleNest = nil
-                                    }
-                                }
-                                if let nrContact = confirmedZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
-                                }
-                            }
-                                
-                        Ago(confirmedZap.zapRequestCreatedAt)
-                            .foregroundColor(theme.secondary)
-                    }
-                    .foregroundColor(theme.accent)
-                    
-                    NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, didStart: $didStart)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .frame(maxHeight: 450, alignment: .top)
-                        .onAppear {
-            //                        if !zapFromAttributes.missingPs.isEmpty {
-            //                            bg().perform {
-            //                                QueuedFetcher.shared.enqueue(pTags: zapFromAttributes.missingPs)
-            //                            }
-            //                        }
-                        }
-                }
+                ChatConfirmedZapRow(confirmedZap: confirmedZap)
             case .chatPendingZap(let pendingZap):
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        HStack(spacing: 3) {
-                            Image(systemName: "bolt.badge.clock.fill").foregroundColor(.yellow.opacity(0.75))
-                            Text(pendingZap.amount.satsFormatted + " sats")
-                                .fontWeightBold()
-                        }
-                        .padding(.leading, 7)
-                        .padding(.trailing, 8)
-                        
-                        .padding(.vertical, 2)
-                        .foregroundColor(Color.white)
-                        .background {
-                            theme.accent
-                                .clipShape(Capsule())
-                        }
-                        
-                        MiniPFP(pictureUrl: pendingZap.contact?.pictureUrl)
-                            .onTapGesture {
-                                if IS_IPHONE {
-                                    if AnyPlayerModel.shared.viewMode == .detailstream {
-                                        AnyPlayerModel.shared.viewMode = .overlay
-                                    }
-                                    else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                        LiveKitVoiceSession.shared.visibleNest = nil
-                                    }
-                                }
-                                if let nrContact = pendingZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: pendingZap.pubkey))
-                                }
-                            }
-                        Text(pendingZap.contact?.anyName ?? "...")
-                            .onTapGesture {
-                                if IS_IPHONE {
-                                    if AnyPlayerModel.shared.viewMode == .detailstream {
-                                        AnyPlayerModel.shared.viewMode = .overlay
-                                    }
-                                    else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                        LiveKitVoiceSession.shared.visibleNest = nil
-                                    }
-                                }
-                                if let nrContact = pendingZap.contact {
-                                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: pendingZap.pubkey))
-                                }
-                            }
-                        Ago(pendingZap.createdAt)
-                            .foregroundColor(theme.secondary)
-                    }
-                    .foregroundColor(theme.accent)
-                    
-                    NXContentRenderer(nxEvent: pendingZap.nxEvent, contentElements: pendingZap.content, didStart: $didStart)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .frame(maxHeight: 450, alignment: .top)
-//                        .padding(.leading, 10)
-                        .onAppear {
-                            //                        if !zapFromAttributes.missingPs.isEmpty {
-                            //                            bg().perform {
-                            //                                QueuedFetcher.shared.enqueue(pTags: zapFromAttributes.missingPs)
-                            //                            }
-                            //                        }
-                        }
-                }
+                ChatPendingZapRow(pendingZap: pendingZap)
             case .chatMessage(let nrChat):
                 ChatMessageRow(nrChat: nrChat)
-//                .overlay(alignment: .top) {
-//                    Text("chatMessage nrChat")
-//                }
         }
     }
 }
 
-//#Preview {
-//    ChatRow(content: )
-//}
-
 enum ChatRowContent: Identifiable {
     case chatMessage(NRChatMessage)
-    case chatPendingZap(ChatPendingZap)
-    case chatConfirmedZap(ChatConfirmedZap)
+    case chatPendingZap(NRChatPendingZap)
+    case chatConfirmedZap(NRChatConfirmedZap)
     
     var pubkey: String {
         switch self {
@@ -216,9 +71,31 @@ enum ChatRowContent: Identifiable {
                 nrChat.nxEvent
         }
     }
+    
+    var nrContact: NRContact? {
+        switch self {
+            case .chatConfirmedZap(let confirmedZap):
+                confirmedZap.contact
+            case .chatPendingZap(let pendingZap):
+                pendingZap.contact
+            case .chatMessage(let nrChat):
+                nrChat.contact
+        }
+    }
+    
+    var missingPs: Set<String> {
+        switch self {
+            case .chatConfirmedZap(let confirmedZap):
+                confirmedZap.contact == nil ? Set([confirmedZap.zapRequestPubkey]) : Set<String>()
+            case .chatPendingZap(let pendingZap):
+                pendingZap.contact == nil ? Set([pendingZap.pubkey]) : Set<String>()
+            case .chatMessage(let nrChat):
+                nrChat.missingPs
+        }
+    }
 }
 
-struct ChatPendingZap {
+class NRChatPendingZap {
     var id: String
     var pubkey: String
     var createdAt: Date
@@ -227,7 +104,16 @@ struct ChatPendingZap {
     
     var nxEvent: NXEvent
     var content: [ContentElement] = []
-    var contact: NRContact?
+    
+    var contact: NRContact?  {
+        get { pfpAttributes.contact }
+        set {
+            DispatchQueue.main.async { [weak self] in
+                self?.pfpAttributes.contact = newValue
+            }
+        }
+    }
+    var pfpAttributes: PFPAttributes
     
     init(id: String, pubkey: String, createdAt: Date, aTag: String, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil) {
         self.id = id
@@ -237,11 +123,23 @@ struct ChatPendingZap {
         self.amount = amount
         self.nxEvent = nxEvent
         self.content = content
-        self.contact = contact ?? NRContact.fetch(pubkey)
+        
+        if let contact { // From param
+            self.pfpAttributes = PFPAttributes(contact: contact, pubkey: pubkey)
+        }
+        else if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) { // from cache
+            self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
+        }
+        else if let contact = Contact.fetchByPubkey(pubkey, context: bg()) { // from db
+            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(pubkey, contact: contact), pubkey: pubkey)
+        }
+        else { // we dont have it
+            self.pfpAttributes = PFPAttributes(pubkey: pubkey)
+        }
     }
 }
 
-struct ChatConfirmedZap {
+class NRChatConfirmedZap {
     var id: String
     var zapRequestId: String
     var zapRequestPubkey: String
@@ -250,7 +148,16 @@ struct ChatConfirmedZap {
     
     var nxEvent: NXEvent
     var content: [ContentElement] = []
-    var contact: NRContact?
+    
+    var contact: NRContact?  {
+        get { pfpAttributes.contact }
+        set {
+            DispatchQueue.main.async { [weak self] in
+                self?.pfpAttributes.contact = newValue
+            }
+        }
+    }
+    var pfpAttributes: PFPAttributes
     
     init(id: String, zapRequestId: String, zapRequestPubkey: String, zapRequestCreatedAt: Date, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil) {
         self.id = id
@@ -260,7 +167,19 @@ struct ChatConfirmedZap {
         self.amount = amount
         self.nxEvent = nxEvent
         self.content = content
-        self.contact = contact ?? NRContact.fetch(zapRequestPubkey)
+        
+        if let contact { // From param
+            self.pfpAttributes = PFPAttributes(contact: contact, pubkey: zapRequestPubkey)
+        }
+        else if let cachedNRContact = NRContactCache.shared.retrieveObject(at: zapRequestPubkey) { // from cache
+            self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: zapRequestPubkey)
+        }
+        else if let contact = Contact.fetchByPubkey(zapRequestPubkey, context: bg()) { // from db
+            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(zapRequestPubkey, contact: contact), pubkey: zapRequestPubkey)
+        }
+        else { // we dont have it
+            self.pfpAttributes = PFPAttributes(pubkey: zapRequestPubkey)
+        }
     }
 }
 

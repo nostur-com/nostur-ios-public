@@ -258,7 +258,7 @@ class Zap {
                                 
                                 if self.withPending, let aTag = self.aTag {
                                     DispatchQueue.main.async {
-                                        sendNotification(.receivedPendingZap, ChatPendingZap(
+                                        sendNotification(.receivedPendingZap, NRChatPendingZap(
                                             id: signedEvent.id,
                                             pubkey: signedEvent.publicKey,
                                             createdAt: Date(
@@ -307,7 +307,7 @@ class Zap {
                     Task { @MainActor in
                         if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {
                             if self.withPending, let aTag = self.aTag {
-                                    sendNotification(.receivedPendingZap, ChatPendingZap(
+                                    sendNotification(.receivedPendingZap, NRChatPendingZap(
                                         id: signedZapRequestNote.id,
                                         pubkey: signedZapRequestNote.publicKey,
                                         createdAt: Date(

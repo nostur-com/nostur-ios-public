@@ -38,9 +38,15 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     var contentElementsDetail: [ContentElement] = [] // PostDetail.Kind1
     var via: String?
     
-    @Published var contact: NRContact? = nil
-    
-    private var contactSavedSubscription: AnyCancellable?
+    var contact: NRContact?  {
+        get { pfpAttributes.contact }
+        set {
+            DispatchQueue.main.async { [weak self] in
+                self?.pfpAttributes.contact = newValue
+            }
+        }
+    }
+    var pfpAttributes: PFPAttributes
  
     var firstE: String? // Needed for muting
       
@@ -55,7 +61,9 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     
     var plainTextOnly = false
     
-    var anyName: String?
+    var anyName: String {
+        pfpAttributes.anyName
+    }
      
     var inWoT: Bool = false // This is just one of the inputs to determine spam or not, should have more inputs.
     
@@ -98,29 +106,24 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         
         let referencedContacts = cachedContacts + contactsFromDb
         
-        var anyName: String?
         var missingPs = Set<String>()
-        
+    
         if let cachedNRContact = NRContactCache.shared.retrieveObject(at: nEvent.publicKey) {
-            self.contact = cachedNRContact
-            anyName = cachedNRContact.contact?.anyName
+            self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: nEvent.publicKey)
             if let c = cachedNRContact.contact, c.metadata_created_at == 0 {
                 missingPs.insert(nEvent.publicKey)
             }
         }
         else if let contact = Contact.fetchByPubkey(nEvent.publicKey, context: bg()) {
-            self.contact = NRContact(pubkey: nEvent.publicKey, contact: contact)
-            anyName = contact.anyName
+            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(nEvent.publicKey, contact: contact), pubkey: nEvent.publicKey)
             if contact.metadata_created_at == 0 {
                 missingPs.insert(nEvent.publicKey)
             }
         }
         else {
+            self.pfpAttributes = PFPAttributes(pubkey: nEvent.publicKey)
             missingPs.insert(nEvent.publicKey)
-            anyName = String(nEvent.publicKey.suffix(11))
         }
-        
-        self.anyName = anyName
         
         let eventContactPs = (referencedContacts.compactMap({ contact in
             if (contact.contact?.metadata_created_at ?? 0) != 0 {

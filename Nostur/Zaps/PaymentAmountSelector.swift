@@ -54,15 +54,14 @@ struct PaymentAmountSelector: View {
                             if paymentInfo.withPending, let aTag = paymentInfo.zapAtag {
                                 DispatchQueue.main.async {
                                     sendNotification(.receivedPendingZap,
-                                                     ChatPendingZap(
+                                                     NRChatPendingZap(
                                                         id: signedZapRequestNote.id,
                                                         pubkey: signedZapRequestNote.publicKey,
                                                         createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)),
                                                         aTag: aTag,
                                                         amount: Int64(amount),
                                                         nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734),
-                                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0,
-                                                        contact: NRContact.fetch(signedZapRequestNote.publicKey)
+                                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0
                                                      )
                                     )
                                 }
@@ -97,13 +96,12 @@ struct PaymentAmountSelector: View {
                     if paymentInfo.withPending, let aTag = paymentInfo.zapAtag {
                         DispatchQueue.main.async {
                             sendNotification(.receivedPendingZap,
-                                             ChatPendingZap(
+                                             NRChatPendingZap(
                                                 id: signedZapRequestNote.id,
                                                 pubkey: signedZapRequestNote.publicKey,
                                                 createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)), aTag: aTag,
                                                 amount: Int64(amount),
-                                                nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734), content: [],
-                                                contact: NRContact.fetch(signedZapRequestNote.publicKey)
+                                                nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734), content: []
                                              ))
                         }
                     }
