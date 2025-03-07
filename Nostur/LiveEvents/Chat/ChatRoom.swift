@@ -78,13 +78,20 @@ let _ = Self._printChanges()
                                     .listRowSeparator(.hidden)
                                     .listRowBackground(.init(Color.clear))
                                     .scaleEffect(x: 1, y: -1, anchor: .center)
-                            }
+                        }
                     }
                     .scrollContentBackgroundHidden()
                     .listStyle(.plain)
                     .safeAreaScroll()
                     .scaleEffect(x: 1, y: -1, anchor: .center)
-//                    .padding(.top, 30)
+                    .padding(.top, 20)
+                    .overlay(alignment: .topTrailing) {
+                        if !chatVM.topZaps.isEmpty {
+                            ChatTopZaps(messages: chatVM.topZaps)
+                                .padding(.top, 50)
+                                .padding(.trailing, 5)
+                        }
+                    }
                     .onChange(of: chatVM.state) { newValue in
                         if newValue == .ready {
                             proxy.scrollTo(bottom)
@@ -106,12 +113,6 @@ let _ = Self._printChanges()
                         .padding(.bottom, 15)
                     }
                 }
-                    .overlay(alignment: .topTrailing) {
-                        if !chatVM.topZaps.isEmpty {
-                            ChatTopZaps(messages: chatVM.topZaps)
-                                .padding(5)
-                        }
-                    }
             }
         }
 
