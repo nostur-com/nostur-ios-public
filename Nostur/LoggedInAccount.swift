@@ -142,7 +142,9 @@ class LoggedInAccount: ObservableObject {
         didSet { // REMINDER, didSet does not run on init!
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.setupAccount(account)
+                if oldValue.publicKey != account.publicKey {
+                    self.setupAccount(account)
+                }
             }
         }
     }
@@ -160,8 +162,10 @@ class LoggedInAccount: ObservableObject {
     }
     
     @MainActor private func setupAccount(_ account: CloudAccount) {
+        let oldAccountPubkey = self.account.publicKey
+        let newAccountPubkey = account.publicKey
         NRContactCache.shared.clear()
-        self.pubkey = pubkey
+        self.pubkey = newAccountPubkey
         
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
         if account.flagsSet.contains("nostur_created") {
@@ -191,8 +195,10 @@ class LoggedInAccount: ObservableObject {
             self.followingCache = bgAccount.loadFollowingCache()
             self.reprocessContactListIfNeeded(bgAccount)
             
-            DispatchQueue.main.async {
-                sendNotification(.activeAccountChanged, account)
+            if oldAccountPubkey != newAccountPubkey {
+                DispatchQueue.main.async {
+                    sendNotification(.activeAccountChanged, account)
+                }
             }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
