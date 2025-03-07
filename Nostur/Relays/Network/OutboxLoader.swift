@@ -44,6 +44,7 @@ public class OutboxLoader {
     }
 
     public func load() {
+        // TODO: Skip if outbox disabled, track didLoad, run on toggle on + !didLoad
         
         // Load from DB, then fetch more
         
