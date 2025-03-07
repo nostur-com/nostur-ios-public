@@ -224,17 +224,20 @@ class LiveKitVoiceSession: ObservableObject {
             ctx.perform { [weak self] in
                 guard let self else { return }
                 if let nrContact = NRContact.fetch(participantPubkey, context: ctx) {
-                    if nrContact.pubkey == self.anonymousPubkeyCached {
-                        DispatchQueue.main.async {
-                            nrContact.name = "You"
-                            nrContact.anyName = "You"
-                        }
-                    }
-                    nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
+                    
+                    let isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
                         true
                     }
                     else {
                         false
+                    }
+                    
+                    if nrContact.pubkey == self.anonymousPubkeyCached {
+                        DispatchQueue.main.async {
+                            nrContact.name = "You"
+                            nrContact.anyName = "You"
+                            nrContact.isMuted = isMuted
+                        }
                     }
 
                     DispatchQueue.main.async {
@@ -256,17 +259,20 @@ class LiveKitVoiceSession: ObservableObject {
                     QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                     
                     if let nrContact = NRContact.fetch(contact.pubkey, contact: contact, context: ctx) {
-                        if nrContact.pubkey == self.anonymousPubkeyCached {
-                            DispatchQueue.main.async {
-                                nrContact.name = "You"
-                                nrContact.anyName = "You"
-                            }
-                        }
-                        nrContact.isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
+                        
+                        let isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
                             true
                         }
                         else {
                             false
+                        }
+                        
+                        if nrContact.pubkey == self.anonymousPubkeyCached {
+                            DispatchQueue.main.async {
+                                nrContact.name = "You"
+                                nrContact.anyName = "You"
+                                nrContact.isMuted = isMuted
+                            }
                         }
                         DispatchQueue.main.async {
                             guard let nrLiveEvent = self.nrLiveEvent else { return }
