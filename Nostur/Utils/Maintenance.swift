@@ -14,6 +14,7 @@ struct Maintenance {
     @MainActor
     static func deleteAllEventsAndContacts(context: NSManagedObjectContext) async {
 #if DEBUG
+        guard IS_SIMULATOR else { return }
         await context.perform {
             
             let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")

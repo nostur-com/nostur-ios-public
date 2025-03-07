@@ -212,7 +212,7 @@ struct AppView: View {
         UserDefaults.standard.register(defaults: ["selected_subtab" : "Following"])
         
 #if DEBUG
-        if LESS_CACHE {
+        if LESS_CACHE && IS_SIMULATOR {
             // To test if things are properly fetched and not broken if not already cached from before
             await Maintenance.deleteAllEventsAndContacts(context: bg())
         }

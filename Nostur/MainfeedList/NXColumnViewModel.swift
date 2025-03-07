@@ -152,7 +152,8 @@ class NXColumnViewModel: ObservableObject {
     public var refreshedAt: Int64 {
         get {
 #if DEBUG
-            if LESS_CACHE { // Force to 6 hours ago for testing
+            
+            if LESS_CACHE && IS_SIMULATOR { // Force to 6 hours ago for testing
                 return (Int64(Date().timeIntervalSince1970) - (3600 * 6))
             }
 #endif
