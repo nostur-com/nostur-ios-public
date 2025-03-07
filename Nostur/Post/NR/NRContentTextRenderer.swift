@@ -116,9 +116,9 @@ struct NRContentTextRendererInner: View {
 //                        }
 //                    }
                     .onReceive(
-                        Importer.shared.contactSaved
+                        ViewUpdates.shared.contactUpdated
                             .receive(on: RunLoop.main)
-                            .filter { pubkey in
+                            .filter { (pubkey, _) in
                                 guard !attributedStringWithPs.input.isEmpty else { return false }
                                 guard !attributedStringWithPs.pTags.isEmpty else { return false }
                                 return self.attributedStringWithPs.pTags.contains(pubkey)
@@ -160,9 +160,9 @@ struct NRContentTextRendererInner: View {
                         onTap?()
                     }
                     .onReceive(
-                        Importer.shared.contactSaved
+                        ViewUpdates.shared.contactUpdated
                             .receive(on: RunLoop.main)
-                            .filter { pubkey in
+                            .filter { (pubkey, _) in
                                 guard !attributedStringWithPs.input.isEmpty else { return false }
                                 guard !attributedStringWithPs.pTags.isEmpty else { return false }
                                 return self.attributedStringWithPs.pTags.contains(pubkey)

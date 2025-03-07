@@ -59,12 +59,14 @@ class Conversation: Identifiable, Hashable, ObservableObject {
             .store(in: &subscriptions)
         
         ViewUpdates.shared.contactUpdated
-            .filter { contactPubkey == $0.pubkey }
-            .sink { [weak self] contact in
-                let nrContact = NRContact.fetch(contact.pubkey, contact: contact)
-                Task { @MainActor [weak self] in
-                    self?.objectWillChange.send()
-                    self?.nrContact = nrContact
+            .filter { contactPubkey == $0.0 }
+            .sink { [weak self] tuple in
+                bg().perform {
+                    let nrContact = NRContact.fetch(tuple.0, contact: tuple.1)
+                    Task { @MainActor [weak self] in
+                        self?.objectWillChange.send()
+                        self?.nrContact = nrContact
+                    }
                 }
             }
             .store(in: &subscriptions)

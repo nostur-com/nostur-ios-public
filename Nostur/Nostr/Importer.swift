@@ -37,7 +37,6 @@ class Importer {
     
     public var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
     public var importedPrioMessagesFromSubscriptionId = PassthroughSubject<ImportedPrioNotification, Never>()
-    public var contactSaved = PassthroughSubject<String, Never>()
     public var listStatus = PassthroughSubject<String, Never>()
     
     var existingIds: [String: EventState] = [:]

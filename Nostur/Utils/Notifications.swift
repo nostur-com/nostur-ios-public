@@ -263,10 +263,6 @@ extension Notification.Name {
     static var newFollowers: Notification.Name {
         return Notification.Name("newFollowers")
     }
-
-    static var contactSaved: Notification.Name {
-        return Notification.Name("contactSaved")
-    }
     
     static var postAction: Notification.Name {
         return Notification.Name("postAction")

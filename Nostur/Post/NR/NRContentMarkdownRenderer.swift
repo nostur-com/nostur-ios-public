@@ -38,9 +38,9 @@ struct NRContentMarkdownRenderer: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, fullWidth ? 10 : 0)
             .onReceive(
-                Importer.shared.contactSaved
+                ViewUpdates.shared.contactUpdated
                     .receive(on: RunLoop.main)
-                    .filter { pubkey in
+                    .filter { (pubkey, _) in
                         guard !markdownContentWithPs.input.isEmpty else { return false }
                         guard !markdownContentWithPs.pTags.isEmpty else { return false }
                         return self.markdownContentWithPs.pTags.contains(pubkey)

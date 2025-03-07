@@ -542,7 +542,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         return Nostur.blocks().contains(pubkey)
     }
     
-    private var contactSavedSubscription: AnyCancellable?
+    private var contactUpdatedSubscription: AnyCancellable?
     private var postDeletedSubscription: AnyCancellable?
     private var repliesSubscription: AnyCancellable?
     private var repliesCountSubscription: AnyCancellable?
@@ -557,7 +557,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         // Don't listen if there is no need to listen (performance?)
         
         if !missingPs.isEmpty {
-            contactSavedListener()
+            contactUpdatedListener()
         }
         
         if deletedById == nil {
@@ -649,17 +649,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     // For rerendering ReplyingToFragment, or setting .contact
     // Or Rebuilding content elements for mentions in text
-    private func contactSavedListener() {
-        guard contactSavedSubscription == nil else { return }
+    private func contactUpdatedListener() {
+        guard contactUpdatedSubscription == nil else { return }
         // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
         // Rerender content elements also for mentions in text
-        contactSavedSubscription = Importer.shared.contactSaved
+        contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
             .subscribe(on: DispatchQueue.global())
-            .filter({ [weak self] pubkey in
+            .filter({ [weak self] (pubkey, contact) in
                 guard let self = self else { return false }
                 return self.missingPs.contains(pubkey)
             })
-            .sink { [weak self] pubkey in
+            .sink { [weak self] (pubkey, contact) in
                 guard let self = self else { return }
                 self.missingPs.remove(pubkey)
                 
@@ -672,7 +672,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     }
                     else {
                         bg().perform { [weak self] in
-                            if let nrContact = NRContact.fetch(pubkey) {
+                            if let nrContact = NRContact.fetch(pubkey, contact: contact) {
                                 DispatchQueue.main.async {
                                     self?.objectWillChange.send()
                                     self?.contact = nrContact
@@ -695,7 +695,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     
                     if self.kind == 9802 && self.highlightAttributes.authorPubkey == pubkey {
                         bg().perform {
-                            if let nrContact = NRContact.fetch(pubkey) {
+                            if let nrContact = NRContact.fetch(pubkey, contact: contact) {
                                 DispatchQueue.main.async { [weak self] in
                                     self?.highlightAttributes.objectWillChange.send()
                                     self?.highlightAttributes.contact = nrContact
@@ -706,8 +706,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 }
                 
                 if self.missingPs.isEmpty {
-                    contactSavedSubscription?.cancel()
-                    contactSavedSubscription = nil
+                    contactUpdatedSubscription?.cancel()
+                    contactUpdatedSubscription = nil
                 }
             }
     }
@@ -1325,22 +1325,21 @@ class PFPAttributes: ObservableObject {
     public var pfpURL: URL? {
         contact?.pictureUrl
     }
-    
-    public var didRanContactUpdated = false
-    
+        
     init(contact: NRContact? = nil, pubkey: String) {
         self.contact = contact
         self.pubkey = pubkey
         
         if contact == nil {
             contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
-                .filter { pubkey == $0.pubkey }
-                .sink(receiveValue: { [weak self] contact in
-                    let nrContact = NRContact.fetch(contact.pubkey, contact: contact)
-                    DispatchQueue.main.async { [weak self] in
-                        self?.objectWillChange.send()
-                        self?.contact = nrContact
-                        self?.didRanContactUpdated = true
+                .filter { pubkey == $0.0 }
+                .sink(receiveValue: { [weak self] (_, contact) in
+                    bg().perform {
+                        let nrContact = NRContact.fetch(contact.pubkey, contact: contact)
+                        DispatchQueue.main.async { [weak self] in
+                            self?.objectWillChange.send()
+                            self?.contact = nrContact
+                        }
                     }
                     self?.contactUpdatedSubscription?.cancel()
                     self?.contactUpdatedSubscription = nil

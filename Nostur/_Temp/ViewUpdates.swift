@@ -34,7 +34,7 @@ class ViewUpdates {
     public var repliesUpdated = PassthroughSubject<EventRepliesChange, Never>()
     public var postDeleted = PassthroughSubject<(toDelete: String, deletedBy: String), Never>()
     public var eventRelationUpdate = PassthroughSubject<EventRelationUpdate, Never>()
-    public var contactUpdated = PassthroughSubject<Contact, Never>()
+    public var contactUpdated = PassthroughSubject<(String, Contact), Never>()
     public var nip05updated = PassthroughSubject<(pubkey: String, isVerified: Bool, nip05: String, nameOnly: String), Never>() //
     public var updateNRPost = PassthroughSubject<Event, Never>()
     public var replacableEventUpdate = PassthroughSubject<Event, Never>()

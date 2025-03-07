@@ -308,13 +308,14 @@ extension Contact : Identifiable {
                 contact.lud06 = metaData.lud06
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                 contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
-                ViewUpdates.shared.contactUpdated.send(contact)
+                
                 // TODO: Should use this more?:
                 Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
                 
                 
                 updateRelatedEvents(contact)
                 updateRelatedAccounts(contact)
+                ViewUpdates.shared.contactUpdated.send((event.publicKey, contact))
             }
             else {
                 // Received metadata is older than stored Contact
@@ -345,6 +346,7 @@ extension Contact : Identifiable {
             EventRelationsQueue.shared.addAwaitingContact(contact)
             updateRelatedEvents(contact)
             updateRelatedAccounts(contact)
+            ViewUpdates.shared.contactUpdated.send((event.publicKey, contact))
         }
     }
     
@@ -363,7 +365,7 @@ extension Contact : Identifiable {
 //                waitingEvent.objectWillChange.send() // Needed for zaps on notification screen
                 if waitingEvent.contact == nil {
                     waitingEvent.contact = contact
-                    ViewUpdates.shared.contactUpdated.send(contact)
+//                    ViewUpdates.shared.contactUpdated.send(contact)
                 }
             }
             if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
@@ -390,9 +392,6 @@ extension Contact : Identifiable {
                 }
             }
         }
-        
-        let pubkey = contact.pubkey
-        Importer.shared.contactSaved.send(pubkey)
     }
     
     static func updateRelatedAccounts(_ contact:Contact) {

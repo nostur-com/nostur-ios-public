@@ -119,8 +119,8 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         let pubkey = self.pubkey
         ViewUpdates.shared.contactUpdated
             .subscribe(on: DispatchQueue.global())
-            .filter { $0.pubkey == pubkey }
-            .sink { [weak self] contact in
+            .filter { $0.0 == pubkey }
+            .sink { [weak self] (_, contact) in
                 bg().perform {
                     guard let self = self else { return }
                     let anyName = contact.anyName
