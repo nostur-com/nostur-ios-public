@@ -210,6 +210,13 @@ struct AppView: View {
     private func startNosturing() async {
         UserDefaults.standard.register(defaults: ["selected_subtab" : "Following"])
         
+#if DEBUG
+        if LESS_CACHE {
+            // To test if things are properly fetched and not broken if not already cached from before
+            await Maintenance.deleteAllEventsAndContacts(context: bg())
+        }
+#endif
+        
         if (firstTimeCompleted) {
             await Maintenance.upgradeDatabase(context: bg())
         }

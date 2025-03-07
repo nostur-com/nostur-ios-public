@@ -398,3 +398,5 @@ let EXPLORER_PUBKEY = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc66
 
 
 var timeTrackers: [String: CFAbsoluteTime] = [:]
+
+let LESS_CACHE = true // For testing, deletes all events and contacts at start up

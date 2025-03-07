@@ -151,6 +151,12 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public var refreshedAt: Int64 {
         get {
+#if DEBUG
+            if LESS_CACHE { // Force to 6 hours ago for testing
+                return (Int64(Date().timeIntervalSince1970) - (3600 * 6))
+            }
+#endif
+            
             guard let config else { // 2 days ago if config is somehow missing
                 return (Int64(Date().timeIntervalSince1970) - (2 * 3600 * 24))
             }

@@ -10,6 +10,38 @@ import CoreData
 import KeychainAccess
 
 struct Maintenance {
+    
+    @MainActor
+    static func deleteAllEventsAndContacts(context: NSManagedObjectContext) async {
+#if DEBUG
+        await context.perform {
+            
+            let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+            fr.predicate = NSPredicate(value: true)
+            
+            let frBatchDelete = NSBatchDeleteRequest(fetchRequest: fr)
+            frBatchDelete.resultType = .resultTypeCount
+            
+            if let result = try? context.execute(frBatchDelete) as? NSBatchDeleteResult {
+                if let count = result.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹🧹🧹 Deleted \(count) events")
+                }
+            }
+            
+            let fr2 = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
+            fr2.predicate = NSPredicate(value: true)
+            
+            let fr2BatchDelete = NSBatchDeleteRequest(fetchRequest: fr2)
+            fr2BatchDelete.resultType = .resultTypeCount
+            
+            if let result2 = try? context.execute(fr2BatchDelete) as? NSBatchDeleteResult {
+                if let count = result2.result as? Int, count > 0 {
+                    L.maintenance.info("🧹🧹🧹🧹 Deleted \(count) contacts")
+                }
+            }
+        }
+#endif
+    }
 
     static let BOOTSTRAP_RELAYS = ["wss://relay.nostr.band", "wss://nos.lol", "wss://nostr.wine", "wss://purplepag.es"]
     
