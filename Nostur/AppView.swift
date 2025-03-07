@@ -50,6 +50,7 @@ struct AppView: View {
     
 //    @State private var isViewDisplayed = false
     @State private var isOnboarding = false
+    @State private var didRunConnectAll = false
     
     @State private var priceLoop = Timer.publish(every: 900, tolerance: 120, on: .main, in: .common).autoconnect().receive(on: RunLoop.main)
         .merge(with: Just(Date()))
@@ -97,7 +98,7 @@ struct AppView: View {
                     .nbUseNavigationStack(.never)
                 }
                 else {
-                    if let loggedInAccount = ns.loggedInAccount { // 74 MB -> 175MB
+                    if didRunConnectAll, let loggedInAccount = ns.loggedInAccount { // 74 MB -> 175MB
                         NosturRootMenu()
                             .environmentObject(themes)
                             .sheet(isPresented: $ns.readOnlyAccountSheetShown) {
@@ -239,6 +240,7 @@ struct AppView: View {
             }
             
             ConnectionPool.shared.connectAll()
+            didRunConnectAll = true
             
             if !SettingsStore.shared.activeNWCconnectionId.isEmpty {
                 await bg().perform {
