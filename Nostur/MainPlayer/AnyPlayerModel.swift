@@ -32,9 +32,6 @@ class AnyPlayerModel: ObservableObject {
             if viewMode == .detailstream {
                 LiveKitVoiceSession.shared.objectWillChange.send() // Force update
             }
-            else if viewMode == .fullscreen {
-                UIApplication.shared.isIdleTimerDisabled = true
-            }
         }
     }
 
