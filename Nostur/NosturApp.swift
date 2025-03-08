@@ -55,6 +55,7 @@ struct AppScene: Scene {
         .onChange(of: phase) { newPhase in
             switch newPhase {
             case .active:
+                UIApplication.shared.isIdleTimerDisabled = true // must be in Scene or it doesn't work?
                 npn.reload()
             case .background:
                 if !IS_CATALYST {
@@ -122,6 +123,7 @@ struct RefreshingAppScene: Scene {
         .onChange(of: phase) { newPhase in
             switch newPhase {
             case .active:
+                UIApplication.shared.isIdleTimerDisabled = true // must be in Scene or it doesn't work?
                 npn.reload()
             case .background:
                 if !IS_CATALYST {
@@ -230,6 +232,7 @@ struct SimpleScene: Scene {
         .onChange(of: phase) { newPhase in
             switch newPhase {
             case .active:
+                UIApplication.shared.isIdleTimerDisabled = true // must be in Scene or it doesn't work?
                 npn.reload()
             case .background:
                 if !IS_CATALYST {
