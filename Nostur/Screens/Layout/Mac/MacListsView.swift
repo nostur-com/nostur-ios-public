@@ -8,6 +8,8 @@
 import SwiftUI
 import NavigationBackport
 
+let COLUMN_SPACING = 1.0
+
 @available(iOS 16.0, *)
 struct MacListsView: View {
     @EnvironmentObject private var la: LoggedInAccount
@@ -23,7 +25,7 @@ struct MacListsView: View {
     var body: some View {
 //        let _ = Self._printChanges()
         GeometryReader { geo in
-            HStack {
+            HStack(spacing: COLUMN_SPACING) {
                 // Tabs on the side
                 SideTabs(columnsCount: $vm.columnsCount, selectedTab: $vm.selectedTab)
                     .frame(width: SIDEBAR_WIDTH)
@@ -87,7 +89,10 @@ struct MacListsView: View {
     }
     
     func columnSize(_ availableWidth: CGFloat) -> CGFloat {
-        CGFloat((availableWidth - SIDEBAR_WIDTH)/Double(vm.columnsCount + 1))
+        let totalColumns = vm.columnsCount + 1 // +1 for main column
+        let spacing = Double((totalColumns + 1)) * COLUMN_SPACING // +1 for side bar
+        
+        return CGFloat((availableWidth - SIDEBAR_WIDTH - spacing) / Double(totalColumns))
     }
 }
 
@@ -216,11 +221,13 @@ struct PhoneViewIsh: View {
 struct ColumnViewWrapper: View {
     let availableFeeds:[CloudFeed]
     @State private var selectedFeed: CloudFeed? = nil
+    @State private var navPath = NBNavigationPath()
 //    @State private var lvm:LVM? = nil
     
     var body: some View {
 //        Text("uuuh")
-        ColumnView(availableFeeds: availableFeeds, selectedFeed: $selectedFeed)
+//        NXColumnConfigurator()
+        ColumnView(availableFeeds: availableFeeds, selectedFeed: $selectedFeed, navPath: $navPath)
     }
 }
 
@@ -228,62 +235,73 @@ struct ColumnView: View {
     @EnvironmentObject private var themes:Themes
     let availableFeeds: [CloudFeed]
     @Binding var selectedFeed: CloudFeed?
+    @Binding var navPath: NBNavigationPath
 //    @Binding var lvm:LVM?
     
     var body: some View {
-        ZStack {
-            themes.theme.listBackground
-            VStack {
-                FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
-                    .padding(.top, 10)
-//                if let lvm = lvm {
-//                    Color.green
-////                    ListViewContainer(vm: lvm)
-////                        .overlay(alignment: .topTrailing) {
-////                            ListUnreadCounter(vm: lvm, theme: themes.theme)
-////                                .padding(.trailing, 10)
-////                                .padding(.top, 5)
-////                        }
-//                }
-                Spacer()
-            }
-            if selectedFeed == nil {
-                VStack(alignment:.leading) {
-                    
-                    Text("Choose content for this column")
-                    
-                    Group {
-                        
-                        Button { } label: {
-                            Label("Custom Feed", systemImage: "rectangle.stack")
-                        }
-                        
-                        Button { } label: {
-                            Label("Profile", systemImage: "person.fill")
-                        }
-                        
-                        Button { } label: {
-                            Label("Private notes", systemImage: "note.text")
-                        }
-                        
-                        Button { } label: {
-                            Label("Hashtag", systemImage: "number")
-                        }
-                        
-                        Button { } label: {
-                            Label("Messages", systemImage: "envelope")
-                        }
-                        
-                        Button { } label: {
-                            Label("Notifications", systemImage: "bell.fill")
-                        }
+        NBNavigationStack(path: $navPath) {
+            ZStack {
+                themes.theme.listBackground
+                VStack {
+                    Button("feeds....") {
+                        navPath.append(ViewPath.Lists)
                     }
-                    .buttonStyle(.bordered)
+                    FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
+                        .padding(.top, 10)
+    //                if let lvm = lvm {
+    //                    Color.green
+    ////                    ListViewContainer(vm: lvm)
+    ////                        .overlay(alignment: .topTrailing) {
+    ////                            ListUnreadCounter(vm: lvm, theme: themes.theme)
+    ////                                .padding(.trailing, 10)
+    ////                                .padding(.top, 5)
+    ////                        }
+    //                }
+                    Spacer()
+                }
+                if selectedFeed == nil {
+                    VStack(alignment:.leading) {
+                        
+                        Text("Choose content for this column")
+                        
+                        Group {
+                            
+                            Button { } label: {
+                                Label("Following", systemImage: "person.3.fill")
+                            }
+                            
+                            Button { } label: {
+                                Label("Custom Feed", systemImage: "person.3")
+                            }
+                            
+                            Button { } label: {
+                                Label("Profile", systemImage: "person.fill")
+                            }
+    //
+    //                        Button { } label: {
+    //                            Label("Private notes", systemImage: "note.text")
+    //                        }
+                            
+                            Button { } label: {
+                                Label("Hashtag", systemImage: "number")
+                            }
+                            
+                            Button { } label: {
+                                Label("Messages", systemImage: "envelope")
+                            }
+                            
+                            Button { } label: {
+                                Label("Notifications", systemImage: "bell.fill")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 }
             }
-        }
-        .onChange(of: selectedFeed) { newFeed in
+            .withNavigationDestinations()
+            .onChange(of: selectedFeed) { newFeed in
 
+            }
         }
     }
 }

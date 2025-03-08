@@ -58,9 +58,8 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     }
 
     init(pubkey: String, contact: Contact? = nil) {
-#if DEBUG
-        if Thread.isMainThread { fatalError("Must be bg thread!") }
-#endif
+        shouldBeBg()
+
         self.contact = contact
         self.pubkey = contact?.pubkey ?? pubkey
         self.randomColor = Nostur.randomColor(seed: contact?.pubkey ?? pubkey)
