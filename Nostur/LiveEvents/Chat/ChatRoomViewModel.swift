@@ -93,7 +93,7 @@ class ChatRoomViewModel: ObservableObject {
             .store(in: &subscriptions)
         
         fetchMissingPs
-            .debounce(for: .seconds(4.5), scheduler: RunLoop.main)
+            .debounce(for: .seconds(3.5), scheduler: RunLoop.main)
             .sink { [weak self] in
                 if let messages = self?.bgMessages {
                     let allMissingPs: Set<String> = messages.map { $0.missingPs }.count > 0 ? Set(messages.flatMap(\.missingPs)) : []
@@ -151,6 +151,7 @@ class ChatRoomViewModel: ObservableObject {
             }
 
             self.bgMessages = rows
+            self.fetchMissingPs.send()
             self.renderMessages.send()
             self.updateTopZaps()
             onComplete?()
