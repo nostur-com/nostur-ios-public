@@ -173,4 +173,6 @@ enum CloudFeedType: String {
     case picture = "picture"
     case pubkeys = "pubkeys"
     case relays = "relays"
+    case mentions = "mentions"
+    case hashtags = "hashtags"
 }

@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct FeedSelector: View {
-    let feeds:[CloudFeed]
-    @Binding var selected:CloudFeed?
+    let feeds: [CloudFeed]
+    @Binding var selected: CloudFeed?
     
     var body: some View {
         Picker("Feed", selection: $selected) {
