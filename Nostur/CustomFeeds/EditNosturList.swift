@@ -75,6 +75,14 @@ struct EditNosturList: View {
                                prompt: "Search", onSelectContacts: { selectedContacts in
                     list.contactPubkeys.formUnion(Set(selectedContacts.map { $0.pubkey }))
                     addContactsSheetShown = false
+                    let listContactPubkeys = list.contactPubkeys
+                    bg().perform {
+                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(listContactPubkeys)
+                            .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                        Task { @MainActor in
+                            self.listNRContacts = listNRContacts
+                        }
+                    }
                     DataProvider.shared().save()
                     sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                 })
