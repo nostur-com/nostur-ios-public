@@ -46,7 +46,7 @@ class FollowingGuardian: ObservableObject {
     
     func listenForAccountChanged() {
         receiveNotification(.activeAccountChanged)
-            .debounce(for: .seconds(15), scheduler: RunLoop.main)
+            .debounce(for: .seconds(7), scheduler: RunLoop.main)
             .sink { notification in
                 let account = notification.object as! CloudAccount
                 guard account.isFullAccount else { return }
