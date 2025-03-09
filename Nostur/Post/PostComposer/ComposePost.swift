@@ -41,7 +41,7 @@ struct ComposePost: View {
     @EnvironmentObject private var themes: Themes
     
     @StateObject private var vm = NewPostModel()
-    @StateObject private var ipm = ImagePickerModel()
+    @StateObject private var ipm = MultipleImagePickerModel()
     @State private var gifSheetShown = false
     @State private var photoPickerShown = false
     @State private var videoPickerShown = false
@@ -226,29 +226,31 @@ struct ComposePost: View {
                             .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                     }
-                    .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection, matching: .images, photoLibrary: .shared())
-                    .onChange(of: ipm.newImage) { newImage in
-                        if let newImage {
-                            if kind == .picture { // Only 1 main picture for kind:20
+                    .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection,
+                                  maxSelectionCount: kind == .picture ? 1 : 8,
+                                  matching: .images, photoLibrary: .shared())
+                    .onChange(of: ipm.newImages) { newImages in
+                        if kind == .picture, let firstImage = newImages.first {
+                            vm.typingTextModel.objectWillChange.send()
+                            vm.typingTextModel.pastedImages = [PostedImageMeta(index: 0, imageData: firstImage, type: .jpeg, uniqueId: UUID().uuidString)]
+                        }
+                        else {
+                            for (index, newImage) in newImages.enumerated() {
                                 vm.typingTextModel.objectWillChange.send()
-                                vm.typingTextModel.pastedImages = [PostedImageMeta(index: 0, imageData: newImage, type: .jpeg, uniqueId: UUID().uuidString)]
-                            }
-                            else { // multiple images possible for others
                                 vm.typingTextModel.pastedImages.append(
-                                    PostedImageMeta(index: vm.typingTextModel.pastedImages.count, imageData: newImage, type: .jpeg, uniqueId: UUID().uuidString)
+                                    PostedImageMeta(index: vm.typingTextModel.pastedImages.count + index, imageData: newImage, type: .jpeg, uniqueId: UUID().uuidString)
                                 )
                             }
-                            ipm.newImage = nil
                         }
+                        ipm.newImages = []
                     }
                     .onChange(of: photoPickerShown) { isShown in
                         // Dismiss whole sheet if no image was picked (for kind:20)
                         guard kind == .picture else { return }
                         guard !isShown else { return }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            guard case .empty = ipm.imageState else {  return }
-                            guard ipm.imageSelection == nil else { return }
-                            guard ipm.newImage == nil else { return }
+                            guard ipm.imageSelection.isEmpty else { return }
+                            guard ipm.newImages.isEmpty else { return }
                             if vm.typingTextModel.pastedImages.isEmpty && !photoPickerShown {
                                 L.og.debug("No image selected, dismiss")
                                 onDismiss()
@@ -347,6 +349,24 @@ struct ComposePost: View {
 }
 
 #Preview("New Post") {
+    PreviewContainer({ pe in
+        pe.loadAccounts()
+        pe.loadPosts()
+        pe.loadContacts()
+    }) {
+        VStack {
+            Button("New Post") { }
+                .sheet(isPresented: .constant(true)) {
+                    NBNavigationStack {
+                        ComposePostCompat(onDismiss: { })
+                    }
+                    .nbUseNavigationStack(.never)
+                }
+        }
+    }
+}
+
+#Preview("New Picture Post") {
     PreviewContainer({ pe in
         pe.loadAccounts()
         pe.loadPosts()

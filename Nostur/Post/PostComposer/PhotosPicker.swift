@@ -9,39 +9,52 @@ import SwiftUI
 import PhotosUI
 
 @available(iOS 16.0, *)
-struct MediaImage: View {
-    let imageState: ImagePickerModel.ImageState
+class MultipleImagePickerModel: ObservableObject {
 
-    var body: some View {
-        switch imageState {
-        case .success(let image):
-            image.resizable()
-        case .loading:
-            ProgressView()
-        case .empty:
-            Rectangle()
-                .foregroundColor(.gray)
-        case .failure:
-            Rectangle()
-                .foregroundColor(.gray)
+    @Published var newImages: [UIImage] = []
+    @Published var imageSelection: [PhotosPickerItem] = [] {
+        didSet {
+            Task {
+                let newImages = await loadTransferables()
+                Task { @MainActor in
+                    self.newImages = newImages
+                    self.imageSelection = []
+                }
+            }
+
         }
     }
-}
 
-@available(iOS 16.0, *)
-class ImagePickerModel: ObservableObject {
-    
-    enum ImageState {
-        case empty
-        case loading(Progress)
-        case success(Image)
-        case failure(Error)
+    private func loadTransferables() async -> [UIImage] {
+        var newImages: [UIImage] = []
+        for imageSelection in self.imageSelection {
+            if let image = await loadTransferable(from: imageSelection) {
+                newImages.append(image)
+            }
+        }
+        return newImages
+    }
+
+    private func loadTransferable(from imageSelection: PhotosPickerItem) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            imageSelection.loadTransferable(type: SelectedImage.self) { result in
+                switch result {
+                case .success(let selectedImage?):
+                    continuation.resume(returning: selectedImage.uiImage)
+                case .success(nil):
+                    continuation.resume(returning: nil)
+                case .failure(_):
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
     }
 
     enum TransferError: Error {
         case importFailed
     }
 
+    @available(iOS 16.0, *)
     struct SelectedImage: Transferable {
         let image: Image
         let uiImage: UIImage
@@ -57,42 +70,6 @@ class ImagePickerModel: ObservableObject {
             #else
                 throw TransferError.importFailed
             #endif
-            }
-        }
-    }
-
-    @Published var imageState: ImageState = .empty
-
-    @Published var newImage: UIImage?
-    @Published var imageSelection: PhotosPickerItem? = nil {
-        didSet {
-            if let imageSelection {
-                let progress = loadTransferable(from: imageSelection)
-                imageState = .loading(progress)
-            } else {
-                imageState = .empty
-            }
-        }
-    }
-
-    // MARK: - Private Methods
-
-    private func loadTransferable(from imageSelection: PhotosPickerItem) -> Progress {
-        return imageSelection.loadTransferable(type: SelectedImage.self) { result in
-            DispatchQueue.main.async {
-                guard imageSelection == self.imageSelection else {
-                    L.og.debug("Failed to get the selected item.")
-                    return
-                }
-                switch result {
-                case .success(let selectedImage?):
-                    self.imageState = .success(selectedImage.image)
-                    self.newImage = selectedImage.uiImage
-                case .success(nil):
-                    self.imageState = .empty
-                case .failure(let error):
-                    self.imageState = .failure(error)
-                }
             }
         }
     }
