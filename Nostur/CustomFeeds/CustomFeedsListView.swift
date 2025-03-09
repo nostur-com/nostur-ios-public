@@ -12,7 +12,7 @@ struct CustomFeedsListView: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
-    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.createdAt, order: .reverse)], predicate: NSPredicate(format: "NOT type IN %@", ["following", "picture"]))
+    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.createdAt, order: .reverse)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture"]))
     var lists: FetchedResults<CloudFeed>
     
     @State var confirmDeleteShown = false
