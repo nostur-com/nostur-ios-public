@@ -374,7 +374,7 @@ extension PreviewEnvironment {
                                         "a3eb29554bd27fca7f53f66272e4bb59d066f2f31708cf341540cb4729fbd841",
                                         "c7dccba4fe4426a7b1ea239a5637ba40fab9862c8c86b3330fe65e9f667435f6",
                                         "7bdef7be22dd8e59f4600e044aa53a1cf975a9dc7d27df5833bc77db784a5805"]
-            NRState.shared.loadAccount(account)
+            NRState.shared.changeAccount(account)
             WebOfTrust.shared.webOfTrustLevel = SettingsStore.WebOfTrustLevel.off.rawValue
 //            return account
         }
@@ -449,7 +449,7 @@ extension PreviewEnvironment {
 //        NRState.shared.loadAccounts()
         
         if let account = NRState.shared.accounts.first {
-            NRState.shared.loadAccount(account)
+            NRState.shared.changeAccount(account)
         }
     }
     

@@ -227,10 +227,6 @@ class LoggedInAccount: ObservableObject {
         }
     }
     
-    public func changeAccount(account: CloudAccount) {
-        self.account = account
-    }
-    
     public func reloadFollows() {
         self.bg.perform { [weak self] in
             guard let self, let bgAccount = self.bgAccount else { return }
