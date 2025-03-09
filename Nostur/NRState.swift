@@ -174,18 +174,6 @@ class NRState: ObservableObject {
         }
     }
     
-    @MainActor public func loadAccount(_ account: CloudAccount) { // main context
-        guard loggedInAccount == nil || account.publicKey != self.activeAccountPublicKey else {
-            L.og.notice("🔴🔴 This account is already loaded")
-            return
-        }
-        self.activeAccountPublicKey = account.publicKey
-        if account.isNC {
-            self.nsecBunker.setAccount(account)
-        }
-        self.loggedInAccount = LoggedInAccount(account)
-    }
-    
     private func managePowerUsage() {
         NotificationCenter.default.addObserver(self, selector: #selector(powerStateChanged), name: Notification.Name.NSProcessInfoPowerStateDidChange, object: nil)
     }
