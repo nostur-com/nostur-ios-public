@@ -51,7 +51,7 @@ struct LiveEventCapsule: View {
         .frame(height: 44.0)
         .contentShape(Rectangle())
         .offset(y: dragOffset.height)
-        .gesture(
+        .simultaneousGesture(
             TapGesture()
                .onEnded {
                    if IS_CATALYST || IS_IPAD {
