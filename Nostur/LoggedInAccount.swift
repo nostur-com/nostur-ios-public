@@ -154,18 +154,16 @@ class LoggedInAccount: ObservableObject {
     
     public var mutedWords: [String] = []
     
-    @MainActor public init(_ account: CloudAccount) {
+    @MainActor public init(_ account: CloudAccount, completion: (() -> Void)? = nil) {
         self.bg = Nostur.bg()
         self.pubkey = account.publicKey
         self.account = account
-        self.setupAccount(account)
+        self.setupAccount(account, completion: completion)
     }
     
-    @MainActor private func setupAccount(_ account: CloudAccount) {
-        let oldAccountPubkey = self.account.publicKey
-        let newAccountPubkey = account.publicKey
-        NRContactCache.shared.clear()
-        self.pubkey = newAccountPubkey
+    @MainActor private func setupAccount(_ account: CloudAccount, completion: (() -> Void)? = nil) {
+        NRContactCache.shared.clear() // No need to clear?
+        self.pubkey = account.publicKey
         
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
         if account.flagsSet.contains("nostur_created") {
@@ -194,12 +192,8 @@ class LoggedInAccount: ObservableObject {
             self.followingPublicKeys = follows
             self.followingCache = bgAccount.loadFollowingCache()
             self.reprocessContactListIfNeeded(bgAccount)
-            
-            if oldAccountPubkey != newAccountPubkey {
-                DispatchQueue.main.async {
-                    sendNotification(.activeAccountChanged, account)
-                }
-            }
+
+            completion?()
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
