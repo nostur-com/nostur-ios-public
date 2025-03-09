@@ -69,7 +69,11 @@ class NRState: ObservableObject {
             self.nsecBunker.setAccount(account)
         }
         let pubkey = account.publicKey
-        self.loggedInAccount = LoggedInAccount(account)
+        self.loggedInAccount = LoggedInAccount(account, completion: {
+            DispatchQueue.main.async {
+                sendNotification(.activeAccountChanged, account)
+            }
+        })
         
         guard pubkey != self.activeAccountPublicKey else { return }
         self.activeAccountPublicKey = pubkey
