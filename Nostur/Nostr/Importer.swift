@@ -253,7 +253,7 @@ class Importer {
                     
                     if event.kind == .contactList {
                         if event.publicKey == EXPLORER_PUBKEY {
-                            // use guest account p's for "Explorer" feed
+                            // use explorer account p's for "Explorer" feed
                             let pTags = event.pTags()
                             Task { @MainActor in
                                 NRState.shared.rawExplorePubkeys = Set(pTags)
@@ -480,7 +480,7 @@ class Importer {
                     
                     if event.kind == .contactList {
                         if event.publicKey == EXPLORER_PUBKEY {
-                            // use guest account p's for "Explorer" feed
+                            // use explorer account p's for "Explorer" feed
                             let pTags = event.pTags()
                             Task { @MainActor in
                                 NRState.shared.rawExplorePubkeys = Set(pTags)
