@@ -134,7 +134,7 @@ class NXColumnViewModel: ObservableObject {
     private var reloadWhenNeededSub: AnyCancellable?
     private var lastDisconnectionSub: AnyCancellable?
     private var onAppearSubjectSub: AnyCancellable?
-    private var watchForFirstConnection = false
+    public var watchForFirstConnection = false
     private var subscriptions = Set<AnyCancellable>()
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
     

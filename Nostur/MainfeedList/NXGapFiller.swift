@@ -44,10 +44,11 @@ class NXGapFiller {
         self.currentGap = currentGap
         
 //        // Check connection? This actually makes the first fetch never work, need to fix the timing or enable somewhere else, disabled for now
-//        guard ConnectionPool.shared.anyConnected else {
-//            L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap")
-//            return
-//        }
+        guard ConnectionPool.shared.anyConnected else {
+            L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true")
+            columnVM.watchForFirstConnection = true
+            return
+        }
         
         // Check if paused
         guard !columnVM.isPaused else {
