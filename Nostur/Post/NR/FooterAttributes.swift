@@ -163,26 +163,26 @@ class FooterAttributes: ObservableObject {
                 return change
             }
             .compactMap { $0 } // Filter out nil values
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
             .receive(on: RunLoop.main)
             .sink { [weak self] change in
                 guard let self else { return }
                 
                 self.objectWillChange.send()
                 
-                if let likes = change.likes, likes != self.likesCount {
+                if let likes = change.likes, likes != self.likesCount, likes != 0 {
                     self.likesCount = likes
                 }
-                if let replies = change.replies, replies != self.repliesCount {
+                if let replies = change.replies, replies != self.repliesCount, replies != 0 {
                     self.repliesCount = replies
                 }
-                if let reposts = change.reposts, reposts != self.repostsCount {
+                if let reposts = change.reposts, reposts != self.repostsCount, reposts != 0 {
                     self.repostsCount = reposts
                 }
-                if let zaps = change.zaps, zaps != self.zapsCount {
+                if let zaps = change.zaps, zaps != self.zapsCount, zaps != 0 {
                     self.zapsCount = zaps
                 }
-                if let zapTally = change.zapTally, zapTally != self.zapTally {
+                if let zapTally = change.zapTally, zapTally != self.zapTally, zapTally != 0  {
                     self.zapTally = zapTally
                 }
                 
