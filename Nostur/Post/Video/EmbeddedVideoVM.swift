@@ -552,8 +552,8 @@ public enum StreamType {
     case unknown
 }
 
-func detectStreamType(_ content:String) -> StreamType {
-    let content = content.prefix(400)
+func detectStreamType(_ content: String) -> StreamType {
+    let content = content.prefix(900)
     if content.contains("RESOLUTION=") {
         return .video
     }
@@ -561,6 +561,9 @@ func detectStreamType(_ content:String) -> StreamType {
         return .video
     }
     else if content.contains("PLAYLIST-TYPE:VOD") {
+        return .video
+    }
+    else if content.contains(".ts") {
         return .video
     }
     return .unknown // probably audio
