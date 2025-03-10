@@ -27,6 +27,7 @@ struct SideBar: View {
     @State private var logoutAccount: CloudAccount? = nil
     @State private var showAnySigner = false
     @State private var sidebarOffset: CGFloat = -NOSTUR_SIDEBAR_WIDTH
+    @State private var npub = ""
     
     static let ICON_WIDTH = 30.0
     static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
@@ -82,6 +83,9 @@ struct SideBar: View {
                     HStack(alignment: .bottom) {
                         VStack(alignment: .leading) {
                             Text("\(account.name)").font(.headline)
+                            CopyableTextView(text: account.npub)
+                                .lineLimit(1)
+                                .frame(width: 140, alignment: .leading)
                             Text("**\(account.followingPubkeys.count)**  Following", comment: "Number of people following").font(.caption)
                         }
                         Spacer()
