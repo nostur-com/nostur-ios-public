@@ -11,19 +11,13 @@ import SwiftUI
 // So moved to separate NXColumnViewModelInner
 class NXColumnViewModelInner: ObservableObject {
     
-    @Published public var unreadIds: [String: Int] = [:] { // Dict of [post id: posts count (post + parent posts)]
-        didSet {
-            if unreadCount == 0 {
-                if !isAtTop {
-                    isAtTop = true
-                }
-            }
-        }
-    }
+    @Published public var unreadIds: [String: Int] = [:]
+    
     public var unreadCount: Int {
         unreadIds.reduce(0, { $0 + $1.value })
     }
     
     @Published public var scrollToIndex: Int?
+    public var isScrollingToIndex = false
     @Published public var isAtTop: Bool = true
 }

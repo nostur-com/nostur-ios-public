@@ -70,6 +70,7 @@ class NXColumnViewModel: ObservableObject {
             if newValue {
                 if delayur == nil { delayur = NXDelayur() }
                 delayur?.setDelayur(true, seconds: 5.0) { [weak self] in
+                    guard (self?.isVisible ?? false) else { return }
                     self?.resumeProcessing()
                 }
             }
@@ -94,7 +95,7 @@ class NXColumnViewModel: ObservableObject {
     private func resumeProcessing() {
         guard let config else { return }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) resumeProcessing")
+        L.og.debug("☘️☘️ \(config.name) resumeProcessing isAtTop: \(self.vmInner.isAtTop)")
 #endif
         // Will trigger listenForNewPosts() with maybe subscriptionIds still in queue
         resumeSubject.send(Set())
@@ -551,7 +552,7 @@ class NXColumnViewModel: ObservableObject {
     public func resume() {
         guard let config else { return }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) resume()")
+        L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop)")
 #endif
         startTime = .now
         
@@ -1633,7 +1634,7 @@ extension NXColumnViewModel {
             
             if !insertAtEnd { // add on top
 #if DEBUG
-                L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (TOP) \(onlyNewAddedPosts.count.description) -> OLD FIRST: \((existingPosts.first?.content ?? "").prefix(150))")
+                L.og.debug("☘️☘️ \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) addedPosts (TOP) \(onlyNewAddedPosts.count.description) -> OLD FIRST: \((existingPosts.first?.content ?? "").prefix(150))")
 #endif
    
                 let addedAndExistingPosts = onlyNewAddedPosts + existingPosts
@@ -1658,24 +1659,27 @@ extension NXColumnViewModel {
                     addedAndExistingPosts
                 }
                 
+                // Update unread count
+                for post in onlyNewAddedPosts {
+                    if vmInner.unreadIds[post.id] == nil {
+                        vmInner.unreadIds[post.id] = 1 + post.parentPosts.count
+                    }
+                }
+                
                 if vmInner.isAtTop {
                     let previousFirstPostId: String? = existingPosts.first?.id
                     
                     // TODO: Should already start prefetching missing onlyNewAddedPosts pfp/kind 0 here
 
-                    // Update unread count
-                    for post in onlyNewAddedPosts {
-                        if vmInner.unreadIds[post.id] == nil {
-                            vmInner.unreadIds[post.id] = 1 + post.parentPosts.count
-                        }
-                    }
-                    
                     if SettingsStore.shared.autoScroll {
                         withAnimation { // withAnimation won't keep scroll position and scrolls to newest post
                             viewState = .posts(addedAndExistingPostsTruncated)
                         }
                     }
                     else {
+                        #if DEBUG
+                        L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) - should restore using scrollToIndex, if we were not at top ")
+                        #endif
                         viewState = .posts(addedAndExistingPostsTruncated)
                         
                         // Set scrollToIndex to restore scroll position after new posts are added on top
@@ -1691,15 +1695,11 @@ extension NXColumnViewModel {
                     }
                 }
                 else {
+                    #if DEBUG
+                    L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) withAnimation { }  + not at top, to keep scroll pos ")
+                    #endif
                     withAnimation { // withAnimation and not at top keeps scroll position
                         viewState = .posts(addedAndExistingPostsTruncated)
-                        
-                        // Update unread count
-                        for post in onlyNewAddedPosts {
-                            if vmInner.unreadIds[post.id] == nil {
-                                vmInner.unreadIds[post.id] = 1 + post.parentPosts.count
-                            }
-                        }
                     }
                 }
             }
@@ -1715,7 +1715,7 @@ extension NXColumnViewModel {
         else { // Nothing on screen yet, put first posts on screen
             let uniqueAddedPosts = addedPosts.uniqued(on: { $0.id })
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description)")
+            L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (💦FIRST💦) \(uniqueAddedPosts.count.description) - \((uniqueAddedPosts.first?.content ?? "").prefix(150))")
 #endif
             if !vmInner.isAtTop {
                 vmInner.isAtTop = true

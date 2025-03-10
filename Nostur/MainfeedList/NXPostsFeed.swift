@@ -15,6 +15,7 @@ struct NXPostsFeed: View {
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
     @ObservedObject private var vmInner: NXColumnViewModelInner
+    private let isVisible: Bool
     
     @Weak private var collectionView: UICollectionView?
     @State private var collectionPrefetcher: NXPostsFeedPrefetcher?
@@ -22,10 +23,11 @@ struct NXPostsFeed: View {
     @Weak private var tableView: UITableView?
     @State private var tablePrefetcher: NXPostsFeedTablePrefetcher?
     
-    init(vm: NXColumnViewModel, posts: [NRPost]) {
+    init(vm: NXColumnViewModel, posts: [NRPost], isVisible: Bool) {
         self.vm = vm
         self.posts = posts
         self.vmInner = vm.vmInner
+        self.isVisible = isVisible
     }
     
     var body: some View {
@@ -87,38 +89,52 @@ struct NXPostsFeed: View {
             .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
                 guard let scrollToIndex else { return }
 #if DEBUG
-                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
+                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
 #endif
+      
+                // While we scroll to previous index here, we are triggering onPostAppear(), which updates markAsRead
+                // But it wasn't a real onPostAppear, so we need to avoid that markAsRead. Using isScrollingToIndex flag to track that
+                vmInner.isScrollingToIndex = true
                 
-                if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
-                    if let collectionView,
-                       let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
-                       rows > scrollToIndex
-                    {
-                        if collectionView.contentOffset.y == 0 {
-                            collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
-                                                        at: .top,
-                                                        animated: false)
-                            vmInner.isAtTop = false
+                Task { @MainActor in // <-- in Task { } makes scroll restore more correct? But has weird flicker sometimes, without Task { } there is no flicker but the scroll restore is weird sometimes
+                    if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+                        if let collectionView,
+                           let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
+                           rows > scrollToIndex
+                        {
+#if DEBUG
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y)")
+#endif
+                            
+                            if collectionView.contentOffset.y == 0 {
+                                collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
+                                                            at: .top,
+                                                            animated: false)
+                                vmInner.isAtTop = false
+                            }
+                            vmInner.scrollToIndex = nil
                         }
-                        vmInner.scrollToIndex = nil
                     }
-                }
-                else { // iOS 15 UITableView
-                    if let tableView,
-                       let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
-                       rows > scrollToIndex
-                    {
-                        if tableView.contentOffset.y == 0 {
-                            tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
-                            vmInner.isAtTop = false
+                    else { // iOS 15 UITableView
+                        if let tableView,
+                           let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
+                           rows > scrollToIndex
+                        {
+                            if tableView.contentOffset.y == 0 {
+                                tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                                vmInner.isAtTop = false
+                            }
+                            vmInner.scrollToIndex = nil
                         }
-                        vmInner.scrollToIndex = nil
                     }
+                    vmInner.isScrollingToIndex = false
                 }
             }
-            .onChange(of: posts) { newPosts in
-                updateIsAtTop() // TODO: in .async or not?
+            .onChange(of: isVisible) { _ in
+#if DEBUG
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") onChange(of: isVisible) -> updateIsAtTop() BEFORE: \(vmInner.isAtTop)")
+#endif
+                updateIsAtTop()
             }
             .overlay(alignment: .topTrailing) {
                 unreadCounterView
@@ -175,9 +191,17 @@ struct NXPostsFeed: View {
     }
     
     private func onPostAppear(_ nrPost: NRPost) {
+#if DEBUG
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop)")
+#endif
         updateIsAtTop()
         loadMoreIfNeeded()
         vm.haltProcessing() // will stop new updates on screen for 5.0 seconds
+        
+        // Don't update markAsRead if the onPostAppear is happening because of scrollToIndex (hidden scroll to keep scroll position)
+        // Only update if it is actual user based scroll
+        guard !vmInner.isScrollingToIndex else { return }
+        
         if vmInner.unreadIds[nrPost.id] != 0 {
             vmInner.unreadIds[nrPost.id] = 0
             vm.markAsRead(nrPost.shortId)
@@ -186,7 +210,10 @@ struct NXPostsFeed: View {
             }
         }
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
-            if appearedIndex == 0 && !vmInner.unreadIds.isEmpty {
+            if vmInner.isAtTop && appearedIndex == 0 && !vmInner.unreadIds.isEmpty {
+#if DEBUG
+                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() .isAtTop \(vmInner.isAtTop) appearedIndex == 0 --> vmInner.unreadIds = [:]")
+#endif
                 vmInner.unreadIds = [:]
             }
             
@@ -255,6 +282,9 @@ struct NXPostsFeed: View {
     }
     
     private func onPostDisappear(_ nrPost: NRPost) {
+#if DEBUG
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostDisappear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop)")
+#endif
         updateIsAtTop()
     }
 }

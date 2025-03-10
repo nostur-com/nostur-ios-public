@@ -32,7 +32,7 @@ struct NXColumnView: View {
                     ProgressView()
                 }
             case .posts(let nrPosts):
-                NXPostsFeed(vm: viewModel, posts: nrPosts)
+                NXPostsFeed(vm: viewModel, posts: nrPosts, isVisible: isVisible)
             case .error(let errorMessage):
                 Text(errorMessage)
             }
