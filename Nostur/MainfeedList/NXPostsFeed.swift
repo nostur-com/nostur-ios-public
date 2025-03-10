@@ -154,6 +154,18 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") onChange(of: isVisible) -> up
                 
                 scrollToTop(proxy)
             }
+            
+            // Handle going to detail and back
+            .onAppear {
+                guard !vm.isVisible else { return }
+                vm.isVisible = true
+            }
+            .onDisappear {
+                // When opening detail, the feed would still update in background using withAnimation { },
+                // but because its not visible the hack to keep scroll position doesn't work
+                // so we set .isVisible to false to pause updates (and resume by setting .isVisible to true in onAppear {})
+                vm.isVisible = false
+            }
         }
     }
     
