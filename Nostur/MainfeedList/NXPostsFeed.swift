@@ -110,7 +110,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.
                                 collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
                                                             at: .top,
                                                             animated: false)
-                                vmInner.isAtTop = false
+                                vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
                             }
                             vmInner.scrollToIndex = nil
                         }
@@ -122,7 +122,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.
                         {
                             if tableView.contentOffset.y == 0 {
                                 tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
-                                vmInner.isAtTop = false
+                                vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
                             }
                             vmInner.scrollToIndex = nil
                         }
@@ -188,6 +188,16 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") onChange(of: isVisible) -> up
                         // NOTE: This can crash, but so far only only iOS 16.1?
                         proxy.scrollTo(firstUnreadPost.id, anchor: .top)
                     }
+
+                    // Regular updateIsAtTop() in onPostAppear { } doesn't catch the first row appearing to set isAtTop to 0, probably because
+                    // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
+                    // so force update here after small delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                        #if DEBUG
+                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
+                        #endif
+                        updateIsAtTop()
+                    }
                 }
                 break
             }
@@ -198,7 +208,17 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") onChange(of: isVisible) -> up
         guard let topPost = posts.first else { return }
         withAnimation {
             proxy.scrollTo(topPost.id, anchor: .top)
-            vmInner.isAtTop = true
+        }
+        vmInner.isAtTop = true
+        
+        // Regular updateIsAtTop() in onPostAppear { } doesn't catch the first row appearing to set isAtTop to 0, probably because
+        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
+        // so force update here after small delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            #if DEBUG
+            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
+            #endif
+            updateIsAtTop()
         }
     }
     
@@ -244,9 +264,16 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
     private func updateIsAtTop() {
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
             if let collectionView {
+#if DEBUG
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y)")
+#endif
+                
                 if collectionView.contentOffset.y <= 3 {
                     if !vmInner.isAtTop {
                         vmInner.isAtTop = true
+#if DEBUG
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true")
+#endif
                     }
                 }
                 else {

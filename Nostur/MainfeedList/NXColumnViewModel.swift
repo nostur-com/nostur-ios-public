@@ -87,7 +87,7 @@ class NXColumnViewModel: ObservableObject {
     public func haltProcessing() {
         guard let config else { return }
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) haltProcessing")
+        L.og.debug("☘️☘️ \(config.name) haltProcessing isAtTop: \(self.vmInner.isAtTop)")
 #endif
         haltedProcessing = true
     }
