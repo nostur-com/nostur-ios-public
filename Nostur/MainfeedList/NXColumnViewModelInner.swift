@@ -18,6 +18,11 @@ class NXColumnViewModelInner: ObservableObject {
     }
     
     @Published public var scrollToIndex: Int?
-    public var isScrollingToIndex = false
+    
     @Published public var isAtTop: Bool = true
+    
+    // New properties for radical anti-flicker approach
+    public var isPerformingScroll: Bool = false
+    public var isPreparingForScrollRestore = false
+    public var pendingScrollToIndex: Int?
 }

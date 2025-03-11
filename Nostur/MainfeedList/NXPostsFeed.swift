@@ -73,6 +73,17 @@ struct NXPostsFeed: View {
                     view.isPrefetchingEnabled = true
                     view.prefetchDataSource = tablePrefetcher
                 }
+                
+                // Special handling for the anti-flicker approach
+                if vmInner.isPreparingForScrollRestore, let pendingIndex = vmInner.pendingScrollToIndex {
+                    // Immediately scroll to the target index without animation
+                    if let rows = view.dataSource?.tableView(view, numberOfRowsInSection: 0),
+                       rows > pendingIndex {
+                        UIView.setAnimationsEnabled(false)
+                        view.scrollToRow(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                        UIView.setAnimationsEnabled(true)
+                    }
+                }
             }
             .introspect(.list, on: .iOS(.v16...)) { view in
                 DispatchQueue.main.async {
@@ -84,32 +95,53 @@ struct NXPostsFeed: View {
                     view.isPrefetchingEnabled = true
                     view.prefetchDataSource = collectionPrefetcher
                 }
+                
+                // Special handling for the anti-flicker approach
+                if vmInner.isPreparingForScrollRestore, let pendingIndex = vmInner.pendingScrollToIndex {
+                    // Immediately scroll to the target index without animation
+                    if let rows = view.dataSource?.collectionView(view, numberOfItemsInSection: 0),
+                       rows > pendingIndex {
+                        UIView.setAnimationsEnabled(false)
+                        view.scrollToItem(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                        UIView.setAnimationsEnabled(true)
+                    }
+                }
             }
             .scrollContentBackgroundHidden()
             .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
                 guard let scrollToIndex else { return }
+                guard !vmInner.isPerformingScroll else { return } // Prevent re-entrancy
+                
 #if DEBUG
                 L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
 #endif
       
                 // While we scroll to previous index here, we are triggering onPostAppear(), which updates markAsRead
-                // But it wasn't a real onPostAppear, so we need to avoid that markAsRead. Using isScrollingToIndex flag to track that
-                vmInner.isScrollingToIndex = true
+                // But it wasn't a real onPostAppear, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
+                vmInner.isPerformingScroll = true
                 
-                Task { @MainActor in // <-- in Task { } makes scroll restore more correct? But has weird flicker sometimes, without Task { } there is no flicker but the scroll restore is weird sometimes
+                // Anti-flicker approach
+                DispatchQueue.main.async {
+                    // Completely disable animations during the scroll
+                    CATransaction.begin()
+                    CATransaction.setDisableActions(true)
+                    UIView.setAnimationsEnabled(false)
+                    
                     if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
                         if let collectionView,
                            let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
                            rows > scrollToIndex
                         {
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y)")
+                            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y)")
 #endif
                             
                             if collectionView.contentOffset.y == 0 {
+                                // Perform the scroll with all animations disabled
+                                collectionView.layer.removeAllAnimations()
                                 collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
-                                                            at: .top,
-                                                            animated: false)
+                                                           at: .top,
+                                                           animated: false)
                                 vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
                             }
                             vmInner.scrollToIndex = nil
@@ -121,13 +153,25 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.
                            rows > scrollToIndex
                         {
                             if tableView.contentOffset.y == 0 {
-                                tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                                // Perform the scroll with all animations disabled
+                                tableView.layer.removeAllAnimations()
+                                tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), 
+                                                    at: .top, 
+                                                    animated: false)
                                 vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
                             }
                             vmInner.scrollToIndex = nil
                         }
                     }
-                    vmInner.isScrollingToIndex = false
+                    
+                    // Re-enable animations
+                    UIView.setAnimationsEnabled(true)
+                    CATransaction.commit()
+                    
+                    // Reset flags after a short delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        vmInner.isPerformingScroll = false
+                    }
                 }
             }
             .onChange(of: isVisible) { _ in
@@ -232,7 +276,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
         
         // Don't update markAsRead if the onPostAppear is happening because of scrollToIndex (hidden scroll to keep scroll position)
         // Only update if it is actual user based scroll
-        guard !vmInner.isScrollingToIndex else { return }
+        guard !vmInner.isPerformingScroll else { return }
         
         if vmInner.unreadIds[nrPost.id] != 0 {
             vmInner.unreadIds[nrPost.id] = 0

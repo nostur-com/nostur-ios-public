@@ -1680,17 +1680,39 @@ extension NXColumnViewModel {
                         #if DEBUG
                         L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) - should restore using scrollToIndex, if we were not at top ")
                         #endif
-                        viewState = .posts(addedAndExistingPostsTruncated)
                         
-                        // Set scrollToIndex to restore scroll position after new posts are added on top
+                        // ANTI-FLICKER:
                         if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
-                            if vmInner.scrollToIndex != restoreToIndex {
-                                vmInner.scrollToIndex = restoreToIndex
-                                vmInner.isAtTop = false
-                            }
+                            // Signal that we're about to update with new posts that will need scroll restoration
+                            vmInner.isPreparingForScrollRestore = true
+                            
+                            // Store the target index for later use
+                            vmInner.pendingScrollToIndex = restoreToIndex
+                            
+                            // Update the view state without animation
+                            viewState = .posts(addedAndExistingPostsTruncated)
+                            
+                            // Set isAtTop to false since we'll be scrolling to a non-top position
+                            vmInner.isAtTop = false
+                            
                             #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
                             #endif
+                            
+                            // After a very short delay, trigger the scroll
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
+                                self.vmInner.scrollToIndex = restoreToIndex
+                                
+                                // Reset the preparation flag after a delay
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    self.vmInner.isPreparingForScrollRestore = false
+                                    self.vmInner.pendingScrollToIndex = nil
+                                }
+                            }
+                        }
+                        else {
+                            // No previous post to restore to, just update the view
+                            viewState = .posts(addedAndExistingPostsTruncated)
                         }
                     }
                 }
