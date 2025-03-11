@@ -146,71 +146,23 @@ struct ContentRenderer: View { // VIEW things
                     EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
                         .padding(.horizontal, fullWidth ? -10 : 0)
                 case .image(let mediaContent):
-                    if let dimensions = mediaContent.dimensions {
-                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: isDetail ? 5000.0 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-#if DEBUG
-//                                                Text(".image.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
-//                                                    .frame(maxWidth: .infinity)
-//                                                    .background(.red)
-//                                                    .foregroundColor(.white)
-//                                                    .debugDimensions()
-#endif
-                        
-                        
-                        if fullWidth || isDetail {
-                            SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
-                                .background {
-                                    if SettingsStore.shared.lowDataMode {
-                                        theme.lineColor.opacity(0.2)
-                                    }
-                                }
-                                .padding(.horizontal, fullWidth ? -10 : 0)
-//                                .debugDimensions("smv")
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-//                                .debugDimensions("smv.frame")
-    //                            .withoutAnimation()
-    //                            .transaction { t in t.animation = nil }
-                        }
-                        else {
-                            SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrPost.imageUrls)
-//                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
-    //                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
-                                .background {
-                                    if SettingsStore.shared.lowDataMode {
-                                        theme.lineColor.opacity(0.2)
-                                    }
-                                }
-                                .padding(.horizontal, fullWidth ? -10 : 0)
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-    //                            .withoutAnimation()
-    //                            .transaction { t in t.animation = nil }
-                        }
-                        
-
-                    }
-                    else {
-                        
-#if DEBUG
-                        //                        Text(".image.availableWidth: \(Int(availableWidth))")
-                        //                            .frame(maxWidth: .infinity)
-                        //                            .background(.red)
-                        //                            .foregroundColor(.white)
-                        //                            .debugDimensions()
-#endif
-                        
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrPost.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, contentPadding: nrPost.kind == 30023 ? 10 : 0, theme: theme, imageUrls: nrPost.imageUrls)
-//                            .debugDimensions("image")
-                            .padding(.horizontal, fullWidth ? -10 : 0)
-                            .padding(.vertical, 0)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-//                            .debugDimensions("image.frame")
-//                            .background(Color.yellow)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
-                    }
+                    MediaContentView(
+                        media: MediaContent(
+                            url: mediaContent.url,
+                            dimensions: mediaContent.dimensions
+                        ),
+                        availableWidth: availableWidth,
+                        availableHeight: isDetail ? 5000.0 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                        contentMode: .fit
+                    )
+                    .padding(.vertical, 10)
+                    // Todo: scale: UIScreen.main.scale ?
+                    // fullWidth || isDetail --->
+                    // .padding(.horizontal, fullWidth ? -10 : 0)
+                    // nrPost.pubkey autoload
+                    //  contentPadding: nrPost.kind == 30023 ? 10 : 0
+                    //  imageUrls: nrPost.imageUrls
+                    // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
                         .padding(.vertical, 10)
