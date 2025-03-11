@@ -283,6 +283,9 @@ struct SideBar: View {
             VStack(alignment: .leading) {
                 Text("Nostur \(APP_VERSION) (Build: \(CI_BUILD_NUMBER))")
                     .font(.footnote)
+#if DEBUG
+                    .foregroundColor(Color.red) // So we can quickly check if we are in debug or release build
+#endif
                     .opacity(0.5)
                 Text("[__Source code__](https://github.com/nostur-com/nostur-ios-public)")
                     .foregroundColor(themes.theme.accent)
