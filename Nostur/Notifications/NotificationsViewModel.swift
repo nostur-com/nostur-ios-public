@@ -272,7 +272,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     public var requestSince: Int64 { // TODO: If event .created_at, is in the future don't save date
-        let oneWeekAgo = (Int64(Date.now.timeIntervalSince1970) - (7 * 3600 * 24))
+        let oneWeekAgo = (Int64(Date.now.timeIntervalSince1970) - 604_800)
         guard let account = account() else { return oneWeekAgo }
         return [
             oneWeekAgo,
@@ -635,7 +635,7 @@ class NotificationsViewModel: ObservableObject {
             }
             else {
                 L.og.info("🔴🔴 Falling back to 2 days before (should not happen)")
-                let twoDaysAgoOrNewer = max(account.lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
+                let twoDaysAgoOrNewer = max(account.lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
                 if account.lastSeenPostCreatedAt != twoDaysAgoOrNewer {
                     account.lastSeenPostCreatedAt = twoDaysAgoOrNewer
                 }
@@ -689,7 +689,7 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             else {
-                let twoDaysAgoOrNewer = max(account.lastSeenRepostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
+                let twoDaysAgoOrNewer = max(account.lastSeenRepostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
                 if account.lastSeenRepostCreatedAt != twoDaysAgoOrNewer {
                     account.lastSeenRepostCreatedAt = twoDaysAgoOrNewer
                 }
@@ -720,7 +720,7 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             else {
-                let twoDaysAgoOrNewer = max(account.lastSeenReactionCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
+                let twoDaysAgoOrNewer = max(account.lastSeenReactionCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
                 if account.lastSeenReactionCreatedAt != twoDaysAgoOrNewer {
                     account.lastSeenReactionCreatedAt = twoDaysAgoOrNewer
                 }
@@ -755,7 +755,7 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             else {
-                let twoDaysAgoOrNewer = max(account.lastSeenZapCreatedAt, (Int64(Date.now.timeIntervalSince1970) - (2 * 3600 * 24)))
+                let twoDaysAgoOrNewer = max(account.lastSeenZapCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
                 if account.lastSeenZapCreatedAt != twoDaysAgoOrNewer {
                     account.lastSeenZapCreatedAt = twoDaysAgoOrNewer
                 }
@@ -957,7 +957,7 @@ fileprivate class NotificationFetchRequests {
 class OfflinePosts {
     
     
-    static func checkForOfflinePosts(_ maxAgo:TimeInterval = 3600 * 24 * 3) { // 3 days
+    static func checkForOfflinePosts(_ maxAgo:TimeInterval = 259_200) { // 3 days
         DispatchQueue.main.async {
             guard ConnectionPool.shared.anyConnected else { return }
             let pubkey = NRState.shared.activeAccountPublicKey

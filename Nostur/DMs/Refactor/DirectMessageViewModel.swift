@@ -434,8 +434,8 @@ class DirectMessageViewModel: ObservableObject {
     
     private func monthsAgoRange(_ months:Int) -> (since: Int, until: Int) {
         return (
-            since: NTimestamp(date: Date().addingTimeInterval(Double(months + 1) * -30 * 24 * 60 * 60)).timestamp,
-            until: NTimestamp(date: Date().addingTimeInterval(Double(months) * -30 * 24 * 60 * 60)).timestamp
+            since: NTimestamp(date: Date().addingTimeInterval(Double(months + 1) * -2_592_000)).timestamp,
+            until: NTimestamp(date: Date().addingTimeInterval(Double(months) * -2_592_000)).timestamp
         )
     }
     

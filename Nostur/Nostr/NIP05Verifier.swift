@@ -19,7 +19,7 @@ class NIP05Verifier {
     
     private var cancellables = Set<AnyCancellable>()
     
-    public static var fourWeeksAgo = Date.now.addingTimeInterval(-(28 * 86400))
+    public static var fourWeeksAgo = Date.now.addingTimeInterval(-2419200)
     private var decoder = JSONDecoder()
     
     init() {

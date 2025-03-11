@@ -58,7 +58,7 @@ struct ScheduleReminderButton: View {
         content.sound = .default
         
         // Create a trigger based on the selected date
-        let fiveMinutesBefore = at.addingTimeInterval(-5 * 60)  // Subtract 5 minutes (60 seconds * 5)
+        let fiveMinutesBefore = at.addingTimeInterval(-300)  // Subtract 5 minutes (60 seconds * 5)
         let calendar = Calendar.current
         let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: fiveMinutesBefore)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)

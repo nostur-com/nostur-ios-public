@@ -866,7 +866,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             guard let self else { return }
             
             let fr = Event.fetchRequest()
-            let afterCreatedAt = self.created_at - (3600 * 2) // allow some time mismatch (2 hours)
+            let afterCreatedAt = self.created_at - 7200 // allow some time mismatch (2 hours)
             fr.predicate = NSPredicate(format: "created_at > %i AND kind == 1 AND replyToId == %@ AND NOT pubkey IN %@", afterCreatedAt, String(self.id), blocks()) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
             if let foundReplies = try? ctx.fetch(fr) {
                 if let existingReplies = self.event?.replies {
@@ -1100,7 +1100,7 @@ extension NRPost { // Helpers for grouped replies
         ctx.perform { [weak self] in
             guard let self = self else { return }
             let fr = Event.fetchRequest()
-            let afterCreatedAt = self.created_at - (3600 * 2) // allow some time mismatch (2 hours)
+            let afterCreatedAt = self.created_at - 7200 // allow some time mismatch (2 hours)
             if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
                 fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind == 1 AND NOT pubkey IN %@", afterCreatedAt, replyToRootId, blocks())
             }

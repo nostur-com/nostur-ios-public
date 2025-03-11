@@ -49,7 +49,7 @@ public class CloudAccount: NSManagedObject {
         }
         
         if safeMode {
-            clEvent.createdAt = NTimestamp(timestamp: Int((Date().timeIntervalSince1970 - (3600*24*7))))
+            clEvent.createdAt = NTimestamp(timestamp: Int((Date().timeIntervalSince1970 - (604800))))
         }
         
         if self.isNC {

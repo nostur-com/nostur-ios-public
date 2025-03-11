@@ -165,7 +165,7 @@ struct AppView: View {
                                     sendNotification(.scenePhaseBackground)
                                     
                                     let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
-                                    let hoursAgo = Date(timeIntervalSinceNow: (-5 * 24 * 60 * 60))
+                                    let hoursAgo = Date(timeIntervalSinceNow: -432_000)
                                     let runNow = lastMaintenanceTimestamp < hoursAgo
                                     
                                     if IS_CATALYST || runNow { // macOS doesn't do background processing tasks, so we do it here instead of .scheduleDatabaseCleaningIfNeeded(). OR we do it if for whatever reason iOS has not run it for 5 days in background the processing task

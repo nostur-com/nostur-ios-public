@@ -130,7 +130,7 @@ struct Maintenance {
         // Time based migrations
     
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
-        let hoursAgo = Date(timeIntervalSinceNow: (-24 * 60 * 60))
+        let hoursAgo = Date(timeIntervalSinceNow: -86_400)
         guard force || (lastMaintenanceTimestamp < hoursAgo) else { // don't do maintenance more than once every 24 hours
             L.maintenance.info("Skipping maintenance");
             return false
@@ -209,8 +209,8 @@ struct Maintenance {
     
     static func databaseCleanUp(_ context: NSManagedObjectContext) {
         let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
-        let fiveDaysAgo = Date.now.addingTimeInterval(-5 * 86400)
-        let monthsAgo = Date.now.addingTimeInterval(-2 * 31 * 86400) // 2 months
+        let fiveDaysAgo = Date.now.addingTimeInterval(-432_000)
+        let monthsAgo = Date.now.addingTimeInterval(-5_356_800) // 2 months
         pfr.predicate = NSPredicate(format: "createdAt < %@ AND NOT readAt = nil", fiveDaysAgo as NSDate)
         
         let pfrBatchDelete = NSBatchDeleteRequest(fetchRequest: pfr)
@@ -249,7 +249,7 @@ struct Maintenance {
             return eventId
         }))
         
-        let xDaysAgo = Date.now.addingTimeInterval(-4 * 86400) // 4 days
+        let xDaysAgo = Date.now.addingTimeInterval(-345_600) // 4 days
         
         
         

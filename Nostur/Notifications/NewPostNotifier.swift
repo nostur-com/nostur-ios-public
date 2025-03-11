@@ -64,7 +64,7 @@ class NewPostNotifier: ObservableObject {
         guard enabledPubkeys.count > 0 else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, enabledPubkeys.count == 0."); return }
         
         // since = "lastCheck" ?? "most recent notification" ?? "most recent task" ?? "8 hours ago"
-        let since = (self.lastCheck?.timeIntervalSince1970 ?? (PersistentNotification.fetchPersistentNotification(byPubkey: accountPubkey, type: .newPosts)?.createdAt.timeIntervalSince1970 ?? tasks.first?.createdAt.timeIntervalSince1970)) ?? (Date.now.timeIntervalSince1970 - (3600 * 8))
+        let since = (self.lastCheck?.timeIntervalSince1970 ?? (PersistentNotification.fetchPersistentNotification(byPubkey: accountPubkey, type: .newPosts)?.createdAt.timeIntervalSince1970 ?? tasks.first?.createdAt.timeIntervalSince1970)) ?? (Date.now.timeIntervalSince1970 - 28800)
         
         let task = ReqTask(
             debounceTime: 0.5,

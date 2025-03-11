@@ -42,7 +42,7 @@ class FollowerNotifier {
             }
             .store(in: &subscriptions)
         
-        checkForNewTimer = Timer.scheduledTimer(withTimeInterval: 3600*4, repeats: true, block: { [weak self] _ in
+        checkForNewTimer = Timer.scheduledTimer(withTimeInterval: 14400, repeats: true, block: { [weak self] _ in
             guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
             let pubkey = NRState.shared.activeAccountPublicKey
             self?.checkForUpdatedContactList(pubkey: pubkey)
@@ -68,7 +68,7 @@ class FollowerNotifier {
                 NTimestamp(date: mostRecent.createdAt)
             }
             else {
-                NTimestamp(timestamp: Int(Date.now.timeIntervalSince1970 - (3600 * 3*24)))
+                NTimestamp(timestamp: Int(Date.now.timeIntervalSince1970 - (259200)))
             }
             
             if self.currentFollowerPubkeys.count <= Self.LIMIT { // Check all new followers

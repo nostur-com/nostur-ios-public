@@ -188,7 +188,7 @@ extension Contact : Identifiable {
     
     var nip05veried:Bool {
         get {
-            let fourWeeksAgo = Date.now.addingTimeInterval(-(28 * 86400))
+            let fourWeeksAgo = Date.now.addingTimeInterval(-(2419200))
             if nip05verifiedAt != nil && nip05verifiedAt! > fourWeeksAgo {
                 return true
             }

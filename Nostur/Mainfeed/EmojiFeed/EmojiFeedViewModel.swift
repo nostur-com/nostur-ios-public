@@ -28,7 +28,7 @@ class EmojiFeedViewModel: ObservableObject {
     
     // From DB we always fetch the maximum time frame selected
     private var agoTimestamp:Int {
-        return Int(Date.now.addingTimeInterval(-1 * Double(ago) * 3600).timeIntervalSince1970)
+        return Int(Date.now.addingTimeInterval(Double(ago) * -3600).timeIntervalSince1970)
     }
     
     // From relays we fetch maximum at first, and then from since the last fetch, but not if its outside of time frame
@@ -365,7 +365,7 @@ class EmojiFeedViewModel: ObservableObject {
         // Should only refetch since last fetch, if last fetch is more than 10 mins ago
         guard let lastFetch else { return true }
 
-        if (Date.now.timeIntervalSince1970 - lastFetch.timeIntervalSince1970) > 60 * 10 {
+        if (Date.now.timeIntervalSince1970 - lastFetch.timeIntervalSince1970) > 600 {
             return true
         }
         return false

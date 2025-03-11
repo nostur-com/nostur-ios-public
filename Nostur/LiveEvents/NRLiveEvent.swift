@@ -333,7 +333,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     @MainActor
     public func fetchPresenceFromRelays() {
         self.listenForPresence()
-        let ago = Int(Date().timeIntervalSince1970 - (60 * 2)) // 2 min ago?
+        let ago = Int(Date().timeIntervalSince1970 - 120) // 2 min ago?
         
         if let cm = NostrEssentials
             .ClientMessage(type: .REQ,
@@ -382,7 +382,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                 guard let event = message.event else { return }
                 guard event.kind == .custom(10312) else { return }
                 
-                let ago = Int(Date().timeIntervalSince1970 - (60 * 2)) // 2 min ago?
+                let ago = Int(Date().timeIntervalSince1970 - 120) // 2 min ago?
                 guard event.createdAt.timestamp > ago else { return }
                 
                 guard event.tags.first(where: { $0.type == "a" && $0.value == self.id }) != nil else { return }
@@ -429,7 +429,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard let self else { return }
-            let ago = Int(Date().timeIntervalSince1970 - (60 * 2)) // 2 min ago?
+            let ago = Int(Date().timeIntervalSince1970 - 120) // 2 min ago?
             
             
             let expiredNrContacts = self.participantsOrSpeakers.filter { nrContact in

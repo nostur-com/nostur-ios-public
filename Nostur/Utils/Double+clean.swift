@@ -14,9 +14,9 @@ extension Double {
     
     var satsFormatted: String {
         let thousand = 1000.0
-        let million = thousand * thousand
-        let billion = million * thousand
-        let trillion = billion * thousand
+        let million = 100_000_000.0
+        let billion = 100_000_000_000.0
+        let trillion = 100_000_000_000_000.0
 
         switch self {
         case 0..<thousand:
@@ -37,9 +37,9 @@ extension Int {
     
     var satsFormatted: String {
         let thousand = 1000.0
-        let million = thousand * thousand
-        let billion = million * thousand
-        let trillion = billion * thousand
+        let million = 100_000_000.0
+        let billion = 100_000_000_000.0
+        let trillion = 100_000_000_000_000.0
 
         switch Double(self) {
         case 0..<thousand:
@@ -61,9 +61,9 @@ extension Int64 {
     
     var formatNumber: String {
         let thousand = 1000
-        let million = thousand * thousand
-        let billion = million * thousand
-        let trillion = billion * thousand
+        let million = 100_000_000
+        let billion = 100_000_000_000
+        let trillion = 100_000_000_000_000
 
         switch Int(self) {
         case 0..<thousand:

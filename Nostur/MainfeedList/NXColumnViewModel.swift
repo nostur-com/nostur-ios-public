@@ -155,31 +155,31 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
             
             if LESS_CACHE && IS_SIMULATOR { // Force to 6 hours ago for testing
-                return (Int64(Date().timeIntervalSince1970) - (3600 * 6))
+                return (Int64(Date().timeIntervalSince1970) - 21_600)
             }
 #endif
             
             guard let config else { // 2 days ago if config is somehow missing
-                return (Int64(Date().timeIntervalSince1970) - (2 * 3600 * 24))
+                return (Int64(Date().timeIntervalSince1970) - 172_800)
             }
             
             switch config.columnType {
             case .following(let feed), .picture(let feed):
                 if let refreshedAt = feed.refreshedAt, let mostRecentCreatedAt = self.mostRecentCreatedAt {
-                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - (5 * 60))
+                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - 300)
                 }
                 if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
-                    return Int64(refreshedAt.timeIntervalSince1970) - (5 * 60)
+                    return Int64(refreshedAt.timeIntervalSince1970) - 300
                 }
                 else if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                    return Int64(mostRecentCreatedAt) // or most recent on screen
                 }
             case .pubkeys(let feed):
                 if let refreshedAt = feed.refreshedAt, let mostRecentCreatedAt = self.mostRecentCreatedAt {
-                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - (5 * 60))
+                    return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - 300)
                 }
                 if let refreshedAt = feed.refreshedAt { // 5 minutes before last refreshedAt
-                    return Int64(refreshedAt.timeIntervalSince1970) - (5 * 60)
+                    return Int64(refreshedAt.timeIntervalSince1970) - 300
                 }
                 else if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                    return Int64(mostRecentCreatedAt) // or most recent on screen
@@ -188,19 +188,19 @@ class NXColumnViewModel: ObservableObject {
                 if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                    return Int64(mostRecentCreatedAt) // or most recent on screen
                 }
-                return (Int64(Date().timeIntervalSince1970) - (8 * 3600))
+                return (Int64(Date().timeIntervalSince1970) - 28_800)
             default:
                 if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                    return Int64(mostRecentCreatedAt) // or most recent on screen
                 }
                 // else take 8 hours?
-                return (Int64(Date().timeIntervalSince1970) - (8 * 3600))
+                return (Int64(Date().timeIntervalSince1970) - 28_800)
             }
             if let mostRecentCreatedAt = self.mostRecentCreatedAt {
                return Int64(mostRecentCreatedAt) // or most recent on screen
             }
             // else take 2 days
-            return (Int64(Date().timeIntervalSince1970) - (2 * 3600 * 24))
+            return (Int64(Date().timeIntervalSince1970) - 172_800)
         }
         set {
             guard let config else { return }
@@ -597,7 +597,7 @@ class NXColumnViewModel: ObservableObject {
         // Fetch since 5 minutes before most recent item on screen (since)
         // Or until oldest (bottom) item on screen (until)
         let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
-            ((nrPosts.first?.created_at ?? (60 * 5)) - (60 * 5), (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
+            ((nrPosts.first?.created_at ?? 300) - 300, (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
         }
         else { // or if empty screen: 0 (since) or now (until)
             (0, Int64(Date().timeIntervalSince1970))
@@ -1830,7 +1830,7 @@ extension NXColumnViewModel {
         default:
             // Fetch since 5 minutes before most recent item on screen (since) or .refeshedAt
             let sinceTimestamp = if case .posts(let nrPosts) = viewState {
-                (nrPosts.first?.created_at ?? self.refreshedAt) - Int64(5 * 60)
+                (nrPosts.first?.created_at ?? self.refreshedAt) - Int64(300)
             }
             else { // or if empty screen: refreshedAt (since)
                 self.refreshedAt
@@ -1839,7 +1839,7 @@ extension NXColumnViewModel {
             L.og.debug("☘️☘️ \(config.name) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0")
 #endif
             // Don't go older than 24 hrs ago
-            let maxAgo = Int64(Date().addingTimeInterval(-24 * 60 * 60).timeIntervalSince1970)
+            let maxAgo = Int64(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
             
             self.gapFiller?.fetchGap(since: max(sinceTimestamp, maxAgo), currentGap: 0)
             
@@ -2092,7 +2092,7 @@ extension Event {
     // TODO: Optimize tagsSerialized / hashtags matching
     static func postsByPubkeys(_ pubkeys: Set<String>, mostRecent: Event, hideReplies: Bool = false, hashtagRegex:String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
-        let cutOffPoint = mostRecent.created_at - (15 * 60)
+        let cutOffPoint = mostRecent.created_at - 900
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -2119,14 +2119,14 @@ extension Event {
     
     static func postsByPubkeys(_ pubkeys: Set<String>, until: Event, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
-        let cutOffPoint = until.created_at + (1 * 60)
+        let cutOffPoint = until.created_at + 60
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = QUERY_FETCH_LIMIT
         if let hashtagRegex = hashtagRegex {
             
-            let after = until.created_at - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
+            let after = until.created_at - 28_800 // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
             
             if hideReplies {
                 fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
@@ -2148,7 +2148,7 @@ extension Event {
     
     static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
-        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
+        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - 28_800 // 8 hours ago
         
         // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
         // if we don't have lastAppearedCreatedAt. Take 8 hours ago
@@ -2199,7 +2199,7 @@ extension Event {
         fr.fetchLimit = QUERY_FETCH_LIMIT
         if let hashtagRegex = hashtagRegex {
             
-            let after = cutOffPoint - (8 * 3600) // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
+            let after = cutOffPoint - 28_800 // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
             
             if hideReplies {
                 fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffPoint, kinds, blockedPubkeys, pubkeys, hashtagRegex)
@@ -2228,7 +2228,7 @@ extension Event {
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ")"
-        let cutOffPoint = mostRecent.created_at - (15 * 60)
+        let cutOffPoint = mostRecent.created_at - 900
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -2250,7 +2250,7 @@ extension Event {
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ")"
-        let cutOffPoint = until.created_at + (1 * 60)
+        let cutOffPoint = until.created_at + 60
         
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -2272,7 +2272,7 @@ extension Event {
         let regex = "(" + relays.compactMap { $0.url }.map {
             NSRegularExpression.escapedPattern(for: $0)
         }.joined(separator: "|") + ")"
-        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - (3600 * 8) // 8 hours ago
+        let hoursAgo = Int64(Date.now.timeIntervalSince1970) - 28_800 // 8 hours ago
         
         // Take oldest timestamp: 8 hours ago OR lastAppearedCreatedAt
         // if we don't have lastAppearedCreatedAt. Take 8 hours ago

@@ -252,7 +252,7 @@ class ProfilePostsViewModel: ObservableObject {
         // Should only refetch since last fetch, if last fetch is more than 10 mins ago
         guard let lastFetch else { return true }
 
-        if (Date.now.timeIntervalSince1970 - lastFetch.timeIntervalSince1970) > 60 * 10 {
+        if (Date.now.timeIntervalSince1970 - lastFetch.timeIntervalSince1970) > 600 {
             return true
         }
         return false

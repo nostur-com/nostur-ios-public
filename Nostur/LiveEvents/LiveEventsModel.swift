@@ -103,7 +103,7 @@ class LiveEventsModel: ObservableObject {
     }
     
     private var agoTimestamp: Int {
-        Int(Date().timeIntervalSince1970 - (60 * 60 * 4)) // Only with recent 4 hours
+        Int(Date().timeIntervalSince1970 - (14400)) // Only with recent 4 hours
     }
     
     private func fetchFromRelays(_ onComplete: (() -> ())? = nil) {

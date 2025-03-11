@@ -13,7 +13,7 @@ func scheduleDatabaseCleaningIfNeeded() {
     let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
 
     // don't do maintenance more than once every 3 days
-    let hoursAgo = Date(timeIntervalSinceNow: (-3 * 24 * 60 * 60))
+    let hoursAgo = Date(timeIntervalSinceNow: -259200)
     guard lastMaintenanceTimestamp < hoursAgo else {
         L.maintenance.debug("Skipping maintenance");
         return

@@ -232,7 +232,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                 guard let event = message.event else { return }
                 guard event.kind == .custom(10312) else { return }
                 
-                let ago = Int(Date().timeIntervalSince1970 - (60 * 2)) // 2 min ago?
+                let ago = Int(Date().timeIntervalSince1970 - 120) // 2 min ago?
                 guard event.createdAt.timestamp > ago else { return }
                 
                 

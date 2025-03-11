@@ -40,9 +40,9 @@ class ImageProcessing {
             }())
 
             let dataCache = try! DataCache(name: "com.nostur.image.pfp")
-            dataCache.sizeLimit = 1024 * 1024 * Self.PFP_SIZE_MB
+            dataCache.sizeLimit = 1_048_576 * Self.PFP_SIZE_MB
 
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100)
+            $0.imageCache = ImageCache(costLimit: 104_857_600)
             $0.dataCache = dataCache
 //            $0.dataCachePolicy = .storeEncodedImages
             $0.dataCachePolicy = .automatic
@@ -58,9 +58,9 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.banner")
-            dataCache.sizeLimit = 1024 * 1024 * Self.BANNER_SIZE_MB
+            dataCache.sizeLimit = 1_048_576 * Self.BANNER_SIZE_MB
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 10)
+            $0.imageCache = ImageCache(costLimit: 10_485_760)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .automatic
         }
@@ -76,9 +76,9 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.content")
-            dataCache.sizeLimit = 1024 * 1024 * Self.CONTENT_SIZE_MB
+            dataCache.sizeLimit = 1_048_576 * Self.CONTENT_SIZE_MB
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
+            $0.imageCache = ImageCache(costLimit: 104_857_600, countLimit: 1000)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .automatic
         }
@@ -94,9 +94,9 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.communities")
-            dataCache.sizeLimit = 1024 * 1024 * 500
+            dataCache.sizeLimit = 524_288_000
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 100, countLimit: 1000)
+            $0.imageCache = ImageCache(costLimit: 104_857_600, countLimit: 1000)
             $0.dataCache = dataCache
             $0.dataCachePolicy = .automatic
         }
@@ -111,9 +111,9 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.image.badges")
-            dataCache.sizeLimit = 1024 * 1024 * 100
+            dataCache.sizeLimit = 104_857_600
             
-            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 25, countLimit: 200)  // 100 MB
+            $0.imageCache = ImageCache(costLimit: 26_214_400, countLimit: 200)  // 100 MB
             $0.dataCache = dataCache
             $0.dataCachePolicy = .automatic
         }
@@ -127,7 +127,7 @@ class ImageProcessing {
             }())
             
             let dataCache = try! DataCache(name: "com.nostur.video.content")
-            dataCache.sizeLimit = 1024 * 1024 * 200
+            dataCache.sizeLimit = 209_715_200
             
 //            $0.imageCache = ImageCache(costLimit: 1024 * 1024 * 50, countLimit: 100)  // 100 MB
             $0.dataCache = dataCache
