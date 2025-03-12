@@ -42,8 +42,8 @@ class NRContentElementBuilder {
                 
                 if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
-                        let dimensions:CGSize? = findImetaDimensions(fastTags, url: matchString)
-                        result.append(ContentElement.image(MediaContent(url: url, dimensions: dimensions)))
+                        let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
+                        result.append(ContentElement.image(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash)))
                         imageUrls.append(url)
                     }
                     else {
@@ -52,8 +52,8 @@ class NRContentElementBuilder {
                 }
                 else if !matchString.matchingStrings(regex: Self.videoUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
-                        let dimensions:CGSize? = findImetaDimensions(fastTags, url: matchString)
-                        result.append(ContentElement.video(MediaContent(url: url, dimensions: dimensions)))
+                        let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
+                        result.append(ContentElement.video(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash)))
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
@@ -328,6 +328,8 @@ struct MediaContent: Hashable {
     }
     var url: URL
     var dimensions: CGSize?
+    var blurHash: String?
+    
 }
 
 // For text notes
@@ -356,87 +358,69 @@ struct MarkdownContentWithPs: Hashable {
     weak var event: Event?
 }
 
+// Helper function to extract all values from a FastTag
+private func getTagValues(_ tag: FastTag) -> [String?] {
+    return [tag.1, tag.2, tag.3, tag.4, tag.5, tag.6, tag.7, tag.8, tag.9]
+}
 
-func findImetaDimensions(_ fastTags: [FastTag], url:String) -> CGSize? {
-    // NIP-54
-    if let dim = findImetaFromUrl(url) { return dim }
+struct iMetaInfo {
+    var size: CGSize?
+    var blurHash: String?
     
+}
+
+func findImeta(_ fastTags: [FastTag], url:String) -> iMetaInfo? {
     // DIP-01
-    // Find any tag that is 'imeta' and has matching 'url', spec is unclear about order, so check every imeta value:
-    // fastTags only supports tags with 3 values, so too bad if there are more.
+    // Find any tag that is 'imeta' and has matching 'url'
     let imetaTag: FastTag? = fastTags.first(where: { tag in
-        
         guard tag.0 == "imeta" else { return false }
         
-        let parts = tag.1.split(separator: " ", maxSplits: 1)
-        if parts.count == 2 {
-            if (String(parts[0]) == "url" && String(parts[1]) == url) {
-                return true
-            }
+        // Check each value in the tag for a URL match
+        return getTagValues(tag).contains { value in
+            guard let value = value else { return false }
+            let parts = value.split(separator: " ", maxSplits: 1)
+            return parts.count == 2 && String(parts[0]) == "url" && String(parts[1]) == url
         }
-        
-        if let parts = tag.2?.split(separator: " ", maxSplits: 1) {
-            if parts.count == 2 {
-                if (String(parts[0]) == "url" && String(parts[1]) == url) {
-                    return true
-                }
-            }
-        }
-        
-        if let parts = tag.3?.split(separator: " ", maxSplits: 1) {
-            if parts.count == 2 {
-                if (String(parts[0]) == "url" && String(parts[1]) == url) {
-                    return true
-                }
-            }
-        }
-        
-        return false
     })
     
-    guard let imetaTag = imetaTag else { return nil }
     
-    // check every value in found imeta tag for 'dim'
-    let parts = imetaTag.1.split(separator: " ", maxSplits: 1)
-    if parts.count == 2 {
-        if (String(parts[0]) == "dim") {
-            let dim = parts[1].split(separator: "x", maxSplits: 1)
-            if dim.count == 2 {
-                if let width = Int(dim[0]), let height = Int(dim[1]) {
-                    return CGSize(width: width, height: height)
+    if let imetaTag {
+    
+        // Check each value in found imeta tag for 'dim'
+        var size: CGSize?
+        for value in getTagValues(imetaTag) {
+            guard let value = value else { continue }
+            let parts = value.split(separator: " ", maxSplits: 1)
+            if parts.count == 2 && String(parts[0]) == "dim" {
+                let dim = parts[1].split(separator: "x", maxSplits: 1)
+                if dim.count == 2, let width = Int(dim[0]), let height = Int(dim[1]) {
+                    size = CGSize(width: width, height: height)
                 }
             }
         }
-    }
-    
-    if let parts = imetaTag.2?.split(separator: " ", maxSplits: 1), parts.count == 2 {
-        if (String(parts[0]) == "dim") {
-            let dim = parts[1].split(separator: "x", maxSplits: 1)
-            if dim.count == 2 {
-                if let width = Int(dim[0]), let height = Int(dim[1]) {
-                    return CGSize(width: width, height: height)
-                }
+        
+        var blurHash: String?
+        for value in getTagValues(imetaTag) {
+            guard let value = value else { continue }
+            let parts = value.split(separator: " ", maxSplits: 1)
+            if parts.count == 2 && String(parts[0]) == "blurhash" {
+                blurHash = String(parts[1])
             }
+        }
+        
+        if blurHash != nil || size != nil {
+            return iMetaInfo(size: size, blurHash: blurHash)
         }
     }
     
-    if let parts = imetaTag.3?.split(separator: " ", maxSplits: 1), parts.count == 2 {
-        if (String(parts[0]) == "dim") {
-            let dim = parts[1].split(separator: "x", maxSplits: 1)
-            if dim.count == 2 {
-                if let width = Int(dim[0]), let height = Int(dim[1]) {
-                    return CGSize(width: width, height: height)
-                }
-            }
-        }
-    }
-
+    // NIP-54
+    if let imeta = findImetaFromUrl(url) { return imeta }
+    
     return nil
 }
 
-
 // NIP-54
-func findImetaFromUrl(_ url:String) -> CGSize? {
+func findImetaFromUrl(_ url: String) -> iMetaInfo? {
     let splits = url.split(separator: "#", maxSplits: 1)
     guard let metaParams = splits.last else { return nil }
     let metaSplits = metaParams.split(separator: "&")
@@ -447,7 +431,7 @@ func findImetaFromUrl(_ url:String) -> CGSize? {
         if String(meta).prefix(4) == "dim=" {
             let dims = String(String(meta).dropFirst(4)).split(separator: "x").compactMap { Double($0) }
             guard dims.count == 2 else { continue }
-            return CGSize(width: dims[0], height: dims[1])
+            return iMetaInfo(size: CGSize(width: dims[0], height: dims[1]))
         }
         // Disabled for now:
 //        else if String(meta).prefix(2) == "x=" {
@@ -461,28 +445,16 @@ func findImetaFromUrl(_ url:String) -> CGSize? {
 //    return ...
 }
 
-
 func imageUrlFromIMetaFastTag(_ tag: FastTag) -> URL? {
-    guard tag.0 == "imeta"  else { return nil }
-    var valuesDict: [String: String] = [:]
+    guard tag.0 == "imeta" else { return nil }
     
-    let property1 = tag.1.components(separatedBy: " ")
-    if property1.count >= 2 {
-        valuesDict[property1[0]] = property1[1]
+    for value in getTagValues(tag) {
+        guard let value = value else { continue }
+        let property = value.components(separatedBy: " ")
+        if property.count >= 2 && property[0] == "url" {
+            return URL(string: property[1])
+        }
     }
     
-    if let property2 = tag.2?.components(separatedBy: " "), property2.count >= 2 {
-        valuesDict[property2[0]] = property2[1]
-    }
-    
-    if let property3 = tag.3?.components(separatedBy: " "), property3.count >= 2 {
-        valuesDict[property3[0]] = property3[1]
-    }
-    
-    if let property4 = tag.4?.components(separatedBy: " "), property4.count >= 2 {
-        valuesDict[property4[0]] = property4[1]
-    }
-        
-    guard let url = valuesDict["url"] else { return nil }
-    return URL(string: url)
+    return nil
 }
