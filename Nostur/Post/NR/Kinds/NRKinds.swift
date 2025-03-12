@@ -54,14 +54,16 @@ struct AnyKind: View {
                 case 20:
                 if let imageUrl = nrPost.imageUrls.first {
                         VStack {
+                            let iMeta: iMetaInfo? = findImeta(nrPost.fastTags, url: imageUrl.absoluteString) // TODO: More to NRPost.init?
                             MediaContentView(
                                 media: MediaContent(
                                     url: imageUrl,
-                                    dimensions: findImetaDimensions(nrPost.fastTags, url: imageUrl.absoluteString)
+                                    dimensions: iMeta?.size,
+                                    blurHash: iMeta?.blurHash
                                 ),
                                 availableWidth: dim.listWidth,
-                                placeholderHeight: dim.listWidth, // Same as width so 1:1 (square)
-                                contentMode: .fit,
+                                placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
+                                contentMode: .fill,
                                 imageUrls: nrPost.imageUrls
                             )
 //                            PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth, imageUrls: nrPost.imageUrls)

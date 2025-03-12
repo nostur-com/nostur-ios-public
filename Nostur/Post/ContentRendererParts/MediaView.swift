@@ -12,19 +12,18 @@ import Nuke
 struct MediaContentView: View {
     public var media: MediaContent
     public var availableWidth: CGFloat?
-    public var availableHeight: CGFloat?
     public var placeholderHeight: CGFloat? // Don't set availableHeight AND placeholderHeight, set only 1!!
-    public var contentMode: ContentMode = .fit
+    public var contentMode: ContentMode = .fit // if placeholderHeight is set, probably should use fill!!
     
     public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
     
     var body: some View {
         MediaView(
             url: media.url,
+            blurHash: media.blurHash,
             imageWidth: media.dimensions?.width,
             imageHeight: media.dimensions?.height,
             availableWidth: availableWidth,
-            availableHeight: availableHeight,
             placeholderHeight: placeholderHeight,
             contentMode: contentMode,
             imageUrls: imageUrls
@@ -34,6 +33,7 @@ struct MediaContentView: View {
 
 struct MediaView: View {
     public let url: URL
+    public var blurHash: String?
     
     // Dimensions about the image/video from metadata/imeta
     public var imageWidth: CGFloat?
@@ -41,7 +41,6 @@ struct MediaView: View {
     
     // Available space provided by parent (optional)
     public var availableWidth: CGFloat?
-    public var availableHeight: CGFloat?
     
     // To prevent jumping, if we don't know availableHeight, shouldn't be 0 points
     public var placeholderHeight: CGFloat?
@@ -52,23 +51,61 @@ struct MediaView: View {
     
     // The actual dimensions, once the image is actually processed and loaded, should be set after download/processing
     @State private var realDimensions: CGSize?
+    
+    // availableWidth/availableHeight from param or GeometryReader
+    func expectedImageSize(availableWidth: CGFloat, availableHeight: CGFloat) -> CGSize {
+        let metaSize: CGSize? = if let imageWidth, let imageHeight {
+            CGSize(width: imageWidth, height: imageHeight)
+        }
+        else { nil }
+        
+        // realDimensions load last, when we finally have them we use them instead of the info further down
+        if let realDimensions {
+            let aspect = realDimensions.height / realDimensions.width
+            return CGSize(
+                width: availableWidth,
+                height: availableWidth * aspect
+            )
+        }
+        
+        // We have availableWidth
+        // We have meta dimensions?
+        //    OK scale to make it fit or fill (only if too wide)   (try to make DEFAULT KIND1BOTH available height high so we always have good scaled width
+        
+        if let metaSize, metaSize.width > availableWidth {
+            let aspect = metaSize.height / metaSize.width
+            return CGSize(
+                width: availableWidth,
+                height: availableWidth * aspect
+            )
+        }
+
+        // Don't have meta dimensions
+        //    OK scale to make it fit or fill to placeholder height
+        // placeholder height comes from param or geo
+        return CGSize(
+            width: availableWidth,
+            height: availableHeight
+        )
+    }
 
     var body: some View {
         if contentMode == .fit {
             // Check if we have explicit available dimensions
-            if let availableWidth, let availableHeight = (availableHeight ?? placeholderHeight) {
+            if let availableWidth, let availableHeight = placeholderHeight {
                 MediaPlaceholder(
                     url: url,
-                    frameWidth: calculatedSize(width: availableWidth, height: availableHeight).width,
-                    frameHeight: calculatedSize(width: availableWidth, height: availableHeight).height,
+                    blurHash: blurHash,
+                    expectedImageSize: expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight),
                     contentMode: contentMode,
                     imageUrls: imageUrls,
                     realDimensions: $realDimensions
                 )
 //                .overlay(alignment: .center) {
-//                    Text("calculatedSize.fit: \(calculatedSize(width: availableWidth, height: availableHeight).width)x\(calculatedSize(width: availableWidth, height: availableHeight).height)")
+//                    Text("fit: \(expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight))")
 //                        .foregroundColor(Color.yellow)
 //                        .background(Color.black)
+//                        .font(.footnote)
 //                }
             }
             else {
@@ -76,16 +113,17 @@ struct MediaView: View {
                 GeometryReader { geometry in
                     MediaPlaceholder(
                         url: url,
-                        frameWidth: calculatedSize(width: geometry.size.width, height: geometry.size.height).width,
-                        frameHeight: calculatedSize(width: geometry.size.width, height: geometry.size.height).height,
+                        blurHash: blurHash,
+                        expectedImageSize: expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height),
                         contentMode: contentMode,
                         imageUrls: imageUrls,
                         realDimensions: $realDimensions
                     )
 //                    .overlay(alignment: .center) {
-//                        Text("calculatedSize.fit2: \(calculatedSize(width: geometry.size.width, height: geometry.size.height).width).width)x\(calculatedSize(width: geometry.size.width, height: geometry.size.height).height)")
+//                        Text("geo.fit: \(expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height))")
 //                            .foregroundColor(Color.yellow)
 //                            .background(Color.black)
+//                            .font(.footnote)
 //                    }
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 }
@@ -93,19 +131,20 @@ struct MediaView: View {
         }
         else { // Same but with .fill and .clipped() instead
             // Check if we have explicit available dimensions
-            if let availableWidth, let availableHeight = (availableHeight ?? placeholderHeight) {
+            if let availableWidth, let availableHeight = placeholderHeight {
                 MediaPlaceholder(
                     url: url,
-                    frameWidth: calculatedSize(width: availableWidth, height: availableHeight).width,
-                    frameHeight: calculatedSize(width: availableWidth, height: availableHeight).height,
+                    blurHash: blurHash,
+                    expectedImageSize: expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight),
                     contentMode: .fill,
                     imageUrls: imageUrls,
                     realDimensions: $realDimensions
                 )
 //                .overlay(alignment: .center) {
-//                    Text("calculatedSize.fill: \(calculatedSize(width: availableWidth, height: availableHeight).width)x\(calculatedSize(width: availableWidth, height: availableHeight).height)")
+//                    Text("fill: \(expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight))")
 //                        .foregroundColor(Color.yellow)
 //                        .background(Color.black)
+//                        .font(.footnote)
 //                }
             }
             else {
@@ -113,67 +152,22 @@ struct MediaView: View {
                 GeometryReader { geometry in
                     MediaPlaceholder(
                         url: url,
-                        frameWidth: calculatedSize(width: geometry.size.width, height: geometry.size.height).width,
-                        frameHeight: calculatedSize(width: geometry.size.width, height: geometry.size.height).height,
+                        blurHash: blurHash,
+                        expectedImageSize: expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height),
                         contentMode: .fill,
                         imageUrls: imageUrls,
                         realDimensions: $realDimensions
                     )
 //                    .overlay(alignment: .center) {
-//                        Text("calculatedSize.fill2: \(calculatedSize(width: geometry.size.width, height: geometry.size.height).width).width)x\(calculatedSize(width: geometry.size.width, height: geometry.size.height).height)")
+//                        Text("geo.fill: \(expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height))")
 //                            .foregroundColor(Color.yellow)
 //                            .background(Color.black)
+//                            .font(.footnote)
 //                    }
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 }
             }
         }
-       
-    }
-
-    private func calculatedSize(width availableWidth: CGFloat, height availableHeight: CGFloat) -> (width: CGFloat, height: CGFloat) {
-        
-        // We get REAL dimensions from response of imageTask (passed through @Binding)
-        // We use that if we have it, else use imeta
-        let imageWidth: CGFloat? = realDimensions?.width ?? self.imageWidth
-        let imageHeight: CGFloat? = realDimensions?.height ?? self.imageHeight
-        
-        // Handle missing or invalid image dimensions (this runs before imageTask)
-        guard let imageWidth, let imageHeight,
-              imageWidth > 0, imageHeight > 0 else {
-            print("availableWidth: \(availableWidth) maxHeight: \(availableHeight)")
-            return (availableWidth, placeholderHeight ?? availableHeight)
-        }
-        
-        // Ensure we don't work with zero or negative sizes
-        let safeMaxWidth = max(availableWidth, 1.0)
-        let safeMaxHeight = if placeholderHeight != nil {
-            max(imageHeight, 1.0) // placeHolderHeight was set, so that means we were waiting for actual image height
-        }
-        else {
-            max(availableHeight, 1.0) // no placeholder so just use availableHeight
-        }
-
-        // Calculate scale factors for both dimensions
-        let widthScale = safeMaxWidth / imageWidth
-        let heightScale = safeMaxHeight / imageHeight
-        
-        // Use the smaller scale factor to ensure fit within bounds
-        let scale = if placeholderHeight != nil {
-            widthScale // placeHolderHeight was set, so that means we were waiting for actual image height, so we always scale to max width and don't care about the height, it can grow as large as necessary
-        }
-        else { // no placeHolderHeight set, so we need to scale to either width or height to make it fit
-            min(widthScale, heightScale)
-        }
-        
-        // Calculate final dimensions
-        let targetWidth = imageWidth * scale
-        let targetHeight = imageHeight * scale
-//        
-//        print("safeMaxWidth: \(safeMaxWidth) safeMaxHeight: \(safeMaxHeight) widthScale: \(widthScale) heightScale: \(heightScale)")
-//        print("targetWidth: \(targetWidth) targetHeight: \(targetHeight) scale: \(scale)")
-        
-        return (targetWidth, targetHeight)
     }
 }
 
@@ -183,8 +177,8 @@ struct MediaPlaceholder: View {
     @EnvironmentObject private var themes: Themes
     
     public let url: URL
-    public let frameWidth: CGFloat
-    public let frameHeight: CGFloat
+    public var blurHash: String?
+    public let expectedImageSize: CGSize
     public var contentMode: ContentMode = .fit
     public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
     
@@ -195,17 +189,19 @@ struct MediaPlaceholder: View {
         if contentMode == .fit {
             mediaPlaceholder
                 .frame(
-                    width: frameWidth,
-                    height: frameHeight
+                    width: expectedImageSize.width,
+                    height: expectedImageSize.height
                 )
+//                .border(Color.green)
         }
         else {
             mediaPlaceholder
                 .frame(
-                    width: frameWidth,
-                    height: frameHeight
+                    width: expectedImageSize.width,
+                    height: expectedImageSize.height
                 )
 //                .border(Color.red)
+//                .border(Color.green)
                 .clipped()
         }
     }
@@ -220,12 +216,53 @@ struct MediaPlaceholder: View {
                 Text(percentage, format: .percent)
             }
         case .lowDataMode:
-            Text(url.absoluteString)
-                .foregroundColor(themes.theme.accent)
-                .truncationMode(.middle)
-                .onTapGesture {
-                    load(overrideLowDataMode: true)
-                }
+            if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
+                Image(uiImage: blurImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(
+                        width: expectedImageSize.width,
+                        height: expectedImageSize.height
+                    )
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        load(overrideLowDataMode: true)
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        Text(url.absoluteString)
+                            .foregroundColor(themes.theme.accent)
+                            .truncationMode(.middle)
+                            .lineLimit(1)
+                            .font(.footnote)
+                            .onTapGesture {
+                                load(overrideLowDataMode: true)
+                            }
+                            .padding(3)
+                    }
+            }
+            else {
+                themes.theme.listBackground.opacity(0.2)
+                    .frame(
+                        width: expectedImageSize.width,
+                        height: expectedImageSize.height
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        load(overrideLowDataMode: true)
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                        Text(url.absoluteString)
+                            .foregroundColor(themes.theme.accent)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .font(.footnote)
+                            .onTapGesture {
+                                load(overrideLowDataMode: true)
+                            }
+                            .padding(3)
+                    }
+            }
         case .httpBlocked:
             VStack {
                 Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
@@ -257,10 +294,13 @@ struct MediaPlaceholder: View {
                 Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .scaledToFit()
+//                Color.red
 //                    .overlay(alignment: .top) {
 //                        VStack {
-//                            Text(".image.fit \(frameWidth)x\(frameHeight)")
+//                            Text(".image.fit \(expectedImageSize.width)x\(expectedImageSize.height)")
+//                                .font(.footnote)
 //                            Text("real: \(imageInfo.realDimensions.width)x\(imageInfo.realDimensions.height)")
+//                                .font(.footnote)
 //                        }
 //                            .foregroundColor(.white)
 //                            .background(Color.black)
@@ -277,8 +317,10 @@ struct MediaPlaceholder: View {
                     .aspectRatio(contentMode: .fill)
 //                    .overlay(alignment: .top) {
 //                        VStack {
-//                            Text(".image.fill \(frameWidth)x\(frameHeight)")
+//                            Text(".image.fill \(expectedImageSize.width)x\(expectedImageSize.height)")
+//                                .font(.footnote)
 //                            Text("real: \(imageInfo.realDimensions.width)x\(imageInfo.realDimensions.height)")
+//                                .font(.footnote)
 //                        }
 //                            .foregroundColor(.white)
 //                            .background(Color.black)
@@ -295,7 +337,7 @@ struct MediaPlaceholder: View {
                     .aspectRatio(contentMode: .fit)
 //                    .overlay(alignment: .top) {
 //                        VStack {
-//                            Text(".gif.fit \(frameWidth)x\(frameHeight)")
+//                            Text(".gif.fit \(expectedImageSize.width)x\(expectedImageSize.height)")
 //                            Text("real: \(gifData.realDimensions.width)x\(gifData.realDimensions.height)")
 //                        }
 //                            .foregroundColor(.white)
@@ -320,7 +362,7 @@ struct MediaPlaceholder: View {
                     .aspectRatio(contentMode: .fill)
 //                    .overlay(alignment: .top) {
 //                        VStack {
-//                            Text(".gif.fill \(frameWidth)x\(frameHeight)")
+//                            Text(".gif.fill \(expectedImageSize.width)x\(expectedImageSize.height)")
 //                            Text("real: \(gifData.realDimensions.width)x\(gifData.realDimensions.height)")
 //                        }
 //                            .foregroundColor(.white)
@@ -353,17 +395,33 @@ struct MediaPlaceholder: View {
                 }
             }
         default:
-            Color.clear
-                .onAppear {
-                    load()
-                }
+            if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
+                Image(uiImage: blurImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(
+                        width: expectedImageSize.width,
+                        height: expectedImageSize.height
+                    )
+                    .clipped()
+                    .contentShape(Rectangle())
+                    .onAppear {
+                        load()
+                    }
+            }
+            else {
+                Color.clear
+                    .onAppear {
+                        load()
+                    }
+            }
         }
     }
     
     @MainActor
     private func load(overrideLowDataMode: Bool = false) {
         Task {
-            await vm.load(url, width: frameWidth, height: frameHeight, contentMode: contentMode, overrideLowDataMode: overrideLowDataMode)
+            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, overrideLowDataMode: overrideLowDataMode)
         }
     }
     
@@ -379,6 +437,46 @@ struct MediaPlaceholder: View {
     }
 }
 
+#Preview("Scale test") {
+//    ScrollView {
+        VStack {
+            MediaContentView(
+                media: MediaContent(
+                    url:  URL(string: "https://i.nostr.build/baSKxXnbK9aQpuGv.jpg")!,
+//                    dimensions: CGSize(width: 2539, height: 3683)
+                    blurHash: "^SIz^+Iox^xZxvtQtlxuayaxayWC?^n$MxR+V?j]xut7ayWBayoef5jvV?WVR,j@WWWVjZaeoeofRjkCogoJt7azsoWBR+oeWBWXn%oLbaR*WBj["
+                ),
+                availableWidth: 360,
+//                placeholderHeight: 360,
+                contentMode: .fit
+            )
+            .border(Color.blue)
+            .frame(width: 360, height: 200)
+            
+            Color.red
+                .frame(width: 360, height: 200)
+                .overlay {
+                    Text("360x200")
+                        .foregroundColor(.white)
+                }
+            
+            MediaContentView(
+                media: MediaContent(
+                    url:  URL(string: "https://i.nostr.build/baSKxXnbK9aQpuGv.jpg")!
+//                    dimensions: CGSize(width: 2539, height: 3683)
+//                    blurHash: "^SIz^+Iox^xZxvtQtlxuayaxayWC?^n$MxR+V?j]xut7ayWBayoef5jvV?WVR,j@WWWVjZaeoeofRjkCogoJt7azsoWBR+oeWBWXn%oLbaR*WBj["
+                ),
+                availableWidth: 360,
+//                placeholderHeight: 360,
+                contentMode: .fit
+            )
+            .border(Color.blue)
+            .frame(width: 360, height: 200)
+        }
+//    }
+    .environmentObject(Themes.default)
+}
+
 #Preview {
     ScrollView {
         VStack {
@@ -388,8 +486,7 @@ struct MediaPlaceholder: View {
                 url: testUrl,
                 imageWidth: 480,
                 imageHeight: 480,
-                availableWidth: 360,
-                availableHeight: 150
+                availableWidth: 360
             )
             .border(Color.blue)
             .frame(width: 360, height: 150)
@@ -415,8 +512,7 @@ struct MediaPlaceholder: View {
             // Test with explicit available space but no image dimensions  (no GeometryReader needed)
             MediaView(
                 url: testUrl,
-                availableWidth: 360,
-                availableHeight: 150
+                availableWidth: 360
             )
             .border(Color.blue)
             .frame(width: 360, height: 150)
@@ -424,3 +520,4 @@ struct MediaPlaceholder: View {
     }
     .environmentObject(Themes.default)
 }
+

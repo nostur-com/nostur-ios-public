@@ -12,9 +12,9 @@ import Nuke
 class MediaViewVM: ObservableObject {
     @Published var state: MediaViewState = .initial
     
-    public func load(_ url: URL, width: CGFloat, height: CGFloat, contentMode: ContentMode = .fit,
+    public func load(_ url: URL, expectedImageSize: CGSize, contentMode: ContentMode = .fit,
                                 upscale: Bool = false, overrideLowDataMode: Bool = false) async {
-        if SettingsStore.shared.lowDataMode {
+        if SettingsStore.shared.lowDataMode && !overrideLowDataMode {
             Task { @MainActor in
                 state = .lowDataMode
             }
@@ -30,8 +30,8 @@ class MediaViewVM: ObservableObject {
         
 
         let imageRequest = makeImageRequest(url,
-                                            width: width,
-                                            height: height,
+                                            width: expectedImageSize.width,
+                                            height: expectedImageSize.height,
                                             contentMode: contentMode == .fit ? .aspectFit : .aspectFill,
                                             upscale: upscale,
                                             label: "MediaViewVM.load",
@@ -135,7 +135,6 @@ struct GifInfo {
              MediaContentView(
                  media: mediaContent,
                  availableWidth: 381,
-                 availableHeight: 600,
                  contentMode: .fit
              )
              .border(Color.blue)
@@ -175,7 +174,6 @@ struct GifInfo {
              MediaContentView(
                  media: mediaContent,
                  availableWidth: 360,
-                 availableHeight: 5000,
                  contentMode: .fit
              )
              .border(Color.blue)

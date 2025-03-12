@@ -407,8 +407,8 @@ struct ImageProgressView: View {
 
 // Use this function to make sure the image request is same in SingleImageViewer, SmoothList prefetch and SmoothList cancel prefetch.
 // else Nuke will prefetch wrong request
-func makeImageRequest(_ url:URL, width:CGFloat, height:CGFloat? = nil, contentMode:ImageProcessingOptions.ContentMode = .aspectFit, upscale:Bool = false, label:String = "", overrideLowDataMode: Bool = false) -> ImageRequest {
-//    L.og.debug("ImageRequest: \(url.absoluteString), \(width) x \(height ?? -1) \(label)")
+func makeImageRequest(_ url: URL, width: CGFloat, height: CGFloat? = nil, contentMode: ImageProcessingOptions.ContentMode = .aspectFit, upscale: Bool = false, label: String = "", overrideLowDataMode: Bool = false) -> ImageRequest {
+    L.og.debug("ImageRequest: \(url.absoluteString), \(width) x \(height ?? -1) \(label)")
     return ImageRequest(url: url,
                  processors: [
                     height != nil

@@ -330,6 +330,13 @@ struct MediaContent: Hashable {
     var dimensions: CGSize?
     var blurHash: String?
     
+    var aspect: CGFloat {
+        if let dimensions {
+            return dimensions.height / dimensions.width
+        } else {
+            return 1
+        }
+    }
 }
 
 // For text notes
@@ -367,6 +374,13 @@ struct iMetaInfo {
     var size: CGSize?
     var blurHash: String?
     
+    var aspect: CGFloat {
+        if let size = size {
+            return size.height / size.width
+        } else {
+            return 1.0
+        }
+    }
 }
 
 func findImeta(_ fastTags: [FastTag], url:String) -> iMetaInfo? {
