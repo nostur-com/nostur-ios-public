@@ -60,12 +60,16 @@ class MediaViewVM: ObservableObject {
             let response = try await task.response
             if response.container.type == .gif, let gifData = response.container.data {
                 Task { @MainActor in
-                    state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
+                    withAnimation(.smooth(duration: 0.2)) {
+                        state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
+                    }
                 }
             }
             else {
                 Task { @MainActor in
-                    state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
+                    withAnimation(.smooth(duration: 0.2)) {
+                        state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
+                    }
                 }
             }
         }
@@ -84,25 +88,26 @@ class MediaViewVM: ObservableObject {
     }
 }
 
-enum MediaViewState {
+enum MediaViewState: Equatable {
     case initial
     case lowDataMode
     case loading(Int) // Progress percentage
     case httpBlocked
     case dontAutoLoad
-    case blurhashLoading
     case image(ImageInfo)
-    case gif(GifInfo)
+    case gif(GifInfo) // TODO: handle  if !dim.isScreenshot
     case error(String) // error message
     case cancelled
 }
 
-struct ImageInfo {
+struct ImageInfo: Equatable {
+    let id = UUID()
     let uiImage: UIImage
     let realDimensions: CGSize
 }
 
-struct GifInfo {
+struct GifInfo: Equatable {
+    let id = UUID()
     let gifData: Data
     let realDimensions: CGSize
 }

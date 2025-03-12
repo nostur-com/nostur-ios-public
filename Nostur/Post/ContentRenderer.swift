@@ -207,9 +207,9 @@ struct ContentRenderer: View { // VIEW things
                 }
             }
         }
-        .transaction { t in
-            t.animation = nil
-        }
+//        .transaction { t in
+//            t.animation = nil
+//        }
     }
 }
 
