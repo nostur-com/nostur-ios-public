@@ -264,6 +264,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
+    private var loadLocalSubject = PassthroughSubject<(NXColumnConfig, Bool, (() -> Void)?), Never>()
 
     @MainActor
     public func load(_ config: NXColumnConfig) {
@@ -271,6 +272,17 @@ class NXColumnViewModel: ObservableObject {
         self.config = config
         
         self.feed = config.feed
+        
+        // Set up loadLocal debouncer (somewhere there is a loadLocal -> loadRemote -> LoadLocal infinite loop, don't know where, this fixes that)
+        // Could also setup for loadRemote but we never call loadRemote by itself so should not be necessary
+        loadLocalSubject
+            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
+            .throttle(for: .seconds(2.0), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] (config, older, completion) in
+                self?._loadLocal(config, older: older, completion: completion)
+            }
+            .store(in: &subscriptions)
+                
         
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
@@ -552,9 +564,16 @@ class NXColumnViewModel: ObservableObject {
             }
         }
     }
+    
+    public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
+#if DEBUG
+L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and throttled first)")
+#endif
+        loadLocalSubject.send((config, older, completion))
+    }
 
     @MainActor
-    public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
+    public func _loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
         
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
         
@@ -1684,12 +1703,16 @@ extension NXColumnViewModel {
                             }
                         }
                         else {
+                            self.vmInner.isPreparingForScrollRestore = false
+                            self.vmInner.pendingScrollToIndex = nil
                             // No previous post to restore to, just update the view
                             viewState = .posts(addedAndExistingPostsTruncated)
                         }
                     }
                 }
                 else {
+                    self.vmInner.isPreparingForScrollRestore = false
+                    self.vmInner.pendingScrollToIndex = nil
                     #if DEBUG
                     L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) withAnimation { }  + not at top, to keep scroll pos ")
                     #endif
@@ -1703,6 +1726,9 @@ extension NXColumnViewModel {
                 L.og.debug("☘️☘️ \(config.name) putOnScreen addedPosts (AT END) \(onlyNewAddedPosts.count.description)")
 #endif
                 
+                self.vmInner.isPreparingForScrollRestore = false
+                self.vmInner.pendingScrollToIndex = nil
+                
                 // No withAnimation { } at bottom or it will jump?
                 self.viewState = .posts(existingPosts + onlyNewAddedPosts)
             }
@@ -1715,6 +1741,8 @@ extension NXColumnViewModel {
             if !vmInner.isAtTop {
                 vmInner.isAtTop = true
             }
+            vmInner.isPreparingForScrollRestore = false
+            vmInner.pendingScrollToIndex = nil
             withAnimation {
                 viewState = .posts(uniqueAddedPosts)
             }
