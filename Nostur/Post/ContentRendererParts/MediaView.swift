@@ -185,6 +185,10 @@ struct MediaPlaceholder: View {
     @Binding var realDimensions: CGSize?
     @State private var gifIsPlaying = false
     
+    @State private var blurImage: UIImage?
+    @State private var loadTask: Task<Void, Never>?
+    @State private var isVisible = false
+    
     var body: some View {
         if contentMode == .fit {
             mediaPlaceholder
@@ -192,6 +196,8 @@ struct MediaPlaceholder: View {
                     width: expectedImageSize.width,
                     height: expectedImageSize.height
                 )
+                .onAppear { isVisible = true }
+                .onDisappear { isVisible = false }
 //                .border(Color.green)
         }
         else {
@@ -200,6 +206,8 @@ struct MediaPlaceholder: View {
                     width: expectedImageSize.width,
                     height: expectedImageSize.height
                 )
+                .onAppear { isVisible = true }
+                .onDisappear { isVisible = false }
 //                .border(Color.red)
 //                .border(Color.green)
                 .clipped()
@@ -211,10 +219,41 @@ struct MediaPlaceholder: View {
     private var mediaPlaceholder: some View {
         switch vm.state {
         case .loading(let percentage):
-            HStack {
-                Image(systemName: "hourglass.tophalf.filled")
-                Text(percentage, format: .percent)
-            }
+            themes.theme.listBackground.opacity(0.2)
+                .onDisappear {
+                    guard case .loading(let percentage) = vm.state else { return }
+                    if percentage < 98 {
+                        cancelLoad()
+                    }
+                }
+                .overlay {
+                    if let blurImage {
+                        Image(uiImage: blurImage)
+                            .resizable()
+                            .animation(.smooth(duration: 0.2), value: vm.state)
+                            .aspectRatio(contentMode: .fill)
+                            .frame(
+                                width: expectedImageSize.width,
+                                height: expectedImageSize.height
+                            )
+                            .clipped()
+                    }
+                }
+                .frame(
+                    width: expectedImageSize.width,
+                    height: expectedImageSize.height
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    debounceLoad(forceLoad: true)
+                }
+                .overlay(alignment:. topTrailing) {
+                    HStack {
+                        Image(systemName: "hourglass.tophalf.filled")
+                        Text(percentage, format: .percent)
+                    }
+                    .padding(5)
+                }
         case .lowDataMode:
             if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
                 Image(uiImage: blurImage)
@@ -227,7 +266,7 @@ struct MediaPlaceholder: View {
                     .clipped()
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        load(overrideLowDataMode: true)
+                        debounceLoad(forceLoad: true)
                     }
                     .overlay(alignment: .bottomTrailing) {
                         Text(url.absoluteString)
@@ -236,7 +275,7 @@ struct MediaPlaceholder: View {
                             .lineLimit(1)
                             .font(.footnote)
                             .onTapGesture {
-                                load(overrideLowDataMode: true)
+                                debounceLoad(forceLoad: true)
                             }
                             .padding(3)
                     }
@@ -249,7 +288,7 @@ struct MediaPlaceholder: View {
                     )
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        load(overrideLowDataMode: true)
+                        debounceLoad(forceLoad: true)
                     }
                     .overlay(alignment: .bottomTrailing) {
                         Text(url.absoluteString)
@@ -258,7 +297,7 @@ struct MediaPlaceholder: View {
                             .truncationMode(.middle)
                             .font(.footnote)
                             .onTapGesture {
-                                load(overrideLowDataMode: true)
+                                debounceLoad(forceLoad: true)
                             }
                             .padding(3)
                     }
@@ -272,28 +311,53 @@ struct MediaPlaceholder: View {
                     .fontItalic()
                     .foregroundColor(themes.theme.accent)
                 Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
-                    load()
+                    debounceLoad(forceLoad: true)
                 }
             }
         case .dontAutoLoad, .cancelled:
-            VStack {
-                Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
-                    .frame(maxWidth: .infinity, alignment: .center)
-                Text(url.absoluteString)
-                    .truncationMode(.middle)
-                    .fontItalic()
-                    .foregroundColor(themes.theme.accent)
-                Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
-                    load()
+            themes.theme.listBackground.opacity(0.2)
+                .overlay {
+                    if let blurImage {
+                        Image(uiImage: blurImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(
+                                width: expectedImageSize.width,
+                                height: expectedImageSize.height
+                            )
+                            .clipped()
+                    }
                 }
-            }
-        case .blurhashLoading:
-            Color.red
+                .frame(
+                    width: expectedImageSize.width,
+                    height: expectedImageSize.height
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    debounceLoad(forceLoad: true)
+                }
+                .overlay(alignment: .center) {
+                    VStack {
+                        Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        Text(url.absoluteString)
+                            .foregroundColor(themes.theme.accent)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .fontItalic()
+                            .font(.footnote)
+                            .onTapGesture {
+                                debounceLoad(forceLoad: true)
+                            }
+                            .padding(3)
+                    }
+                }
         case .image(let imageInfo):
             if contentMode == .fit {
                 Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .scaledToFit()
+                    .animation(.smooth(duration: 0.2), value: vm.state)
 //                Color.red
 //                    .overlay(alignment: .top) {
 //                        VStack {
@@ -315,6 +379,7 @@ struct MediaPlaceholder: View {
                 Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
+                    .animation(.smooth(duration: 0.2), value: vm.state)
 //                    .overlay(alignment: .top) {
 //                        VStack {
 //                            Text(".image.fill \(expectedImageSize.width)x\(expectedImageSize.height)")
@@ -334,6 +399,7 @@ struct MediaPlaceholder: View {
         case .gif(let gifData):
             if contentMode == .fit {
                 GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
+                    .animation(.smooth(duration: 0.2), value: vm.state)
                     .aspectRatio(contentMode: .fit)
 //                    .overlay(alignment: .top) {
 //                        VStack {
@@ -359,6 +425,7 @@ struct MediaPlaceholder: View {
             }
             else {
                 GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
+                    .animation(.smooth(duration: 0.2), value: vm.state)
                     .aspectRatio(contentMode: .fill)
 //                    .overlay(alignment: .top) {
 //                        VStack {
@@ -391,14 +458,24 @@ struct MediaPlaceholder: View {
                     .fontItalic()
                     .foregroundColor(themes.theme.accent)
                 Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
-                    load()
+                    debounceLoad()
                 }
             }
         default:
-            if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
+            if !autoload {
+                Color.clear
+                    .onAppear {
+                        if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
+                            self.blurImage = blurImage
+                        }
+                        vm.state = .dontAutoLoad
+                    }
+            }
+            else if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
                 Image(uiImage: blurImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
+                    .animation(.smooth(duration: 0.2), value: vm.state)
                     .frame(
                         width: expectedImageSize.width,
                         height: expectedImageSize.height
@@ -406,23 +483,54 @@ struct MediaPlaceholder: View {
                     .clipped()
                     .contentShape(Rectangle())
                     .onAppear {
-                        load()
+                        withAnimation {
+                            self.blurImage = blurImage
+                        }
+                        debounceLoad()
                     }
             }
             else {
                 Color.clear
                     .onAppear {
-                        load()
+                        debounceLoad()
                     }
             }
         }
     }
     
     @MainActor
-    private func load(overrideLowDataMode: Bool = false) {
-        Task {
-            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, overrideLowDataMode: overrideLowDataMode)
+    private func debounceLoad(forceLoad: Bool = false) {
+        // Cancel any existing load task
+        cancelLoad()
+        
+        // Create a new debounced load task
+        loadTask = Task {
+            // Wait for a short delay to debounce rapid scrolling
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            
+            // Check if the task was cancelled during the delay
+            if Task.isCancelled { return }
+            
+            // Check if the view is still visible
+            if !isVisible && !forceLoad { return }
+            
+            // Proceed with loading
+            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad)
         }
+    }
+    
+    @MainActor
+    private func load(forceLoad: Bool = false) {
+        Task {
+            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad)
+        }
+    }
+    
+    @MainActor
+    private func cancelLoad() {
+        loadTask?.cancel()
+        loadTask = nil
+        vm.cancel()
     }
     
     private func imageTap() {
