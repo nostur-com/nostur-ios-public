@@ -17,32 +17,8 @@ class NXColumnViewModel: ObservableObject {
     
     public let vmInner = NXColumnViewModelInner()
     
-    private var startTime: Date? {
-        didSet {
-            finishTime = nil
-        }
-    }
-    @Published private var finishTime: Date?
-    
-    var loadTime: TimeInterval? {
-        guard let startTime, let finishTime else { return nil }
-        return finishTime.timeIntervalSince(startTime)
-    }
-    
-    var formattedLoadTime: String {
-        guard let loadTime else { return "-" }
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.minimumFractionDigits = 2
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: loadTime)) ?? "-"
-    }
-    
     @MainActor
     private func didFinish() {
-        if finishTime == nil {
-            finishTime = .now
-        }
         if !ConnectionPool.shared.anyConnected { // After finish we were never connected, watch for first connection to .load() again
             self.watchForFirstConnection = true
         }
@@ -299,7 +275,6 @@ class NXColumnViewModel: ObservableObject {
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         guard isVisible else { return }
-        startTime = .now
         startFetchFeedTimer()
         
         // Change to loading if we were displaying posts before
@@ -506,7 +481,6 @@ class NXColumnViewModel: ObservableObject {
     public func reload(_ config: NXColumnConfig) {
         viewState = .loading
         self.allIdsSeen = []
-        startTime = .now
         startFetchFeedTimer()
         loadLocal(config)
     }
@@ -554,7 +528,6 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop)")
 #endif
-        startTime = .now
         
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
