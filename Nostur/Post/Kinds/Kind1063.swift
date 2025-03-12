@@ -10,16 +10,17 @@ import NavigationBackport
 
 struct Kind1063: View {
     
-    @ObservedObject private var nrPost:NRPost
-    private let url:String
-    private let availableWidth:CGFloat
-    private let fullWidth:Bool
-    private var height:CGFloat? = nil
-    private let forceAutoload:Bool
-    private var theme:Theme
+    @ObservedObject private var nrPost: NRPost
+    private let url: String
+    private let availableWidth: CGFloat
+    private let fullWidth: Bool
+    private var height: CGFloat? = nil
+    private let forceAutoload: Bool
+    private var theme: Theme
+    private var fileMetadata: KindFileMetadata
     @Binding var didStart: Bool
     
-    init(_ nrPost:NRPost, fileMetadata:KindFileMetadata, availableWidth:CGFloat = .zero, fullWidth:Bool = false, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false)) {
+    init(_ nrPost:NRPost, fileMetadata: KindFileMetadata, availableWidth: CGFloat = .zero, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false)) {
         self.theme = theme
         self.nrPost = nrPost
         self.url = fileMetadata.url
@@ -27,6 +28,7 @@ struct Kind1063: View {
         self.fullWidth = fullWidth
         self.forceAutoload = forceAutoload
         _didStart = didStart
+        self.fileMetadata = fileMetadata
         if let dim = fileMetadata.dim {
             let dims = dim.split(separator: "x", maxSplits: 2)
             if dims.count == 2 {
@@ -76,10 +78,20 @@ struct Kind1063: View {
 //                    .withoutAnimation()
             }
             else if let height {
-                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)
-                    .padding(.horizontal, fullWidth ? -10 : 0)
-//                    .padding(.horizontal, -10)
-//                    .fixedSize(horizontal: false, vertical: true)
+                MediaContentView(
+                    media: MediaContent(
+                        url: URL(string: url)!,
+                        dimensions: fileMetadata.size,
+                        blurHash: fileMetadata.blurhash
+                    ),
+                    availableWidth: availableWidth + (fullWidth ? +20 : 0),
+                    placeholderHeight: height,
+                    contentMode: fullWidth ? .fill : .fit
+                )
+//                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)
+//                    .padding(.horizontal, fullWidth ? -10 : 0)
+////                    .padding(.horizontal, -10)
+////                    .fixedSize(horizontal: false, vertical: true)
                     .frame(height: height)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)

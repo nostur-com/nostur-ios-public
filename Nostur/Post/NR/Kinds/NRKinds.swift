@@ -13,6 +13,15 @@ struct KindFileMetadata {
     var hash:String?
     var dim:String?
     var blurhash:String?
+    
+    var size: CGSize? {
+        guard let dim else { return nil }
+        let parts = dim.split(separator: "x", maxSplits: 1)
+        if parts.count == 2, let width = Int(parts[0]), let height = Int(parts[1]) {
+            return CGSize(width: width, height: height)
+        }
+        return nil
+    }
 }
 
 // We expect to show these properly
@@ -66,18 +75,17 @@ struct AnyKind: View {
                                 contentMode: .fill,
                                 imageUrls: nrPost.imageUrls
                             )
-//                            PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth, imageUrls: nrPost.imageUrls)
-                                .padding(.horizontal, -10)
-                                .overlay(alignment: .bottomTrailing) {
-                                    if nrPost.imageUrls.count > 1 {
-                                        Text("\(nrPost.imageUrls.count - 1) more")
-                                            .fontWeightBold()
-                                            .foregroundColor(.white)
-                                            .padding(5)
-                                            .background(.black)
-                                            .allowsHitTesting(false)
-                                    }
+                            .padding(.horizontal, -10)
+                            .overlay(alignment: .bottomTrailing) {
+                                if nrPost.imageUrls.count > 1 {
+                                    Text("\(nrPost.imageUrls.count - 1) more")
+                                        .fontWeightBold()
+                                        .foregroundColor(.white)
+                                        .padding(5)
+                                        .background(.black)
+                                        .allowsHitTesting(false)
                                 }
+                            }
                             
                             ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: availableWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
                                 .padding(.vertical, 10)

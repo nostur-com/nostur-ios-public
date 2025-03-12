@@ -105,10 +105,31 @@ struct ParentPost: View {
                                 switch nrPost.kind {
                                 case 20:
                                     if let imageUrl = nrPost.imageUrls.first {
+                                        let iMeta: iMetaInfo? = findImeta(nrPost.fastTags, url: imageUrl.absoluteString) // TODO: More to NRPost.init?
                                         VStack {
-                                            PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
-                                                .padding(.top, 10)
-                                                .padding(.horizontal, -10)
+                                            MediaContentView(
+                                                media: MediaContent(
+                                                    url: imageUrl,
+                                                    dimensions: iMeta?.size,
+                                                    blurHash: iMeta?.blurHash
+                                                ),
+                                                availableWidth: dim.listWidth,
+                                                placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
+                                                contentMode: .fill,
+                                                imageUrls: nrPost.imageUrls
+                                            )
+                                            .padding(.top, 10)
+                                            .padding(.horizontal, -10)
+                                            .overlay(alignment: .bottomTrailing) {
+                                                if nrPost.imageUrls.count > 1 {
+                                                    Text("\(nrPost.imageUrls.count - 1) more")
+                                                        .fontWeightBold()
+                                                        .foregroundColor(.white)
+                                                        .padding(5)
+                                                        .background(.black)
+                                                        .allowsHitTesting(false)
+                                                }
+                                            }
                                             
                                             ContentRenderer(nrPost: nrPost, isDetail: true, availableWidth: dim.listWidth - 80, theme: themes.theme, didStart: $didStart)
                                                 .padding(.vertical, 10)

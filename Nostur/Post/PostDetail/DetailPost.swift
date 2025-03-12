@@ -97,18 +97,33 @@ struct DetailPost: View {
         
             switch nrPost.kind {
             case 20:
-                if let imageUrl = nrPost.imageUrls.first {
-                    VStack {
-                        PictureEventView(imageUrl: imageUrl, autoload: true, theme: themes.theme)
+                VStack {
+                    if nrPost.imageUrls.count > 1 {
+                        ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: themes.theme, didStart: $didStart)
                             .padding(.top, 10)
-                            .padding(.horizontal, -10)
+                    }
+                    ForEach(nrPost.imageUrls.indices, id:\.self) { index in
+                        let iMeta: iMetaInfo? = findImeta(nrPost.fastTags, url: nrPost.imageUrls[index].absoluteString) // TODO: More to NRPost.init?
                         
+                        MediaContentView(
+                            media: MediaContent(
+                                url: nrPost.imageUrls[index],
+                                dimensions: iMeta?.size,
+                                blurHash: iMeta?.blurHash
+                            ),
+                            availableWidth: dim.listWidth,
+                            placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
+                            contentMode: .fill,
+                            imageUrls: nrPost.imageUrls
+                        )
+                        .padding(.top, 10)
+                        .padding(.horizontal, -10)
+                    }
+                    
+                    if nrPost.imageUrls.count < 2 {
                         ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: themes.theme, didStart: $didStart)
                             .padding(.vertical, 10)
                     }
-                }
-                else {
-                    EmptyView()
                 }
             case 30023:
                 ArticleView(nrPost, isDetail: true, fullWidth: settings.fullWidthImages, hideFooter: false, theme: themes.theme)
