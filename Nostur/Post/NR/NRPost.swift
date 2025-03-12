@@ -170,7 +170,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var event: Event? // Only touch this in BG context!!!
     
     var missingPs: Set<String> // missing or have no contact info
-    var fastTags: [(String, String, String?, String?, String?)] = []
+    var fastTags: [FastTag] = []
     var hashtags: Set<String> = [] // lowercased hashtags for fast hashtag blocking
     
     var fileMetadata: KindFileMetadata?
@@ -393,9 +393,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
         // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
         if kind != 6 {
-            event.fastPs.prefix(SPAM_LIMIT_P).forEach { (tag, pubkey, hint, _, _) in
-                if !eventContactPs.contains(pubkey) {
-                    missingPs.insert(pubkey)
+            event.fastPs.prefix(SPAM_LIMIT_P).forEach { fastTag in
+                if !eventContactPs.contains(fastTag.1) {
+                    missingPs.insert(fastTag.1)
                 }
             }
         }

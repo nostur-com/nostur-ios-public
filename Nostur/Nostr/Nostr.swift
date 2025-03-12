@@ -404,8 +404,8 @@ public struct NEvent: Codable {
         tags.first(where: { $0.type == type })?.value
     }
     
-    var fastTags: [(String, String, String?, String?, String?)] {
-        return tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4]) }
+    var fastTags: [FastTag] {
+        return tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4], $0.tag[safe: 5] ,$0.tag[safe: 6], $0.tag[safe: 7], $0.tag[safe: 8], $0.tag[safe: 9]) }
     }
 }
 

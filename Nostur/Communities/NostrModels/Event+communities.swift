@@ -27,7 +27,7 @@ extension Event {
         fastTags.first(where: { $0.0 == "image" })?.1
     }
     
-    var communityModerators:[ModeratorPTag] {
+    var communityModerators: [ModeratorPTag] {
         fastTags.filter { $0.0 == "p" && $0.3 == "moderator" }
     }
     
@@ -37,7 +37,7 @@ extension Event {
     }
 }
 
-typealias ModeratorPTag = (String, String, String?, String?, String?)
+typealias ModeratorPTag = FastTag
 typealias CommunityRelay = (String, String, String?)
 
 

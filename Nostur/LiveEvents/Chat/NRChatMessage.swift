@@ -51,7 +51,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     var firstE: String? // Needed for muting
       
     var missingPs: Set<String> = [] // missing or have no contact info
-    var fastTags: [(String, String, String?, String?, String?)] = []
+    var fastTags: [FastTag] = []
     var hashtags: Set<String> = [] // lowercased hashtags for fast hashtag blocking
 
     var following = false
@@ -74,8 +74,8 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     init(nEvent: NEvent) {
         self.nEvent = nEvent
         
-        let fastTags: [(String, String, String?, String?, String?)] = nEvent.tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4]) }
-        let fastPs: [(String, String, String?, String?, String?)] = fastTags.filter { $0.0 == "p" }
+        let fastTags: [FastTag] = nEvent.tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4], $0.tag[safe: 5], $0.tag[safe: 6], $0.tag[safe: 7], $0.tag[safe: 8], $0.tag[safe: 9]) }
+        let fastPs: [FastTag] = fastTags.filter { $0.0 == "p" }
         
         let (contentElementsDetail, linkPreviewURLs, imageUrls) = NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags)
         self.linkPreviewURLs = linkPreviewURLs
@@ -134,9 +134,9 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         
         // Some clients put P in kind 6. Ignore that because the contacts are in the reposted post, not in the kind 6.
         // TODO: Should only fetch if the Ps are going to be on screen. Could be just for notifications.
-        fastPs.prefix(SPAM_LIMIT_P).forEach { (tag, pubkey, hint, _, _) in
-            if !eventContactPs.contains(pubkey) {
-                missingPs.insert(pubkey)
+        fastPs.prefix(SPAM_LIMIT_P).forEach { fastTag in
+            if !eventContactPs.contains(fastTag.1) {
+                missingPs.insert(fastTag.1)
             }
         }
         

@@ -143,7 +143,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                                               participantsOrSpeakers: [NRContact],
                                               title: String?,
                                               summary: String?,
-                                              fastPs: [(String, String, String?, String?, String?)],
+                                              fastPs: [FastTag],
                                               totalParticipants: Int,
                                               url: URL?,
                                               eventJson: String,
