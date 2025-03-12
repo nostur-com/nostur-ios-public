@@ -146,15 +146,20 @@ struct ContentRenderer: View { // VIEW things
                     EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
                         .padding(.horizontal, fullWidth ? -10 : 0)
                 case .image(let mediaContent):
+//                    Color.red
+//                        .frame(height: 30)
+//                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
                     MediaContentView(
                         media: MediaContent(
                             url: mediaContent.url,
                             dimensions: mediaContent.dimensions
                         ),
-                        availableWidth: availableWidth,
+                        availableWidth: availableWidth + (fullWidth ? +20 : 0),
                         availableHeight: isDetail ? 5000.0 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
-                        contentMode: .fit
+                        contentMode: fullWidth ? .fill : .fit,
+                        imageUrls: nrPost.imageUrls
                     )
+                    .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     // Todo: scale: UIScreen.main.scale ?
                     // fullWidth || isDetail --->

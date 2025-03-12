@@ -14,7 +14,7 @@ class DIMENSIONS: ObservableObject {
     
     
     static public let MIN_MEDIA_ROW_HEIGHT = 200.0 // TODO: change based on device?
-    static public let MAX_MEDIA_ROW_HEIGHT = 600.0 // TODO: change based on device?
+    static public let MAX_MEDIA_ROW_HEIGHT = 1200.0 // TODO: change based on device?
     
     static public let POST_MAX_ROW_HEIGHT:CGFloat = 1200.0
     

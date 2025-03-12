@@ -178,7 +178,7 @@ struct Kind1Both: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if (nrPost.kind != 1) && (nrPost.kind != 6) {
-                        AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, imageWidth: dim.availableNoteRowImageWidth(), theme: theme)
+                        AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, availableWidth: dim.availableNoteRowImageWidth(), theme: theme)
                     }
                     else if (isDetail) {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
@@ -191,7 +191,7 @@ struct Kind1Both: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
     //                            .frame(height: 500, alignment: .top)
     //                            .fixedSize(horizontal: false, vertical: true)
-                                .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 750 : 450, alignment: .top)
+                                .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 1200 : 900, alignment: .top)
                                 .clipped()
                             
                             
@@ -336,7 +336,7 @@ struct Kind1Both: View {
                         Image(systemName: "exclamationmark.triangle.fill")
                     }
                     else if ((nrPost.kind != 1) && (nrPost.kind != 6)) || (isOlasGeneric) {
-                        AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, imageWidth: imageWidth, theme: theme)
+                        AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, availableWidth: imageWidth, theme: theme)
                     }
                     else if (isDetail) {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
@@ -348,8 +348,8 @@ struct Kind1Both: View {
                         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
                             .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 800 : 500, alignment: .top)
-                            .clipBottom(height: !IS_IPHONE && didStart ? 800 : 500)
+                            .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 1200 : 800, alignment: .top)
+                            .clipBottom(height: !IS_IPHONE && didStart ? 1200 : 800)
 //                            .clipped()
                         // Debug size estimate
 //                            .overlay(alignment: .topTrailing) {

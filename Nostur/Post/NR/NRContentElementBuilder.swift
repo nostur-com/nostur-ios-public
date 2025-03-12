@@ -326,8 +326,8 @@ struct MediaContent: Hashable {
     func hash(into hasher: inout Hasher) {
         return hasher.combine(id)
     }
-    var url:URL
-    var dimensions:CGSize?
+    var url: URL
+    var dimensions: CGSize?
 }
 
 // For text notes

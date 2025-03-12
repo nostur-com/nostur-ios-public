@@ -49,12 +49,12 @@ class MediaViewVM: ObservableObject {
             let response = try await task.response
             if response.container.type == .gif, let gifData = response.container.data {
                 Task { @MainActor in
-                    state = .gif(gifData)
+                    state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
                 }
             }
             else {
                 Task { @MainActor in
-                    state = .image(Image(uiImage: response.image))
+                    state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
                 }
             }
         }
@@ -73,14 +73,20 @@ enum MediaViewState {
     case httpBlocked
     case dontAutoLoad
     case blurhashLoading
-    case image(Image)
-    case gif(Data)
+    case image(ImageInfo)
+    case gif(GifInfo)
     case error(String) // error message
     case cancelled
 }
 
-struct Media { // type image, gif, video ...
-    
+struct ImageInfo {
+    let uiImage: UIImage
+    let realDimensions: CGSize
+}
+
+struct GifInfo {
+    let gifData: Data
+    let realDimensions: CGSize
 }
 
 // Need context
@@ -168,6 +174,8 @@ struct Media { // type image, gif, video ...
              
              MediaContentView(
                  media: mediaContent,
+                 availableWidth: 360,
+                 availableHeight: 5000,
                  contentMode: .fit
              )
              .border(Color.blue)
@@ -177,7 +185,7 @@ struct Media { // type image, gif, video ...
              
              
              .overlay(alignment: .bottom) {
-                 Text("360x660")
+                 Text("360x5000")
                      .foregroundColor(.white)
                      .background(Color.blue)
              }

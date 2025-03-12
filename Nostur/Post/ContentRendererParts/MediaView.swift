@@ -13,7 +13,10 @@ struct MediaContentView: View {
     public var media: MediaContent
     public var availableWidth: CGFloat?
     public var availableHeight: CGFloat?
+    public var placeholderHeight: CGFloat? // Don't set availableHeight AND placeholderHeight, set only 1!!
     public var contentMode: ContentMode = .fit
+    
+    public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
     
     var body: some View {
         MediaView(
@@ -22,7 +25,9 @@ struct MediaContentView: View {
             imageHeight: media.dimensions?.height,
             availableWidth: availableWidth,
             availableHeight: availableHeight,
-            contentMode: contentMode
+            placeholderHeight: placeholderHeight,
+            contentMode: contentMode,
+            imageUrls: imageUrls
         )
     }
 }
@@ -30,7 +35,7 @@ struct MediaContentView: View {
 struct MediaView: View {
     public let url: URL
     
-    // Dimensions about the image/video from metadata
+    // Dimensions about the image/video from metadata/imeta
     public var imageWidth: CGFloat?
     public var imageHeight: CGFloat?
     
@@ -38,49 +43,87 @@ struct MediaView: View {
     public var availableWidth: CGFloat?
     public var availableHeight: CGFloat?
     
+    // To prevent jumping, if we don't know availableHeight, shouldn't be 0 points
+    public var placeholderHeight: CGFloat?
+    
     public var contentMode: ContentMode = .fit
+    
+    public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
+    
+    // The actual dimensions, once the image is actually processed and loaded, should be set after download/processing
+    @State private var realDimensions: CGSize?
 
     var body: some View {
         if contentMode == .fit {
             // Check if we have explicit available dimensions
-            if let availableWidth, let availableHeight {
+            if let availableWidth, let availableHeight = (availableHeight ?? placeholderHeight) {
                 MediaPlaceholder(
                     url: url,
                     frameWidth: calculatedSize(width: availableWidth, height: availableHeight).width,
                     frameHeight: calculatedSize(width: availableWidth, height: availableHeight).height,
-                    contentMode: contentMode
+                    contentMode: contentMode,
+                    imageUrls: imageUrls,
+                    realDimensions: $realDimensions
                 )
-            } else {
+//                .overlay(alignment: .center) {
+//                    Text("calculatedSize.fit: \(calculatedSize(width: availableWidth, height: availableHeight).width)x\(calculatedSize(width: availableWidth, height: availableHeight).height)")
+//                        .foregroundColor(Color.yellow)
+//                        .background(Color.black)
+//                }
+            }
+            else {
                 // Fall back to GeometryReader when no explicit dimensions are provided
                 GeometryReader { geometry in
                     MediaPlaceholder(
                         url: url,
                         frameWidth: calculatedSize(width: geometry.size.width, height: geometry.size.height).width,
                         frameHeight: calculatedSize(width: geometry.size.width, height: geometry.size.height).height,
-                        contentMode: contentMode
+                        contentMode: contentMode,
+                        imageUrls: imageUrls,
+                        realDimensions: $realDimensions
                     )
+//                    .overlay(alignment: .center) {
+//                        Text("calculatedSize.fit2: \(calculatedSize(width: geometry.size.width, height: geometry.size.height).width).width)x\(calculatedSize(width: geometry.size.width, height: geometry.size.height).height)")
+//                            .foregroundColor(Color.yellow)
+//                            .background(Color.black)
+//                    }
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 }
             }
         }
         else { // Same but with .fill and .clipped() instead
             // Check if we have explicit available dimensions
-            if let availableWidth, let availableHeight {
+            if let availableWidth, let availableHeight = (availableHeight ?? placeholderHeight) {
                 MediaPlaceholder(
                     url: url,
                     frameWidth: calculatedSize(width: availableWidth, height: availableHeight).width,
                     frameHeight: calculatedSize(width: availableWidth, height: availableHeight).height,
-                    contentMode: .fill
+                    contentMode: .fill,
+                    imageUrls: imageUrls,
+                    realDimensions: $realDimensions
                 )
-            } else {
+//                .overlay(alignment: .center) {
+//                    Text("calculatedSize.fill: \(calculatedSize(width: availableWidth, height: availableHeight).width)x\(calculatedSize(width: availableWidth, height: availableHeight).height)")
+//                        .foregroundColor(Color.yellow)
+//                        .background(Color.black)
+//                }
+            }
+            else {
                 // Fall back to GeometryReader when no explicit dimensions are provided
                 GeometryReader { geometry in
                     MediaPlaceholder(
                         url: url,
                         frameWidth: calculatedSize(width: geometry.size.width, height: geometry.size.height).width,
                         frameHeight: calculatedSize(width: geometry.size.width, height: geometry.size.height).height,
-                        contentMode: .fill
+                        contentMode: .fill,
+                        imageUrls: imageUrls,
+                        realDimensions: $realDimensions
                     )
+//                    .overlay(alignment: .center) {
+//                        Text("calculatedSize.fill2: \(calculatedSize(width: geometry.size.width, height: geometry.size.height).width).width)x\(calculatedSize(width: geometry.size.width, height: geometry.size.height).height)")
+//                            .foregroundColor(Color.yellow)
+//                            .background(Color.black)
+//                    }
                     .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 }
             }
@@ -88,27 +131,47 @@ struct MediaView: View {
        
     }
 
-    private func calculatedSize(width maxWidth: CGFloat, height maxHeight: CGFloat) -> (width: CGFloat, height: CGFloat) {
-        // Handle missing or invalid image dimensions
+    private func calculatedSize(width availableWidth: CGFloat, height availableHeight: CGFloat) -> (width: CGFloat, height: CGFloat) {
+        
+        // We get REAL dimensions from response of imageTask (passed through @Binding)
+        // We use that if we have it, else use imeta
+        let imageWidth: CGFloat? = realDimensions?.width ?? self.imageWidth
+        let imageHeight: CGFloat? = realDimensions?.height ?? self.imageHeight
+        
+        // Handle missing or invalid image dimensions (this runs before imageTask)
         guard let imageWidth, let imageHeight,
               imageWidth > 0, imageHeight > 0 else {
-            return (maxWidth, maxHeight)
+            print("availableWidth: \(availableWidth) maxHeight: \(availableHeight)")
+            return (availableWidth, placeholderHeight ?? availableHeight)
         }
         
         // Ensure we don't work with zero or negative sizes
-        let safeMaxWidth = max(maxWidth, 1.0)
-        let safeMaxHeight = max(maxHeight, 1.0)
-        
+        let safeMaxWidth = max(availableWidth, 1.0)
+        let safeMaxHeight = if placeholderHeight != nil {
+            max(imageHeight, 1.0) // placeHolderHeight was set, so that means we were waiting for actual image height
+        }
+        else {
+            max(availableHeight, 1.0) // no placeholder so just use availableHeight
+        }
+
         // Calculate scale factors for both dimensions
         let widthScale = safeMaxWidth / imageWidth
         let heightScale = safeMaxHeight / imageHeight
         
         // Use the smaller scale factor to ensure fit within bounds
-        let scale = min(widthScale, heightScale)
+        let scale = if placeholderHeight != nil {
+            widthScale // placeHolderHeight was set, so that means we were waiting for actual image height, so we always scale to max width and don't care about the height, it can grow as large as necessary
+        }
+        else { // no placeHolderHeight set, so we need to scale to either width or height to make it fit
+            min(widthScale, heightScale)
+        }
         
         // Calculate final dimensions
         let targetWidth = imageWidth * scale
         let targetHeight = imageHeight * scale
+//        
+//        print("safeMaxWidth: \(safeMaxWidth) safeMaxHeight: \(safeMaxHeight) widthScale: \(widthScale) heightScale: \(heightScale)")
+//        print("targetWidth: \(targetWidth) targetHeight: \(targetHeight) scale: \(scale)")
         
         return (targetWidth, targetHeight)
     }
@@ -123,6 +186,10 @@ struct MediaPlaceholder: View {
     public let frameWidth: CGFloat
     public let frameHeight: CGFloat
     public var contentMode: ContentMode = .fit
+    public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
+    
+    @Binding var realDimensions: CGSize?
+    @State private var gifIsPlaying = false
     
     var body: some View {
         if contentMode == .fit {
@@ -138,7 +205,7 @@ struct MediaPlaceholder: View {
                     width: frameWidth,
                     height: frameHeight
                 )
-                .border(Color.red)
+//                .border(Color.red)
                 .clipped()
         }
     }
@@ -185,45 +252,93 @@ struct MediaPlaceholder: View {
             }
         case .blurhashLoading:
             Color.red
-        case .image(let image):
+        case .image(let imageInfo):
             if contentMode == .fit {
-                image
+                Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .scaledToFit()
-                    .overlay(alignment: .top) {
-                        Text(".image.fit \(frameWidth)x\(frameHeight)")
-                            .foregroundColor(.white)
-                            .background(Color.black)
+//                    .overlay(alignment: .top) {
+//                        VStack {
+//                            Text(".image.fit \(frameWidth)x\(frameHeight)")
+//                            Text("real: \(imageInfo.realDimensions.width)x\(imageInfo.realDimensions.height)")
+//                        }
+//                            .foregroundColor(.white)
+//                            .background(Color.black)
+//                    }
+                    .onAppear {
+                        // Communicate back to set container frame
+                        realDimensions = imageInfo.realDimensions
                     }
+                    .onTapGesture { imageTap() }
             }
             else {
-                image
+                Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .overlay(alignment: .top) {
-                        Text(".image.fill \(frameWidth)x\(frameHeight)")
-                            .foregroundColor(.white)
-                            .background(Color.black)
+//                    .overlay(alignment: .top) {
+//                        VStack {
+//                            Text(".image.fill \(frameWidth)x\(frameHeight)")
+//                            Text("real: \(imageInfo.realDimensions.width)x\(imageInfo.realDimensions.height)")
+//                        }
+//                            .foregroundColor(.white)
+//                            .background(Color.black)
+//                    }
+                    .onAppear {
+                        // Communicate back to set container frame
+                        realDimensions = imageInfo.realDimensions
                     }
+                    .onTapGesture { imageTap() }
             }
         case .gif(let gifData):
             if contentMode == .fit {
-                GIFImage(data: gifData, isPlaying: .constant(true))
+                GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
                     .aspectRatio(contentMode: .fit)
-                    .overlay(alignment: .top) {
-                        Text(".gif.fit \(frameWidth)x\(frameHeight)")
-                            .foregroundColor(.white)
-                            .background(Color.black)
+//                    .overlay(alignment: .top) {
+//                        VStack {
+//                            Text(".gif.fit \(frameWidth)x\(frameHeight)")
+//                            Text("real: \(gifData.realDimensions.width)x\(gifData.realDimensions.height)")
+//                        }
+//                            .foregroundColor(.white)
+//                            .background(Color.black)
+//                    }
+                    .onAppear {
+                        // Communicate back to set container frame
+                        realDimensions = gifData.realDimensions
                     }
+                    .task(id: url.absoluteString) {
+                        try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                        gifIsPlaying = true
+                    }
+                    .onDisappear {
+                        gifIsPlaying = false
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture { imageTap() }
             }
             else {
-                GIFImage(data: gifData, isPlaying: .constant(true))
+                GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
                     .aspectRatio(contentMode: .fill)
-                    .overlay(alignment: .top) {
-                        Text(".gif.fill \(frameWidth)x\(frameHeight)")
-                            .foregroundColor(.white)
-                            .background(Color.black)
+//                    .overlay(alignment: .top) {
+//                        VStack {
+//                            Text(".gif.fill \(frameWidth)x\(frameHeight)")
+//                            Text("real: \(gifData.realDimensions.width)x\(gifData.realDimensions.height)")
+//                        }
+//                            .foregroundColor(.white)
+//                            .background(Color.black)
+//                    }
+                    .onAppear {
+                        // Communicate back to set container frame
+                        realDimensions = gifData.realDimensions
                     }
+                    .task(id: url.absoluteString) {
+                        try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                        gifIsPlaying = true
+                    }
+                    .onDisappear {
+                        gifIsPlaying = false
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture { imageTap() }
             }
         case .error(_):
             VStack {
@@ -238,7 +353,7 @@ struct MediaPlaceholder: View {
                 }
             }
         default:
-            Color.green
+            Color.clear
                 .onAppear {
                     load()
                 }
@@ -249,6 +364,17 @@ struct MediaPlaceholder: View {
     private func load(overrideLowDataMode: Bool = false) {
         Task {
             await vm.load(url, width: frameWidth, height: frameHeight, contentMode: contentMode, overrideLowDataMode: overrideLowDataMode)
+        }
+    }
+    
+    private func imageTap() {
+        if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
+            let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
+            let index: Int = imageUrls.firstIndex(of: url) ?? 0
+            sendNotification(.fullScreenView17, FullScreenItem17(items: items, index: index))
+        }
+        else {
+            sendNotification(.fullScreenView, FullScreenItem(url: url))
         }
     }
 }

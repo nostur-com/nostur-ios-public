@@ -23,19 +23,20 @@ let KNOWN_VIEW_KINDS: Set<Int64> = [0,3,4,5,7,1984,9734,9735,30009,8,30008]
 
 // Need to clean up, AnyKind is only in Kind1Both?? shouldn't be there
 struct AnyKind: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     private var nrPost: NRPost
     private var hideFooter: Bool = false
     private var autoload: Bool = false
-    private var imageWidth: CGFloat
+    private var availableWidth: CGFloat
     private var theme: Theme
     
     @State private var didStart = false
     
-    init(_ nrPost: NRPost, hideFooter: Bool = false, autoload: Bool = false, imageWidth: CGFloat, theme: Theme) {
+    init(_ nrPost: NRPost, hideFooter: Bool = false, autoload: Bool = false, availableWidth: CGFloat, theme: Theme) {
         self.nrPost = nrPost
         self.hideFooter = hideFooter
         self.autoload = autoload
-        self.imageWidth = imageWidth
+        self.availableWidth = availableWidth
         self.theme = theme
     }
     
@@ -44,16 +45,26 @@ struct AnyKind: View {
             switch nrPost.kind {
                 case 1: // generic olas
                     if (nrPost.kTag ?? "" == "20"), let imageUrl = nrPost.imageUrls.first {
-                        ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: imageWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
+                        ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: availableWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
                             .padding(.vertical, 10)
                     }
                     else {
                         EmptyView()
                     }
                 case 20:
-                    if let imageUrl = nrPost.imageUrls.first {
+                if let imageUrl = nrPost.imageUrls.first {
                         VStack {
-                            PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth, imageUrls: nrPost.imageUrls)
+                            MediaContentView(
+                                media: MediaContent(
+                                    url: imageUrl,
+                                    dimensions: findImetaDimensions(nrPost.fastTags, url: imageUrl.absoluteString)
+                                ),
+                                availableWidth: dim.listWidth,
+                                placeholderHeight: dim.listWidth, // Same as width so 1:1 (square)
+                                contentMode: .fit,
+                                imageUrls: nrPost.imageUrls
+                            )
+//                            PictureEventView(imageUrl: imageUrl, autoload: autoload, theme: theme, availableWidth: imageWidth, imageUrls: nrPost.imageUrls)
                                 .padding(.horizontal, -10)
                                 .overlay(alignment: .bottomTrailing) {
                                     if nrPost.imageUrls.count > 1 {
@@ -66,7 +77,7 @@ struct AnyKind: View {
                                     }
                                 }
                             
-                            ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: imageWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
+                            ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: availableWidth, forceAutoload: autoload, theme: theme, didStart: $didStart)
                                 .padding(.vertical, 10)
                         }
                     }
