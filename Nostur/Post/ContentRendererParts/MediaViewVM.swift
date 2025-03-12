@@ -12,6 +12,7 @@ import Nuke
 class MediaViewVM: ObservableObject {
     @Published var state: MediaViewState = .initial
     
+    private var task: AsyncImageTask?
     
     public func load(_ url: URL, expectedImageSize: CGSize, contentMode: ContentMode = .fit,
                                 upscale: Bool = false, forceLoad: Bool = false) async {
@@ -38,9 +39,18 @@ class MediaViewVM: ObservableObject {
                                             label: "MediaViewVM.load",
                                             overrideLowDataMode: forceLoad
         )
-        let task = ImageProcessing.shared.content.imageTask(with: imageRequest)
+        
+        self.task = ImageProcessing.shared.content.imageTask(with: imageRequest)
+        
+        guard let task = self.task else {
+            Task { @MainActor in
+                state = .error("Error loading media")
+            }
+            return
+        }
         
         for await progress in task.progress {
+            guard progress.fraction > 0.08 else { continue }
             Task { @MainActor in
                 state = .loading(Int(ceil(progress.fraction * 100)))
             }
@@ -63,6 +73,13 @@ class MediaViewVM: ObservableObject {
             Task { @MainActor in
                 state = .error(error.localizedDescription)
             }
+        }
+    }
+    
+    public func cancel() {
+        task?.cancel()
+        Task { @MainActor in
+            state = .cancelled
         }
     }
 }

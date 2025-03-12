@@ -549,6 +549,7 @@ struct MediaPlaceholder: View {
     private func cancelLoad() {
         loadTask?.cancel()
         loadTask = nil
+        guard case .loading(_) = vm.state else { return }
         vm.cancel()
     }
     
