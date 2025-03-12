@@ -568,6 +568,8 @@ final class SettingsStore: ObservableObject {
         let la: LoggedInAccount? = laOrNil ?? NRState.shared.loggedInAccount
         guard let la else { return false }
 
+        if NRState.shared.fullAccountPubkeys.contains(nrPost.pubkey) { return true }
+        
         if nrPost.isScreenshot { return true }
         if la.isFollowing(pubkey: nrPost.pubkey) { return true }
 
@@ -589,6 +591,7 @@ final class SettingsStore: ObservableObject {
         let la: LoggedInAccount? = laOrNil ?? NRState.shared.loggedInAccount
         guard let la else { return false }
 
+        if NRState.shared.fullAccountPubkeys.contains(nrPost.pubkey) { return true }
         if la.isFollowing(pubkey: nrPost.pubkey) { return true }
 
         switch SettingsStore.shared.autoDownloadFrom {
@@ -606,6 +609,7 @@ final class SettingsStore: ObservableObject {
     
     static func shouldAutodownload(_ nrChat: NRChatMessage) -> Bool {
         if nrChat.following { return true }
+        if NRState.shared.fullAccountPubkeys.contains(nrChat.pubkey) { return true }
         switch SettingsStore.shared.autoDownloadFrom {
         case AutodownloadLevel.all.rawValue:
             return true
@@ -614,6 +618,21 @@ final class SettingsStore: ObservableObject {
             return WebOfTrust.shared.isAllowed(nrChat.pubkey)
         case AutodownloadLevel.onlyWoTstrict.rawValue:
             return isFollowing(nrChat.pubkey)
+        default:
+            return true
+        }
+    }
+    
+    static func shouldAutodownload(_ nxEvent: NXEvent) -> Bool {
+        if NRState.shared.fullAccountPubkeys.contains(nxEvent.pubkey) { return true }
+        switch SettingsStore.shared.autoDownloadFrom {
+        case AutodownloadLevel.all.rawValue:
+            return true
+        case AutodownloadLevel.onlyWoT.rawValue:
+            guard WebOfTrust.shared.tresholdReached else { return true }
+            return WebOfTrust.shared.isAllowed(nxEvent.pubkey)
+        case AutodownloadLevel.onlyWoTstrict.rawValue:
+            return isFollowing(nxEvent.pubkey)
         default:
             return true
         }

@@ -43,7 +43,7 @@ struct ArticleView: View {
     @State private var didStart = false
     
     private var shouldAutoload: Bool { // Only for non-detail view. On detail we force show images.
-        forceAutoload || SettingsStore.shouldAutodownload(article)
+        !article.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(article))
     }
     
     var body: some View {
@@ -157,9 +157,16 @@ struct ArticleView: View {
                     
                     if let eventImageUrl = article.eventImageUrl {
                         //                        Text("imageWidth: \(dim.listWidth.description)")
-                        SingleMediaViewer(url: eventImageUrl, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: true, contentPadding: 20, contentMode: .aspectFill, upscale: true)
-                            .padding(.vertical, 10)
-                        //                            .padding(.horizontal, -20)
+                        MediaContentView(
+                            media: MediaContent(url: eventImageUrl),
+                            availableWidth: dim.listWidth,
+                            placeholderHeight: dim.listWidth / 2, // 1:2 guess??
+                            contentMode: .fill,
+                            upscale: true,
+                            autoload: true // is detail so we can force true
+                        )
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, -20) 
                     }
                     
                     ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme, didStart: $didStart)
@@ -230,11 +237,16 @@ struct ArticleView: View {
                 .padding(.bottom, 10)
                 
                 if let image = article.eventImageUrl {
-                    SingleMediaViewer(url: image, pubkey: article.pubkey, imageWidth: dim.listWidth, fullWidth: true, autoload: shouldAutoload, contentMode: .aspectFill, upscale: true)
-//                        .frame(width: dim.listWidth)
-//                        .frame(minHeight: 100)
-                        .padding(.horizontal, -20) // on article preview always use full width style
-                        .padding(.vertical, 10)
+                    MediaContentView(
+                        media: MediaContent(url: image),
+                        availableWidth: dim.listWidth,
+                        placeholderHeight: dim.listWidth / 2, // 1:2 guess??
+                        contentMode: .fill,
+                        upscale: true,
+                        autoload: shouldAutoload
+                    )
+                    .padding(.horizontal, -20) // on article preview always use full width style
+                    .padding(.vertical, 10)
                 }
                 
                 if let summary = article.eventSummary, !summary.isEmpty {

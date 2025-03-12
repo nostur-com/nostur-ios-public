@@ -56,6 +56,13 @@ struct NXEvent {
     public var imageUrls: [URL] = []
 }
 
+extension NXEvent {
+    var isNSFW: Bool {
+        return false
+        // TODO... need to check tags
+    }
+}
+
 enum NXContentRendererViewState {
     case loading
     case ready(DIMENSIONS)
@@ -67,11 +74,12 @@ struct NXContentRenderer: View { // VIEW things
     public let nxEvent: NXEvent
     public let contentElements: [ContentElement]
     @Binding var didStart: Bool
+    public var forceAutoload: Bool = false
     
     @State private var viewState: NXContentRendererViewState = .loading
     
     private var shouldAutoload: Bool {
-        true // TODO
+        return !nxEvent.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nxEvent))
     }
     
     var body: some View {
@@ -248,7 +256,15 @@ struct NXContentRenderer: View { // VIEW things
                             //                            .debugDimensions()
     #endif
 
-                            SingleMediaViewer(url: mediaContent.url, pubkey: nxEvent.pubkey, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: vc.availableWidth, fullWidth: vc.fullWidthImages, autoload: shouldAutoload, contentPadding: nxEvent.kind == 30023 ? 10 : 0, theme: vc.theme, imageUrls: nxEvent.imageUrls)
+                                MediaContentView(
+                                    media: mediaContent,
+                                    availableWidth: vc.availableWidth - (nxEvent.kind == 30023 ? 10 : 0),
+                                    placeholderHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                                    contentMode: .fill,
+                                    imageUrls: nxEvent.imageUrls,
+                                    upscale: true,
+                                    autoload: shouldAutoload
+                                )
     //                            .debugDimensions("image")
                                 .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
                                 .padding(.vertical, 10)

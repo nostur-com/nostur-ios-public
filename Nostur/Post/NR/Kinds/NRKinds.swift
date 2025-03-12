@@ -73,7 +73,8 @@ struct AnyKind: View {
                                 availableWidth: dim.listWidth,
                                 placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
                                 contentMode: .fill,
-                                imageUrls: nrPost.imageUrls
+                                imageUrls: nrPost.imageUrls,
+                                autoload: autoload
                             )
                             .padding(.horizontal, -10)
                             .overlay(alignment: .bottomTrailing) {

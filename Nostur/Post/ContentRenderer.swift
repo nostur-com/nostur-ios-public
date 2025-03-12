@@ -35,7 +35,7 @@ struct ContentRenderer: View { // VIEW things
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
     }
     
     var body: some View {
@@ -154,7 +154,8 @@ struct ContentRenderer: View { // VIEW things
                         availableWidth: availableWidth + (fullWidth ? +20 : 0),
                         placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * mediaContent.aspect,
                         contentMode: fullWidth ? .fill : .fit,
-                        imageUrls: nrPost.imageUrls
+                        imageUrls: nrPost.imageUrls,
+                        autoload: shouldAutoload
                     )
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)

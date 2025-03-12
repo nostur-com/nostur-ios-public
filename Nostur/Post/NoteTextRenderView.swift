@@ -17,7 +17,7 @@ struct NoteTextRenderView: View {
     @State private var didStart = false
     
     private var shouldAutoload: Bool {
-        forceAutoload || SettingsStore.shouldAutodownload(nrPost)
+        !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
     }
     
     var body: some View {
@@ -39,7 +39,8 @@ struct NoteTextRenderView: View {
                                 availableWidth: dim.listWidth,
                                 placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
                                 contentMode: .fill,
-                                imageUrls: nrPost.imageUrls
+                                imageUrls: nrPost.imageUrls,
+                                autoload: shouldAutoload
                             )
                             .padding(.horizontal, -10)
                             .overlay(alignment: .bottomTrailing) {

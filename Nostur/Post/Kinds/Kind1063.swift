@@ -58,8 +58,8 @@ struct Kind1063: View {
         }
     }
     
-    private var shouldAutoload:Bool {
-        forceAutoload || SettingsStore.shouldAutodownload(nrPost)
+    private var shouldAutoload: Bool {
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
     }
     
     var body: some View {
@@ -86,7 +86,8 @@ struct Kind1063: View {
                     ),
                     availableWidth: availableWidth + (fullWidth ? +20 : 0),
                     placeholderHeight: height,
-                    contentMode: fullWidth ? .fill : .fit
+                    contentMode: fullWidth ? .fill : .fit,
+                    autoload: shouldAutoload
                 )
 //                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)
 //                    .padding(.horizontal, fullWidth ? -10 : 0)

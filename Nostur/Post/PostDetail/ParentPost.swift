@@ -18,12 +18,18 @@ struct ParentPost: View {
     private var connect:ThreadConnectDirection? = nil
     @State private var showMiniProfile = false
     @State private var didStart = false
+    private var forceAutoload: Bool = false
     
-    init(nrPost: NRPost, connect: ThreadConnectDirection? = nil) {
+    init(nrPost: NRPost, connect: ThreadConnectDirection? = nil, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.pfpAttributes = nrPost.pfpAttributes
         self.connect = connect
+        self.forceAutoload = forceAutoload
+    }
+    
+    private var shouldAutoload: Bool {
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
     }
     
     var body: some View {
@@ -116,7 +122,8 @@ struct ParentPost: View {
                                                 availableWidth: dim.listWidth,
                                                 placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
                                                 contentMode: .fill,
-                                                imageUrls: nrPost.imageUrls
+                                                imageUrls: nrPost.imageUrls,
+                                                autoload: shouldAutoload
                                             )
                                             .padding(.top, 10)
                                             .padding(.horizontal, -10)

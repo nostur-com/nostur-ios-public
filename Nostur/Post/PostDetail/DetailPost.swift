@@ -114,7 +114,8 @@ struct DetailPost: View {
                             availableWidth: dim.listWidth,
                             placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
                             contentMode: .fill,
-                            imageUrls: nrPost.imageUrls
+                            imageUrls: nrPost.imageUrls,
+                            autoload: true // We opened detail, so can autoload
                         )
                         .padding(.top, 10)
                         .padding(.horizontal, -10)

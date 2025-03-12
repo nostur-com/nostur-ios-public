@@ -12,16 +12,17 @@ import Nuke
 class MediaViewVM: ObservableObject {
     @Published var state: MediaViewState = .initial
     
+    
     public func load(_ url: URL, expectedImageSize: CGSize, contentMode: ContentMode = .fit,
-                                upscale: Bool = false, overrideLowDataMode: Bool = false) async {
-        if SettingsStore.shared.lowDataMode && !overrideLowDataMode {
+                                upscale: Bool = false, forceLoad: Bool = false) async {
+        if SettingsStore.shared.lowDataMode && !forceLoad {
             Task { @MainActor in
                 state = .lowDataMode
             }
             return
         }
         
-        if url.absoluteString.prefix(7) == "http://" {
+        if url.absoluteString.prefix(7) == "http://" && !forceLoad {
             Task { @MainActor in
                 state = .httpBlocked
             }
@@ -35,7 +36,7 @@ class MediaViewVM: ObservableObject {
                                             contentMode: contentMode == .fit ? .aspectFit : .aspectFill,
                                             upscale: upscale,
                                             label: "MediaViewVM.load",
-                                            overrideLowDataMode: overrideLowDataMode
+                                            overrideLowDataMode: forceLoad
         )
         let task = ImageProcessing.shared.content.imageTask(with: imageRequest)
         

@@ -66,7 +66,15 @@ struct LiveEventRowView: View {
             }
             
             if let image = liveEvent.thumbUrl {
-                SingleMediaViewer(url: image, pubkey: liveEvent.pubkey, imageWidth: dim.articleRowImageWidth(), fullWidth: true, autoload: shouldAutoload, contentMode: .aspectFill, upscale: true)
+                MediaContentView(
+                    media: MediaContent(
+                        url: image
+                    ),
+                    availableWidth: dim.articleRowImageWidth(),
+                    contentMode: .fill,
+                    upscale: true,
+                    autoload: shouldAutoload
+                )
 //                        .frame(width: dim.listWidth)
 //                        .frame(minHeight: 100)
 //                    .padding(.horizontal, -20) // on article preview always use full width style

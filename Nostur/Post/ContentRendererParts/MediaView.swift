@@ -17,6 +17,9 @@ struct MediaContentView: View {
     
     public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
     
+    public var upscale: Bool = false
+    public var autoload: Bool = false
+    
     var body: some View {
         MediaView(
             url: media.url,
@@ -26,7 +29,9 @@ struct MediaContentView: View {
             availableWidth: availableWidth,
             placeholderHeight: placeholderHeight,
             contentMode: contentMode,
-            imageUrls: imageUrls
+            imageUrls: imageUrls,
+            upscale: upscale,
+            autoload: autoload
         )
     }
 }
@@ -48,6 +53,9 @@ struct MediaView: View {
     public var contentMode: ContentMode = .fit
     
     public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
+    
+    public var upscale: Bool = false
+    public var autoload: Bool = false
     
     // The actual dimensions, once the image is actually processed and loaded, should be set after download/processing
     @State private var realDimensions: CGSize?
@@ -99,7 +107,9 @@ struct MediaView: View {
                     expectedImageSize: expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight),
                     contentMode: contentMode,
                     imageUrls: imageUrls,
-                    realDimensions: $realDimensions
+                    realDimensions: $realDimensions,
+                    upscale: upscale,
+                    autoload: autoload
                 )
 //                .overlay(alignment: .center) {
 //                    Text("fit: \(expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight))")
@@ -117,7 +127,9 @@ struct MediaView: View {
                         expectedImageSize: expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height),
                         contentMode: contentMode,
                         imageUrls: imageUrls,
-                        realDimensions: $realDimensions
+                        realDimensions: $realDimensions,
+                        upscale: upscale,
+                        autoload: autoload
                     )
 //                    .overlay(alignment: .center) {
 //                        Text("geo.fit: \(expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height))")
@@ -138,7 +150,9 @@ struct MediaView: View {
                     expectedImageSize: expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight),
                     contentMode: .fill,
                     imageUrls: imageUrls,
-                    realDimensions: $realDimensions
+                    realDimensions: $realDimensions,
+                    upscale: upscale,
+                    autoload: autoload
                 )
 //                .overlay(alignment: .center) {
 //                    Text("fill: \(expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight))")
@@ -156,7 +170,9 @@ struct MediaView: View {
                         expectedImageSize: expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height),
                         contentMode: .fill,
                         imageUrls: imageUrls,
-                        realDimensions: $realDimensions
+                        realDimensions: $realDimensions,
+                        upscale: upscale,
+                        autoload: autoload
                     )
 //                    .overlay(alignment: .center) {
 //                        Text("geo.fill: \(expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height))")
@@ -184,6 +200,9 @@ struct MediaPlaceholder: View {
     
     @Binding var realDimensions: CGSize?
     @State private var gifIsPlaying = false
+    
+    public var upscale: Bool = false
+    public var autoload: Bool = false
     
     @State private var blurImage: UIImage?
     @State private var loadTask: Task<Void, Never>?
