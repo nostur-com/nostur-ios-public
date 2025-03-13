@@ -466,10 +466,13 @@ extension Event {
             guard let lastEtag = reaction.lastE() else { break }
             guard let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) else { break }
             
-            reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-            reaction.reactionTo = reactingToEvent
-            reaction.reactionToId = reactingToEvent.id
+            
+            CoreDataRelationFixer.shared.addTask ({
+                reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+                reaction.reactionTo = reactingToEvent
+                reaction.reactionToId = reactingToEvent.id
+            })
         }
     }
     
@@ -480,8 +483,10 @@ extension Event {
         }
         else if let firstQuoteId = repost.firstQuoteId {
             guard let firstQuote = Event.fetchEvent(id: firstQuoteId, context: context) else { return }
-            firstQuote.repostsCount = (firstQuote.repostsCount + 1)
-            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
+            CoreDataRelationFixer.shared.addTask ({
+                firstQuote.repostsCount = (firstQuote.repostsCount + 1)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
+            })
         }
     }
     
@@ -490,9 +495,11 @@ extension Event {
         guard let lastEtag = event.lastE() else { return }
         guard let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) else { return }
         
-        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-        event.reactionTo = reactingToEvent
-        event.reactionToId = reactingToEvent.id
+        CoreDataRelationFixer.shared.addTask({
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+            event.reactionTo = reactingToEvent
+            event.reactionToId = reactingToEvent.id
+        })
     }
     
     static func updateZapTallyCache(_ zap: Event, context: NSManagedObjectContext) {
@@ -503,9 +510,11 @@ extension Event {
         }
         else if let zappedEventId = zap.zappedEventId {
             guard let zappedEvent = Event.fetchEvent(id: zappedEventId, context: context) else { return }
-            zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
-            zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
-            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
+            CoreDataRelationFixer.shared.addTask ({
+                zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
+                zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
+            })
         }
         
         // Repair things afterwards
@@ -547,11 +556,13 @@ extension Event {
         // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
         guard let mentionEtags = TagsHelpers(tags).newerMentionEtags() else { return }
         
-        for etag in mentionEtags {
-            if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
-                mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
+        CoreDataRelationFixer.shared.addTask({
+            for etag in mentionEtags {
+                if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
+                    mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
+                }
             }
-        }
+        })
     }
     
     var fastPs: [FastTag] {
