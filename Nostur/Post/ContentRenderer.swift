@@ -44,13 +44,9 @@ struct ContentRenderer: View { // VIEW things
                 switch element {
                 case .nrPost(let nrPost):
                     EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
-//                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
-                    //                        .fixedSize(horizontal: false, vertical: true)
-//                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
-//                        .withoutAnimation()
-//                        .transaction { t in t.animation = nil }
+
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
