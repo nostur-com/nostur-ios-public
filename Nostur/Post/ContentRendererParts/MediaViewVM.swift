@@ -60,14 +60,14 @@ class MediaViewVM: ObservableObject {
             let response = try await task.response
             if response.container.type == .gif, let gifData = response.container.data {
                 Task { @MainActor in
-                    withAnimation(.smooth(duration: 0.2)) {
+                    withAnimation(.smooth(duration: 0.5)) {
                         state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
                     }
                 }
             }
             else {
                 Task { @MainActor in
-                    withAnimation(.smooth(duration: 0.2)) {
+                    withAnimation(.smooth(duration: 0.5)) {
                         state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
                     }
                 }

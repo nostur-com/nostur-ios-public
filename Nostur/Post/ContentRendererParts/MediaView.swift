@@ -249,7 +249,7 @@ struct MediaPlaceholder: View {
                     if let blurImage {
                         Image(uiImage: blurImage)
                             .resizable()
-                            .animation(.smooth(duration: 0.2), value: vm.state)
+//                            .animation(.smooth(duration: 0.2), value: vm.state)
                             .aspectRatio(contentMode: .fill)
                             .frame(
                                 width: expectedImageSize.width,
@@ -376,7 +376,7 @@ struct MediaPlaceholder: View {
                 Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .scaledToFit()
-                    .animation(.smooth(duration: 0.2), value: vm.state)
+                    .animation(.smooth(duration: 0.5), value: vm.state)
 //                Color.red
 //                    .overlay(alignment: .top) {
 //                        VStack {
@@ -398,7 +398,7 @@ struct MediaPlaceholder: View {
                 Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .animation(.smooth(duration: 0.2), value: vm.state)
+                    .animation(.smooth(duration: 0.5), value: vm.state)
 //                    .overlay(alignment: .top) {
 //                        VStack {
 //                            Text(".image.fill \(expectedImageSize.width)x\(expectedImageSize.height)")
@@ -418,7 +418,7 @@ struct MediaPlaceholder: View {
         case .gif(let gifData):
             if contentMode == .fit {
                 GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
-                    .animation(.smooth(duration: 0.2), value: vm.state)
+                    .animation(.smooth(duration: 0.5), value: vm.state)
                     .aspectRatio(contentMode: .fit)
 //                    .overlay(alignment: .top) {
 //                        VStack {
@@ -444,7 +444,7 @@ struct MediaPlaceholder: View {
             }
             else {
                 GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
-                    .animation(.smooth(duration: 0.2), value: vm.state)
+                    .animation(.smooth(duration: 0.5), value: vm.state)
                     .aspectRatio(contentMode: .fill)
 //                    .overlay(alignment: .top) {
 //                        VStack {
@@ -494,7 +494,7 @@ struct MediaPlaceholder: View {
                 Image(uiImage: blurImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .animation(.smooth(duration: 0.2), value: vm.state)
+//                    .animation(.smooth(duration: 0.2), value: vm.state)
                     .frame(
                         width: expectedImageSize.width,
                         height: expectedImageSize.height
