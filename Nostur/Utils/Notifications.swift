@@ -388,5 +388,8 @@ extension Notification.Name {
     
     static var newTemplatePost: Notification.Name {
         return Notification.Name("newTemplatePost")
+    }    
+    static var iMetaInfoForUrl: Notification.Name {
+        return Notification.Name("iMetaInfoForUrl")
     }
 }

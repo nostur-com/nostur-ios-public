@@ -15,7 +15,7 @@ class MediaViewVM: ObservableObject {
     private var task: AsyncImageTask?
     
     public func load(_ url: URL, expectedImageSize: CGSize, contentMode: ContentMode = .fit,
-                                upscale: Bool = false, forceLoad: Bool = false) async {
+                     upscale: Bool = false, forceLoad: Bool = false, generateIMeta: Bool = false) async {
         if SettingsStore.shared.lowDataMode && !forceLoad {
             Task { @MainActor in
                 state = .lowDataMode
@@ -66,12 +66,26 @@ class MediaViewVM: ObservableObject {
                     withAnimation(.smooth(duration: 0.5)) {
                         state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
                     }
+                    
+                    if generateIMeta {
+                        let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
+                        let pixelSize = CGSize(width: response.container.image.size.width * UIScreen.main.scale, height: response.container.image.size.height * UIScreen.main.scale)
+                        let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
+                        sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
+                    }
                 }
             }
             else {
                 Task { @MainActor in
                     withAnimation(.smooth(duration: 0.5)) {
                         state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
+                    }
+                    
+                    if generateIMeta {
+                        let blurhash: String? = response.image.blurHash(numberOfComponents: (4, 3))
+                        let pixelSize = CGSize(width: response.image.size.width * UIScreen.main.scale, height: response.image.size.height * UIScreen.main.scale)
+                        let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
+                        sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
                     }
                 }
             }

@@ -19,10 +19,11 @@ struct ContentRenderer: View { // VIEW things
     private let availableWidth: CGFloat
     private let contentElements: [ContentElement]
     private let forceAutoload: Bool
+    private let isPreviewContext: Bool
     @Binding public var didStart: Bool
     @StateObject private var childDIM: DIMENSIONS
     
-    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false)) {
+    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false), isPreviewContext: Bool = false) {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
@@ -30,8 +31,9 @@ struct ContentRenderer: View { // VIEW things
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
         self.forceAutoload = forceAutoload
         self.theme = theme
+        self.isPreviewContext = isPreviewContext
         _didStart = didStart
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20, isScreenshot: nrPost.isScreenshot))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20, isScreenshot: nrPost.isScreenshot, isPreviewContext: isPreviewContext))
     }
     
     private var shouldAutoload: Bool {
@@ -151,7 +153,8 @@ struct ContentRenderer: View { // VIEW things
                         placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * mediaContent.aspect,
                         contentMode: fullWidth ? .fill : .fit,
                         imageUrls: nrPost.imageUrls,
-                        autoload: shouldAutoload
+                        autoload: shouldAutoload,
+                        generateIMeta: isPreviewContext
                     )
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)

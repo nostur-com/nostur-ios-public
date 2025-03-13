@@ -20,6 +20,9 @@ struct MediaContentView: View {
     public var upscale: Bool = false
     public var autoload: Bool = false
     
+    // will sendNotification with image dimensions / blurhash 
+    public var generateIMeta: Bool = false
+    
     var body: some View {
         MediaView(
             url: media.url,
@@ -31,7 +34,8 @@ struct MediaContentView: View {
             contentMode: contentMode,
             imageUrls: imageUrls,
             upscale: upscale,
-            autoload: autoload
+            autoload: autoload,
+            generateIMeta: generateIMeta
         )
     }
 }
@@ -56,6 +60,7 @@ struct MediaView: View {
     
     public var upscale: Bool = false
     public var autoload: Bool = false
+    public var generateIMeta: Bool = false
     
     // The actual dimensions, once the image is actually processed and loaded, should be set after download/processing
     @State private var realDimensions: CGSize?
@@ -109,7 +114,8 @@ struct MediaView: View {
                     imageUrls: imageUrls,
                     realDimensions: $realDimensions,
                     upscale: upscale,
-                    autoload: autoload
+                    autoload: autoload,
+                    generateIMeta: generateIMeta
                 )
 //                .overlay(alignment: .center) {
 //                    Text("fit: \(expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight))")
@@ -129,7 +135,8 @@ struct MediaView: View {
                         imageUrls: imageUrls,
                         realDimensions: $realDimensions,
                         upscale: upscale,
-                        autoload: autoload
+                        autoload: autoload,
+                        generateIMeta: generateIMeta
                     )
 //                    .overlay(alignment: .center) {
 //                        Text("geo.fit: \(expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height))")
@@ -152,7 +159,8 @@ struct MediaView: View {
                     imageUrls: imageUrls,
                     realDimensions: $realDimensions,
                     upscale: upscale,
-                    autoload: autoload
+                    autoload: autoload,
+                    generateIMeta: generateIMeta
                 )
 //                .overlay(alignment: .center) {
 //                    Text("fill: \(expectedImageSize(availableWidth: availableWidth, availableHeight: availableHeight))")
@@ -172,7 +180,8 @@ struct MediaView: View {
                         imageUrls: imageUrls,
                         realDimensions: $realDimensions,
                         upscale: upscale,
-                        autoload: autoload
+                        autoload: autoload,
+                        generateIMeta: generateIMeta
                     )
 //                    .overlay(alignment: .center) {
 //                        Text("geo.fill: \(expectedImageSize(availableWidth: geometry.size.width, availableHeight: placeholderHeight ?? geometry.size.height))")
@@ -203,6 +212,7 @@ struct MediaPlaceholder: View {
     
     public var upscale: Bool = false
     public var autoload: Bool = false
+    public var generateIMeta: Bool = false
     
     @State private var blurImage: UIImage?
     @State private var loadTask: Task<Void, Never>?
@@ -534,14 +544,14 @@ struct MediaPlaceholder: View {
             if !isVisible && !forceLoad { return }
             
             // Proceed with loading
-            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad)
+            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
         }
     }
     
     @MainActor
     private func load(forceLoad: Bool = false) {
         Task {
-            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad)
+            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
         }
     }
     

@@ -55,6 +55,10 @@ public final class TypingTextModel: ObservableObject {
 }
 
 public final class NewPostModel: ObservableObject {
+    
+    // For remote included images we need to download and fetch dimensions/blurhash
+    var remoteIMetas: [String: iMetaInfo] = [:]
+    
     @AppStorage("nip96_api_url") private var nip96apiUrl = ""
     @ObservedObject public var uploader = Nip96Uploader()
     

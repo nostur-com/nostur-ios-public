@@ -31,8 +31,9 @@ class DIMENSIONS: ObservableObject {
     
     static public let PFP_BIG:CGFloat = 75.0 // Bigger PFP on Profile View and Profile Cards
     
-    @Published var listWidth:CGFloat = UIScreen.main.bounds.width // Should override for IS_IPAD / macOS
-    @Published var isScreenshot:Bool = false // So we can disable animate gifs and use Text instead of NRText
+    @Published var listWidth: CGFloat = UIScreen.main.bounds.width // Should override for IS_IPAD / macOS
+    @Published var isScreenshot: Bool = false // So we can disable animate gifs and use Text instead of NRText
+    public var isPreviewContext: Bool = false // When views detect this, they send .iMetaInfoForUrl
     
     static public let BOX_PADDING:CGFloat = 10.0 // TODO: Should start using this everywhere instead if .padding(10)
     
@@ -65,7 +66,7 @@ class DIMENSIONS: ObservableObject {
          //   -10    684               -10
     }
     
-    static func embeddedDim(availableWidth: CGFloat, isScreenshot:Bool = false) -> DIMENSIONS {
+    static func embeddedDim(availableWidth: CGFloat, isScreenshot: Bool = false, isPreviewContext: Bool = false) -> DIMENSIONS {
         let embeddedDim = DIMENSIONS()
 //        if isArticle {
 //            embeddedDim.listWidth = self.listWidth - (20 * 2)
@@ -74,6 +75,7 @@ class DIMENSIONS: ObservableObject {
             embeddedDim.listWidth = availableWidth
             embeddedDim.isScreenshot = isScreenshot
 //        }
+        embeddedDim.isPreviewContext = isPreviewContext
         return embeddedDim
     }
 }

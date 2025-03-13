@@ -42,6 +42,9 @@ struct PostPreview: View {
                 .padding(10)
                 .disabled(true)
                 .environmentObject(dim)
+                .onReceive(receiveNotification(.iMetaInfoForUrl)) { notification in
+                    let (urlString, iMeta) = notification.object as! (String, iMetaInfo)
+                    vm.remoteIMetas[urlString] = iMeta
                 }
             Spacer()
         }

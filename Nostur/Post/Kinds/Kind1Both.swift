@@ -166,7 +166,7 @@ struct Kind1Both: View {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata:fileMetadata, availableWidth: imageWidth, theme: theme, didStart: $didStart)
+                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: imageWidth, theme: theme, didStart: $didStart)
                 }
                 else {
                     if let subject = nrPost.subject {
@@ -181,12 +181,12 @@ struct Kind1Both: View {
                         AnyKind(nrPost, hideFooter: hideFooter, autoload: shouldAutoload, availableWidth: dim.availableNoteRowImageWidth(), theme: theme)
                     }
                     else if (isDetail) {
-                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
                             .frame(maxWidth: .infinity, alignment:.leading)
                     }
                     else {
 //                        ZStack(alignment: .bottom) {
-                            ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart)
+                            ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
                                 .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                                 .frame(maxWidth: .infinity, alignment: .leading)
     //                            .frame(height: 500, alignment: .top)
