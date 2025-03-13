@@ -51,8 +51,11 @@ class MediaViewVM: ObservableObject {
         
         for await progress in task.progress {
             guard progress.fraction > 0.08 else { continue }
-            Task { @MainActor in
-                state = .loading(Int(ceil(progress.fraction * 100)))
+            
+            if Int(progress.fraction * 100) % 3 == 0 {
+                Task { @MainActor in
+                    state = .loading(Int(ceil(progress.fraction * 100)))
+                }
             }
         }
         
