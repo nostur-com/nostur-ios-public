@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PostPreview: View {
     @EnvironmentObject private var themes: Themes
-    @StateObject private var dim = DIMENSIONS()
+    @EnvironmentObject private var dim: DIMENSIONS // previewDIM from ComposePost
     @Environment(\.dismiss) private var dismissPostPreview
     public let nrPost: NRPost
     public let replyTo: ReplyTo?
@@ -18,7 +18,6 @@ struct PostPreview: View {
     @ObservedObject public var typingTextModel: TypingTextModel
     public let onDismiss: () -> Void
     @State private var postPreviewWidth: CGFloat? = nil
-    @StateObject private var previewDIM = DIMENSIONS()
 
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
@@ -38,20 +37,12 @@ struct PostPreview: View {
 
     var body: some View {
         ScrollView {
-            Color.clear.frame(height: 0)
-                .modifier(SizeModifier())
-                .onPreferenceChange(SizePreferenceKey.self) { size in
-                    guard size.width > 0 else { return }
-                    postPreviewWidth = size.width
-                    previewDIM.listWidth = (size.width - 80.0)
+            AnyStatus()
+            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
+                .padding(10)
+                .disabled(true)
+                .environmentObject(dim)
                 }
-            if postPreviewWidth != nil {
-                AnyStatus()
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
-                    .padding(10)
-                    .disabled(true)
-                    .environmentObject(previewDIM)
-            }
             Spacer()
         }
         .overlay(alignment: .bottom) {
@@ -92,6 +83,8 @@ struct PostPreview: View {
         .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
         .background(themes.theme.background)
+        .frame(width: dim.listWidth)
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 

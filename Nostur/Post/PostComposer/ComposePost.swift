@@ -64,6 +64,9 @@ struct ComposePost: View {
         return true
     }
     
+    // No need to refresh previewDIM, just pass to PostPreview to fix random width bug
+    @State private var previewDIM = DIMENSIONS()
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -203,6 +206,7 @@ struct ComposePost: View {
                                 VStack(alignment: .leading) {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
+                                        .environmentObject(previewDIM)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                         AutoPilotSendPreview(nEvent: nEvent)
@@ -216,6 +220,7 @@ struct ComposePost: View {
                                 VStack(alignment: .leading) {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
+                                        .environmentObject(previewDIM)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                         AutoPilotSendPreview(nEvent: nEvent)
@@ -267,6 +272,10 @@ struct ComposePost: View {
                             selectedVideoURL = nil
                         }
                     })
+                    .onAppear {
+                        previewDIM.listWidth = geo.size.width - 80.0
+                        previewDIM.isPreviewContext = true
+                    }
                 }
                 .overlay {
                     ZStack {
