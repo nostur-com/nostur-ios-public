@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Highlight note
+// Highlight post (stand-alone)
 struct Highlight: View {
     @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject private var highlightAttributes: HighlightAttributes

@@ -31,30 +31,9 @@ struct EmbedById: View {
                             .stroke(theme.lineColor, lineWidth: 1)
                     )
             case .ready(let nrPost):
-                if nrPost.kind == 30023 {
-                    ArticleView(nrPost, hideFooter: true, forceAutoload: forceAutoload, theme: theme)
-                        .padding(20)
-                        .background(
-                            Color(.secondarySystemBackground)
-                                .cornerRadius(15)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(.regularMaterial, lineWidth: 1)
-                        )
-//                        .transaction { t in t.animation = nil }
-//                        .debugDimensions("EmbedById.ArticleView")
-                }
-                else {
-                    QuotedNoteFragmentView(nrPost: nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
-                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: dim.listWidth, isScreenshot: nrPost.isScreenshot))
-//                        .transaction { t in t.animation = nil }
-//                        .debugDimensions("EmbedById.QuotedNoteFragmentView")
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(theme.lineColor, lineWidth: 1)
-                        )
-                }
+                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+//                    .environmentObject(childDIM)
+//                    .padding(.vertical, 10)
             case .timeout:
                 VStack {
                     Text("Unable to fetch content")

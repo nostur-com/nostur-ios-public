@@ -63,6 +63,11 @@ struct EmbeddedPost: View {
                 )
 //                .debugDimensions("EmbeddedPost.QuotedNoteFragmentView", alignment: .bottomLeading)
         }
+        else if nrPost.kind == 9802 {
+            HighlightRenderer(nrPost: nrPost, theme: theme)
+                .padding(.top, 3)
+                .padding(.bottom, 10)
+        }
         else {
             NoteRow(nrPost: nrPost, hideFooter: true, missingReplyTo: false, fullWidth: fullWidth, isReply: false, isDetail: false, grouped: false, theme: theme)
                 .padding(.horizontal, 10)
