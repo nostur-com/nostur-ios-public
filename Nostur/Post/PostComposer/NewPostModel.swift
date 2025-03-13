@@ -145,7 +145,8 @@ public final class NewPostModel: ObservableObject {
                 }
                 
                 let maxWidth: CGFloat = 2800.0
-                let mediaRequestBags: [MediaRequestBag] = typingTextModel.pastedImages
+                // [(MediaRequestBag, String?)] <-- String? is blurhash
+                let mediaRequestBags: [(MediaRequestBag, String?)] = typingTextModel.pastedImages
                     .compactMap { imageMeta in // Resize images
                         let scale = imageMeta.imageData.size.width > maxWidth ? imageMeta.imageData.size.width / maxWidth : 1
                         let size = CGSize(width: imageMeta.imageData.size.width / scale, height: imageMeta.imageData.size.height / scale)
@@ -157,13 +158,18 @@ public final class NewPostModel: ObservableObject {
                             imageMeta.imageData.draw(in: CGRect(origin: .zero, size: size))
                         }
                         
+                        
+                        
                         if let imageData = scaledImage.jpegData(compressionQuality: 0.85) {
-                            return (imageData, PostedImageMeta.ImageType.jpeg, imageMeta.index)
+                            // Resize first for faster blurhash
+                            let resized = imageMeta.imageData.resized(to: CGSize(width: 32, height: 32))
+                            let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                            return (imageData, PostedImageMeta.ImageType.jpeg, blurhash, imageMeta.index)
                         }
                         return nil
                     }
-                    .map { (resizedImage, type, index) in
-                        MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index)
+                    .map { (resizedImage, type, blurhash, index) in
+                        (MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index), blurhash)
                     } + typingTextModel.pastedVideos
                     .compactMap { videoMeta in // compress
                         let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
@@ -179,16 +185,16 @@ public final class NewPostModel: ObservableObject {
                         return nil
                     }
                     .map { (compressedVideoData, index) in
-                        MediaRequestBag(apiUrl: nip96apiURL, uploadtype: "media", filename: "media.mp4", mediaData: compressedVideoData, index: index)
+                        (MediaRequestBag(apiUrl: nip96apiURL, uploadtype: "media", filename: "media.mp4", mediaData: compressedVideoData, index: index), nil)
                     }
                     
                 
-                uploader.queued = mediaRequestBags
+                uploader.queued = mediaRequestBags.map { $0.0 }
                 uploader.onFinish = {
                     let imetas: [Nostur.Imeta] = mediaRequestBags
                         .compactMap {
-                            guard let url = $0.downloadUrl else { return nil }
-                            return Imeta(url: url, dim: $0.dim, hash: $0.sha256)
+                            guard let url = $0.0.downloadUrl else { return nil }
+                            return Imeta(url: url, dim: $0.0.dim, hash: $0.0.sha256, blurhash: $0.1)
                         }
                     self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
                     
@@ -197,7 +203,7 @@ public final class NewPostModel: ObservableObject {
                         try? FileManager.default.removeItem(at: videoURL)
                     }
                 }
-                uploader.uploadingPublishers(for: mediaRequestBags, keys: keys)
+                uploader.uploadingPublishers(for: mediaRequestBags.map { $0.0 }, keys: keys)
                     .receive(on: RunLoop.main)
                     .sink(receiveCompletion: { result in
                         switch result {
@@ -265,8 +271,9 @@ public final class NewPostModel: ObservableObject {
         nEvent.createdAt = NTimestamp.init(date: Date())
         
         // Handle images
-        if !imetas.isEmpty {
-            // send message with images
+        if !imetas.isEmpty || !remoteIMetas.isEmpty {
+             
+            // imetas from local uploaded / pasted images
             for imeta in imetas {
                 
                 // don't add image urls in .content for kind:20
@@ -278,11 +285,31 @@ public final class NewPostModel: ObservableObject {
                 if let dim = imeta.dim, !dim.isEmpty {
                     imetaParts.append("dim \(dim)")
                 }
+                if let blurhash = imeta.blurhash, !blurhash.isEmpty {
+                    imetaParts.append("blurhash \(blurhash)")
+                }
                 if let hash = imeta.hash, !hash.isEmpty {
                     imetaParts.append("sha256 \(hash)")
                 }
 
                 nEvent.tags.append(NostrTag(imetaParts))
+            }
+            
+            // imetas from included image urls (generated from MediaContentView)
+            for (key: imageUrl, value: imeta) in remoteIMetas {
+                if nEvent.content.contains(imageUrl) {
+                    
+                    var imetaParts: [String] = ["imeta", "url \(imageUrl)"]
+                    if let size = imeta.size {
+                        imetaParts.append("dim \(Int(size.width.rounded(.up)))x\(Int(size.height.rounded(.up)))")
+                    }
+                    if let blurHash = imeta.blurHash, !blurHash.isEmpty {
+                        imetaParts.append("blurhash \(blurHash)")
+                    }
+                    
+                    nEvent.tags.append(NostrTag(imetaParts))
+                    
+                }
             }
         }
         
@@ -749,4 +776,5 @@ struct Imeta {
     let url: String
     var dim: String?
     var hash: String?
+    var blurhash: String?
 }
