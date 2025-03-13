@@ -185,49 +185,12 @@ struct Kind1Both: View {
                             .frame(maxWidth: .infinity, alignment:.leading)
                     }
                     else {
-//                        ZStack(alignment: .bottom) {
-                            ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
-                                .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-    //                            .frame(height: 500, alignment: .top)
-    //                            .fixedSize(horizontal: false, vertical: true)
-                                .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 1200 : 900, alignment: .top)
-                                .clipped()
-                            
-                            
-                            // Fade bottom instead of hard clip. disabled because not accurate enough
-//                            if nrPost.sizeEstimate == .large && !didStart {
-//                                // Fade effect
-//                               LinearGradient(
-//                                gradient: Gradient(colors: [.clear, theme.background.opacity(0.35), theme.background.opacity(0.75), theme.background.opacity(0.95)]),
-//                                   startPoint: .top,
-//                                   endPoint: .bottom
-//                               )
-//                               .frame(height: 30) // Adjust the height of the fade effect
-//                               .edgesIgnoringSafeArea(.bottom)
-//                            }
-//                        }
-                        
-                            // Debug size estimate
-//                            .overlay(alignment: .topTrailing) {
-//                                VStack {
-//                                    let est = switch nrPost.sizeEstimate {
-//                                    case .large:
-//                                        "large"
-//                                    case .medium:
-//                                        "medium"
-//                                    case .small:
-//                                        "small"
-//                                    }
-//                                    Text(est)
-//                                        .background(.red)
-//                                        .foregroundColor(.white)
-//                                    if let weights = nrPost.previewWeights {
-//                                        Text(weights.weight.rounded().description)
-//                                    }
-//                                }
-//                            }
-                        
+                        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: imageWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
+                            .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 1200 : 900, alignment: .top)
+                            .clipped()
+                                                    
                         if (nrPost.previewWeights?.moreItems ?? false) {
                             ReadMoreButton(nrPost: nrPost)
                                 .padding(.vertical, 5)

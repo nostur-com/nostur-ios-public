@@ -75,10 +75,7 @@ struct LiveEventRowView: View {
                     upscale: true,
                     autoload: shouldAutoload
                 )
-//                        .frame(width: dim.listWidth)
-//                        .frame(minHeight: 100)
-//                    .padding(.horizontal, -20) // on article preview always use full width style
-                    .padding(.vertical, 10)
+                .padding(.vertical, 10)
             }
         }
         .onAppear {
