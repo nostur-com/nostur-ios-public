@@ -14,6 +14,7 @@ class MultipleImagePickerModel: ObservableObject {
     @Published var newImages: [UIImage] = []
     @Published var imageSelection: [PhotosPickerItem] = [] {
         didSet {
+            guard !imageSelection.isEmpty else { return }
             Task {
                 let newImages = await loadTransferables()
                 Task { @MainActor in
@@ -21,7 +22,6 @@ class MultipleImagePickerModel: ObservableObject {
                     self.imageSelection = []
                 }
             }
-
         }
     }
 
