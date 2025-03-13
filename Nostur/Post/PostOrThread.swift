@@ -75,7 +75,7 @@ struct PostOrThread: View { //, Equatable {
                         PostRowDeletable(nrPost: nrParent,
                                          hideFooter: true,
                                          missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
-                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
+                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, grouped:grouped, theme: themes.theme)
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
