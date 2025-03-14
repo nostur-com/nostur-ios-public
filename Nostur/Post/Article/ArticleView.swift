@@ -166,7 +166,7 @@ struct ArticleView: View {
                             autoload: true // is detail so we can force true
                         )
                         .padding(.vertical, 10)
-                        .padding(.horizontal, -20) 
+                        .padding(.horizontal, -20)
                     }
                     
                     ContentRenderer(nrPost: article, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme, didStart: $didStart)
@@ -466,6 +466,7 @@ struct ArticleView: View {
                     CustomizableFooterFragmentView(nrPost: article, theme: theme)
                 }
             }
+//            .padding(20)
             .contentShape(Rectangle())
             .onTapGesture {
                 navigateTo(article)

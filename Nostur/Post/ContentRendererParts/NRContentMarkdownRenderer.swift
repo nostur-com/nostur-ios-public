@@ -33,10 +33,10 @@ struct NRContentMarkdownRenderer: View {
             .markdownTextStyle(\.link) {
                 ForegroundColor(theme.accent)
             }
-            .markdownImageProvider(.nukeImage)
-            .markdownInlineImageProvider(.nukeImage)
+            .markdownImageProvider(.nukeImage(maxWidth: maxWidth))
+            .markdownInlineImageProvider(.nukeImage(maxWidth: maxWidth))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, fullWidth ? 10 : 0)
+//            .padding(.horizontal, 20)
             .onReceive(
                 ViewUpdates.shared.contactUpdated
                     .receive(on: RunLoop.main)
@@ -63,35 +63,46 @@ struct NRContentMarkdownRenderer: View {
 
 
 struct NukeImageProvider: ImageProvider {
-  func makeImage(url: URL?) -> some View {
-      if let url = url {
-          MediaContentView(
-              media: MediaContent(url: url),
-              availableWidth: DIMENSIONS.shared.listWidth,
-              placeholderHeight: DIMENSIONS.shared.listWidth / 2, // 1:2 guess??
-              contentMode: .fill,
-              upscale: true,
-              autoload: true
-          )
-      }
-      else {
-          EmptyView()
-      }
-  }
+    let maxWidth: CGFloat
+    
+    init(maxWidth: CGFloat) {
+        self.maxWidth = maxWidth
+    }
+    
+    func makeImage(url: URL?) -> some View {
+        if let url = url {
+            MediaContentView(
+                media: MediaContent(url: url),
+                availableWidth: maxWidth,
+                placeholderHeight: maxWidth / 2, // 1:2 guess??
+                contentMode: .fill,
+                upscale: true,
+                autoload: true
+            )
+            .padding(.horizontal, -20)
+        }
+        else {
+            EmptyView()
+        }
+    }
 }
 
 extension ImageProvider where Self == NukeImageProvider {
-  static var nukeImage: Self {
-    .init()
-  }
+    static func nukeImage(maxWidth: CGFloat) -> Self {
+        .init(maxWidth: maxWidth)
+    }
 }
 
 class NukeInlineImageProvider: InlineImageProvider {
+    let maxWidth: CGFloat
+    
+    init(maxWidth: CGFloat) {
+        self.maxWidth = maxWidth
+    }
+    
     func image(with url: URL, label: String) async throws -> Image {
-        let imageWidth = DIMENSIONS.shared.listWidth
-        
         let imageRequest = await ImageRequest(url: url,
-                                          processors: [.resize(width: imageWidth, upscale: false)],
+                                          processors: [.resize(width: maxWidth, upscale: false)],
                                           options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
                                           userInfo: [.scaleKey: UIScreen.main.scale])
         
@@ -104,9 +115,9 @@ class NukeInlineImageProvider: InlineImageProvider {
 }
 
 extension InlineImageProvider where Self == NukeInlineImageProvider {
-  static var nukeImage: Self {
-    .init()
-  }
+    static func nukeImage(maxWidth: CGFloat) -> Self {
+        .init(maxWidth: maxWidth)
+    }
 }
 
 
