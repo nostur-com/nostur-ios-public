@@ -45,6 +45,10 @@ class MediaViewVM: ObservableObject {
             return
         }
         
+        Task { @MainActor in
+            state = .loading(0)
+        }
+        
         for await progress in task.progress {
             guard progress.fraction > 0.08 else { continue }
             
