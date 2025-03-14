@@ -29,11 +29,13 @@ class NXColumnViewModel: ObservableObject {
             if case .posts(let nrPosts) = viewState, nrPosts.isEmpty {
                 if !vmInner.unreadIds.isEmpty {
                     vmInner.unreadIds = [:]
+                    vmInner.updateIsAtTopSubject.send()
                 }
             }
             else if case .loading = viewState {
                 if !vmInner.unreadIds.isEmpty {
                     vmInner.unreadIds = [:]
+                    vmInner.updateIsAtTopSubject.send()
                 }
             }
         }
@@ -241,6 +243,7 @@ class NXColumnViewModel: ObservableObject {
                         for key in vmInner.unreadIds.keys {
                             if lastReadIdsToRemove.contains(String(key.prefix(8))) {
                                 vmInner.unreadIds[key] = nil
+                                vmInner.updateIsAtTopSubject.send()
                             }
                         }
 
@@ -379,6 +382,7 @@ class NXColumnViewModel: ObservableObject {
                     
                     for nrPost in existingPosts where (mutedRootIds.contains(nrPost.id) || mutedRootIds.contains(nrPost.replyToRootId ?? "!")) {
                         vmInner.unreadIds[nrPost.id] = nil
+                        vmInner.updateIsAtTopSubject.send()
                     }
                     
                     viewState = .posts(existingPosts.filter { nrPost in
@@ -402,6 +406,7 @@ class NXColumnViewModel: ObservableObject {
                     
                     for nrPost in existingPosts where blocks.contains(nrPost.pubkey) {
                         vmInner.unreadIds[nrPost.id] = nil
+                        vmInner.updateIsAtTopSubject.send()
                     }
                     
                     viewState = .posts(existingPosts.filter { nrPost in
@@ -483,6 +488,7 @@ class NXColumnViewModel: ObservableObject {
                 if case .posts(let existingPosts) = viewState {
                     let nrPost = notification.object as! NRPost
                     vmInner.unreadIds[nrPost.id] = nil
+                    vmInner.updateIsAtTopSubject.send()
                     viewState = .posts(existingPosts.filter { $0.id != nrPost.id })
                 }
             }

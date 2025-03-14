@@ -7,6 +7,7 @@
 
 import SwiftUI
 @_spi(Advanced) import SwiftUIIntrospect
+import Combine
 
 struct NXPostsFeed: View {
     
@@ -22,6 +23,8 @@ struct NXPostsFeed: View {
     
     @Weak private var tableView: UITableView?
     @State private var tablePrefetcher: NXPostsFeedTablePrefetcher?
+    
+    @State private var updateIsAtTopSubscription: AnyCancellable?
     
     init(vm: NXColumnViewModel, posts: [NRPost], isVisible: Bool) {
         self.vm = vm
@@ -82,6 +85,10 @@ struct NXPostsFeed: View {
                         UIView.setAnimationsEnabled(false)
                         view.scrollToRow(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
                         UIView.setAnimationsEnabled(true)
+                        
+                        if pendingIndex > 0 {
+                            updateIsAtTop()
+                        }
                     }
                 }
             }
@@ -104,6 +111,10 @@ struct NXPostsFeed: View {
                         UIView.setAnimationsEnabled(false)
                         view.scrollToItem(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
                         UIView.setAnimationsEnabled(true)
+                        
+                        if pendingIndex > 0 {
+                            updateIsAtTop()
+                        }
                     }
                 }
             }
@@ -171,6 +182,7 @@ struct NXPostsFeed: View {
                     // Reset flags after a short delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         vmInner.isPerformingScroll = false
+                        updateIsAtTop()
                     }
                 }
             }
@@ -210,6 +222,16 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") onChange(of: isVisible) -> up
                 // so we set .isVisible to false to pause updates (and resume by setting .isVisible to true in onAppear {})
                 guard vm.isVisible else { return }
                 vm.isVisible = false
+            }
+            
+            // Add updateIsAtTop() debounces
+            .onAppear {
+                guard updateIsAtTopSubscription == nil else { return }
+                updateIsAtTopSubscription = vmInner.updateIsAtTopSubject
+                    .debounce(for: 0.075, scheduler: RunLoop.main)
+                    .sink {
+                        self._updateIsAtTop()
+                    }
             }
         }
     }
@@ -281,6 +303,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
         
         if vmInner.unreadIds[nrPost.id] != 0 {
             vmInner.unreadIds[nrPost.id] = 0
+            vmInner.updateIsAtTopSubject.send()
             vm.markAsRead(nrPost.shortId)
             if nrPost.isRepost, let shortId = nrPost.firstQuote?.shortId {
                 vm.markAsRead(shortId)
@@ -292,11 +315,13 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
                 L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() .isAtTop \(vmInner.isAtTop) appearedIndex == 0 --> vmInner.unreadIds = [:]")
 #endif
                 vmInner.unreadIds = [:]
+                vmInner.updateIsAtTopSubject.send()
             }
             
             for i in appearedIndex..<posts.count {
                 if vmInner.unreadIds[posts[i].id] != 0 {
                     vmInner.unreadIds[posts[i].id] = 0
+                    vmInner.updateIsAtTopSubject.send()
                     vm.markAsRead(posts[i].shortId)
                     if posts[i].isRepost, let shortId = posts[i].firstQuote?.shortId {
                         vm.markAsRead(shortId)
@@ -307,6 +332,10 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
     }
     
     private func updateIsAtTop() {
+        vmInner.updateIsAtTopSubject.send()
+    }
+    
+    private func _updateIsAtTop() {
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
             if let collectionView {
 #if DEBUG
