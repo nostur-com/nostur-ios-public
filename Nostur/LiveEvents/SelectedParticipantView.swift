@@ -185,7 +185,7 @@ struct SelectedParticipantView: View {
             guard let oldFixedPfp = nrContact.fixedPfp,
                   oldFixedPfp != newPictureUrl?.absoluteString,
                   let fixedPfpUrl = URL(string: oldFixedPfp),
-                  hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+                  hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
             else { return }
             DispatchQueue.main.async {
                 withAnimation {
@@ -198,7 +198,7 @@ struct SelectedParticipantView: View {
                 if let fixedPfp = nrContact.fixedPfp,
                    fixedPfp != nrContact.contact?.picture,
                    let fixedPfpUrl = URL(string: fixedPfp),
-                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
                 {
                     DispatchQueue.main.async {
                         withAnimation {
