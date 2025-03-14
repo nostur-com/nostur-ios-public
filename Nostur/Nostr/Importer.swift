@@ -283,8 +283,9 @@ class Importer {
                     if let subscriptionId = message.subscriptionId {
                         subscriptionIds.insert(subscriptionId)
                     }
-                    if (kind6firstQuote != nil) {
+                    if let kind6firstQuote {
                         CoreDataRelationFixer.shared.addTask({
+                            guard contextWontCrash([savedEvent, kind6firstQuote]) else { return }
                             savedEvent.firstQuote = kind6firstQuote
                         })
                     }
@@ -509,8 +510,9 @@ class Importer {
                     if let subscriptionId = message.subscriptionId {
                         importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
                     }
-                    if (kind6firstQuote != nil) {
+                    if let kind6firstQuote {
                         CoreDataRelationFixer.shared.addTask({
+                            guard contextWontCrash([savedEvent, kind6firstQuote]) else { return }
                             savedEvent.firstQuote = kind6firstQuote
                         })
                     }
