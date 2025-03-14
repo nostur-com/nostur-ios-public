@@ -139,7 +139,8 @@ struct GifInfo: Equatable {
              let mediaContent = MediaContent(url: URL(string: "https://m.primal.net/Pbct.jpg")!)
              
              MediaContentView(
-                 media: mediaContent
+                 media: mediaContent,
+                 availableWidth: 360
              )
              .border(Color.blue)
              .frame(width: 360, height: 360)
@@ -147,6 +148,7 @@ struct GifInfo: Equatable {
              
              MediaContentView(
                  media: mediaContent,
+                 availableWidth: 360,
                  contentMode: .fill
              )
              .border(Color.blue)
@@ -246,13 +248,15 @@ struct GifInfo: Equatable {
         
         MediaContentView(
             media: mediaContent,
+            availableWidth: 360,
             contentMode: .fill
         )
         .border(Color.blue)
         .frame(width: 360, height: 360)
         
         MediaContentView(
-            media: mediaContent
+            media: mediaContent,
+            availableWidth: 360
         )
         .border(Color.blue)
         .frame(width: 360, height: 360)

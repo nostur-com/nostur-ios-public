@@ -151,6 +151,7 @@ struct ContentRenderer: View { // VIEW things
                         media: mediaContent,
                         availableWidth: availableWidth + (fullWidth ? +20 : 0),
                         placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * mediaContent.aspect,
+                        maxHeight: isDetail ? 4000 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                         contentMode: fullWidth ? .fill : .fit,
                         imageUrls: nrPost.imageUrls,
                         autoload: shouldAutoload,

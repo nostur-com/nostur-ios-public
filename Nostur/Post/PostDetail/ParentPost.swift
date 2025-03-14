@@ -121,6 +121,7 @@ struct ParentPost: View {
                                                 ),
                                                 availableWidth: dim.listWidth,
                                                 placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
+                                                maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                                                 contentMode: .fill,
                                                 imageUrls: nrPost.imageUrls,
                                                 autoload: shouldAutoload

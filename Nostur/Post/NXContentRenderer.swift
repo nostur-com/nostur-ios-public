@@ -259,7 +259,8 @@ struct NXContentRenderer: View { // VIEW things
                                 MediaContentView(
                                     media: mediaContent,
                                     availableWidth: vc.availableWidth - (nxEvent.kind == 30023 ? 10 : 0),
-                                    placeholderHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                                    placeholderHeight: 300,
+                                    maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                                     contentMode: .fill,
                                     imageUrls: nxEvent.imageUrls,
                                     upscale: true,

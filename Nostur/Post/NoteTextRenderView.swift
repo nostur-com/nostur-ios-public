@@ -38,6 +38,7 @@ struct NoteTextRenderView: View {
                                 ),
                                 availableWidth: dim.listWidth,
                                 placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
+                                maxHeight: 800,
                                 contentMode: .fill,
                                 imageUrls: nrPost.imageUrls,
                                 autoload: shouldAutoload

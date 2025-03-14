@@ -70,7 +70,9 @@ struct LiveEventRowView: View {
                     media: MediaContent(
                         url: image
                     ),
-                    availableWidth: dim.articleRowImageWidth(),
+                    availableWidth: dim.listWidth,
+                    placeholderHeight: dim.listWidth * 9/16,
+                    maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                     contentMode: .fill,
                     upscale: true,
                     autoload: shouldAutoload
