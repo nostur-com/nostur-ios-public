@@ -53,7 +53,7 @@ struct SingleMediaViewer: View {
             .background(theme.lineColor.opacity(0.2))
         }
         else if !cancelled && (autoload || imagesShown) {
-            LazyImage(request: makeImageRequest(url, width: imageWidth, height: height, contentMode: contentMode, upscale: upscale, label: "SingleMediaViewer", overrideLowDataMode: overrideLowDataMode)) { state in
+            LazyImage(request: makeImageRequest(url, label: "SingleMediaViewer", overrideLowDataMode: overrideLowDataMode)) { state in
                 if state.error != nil {
                     if SettingsStore.shared.lowDataMode {
                         Text(tapUrl?.absoluteString ?? url.absoluteString)
@@ -403,19 +403,4 @@ struct ImageProgressView: View {
             Text(percent, format: .percent)
         }
     }
-}
-
-// Use this function to make sure the image request is same in SingleImageViewer, SmoothList prefetch and SmoothList cancel prefetch.
-// else Nuke will prefetch wrong request
-func makeImageRequest(_ url: URL, width: CGFloat, height: CGFloat? = nil, contentMode: ImageProcessingOptions.ContentMode = .aspectFit, upscale: Bool = false, label: String = "", overrideLowDataMode: Bool = false) -> ImageRequest {
-    L.og.debug("ImageRequest: \(url.absoluteString), \(width) x \(height ?? -1) \(label)")
-    return ImageRequest(url: url,
-                 processors: [
-                    height != nil
-                    ? .resize(size: CGSize(width: width, height: height!), contentMode: contentMode, upscale: upscale)
-                    : .resize(width: width, upscale: upscale)
-                 ],
-                options: (!overrideLowDataMode && SettingsStore.shared.lowDataMode) ? [.returnCacheDataDontLoad] : [],
-                userInfo: [.scaleKey: UIScreen.main.scale]
-    )
 }

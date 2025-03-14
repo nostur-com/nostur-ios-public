@@ -317,7 +317,7 @@ struct ProfileOverlayCard: View {
             guard let oldFixedPfp = contact.fixedPfp,
                   oldFixedPfp != newPictureUrl?.absoluteString,
                   let fixedPfpUrl = URL(string: oldFixedPfp),
-                  hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+                  hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
             else { return }
             DispatchQueue.main.async {
                 withAnimation {
@@ -332,7 +332,7 @@ struct ProfileOverlayCard: View {
                 if let fixedPfp = contact.fixedPfp,
                    fixedPfp != contact.contact?.picture,
                    let fixedPfpUrl = URL(string: fixedPfp),
-                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
                 {
                     DispatchQueue.main.async {
                         withAnimation {

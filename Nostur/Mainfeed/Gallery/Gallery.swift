@@ -157,7 +157,7 @@ struct GridItemView: View {
     private var url: URL { item.url }
     
     var body: some View {
-        LazyImage(request: makeImageRequest(url, width: size, height: size, contentMode: .aspectFill, upscale: true, label: "GridItemView")) { state in
+        LazyImage(request: makeImageRequest(url, label: "GridItemView")) { state in
             if state.error != nil {
                 if SettingsStore.shared.lowDataMode {
                     Text(url.absoluteString)
@@ -223,7 +223,7 @@ struct GridItemView17: View {
     private var url: URL { item.url }
     
     var body: some View {
-        LazyImage(request: makeImageRequest(url, width: size, height: size, contentMode: .aspectFill, upscale: true, label: "GridItemView")) { state in
+        LazyImage(request: makeImageRequest(url, label: "GridItemView")) { state in
             if state.error != nil {
                 if SettingsStore.shared.lowDataMode {
                     Text(url.absoluteString)

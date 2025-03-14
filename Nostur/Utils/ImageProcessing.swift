@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 08/03/2023.
 //
 
-import Foundation
+import SwiftUI
 import Nuke
 
 class ImageProcessing {
@@ -141,4 +141,43 @@ class ImageProcessing {
         pfpPrefetcher.priority = .high
     }
     
+}
+
+
+// Force processing to 50x50 so we always get the same from cache and not redownload, do scaling down to 20x20 (or other) in SwiftUI if needed (.resizable())
+func pfpImageRequestFor(_ pictureUrl: URL) -> ImageRequest {
+    L.og.debug("pfpImageRequestFor: \(pictureUrl.absoluteString)")
+    //    thumbOptions.createThumbnailFromImageAlways = true
+    //    thumbOptions.shouldCacheImmediately = true
+    let options: ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
+
+    if !SettingsStore.shared.animatedPFPenabled || pictureUrl.absoluteString.suffix(4) != ".gif" {
+        return ImageRequest(url: pictureUrl,
+//                            userInfo: [.thumbnailKey: thumbOptions],
+                            processors: [
+                                .resize(size: CGSize(width: 50, height: 50), unit: .points, contentMode: .aspectFill,
+                                        crop: true,
+                                        upscale: true)
+                            ],
+                            options: options,
+                            userInfo: [.scaleKey: UIScreen.main.scale]
+//                            userInfo: [.scaleKey: 1, .thumbnailKey: thumbOptions]
+//                            userInfo: [.scaleKey: UIScreen.main.scale, .thumbnailKey: thumbOptions]
+        )
+    }
+    return ImageRequest(url: pictureUrl)
+}
+
+
+// Use this function to make sure the image request is same in SingleImageViewer, SmoothList prefetch and SmoothList cancel prefetch.
+// else Nuke will prefetch wrong request
+func makeImageRequest(_ url: URL, label: String = "", overrideLowDataMode: Bool = false, size: CGFloat? = nil) -> ImageRequest {
+    L.og.debug("ImageRequest: \(url.absoluteString), \(label)")
+    return ImageRequest(url: url,
+                 processors: [
+                    .resize(size: CGSize(width: size ?? ScreenSpace.shared.screenSize.width, height: size ?? ScreenSpace.shared.screenSize.height), contentMode: .aspectFit, upscale: false)
+                 ],
+                options: (!overrideLowDataMode && SettingsStore.shared.lowDataMode) ? [.returnCacheDataDontLoad] : [],
+                userInfo: [.scaleKey: UIScreen.main.scale]
+    )
 }

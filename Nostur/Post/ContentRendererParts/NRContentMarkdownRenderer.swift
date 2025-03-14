@@ -101,10 +101,7 @@ class NukeInlineImageProvider: InlineImageProvider {
     }
     
     func image(with url: URL, label: String) async throws -> Image {
-        let imageRequest = await ImageRequest(url: url,
-                                          processors: [.resize(width: maxWidth, upscale: false)],
-                                          options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                                          userInfo: [.scaleKey: UIScreen.main.scale])
+        let imageRequest = makeImageRequest(url, label: "NukeInlineImageProvider")
         
         let task = ImageProcessing.shared.content.imageTask(with: imageRequest)
         

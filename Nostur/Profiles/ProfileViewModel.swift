@@ -151,7 +151,7 @@ class ProfileViewModel: ObservableObject {
             if let fixedPfp = nrContact.contact?.fixedPfp,
                fixedPfp != nrContact.contact?.picture,
                let fixedPfpUrl = URL(string: fixedPfp),
-               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
             {
                 Task { @MainActor [weak self] in
                     withAnimation {

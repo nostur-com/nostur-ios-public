@@ -37,14 +37,14 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
                 if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
+                    .map { pfpImageRequestFor($0) }
                 )
                 
                 for element in item.contentElements {
@@ -56,11 +56,11 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                             let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "prefetch"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
                         }
                         else {
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: availableWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "prefetch (unscaled)"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch (unscaled)"))
                         }
                     default:
                         continue
@@ -122,14 +122,14 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
                 if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
+                    .map { pfpImageRequestFor($0) }
                 )
                 
                 for element in item.contentElements {
@@ -142,11 +142,11 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                             
                             
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "cancel prefetch"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
                         }
                         else {
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: availableWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "cancel prefetch (unscaled)"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch (unscaled)"))
                         }
                     default:
                         continue
@@ -200,14 +200,14 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
                 if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
+                    .map { pfpImageRequestFor($0) }
                 )
                 
                 for element in item.contentElements {
@@ -219,11 +219,11 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                             let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
                             
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "prefetch"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
                         }
                         else {
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: availableWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "prefetch (unscaled)"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch (unscaled)"))
                         }
                     default:
                         continue
@@ -283,14 +283,14 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
                 if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
-                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER))
+                    imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
                     .compactMap { $0.contact?.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
-                    .map { pfpImageRequestFor($0, size: DIMENSIONS.POST_ROW_PFP_DIAMETER) }
+                    .map { pfpImageRequestFor($0) }
                 )
                 
                 for element in item.contentElements {
@@ -303,11 +303,11 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                             
                             
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: scaledDimensions.width, height: scaledDimensions.height, label: "cancel prefetch"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
                         }
                         else {
                             // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, width: availableWidth, height: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, label: "cancel prefetch (unscaled)"))
+                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch (unscaled)"))
                         }
                     default:
                         continue

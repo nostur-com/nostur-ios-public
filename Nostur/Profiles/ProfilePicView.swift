@@ -134,7 +134,7 @@ struct InnerPFP: View {
                         }
                     
                 case .flat(let url):
-                    LazyImage(request: pfpImageRequestFor(url, size: size)) { state in
+                    LazyImage(request: pfpImageRequestFor(url)) { state in
                         if let image = state.image {
                             if state.imageContainer?.type == .gif {
                                 image
@@ -162,7 +162,7 @@ struct InnerPFP: View {
                     }
                     
                 case .animatedGif(let url):
-                    LazyImage(request: pfpImageRequestFor(url, size: size)) { state in
+                    LazyImage(request: pfpImageRequestFor(url)) { state in
                         if let container = state.imageContainer {
                             if !ProcessInfo.processInfo.isLowPowerModeEnabled, container.type == .gif, let gifData = container.data {
                                 ZStack {
@@ -208,31 +208,6 @@ struct InnerPFP: View {
             }
             .animation(.smooth, value: renderCase)
     }
-}
-
-func pfpImageRequestFor(_ pictureUrl:URL, size: CGFloat) -> ImageRequest {
-
-    //    thumbOptions.createThumbnailFromImageAlways = true
-    //    thumbOptions.shouldCacheImmediately = true
-    let options: ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
-
-    if !SettingsStore.shared.animatedPFPenabled || pictureUrl.absoluteString.suffix(4) != ".gif" {
-        return ImageRequest(url: pictureUrl,
-                            //                            userInfo: [.thumbnailKey: thumbOptions],
-                            processors: [
-                                .resize(size: CGSize(width: size, height: size),
-                                        unit: .points,
-                                        contentMode: .aspectFill,
-                                        crop: true,
-                                        upscale: true)
-                            ],
-                            options: options,
-                            userInfo: [.scaleKey: UIScreen.main.scale]
-                            //                            userInfo: [.scaleKey: 1, .thumbnailKey: thumbOptions]
-                            //                            userInfo: [.scaleKey: UIScreen.main.scale, .thumbnailKey: thumbOptions]
-        )
-    }
-    return ImageRequest(url: pictureUrl)
 }
 
 // FOR PREVIEW
@@ -307,7 +282,7 @@ struct MiniPFP: View {
     
     var body: some View {
         if let pictureUrl {
-            LazyImage(request: pfpImageRequestFor(pictureUrl, size: size)) { state in
+            LazyImage(request: pfpImageRequestFor(pictureUrl)) { state in
                 if let image = state.image {
                     if state.imageContainer?.type == .gif {
                         image

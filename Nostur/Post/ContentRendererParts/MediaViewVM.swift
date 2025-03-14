@@ -32,10 +32,6 @@ class MediaViewVM: ObservableObject {
         
 
         let imageRequest = makeImageRequest(url,
-                                            width: expectedImageSize.width,
-                                            height: expectedImageSize.height,
-                                            contentMode: contentMode == .fit ? .aspectFit : .aspectFill,
-                                            upscale: upscale,
                                             label: "MediaViewVM.load",
                                             overrideLowDataMode: forceLoad
         )

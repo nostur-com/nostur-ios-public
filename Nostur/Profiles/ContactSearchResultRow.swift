@@ -92,7 +92,7 @@ struct ContactSearchResultRow: View {
             if let fixedPfp = contact.fixedPfp,
                fixedPfp != contact.picture,
                let fixedPfpUrl = URL(string: fixedPfp),
-               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
             {
                 withAnimation {
                     self.fixedPfp = fixedPfpUrl
@@ -190,7 +190,7 @@ struct NRContactSearchResultRow: View {
             if let fixedPfp = nrContact.fixedPfp,
                fixedPfp != nrContact.pictureUrl?.absoluteString,
                let fixedPfpUrl = URL(string: fixedPfp),
-               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl, size: 20.0))
+               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
             {
                 withAnimation {
                     self.fixedPfp = fixedPfpUrl

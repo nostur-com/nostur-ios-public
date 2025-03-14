@@ -95,13 +95,8 @@ class BannerModel: ObservableObject {
         }
     }
     
-    func loadExistingImage(_ picture:String) {
-        let request = ImageRequest(
-            url: URL(string: picture),
-            processors: [.resize(width: self.width, upscale: true)],
-            priority: .high,
-            userInfo: [.scaleKey: UIScreen.main.scale]
-        )
+    func loadExistingImage(_ picture: String) {
+        let request = makeImageRequest(URL(string: picture)!, label: "Banner.01")
         Task {
             let image = try await ImageProcessing.shared.pfp.image(for: request)
             imageState = .success(Image(uiImage: image))

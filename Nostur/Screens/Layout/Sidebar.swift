@@ -40,7 +40,7 @@ struct SideBar: View {
         VStack(alignment: .leading) {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH)
                 .overlay(alignment: .bottomLeading, content: {
-                    PFP(pubkey: account.publicKey, account: account, size: 75)
+                    PFP(pubkey: account.publicKey, account: account, size: 50) // Can't do 75x75 because caching issue/TODO
                         .equatable()
                         .overlay(
                             Circle()

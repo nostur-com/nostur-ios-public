@@ -95,13 +95,8 @@ class ProfileModel: ObservableObject {
         }
     }
     
-    func loadExistingImage(_ picture:String) {
-        let request = ImageRequest(
-            url: URL(string: picture),
-            processors: [.resize(width: 75, upscale: true)],
-            priority: .high,
-            userInfo: [.scaleKey: UIScreen.main.scale]
-        )
+    func loadExistingImage(_ picture: String) {
+        let request = makeImageRequest(URL(string: picture)!, label: "ProfileModel")
         Task {
             let image = try await ImageProcessing.shared.pfp.image(for: request)
             imageState = .success(Image(uiImage: image))
