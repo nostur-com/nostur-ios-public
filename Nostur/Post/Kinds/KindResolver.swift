@@ -29,8 +29,10 @@ struct KindResolver: View {
 //        let _ = Self._printChanges()
 //        #endif
         switch nrPost.kind {
-        case 0,3,4,5,6,7,1984,9734,30009,8,30008:
-            KnownKindView(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
+        
+        case 0,3,4,5,7,1984,9734,30009,8,30008:
+            // We don't expect to show these, but anyone can quote or reply to any event so we still need to show something
+            OtherKnownKinds(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
         case 443:
             Kind443(nrPost: nrPost, theme: theme)
             // TODO: .navigationTitle should be somewhere else, only if isDetail
@@ -79,12 +81,27 @@ struct KindResolver: View {
             Text("uhhh 1063")
         case 20:
             Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            
+        case 99999: // Disabled and let NIP-89 handle it for now
+            let title = nrPost.eventTitle ?? "Untitled"
+            if let eventUrl = nrPost.eventUrl {
+                VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: theme)
+                    .padding(.vertical, 10)
+            }
+            else {
+                EmptyView()
+            }
         
         case 1:
-            Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            if (nrPost.kTag ?? "" == "20"), let imageUrl = nrPost.imageUrls.first { // Generic Olas
+                Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            }
+            else {
+                Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            }
             
         default:
-            UnknownKindView(nrPost: nrPost, hideFooter: hideFooter, isDetail: isDetail, isEmbedded: isEmbedded, theme: theme)
+            UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
             
         }
     }
