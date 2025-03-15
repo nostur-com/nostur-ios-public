@@ -10,14 +10,48 @@ import SwiftUI
 struct UnknownKindView: View {
     private var nrPost: NRPost
     private var theme: Theme
+    private var hideFooter: Bool
+    private var isDetail: Bool
+    private var isEmbedded: Bool
     @StateObject private var model = UnknownKindModel()
     
-    init(nrPost: NRPost, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, isDetail: Bool = false, isEmbedded: Bool, theme: Theme) {
         self.nrPost = nrPost
         self.theme = theme
+        self.hideFooter = hideFooter
+        self.isDetail = isDetail
+        self.isEmbedded = isEmbedded
     }
     
     var body: some View {
+        if isEmbedded {
+            self.embeddedView
+        }
+        else {
+            self.normalView
+        }
+    }
+    
+    @ViewBuilder
+    var embeddedView: some View {
+        PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
+            
+            content
+            
+        }
+    }
+    
+    @ViewBuilder
+    var normalView: some View {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, isDetail: isDetail, theme: theme) {
+            
+            content
+            
+        }
+    }
+    
+    @ViewBuilder
+    var content: some View {
         switch model.state {
         case .loading:
             CenteredProgressView()

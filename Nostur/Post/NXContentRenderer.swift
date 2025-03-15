@@ -89,7 +89,7 @@ struct NXContentRenderer: View { // VIEW things
                 ProgressView()
                     .onAppear {
                         viewState = .ready(DIMENSIONS.embeddedDim(
-                            availableWidth: vc.availableWidth - 20,
+                            availableWidth: vc.availableWidth,
                             isScreenshot: vc.isScreenshot)
                         )
                     }
@@ -97,7 +97,8 @@ struct NXContentRenderer: View { // VIEW things
                 ForEach(contentElements.indices, id:\.self) { index in
                     switch contentElements[index] {
                     case .nrPost(let nrPost):
-                        EmbeddedPost(nrPost, fullWidth: vc.fullWidthImages, forceAutoload: shouldAutoload, theme: vc.theme)
+                        KindResolver(nrPost: nrPost, fullWidth: vc.fullWidthImages, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload, theme: vc.theme)
+//                        EmbeddedPost(nrPost, fullWidth: vc.fullWidthImages, forceAutoload: shouldAutoload, theme: vc.theme)
     //                        .frame(minHeight: 75)
                             .environmentObject(childDIM)
                         //                        .fixedSize(horizontal: false, vertical: true)

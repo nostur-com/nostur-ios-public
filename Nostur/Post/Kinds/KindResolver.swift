@@ -15,31 +15,85 @@ struct KindResolver: View {
     public var missingReplyTo: Bool = false // For rendering in thread
     public var isReply: Bool = false
     public var isDetail: Bool = false
+    public var isEmbedded: Bool = false
     public var connect: ThreadConnectDirection? = nil
-    public var grouped: Bool = false
     public var forceAutoload: Bool = false // To override auto downloaded of reposted post using pubkey of reposter
     public var theme: Theme
+    
+    private var shouldAutoload: Bool {
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+    }
     
     var body: some View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
         switch nrPost.kind {
-        case 0,3,4,5,7,1984,9734,9735,30009,8,30008:
+        case 0,3,4,5,6,7,1984,9734,30009,8,30008:
             KnownKindView(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
         case 443:
             URLView(nrPost: nrPost, theme: theme)
+            // TODO: .navigationTitle should be somewhere else, only if isDetail
+//                .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+            if isDetail {
+                
+                Text("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+                    .fontWeightBold()
+                    .padding(.top, 10)
+                    .padding(.bottom, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(theme.listBackground)
+                    .padding(.horizontal, -10)
+                
+                HStack(spacing: 0) {
+                    self.replyButton
+                        .foregroundColor(theme.footerButtons)
+                        .padding(.leading, 10)
+                        .padding(.vertical, 5)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
+                        }
+                    Spacer()
+                }
+                .padding(.bottom, 15)
+                .background(theme.listBackground)
+                .padding(.top, -10)
+                .padding(.horizontal, -10)
+            }
+        case 9735: // TODO: need to check
+            if let zap = Event.fetchEvent(id: nrPost.id, context: viewContext()), let zapFrom = zap.zapFromRequest {
+                ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom)
+            }
+            
         case 9802:
-            Highlight(nrPost: nrPost, hideFooter: false, missingReplyTo: missingReplyTo, connect: connect, grouped: grouped, theme: theme)
+            Kind9802(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            
         case 30311:
             if let liveEvent = nrPost.nrLiveEvent {
                 LiveEventRowView(liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
             }
         case 30023:
-            ArticleView(nrPost, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+            Kind30023(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+        case 1063:
+            Text("uhhh 1063")
+        case 20:
+            Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+        
+        case 1:
+            Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            
         default:
-            Kind1Both(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, fullWidth: fullWidth, grouped: grouped, forceAutoload: forceAutoload, theme: theme)
+            UnknownKindView(nrPost: nrPost, hideFooter: hideFooter, isDetail: isDetail, isEmbedded: isEmbedded, theme: theme)
+            
         }
+    }
+    
+    
+    @ViewBuilder
+    private var replyButton: some View {
+        Image("ReplyIcon")
+        Text("Add comment")
     }
 }
 

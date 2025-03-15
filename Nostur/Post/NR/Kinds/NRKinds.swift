@@ -115,7 +115,7 @@ struct AnyKind: View {
                 .padding(.vertical, 10)
         }
         else {
-            UnknownKindView(nrPost: nrPost, theme: theme)
+            UnknownKindView(nrPost: nrPost, isEmbedded: true, theme: theme)
                 .padding(.vertical, 10)
         }
     }
@@ -209,6 +209,8 @@ func fallbackDescription(for nrPost: NRPost) -> String {
         "A Direct Message"
     case 5:
         "A deletion request"
+    case 6:
+        "A repost"
     case 7:
         "A reaction"
     case 9734:

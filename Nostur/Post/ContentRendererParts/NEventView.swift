@@ -91,7 +91,8 @@ struct NEventView: View {
                             .stroke(theme.lineColor, lineWidth: 1)
                     )
             case .ready(let nrPost):
-                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+//                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
             case .timeout:
                 Text("Unable to fetch content")
                     .padding(10)

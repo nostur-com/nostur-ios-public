@@ -76,7 +76,7 @@ struct Repost: View {
                     .hCentered()
                 }
                 else {
-                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, grouped: grouped, forceAutoload: shouldForceAutoLoad, theme: theme)
+                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, forceAutoload: shouldForceAutoLoad, theme: theme)
                         .onAppear {
                             if !firstQuote.missingPs.isEmpty {
                                 bg().perform {

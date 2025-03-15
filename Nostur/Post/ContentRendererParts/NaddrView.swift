@@ -101,7 +101,8 @@ struct NaddrView: View {
                         vm?.fetch()
                     }
             case .ready(let nrPost):
-                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+//                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
                     .environmentObject(dim)
             case .timeout:
                 Text("Unable to fetch content")

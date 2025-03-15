@@ -35,7 +35,7 @@ struct DMContentRenderer: View { // VIEW things
             ForEach(contentElements) { contentElement in
                 switch contentElement {
                 case .nrPost(let nrPost):
-                    EmbeddedPost(nrPost, forceAutoload: false, theme: theme)
+                    KindResolver(nrPost: nrPost, fullWidth: false, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: false, theme: theme)
                         .environmentObject(childDIM)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts

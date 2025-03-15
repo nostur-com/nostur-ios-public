@@ -69,7 +69,7 @@ struct WithSheets: ViewModifier {
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
     
-    @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: 600, isScreenshot: true)
+    @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: 384, isScreenshot: true)
     
     func body(content: Content) -> some View {
         content
@@ -421,7 +421,9 @@ struct WithSheets: ViewModifier {
                     
                     let renderer = ImageRenderer(content:
                         VStack(spacing:0) {
-                            DetailPost(nrPost: nrPost)
+                            // TODO: Fix image size + GIF in screenshot
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: themes.theme)
+
                             Group {
                                 if SettingsStore.shared.includeSharedFrom {
                                     Text("Shared from **Nostur**")

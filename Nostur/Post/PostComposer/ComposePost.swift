@@ -159,12 +159,8 @@ struct ComposePost: View {
                                     .padding(.top, 10)
                                     
                                     if let quotingNRPost = quotePost?.nrPost {
-                                        QuotedNoteFragmentView(nrPost: quotingNRPost, theme: themes.theme)
-                                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width - 70, isScreenshot: false))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .stroke(themes.theme.lineColor.opacity(0.5), lineWidth: 1)
-                                            )
+                                        KindResolver(nrPost: quotingNRPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, theme: themes.theme)
+                                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width, isScreenshot: false))
                                             .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                                     }
                                 }
@@ -204,6 +200,9 @@ struct ComposePost: View {
                         if #available(iOS 16, *) {
                             NavigationStack {
                                 VStack(alignment: .leading) {
+                                    Color.red
+                                        .frame(height: 30)
+                                        .debugDimensions("PostPreview")
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                         .environmentObject(previewDIM)
@@ -273,7 +272,7 @@ struct ComposePost: View {
                         }
                     })
                     .onAppear {
-                        previewDIM.listWidth = geo.size.width - 80.0
+                        previewDIM.listWidth = geo.size.width // - 80.0
                         previewDIM.isPreviewContext = true
                     }
                 }

@@ -21,7 +21,7 @@ struct ThreadReplies: View {
         VStack(spacing: GUTTER) {
             if didLoad {
                 ForEach(nrPost.groupedRepliesSorted) { reply in
-                    PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
+                    PostOrThread(nrPost: reply, rootId: nrPost.id)
                         .id(reply.id)
                         .animation(Animation.spring(), value: nrPost.groupedRepliesSorted)
                 }
@@ -39,7 +39,7 @@ struct ThreadReplies: View {
                     }
                     if showNotWoT {
                         ForEach(nrPost.groupedRepliesNotWoT) { reply in
-                            PostOrThread(nrPost: reply, grouped:true, rootId: nrPost.id)
+                            PostOrThread(nrPost: reply, rootId: nrPost.id)
                                 .id(reply.id)
                         }
                         .animation(Animation.spring(), value: nrPost.groupedRepliesNotWoT)

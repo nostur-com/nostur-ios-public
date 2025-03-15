@@ -31,7 +31,8 @@ struct EmbedById: View {
                             .stroke(theme.lineColor, lineWidth: 1)
                     )
             case .ready(let nrPost):
-                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+//                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
 //                    .environmentObject(childDIM)
 //                    .padding(.vertical, 10)
             case .timeout:

@@ -24,7 +24,7 @@ struct ChatRenderer: View { // VIEW things
         self.forceAutoload = forceAutoload
         self.theme = theme
         _didStart = didStart
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20, isScreenshot: false))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
     }
     
     private var shouldAutoload: Bool {
@@ -36,7 +36,7 @@ struct ChatRenderer: View { // VIEW things
             ForEach(contentElements.indices, id:\.self) { index in
                 switch contentElements[index] {
                 case .nrPost(let nrPost):
-                    EmbeddedPost(nrPost, forceAutoload: shouldAutoload, theme: theme)
+                    KindResolver(nrPost: nrPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
                     //                        .fixedSize(horizontal: false, vertical: true)

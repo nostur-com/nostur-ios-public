@@ -18,14 +18,12 @@ struct PostOrThread: View { //, Equatable {
     @EnvironmentObject private var themes: Themes
     private let nrPost: NRPost
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
-    private var grouped = false
     private var rootId: String? = nil
     @ObservedObject private  var settings: SettingsStore = .shared
     
-    init(nrPost: NRPost, grouped: Bool = false, rootId: String? = nil) {
+    init(nrPost: NRPost, rootId: String? = nil) {
         self.nrPost = nrPost
         self.postOrThreadAttributes = nrPost.postOrThreadAttributes
-        self.grouped = grouped
         self.rootId = rootId
     }
     
@@ -35,7 +33,7 @@ struct PostOrThread: View { //, Equatable {
 //        #endif
         if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
             Box(nrPost: nrPost, theme: themes.theme) {
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: themes.theme)
 //                    .transaction { t in
 //                        t.animation = nil
 //                    }
@@ -75,7 +73,7 @@ struct PostOrThread: View { //, Equatable {
                         PostRowDeletable(nrPost: nrParent,
                                          hideFooter: true,
                                          missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
-                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, grouped:grouped, theme: themes.theme)
+                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: themes.theme)
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
@@ -90,7 +88,7 @@ struct PostOrThread: View { //, Equatable {
                 }
 
                 Box(nrPost: nrPost, theme: themes.theme) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, grouped:grouped, theme: themes.theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: themes.theme)
     //                    .transaction { t in
     //                        t.animation = nil
     //                    }
@@ -128,26 +126,10 @@ struct PostOrThread: View { //, Equatable {
     }
 }
 
-struct PostOrThread15: View {
-    private var themes: Themes
-    private var dim: DIMENSIONS
-    private let nrPost: NRPost
-    private var grouped = false
-    private var rootId: String? = nil
-    
-    init(nrPost: NRPost, grouped: Bool = false, rootId: String? = nil, themes: Themes, dim: DIMENSIONS) {
-        self.nrPost = nrPost
-        self.grouped = grouped
-        self.rootId = rootId
-        self.themes = themes
-        self.dim = dim
-    }
-    
-    var body: some View {
-        PostOrThread(nrPost: nrPost, grouped: grouped, rootId: rootId)
-            .environmentObject(themes)
-            .environmentObject(dim)
-    }
+enum ThreadConnectDirection {
+    case top
+    case bottom
+    case both
 }
 
 func onlyRootOrReplyingToFollower(_ event:Event) -> Bool {

@@ -33,7 +33,7 @@ struct ContentRenderer: View { // VIEW things
         self.theme = theme
         self.isPreviewContext = isPreviewContext
         _didStart = didStart
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20, isScreenshot: nrPost.isScreenshot, isPreviewContext: isPreviewContext))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreviewContext: isPreviewContext))
     }
     
     private var shouldAutoload: Bool {
@@ -45,7 +45,11 @@ struct ContentRenderer: View { // VIEW things
             ForEach(contentElements) { element in
                 switch element {
                 case .nrPost(let nrPost):
-                    EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+//                    EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+                    // TODO: the enqueeu dequeue need to be added in KindResolver or somewhere
+//                        .onAppear { self.enqueue() }
+//                        .onDisappear { self.dequeue() }
                         .environmentObject(childDIM)
                         .padding(.vertical, 10)
 
@@ -174,10 +178,10 @@ struct ContentRenderer: View { // VIEW things
                 case .postPreviewImage(let postedImageMeta):
                     Image(uiImage: postedImageMeta.imageData)
                         .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: 600)
-                        .padding(.top, 10)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                        .scaledToFill()
+                        .padding(.horizontal, -10)
+                        .padding(.vertical, 10)
+                    
                 case .postPreviewVideo(let postedVideoMeta):
                     if let thumbnail = postedVideoMeta.thumbnail {
                         Image(uiImage: thumbnail)
