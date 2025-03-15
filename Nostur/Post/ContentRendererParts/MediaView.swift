@@ -179,6 +179,7 @@ struct MediaPlaceholder: View {
                 .onAppear { isVisible = true }
                 .onDisappear { isVisible = false }
                 .clipped()
+//                .debugDimensions()
 //                .overlay(alignment: .center) {
 //                    Text("fill: \(expectedImageSize.width)x\(expectedImageSize.height)")
 //                        .foregroundColor(Color.yellow)
@@ -354,6 +355,7 @@ struct MediaPlaceholder: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .animation(.smooth(duration: 0.5), value: vm.state)
+//                    .debugDimensions("Image", alignment: .topLeading)
 //                    .overlay(alignment: .top) {
 //                        VStack {
 //                            Text(".image.fill \(expectedImageSize.width)x\(expectedImageSize.height)")

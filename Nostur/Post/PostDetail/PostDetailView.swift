@@ -31,6 +31,9 @@ struct PostDetailView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(spacing: GUTTER) { // 2 for space between (parents+detail) and replies
+//                        Color.red
+//                            .frame(height: 30)
+//                            .debugDimensions()
                         PostAndParent(nrPost: nrPost,  navTitleHidden:navTitleHidden)
                         
                             // Around parents + detail (not replies)

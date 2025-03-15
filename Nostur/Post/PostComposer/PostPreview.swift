@@ -37,6 +37,10 @@ struct PostPreview: View {
 
     var body: some View {
         ScrollView {
+//            Color.red
+//                .overlay { Text("dim.listWidth: \(dim.listWidth.description)") }
+//                .frame(height: 30)
+//                .debugDimensions("PostPreview.ScrollView")
             AnyStatus()
             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
                 .padding(10)

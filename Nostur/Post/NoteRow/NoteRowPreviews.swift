@@ -248,7 +248,7 @@ import NukeVideo
     }) {
         if let p = PreviewFetcher.fetchNRPost("0e090529d5fa674eeb07a3a17a012349ee6c1db56fa172fd3dc0f704f46a8e3e") {
             Box {
-                NoteRow(nrPost: p, theme: Themes.default.theme)
+                PostRowDeletable(nrPost: p, theme: Themes.default.theme)
             }
         }
     }
