@@ -40,52 +40,10 @@ struct PostAndParent: View {
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
             if let replyTo = nrPost.replyTo {
                 if replyTo.deletedById == nil {
-                    switch replyTo.kind {
-                    case 9735:
-                        if let zap = Event.fetchEvent(id: replyTo.id, context: viewContext()), let zapFrom = zap.zapFromRequest {
-                            ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom)
-                        }
-                    case 0,3,4,5,7,1984,9734,30009,8,30008:
-                        KnownKindView(nrPost: replyTo, theme: themes.theme)
-                        
-                    case 30023:
-                        ArticleView(replyTo, isParent:true, isDetail: true, fullWidth: true, theme: themes.theme)
-                            .padding(.horizontal, -10) // padding is all around (detail+parents) if article is parent we need to negate the padding
-                            .background(Color(.secondarySystemBackground))
-                        
-                    case 443:
-                        URLView(nrPost: replyTo, theme: themes.theme)
-                            .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
-                        
-                        Text("Comments on \(replyTo.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
-                            .fontWeightBold()
-                            .padding(.top, 10)
-                            .padding(.bottom, 10)
-                            .frame(maxWidth: .infinity)
-                            .background(themes.theme.listBackground)
-                            .padding(.horizontal, -10)
-                        
-                        HStack(spacing: 0) {
-                            self.replyButton
-                                .foregroundColor(themes.theme.footerButtons)
-                                .padding(.leading, 10)
-                                .padding(.vertical, 5)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
-                                }
-                            Spacer()
-                        }
-                        .padding(.bottom, 15)
-                        .background(themes.theme.listBackground)
-                        .padding(.top, -10)
-                        .padding(.horizontal, -10)
-                    default:
-                        let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
-                        PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
+                    let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
+                    PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
 //                            .padding(10)
-                            .background(themes.theme.background)
-                    }
+                        .background(themes.theme.background)
                 }
                 else {
                     Text("_Post deleted by author_", comment: "Message shown when a post is deleted")
@@ -133,48 +91,22 @@ struct PostAndParent: View {
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 0) {
-                if nrPost.deletedById == nil {
-                    switch nrPost.kind {
-                    case 0,3,4,5,7,1984,9734,9735,30009,8,30008:
-                        KnownKindView(nrPost: nrPost, hideFooter: true, theme: themes.theme)
-                        DetailFooterFragment(nrPost: nrPost)
-                            .padding(.top, 10)
-                        CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: themes.theme)
-                            .padding(.vertical, 5)
-                            .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
-                    case 443:
-                        URLView(nrPost: nrPost, theme: themes.theme)
-                    default:
-                        if isParent {
-                            ParentPost(nrPost: nrPost, connect:connect)
-                                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                                .background(
-                                    themes.theme.background
-                                        .onTapGesture {
-                                            navigateTo(nrPost)
-                                        }
-                                )
-                        }
-                        else if nrPost.isRepost { // who opens a repost in detail?
-                            Repost(nrPost: nrPost, hideFooter: false, missingReplyTo: false, connect: .none, fullWidth: false, isReply: false, isDetail: true, grouped: false, theme: themes.theme)
-                        }
-                        else {
-                            DetailPost(nrPost: nrPost)
-//                                .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                                .id(nrPost.id)
-                                .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
-                                .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
-                        }
-                    }
+                if isParent {
+                    PostRowDeletable(nrPost: nrPost, connect: connect)
+                        .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
+                        .background(
+                            themes.theme.background
+                                .onTapGesture {
+                                    navigateTo(nrPost)
+                                }
+                        )
                 }
                 else {
-                    Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)")
-                        .hCentered()
-                    Button("Undelete") {
-                        nrPost.undelete()
-                    }
-                    .foregroundColor(themes.theme.accent)
-                    .hCentered()
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: themes.theme)
+                        .id(nrPost.id)
+                        .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
+                        .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
+                        
                 }
             }
             .id(nrPost.id)

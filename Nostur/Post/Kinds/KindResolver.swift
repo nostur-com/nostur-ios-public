@@ -45,21 +45,21 @@ struct KindResolver: View {
                     .background(theme.listBackground)
                     .padding(.horizontal, -10)
                 
-                HStack(spacing: 0) {
-                    self.replyButton
-                        .foregroundColor(theme.footerButtons)
-                        .padding(.leading, 10)
-                        .padding(.vertical, 5)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
-                        }
-                    Spacer()
-                }
-                .padding(.bottom, 15)
-                .background(theme.listBackground)
-                .padding(.top, -10)
-                .padding(.horizontal, -10)
+//                HStack(spacing: 0) {
+//                    self.replyButton
+//                        .foregroundColor(theme.footerButtons)
+//                        .padding(.leading, 10)
+//                        .padding(.vertical, 5)
+//                        .contentShape(Rectangle())
+//                        .onTapGesture {
+//                            sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
+//                        }
+//                    Spacer()
+//                }
+//                .padding(.bottom, 15)
+//                .background(theme.listBackground)
+//                .padding(.top, -10)
+//                .padding(.horizontal, -10)
             }
         case 9735: // TODO: need to check
             if let zap = Event.fetchEvent(id: nrPost.id, context: viewContext()), let zapFrom = zap.zapFromRequest {

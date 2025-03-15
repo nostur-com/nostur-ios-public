@@ -41,13 +41,13 @@ struct PostDetailView: View {
                             .background(themes.theme.background)
 //                            .background(themes.theme.background)
 //                            .background(Color.blue)
-                        
-                        if (nrPost.kind == 443) {
-                            Text("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
-                                .fontWeightBold()
-                                .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
-                                
-                        }
+//                        
+//                        if (nrPost.kind == 443) {
+//                            Text("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+//                                .fontWeightBold()
+//                                .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
+//                                
+//                        }
                         
                         // MARK: REPLIES TO OUR MAIN POST
                         if (nrPost.kind == 443) {

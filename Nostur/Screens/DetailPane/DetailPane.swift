@@ -27,7 +27,8 @@ struct DetailPane: View {
                 .modifier(SizeModifier())
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
-                    dim.listWidth = (size.width - (DIMENSIONS.BOX_PADDING*2))
+                    dim.listWidth = size.width
+//                    dim.listWidth = (size.width - (DIMENSIONS.BOX_PADDING*2))
                 }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -227,7 +228,7 @@ struct DetailPane: View {
     //                        .padding(.horizontal, 0)
                             .opacity(tm.selected == tab ? 1 : 0)
                             .id(tab.id)
-                            .padding(.horizontal, DIMENSIONS.BOX_PADDING)
+//                            .padding(.horizontal, DIMENSIONS.BOX_PADDING)
                             .onPreferenceChange(TabTitlePreferenceKey.self) { title in
                                 guard !title.isEmpty else { return }
                                 tm.selected?.navigationTitle = title
@@ -262,7 +263,7 @@ struct DetailPane: View {
         }
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .padding(0)
+//        .padding(.horizontal, -10)
         .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up
