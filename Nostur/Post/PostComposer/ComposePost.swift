@@ -200,9 +200,6 @@ struct ComposePost: View {
                         if #available(iOS 16, *) {
                             NavigationStack {
                                 VStack(alignment: .leading) {
-                                    Color.red
-                                        .frame(height: 30)
-                                        .debugDimensions("PostPreview")
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                         .environmentObject(previewDIM)
