@@ -2,59 +2,80 @@
 //  Kind1063.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 11/05/2023.
+//  Created by Fabian Lachman on 15/03/2025.
 //
 
 import SwiftUI
-import NavigationBackport
 
 struct Kind1063: View {
-    
-    @ObservedObject private var nrPost: NRPost
-    private let url: String
-    private let availableWidth: CGFloat
-    private let fullWidth: Bool
-    private var height: CGFloat? = nil
-    private let forceAutoload: Bool
     private var theme: Theme
-    private var fileMetadata: KindFileMetadata
-    @Binding var didStart: Bool
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var settings: SettingsStore = .shared
+    private let nrPost: NRPost
+    @ObservedObject private var pfpAttributes: PFPAttributes
     
-    init(_ nrPost:NRPost, fileMetadata: KindFileMetadata, availableWidth: CGFloat = .zero, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false)) {
-        self.theme = theme
+    private let hideFooter: Bool // For rendering in NewReply
+    private let missingReplyTo: Bool // For rendering in thread
+    private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let isReply: Bool // is reply on PostDetail
+    private let isDetail: Bool
+    private let isEmbedded: Bool
+    private let fullWidth: Bool
+    private let grouped: Bool
+    private let forceAutoload: Bool
+    @State private var didStart = false
+    @State private var couldBeImposter: Int16 // TODO: this is here but also in NRPostHeaderContainer, need to clean up
+    
+    private let THREAD_LINE_OFFSET = 24.0
+    
+    private var imageWidth: CGFloat {
+        // FULL WIDTH IS OFF
+        
+        // LIST OR LIST PARENT
+        if !isDetail { return fullWidth ? (dim.listWidth - 20) : dim.availableNoteRowWidth }
+        
+        // DETAIL
+        if isDetail && !isReply { return fullWidth ? dim.availablePostDetailRowImageWidth() : dim.availablePostDetailImageWidth() }
+        
+        // DETAIL PARENT OR REPLY
+        return dim.availablePostDetailRowImageWidth()
+    }
+    
+    private var fileMetadata: KindFileMetadata
+    
+    @State var showMiniProfile = false
+    
+    init(nrPost: NRPost, fileMetadata: KindFileMetadata, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
-        self.url = fileMetadata.url
-        self.availableWidth = availableWidth
+        self.pfpAttributes = nrPost.pfpAttributes
+        self.hideFooter = hideFooter
+        self.missingReplyTo = missingReplyTo
+        self.connect = connect
+        self.isReply = isReply
         self.fullWidth = fullWidth
+        self.isDetail = isDetail
+        self.isEmbedded = isEmbedded
+        self.grouped = grouped
+        self.theme = theme
         self.forceAutoload = forceAutoload
-        _didStart = didStart
+        self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
         self.fileMetadata = fileMetadata
-        if let dim = fileMetadata.dim {
-            let dims = dim.split(separator: "x", maxSplits: 2)
-            if dims.count == 2 {
-                let width = (Double(dims[0]) ?? 1)
-                let height = (Double(dims[1]) ?? 1)
-                let widthPoints = width / UIScreen.main.scale
-                let heightPoints = height / UIScreen.main.scale
-                
-                let ratio = widthPoints / heightPoints
-                let scale = widthPoints / availableWidth
-                
-                let newHeight = (widthPoints / scale / ratio)
-                
-                if fullWidth {
-                    self.height = newHeight
-                }
-                else {
-                    self.height = min(DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, newHeight)
-                }
-            }
-            else {
-                self.height = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
-            }
+    }
+    
+    private var availableWidth: CGFloat {
+        if isDetail || fullWidth || isEmbedded {
+            return dim.listWidth - 20
+        }
+        
+        return dim.availableNoteRowImageWidth()
+    }
+    
+    var body: some View {
+        if isEmbedded {
+            self.embeddedView
         }
         else {
-            self.height = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT
+            self.normalView
         }
     }
     
@@ -62,57 +83,88 @@ struct Kind1063: View {
         return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
     }
     
-    var body: some View {
+    @ViewBuilder
+    private var normalView: some View {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true, theme: theme) {
+            
+            content
+            
+        }
+    }
+    
+    @ViewBuilder
+    private var embeddedView: some View {
+        content
+    }
+    
+    
+    @ViewBuilder 
+    var content: some View {
         VStack(alignment: .leading) {
-            if let subject = nrPost.subject {
+            if isDetail, let subject = nrPost.subject {
                 Text(subject)
                     .fontWeight(.bold)
                     .lineLimit(3)
                     
             }
             if is1063Video(nrPost) {
-                EmbeddedVideoView(url: URL(string: url)!, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
+                EmbeddedVideoView(url: URL(string: fileMetadata.url)!, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? +20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)
 //                    .withoutAnimation()
             }
-            else if let height {
+            else {
                 MediaContentView(
                     media: MediaContent(
-                        url: URL(string: url)!,
+                        url: URL(string: fileMetadata.url)!,
                         dimensions: fileMetadata.size,
                         blurHash: fileMetadata.blurhash
                     ),
                     availableWidth: availableWidth + (fullWidth ? +20 : 0),
-                    placeholderHeight: height,
-                    contentMode: fullWidth ? .fill : .fit,
+                    placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * fileMetadata.aspect,
+                    maxHeight: 800,
+                    contentMode: .fill,
                     autoload: shouldAutoload
                 )
+                .padding(.horizontal, fullWidth ? -10 : 0)
 //                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)
 //                    .padding(.horizontal, fullWidth ? -10 : 0)
 ////                    .padding(.horizontal, -10)
 ////                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(height: height)
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: .infinity, alignment: .center)
+//                    .padding(.vertical, 10)
+//                    .frame(maxWidth: .infinity, alignment: .center)
             }
         }
     }
+    
 }
 
-struct Kind1063_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in pe.loadKind1063() }) {
-            NBNavigationStack {
-                if let nrPost = PreviewFetcher.fetchNRPost("ac0c2960db29828ee4a818337ea56df990d9ddd9278341b96c9fb530b4c4dce8") , let fileMetadata = nrPost.fileMetadata {
-                    Kind1063(nrPost, fileMetadata: fileMetadata, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
-                }
-            }
+
+struct KindFileMetadata {
+    var url:String
+    var m:String?
+    var hash:String?
+    var dim:String?
+    var blurhash:String?
+    
+    var size: CGSize? {
+        guard let dim else { return nil }
+        let parts = dim.split(separator: "x", maxSplits: 1)
+        if parts.count == 2, let width = Int(parts[0]), let height = Int(parts[1]) {
+            return CGSize(width: width, height: height)
+        }
+        return nil
+    }
+    
+    var aspect: CGFloat {
+        if let size = size {
+            return size.height / size.width
+        } else {
+            return 1.0
         }
     }
 }
-
 
 
 func canRender1063(_ nrPost:NRPost) -> Bool {
