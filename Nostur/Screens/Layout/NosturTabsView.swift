@@ -28,109 +28,111 @@ struct NosturTabsView: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        HStack {
-            AvailableWidthContainer {
-                VStack {
-                    NoInternetConnectionBanner()
-                    TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
-                        tabTapped(newTab, oldTab: oldTab)
-                    }) {
-                        MainView()
-                            .environment(\.horizontalSizeClass, horizontalSizeClass)
-                            .environmentObject(la)
-                            .tabItem { Label("", systemImage: "house") }
-                            .tag("Main")
-                            .nosturTabsCompat(themes: themes)
-                        
-    //                    DiscoverCommunities()
-    //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
-    //                        .tag("Communities")
-                            .nosturTabsCompat(themes: themes)
-
-                        BookmarksAndPrivateNotes()
-                            .environment(\.horizontalSizeClass, horizontalSizeClass)
-                            .tabItem { Label("", systemImage: "bookmark") }
-                            .tag("Bookmarks")
-                            .nosturTabsCompat(themes: themes)
-                        
-                        
-                        Search()
-                            .environment(\.horizontalSizeClass, horizontalSizeClass)
-                            .tabItem { Label("", systemImage: "magnifyingglass") }
-                            .tag("Search")
-                            .nosturTabsCompat(themes: themes)
-                        
-                        NotificationsContainer()
-                            .environment(\.horizontalSizeClass, horizontalSizeClass)
-                            .tabItem { Label("", systemImage: "bell.fill") }
-                            .tag("Notifications")
-                            .badge(unread)
-                            .nosturTabsCompat(themes: themes)
-
-                        DMContainer()
-                            .environment(\.horizontalSizeClass, horizontalSizeClass)
-                            .tabItem { Label("", systemImage: "envelope.fill") }
-                            .tag("Messages")
-                            .badge((dm.unread + dm.newRequests))
-                            .nosturTabsCompat(themes: themes)
-                    }
-                    .environment(\.horizontalSizeClass, .compact)
-                    .withSheets() // Move .sheets to each (NB)NavigationStack?
-                    .edgesIgnoringSafeArea(.all)
-                }
-            }
-            .frame(maxWidth: 600)
-            .overlay(alignment: .center) {
-                OverlayVideo()
-                    .edgesIgnoringSafeArea(.bottom)
-            }
-            if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
+        Zoomable {
+            HStack {
                 AvailableWidthContainer {
-                    DetailPane()
+                    VStack {
+                        NoInternetConnectionBanner()
+                        TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
+                            tabTapped(newTab, oldTab: oldTab)
+                        }) {
+                            MainView()
+                                .environment(\.horizontalSizeClass, horizontalSizeClass)
+                                .environmentObject(la)
+                                .tabItem { Label("", systemImage: "house") }
+                                .tag("Main")
+                                .nosturTabsCompat(themes: themes)
+                            
+        //                    DiscoverCommunities()
+        //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
+        //                        .tag("Communities")
+                                .nosturTabsCompat(themes: themes)
+
+                            BookmarksAndPrivateNotes()
+                                .environment(\.horizontalSizeClass, horizontalSizeClass)
+                                .tabItem { Label("", systemImage: "bookmark") }
+                                .tag("Bookmarks")
+                                .nosturTabsCompat(themes: themes)
+                            
+                            
+                            Search()
+                                .environment(\.horizontalSizeClass, horizontalSizeClass)
+                                .tabItem { Label("", systemImage: "magnifyingglass") }
+                                .tag("Search")
+                                .nosturTabsCompat(themes: themes)
+                            
+                            NotificationsContainer()
+                                .environment(\.horizontalSizeClass, horizontalSizeClass)
+                                .tabItem { Label("", systemImage: "bell.fill") }
+                                .tag("Notifications")
+                                .badge(unread)
+                                .nosturTabsCompat(themes: themes)
+
+                            DMContainer()
+                                .environment(\.horizontalSizeClass, horizontalSizeClass)
+                                .tabItem { Label("", systemImage: "envelope.fill") }
+                                .tag("Messages")
+                                .badge((dm.unread + dm.newRequests))
+                                .nosturTabsCompat(themes: themes)
+                        }
+                        .environment(\.horizontalSizeClass, .compact)
+                        .withSheets() // Move .sheets to each (NB)NavigationStack?
+                        .edgesIgnoringSafeArea(.all)
+                    }
+                }
+                .frame(maxWidth: 600)
+                .overlay(alignment: .center) {
+                    OverlayVideo()
+                        .edgesIgnoringSafeArea(.bottom)
+                }
+                if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
+                    AvailableWidthContainer {
+                        DetailPane()
+                    }
                 }
             }
-        }
-        .contentShape(Rectangle())
-        .background(themes.theme.listBackground)
-        .withLightningEffect()
-        .onChange(of: selectedTab) { newValue in
-            if newValue == "Notifications" {
-                
-                // If there is only one tab with unread notifications, go to that tab
-                if NotificationsViewModel.shared.unread > 0 {
-                    if NotificationsViewModel.shared.unreadMentions > 0 {
-                        UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
+            .contentShape(Rectangle())
+            .background(themes.theme.listBackground)
+            .withLightningEffect()
+            .onChange(of: selectedTab) { newValue in
+                if newValue == "Notifications" {
+                    
+                    // If there is only one tab with unread notifications, go to that tab
+                    if NotificationsViewModel.shared.unread > 0 {
+                        if NotificationsViewModel.shared.unreadMentions > 0 {
+                            UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
+                        }
+                        else if NotificationsViewModel.shared.unreadNewPosts > 0 {
+                            UserDefaults.standard.setValue("New Posts", forKey: "selected_notifications_tab")
+                        }
+                        else if NotificationsViewModel.shared.unreadReactions > 0 {
+                            UserDefaults.standard.setValue("Reactions", forKey: "selected_notifications_tab")
+                        }
+                        else if NotificationsViewModel.shared.unreadZaps > 0 {
+                            UserDefaults.standard.setValue("Zaps", forKey: "selected_notifications_tab")
+                        }
+                        else if NotificationsViewModel.shared.unreadReposts > 0 {
+                            UserDefaults.standard.setValue("Reposts", forKey: "selected_notifications_tab")
+                        }
+                        else if NotificationsViewModel.shared.unreadNewFollowers > 0 {
+                            UserDefaults.standard.setValue("Followers", forKey: "selected_notifications_tab")
+                        }
                     }
-                    else if NotificationsViewModel.shared.unreadNewPosts > 0 {
-                        UserDefaults.standard.setValue("New Posts", forKey: "selected_notifications_tab")
-                    }
-                    else if NotificationsViewModel.shared.unreadReactions > 0 {
-                        UserDefaults.standard.setValue("Reactions", forKey: "selected_notifications_tab")
-                    }
-                    else if NotificationsViewModel.shared.unreadZaps > 0 {
-                        UserDefaults.standard.setValue("Zaps", forKey: "selected_notifications_tab")
-                    }
-                    else if NotificationsViewModel.shared.unreadReposts > 0 {
-                        UserDefaults.standard.setValue("Reposts", forKey: "selected_notifications_tab")
-                    }
-                    else if NotificationsViewModel.shared.unreadNewFollowers > 0 {
-                        UserDefaults.standard.setValue("Followers", forKey: "selected_notifications_tab")
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        sendNotification(.notificationsTabAppeared) // use for resetting unread count
                     }
                 }
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                    sendNotification(.notificationsTabAppeared) // use for resetting unread count
+            }
+            .task {
+                if SettingsStore.shared.receiveLocalNotifications {
+                    requestNotificationPermission()
                 }
             }
-        }
-        .task {
-            if SettingsStore.shared.receiveLocalNotifications {
-                requestNotificationPermission()
-            }
-        }
-        .onReceive(NotificationsViewModel.shared.unreadPublisher) { unread in
-            if unread != self.unread {
-                self.unread = unread
+            .onReceive(NotificationsViewModel.shared.unreadPublisher) { unread in
+                if unread != self.unread {
+                    self.unread = unread
+                }
             }
         }
     }
