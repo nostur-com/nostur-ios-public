@@ -22,7 +22,6 @@ class NXColumnViewModelInner: ObservableObject {
     
     @Published public var isAtTop: Bool = true
     
-    // TODO: Put updateIsAtTopSubject here or on NXColumnViewModel? Doesn't matter?
     public var updateIsAtTopSubject = PassthroughSubject<Void, Never>()
     
     // New properties for radical anti-flicker approach

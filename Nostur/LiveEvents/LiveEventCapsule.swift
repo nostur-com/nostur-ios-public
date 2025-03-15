@@ -25,7 +25,6 @@ struct LiveEventCapsule: View {
     
     var body: some View {
         HStack {
-            // TODO: Refactor and reuse FoundAccountPFPs
             ZStack(alignment: .leading) {
                 ForEach(liveEvent.participantsOrSpeakers.indices, id: \.self) { index in
                     HStack(spacing: 0) {

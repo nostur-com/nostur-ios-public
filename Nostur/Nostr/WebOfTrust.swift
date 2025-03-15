@@ -251,7 +251,6 @@ class WebOfTrust: ObservableObject {
     public var webOfTrustLevel: String = UserDefaults.standard.string(forKey: SettingsStore.Keys.webOfTrustLevel) ?? SettingsStore.WebOfTrustLevel.normal.rawValue // Faster then querying UserDefaults so cache here
     
     public func isAllowed(_ pubkey: String) -> Bool {
-        // TODO: Accessing UserDefaults seems slow (mainAccountWoTpubkey)
         guard mainAccountWoTpubkey != "" else { return true }
         if webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
         

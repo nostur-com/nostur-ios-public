@@ -25,7 +25,7 @@ class AccountViewModel: ObservableObject, Identifiable {
     let flags: Set<String>
     let isNC: Bool
 
-    public var pictureUrl: URL? { // TODO: Measure, is this done when passed around views or only once at init? We want once, in bg at init. Keep views fast.
+    public var pictureUrl: URL? {
         guard let picture else { return nil }
         return URL(string: picture)
     }

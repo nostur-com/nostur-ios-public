@@ -967,7 +967,6 @@ extension Event {
                          // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
                         // _PFManagedObject_coerceValueForKeyWithDescription
                         // _sharedIMPL_setvfk_core
-                        // TODO: Maybe wrong main context event added somewhere?
                     }
                     else {
                         CoreDataRelationFixer.shared.addTask({
@@ -994,7 +993,6 @@ extension Event {
                         // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
                         // _PFManagedObject_coerceValueForKeyWithDescription
                         // _sharedIMPL_setvfk_core
-                        // TODO: Maybe wrong main context event added somewhere?
                     }
                     else {
                         CoreDataRelationFixer.shared.addTask({
@@ -1128,12 +1126,12 @@ extension Event {
                 // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
                 if let parent = Event.fetchEvent(id: replyToEtag.id, context: context) {
                     CoreDataRelationFixer.shared.addTask({
-                        // TODO: Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
+                        // Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
                         // (when opening from bookmarks)
                         guard contextWontCrash([savedEvent, parent]) else { return }
                         savedEvent.replyTo = parent
                     })
-                    // TODO: Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
+                    // Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
                     parent.addToReplies(savedEvent)
                     parent.repliesCount += 1
 //                    replyTo.repliesUpdated.send(replyTo.replies_)
@@ -1413,9 +1411,8 @@ extension Event {
             // 1. set pointer to most recent (this one)
             // 2. set "is_update" flag on this one so it doesn't show up as new in feed
             let r = Event.fetchRequest()
-            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at) // TODO: because we cache .aTag now, we could query using that instead maybe. need to check performance
-            
-            
+            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at)
+
             var existingArticleIds = Set<String>() // need to repoint all replies to older articles to the newest id
             
             if let olderEvents = try? context.fetch(r) {

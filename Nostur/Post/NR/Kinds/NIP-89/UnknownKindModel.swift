@@ -13,7 +13,6 @@ import CoreData
 // Fetches all handlers (31990)
 // Fetches recommendations (31989) from follows
 // Builds a list of suggested apps sorted by recommendations count
-// TODO: Only uses web-handlers for now until we know how when/how to route/redirect to app store download or app deeplink)
 class UnknownKindModel: ObservableObject {
     @Published var state: ViewState = .loading
     

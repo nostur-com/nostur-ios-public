@@ -16,7 +16,7 @@ class BookmarkBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
     override init() {
         let fr = Bookmark.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Bookmark.createdAt, ascending: false)]
-        self.frc = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: bg(), sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
+        self.frc = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: bg(), sectionNameKeyPath: nil, cacheName: nil)
         super.init()
         frc.delegate = self
         bg().perform { [weak self] in

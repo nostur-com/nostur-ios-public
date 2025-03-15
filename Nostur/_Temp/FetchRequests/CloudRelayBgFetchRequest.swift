@@ -16,7 +16,7 @@ class CloudRelayBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
     override init() {
         let fr = CloudRelay.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudRelay.updatedAt_, ascending: false)]
-        self.frc = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: bg(), sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
+        self.frc = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: bg(), sectionNameKeyPath: nil, cacheName: nil) 
         super.init()
         frc.delegate = self
         bg().perform { [weak self] in

@@ -38,13 +38,7 @@ struct CreateNest: View {
                 .fontWeightBold()
                 .padding(.bottom, 30)
                 .padding(.top, 30)
-            
-//            Toggle(isOn: $enableRecording) { // TODO: Implement
-//                Text("Record audio")
-//            }
-//            .disabled(creatingRoomState != .initial)
-//            .padding(.bottom, 30)
-            
+                        
             Text("Nests server:")
                 .padding(.top, 30)
                 .fontWeightBold()

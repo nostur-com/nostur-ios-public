@@ -15,7 +15,7 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
     override init() {
         let fr = CloudAccount.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudAccount.lastLoginAt_, ascending: false)]
-        self.frc = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: bg(), sectionNameKeyPath: nil, cacheName: nil) // TODO: Try cache?
+        self.frc = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: bg(), sectionNameKeyPath: nil, cacheName: nil)
         super.init()
         frc.delegate = self
 

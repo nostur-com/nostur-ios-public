@@ -88,11 +88,6 @@ struct AccountsSheet: View {
                 ? [
                     .destructive(Text("Log out", comment: "Button to log out"), action: {
                         NRState.shared.logout(account)
-                        
-//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
-//                                sendNotification(.hideSideBar)
-//                            }
-                        
                     }),
                     .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
                         if let pk = account.privateKey {

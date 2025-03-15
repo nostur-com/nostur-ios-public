@@ -164,60 +164,6 @@ class DataProvider: ObservableObject {
                 completion?()
             }
         }
-
-//        bg.perform { [weak self] in
-//            guard let self = self else { return }
-//            L.og.debug("BG: Registered objects: \(bg.registeredObjects.count)")
-//            if bg.hasChanges {
-//                do {
-//                    try bg.save()
-//                    L.og.info("🟢🟢 bg saved 1")
-//                }
-//                catch {
-//                    L.og.error("🔴🔴 Could not save bgContext \(error) 1")
-//                }
-//                Task {
-//                    self.container.viewContext.perform {
-//                        L.og.debug("VIEWCONTEXT: Registered objects: \(self.container.viewContext.registeredObjects.count)")
-//                        if self.container.viewContext.hasChanges {
-//                            do {
-//                                try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
-//                                completion?()
-//                                L.og.info("🟢🟢 viewContext saved 1")
-//                            }
-//                            catch {
-//                                L.og.error("🔴🔴 Could not save viewContext 1")
-//                            }
-//                        }
-//                        else {
-//                            L.og.info("🟠🟠 nothing to save (viewContext) 1")
-//                            completion?()
-//                        }
-//                    }
-//                }
-//            }
-//            else {
-//                Task {
-//                    self.container.viewContext.perform {
-//                        L.og.debug("VIEWCONTEXT: Registered objects: \(self.container.viewContext.registeredObjects.count)")
-//                        if self.container.viewContext.hasChanges {
-//                            do {
-//                                try self.container.viewContext.save() // TODO: SHOULD MOVE THIS TO viewContext.perform? or .performAndWait ???
-//                                completion?()
-//                                L.og.info("🟢🟢 viewContext saved 2")
-//                            }
-//                            catch {
-//                                L.og.error("🔴🔴 Could not save viewContext 2")
-//                            }
-//                        }
-//                        else {
-//                            L.og.info("🟠🟠 nothing to save (viewContext) 2")
-//                            completion?()
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
     
     func bgSave() { 
