@@ -32,7 +32,7 @@ struct KindResolver: View {
         case 0,3,4,5,6,7,1984,9734,30009,8,30008:
             KnownKindView(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
         case 443:
-            URLView(nrPost: nrPost, theme: theme)
+            Kind443(nrPost: nrPost, theme: theme)
             // TODO: .navigationTitle should be somewhere else, only if isDetail
 //                .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
             if isDetail {

@@ -1,5 +1,5 @@
 //
-//  URLView.swift
+//  Kind443.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 11/01/2024.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-// Highlight note
-struct URLView: View {
+// https://github.com/nostur-com/nids/blob/main/02.md
+struct Kind443: View {
     @Environment(\.openURL) private var openURL
     @ObservedObject private var settings:SettingsStore = .shared
     
@@ -68,7 +68,7 @@ struct URLView: View {
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("7d56ff8134fa6e500776c2d0dce1e26131f859f352a390d2dd96303458821d82") {
                 Box {
-                    URLView(nrPost: nrPost, theme: Themes.default.theme)
+                    Kind443(nrPost: nrPost, theme: Themes.default.theme)
                 }
             }
         }

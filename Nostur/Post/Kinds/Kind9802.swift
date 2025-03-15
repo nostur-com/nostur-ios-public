@@ -14,7 +14,6 @@ struct Kind9802: View {
     private let nrPost: NRPost
     @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject private var highlightAttributes: HighlightAttributes
-    @State private var lineLimit = 25
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
@@ -59,69 +58,7 @@ struct Kind9802: View {
     private var normalView: some View {
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true, theme: theme) {
             
-            VStack {
-                Text(nrPost.content ?? "")
-                    .lineLimit(lineLimit)
-                    .onTapGesture(perform: {
-                        withAnimation {
-                            lineLimit = 150
-                        }
-                    })
-                    .fontItalic()
-                    .padding(20)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if let firstE = nrPost.firstE {
-                            navigateTo(NotePath(id: firstE))
-                        }
-                        else if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
-                                let naddr = try? ShareableIdentifier(aTag: aTag.1) {
-                                navigateTo(Naddr1Path(naddr1: naddr.bech32string))
-                        }
-                    }
-                    .overlay(alignment:.topLeading) {
-                        Image(systemName: "quote.opening")
-                            .foregroundColor(Color.secondary)
-                    }
-                    .overlay(alignment:.bottomTrailing) {
-                        Image(systemName: "quote.closing")
-                            .foregroundColor(Color.secondary)
-                    }
-                
-                if let hlAuthorPubkey = highlightAttributes.authorPubkey {
-                    HStack {
-                        Spacer()
-                        PFP(pubkey: hlAuthorPubkey, nrContact: highlightAttributes.contact, size: 20)
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: hlAuthorPubkey))
-                            }
-                        Text(highlightAttributes.anyName ?? "Unknown")
-                            .onTapGesture {
-                                navigateTo(ContactPath(key: hlAuthorPubkey))
-                            }
-                    }
-                    .padding(.trailing, 20)
-                }
-                HStack {
-                    Spacer()
-                    if let url = highlightAttributes.url {
-                        Text("[\(url)](\(url))")
-                            .lineLimit(1)
-                            .font(.caption)
-                    }
-                }
-                .padding(.trailing, 20)
-            }
-            .padding(10)
-            .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
-            )
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                navigateTo(nrPost)
-            }
+            content
             
         }
     }
@@ -129,20 +66,83 @@ struct Kind9802: View {
     @ViewBuilder
     private var embeddedView: some View {
         PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
-            HighlightRenderer(nrPost: nrPost, theme: theme)
+            
+            content
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    navigateTo(nrPost)
+                }
+            
         }
     }
     
-    private func navigateToContact() {
-        if let nrContact = nrPost.contact {
-            navigateTo(nrContact)
+    @ViewBuilder
+    var content: some View {
+        VStack {
+            Text(nrPost.content ?? "")
+                .lineLimit(isDetail ? 500 : 25)
+                .fixedSize(horizontal: false, vertical: true)
+                .fontItalic()
+                .padding(20)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if let firstE = nrPost.firstE {
+                        navigateTo(NotePath(id: firstE))
+                    }
+                    else if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
+                            let naddr = try? ShareableIdentifier(aTag: aTag.1) {
+                            navigateTo(Naddr1Path(naddr1: naddr.bech32string))
+                    }
+                }
+                .overlay(alignment:.topLeading) {
+                    Image(systemName: "quote.opening")
+                        .foregroundColor(Color.secondary)
+                }
+                .overlay(alignment:.bottomTrailing) {
+                    Image(systemName: "quote.closing")
+                        .foregroundColor(Color.secondary)
+                }
+            
+            if let hlAuthorPubkey = highlightAttributes.authorPubkey {
+                HStack {
+                    Spacer()
+                    PFP(pubkey: hlAuthorPubkey, nrContact: highlightAttributes.contact, size: 20)
+                    Text(highlightAttributes.anyName ?? "Unknown")
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    navigateTo(ContactPath(key: hlAuthorPubkey))
+                }
+                .padding(.trailing, 40)
+            }
+            HStack {
+                Spacer()
+                if let url = highlightAttributes.url, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
+                    Text(md)
+                        .lineLimit(1)
+                        .font(.caption)
+                }
+            }
+            .padding(.trailing, 40)
         }
-        else {
-            navigateTo(ContactPath(key: nrPost.pubkey))
-        }
+        .padding(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 15)
+                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
+        )
     }
     
     private func navigateToPost() {
         navigateTo(nrPost)
     }
 }
+
+
+// TODO: handle "source":
+//"tags": [
+//  [
+//    "e",
+//    "bc3d47e7f9bba39c89d969d7c2e09ba74e5bb4cd517aa99542ccbbb4d323fcbe",
+//    "source"
+//  ]
+//]
