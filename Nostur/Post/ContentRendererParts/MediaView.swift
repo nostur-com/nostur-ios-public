@@ -337,7 +337,7 @@ struct MediaPlaceholder: View {
                 }
         case .image(let imageInfo):
             if fullScreen {
-                Image(uiImage: UIImage(data: imageInfo.imageData)!)
+                Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .scaledToFit()
                     .onAppear {
@@ -347,7 +347,7 @@ struct MediaPlaceholder: View {
             }
             else if contentMode == .fit {
                 ZoomableItem {
-                    Image(uiImage: UIImage(data: imageInfo.imageData)!)
+                    Image(uiImage: imageInfo.uiImage)
                         .resizable()
                         .scaledToFit()
                         .animation(.smooth(duration: 0.5), value: vm.state)
@@ -375,7 +375,7 @@ struct MediaPlaceholder: View {
             }
             else {
                 ZoomableItem {
-                    Image(uiImage: UIImage(data: imageInfo.imageData)!)
+                    Image(uiImage: imageInfo.uiImage)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .animation(.smooth(duration: 0.5), value: vm.state)

@@ -292,17 +292,10 @@ struct GalleryFullScreenSwiper: View {
     }
     
     private func saveImageToPhotoLibrary(_ imageInfo: ImageInfo) {
-        // Get UIImage from data
-        guard let uiImage = UIImage(data: imageInfo.imageData) else {
-            sendNotification(.anyStatus, ("Failed to process image", "APP_NOTICE"))
-            isSaving = false
-            return
-        }
-        
         requestPhotoLibraryAccess { granted in
             if granted {
                 PHPhotoLibrary.shared().performChanges({
-                    PHAssetChangeRequest.creationRequestForAsset(from: uiImage)
+                    PHAssetChangeRequest.creationRequestForAsset(from: imageInfo.uiImage)
                 }) { success, error in
                     DispatchQueue.main.async {
                         if success {
