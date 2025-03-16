@@ -20,24 +20,27 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
     
     var body: some View {
         if #available(iOS 16.0, *) {
-            content
-                .readSize(onChange: { size in
-                    guard contentSize != size else { return }
-                    contentSize = size
-                    print("contentSize: \(contentSize)")
-                })
-                .onTapGesture(coordinateSpace: .global) { coordinate in
-                    triggerZoom(at: coordinate)
-                }
+            GeometryReader { geometry in
+                content
+                    .readSize(onChange: { size in
+                        guard contentSize != size else { return }
+                        contentSize = size
+                        print("contentSize: \(contentSize)")
+                    })
+                    .onTapGesture(coordinateSpace: .global) { _ in
+                        let frame = geometry.frame(in: .global)
+                        triggerZoom(origin: CGPoint(x: frame.minX + (contentSize.width/2), y: frame.minY + (contentSize.height/2)))
+                    }
+            }
         } else {
             // Fallback on earlier versions
             content
         }
     }
     
-    private func triggerZoom(at: CGPoint) {
-        print("triggerzoom: \(at)")
-        let zoomRequest = ZoomRequested(origin: at, startingSize: contentSize, content: detailContent)
+    private func triggerZoom(origin: CGPoint) {
+        print("triggerzoom from position: \(viewPosition)")
+        let zoomRequest = ZoomRequested(origin: origin, startingSize: contentSize, content: detailContent)
         sendNotification(.zoomRequested, zoomRequest)
     }
 }
