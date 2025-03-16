@@ -26,10 +26,6 @@ struct LiveEventDetail: View {
     @State private var gridColumns = Array(repeating: GridItem(.flexible()), count: 4)
     @State private var rows = [GridItem(.fixed(80)), GridItem(.fixed(80))]
     
-    private var videoWidth: CGFloat {
-        dim.listWidth + (DIMENSIONS.BOX_PADDING*2)
-    }
-    
     // Zap sheet NON-NWC
     @State private var paymentInfo: PaymentInfo? = nil // NON-NWC ZAP
     @State private var showNonNWCZapSheet = false // NON-NWC ZAP
@@ -129,7 +125,7 @@ struct LiveEventDetail: View {
                     }
                 }
                 
-                vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
+                vc = ViewingContext(availableWidth: dim.listWidth - 20, fullWidthImages: false, theme: themes.theme, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
                 if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
                     account = Nostur.account()
@@ -515,14 +511,14 @@ struct LiveEventDetail: View {
     @ViewBuilder
     private var videoStreamView: some View {
         if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
         }
         else if liveEvent.streamHasEnded {
             EmptyView()
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
-                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
             }
             else if liveEvent.liveKitConnectUrl == nil {
                 Button {

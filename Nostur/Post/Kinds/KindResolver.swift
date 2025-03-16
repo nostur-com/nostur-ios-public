@@ -73,7 +73,12 @@ struct KindResolver: View {
             
         case 30311:
             if let liveEvent = nrPost.nrLiveEvent {
-                LiveEventRowView(liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
+                if isEmbedded {
+                    LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
+                }
+                else {
+                    LiveEventDetail(liveEvent: liveEvent)
+                }
             }
         case 30023:
             Kind30023(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
