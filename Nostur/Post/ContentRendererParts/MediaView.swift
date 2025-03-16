@@ -372,7 +372,6 @@ struct MediaPlaceholder: View {
                     // Communicate back to set container frame
                     realDimensions = imageInfo.realDimensions
                 }
-//                .onTapGesture { imageTap() }
             }
             else {
                 ZoomableItem {
@@ -401,7 +400,6 @@ struct MediaPlaceholder: View {
                     // Communicate back to set container frame
                     realDimensions = imageInfo.realDimensions
                 }
-//                .onTapGesture { imageTap() }
             }
         case .gif(let gifInfo):
             if fullScreen {
