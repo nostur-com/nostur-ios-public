@@ -89,101 +89,98 @@ struct FullImageViewer: View {
                 }
             }))
         
-        GeometryReader { geo in
-            ZStack {
-                themes.theme.listBackground
-                LazyImage(request: ImageRequest(url: fullImageURL, options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [])) { state in
-                                if state.error != nil {
-                                    if SettingsStore.shared.lowDataMode {
-                                        Text(fullImageURL.absoluteString)
-                                            .foregroundColor(themes.theme.accent)
-                                            .truncationMode(.middle)
-                                            .onTapGesture {
-                                                openURL(fullImageURL)
-                                            }
-                                            .onAppear {
-                                                sharableGif = nil
-                                                sharableImage = nil
-                                            }
-                                    }
-                                    else {
-                                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                                            .centered()
-                                            .background(themes.theme.lineColor.opacity(0.2))
-                                            .onAppear {
-                                                L.og.debug("Failed to load image: \(fullImageURL) - \(state.error?.localizedDescription ?? "")")
-                                                sharableGif = nil
-                                                sharableImage = nil
-                                            }
-                                    }
-                                }
-                                else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                                    GIFImage(data: data, isPlaying: .constant(true))
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: geo.size.width, height: geo.size.height)
-                                        .contentShape(Rectangle())
-                                        .scaleEffect(scale)
-                                        .offset(position)
-                                        .simultaneousGesture(magnifyAndDragGesture)
+        ZStack {
+            themes.theme.listBackground
+            LazyImage(request: makeImageRequest(fullImageURL, label: "FullImageViewer")) { state in
+                            if state.error != nil {
+                                if SettingsStore.shared.lowDataMode {
+                                    Text(fullImageURL.absoluteString)
+                                        .foregroundColor(themes.theme.accent)
+                                        .truncationMode(.middle)
                                         .onTapGesture {
-                                            withAnimation {
-                                                mediaPostPreview.toggle()
-                                                scale = 1.0
-                                            }
+                                            openURL(fullImageURL)
                                         }
-                                        .onAppear {
-                                            sharableGif = data
-                                            sharableImage = nil
-                                        }
-                                }
-                                else if let image = state.image {
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                        .scaleEffect(scale)
-                                        .offset(position)
-                                        .simultaneousGesture(magnifyAndDragGesture)
-                                        .onTapGesture {
-                                            withAnimation {
-                                                mediaPostPreview.toggle()
-                                                scale = 1.0
-                                            }
-                                        }
-                                        .onAppear {
-                                            if let image = state.imageContainer?.image {
-                                                sharableImage = image
-                                                sharableGif = nil
-                                            }
-                                            else {
-                                                sharableGif = nil
-                                                sharableImage = nil
-                                            }
-                                        }
-                                }
-                                else if state.isLoading { // does this conflict with showing preview images??
-                                    HStack(spacing: 5) {
-                                        ImageProgressView(state: state)
-                                            .frame(width: 48)
-                                        Image(systemName: "multiply.circle.fill")
-                                            .padding(10)
-                                    }
-                                    .background(themes.theme.background)
-                                    .onAppear {
-                                        sharableGif = nil
-                                        sharableImage = nil
-                                    }
-                                }
-                                else {
-                                    themes.theme.background
                                         .onAppear {
                                             sharableGif = nil
                                             sharableImage = nil
                                         }
                                 }
+                                else {
+                                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                                        .centered()
+                                        .background(themes.theme.lineColor.opacity(0.2))
+                                        .onAppear {
+                                            L.og.debug("Failed to load image: \(fullImageURL) - \(state.error?.localizedDescription ?? "")")
+                                            sharableGif = nil
+                                            sharableImage = nil
+                                        }
+                                }
                             }
-                            .pipeline(ImageProcessing.shared.content)
-                            .priority(.high)
-            }
+                            else if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
+                                GIFImage(data: data, isPlaying: .constant(true))
+                                    .aspectRatio(contentMode: .fit)
+                                    .contentShape(Rectangle())
+                                    .scaleEffect(scale)
+                                    .offset(position)
+                                    .simultaneousGesture(magnifyAndDragGesture)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            mediaPostPreview.toggle()
+                                            scale = 1.0
+                                        }
+                                    }
+                                    .onAppear {
+                                        sharableGif = data
+                                        sharableImage = nil
+                                    }
+                            }
+                            else if let image = state.image {
+                                image
+                                    .resizable()
+                                    .scaledToFit()
+                                    .scaleEffect(scale)
+                                    .offset(position)
+                                    .simultaneousGesture(magnifyAndDragGesture)
+                                    .onTapGesture {
+                                        withAnimation {
+                                            mediaPostPreview.toggle()
+                                            scale = 1.0
+                                        }
+                                    }
+                                    .onAppear {
+                                        if let image = state.imageContainer?.image {
+                                            sharableImage = image
+                                            sharableGif = nil
+                                        }
+                                        else {
+                                            sharableGif = nil
+                                            sharableImage = nil
+                                        }
+                                    }
+                            }
+                            else if state.isLoading { // does this conflict with showing preview images??
+                                HStack(spacing: 5) {
+                                    ImageProgressView(state: state)
+                                        .frame(width: 48)
+                                    Image(systemName: "multiply.circle.fill")
+                                        .padding(10)
+                                }
+                                .background(themes.theme.background)
+                                .onAppear {
+                                    sharableGif = nil
+                                    sharableImage = nil
+                                }
+                            }
+                            else {
+                                themes.theme.background
+                                    .onAppear {
+                                        sharableGif = nil
+                                        sharableImage = nil
+                                    }
+                            }
+                        }
+                        .pipeline(ImageProcessing.shared.content)
+                        .priority(.high)
         }
         .onAppear {
             bg().perform {

@@ -15,11 +15,14 @@ struct MediaContentView: View {
     public var placeholderHeight: CGFloat? // to reduce jumping
     public var maxHeight: CGFloat = 4000.0
     public var contentMode: ContentMode = .fit // if placeholderHeight is set, probably should use fill!!
+    public var fullScreen: Bool = false
     
     public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
     
     public var upscale: Bool = false
     public var autoload: Bool = false
+    public var imageInfo: ImageInfo? = nil
+    public var gifInfo: GifInfo? = nil
     
     // will sendNotification with image dimensions / blurhash 
     public var generateIMeta: Bool = false
@@ -34,10 +37,13 @@ struct MediaContentView: View {
             expectedImageSize: expectedImageSize(availableWidth: availableWidth, maxHeight: maxHeight),
             maxHeight: maxHeight,
             contentMode: contentMode,
+            fullScreen: fullScreen,
             imageUrls: imageUrls,
             realDimensions: $realDimensions,
             upscale: upscale,
             autoload: autoload,
+            imageInfo: imageInfo,
+            gifInfo: gifInfo,
             generateIMeta: generateIMeta
         )
     }
@@ -148,6 +154,8 @@ struct MediaPlaceholder: View {
     
     public var upscale: Bool = false
     public var autoload: Bool = false
+    public var imageInfo: ImageInfo? = nil
+    public var gifInfo: GifInfo? = nil
     public var generateIMeta: Bool = false
     
     @State private var blurImage: UIImage?
@@ -328,66 +336,81 @@ struct MediaPlaceholder: View {
                     }
                 }
         case .image(let imageInfo):
-            if contentMode == .fit {
+            if fullScreen {
                 Image(uiImage: imageInfo.uiImage)
                     .resizable()
                     .scaledToFit()
-                    .animation(.smooth(duration: 0.5), value: vm.state)
-//                Color.red
-//                    .overlay(alignment: .top) {
-//                        VStack {
-//                            Text(".image.fit \(expectedImageSize.width)x\(expectedImageSize.height)")
-//                                .font(.footnote)
-//                            Text("real: \(imageInfo.realDimensions.width)x\(imageInfo.realDimensions.height)")
-//                                .font(.footnote)
-//                        }
-//                            .foregroundColor(.white)
-//                            .background(Color.black)
-//                    }
                     .onAppear {
                         // Communicate back to set container frame
                         realDimensions = imageInfo.realDimensions
                     }
-                    .onTapGesture { imageTap() }
+            }
+            else if contentMode == .fit {
+                ZoomableItem {
+                    Image(uiImage: imageInfo.uiImage)
+                        .resizable()
+                        .scaledToFit()
+                        .animation(.smooth(duration: 0.5), value: vm.state)
+                } detailContent: {
+                    GalleryFullScreenSwiper(
+                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
+                        items: imageUrls?.map {
+                            GalleryItem(
+                                url: $0,
+                                dimensions: $0.absoluteString == url.absoluteString ? imageInfo.realDimensions : nil,
+                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
+                                imageInfo: $0.absoluteString == url.absoluteString ? imageInfo : nil
+                            )
+                        } ?? [GalleryItem(
+                            url: url,
+                            dimensions: imageInfo.realDimensions ,
+                            blurhash:  blurHash,
+                            imageInfo: imageInfo)]
+                    )
+                }
+                .onAppear {
+                    // Communicate back to set container frame
+                    realDimensions = imageInfo.realDimensions
+                }
+//                .onTapGesture { imageTap() }
             }
             else {
-                Image(uiImage: imageInfo.uiImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .animation(.smooth(duration: 0.5), value: vm.state)
-//                    .debugDimensions("Image", alignment: .topLeading)
-//                    .overlay(alignment: .top) {
-//                        VStack {
-//                            Text(".image.fill \(expectedImageSize.width)x\(expectedImageSize.height)")
-//                                .font(.footnote)
-//                            Text("real: \(imageInfo.realDimensions.width)x\(imageInfo.realDimensions.height)")
-//                                .font(.footnote)
-//                        }
-//                            .foregroundColor(.white)
-//                            .background(Color.black)
-//                    }
-                    .onAppear {
-                        // Communicate back to set container frame
-                        realDimensions = imageInfo.realDimensions
-                    }
-                    .onTapGesture { imageTap() }
+                ZoomableItem {
+                    Image(uiImage: imageInfo.uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .animation(.smooth(duration: 0.5), value: vm.state)
+                } detailContent: {
+                    GalleryFullScreenSwiper(
+                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
+                        items: imageUrls?.map {
+                            GalleryItem(
+                                url: $0,
+                                dimensions: $0.absoluteString == url.absoluteString ? imageInfo.realDimensions : nil,
+                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
+                                imageInfo: $0.absoluteString == url.absoluteString ? imageInfo : nil
+                            )
+                        } ?? [GalleryItem(
+                            url: url,
+                            dimensions: imageInfo.realDimensions ,
+                            blurhash:  blurHash,
+                            imageInfo: imageInfo)]
+                    )
+                }
+                .onAppear {
+                    // Communicate back to set container frame
+                    realDimensions = imageInfo.realDimensions
+                }
+//                .onTapGesture { imageTap() }
             }
-        case .gif(let gifData):
-            if contentMode == .fit {
-                GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
+        case .gif(let gifInfo):
+            if fullScreen {
+                GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                     .animation(.smooth(duration: 0.5), value: vm.state)
                     .aspectRatio(contentMode: .fit)
-//                    .overlay(alignment: .top) {
-//                        VStack {
-//                            Text(".gif.fit \(expectedImageSize.width)x\(expectedImageSize.height)")
-//                            Text("real: \(gifData.realDimensions.width)x\(gifData.realDimensions.height)")
-//                        }
-//                            .foregroundColor(.white)
-//                            .background(Color.black)
-//                    }
                     .onAppear {
                         // Communicate back to set container frame
-                        realDimensions = gifData.realDimensions
+                        realDimensions = gifInfo.realDimensions
                     }
                     .task(id: url.absoluteString) {
                         try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
@@ -396,49 +419,129 @@ struct MediaPlaceholder: View {
                     .onDisappear {
                         gifIsPlaying = false
                     }
-                    .contentShape(Rectangle())
-                    .onTapGesture { imageTap() }
+            }
+            else if contentMode == .fit {
+                ZoomableItem {
+                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                        .animation(.smooth(duration: 0.5), value: vm.state)
+                        .aspectRatio(contentMode: .fit)
+                        .contentShape(Rectangle())
+                } detailContent: {
+                    GalleryFullScreenSwiper(
+                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
+                        items: imageUrls?.map {
+                            GalleryItem(
+                                url: $0,
+                                dimensions: $0.absoluteString == url.absoluteString ? gifInfo.realDimensions : nil,
+                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
+                                gifInfo: $0.absoluteString == url.absoluteString ? gifInfo : nil
+                            )
+                        } ?? [GalleryItem(
+                            url: url,
+                            dimensions: gifInfo.realDimensions ,
+                            blurhash:  blurHash,
+                            gifInfo: gifInfo)]
+                    )
+                }
+                .onAppear {
+                    // Communicate back to set container frame
+                    realDimensions = gifInfo.realDimensions
+                }
+                .task(id: url.absoluteString) {
+                    try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                    gifIsPlaying = true
+                }
+                .onDisappear {
+                    gifIsPlaying = false
+                }
+                
+//                .onTapGesture { imageTap() }
             }
             else {
-                GIFImage(data: gifData.gifData, isPlaying: $gifIsPlaying)
-                    .animation(.smooth(duration: 0.5), value: vm.state)
-                    .aspectRatio(contentMode: .fill)
-//                    .overlay(alignment: .top) {
-//                        VStack {
-//                            Text(".gif.fill \(expectedImageSize.width)x\(expectedImageSize.height)")
-//                            Text("real: \(gifData.realDimensions.width)x\(gifData.realDimensions.height)")
-//                        }
-//                            .foregroundColor(.white)
-//                            .background(Color.black)
-//                    }
-                    .onAppear {
-                        // Communicate back to set container frame
-                        realDimensions = gifData.realDimensions
-                    }
-                    .task(id: url.absoluteString) {
-                        try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
-                        gifIsPlaying = true
-                    }
-                    .onDisappear {
-                        gifIsPlaying = false
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture { imageTap() }
-            }
-        case .error(_):
-            VStack {
-                Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                    .frame(maxWidth: .infinity, alignment: .center)
-                Text(url.absoluteString)
-                    .truncationMode(.middle)
-                    .fontItalic()
-                    .foregroundColor(themes.theme.accent)
-                Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
-                    debounceLoad()
+                ZoomableItem {
+                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                        .animation(.smooth(duration: 0.5), value: vm.state)
+                        .aspectRatio(contentMode: .fill)
+                        .contentShape(Rectangle())
+                } detailContent: {
+                    GalleryFullScreenSwiper(
+                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
+                        items: imageUrls?.map {
+                            GalleryItem(
+                                url: $0,
+                                dimensions: $0.absoluteString == url.absoluteString ? gifInfo.realDimensions : nil,
+                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
+                                gifInfo: $0.absoluteString == url.absoluteString ? gifInfo : nil
+                            )
+                        } ?? [GalleryItem(
+                            url: url,
+                            dimensions: gifInfo.realDimensions ,
+                            blurhash:  blurHash,
+                            gifInfo: gifInfo)]
+                    )
+                }
+                .onAppear {
+                    // Communicate back to set container frame
+                    realDimensions = gifInfo.realDimensions
+                }
+                .task(id: url.absoluteString) {
+                    try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                    gifIsPlaying = true
+                }
+                .onDisappear {
+                    gifIsPlaying = false
                 }
             }
+        case .error(_):
+            themes.theme.listBackground.opacity(0.2)
+                .overlay {
+                    if let blurImage {
+                        Image(uiImage: blurImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(
+                                width: expectedImageSize.width,
+                                height: min(expectedImageSize.height, maxHeight)
+                            )
+                            .clipped()
+                    }
+                }
+                .frame(
+                    width: expectedImageSize.width,
+                    height: min(expectedImageSize.height, maxHeight)
+                )
+                .clipped()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    debounceLoad(forceLoad: true)
+                }
+                .overlay(alignment: .center) {
+                    VStack {
+                        Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        Text(url.absoluteString)
+                            .truncationMode(.middle)
+                            .fontItalic()
+                            .foregroundColor(themes.theme.accent)
+                        Button(String(localized: "Try again", comment: "Button try again")) {
+                            debounceLoad(forceLoad: true)
+                        }
+                    }
+                }
         default:
-            if !autoload {
+            if let imageInfo {
+                Color.clear
+                    .onAppear {
+                        vm.state = .image(imageInfo)
+                    }
+            }
+            else if let gifInfo {
+                Color.clear
+                    .onAppear {
+                        vm.state = .gif(gifInfo)
+                    }
+            }
+            else if !autoload && !fullScreen {
                 Color.clear
                     .onAppear {
                         if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
@@ -462,13 +565,13 @@ struct MediaPlaceholder: View {
                         withAnimation {
                             self.blurImage = blurImage
                         }
-                        debounceLoad()
+                        debounceLoad(forceLoad: fullScreen)
                     }
             }
             else {
                 Color.clear
                     .onAppear {
-                        debounceLoad()
+                        debounceLoad(forceLoad: fullScreen)
                     }
             }
         }
@@ -508,17 +611,6 @@ struct MediaPlaceholder: View {
         loadTask = nil
         guard case .loading(_) = vm.state else { return }
         vm.cancel()
-    }
-    
-    private func imageTap() {
-        if let imageUrls, imageUrls.count > 1, #available(iOS 17, *) {
-            let items: [GalleryItem] = imageUrls.map { GalleryItem(url: $0) }
-            let index: Int = imageUrls.firstIndex(of: url) ?? 0
-            sendNotification(.fullScreenView17, FullScreenItem17(items: items, index: index))
-        }
-        else {
-            sendNotification(.fullScreenView, FullScreenItem(url: url))
-        }
     }
 }
 

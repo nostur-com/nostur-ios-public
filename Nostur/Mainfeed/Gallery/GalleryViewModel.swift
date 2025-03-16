@@ -360,13 +360,21 @@ struct GalleryItem: Identifiable, Equatable {
     let event: Event? // bg
     let eventId: String? // need the id in main context
     var pfpPictureURL: URL?
+    var dimensions: CGSize?
+    var blurhash: String?
+    var imageInfo: ImageInfo?
+    var gifInfo: GifInfo?
         
-    init(url: URL, event: Event? = nil) {
+    init(url: URL, event: Event? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil) {
         self.url = url
         self.event = event
         self.eventId = event?.id
         self.id = UUID()
         self.pubkey = event?.pubkey
+        self.imageInfo = imageInfo
+        self.gifInfo = gifInfo
+        self.blurhash = blurhash
+        self.dimensions = dimensions
         if let event {
             self.pfpPictureURL = NRState.shared.loggedInAccount?.followingCache[event.pubkey]?.pfpURL
         }
