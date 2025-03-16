@@ -2505,6 +2505,9 @@
         }
       }
     },
+    "Copy image URL" : {
+
+    },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
       "localizations" : {
