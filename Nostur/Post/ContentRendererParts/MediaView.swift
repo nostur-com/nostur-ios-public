@@ -586,7 +586,7 @@ struct MediaPlaceholder: View {
         cancelLoad()
         
         // Create a new debounced load task
-        loadTask = Task {
+        loadTask = Task.detached(priority: .low) {
             // Wait for a short delay to debounce rapid scrolling
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             
@@ -603,7 +603,7 @@ struct MediaPlaceholder: View {
     
     @MainActor
     private func load(forceLoad: Bool = false) {
-        Task {
+        Task.detached(priority: .low) {
             await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
         }
     }

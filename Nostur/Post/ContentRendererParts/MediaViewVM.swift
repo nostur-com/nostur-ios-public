@@ -76,19 +76,18 @@ class MediaViewVM: ObservableObject {
                 }
             }
             else {
-                Task { @MainActor in
-                    withAnimation(.smooth(duration: 0.5)) {
-                        if let pngData = response.image.pngData() {
+                if let pngData = response.image.pngData() {
+                    Task { @MainActor in
+                        withAnimation(.smooth(duration: 0.5)) {
                             state = .image(ImageInfo(imageData: pngData, realDimensions: response.image.size))
                         }
                     }
-                    
-                    if generateIMeta {
-                        let blurhash: String? = response.image.blurHash(numberOfComponents: (4, 3))
-                        let pixelSize = CGSize(width: response.image.size.width * UIScreen.main.scale, height: response.image.size.height * UIScreen.main.scale)
-                        let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
-                        sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
-                    }
+                }
+                if generateIMeta {
+                    let blurhash: String? = response.image.blurHash(numberOfComponents: (4, 3))
+                    let pixelSize = CGSize(width: response.image.size.width * UIScreen.main.scale, height: response.image.size.height * UIScreen.main.scale)
+                    let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
+                    sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
                 }
             }
         }
