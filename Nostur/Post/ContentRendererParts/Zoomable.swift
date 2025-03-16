@@ -12,6 +12,7 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
     private let content: Content
     private let detailContent: DetailContent
     @State private var contentSize: CGSize = CGSize(width: 50, height: 50)
+    @State private var viewPosition: CGPoint = .zero
     
     init(@ViewBuilder _ content: () -> Content, @ViewBuilder detailContent: () -> DetailContent) {
         self.content = content()
@@ -69,12 +70,12 @@ struct Zoomable<Content: View>: View {
                 
                 if viewState == .zoomed {
                     ZStack(alignment: .topLeading) {
-                        // Background overlay
-                        Color.black.opacity(animationProgress)
-                            .edgesIgnoringSafeArea(.all)
-                            .onTapGesture {
-                                closeWithAnimation()
-                            }
+//                        // Background overlay
+//                        Color.black.opacity(animationProgress)
+//                            .edgesIgnoringSafeArea(.all)
+//                            .onTapGesture {
+//                                closeWithAnimation()
+//                            }
                         
                         // Content container
                         if let detailContent {
@@ -126,6 +127,9 @@ struct Zoomable<Content: View>: View {
                     zoom(from: zoomRequest.origin, detailContent: typedContent)
                 }
             }
+        }
+        .onReceive(receiveNotification(.closeFullscreenGallery)) { _ in
+            closeWithAnimation()
         }
     }
     

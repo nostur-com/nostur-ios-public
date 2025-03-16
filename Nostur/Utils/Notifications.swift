@@ -397,4 +397,8 @@ extension Notification.Name {
     static var zoomRequested: Notification.Name {
         return Notification.Name("zoomRequested")
     }
+    
+    static var closeFullscreenGallery: Notification.Name {
+        return Notification.Name("closeFullscreenGallery")
+    }
 }

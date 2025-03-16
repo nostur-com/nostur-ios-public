@@ -10,7 +10,6 @@ import SwiftUI
 struct GalleryFullScreenSwiper: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var screenSpace: ScreenSpace
-    @Environment(\.dismiss) private var dismiss
 
     public var initialIndex: Int
     public var items: [GalleryItem]
@@ -20,9 +19,20 @@ struct GalleryFullScreenSwiper: View {
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
     
+    // Zoom and pan state
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var position: CGSize = .zero
+    @State private var newPosition: CGSize = .zero
+    @State private var gestureStartTime: Date?
+    
+    // Interactive dismissal state
+    @State private var dismissProgress: CGFloat = 0
+    @State private var isDraggingToDismiss = false
+    
     var body: some View {
         if #available(iOS 17.0, *) {
-            ScrollView(.horizontal) {
+            ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 0) {
                     ForEach(items.indices, id:\.self) { index in
                         MediaContentView(
@@ -37,13 +47,95 @@ struct GalleryFullScreenSwiper: View {
                             contentMode: .fit,
                             fullScreen: true,
                             autoload: true,
-                            
-                            // Faster if we already have the data from ZoomableItem:
                             imageInfo: items[index].imageInfo,
                             gifInfo: items[index].gifInfo
                         )
-//                        FullImageViewer(fullImageURL: items[index].url, galleryItem: items[index], mediaPostPreview: $mediaPostPreview, sharableImage: $sharableImage, sharableGif: $sharableGif)
-                            .frame(width: screenSpace.screenSize.width, height: screenSpace.screenSize.height)
+                        .frame(width: screenSpace.screenSize.width, height: screenSpace.screenSize.height)
+                        .scaleEffect(scale * (1.0 - (0.2 * dismissProgress)))
+                        .offset(position)
+                        .offset(y: dismissProgress * 200)
+                        .contentShape(Rectangle())
+                        .onTapGesture(count: 2) {
+                            withAnimation {
+                                self.scale = 1.0
+                                self.position = .zero
+                                self.newPosition = .zero
+                            }
+                        }
+
+                        // 1. Drag down to dismiss
+                        .simultaneousGesture(
+                            DragGesture(minimumDistance: 10, coordinateSpace: .local)
+                                .onChanged { value in
+                                    // Only handle vertical drags when not zoomed alot
+                                    if scale <= 1.3 && value.translation.height > 0 && abs(value.translation.height) > abs(value.translation.width) {
+                                        if gestureStartTime == nil {
+                                            gestureStartTime = Date()
+                                            isDraggingToDismiss = true
+                                        }
+                                        
+                                        // Calculate dismiss progress (0 to 1)
+                                        let progress = min(1.0, max(0, value.translation.height / 200))
+                                        dismissProgress = progress
+                                    }
+                                }
+                                .onEnded { value in
+                                    if isDraggingToDismiss {
+                                        guard let startTime = gestureStartTime else { return }
+                                        let duration = Date().timeIntervalSince(startTime)
+                                        let quickSwipeThreshold: TimeInterval = 0.25
+                                        let dismissThreshold: CGFloat = 0.3
+                                        
+                                        let shouldDismiss = (duration < quickSwipeThreshold && value.translation.height > 30) || 
+                                                          dismissProgress > dismissThreshold
+                                        
+                                        if shouldDismiss {
+                                            withAnimation(.easeOut(duration: 0.2)) {
+                                                dismissProgress = 1.0
+                                            }
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                                sendNotification(.closeFullscreenGallery)
+                                            }
+                                        } else {
+                                            withAnimation(.spring(duration: 0.3)) {
+                                                dismissProgress = 0
+                                            }
+                                        }
+                                    }
+                                    gestureStartTime = nil
+                                    isDraggingToDismiss = false
+                                }
+                        )
+
+                        // 2. Gestures for zoom and pan
+                        .simultaneousGesture(
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    let delta = value / self.lastScale
+                                    self.lastScale = value
+                                    self.scale *= delta
+                                }
+                                .onEnded { value in
+                                    self.lastScale = 1.0
+                                }
+                        )
+                        
+                        
+                        .simultaneousGesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    if scale > 1.0 {
+                                        // When zoomed, allow free panning
+                                        self.position.width = self.newPosition.width + value.translation.width
+                                        self.position.height = self.newPosition.height + value.translation.height
+                                    }
+                                }
+                                .onEnded { value in
+                                    if scale > 1.0 {
+                                        self.newPosition = self.position
+                                    }
+                                }
+                        )
                         .id(index)
                     }
                 }
@@ -52,6 +144,8 @@ struct GalleryFullScreenSwiper: View {
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $activeIndex)
             .frame(width: screenSpace.screenSize.width, height: screenSpace.screenSize.height)
+            .scrollDisabled(items.count == 1 || scale > 1.0 || isDraggingToDismiss)  // Also disable scroll while dismissing
+            .background(Color.black.opacity(1 - dismissProgress)) // Fade out background
             .overlay(alignment: .leading) {
                 if IS_CATALYST {
                     Button("", systemImage: "chevron.compact.backward") {
