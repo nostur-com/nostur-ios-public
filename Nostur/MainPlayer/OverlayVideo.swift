@@ -148,7 +148,7 @@ struct OverlayVideo: View {
                                                         .padding(5)
                                                         .offset(y: -6)
                                                 }
-                                            }, primaryAction: saveAVAssetToPhotos)
+                                            })
                                             .disabled(isSaving)
                                             .font(.title2)
                                             .foregroundColor(Color.white)
@@ -331,7 +331,7 @@ struct OverlayVideo: View {
                                                     .padding(5)
                                                     .offset(y: -6)
                                             }
-                                        }, primaryAction: saveAVAssetToPhotos)
+                                        })
                                         .disabled(isSaving)
                                         .font(.title2)
                                         .foregroundColor(themes.theme.accent)

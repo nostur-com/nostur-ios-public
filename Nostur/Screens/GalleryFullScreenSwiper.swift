@@ -187,7 +187,7 @@ struct GalleryFullScreenSwiper: View {
                         .offset(y: -6)
                 }
             }
-        }, primaryAction: saveCurrentImageToPhotos)
+        })
         .disabled(isSaving)
         .font(.title2)
         .padding(.trailing, 10)
