@@ -867,7 +867,14 @@
       }
     },
     "📽️" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "📽️"
+          }
+        }
+      }
     },
     "🤫 Following" : {
       "comment" : "Follow/Unfollow button when the state is 'Following silent'",
@@ -2246,6 +2253,16 @@
         }
       }
     },
+    "Configure column" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configureer kolom"
+          }
+        }
+      }
+    },
     "Configure contacts..." : {
       "localizations" : {
         "nl" : {
@@ -2427,6 +2444,16 @@
         }
       }
     },
+    "Contacts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacten"
+          }
+        }
+      }
+    },
     "Contacts:" : {
       "localizations" : {
         "nl" : {
@@ -2588,7 +2615,14 @@
       }
     },
     "Could not find latest user profile (kind-0)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan profiel niet vinden (kind-0)"
+          }
+        }
+      }
     },
     "Could not parse JSON" : {
       "comment" : "Error message",
@@ -3276,6 +3310,16 @@
         }
       }
     },
+    "Enable WoT filter" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik WoT filter"
+          }
+        }
+      }
+    },
     "End test" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3591,6 +3635,9 @@
         }
       }
     },
+    "feeds...." : {
+      "shouldTranslate" : false
+    },
     "Fetch counts on timeline" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -3894,6 +3941,16 @@
         }
       }
     },
+    "Hashtags" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hashtags"
+          }
+        }
+      }
+    },
     "Hello, World! Hello World! Hello World! Hello World! Hello World! Hello World" : {
       "localizations" : {
         "nl" : {
@@ -3969,6 +4026,9 @@
           }
         }
       }
+    },
+    "hoho" : {
+      "shouldTranslate" : false
     },
     "Home/Lock screen notifications" : {
       "localizations" : {
@@ -6051,6 +6111,7 @@
       }
     },
     "Private notes" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6697,7 +6758,14 @@
       }
     },
     "Reload" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw"
+          }
+        }
+      }
     },
     "Remember this amount for all zaps" : {
       "comment" : "Toggle on zap screen to set selected amount as default for all zaps",
@@ -6793,7 +6861,14 @@
       }
     },
     "Replay" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw"
+          }
+        }
+      }
     },
     "Replies" : {
       "comment" : "Tab title",
@@ -6955,7 +7030,14 @@
       }
     },
     "Reposts" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reposts"
+          }
+        }
+      }
     },
     "Request delete" : {
       "localizations" : {
@@ -7050,7 +7132,15 @@
       }
     },
     "restricted" : {
-      "comment" : "Label shown on a restricted post"
+      "comment" : "Label shown on a restricted post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "afgeschermd"
+          }
+        }
+      }
     },
     "Retake" : {
       "localizations" : {
@@ -8438,6 +8528,9 @@
         }
       }
     },
+    "TODO PLAINTEXTONLY" : {
+      "shouldTranslate" : false
+    },
     "toggle red" : {
       "localizations" : {
         "nl" : {
@@ -8459,6 +8552,7 @@
       }
     },
     "Try again" : {
+      "comment" : "Button try again",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8763,9 +8857,6 @@
           }
         }
       }
-    },
-    "uuuh" : {
-      "shouldTranslate" : false
     },
     "Verify again" : {
       "localizations" : {
