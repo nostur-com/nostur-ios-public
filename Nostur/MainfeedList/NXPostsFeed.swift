@@ -26,12 +26,42 @@ struct NXPostsFeed: View {
     
     @State private var updateIsAtTopSubscription: AnyCancellable?
     
+#if DEBUG
+    @ObservedObject private var speedTest: NXSpeedTest
+#endif
+    
     init(vm: NXColumnViewModel, posts: [NRPost], isVisible: Bool) {
         self.vm = vm
+#if DEBUG
+        self.speedTest = vm.speedTest
+#endif
         self.posts = posts
         self.vmInner = vm.vmInner
         self.isVisible = isVisible
     }
+    
+#if DEBUG
+    @ViewBuilder
+    private var speedTestView: some View {
+        VStack {
+            Text("Speed final: \(speedTest.totalTimeSinceStarting)")
+            if let timestampFirstFetchFinished = speedTest.timestampFirstFetchFinished, let sinceFetchStart = speedTest.timestampFirstFetchStarted {
+                Text("First fetch finished: \(timestampFirstFetchFinished.timeIntervalSince(sinceFetchStart))")
+            }
+            if let sinceFetchStart = speedTest.timestampFirstFetchStarted {
+                ForEach(Array(speedTest.relaysFinishedAt.enumerated()), id: \.offset) { index, timestamp in
+                    Text("\(timestamp.timeIntervalSince(sinceFetchStart))")
+                }
+                Divider()
+                ForEach(Array(speedTest.relaysFinishedLater.enumerated()), id: \.offset) { index, timestamp in
+                    Text("\(timestamp.timeIntervalSince(sinceFetchStart))")
+                }
+            }
+        }
+        .background(Color.black.opacity(0.7))
+        .foregroundColor(.white)
+    }
+#endif
     
     var body: some View {
         #if DEBUG
@@ -233,6 +263,12 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") onChange(of: isVisible) -> up
                         self._updateIsAtTop()
                     }
             }
+            
+#if DEBUG
+            .overlay(alignment: .bottom) {
+                speedTestView
+            }
+#endif
         }
     }
     

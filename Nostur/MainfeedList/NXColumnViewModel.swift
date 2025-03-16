@@ -10,7 +10,11 @@ import Combine
 import NostrEssentials
 
 class NXColumnViewModel: ObservableObject {
-    
+
+#if DEBUG
+    @ObservedObject public var speedTest = NXSpeedTest()
+#endif
+
     // "Following-..." / "List-56D5EE90-17CB-4925" / ...
     public var id: String? { config?.id }
     public var config: NXColumnConfig?
@@ -86,6 +90,12 @@ class NXColumnViewModel: ObservableObject {
         didSet {
             guard let config else { return }
             if isVisible {
+
+#if DEBUG
+                speedTest.reset()
+                speedTest.firstEmptyFeedVisibleFinished()
+#endif
+                
                 if case .loading = viewState {
                     Task { @MainActor in
                         self.load(config)
@@ -296,6 +306,10 @@ class NXColumnViewModel: ObservableObject {
         if case .posts(_) = viewState {
             viewState = .loading
         }
+        
+#if DEBUG
+            speedTest.firstEmptyFeedVisibleFinished()
+#endif
         
         // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
         if case .someoneElses(let pubkey) = config.columnType {
@@ -1794,6 +1808,11 @@ extension NXColumnViewModel {
     
     @MainActor
     private func loadRemote(_ config: NXColumnConfig) {
+        
+#if DEBUG
+        speedTest.firstFetchStarted()
+#endif
+        
         #if DEBUG
         L.og.debug("☘️☘️ \(config.name) loadRemote(config)")
         #endif
