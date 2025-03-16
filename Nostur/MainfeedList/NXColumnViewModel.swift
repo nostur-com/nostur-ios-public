@@ -290,7 +290,7 @@ class NXColumnViewModel: ObservableObject {
         // Could also setup for loadRemote but we never call loadRemote by itself so should not be necessary
         loadLocalSubject
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-            .throttle(for: .seconds(2.0), scheduler: RunLoop.main, latest: false)
+//            .throttle(for: .seconds(2.0), scheduler: RunLoop.main, latest: false) // <-- a 2 sec throttle here means our localLocal->loadRemote->loadLocal dance will always take longer than 2.0 seconds OR never finish... so remove it and find other solution
             .sink { [weak self] (config, older, completion) in
                 self?._loadLocal(config, older: older, completion: completion)
             }
