@@ -405,27 +405,41 @@ struct MediaPlaceholder: View {
             }
         case .gif(let gifInfo):
             if fullScreen {
-                    .animation(.smooth(duration: 0.5), value: vm.state)
-                    .aspectRatio(contentMode: .fit)
-                    .onAppear {
-                        // Communicate back to set container frame
-                        realDimensions = gifInfo.realDimensions
+                // Create a touch-responsive wrapper around the GIF
+                ZStack {
+                    // Black background to maintain visual consistency during gestures
+                    Color.black.edgesIgnoringSafeArea(.all)
+                    
+                    // GIF content with hit testing disabled
                     GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
-                        GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
-                    }
-                    .task(id: url.absoluteString) {
-                        try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
-                        gifIsPlaying = true
-                    }
-                    .onDisappear {
-                        gifIsPlaying = false
-                    }
+                        .animation(.smooth(duration: 0.5), value: vm.state)
+                        .aspectRatio(contentMode: .fit)
+                }
+                .onAppear {
+                    // Communicate back to set container frame
+                    realDimensions = gifInfo.realDimensions
+                }
+                .task(id: url.absoluteString) {
+                    try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                    gifIsPlaying = true
+                }
+                .onDisappear {
+                    gifIsPlaying = false
+                }
             }
             else if contentMode == .fit {
                 ZoomableItem {
+                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fit)
                         .contentShape(Rectangle())
+                        .task(id: url.absoluteString) {
+                            try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                            gifIsPlaying = true
+                        }
+                        .onDisappear {
+                            gifIsPlaying = false
+                        }
                 } detailContent: {
                     GalleryFullScreenSwiper(
                         initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
@@ -438,8 +452,8 @@ struct MediaPlaceholder: View {
                             )
                         } ?? [GalleryItem(
                             url: url,
-                            dimensions: gifInfo.realDimensions ,
-                            blurhash:  blurHash,
+                            dimensions: gifInfo.realDimensions,
+                            blurhash: blurHash,
                             gifInfo: gifInfo)]
                     )
                 }
@@ -447,22 +461,20 @@ struct MediaPlaceholder: View {
                     // Communicate back to set container frame
                     realDimensions = gifInfo.realDimensions
                 }
-                .task(id: url.absoluteString) {
-                    try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
-                    gifIsPlaying = true
-                }
-                .onDisappear {
-                    gifIsPlaying = false
-                }
-                
-//                .onTapGesture { imageTap() }
             }
             else {
                 ZoomableItem {
+                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fill)
                         .contentShape(Rectangle())
-                        GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                        .task(id: url.absoluteString) {
+                            try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                            gifIsPlaying = true
+                        }
+                        .onDisappear {
+                            gifIsPlaying = false
+                        }
                 } detailContent: {
                     GalleryFullScreenSwiper(
                         initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
@@ -475,21 +487,14 @@ struct MediaPlaceholder: View {
                             )
                         } ?? [GalleryItem(
                             url: url,
-                            dimensions: gifInfo.realDimensions ,
-                            blurhash:  blurHash,
+                            dimensions: gifInfo.realDimensions,
+                            blurhash: blurHash,
                             gifInfo: gifInfo)]
                     )
                 }
                 .onAppear {
                     // Communicate back to set container frame
                     realDimensions = gifInfo.realDimensions
-                }
-                .task(id: url.absoluteString) {
-                    try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
-                    gifIsPlaying = true
-                }
-                .onDisappear {
-                    gifIsPlaying = false
                 }
             }
         case .error(_):

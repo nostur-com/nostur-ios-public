@@ -31,6 +31,8 @@ public struct GIFImage: View {
          let imageView = GIFImageView()
          imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
          imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+         imageView.isUserInteractionEnabled = false // Disable user interaction at UIKit level
+         
          receiveNotification(.scenePhaseBackground)
              .receive(on: RunLoop.main)
              .sink { _ in
