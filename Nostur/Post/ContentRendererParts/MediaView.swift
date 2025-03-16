@@ -337,7 +337,7 @@ struct MediaPlaceholder: View {
                 }
         case .image(let imageInfo):
             if fullScreen {
-                Image(uiImage: imageInfo.uiImage)
+                Image(uiImage: UIImage(data: imageInfo.imageData)!)
                     .resizable()
                     .scaledToFit()
                     .onAppear {
@@ -347,7 +347,7 @@ struct MediaPlaceholder: View {
             }
             else if contentMode == .fit {
                 ZoomableItem {
-                    Image(uiImage: imageInfo.uiImage)
+                    Image(uiImage: UIImage(data: imageInfo.imageData)!)
                         .resizable()
                         .scaledToFit()
                         .animation(.smooth(duration: 0.5), value: vm.state)
@@ -376,7 +376,7 @@ struct MediaPlaceholder: View {
             }
             else {
                 ZoomableItem {
-                    Image(uiImage: imageInfo.uiImage)
+                    Image(uiImage: UIImage(data: imageInfo.imageData)!)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .animation(.smooth(duration: 0.5), value: vm.state)
@@ -405,12 +405,13 @@ struct MediaPlaceholder: View {
             }
         case .gif(let gifInfo):
             if fullScreen {
-                GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                     .animation(.smooth(duration: 0.5), value: vm.state)
                     .aspectRatio(contentMode: .fit)
                     .onAppear {
                         // Communicate back to set container frame
                         realDimensions = gifInfo.realDimensions
+                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                        GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                     }
                     .task(id: url.absoluteString) {
                         try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
@@ -422,7 +423,6 @@ struct MediaPlaceholder: View {
             }
             else if contentMode == .fit {
                 ZoomableItem {
-                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fit)
                         .contentShape(Rectangle())
@@ -459,10 +459,10 @@ struct MediaPlaceholder: View {
             }
             else {
                 ZoomableItem {
-                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fill)
                         .contentShape(Rectangle())
+                        GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                 } detailContent: {
                     GalleryFullScreenSwiper(
                         initialIndex: imageUrls?.firstIndex(of: url) ?? 0,

@@ -78,7 +78,9 @@ class MediaViewVM: ObservableObject {
             else {
                 Task { @MainActor in
                     withAnimation(.smooth(duration: 0.5)) {
-                        state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
+                        if let pngData = response.image.pngData() {
+                            state = .image(ImageInfo(imageData: pngData, realDimensions: response.image.size))
+                        }
                     }
                     
                     if generateIMeta {
@@ -119,7 +121,7 @@ enum MediaViewState: Equatable {
 
 struct ImageInfo: Equatable {
     let id = UUID()
-    let uiImage: UIImage
+    let imageData: Data
     let realDimensions: CGSize
 }
 
