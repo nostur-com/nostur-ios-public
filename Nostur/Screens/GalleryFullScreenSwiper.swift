@@ -40,7 +40,7 @@ struct GalleryFullScreenSwiper: View {
             mainContentView
         }
         else {
-            EmptyView()
+            mainContentIOS16
         }
     }
     
@@ -67,7 +67,24 @@ struct GalleryFullScreenSwiper: View {
         }
     }
     
-    @available(iOS 17.0, *)
+    private var mainContentIOS16: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: 0) {
+                ForEach(items.indices, id:\.self) { index in
+                    mediaItemView(for: index)
+                }
+            }
+        }
+        .frame(width: screenSpace.screenSize.width, height: screenSpace.screenSize.height)
+        .background(Color.black.opacity(1 - dismissProgress))
+        .overlay(alignment: .leading) { navigationLeftButton }
+        .overlay(alignment: .trailing) { navigationRightButton }
+        .overlay(alignment: .topTrailing) { saveButton }
+        .onAppear {
+            activeIndex = initialIndex
+        }
+    }
+    
     private func mediaItemView(for index: Int) -> some View {
         MediaContentView(
             media: MediaContent(
@@ -102,7 +119,6 @@ struct GalleryFullScreenSwiper: View {
         .id(index)
     }
     
-    @available(iOS 17.0, *)
     private var navigationLeftButton: some View {
         Group {
             if IS_CATALYST {
@@ -119,7 +135,6 @@ struct GalleryFullScreenSwiper: View {
         }
     }
     
-    @available(iOS 17.0, *)
     private var navigationRightButton: some View {
         Group {
             if IS_CATALYST {
@@ -136,7 +151,6 @@ struct GalleryFullScreenSwiper: View {
         }
     }
     
-    @available(iOS 17.0, *)
     private var saveButton: some View {
         // Save button
         Menu(content: {
