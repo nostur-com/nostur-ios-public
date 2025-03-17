@@ -640,6 +640,9 @@
         }
       }
     },
+    "%lf" : {
+      "shouldTranslate" : false
+    },
     "%lld" : {
       "localizations" : {
         "nl" : {
@@ -2506,7 +2509,14 @@
       }
     },
     "Copy image URL" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer adres"
+          }
+        }
+      }
     },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
@@ -3735,6 +3745,9 @@
           }
         }
       }
+    },
+    "First fetch finished: %lf" : {
+      "shouldTranslate" : false
     },
     "Follow" : {
       "comment" : "Button to follow someone",
@@ -7878,6 +7891,9 @@
         }
       }
     },
+    "Speed final: %lf" : {
+      "shouldTranslate" : false
+    },
     "Start listening" : {
       "localizations" : {
         "nl" : {
@@ -7933,7 +7949,7 @@
       }
     },
     "streaming" : {
-
+      "shouldTranslate" : false
     },
     "Swipe to unblock/unmute" : {
       "comment" : "Informational text",
