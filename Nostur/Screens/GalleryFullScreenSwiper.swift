@@ -50,6 +50,9 @@ struct GalleryFullScreenSwiper: View {
             LazyHStack(spacing: 0) {
                 ForEach(items.indices, id:\.self) { index in
                     mediaItemView(for: index)
+                        .onAppear {
+                            prefetchNextImage(currentIndex: index)
+                        }
                 }
             }
             .scrollTargetLayout()
@@ -64,6 +67,16 @@ struct GalleryFullScreenSwiper: View {
         .overlay(alignment: .topTrailing) { saveButton }
         .onAppear {
             activeIndex = initialIndex
+        }
+    }
+    
+    private func prefetchNextImage(currentIndex: Int) {
+        if items.count > (currentIndex + 1) {
+            let prefetchRequest = makeImageRequest(
+                items[currentIndex + 1].url,
+                label: "prefetchNextImage"
+            )
+            ImageProcessing.shared.contentPrefetcher.startPrefetching(with: [prefetchRequest])
         }
     }
     
