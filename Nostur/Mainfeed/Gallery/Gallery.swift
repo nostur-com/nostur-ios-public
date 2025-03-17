@@ -47,33 +47,20 @@ struct Gallery: View {
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     if !vm.items.isEmpty {
-                        if #available(iOS 17, *) {
-                            LazyVGrid(columns: Self.gridColumns) {
-                                ForEach(vm.items.indices, id:\.self) { index in
-                                    GeometryReader { geo in
-                                        if index < vm.items.count { // Should fix "Index out of range" crash
-                                            GridItemView17(size: geo.size.width, item: vm.items[index], withPFP: true)
-                                        }
-                                    }
-                                    .clipped()
-                                    .aspectRatio(1, contentMode: .fit)
-                                    .id(index)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
+                        LazyVGrid(columns: Self.gridColumns) {
+                            ForEach(vm.items.indices, id:\.self) { index in
+                                GeometryReader { geo in
+                                    if index < vm.items.count { // Should fix "Index out of range" crash
+                                        GalleryGridItemView(size: geo.size.width, items: vm.items, currentIndex: index, withPFP: true)
                                     }
                                 }
-                            }
-                        }
-                        else {
-                            LazyVGrid(columns: Self.gridColumns) {
-                                ForEach(vm.items) { item in
-                                    GeometryReader { geo in
-                                        GridItemView(size: geo.size.width, item: item, withPFP: true)
-                                    }
-                                    .clipped()
-                                    .aspectRatio(1, contentMode: .fit)
-                                }
+                                .clipped()
+                                .aspectRatio(1, contentMode: .fit)
+//                                    .id(index)
+                                .contentShape(Rectangle())
+//                                    .onTapGesture {
+//                                        sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
+//                                    }
                             }
                         }
                     }
@@ -149,128 +136,31 @@ struct Gallery_Previews: PreviewProvider {
     }
 }
 
-struct GridItemView: View {
-    @EnvironmentObject private var themes:Themes
+struct GalleryGridItemView: View {
     public let size: Double
-    public let item: GalleryItem
+    public let items: [GalleryItem]
+    public let currentIndex: Int
+    
     public var withPFP = false
-    private var url: URL { item.url }
+    
+    private var currentItem: GalleryItem { items[currentIndex] }
     
     var body: some View {
-        LazyImage(request: makeImageRequest(url, label: "GridItemView")) { state in
-            if state.error != nil {
-                if SettingsStore.shared.lowDataMode {
-                    Text(url.absoluteString)
-                        .foregroundColor(themes.theme.accent)
-                        .truncationMode(.middle)
-                        .onTapGesture {
-                            guard let eventId = item.eventId else { return }
-                            navigateTo(NotePath(id: eventId))
-                        }
-                }
-                else {
-                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                        .centered()
-                        .onAppear {
-                            L.og.error("Failed to load image: \(url.absoluteString) - \(state.error?.localizedDescription ?? "")")
-                        }
-                        .onTapGesture {
-                            guard let eventId = item.eventId else { return }
-                            navigateTo(NotePath(id: eventId))
-                        }
-                }
-            }
-            else if let image = state.image {
-                image
-                //                            .interpolation(.none)
-                    .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
-                    .scaledToFill()
-                    .frame(width: size, height: size)
-                    .clipped()
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        sendNotification(.fullScreenView, FullScreenItem(url: url, galleryItem: item))
-                    }
-                    .overlay(alignment:.topLeading) {
-                        if state.isLoading { // does this conflict with showing preview images??
-                            ImageProgressView(state: state)
-                        }
-                    }
-                    .overlay(alignment: .bottomLeading) {
-                        if withPFP, let pfpPictureURL = item.pfpPictureURL {
-                            MiniPFP(pictureUrl: pfpPictureURL)
-                                .padding(10)
-                        }
-                    }
-            }
-            else if state.isLoading { // does this conflict with showing preview images??
-                ImageProgressView(state: state, numericOnly: false)
-            }
-            else {
-                Color(.secondarySystemBackground)
+        MediaContentView(
+            galleryItem: currentItem,
+            availableWidth: size,
+            placeholderHeight: size,
+            maxHeight: size,
+            contentMode: .fill,
+            galleryItems: items,
+            autoload: true // Gallery is from follows so can be true
+        )
+        .overlay(alignment: .bottomLeading) {
+            if withPFP, let pfpPictureURL = currentItem.pfpPictureURL {
+                MiniPFP(pictureUrl: pfpPictureURL)
+                    .padding(10)
             }
         }
-        .pipeline(ImageProcessing.shared.content)
-        .frame(width: size, height: size)
-    }
-}
-
-struct GridItemView17: View {
-    @EnvironmentObject private var themes: Themes
-    public let size: Double
-    public let item: GalleryItem
-    public var withPFP = false
-    private var url: URL { item.url }
-    
-    var body: some View {
-        LazyImage(request: makeImageRequest(url, label: "GridItemView")) { state in
-            if state.error != nil {
-                if SettingsStore.shared.lowDataMode {
-                    Text(url.absoluteString)
-                        .foregroundColor(themes.theme.accent)
-                        .truncationMode(.middle)
-                        .onTapGesture {
-                            guard let eventId = item.eventId else { return }
-                            navigateTo(NotePath(id: eventId))
-                        }
-                }
-                else {
-                    Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
-                        .centered()
-                        .onAppear {
-                            L.og.error("Failed to load image: \(url.absoluteString) - \(state.error?.localizedDescription ?? "")")
-                        }
-                        .onTapGesture {
-                            guard let eventId = item.eventId else { return }
-                            navigateTo(NotePath(id: eventId))
-                        }
-                }
-            }
-            else if let image = state.image {
-                image
-                    .resizable() // <-- without this STILL sometimes a randomly an image with wrong size, even though we have all the correct dimensions. Somewhere Nuke is doing something wrong
-                    .scaledToFill()
-                    .frame(width: size, height: size)
-                    .overlay(alignment:.topLeading) {
-                        if state.isLoading { // does this conflict with showing preview images??
-                            ImageProgressView(state: state)
-                        }
-                    }
-                    .overlay(alignment: .bottomLeading) {
-                        if withPFP, let pfpPictureURL = item.pfpPictureURL {
-                            MiniPFP(pictureUrl: pfpPictureURL)
-                                .padding(10)
-                        }
-                    }
-            }
-            else if state.isLoading { // does this conflict with showing preview images??
-                ImageProgressView(state: state, numericOnly: false)
-            }
-            else {
-                Color(.secondarySystemBackground)
-            }
-        }
-        .pipeline(ImageProcessing.shared.content)
     }
 }
 

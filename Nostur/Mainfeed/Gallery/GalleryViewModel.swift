@@ -279,13 +279,19 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                     var urls = getImgUrlsFromContent(content)
                     
                     if urls.isEmpty {
-                        urls = event.fastTags.compactMap { imageUrlFromIMetaFastTag($0) }
+                        urls = event.fastTags.compactMap { imageUrlFromIMetaFastTag($0) }.filter { url in 
+                            // Only if url matches imageRegex
+                            let range = NSRange(url.absoluteString.startIndex..<url.absoluteString.endIndex, in: url.absoluteString)
+                            return imageRegex.firstMatch(in: url.absoluteString, range: range) != nil
+                        }
                     }
+
+            
                     
                     guard !urls.isEmpty else { continue }
                     
                     for url in urls.prefix(Self.MAX_IMAGES_PER_POST) {
-                        items.append(GalleryItem(url: url, event: event))
+                        items.append(GalleryItem(url: url, pubkey: event.pubkey, eventId: event.id))
                     }
                 }
             }
@@ -352,12 +358,16 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
 }
 
 
-struct GalleryItem: Identifiable, Equatable {
-
+struct GalleryItem: Identifiable, Equatable, Hashable {
+    
+    func hash(into hasher: inout Hasher) {
+        return hasher.combine(id)
+    }
+    
     let id: UUID
     let pubkey: String? // for blocklist filtering
     let url: URL
-    let event: Event? // bg
+
     let eventId: String? // need the id in main context
     var pfpPictureURL: URL?
     var dimensions: CGSize?
@@ -365,18 +375,25 @@ struct GalleryItem: Identifiable, Equatable {
     var imageInfo: ImageInfo?
     var gifInfo: GifInfo?
         
-    init(url: URL, event: Event? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil) {
+    init(url: URL, pubkey: String? = nil, eventId: String? = nil, dimensions: CGSize? = nil, blurhash: String? = nil, imageInfo: ImageInfo? = nil, gifInfo: GifInfo? = nil) {
         self.url = url
-        self.event = event
-        self.eventId = event?.id
+        self.eventId = eventId
         self.id = UUID()
-        self.pubkey = event?.pubkey
+        self.pubkey = pubkey
         self.imageInfo = imageInfo
         self.gifInfo = gifInfo
         self.blurhash = blurhash
         self.dimensions = dimensions
-        if let event {
-            self.pfpPictureURL = NRState.shared.loggedInAccount?.followingCache[event.pubkey]?.pfpURL
+        if let pubkey {
+            self.pfpPictureURL = NRState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL
+        }
+    }
+    
+    var aspect: CGFloat {
+        if let dimensions {
+            return dimensions.height / dimensions.width
+        } else {
+            return 1
         }
     }
 

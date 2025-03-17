@@ -41,27 +41,16 @@ struct ProfileMediaView: View {
                 ForEach(Array(stride(from: 0, to: vm.items.count, by: 3)), id: \.self) { index in
                     HStack {
                         Group {
-                            GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index])
+                            GalleryGridItemView(size: ((dim.listWidth / 3.0) - 0.0), items: vm.items, currentIndex: index)
                                 .onBecomingVisible {
                                     vm.fetchMoreIfNeeded(index)
                                 }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index))
-                                }
+                            
                             if (index+1) < vm.items.count {
-                                GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index + 1])
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index + 1))
-                                    }
+                                GalleryGridItemView(size: ((dim.listWidth / 3.0) - 0.0), items: vm.items, currentIndex: index + 1)
                             }
                             if (index+2) < vm.items.count {
-                                GridItemView17(size: ((dim.listWidth / 3.0) - 0.0), item: vm.items[index + 2])
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        sendNotification(.fullScreenView17, FullScreenItem17(items: vm.items, index: index + 2))
-                                    }
+                                GalleryGridItemView(size: ((dim.listWidth / 3.0) - 0.0), items: vm.items, currentIndex: index + 2)
                             }
                         }
                         .aspectRatio(contentMode: .fill)
