@@ -291,7 +291,8 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                     guard !urls.isEmpty else { continue }
                     
                     for url in urls.prefix(Self.MAX_IMAGES_PER_POST) {
-                        items.append(GalleryItem(url: url, pubkey: event.pubkey, eventId: event.id))
+                        let iMeta: iMetaInfo? = findImeta(event.fastTags, url: url.absoluteString)
+                        items.append(GalleryItem(url: url, pubkey: event.pubkey, eventId: event.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash))
                     }
                 }
             }
