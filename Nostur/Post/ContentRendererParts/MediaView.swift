@@ -640,6 +640,83 @@ struct MediaPlaceholder: View {
     }
 }
 
+
+struct MediaPostPreview: View {
+    @EnvironmentObject private var themes: Themes
+    private let nrPost: NRPost
+    @ObservedObject private var pfpAttributes: PFPAttributes
+    @Binding private var showMiniProfile: Bool
+    
+    init(_ nrPost: NRPost, showMiniProfile: Binding<Bool>) {
+        self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
+        _showMiniProfile = showMiniProfile
+    }
+    
+    var body: some View {
+        HStack(alignment: .center) {
+            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+            
+            VStack(alignment: .leading) {
+                
+                Text(pfpAttributes.anyName)
+                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .lineLimit(1)
+                    .layoutPriority(2)
+                    .onTapGesture {
+                        dismiss()
+                        if let nrContact = nrPost.contact {
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                        }
+                        else {
+                            navigateTo(ContactPath(key: nrPost.pubkey))
+                        }
+                    }
+                    .onAppear {
+                        guard nrPost.contact == nil else { return }
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "FullImageViewer.001")
+                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                        }
+                    }
+                    .onDisappear {
+                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                    }
+                
+                if let nrContact = pfpAttributes.contact, nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
+                            .layoutPriority(3)
+                }
+                
+                
+                Text("Posted on \(nrPost.createdAt.formatted(date: .abbreviated, time: .omitted))")
+                    .onTapGesture {
+                        dismiss()
+                        navigateTo(nrPost)
+                    }
+            }
+            
+            Image(systemName: "chevron.right")
+                .padding(10)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    dismiss()
+                    navigateTo(nrPost)
+                }
+        }
+        .font(.custom("Charter", size: 18))
+        .padding(.vertical, 10)
+        .lineLimit(1)
+        .foregroundColor(Color.secondary)
+    }
+    
+    func dismiss() {
+        sendNotification(.closeFullscreenGallery)
+    }
+}
+
 #Preview("Scale test") {
 //    ScrollView {
         VStack {

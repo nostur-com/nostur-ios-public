@@ -15,7 +15,6 @@ struct GalleryFullScreenSwiper: View {
     public var initialIndex: Int
     public var items: [GalleryItem]
     
-    @State private var mediaPostPreview = true
     @State private var activeIndex: Int?
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
@@ -35,6 +34,11 @@ struct GalleryFullScreenSwiper: View {
     @State private var dismissProgress: CGFloat = 0
     @State private var isDraggingToDismiss = false
     
+    // Media Post Preview
+    @State private var mediaPostPreview = false
+    @State private var post: NRPost? = nil
+    @State private var showMiniProfile = false
+    
     var body: some View {
         if #available(iOS 17.0, *) {
             mainContentView
@@ -51,8 +55,15 @@ struct GalleryFullScreenSwiper: View {
                 ForEach(items.indices, id:\.self) { index in
                     mediaItemView(for: index)
                         .onAppear {
+                            loadMediaPostPreview(for: index)
                             prefetchNextImage(currentIndex: index)
                         }
+                        .highPriorityGesture(TapGesture().onEnded({ _ in
+                            withAnimation {
+                                mediaPostPreview.toggle()
+                                scale = 1.0
+                            }
+                        }))
                 }
             }
             .scrollTargetLayout()
@@ -67,6 +78,31 @@ struct GalleryFullScreenSwiper: View {
         .overlay(alignment: .topTrailing) { saveButton }
         .onAppear {
             activeIndex = initialIndex
+        }
+        .overlay(alignment: .bottomLeading) {
+            if let post = post, mediaPostPreview && !showMiniProfile {
+                MediaPostPreview(post, showMiniProfile: $showMiniProfile)
+                    .padding(10)
+                    .background(.ultraThinMaterial)
+            }
+        }
+    }
+    
+    private func loadMediaPostPreview(for index: Int) {
+        post = nil
+        mediaPostPreview = false
+        guard items.count > index else { return }
+        let galleryItem = items[index]
+        
+        bg().perform {
+            guard let eventId = galleryItem.eventId,
+                  let event = Event.fetchEvent(id: eventId, context: bg())
+            else { return }
+            
+            let nrPost = NRPost(event: event)
+            Task { @MainActor in
+                self.post = nrPost
+            }
         }
     }
     
