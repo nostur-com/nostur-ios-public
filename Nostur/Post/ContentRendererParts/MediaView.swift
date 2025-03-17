@@ -193,7 +193,7 @@ struct MediaPlaceholder: View {
         case .loading(let percentage), .paused(let percentage):
             themes.theme.listBackground.opacity(0.2)
                 .onAppear {
-                    guard case .paused(let percentage) = vm.state else { return }
+                    guard case .paused(_) = vm.state else { return }
                     debounceLoad(forceLoad: true)
                 }
                 .onDisappear {
@@ -224,10 +224,7 @@ struct MediaPlaceholder: View {
                     debounceLoad(forceLoad: true)
                 }
                 .overlay(alignment:. topTrailing) {
-                    HStack {
-                        Image(systemName: "hourglass.tophalf.filled")
-                        Text(percentage, format: .percent)
-                    }
+                    Text(percentage, format: .percent)
                     .padding(5)
                 }
         case .lowDataMode:
@@ -574,9 +571,7 @@ struct MediaPlaceholder: View {
                     .clipped()
                     .contentShape(Rectangle())
                     .onAppear {
-                        withAnimation {
-                            self.blurImage = blurImage
-                        }
+                        self.blurImage = blurImage // reuse in other view states
                         debounceLoad(forceLoad: fullScreen)
                     }
             }
