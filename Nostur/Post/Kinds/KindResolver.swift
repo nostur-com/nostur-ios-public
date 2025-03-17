@@ -103,7 +103,7 @@ struct KindResolver: View {
             }
         
         case 1:
-            if (nrPost.kTag ?? "" == "20"), let imageUrl = nrPost.imageUrls.first { // Generic Olas
+            if (nrPost.kTag ?? "" == "20"), let galleryItem = nrPost.galleryItems.first { // Generic Olas
                 Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
             }
             else {

@@ -186,7 +186,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 
     
     var linkPreviewURLs: [URL] = []
-    var imageUrls: [URL] = []
+    var galleryItems: [GalleryItem] = []
     var previewWeights: PreviewWeights?
     var plainTextOnly = false
     var flags: String {
@@ -459,9 +459,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
-            let (contentElementsDetail, linkPreviewURLs, imageUrls) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(input: event.noteTextPrepared, fastTags: event.fastTags, event: event, previewImages: event.previewImages, previewVideos: event.previewVideos)
+            let (contentElementsDetail, linkPreviewURLs, galleryItems) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(input: event.noteTextPrepared, fastTags: event.fastTags, event: event, previewImages: event.previewImages, previewVideos: event.previewVideos)
             self.linkPreviewURLs = linkPreviewURLs
-            self.imageUrls = imageUrls
+            self.galleryItems = galleryItems
             
             self.contentElementsDetail = contentElementsDetail
             let (contentElements, previewWeights) = filteredForPreview(contentElementsDetail)

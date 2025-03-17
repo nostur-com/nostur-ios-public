@@ -17,7 +17,7 @@ class NRContentElementBuilder {
     static let shared = NRContentElementBuilder()
     let context = bg()
     
-    func buildElements(input: String, fastTags: [FastTag], event: Event? = nil, primaryColor: Color? = nil, previewImages: [PostedImageMeta] = [], previewVideos: [PostedVideoMeta] = []) -> ([ContentElement], [URL], [URL]) {
+    func buildElements(input: String, fastTags: [FastTag], event: Event? = nil, primaryColor: Color? = nil, previewImages: [PostedImageMeta] = [], previewVideos: [PostedVideoMeta] = []) -> ([ContentElement], [URL], [GalleryItem]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
@@ -26,7 +26,7 @@ class NRContentElementBuilder {
         
         var result: [ContentElement] = []
         var linkPreviewUrls: [URL] = []
-        var imageUrls: [URL] = []
+        var galleryItems: [GalleryItem] = []
         var lastMatchEnd = 0
         
         Self.regex.enumerateMatches(in: input, options: [], range: range) { match, _, _ in
@@ -43,8 +43,9 @@ class NRContentElementBuilder {
                 if !matchString.matchingStrings(regex: Self.imageUrlPattern).isEmpty {
                     if let url = URL(string: matchString) {
                         let iMeta: iMetaInfo? = findImeta(fastTags, url: matchString)
-                        result.append(ContentElement.image(MediaContent(url: url, dimensions: iMeta?.size, blurHash: iMeta?.blurHash)))
-                        imageUrls.append(url)
+                        let galleryItem = GalleryItem(url: url, pubkey: event?.pubkey, eventId: event?.id, dimensions: iMeta?.size, blurhash: iMeta?.blurHash)
+                        result.append(ContentElement.image(galleryItem))
+                        galleryItems.append(galleryItem)
                     }
                     else {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
@@ -160,17 +161,17 @@ class NRContentElementBuilder {
         }
         
         // for kind:20 image urls are not in text but only as imeta:
-        if imageUrls.isEmpty {
-            imageUrls = fastTags
-                .compactMap { imageUrlFromIMetaFastTag($0) }
+        if galleryItems.isEmpty {
+            galleryItems = fastTags
+                .compactMap { galleryItemFromIMetaFastTag($0, pubkey: event?.pubkey, eventId: event?.id) }
         }
         
-        return (result, linkPreviewUrls, imageUrls)
+        return (result, linkPreviewUrls, galleryItems)
     }
     
     // Same as buildElements(), but with a image/video/other url matching removed
     // and uses .parseMD instead of .parseText
-    func buildArticleElements(_ event:Event) -> ([ContentElement], [URL], [URL]) {
+    func buildArticleElements(_ event: Event) -> ([ContentElement], [URL], [GalleryItem]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ buildArticleElements on MAIN thread....")
         }
@@ -307,7 +308,7 @@ enum ContentElement: Hashable, Identifiable {
     case lnbc(String)
     case cashu(String)
     case link(String, URL)
-    case image(MediaContent)
+    case image(GalleryItem)
     case video(MediaContent)
     case linkPreview(URL)
     case postPreviewImage(PostedImageMeta)
@@ -471,4 +472,14 @@ func imageUrlFromIMetaFastTag(_ tag: FastTag) -> URL? {
     }
     
     return nil
+}
+
+
+func galleryItemFromIMetaFastTag(_ tag: FastTag, pubkey: String? = nil, eventId: String? = nil) -> GalleryItem? {
+    guard let url = imageUrlFromIMetaFastTag(tag) else { return nil }
+    
+    guard let iMeta = findImetaFromUrl(url.absoluteString) else { return nil }
+    
+    return GalleryItem(url: url, pubkey: pubkey, eventId: eventId, dimensions: iMeta.size, blurhash: iMeta.blurHash)
+
 }

@@ -181,7 +181,7 @@ struct Kind30023: View {
                     if let eventImageUrl = nrPost.eventImageUrl {
                         //                        Text("imageWidth: \(dim.listWidth.description)")
                         MediaContentView(
-                            media: MediaContent(url: eventImageUrl),
+                            galleryItem: GalleryItem(url: eventImageUrl),
                             availableWidth: dim.listWidth,
                             placeholderHeight: dim.listWidth / 2, // 1:2 guess??
                             contentMode: .fill,
@@ -283,7 +283,7 @@ struct Kind30023: View {
             
             if let image = nrPost.eventImageUrl {
                 MediaContentView(
-                    media: MediaContent(url: image),
+                    galleryItem: GalleryItem(url: image),
                     availableWidth: dim.listWidth,
                     placeholderHeight: dim.listWidth / 2, // 1:2 guess??
                     contentMode: .fill,

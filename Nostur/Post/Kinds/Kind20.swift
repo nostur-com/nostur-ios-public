@@ -97,26 +97,21 @@ struct Kind20: View {
     
     @ViewBuilder
     private var rowContent: some View {
-        if let imageUrl = nrPost.imageUrls.first {
-            let iMeta: iMetaInfo? = findImeta(nrPost.fastTags, url: imageUrl.absoluteString) // TODO: More to NRPost.init?
+        if let galleryItem = nrPost.galleryItems.first {
             VStack {
                     MediaContentView(
-                        media: MediaContent(
-                            url: imageUrl,
-                            dimensions: iMeta?.size,
-                            blurHash: iMeta?.blurHash
-                        ),
+                        galleryItem: galleryItem,
                         availableWidth: dim.listWidth,
-                        placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
+                        placeholderHeight: dim.listWidth * galleryItem.aspect,
                         maxHeight: 800,
                         contentMode: .fill,
-                        imageUrls: nrPost.imageUrls,
+                        galleryItems: nrPost.galleryItems,
                         autoload: shouldAutoload
                     )
                     .padding(.horizontal, -10)
                     .overlay(alignment: .bottomTrailing) {
-                        if nrPost.imageUrls.count > 1 {
-                            Text("\(nrPost.imageUrls.count - 1) more")
+                        if nrPost.galleryItems.count > 1 {
+                            Text("\(nrPost.galleryItems.count - 1) more")
                                 .fontWeightBold()
                                 .foregroundColor(.white)
                                 .padding(5)
@@ -139,30 +134,24 @@ struct Kind20: View {
     @ViewBuilder // When there are multiple images, put the text at the top
     private var detailContent: some View {
         VStack {
-            if nrPost.imageUrls.count > 1 {
+            if nrPost.galleryItems.count > 1 {
                 ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme, didStart: $didStart)
                     .padding(.top, 10)
             }
-            ForEach(nrPost.imageUrls.indices, id:\.self) { index in
-                let iMeta: iMetaInfo? = findImeta(nrPost.fastTags, url: nrPost.imageUrls[index].absoluteString) // TODO: More to NRPost.init?
-                
+            ForEach(nrPost.galleryItems) { galleryItem in
                 MediaContentView(
-                    media: MediaContent(
-                        url: nrPost.imageUrls[index],
-                        dimensions: iMeta?.size,
-                        blurHash: iMeta?.blurHash
-                    ),
+                    galleryItem: galleryItem,
                     availableWidth: dim.listWidth,
-                    placeholderHeight: dim.listWidth * (iMeta?.aspect ?? 1.0),
+                    placeholderHeight: dim.listWidth * galleryItem.aspect,
                     contentMode: .fill,
-                    imageUrls: nrPost.imageUrls,
+                    galleryItems: nrPost.galleryItems,
                     autoload: true // We opened detail, so can autoload
                 )
                 .padding(.top, 10)
                 .padding(.horizontal, -10)
             }
             
-            if nrPost.imageUrls.count < 2 {
+            if nrPost.galleryItems.count < 2 {
                 ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme, didStart: $didStart)
                     .padding(.vertical, 10)
             }

@@ -57,7 +57,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     var following = false
    
     var linkPreviewURLs: [URL] = []
-    var imageUrls: [URL] = []
+    var galleryItems: [GalleryItem] = []
     
     var plainTextOnly = false
     
@@ -77,9 +77,9 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         let fastTags: [FastTag] = nEvent.tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4], $0.tag[safe: 5], $0.tag[safe: 6], $0.tag[safe: 7], $0.tag[safe: 8], $0.tag[safe: 9]) }
         let fastPs: [FastTag] = fastTags.filter { $0.0 == "p" }
         
-        let (contentElementsDetail, linkPreviewURLs, imageUrls) = NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags)
+        let (contentElementsDetail, linkPreviewURLs, galleryItems) = NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags)
         self.linkPreviewURLs = linkPreviewURLs
-        self.imageUrls = imageUrls
+        self.galleryItems = galleryItems
         
         self.contentElementsDetail = contentElementsDetail
         

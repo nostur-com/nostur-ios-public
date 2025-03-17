@@ -134,119 +134,111 @@ struct GifInfo: Equatable {
 
 
 #Preview("PNG") {
-         VStack {
-             let mediaContent = MediaContent(url: URL(string: "https://m.primal.net/Pbct.jpg")!)
-             
-             MediaContentView(
-                 media: mediaContent,
-                 availableWidth: 360
-             )
-             .border(Color.blue)
-             .frame(width: 360, height: 360)
-             
-             
-             MediaContentView(
-                 media: mediaContent,
-                 availableWidth: 360,
-                 contentMode: .fill
-             )
-             .border(Color.blue)
-             .frame(width: 360, height: 160)
-             
-             Button("Clear cache") {
-                 ImageProcessing.shared.content.cache.removeAll()
-             }
-         }
-         .environmentObject(Themes.default)
-         .environmentObject(DIMENSIONS.shared)
+    VStack {
+        let galleryItem = GalleryItem(url: URL(string: "https://m.primal.net/Pbct.jpg")!)
+        
+        MediaContentView(
+            galleryItem: galleryItem,
+            availableWidth: 360
+        )
+        .border(Color.blue)
+        .frame(width: 360, height: 360)
+        
+        
+        MediaContentView(
+            galleryItem: galleryItem,
+            availableWidth: 360,
+            contentMode: .fill
+        )
+        .border(Color.blue)
+        .frame(width: 360, height: 160)
+        
+        Button("Clear cache") {
+            ImageProcessing.shared.content.cache.removeAll()
+        }
+    }
+    .environmentObject(Themes.default)
+    .environmentObject(DIMENSIONS.shared)
 }
 
 #Preview("GM") {
-         VStack {
-             let mediaContent = MediaContent(
-                url: URL(string: "https://m.primal.net/PbPR.jpg")!,
-                dimensions: CGSize(
-                    width: 1024,
-                    height: 768
-                )
-             )
-            
-             
-             
-             MediaContentView(
-                 media: mediaContent,
-                 availableWidth: 381,
-                 contentMode: .fit
-             )
-             .border(Color.blue)
-//             .clipped()
-             .frame(width: 381, height: 600)
-//             .clipped()
-             
-             
-             .overlay(alignment: .bottom) {
-                 Text("360x660")
-                     .foregroundColor(.white)
-                     .background(Color.blue)
-             }
-             
-             
-             
-             
-             Button("Clear cache") {
-                 ImageProcessing.shared.content.cache.removeAll()
-             }
-         }
-         .environmentObject(Themes.default)
-         .environmentObject(DIMENSIONS.shared)
+    VStack {
+        let galleryItem = GalleryItem(url: URL(string: "https://m.primal.net/Pbct.jpg")!, dimensions: CGSize(
+            width: 1024,
+            height: 768
+        ))
+        
+        MediaContentView(
+            galleryItem: galleryItem,
+            availableWidth: 381,
+            contentMode: .fit
+        )
+        .border(Color.blue)
+        //             .clipped()
+        .frame(width: 381, height: 600)
+        //             .clipped()
+        
+        
+        .overlay(alignment: .bottom) {
+            Text("360x660")
+                .foregroundColor(.white)
+                .background(Color.blue)
+        }
+        
+        
+        
+        
+        Button("Clear cache") {
+            ImageProcessing.shared.content.cache.removeAll()
+        }
+    }
+    .environmentObject(Themes.default)
+    .environmentObject(DIMENSIONS.shared)
 }
 
 
 #Preview("Good night") {
-         VStack {
-             let mediaContent = MediaContent(
-                url: URL(string: "https://i.nostr.build/3ZAA1HdMP7doa8nv.jpg")!,
-                dimensions: CGSize(
-                    width: 1776,
-                    height: 1184
-                )
-             )
-             
-             MediaContentView(
-                 media: mediaContent,
-                 availableWidth: 360,
-                 contentMode: .fit
-             )
-             .border(Color.blue)
-//             .clipped()
-             .frame(width: 360, height: 5000)
-//             .clipped()
-             
-             
-             .overlay(alignment: .bottom) {
-                 Text("360x5000")
-                     .foregroundColor(.white)
-                     .background(Color.blue)
-             }
-             
-             
-             
-             
-             Button("Clear cache") {
-                 ImageProcessing.shared.content.cache.removeAll()
-             }
-         }
-         .environmentObject(Themes.default)
-         .environmentObject(DIMENSIONS.shared)
+    VStack {
+        let galleryItem = GalleryItem(url: URL(string: "https://i.nostr.build/3ZAA1HdMP7doa8nv.jpg")!, dimensions: CGSize(
+            width: 1776,
+            height: 1184
+        ))
+        
+        MediaContentView(
+            galleryItem: galleryItem,
+            availableWidth: 360,
+            contentMode: .fit
+        )
+        .border(Color.blue)
+        //             .clipped()
+        .frame(width: 360, height: 5000)
+        //             .clipped()
+        
+        
+        .overlay(alignment: .bottom) {
+            Text("360x5000")
+                .foregroundColor(.white)
+                .background(Color.blue)
+        }
+        
+        
+        
+        
+        Button("Clear cache") {
+            ImageProcessing.shared.content.cache.removeAll()
+        }
+    }
+    .environmentObject(Themes.default)
+    .environmentObject(DIMENSIONS.shared)
 }
 
 
 #Preview("GIF") {
     VStack {
-        let mediaContent = MediaContent(url: URL(string: "https://media.tenor.com/8ZwnfDCNcUoAAAAC/doctor-dr.gif")!)
+        let galleryItem = GalleryItem(url: URL(string: "https://media.tenor.com/8ZwnfDCNcUoAAAAC/doctor-dr.gif")!)
         
         MediaContentView(
-            media: mediaContent,
+            galleryItem: galleryItem,
             availableWidth: 360,
             contentMode: .fill
         )
@@ -254,7 +246,7 @@ struct GifInfo: Equatable {
         .frame(width: 360, height: 360)
         
         MediaContentView(
-            media: mediaContent,
+            galleryItem: galleryItem,
             availableWidth: 360
         )
         .border(Color.blue)

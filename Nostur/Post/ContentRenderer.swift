@@ -147,17 +147,17 @@ struct ContentRenderer: View { // VIEW things
                 case .video(let mediaContent):
                     EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
                         .padding(.horizontal, fullWidth ? -10 : 0)
-                case .image(let mediaContent):
+                case .image(let galleryItem):
 //                    Color.red
 //                        .frame(height: 30)
 //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .topLeading)
                     MediaContentView(
-                        media: mediaContent,
+                        galleryItem: galleryItem,
                         availableWidth: availableWidth + (fullWidth ? +20 : 0),
-                        placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * mediaContent.aspect,
+                        placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * galleryItem.aspect,
                         maxHeight: isDetail ? 4000 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                         contentMode: fullWidth ? .fill : .fit,
-                        imageUrls: nrPost.imageUrls,
+                        galleryItems: nrPost.galleryItems,
                         autoload: shouldAutoload,
                         generateIMeta: isPreviewContext
                     )

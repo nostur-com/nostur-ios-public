@@ -10,14 +10,14 @@ import NukeUI
 import Nuke
 
 struct MediaContentView: View {
-    public var media: MediaContent
+    public var galleryItem: GalleryItem
     public var availableWidth: CGFloat
     public var placeholderHeight: CGFloat? // to reduce jumping
     public var maxHeight: CGFloat = 4000.0
     public var contentMode: ContentMode = .fit // if placeholderHeight is set, probably should use fill!!
     public var fullScreen: Bool = false
     
-    public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
+    public var galleryItems: [GalleryItem]? = nil // In case of multiple images in originating post, we can use this swipe to next image
     
     public var upscale: Bool = false
     public var autoload: Bool = false
@@ -32,13 +32,13 @@ struct MediaContentView: View {
     
     var body: some View {
         MediaPlaceholder(
-            url: media.url,
-            blurHash: media.blurHash,
+            galleryItem: galleryItem,
+            blurHash: galleryItem.blurhash,
             expectedImageSize: expectedImageSize(availableWidth: availableWidth, maxHeight: maxHeight),
             maxHeight: maxHeight,
             contentMode: contentMode,
             fullScreen: fullScreen,
-            imageUrls: imageUrls,
+            galleryItems: galleryItems,
             realDimensions: $realDimensions,
             upscale: upscale,
             autoload: autoload,
@@ -141,13 +141,13 @@ struct MediaPlaceholder: View {
     @StateObject private var vm = MediaViewVM()
     @EnvironmentObject private var themes: Themes
     
-    public let url: URL
+    public let galleryItem: GalleryItem
     public var blurHash: String?
     public let expectedImageSize: CGSize
     public let maxHeight: CGFloat
     public var contentMode: ContentMode = .fit
     public var fullScreen: Bool = false
-    public var imageUrls: [URL]? = nil // In case of multiple images in originating post, we can use this swipe to next image
+    public var galleryItems: [GalleryItem]? = nil // In case of multiple images in originating post, we can use this swipe to next image
     
     @Binding var realDimensions: CGSize?
     @State private var gifIsPlaying = false
@@ -252,7 +252,7 @@ struct MediaPlaceholder: View {
                         debounceLoad(forceLoad: true)
                     }
                     .overlay(alignment: .bottomTrailing) {
-                        Text(url.absoluteString)
+                        Text(galleryItem.url.absoluteString)
                             .foregroundColor(themes.theme.accent)
                             .truncationMode(.middle)
                             .lineLimit(1)
@@ -274,7 +274,7 @@ struct MediaPlaceholder: View {
                         debounceLoad(forceLoad: true)
                     }
                     .overlay(alignment: .bottomTrailing) {
-                        Text(url.absoluteString)
+                        Text(galleryItem.url.absoluteString)
                             .foregroundColor(themes.theme.accent)
                             .lineLimit(1)
                             .truncationMode(.middle)
@@ -289,7 +289,7 @@ struct MediaPlaceholder: View {
             VStack {
                 Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
                     .frame(maxWidth: .infinity, alignment: .center)
-                Text(url.absoluteString)
+                Text(galleryItem.url.absoluteString)
                     .truncationMode(.middle)
                     .fontItalic()
                     .foregroundColor(themes.theme.accent)
@@ -323,7 +323,7 @@ struct MediaPlaceholder: View {
                     VStack {
                         Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                             .frame(maxWidth: .infinity, alignment: .center)
-                        Text(url.absoluteString)
+                        Text(galleryItem.url.absoluteString)
                             .foregroundColor(themes.theme.accent)
                             .lineLimit(1)
                             .truncationMode(.middle)
@@ -353,18 +353,22 @@ struct MediaPlaceholder: View {
                         .animation(.smooth(duration: 0.5), value: vm.state)
                 } detailContent: {
                     GalleryFullScreenSwiper(
-                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
-                        items: imageUrls?.map {
+                        initialIndex: galleryItems?.firstIndex(where: { $0.url == galleryItem.url }) ?? 0,
+                        items: galleryItems?.map {
                             GalleryItem(
-                                url: $0,
-                                dimensions: $0.absoluteString == url.absoluteString ? imageInfo.realDimensions : nil,
-                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
-                                imageInfo: $0.absoluteString == url.absoluteString ? imageInfo : nil
+                                url: $0.url,
+                                pubkey: $0.pubkey,
+                                eventId: $0.eventId,
+                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo.realDimensions : nil,
+                                blurhash: $0.url.absoluteString == galleryItem.url.absoluteString ? blurHash : nil,
+                                imageInfo: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo : nil
                             )
                         } ?? [GalleryItem(
-                            url: url,
-                            dimensions: imageInfo.realDimensions ,
-                            blurhash:  blurHash,
+                            url: galleryItem.url,
+                            pubkey: galleryItem.pubkey,
+                            eventId: galleryItem.eventId,
+                            dimensions: imageInfo.realDimensions,
+                            blurhash:  galleryItem.blurhash ?? blurHash,
                             imageInfo: imageInfo)]
                     )
                 }
@@ -381,18 +385,22 @@ struct MediaPlaceholder: View {
                         .animation(.smooth(duration: 0.5), value: vm.state)
                 } detailContent: {
                     GalleryFullScreenSwiper(
-                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
-                        items: imageUrls?.map {
+                        initialIndex: galleryItems?.firstIndex(where: { $0.url == galleryItem.url }) ?? 0,
+                        items: galleryItems?.map {
                             GalleryItem(
-                                url: $0,
-                                dimensions: $0.absoluteString == url.absoluteString ? imageInfo.realDimensions : nil,
-                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
-                                imageInfo: $0.absoluteString == url.absoluteString ? imageInfo : nil
+                                url: $0.url,
+                                pubkey: $0.pubkey,
+                                eventId: $0.eventId,
+                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo.realDimensions : nil,
+                                blurhash: $0.url.absoluteString == galleryItem.url.absoluteString ? blurHash : nil,
+                                imageInfo: $0.url.absoluteString == galleryItem.url.absoluteString ? imageInfo : nil
                             )
                         } ?? [GalleryItem(
-                            url: url,
-                            dimensions: imageInfo.realDimensions ,
-                            blurhash:  blurHash,
+                            url: galleryItem.url,
+                            pubkey: galleryItem.pubkey,
+                            eventId: galleryItem.eventId,
+                            dimensions: imageInfo.realDimensions,
+                            blurhash:  galleryItem.blurhash ?? blurHash,
                             imageInfo: imageInfo)]
                     )
                 }
@@ -417,7 +425,7 @@ struct MediaPlaceholder: View {
                     // Communicate back to set container frame
                     realDimensions = gifInfo.realDimensions
                 }
-                .task(id: url.absoluteString) {
+                .task(id: galleryItem.url.absoluteString) {
                     try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
                     gifIsPlaying = true
                 }
@@ -431,7 +439,7 @@ struct MediaPlaceholder: View {
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fit)
                         .contentShape(Rectangle())
-                        .task(id: url.absoluteString) {
+                        .task(id: galleryItem.url.absoluteString) {
                             try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
                             gifIsPlaying = true
                         }
@@ -440,18 +448,22 @@ struct MediaPlaceholder: View {
                         }
                 } detailContent: {
                     GalleryFullScreenSwiper(
-                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
-                        items: imageUrls?.map {
+                        initialIndex: galleryItems?.firstIndex(where: { $0.url == galleryItem.url }) ?? 0,
+                        items: galleryItems?.map {
                             GalleryItem(
-                                url: $0,
-                                dimensions: $0.absoluteString == url.absoluteString ? gifInfo.realDimensions : nil,
-                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
-                                gifInfo: $0.absoluteString == url.absoluteString ? gifInfo : nil
+                                url: $0.url,
+                                pubkey: $0.pubkey,
+                                eventId: $0.eventId,
+                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString ? gifInfo.realDimensions : nil,
+                                blurhash: $0.url.absoluteString == galleryItem.url.absoluteString ? blurHash : nil,
+                                gifInfo: $0.url.absoluteString == galleryItem.url.absoluteString ? gifInfo : nil
                             )
                         } ?? [GalleryItem(
-                            url: url,
+                            url: galleryItem.url,
+                            pubkey: galleryItem.pubkey,
+                            eventId: galleryItem.eventId,
                             dimensions: gifInfo.realDimensions,
-                            blurhash: blurHash,
+                            blurhash:  galleryItem.blurhash ?? blurHash,
                             gifInfo: gifInfo)]
                     )
                 }
@@ -466,7 +478,7 @@ struct MediaPlaceholder: View {
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fill)
                         .contentShape(Rectangle())
-                        .task(id: url.absoluteString) {
+                        .task(id: galleryItem.url.absoluteString) {
                             try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
                             gifIsPlaying = true
                         }
@@ -475,18 +487,22 @@ struct MediaPlaceholder: View {
                         }
                 } detailContent: {
                     GalleryFullScreenSwiper(
-                        initialIndex: imageUrls?.firstIndex(of: url) ?? 0,
-                        items: imageUrls?.map {
+                        initialIndex: galleryItems?.firstIndex(where: { $0.url == galleryItem.url }) ?? 0,
+                        items: galleryItems?.map {
                             GalleryItem(
-                                url: $0,
-                                dimensions: $0.absoluteString == url.absoluteString ? gifInfo.realDimensions : nil,
-                                blurhash: $0.absoluteString == url.absoluteString ? blurHash : nil,
-                                gifInfo: $0.absoluteString == url.absoluteString ? gifInfo : nil
+                                url: $0.url,
+                                pubkey: $0.pubkey,
+                                eventId: $0.eventId,
+                                dimensions: $0.url.absoluteString == galleryItem.url.absoluteString ? gifInfo.realDimensions : nil,
+                                blurhash: $0.url.absoluteString == galleryItem.url.absoluteString ? blurHash : nil,
+                                gifInfo: $0.url.absoluteString == galleryItem.url.absoluteString ? gifInfo : nil
                             )
                         } ?? [GalleryItem(
-                            url: url,
+                            url: galleryItem.url,
+                            pubkey: galleryItem.pubkey,
+                            eventId: galleryItem.eventId,
                             dimensions: gifInfo.realDimensions,
-                            blurhash: blurHash,
+                            blurhash:  galleryItem.blurhash ?? blurHash,
                             gifInfo: gifInfo)]
                     )
                 }
@@ -522,7 +538,7 @@ struct MediaPlaceholder: View {
                     VStack {
                         Label("Failed to load image", systemImage: "exclamationmark.triangle.fill")
                             .frame(maxWidth: .infinity, alignment: .center)
-                        Text(url.absoluteString)
+                        Text(galleryItem.url.absoluteString)
                             .truncationMode(.middle)
                             .fontItalic()
                             .foregroundColor(themes.theme.accent)
@@ -597,18 +613,25 @@ struct MediaPlaceholder: View {
             if !isVisible && !forceLoad { return }
             
             // Proceed with loading
-            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
+            await vm.load(galleryItem.url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
         }
     }
     
     @MainActor
     private func load(forceLoad: Bool = false) {
         Task.detached(priority: .low) {
-            await vm.load(url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
+            await vm.load(galleryItem.url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
         }
     }
     
-    @MainActor
+    @MainActor // Pause is because onDisappear, and will resume automatically on onAppear
+    private func pauseLoad() {
+        loadTask?.cancel()
+        guard case .loading(let progress) = vm.state else { return }
+        vm.pause(progress)
+    }
+    
+    @MainActor // Cancel is by user
     private func cancelLoad() {
         loadTask?.cancel()
         loadTask = nil
@@ -621,10 +644,10 @@ struct MediaPlaceholder: View {
 //    ScrollView {
         VStack {
             MediaContentView(
-                media: MediaContent(
-                    url:  URL(string: "https://i.nostr.build/baSKxXnbK9aQpuGv.jpg")!,
+                galleryItem: GalleryItem(
+                    url: URL(string: "https://i.nostr.build/baSKxXnbK9aQpuGv.jpg")!,
 //                    dimensions: CGSize(width: 2539, height: 3683)
-                    blurHash: "^SIz^+Iox^xZxvtQtlxuayaxayWC?^n$MxR+V?j]xut7ayWBayoef5jvV?WVR,j@WWWVjZaeoeofRjkCogoJt7azsoWBR+oeWBWXn%oLbaR*WBj["
+                    blurhash: "^SIz^+Iox^xZxvtQtlxuayaxayWC?^n$MxR+V?j]xut7ayWBayoef5jvV?WVR,j@WWWVjZaeoeofRjkCogoJt7azsoWBR+oeWBWXn%oLbaR*WBj["
                 ),
                 availableWidth: 360,
 //                placeholderHeight: 360,
@@ -641,7 +664,7 @@ struct MediaPlaceholder: View {
                 }
             
             MediaContentView(
-                media: MediaContent(
+                galleryItem: GalleryItem(
                     url:  URL(string: "https://i.nostr.build/baSKxXnbK9aQpuGv.jpg")!
 //                    dimensions: CGSize(width: 2539, height: 3683)
 //                    blurHash: "^SIz^+Iox^xZxvtQtlxuayaxayWC?^n$MxR+V?j]xut7ayWBayoef5jvV?WVR,j@WWWVjZaeoeofRjkCogoJt7azsoWBR+oeWBWXn%oLbaR*WBj["
@@ -664,7 +687,7 @@ struct MediaPlaceholder: View {
                 let testUrl = URL(string: "https://nostur.com/screenshots/c2/longform-dark.jpg")!
                 // Test with explicit available space and image dimensions  (no GeometryReader needed)
                 MediaContentView(
-                    media: MediaContent(
+                    galleryItem: GalleryItem(
                         url: testUrl,
                         dimensions: .init(width: 1500, height: 1338)
                     ),
@@ -693,7 +716,7 @@ struct MediaPlaceholder: View {
 ////                
 //                // Test with explicit available space but no image dimensions  (no GeometryReader needed)
                 MediaContentView(
-                    media: MediaContent(
+                    galleryItem: GalleryItem(
                         url: testUrl,
                         dimensions: .init(width: 1500, height: 1338)
                     ),

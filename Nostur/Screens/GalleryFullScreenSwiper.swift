@@ -100,16 +100,13 @@ struct GalleryFullScreenSwiper: View {
     
     private func mediaItemView(for index: Int) -> some View {
         MediaContentView(
-            media: MediaContent(
-                url: items[index].url,
-                dimensions: items[index].dimensions,
-                blurHash: items[index].blurhash
-            ),
+            galleryItem: items[index],
             availableWidth: screenSpace.screenSize.width,
             placeholderHeight: screenSpace.screenSize.height,
             maxHeight: screenSpace.screenSize.height,
             contentMode: .fit,
             fullScreen: true,
+            // Already fullscreen, so don't load "galleryItems" recursively
             autoload: true,
             imageInfo: items[index].imageInfo,
             gifInfo: items[index].gifInfo

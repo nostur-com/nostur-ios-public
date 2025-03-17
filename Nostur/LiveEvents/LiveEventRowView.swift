@@ -77,9 +77,7 @@ struct LiveEventRowView: View {
             
             if let image = liveEvent.thumbUrl {
                 MediaContentView(
-                    media: MediaContent(
-                        url: image
-                    ),
+                    galleryItem: GalleryItem(url: image, pubkey: nrPost.pubkey, eventId: nrPost.id),
                     availableWidth: availableWidth + (fullWidth ? +20 : 0),
                     placeholderHeight: availableWidth + (fullWidth ? +20 : 0) * 9/16,
                     maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,

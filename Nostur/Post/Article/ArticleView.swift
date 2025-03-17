@@ -158,7 +158,7 @@ struct ArticleView: View {
                     if let eventImageUrl = article.eventImageUrl {
                         //                        Text("imageWidth: \(dim.listWidth.description)")
                         MediaContentView(
-                            media: MediaContent(url: eventImageUrl),
+                            galleryItem: GalleryItem(url: eventImageUrl, pubkey: article.pubkey, eventId: article.id),
                             availableWidth: dim.listWidth,
                             placeholderHeight: dim.listWidth / 2, // 1:2 guess??
                             contentMode: .fill,
@@ -238,7 +238,7 @@ struct ArticleView: View {
                 
                 if let image = article.eventImageUrl {
                     MediaContentView(
-                        media: MediaContent(url: image),
+                        galleryItem: GalleryItem(url: image, pubkey: article.pubkey, eventId: article.id),
                         availableWidth: dim.listWidth,
                         placeholderHeight: dim.listWidth / 2, // 1:2 guess??
                         contentMode: .fill,

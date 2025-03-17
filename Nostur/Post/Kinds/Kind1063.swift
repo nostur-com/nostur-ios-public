@@ -116,10 +116,12 @@ struct Kind1063: View {
             }
             else {
                 MediaContentView(
-                    media: MediaContent(
+                    galleryItem: GalleryItem(
                         url: URL(string: fileMetadata.url)!,
+                        pubkey: nrPost.pubkey,
+                        eventId: nrPost.id,
                         dimensions: fileMetadata.size,
-                        blurHash: fileMetadata.blurhash
+                        blurhash: fileMetadata.blurhash
                     ),
                     availableWidth: availableWidth + (fullWidth ? +20 : 0),
                     placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * fileMetadata.aspect,

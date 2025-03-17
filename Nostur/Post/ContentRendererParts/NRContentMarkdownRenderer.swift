@@ -72,7 +72,7 @@ struct NukeImageProvider: ImageProvider {
     func makeImage(url: URL?) -> some View {
         if let url = url {
             MediaContentView(
-                media: MediaContent(url: url),
+                galleryItem: GalleryItem(url: url),
                 availableWidth: maxWidth,
                 placeholderHeight: maxWidth / 2, // 1:2 guess??
                 contentMode: .fill,
