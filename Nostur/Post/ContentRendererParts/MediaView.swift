@@ -53,18 +53,16 @@ struct MediaContentView: View {
         // 1. Always scale to available width
         // 2. If .fit and height > maxHeight, the scale down
         
+        // If .fill just return availableWidth + min(placeholderHeight/maxHeight)
+        
+        if contentMode == .fill {
+            return CGSize(width: availableWidth, height: min(placeholderHeight ?? maxHeight, maxHeight))
+        }
+        
         
         // realDimensions load last, when we finally have them we use them instead of the info further down
         if let realDimensions {
             let aspect = realDimensions.width / realDimensions.height // 200 / 100 = 2
-            //let isPortrait = aspect < 1 // 2 < 1 = false
-            
-            if contentMode == .fill { // 200x100 -> 400x200
-                return CGSize(
-                    width: availableWidth, // 400
-                    height: availableWidth / aspect // 400 / 2 = // 200
-                )
-            }
             
             // if 200 > 100
             if realDimensions.height > maxHeight { // 200 > 100 so 100x200 -> 50x100
@@ -74,14 +72,13 @@ struct MediaContentView: View {
                 )
             }
             
-            // uhh, same as fill? We can reorganize this logic then...
             return CGSize(
                 width: availableWidth, // 400
                 height: availableWidth / aspect // 400 / 2 = // 200
             )
         }
         
-        let metaSize: CGSize? = if let imageWidth = media.dimensions?.width, let imageHeight = media.dimensions?.height {
+        let metaSize: CGSize? = if let imageWidth = galleryItem.dimensions?.width, let imageHeight = galleryItem.dimensions?.height {
             CGSize(width: imageWidth, height: imageHeight)
         }
         else { nil }
@@ -89,15 +86,7 @@ struct MediaContentView: View {
 
         if let metaSize {
             let aspect = metaSize.width / metaSize.height // 200 / 100 = 2
-            //let isPortrait = aspect < 1 // 2 < 1 = false
-            
-            if contentMode == .fill { // 200x100 -> 400x200
-                return CGSize(
-                    width: availableWidth, // 400
-                    height: availableWidth / aspect // 400 / 2 = // 200
-                )
-            }
-            
+                        
             let availableAspect = availableWidth / maxHeight
             
             if availableAspect < aspect { // Fit horizontal or vertical?
