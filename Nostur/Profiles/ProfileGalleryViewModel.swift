@@ -88,7 +88,11 @@ class ProfileGalleryViewModel: ObservableObject {
                 var urls = getImgUrlsFromContent(content)
                 
                 if urls.isEmpty {
-                    urls = event.fastTags.compactMap { imageUrlFromIMetaFastTag($0) }
+                    urls = event.fastTags.compactMap { imageUrlFromIMetaFastTag($0) }.filter { url in 
+                        // Only if url matches imageRegex
+                        let range = NSRange(url.absoluteString.startIndex..<url.absoluteString.endIndex, in: url.absoluteString)
+                        return imageRegex.firstMatch(in: url.absoluteString, range: range) != nil
+                    }
                 }
                 
                 guard !urls.isEmpty else { continue }
@@ -153,3 +157,20 @@ class ProfileGalleryViewModel: ObservableObject {
         self.fetchPostsFromRelays(limit: 999)
     }
 }
+
+func getImgUrlsFromContent(_ content: String) -> [URL] {
+    var urls: [URL] =  []
+    let range = NSRange(content.startIndex..<content.endIndex, in: content)
+    let matches = imageRegex.matches(in: content, range: range)
+    for match in matches {
+        let url = (content as NSString).substring(with: match.range)
+        if let urlURL = URL(string: url) {
+            urls.append(urlURL)
+        }
+    }
+    return urls
+}
+
+let imageRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:png|jpe?g|gif|webp|bmp|avif)(\\?\\S+){0,1}\\b")
+
+let mediaRegex = try! NSRegularExpression(pattern: "(?i)https?:\\/\\/\\S+?\\.(?:mp4|mov|m4a|m3u8|mp3|png|jpe?g|gif|webp|bmp|avif)(\\?\\S+){0,1}\\b")
