@@ -29,7 +29,24 @@ struct ZapReceipt: View {
     @State var showMiniProfile = false
     @State private var didStart = false
     
-    var body: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
+    public var isEmbedded: Bool = false
+    
+    var body: some View {
+        if isEmbedded {
+            content
+                .padding(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(themes.theme.lineColor, lineWidth: 1)
+                )
+        }
+        else {
+            
+        }
+    }
+    
+    @ViewBuilder
+    var content: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
         HStack(alignment: .top) {
             VStack {
                 InnerPFP(pubkey: fromPubkey, pictureUrl:pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: color)

@@ -65,14 +65,26 @@ struct Kind9802: View {
     
     @ViewBuilder
     private var embeddedView: some View {
-        PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
-            
+        
+        
+        if let hlAuthorPubkey = highlightAttributes.authorPubkey, hlAuthorPubkey == nrPost.pubkey {
+            // No need to wrap in PostEmbeddedLayout if the 9802.pubkey is the same as quoted text pubkey
             content
                 .contentShape(Rectangle())
                 .onTapGesture {
                     navigateTo(nrPost)
                 }
-            
+        }
+        else {
+            PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
+                
+                content
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        navigateTo(nrPost)
+                    }
+                
+            }
         }
     }
     
