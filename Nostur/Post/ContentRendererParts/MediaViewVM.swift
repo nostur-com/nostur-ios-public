@@ -91,6 +91,10 @@ class MediaViewVM: ObservableObject {
         }
         catch {
             Task { @MainActor in
+                
+                // Paused is not error
+                if case .paused(let percentage) = state { return }
+                
                 state = .error(error.localizedDescription)
             }
         }
@@ -102,12 +106,20 @@ class MediaViewVM: ObservableObject {
             state = .cancelled
         }
     }
+    
+    public func pause(_ atProgress: Int = 0) {
+        task?.cancel()
+        Task { @MainActor in
+            state = .paused(atProgress)
+        }
+    }
 }
 
 enum MediaViewState: Equatable {
     case initial
     case lowDataMode
     case loading(Int) // Progress percentage
+    case paused(Int)
     case httpBlocked
     case dontAutoLoad
     case image(ImageInfo)

@@ -201,12 +201,16 @@ struct MediaPlaceholder: View {
     @ViewBuilder
     private var mediaPlaceholder: some View {
         switch vm.state {
-        case .loading(let percentage):
+        case .loading(let percentage), .paused(let percentage):
             themes.theme.listBackground.opacity(0.2)
+                .onAppear {
+                    guard case .paused(let percentage) = vm.state else { return }
+                    debounceLoad(forceLoad: true)
+                }
                 .onDisappear {
                     guard case .loading(let percentage) = vm.state else { return }
                     if percentage < 98 {
-                        cancelLoad()
+                        pauseLoad()
                     }
                 }
                 .overlay {
