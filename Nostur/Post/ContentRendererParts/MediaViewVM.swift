@@ -38,15 +38,15 @@ class MediaViewVM: ObservableObject {
         
         self.task = ImageProcessing.shared.content.imageTask(with: imageRequest)
         
+        Task { @MainActor in
+            state = .loading(0)
+        }
+        
         guard let task = self.task else {
             Task { @MainActor in
                 state = .error("Error loading media")
             }
             return
-        }
-        
-        Task { @MainActor in
-            state = .loading(0)
         }
         
         for await progress in task.progress {
@@ -93,7 +93,7 @@ class MediaViewVM: ObservableObject {
             Task { @MainActor in
                 
                 // Paused is not error
-                if case .paused(let percentage) = state { return }
+                if case .paused(_) = state { return }
                 
                 state = .error(error.localizedDescription)
             }
