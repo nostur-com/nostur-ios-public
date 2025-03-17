@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "1600"
-   wasCreatedForAppExtension = "YES"
+   LastUpgradeVersion = "1620"
    version = "2.0">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -44,19 +43,6 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
-      <Testables>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1FBCD6112CAAB112008258C3"
-               BuildableName = "NosturTests.xctest"
-               BlueprintName = "NosturTests"
-               ReferencedContainer = "container:Nostur.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-      </Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
