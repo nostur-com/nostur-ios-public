@@ -23,7 +23,7 @@ struct ProfileView: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
 
-    @State private var profilePicViewerIsShown = false
+//    @State private var profilePicViewerIsShown = false
     @State private var selectedSubTab = "Posts"
 
     @State private var editingAccount: CloudAccount?
@@ -41,30 +41,38 @@ struct ProfileView: View {
                     
                     ProfileBanner(banner: nrContact.banner, width: dim.listWidth)
                         .overlay(alignment: .bottomLeading, content: {
-                            PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
-                                .overlay(
+                            ZoomableItem {
+                                PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
+                                    .overlay(
+                                        Circle()
+                                            .strokeBorder(themes.theme.background, lineWidth: 3)
+                                    )
+                                    .background {
+                                        GeometryReader { geometry in
+                                            Color.clear
+                                                .preference(key: ScrollOffset.self, value: geometry.frame(in: .global).origin)
+                                        }
+                                    }
+                                    .onPreferenceChange(ScrollOffset.self) { position in
+                                        self.scrollPosition.position = position
+                                    }
+                                    .overlay(alignment: .bottomTrailing) {
+                                        if let fixedPfp = vm.fixedPfp {
+                                            FixedPFP(picture: fixedPfp)
+                                        }
+                                    }
+                            } detailContent: {
+                                if let pictureUrl = nrContact.pictureUrl {
+                                    GalleryFullScreenSwiper(
+                                        initialIndex: 0,
+                                        items: [GalleryItem(url: pictureUrl)]
+                                    )
+                                }
+                                else {
                                     Circle()
                                         .strokeBorder(themes.theme.background, lineWidth: 3)
-                                )
-                                .onTapGesture {
-                                    if (nrContact.pictureUrl != nil) {
-                                        profilePicViewerIsShown = true
-                                    }
                                 }
-                                .background {
-                                    GeometryReader { geometry in
-                                        Color.clear
-                                            .preference(key: ScrollOffset.self, value: geometry.frame(in: .global).origin)
-                                    }
-                                }
-                                .onPreferenceChange(ScrollOffset.self) { position in
-                                    self.scrollPosition.position = position
-                                }
-                                .overlay(alignment: .bottomTrailing) {
-                                    if let fixedPfp = vm.fixedPfp {
-                                        FixedPFP(picture: fixedPfp)
-                                    }
-                                }
+                            }
                                 .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
                         })
                     
@@ -390,10 +398,10 @@ struct ProfileView: View {
                 NIP05Verifier.shared.verify(contact)
             }
         }
-        .fullScreenCover(isPresented: $profilePicViewerIsShown) {
-            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl: nrContact.pictureUrl!)
-                .environmentObject(themes)
-        }
+//        .fullScreenCover(isPresented: $profilePicViewerIsShown) {
+//            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl: nrContact.pictureUrl!)
+//                .environmentObject(themes)
+//        }
     }
 }
 
