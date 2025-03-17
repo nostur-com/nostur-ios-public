@@ -400,32 +400,7 @@ func findImeta(_ fastTags: [FastTag], url:String) -> iMetaInfo? {
     
     
     if let imetaTag {
-    
-        // Check each value in found imeta tag for 'dim'
-        var size: CGSize?
-        for value in getTagValues(imetaTag) {
-            guard let value = value else { continue }
-            let parts = value.split(separator: " ", maxSplits: 1)
-            if parts.count == 2 && String(parts[0]) == "dim" {
-                let dim = parts[1].split(separator: "x", maxSplits: 1)
-                if dim.count == 2, let width = Int(dim[0]), let height = Int(dim[1]) {
-                    size = CGSize(width: width, height: height)
-                }
-            }
-        }
-        
-        var blurHash: String?
-        for value in getTagValues(imetaTag) {
-            guard let value = value else { continue }
-            let parts = value.split(separator: " ", maxSplits: 1)
-            if parts.count == 2 && String(parts[0]) == "blurhash" {
-                blurHash = String(parts[1])
-            }
-        }
-        
-        if blurHash != nil || size != nil {
-            return iMetaInfo(size: size, blurHash: blurHash)
-        }
+        return iMetaFromFastTag(imetaTag)
     }
     
     // NIP-54
@@ -433,6 +408,37 @@ func findImeta(_ fastTags: [FastTag], url:String) -> iMetaInfo? {
     
     return nil
 }
+
+func iMetaFromFastTag(_ fastTag: FastTag) -> iMetaInfo? {
+    // Check each value in found imeta tag for 'dim'
+    var size: CGSize?
+    for value in getTagValues(fastTag) {
+        guard let value = value else { continue }
+        let parts = value.split(separator: " ", maxSplits: 1)
+        if parts.count == 2 && String(parts[0]) == "dim" {
+            let dim = parts[1].split(separator: "x", maxSplits: 1)
+            if dim.count == 2, let width = Int(dim[0]), let height = Int(dim[1]) {
+                size = CGSize(width: width, height: height)
+            }
+        }
+    }
+    
+    var blurHash: String?
+    for value in getTagValues(fastTag) {
+        guard let value = value else { continue }
+        let parts = value.split(separator: " ", maxSplits: 1)
+        if parts.count == 2 && String(parts[0]) == "blurhash" {
+            blurHash = String(parts[1])
+        }
+    }
+    
+    if blurHash != nil || size != nil {
+        return iMetaInfo(size: size, blurHash: blurHash)
+    }
+    
+    return nil
+}
+
 
 // NIP-54
 func findImetaFromUrl(_ url: String) -> iMetaInfo? {
@@ -477,9 +483,6 @@ func imageUrlFromIMetaFastTag(_ tag: FastTag) -> URL? {
 
 func galleryItemFromIMetaFastTag(_ tag: FastTag, pubkey: String? = nil, eventId: String? = nil) -> GalleryItem? {
     guard let url = imageUrlFromIMetaFastTag(tag) else { return nil }
-    
-    guard let iMeta = findImetaFromUrl(url.absoluteString) else { return nil }
-    
-    return GalleryItem(url: url, pubkey: pubkey, eventId: eventId, dimensions: iMeta.size, blurhash: iMeta.blurHash)
-
+    let iMeta: iMetaInfo? = iMetaFromFastTag(tag)
+    return GalleryItem(url: url, pubkey: pubkey, eventId: eventId, dimensions: iMeta?.size, blurhash: iMeta?.blurHash)
 }
