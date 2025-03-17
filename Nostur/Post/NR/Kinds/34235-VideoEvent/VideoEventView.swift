@@ -19,11 +19,15 @@ struct VideoEventView: View {
     public var imageUrl: URL?
     public var thumb: String?
     
-    public var autoload:Bool = false
+    public var autoload: Bool = false
     
     public var theme: Theme
     
     public var availableWidth: CGFloat?
+    
+    var imageWidth: CGFloat {
+        availableWidth ?? dim.availableNoteRowImageWidth()
+    }
     
     static let aspect: CGFloat = 16/9
     
@@ -32,7 +36,15 @@ struct VideoEventView: View {
             Group {
                 VStack(alignment: .leading, spacing: 5) {
                     if let imageUrl {
-                        SingleMediaViewer(url: imageUrl, pubkey: "", imageWidth: availableWidth ?? dim.availableNoteRowImageWidth(), fullWidth: true, autoload: autoload, contentPadding: 0, contentMode: .aspectFit, upscale: true, theme: theme, tapUrl: url)
+                        MediaContentView(
+                            galleryItem: GalleryItem(url: imageUrl),
+                            availableWidth: imageWidth,
+                            placeholderHeight: imageWidth * 9/16,
+                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            contentMode: .fit,
+                            autoload: autoload
+//                            tapUrl: url
+                        )
                     }
                     else {
                         Image(systemName: "movieclapper")

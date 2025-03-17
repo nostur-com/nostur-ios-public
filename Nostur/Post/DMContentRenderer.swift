@@ -107,29 +107,17 @@ struct DMContentRenderer: View { // VIEW things
                 case .video(let mediaContent):
                     EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: availableWidth, autoload: false, theme: theme, didStart: $didStart)
                     
-                case .image(let mediaContent):
-                    if let dimensions = mediaContent.dimensions {
-                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
+                case .image(let galleryItem):
+                    MediaContentView(
+                        galleryItem: galleryItem,
+                        availableWidth: availableWidth,
+                        placeholderHeight: availableWidth * galleryItem.aspect,
+                        maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                        contentMode: .fit,
+                        autoload: false
+                    )
+                    .padding(.vertical, 10)
 
-                        SingleMediaViewer(url: mediaContent.url, pubkey: pubkey, height:scaledDimensions.height, imageWidth: availableWidth, fullWidth: false, autoload: false, contentPadding: 0, theme: theme)
-                            .frame(width: max(25,scaledDimensions.width), height: max(25,scaledDimensions.height))
-                            .background {
-                                if SettingsStore.shared.lowDataMode {
-                                    theme.lineColor.opacity(0.2)
-                                }
-                            }
-                            .padding(.horizontal, 0)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                    }
-                    else {
-                        SingleMediaViewer(url: mediaContent.url, pubkey: pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: false, autoload: false, contentPadding: 0, theme: theme)
-                            .padding(.horizontal, 0)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-                    }
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: false, theme: theme, linkColor: isSentByCurrentUser ? .mint : theme.accent)
                         .padding(.vertical, 10)

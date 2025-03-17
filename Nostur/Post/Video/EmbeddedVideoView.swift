@@ -31,8 +31,16 @@ struct EmbeddedVideoView: View {
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     if let thumbnail {
-                        SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
-                            .allowsHitTesting(false)
+                        MediaContentView(
+                            galleryItem: GalleryItem(url: thumbnail),
+                            availableWidth: availableWidth,
+                            placeholderHeight: availableWidth * 9/16,
+                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            contentMode: .fit,
+                            autoload: autoload
+//                            tapUrl: url
+                        )
+                        .allowsHitTesting(false)
                     }
                 }
                 .overlay {
@@ -85,8 +93,16 @@ struct EmbeddedVideoView: View {
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     if let thumbnail {
-                        SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
-                            .allowsHitTesting(false)
+                        MediaContentView(
+                            galleryItem: GalleryItem(url: thumbnail),
+                            availableWidth: availableWidth,
+                            placeholderHeight: availableWidth * 9/16,
+                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            contentMode: .fit,
+                            autoload: autoload
+//                            tapUrl: url
+                        )
+                        .allowsHitTesting(false)
                     }
                 }
                 .overlay {
@@ -227,8 +243,16 @@ struct EmbeddedVideoView: View {
                             .truncationMode(.middle)
                     }
                     else if let thumbnail {
-                        SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
-                            .allowsHitTesting(false)
+                        MediaContentView(
+                            galleryItem: GalleryItem(url: thumbnail),
+                            availableWidth: availableWidth,
+                            placeholderHeight: availableWidth * 9/16,
+                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            contentMode: .fit,
+                            autoload: autoload
+//                            tapUrl: url
+                        )
+                        .allowsHitTesting(false)
                     }
                 }
                 .overlay {
@@ -279,8 +303,16 @@ struct EmbeddedVideoView: View {
                                 theme.listBackground
                                     .overlay {
                                         if let thumbnail {
-                                            SingleMediaViewer(url: thumbnail, pubkey: "", imageWidth: availableWidth, autoload: true)
-                                                .allowsHitTesting(false)
+                                            MediaContentView(
+                                                galleryItem: GalleryItem(url: thumbnail),
+                                                availableWidth: availableWidth,
+                                                placeholderHeight: availableWidth * 9/16,
+                                                maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                                                contentMode: .fit,
+                                                autoload: autoload
+                    //                            tapUrl: url
+                                            )
+                                            .allowsHitTesting(false)
                                         }
                                     }
                                     .overlay {

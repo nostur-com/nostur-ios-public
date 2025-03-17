@@ -199,84 +199,17 @@ struct NXContentRenderer: View { // VIEW things
                         EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey, availableWidth: vc.availableWidth + (vc.fullWidthImages ? 20 : 0), autoload: shouldAutoload, theme: vc.theme, didStart: $didStart)
                             .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 
-                    case .image(let mediaContent):
-                        if let dimensions = mediaContent.dimensions {
-                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: vc.availableWidth, maxHeight: vc.isDetail ? 5000.0 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-    #if DEBUG
-    //                                                Text(".image.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
-    //                                                    .frame(maxWidth: .infinity)
-    //                                                    .background(.red)
-    //                                                    .foregroundColor(.white)
-    //                                                    .debugDimensions()
-    #endif
+                    case .image(let galleryItem):
+                        MediaContentView(
+                            galleryItem: galleryItem,
+                            availableWidth: vc.availableWidth + (vc.fullWidthImages ? +20 : 0),
+                            placeholderHeight: (vc.availableWidth + (vc.fullWidthImages ? +20 : 0)) * galleryItem.aspect,
+                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            contentMode: .fit,
+                            autoload: shouldAutoload
+                        )
+                        .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 
-
-                            if vc.fullWidthImages || vc.isDetail {
-                                SingleMediaViewer(url: mediaContent.url, pubkey: nxEvent.pubkey, height: scaledDimensions.height, imageWidth: vc.availableWidth, fullWidth: vc.fullWidthImages, autoload: shouldAutoload, contentPadding: nxEvent.kind == 30023 ? 10 : 0, theme: vc.theme, scaledDimensions: scaledDimensions, imageUrls: nxEvent.imageUrls)
-                                    .background {
-                                        if SettingsStore.shared.lowDataMode {
-                                            vc.theme.lineColor.opacity(0.2)
-                                        }
-                                    }
-                                    .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
-    //                                .debugDimensions("smv")
-                                    .padding(.vertical, 10)
-                                    .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-    //                                .debugDimensions("smv.frame")
-                                    .id(index)
-        //                            .withoutAnimation()
-        //                            .transaction { t in t.animation = nil }
-                            }
-                            else {
-                                SingleMediaViewer(url: mediaContent.url, pubkey: nxEvent.pubkey, height: scaledDimensions.height, imageWidth: vc.availableWidth, fullWidth: vc.fullWidthImages, autoload: shouldAutoload, contentPadding: nxEvent.kind == 30023 ? 10 : 0, theme: vc.theme, scaledDimensions: scaledDimensions, imageUrls: nxEvent.imageUrls)
-    //                                .fixedSize(horizontal: false, vertical: true)
-                                    .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
-        //                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
-                                    .background {
-                                        if SettingsStore.shared.lowDataMode {
-                                            vc.theme.lineColor.opacity(0.2)
-                                        }
-                                    }
-                                    .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
-                                    .padding(.vertical, 10)
-                                    .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                                    .id(index)
-        //                            .withoutAnimation()
-        //                            .transaction { t in t.animation = nil }
-                            }
-
-
-                        }
-                        else {
-
-    #if DEBUG
-                            //                        Text(".image.availableWidth: \(Int(availableWidth))")
-                            //                            .frame(maxWidth: .infinity)
-                            //                            .background(.red)
-                            //                            .foregroundColor(.white)
-                            //                            .debugDimensions()
-    #endif
-
-                                MediaContentView(
-                                    media: mediaContent,
-                                    availableWidth: vc.availableWidth - (nxEvent.kind == 30023 ? 10 : 0),
-                                    placeholderHeight: 300,
-                                    maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
-                                    contentMode: .fill,
-                                    imageUrls: nxEvent.imageUrls,
-                                    upscale: true,
-                                    autoload: shouldAutoload
-                                )
-    //                            .debugDimensions("image")
-                                .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-    //                            .debugDimensions("image.frame")
-                                .id(index)
-    //                            .background(Color.yellow)
-    //                            .withoutAnimation()
-    //                            .transaction { t in t.animation = nil }
-                        }
                     case .linkPreview(let url):
                         LinkPreviewView(url: url, autoload: shouldAutoload, theme: vc.theme)
                             .padding(.vertical, 10)

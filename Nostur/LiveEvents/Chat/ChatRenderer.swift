@@ -124,57 +124,16 @@ struct ChatRenderer: View { // VIEW things
                         .id(index)
                 case .video(let mediaContent):
                     EmbeddedVideoView(url: mediaContent.url, pubkey: nrChat.pubkey, availableWidth: availableWidth, autoload: shouldAutoload, theme: theme, didStart: $didStart)
-                case .image(let mediaContent):
-                    if let dimensions = mediaContent.dimensions {
-                        let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: availableWidth, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-#if DEBUG
-                        //                        Text(".image.availableWidth (SD): \(Int(availableWidth))\ndim:\(dimensions.debugDescription)\nSD: \(scaledDimensions.debugDescription)")
-                        //                            .frame(maxWidth: .infinity)
-                        //                            .background(.red)
-                        //                            .foregroundColor(.white)
-                        //                            .debugDimensions()
-#endif
-                        
-                        
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrChat.pubkey, height: scaledDimensions.height, imageWidth: availableWidth, fullWidth: false, autoload: shouldAutoload, contentPadding: 0, theme: theme, scaledDimensions: scaledDimensions, imageUrls: nrChat.imageUrls)
-//                                .fixedSize(horizontal: false, vertical: true)
-                            .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
-//                            .debugDimensions("sd.image \(scaledDimensions.width)x\(scaledDimensions.height)")
-                            .background {
-                                if SettingsStore.shared.lowDataMode {
-                                    theme.lineColor.opacity(0.2)
-                                }
-                            }
-                            .padding(.horizontal, 0)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-                            .id(index)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
-                        
-
-                    }
-                    else {
-                        
-#if DEBUG
-                        //                        Text(".image.availableWidth: \(Int(availableWidth))")
-                        //                            .frame(maxWidth: .infinity)
-                        //                            .background(.red)
-                        //                            .foregroundColor(.white)
-                        //                            .debugDimensions()
-#endif
-                        
-                        SingleMediaViewer(url: mediaContent.url, pubkey: nrChat.pubkey, height:DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, imageWidth: availableWidth, fullWidth: false, autoload: shouldAutoload, contentPadding: 0, theme: theme, imageUrls: nrChat.imageUrls)
-//                            .debugDimensions("image")
-                            .padding(.horizontal, 0)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: SettingsStore.shared.lowDataMode ? .leading : .center)
-//                            .debugDimensions("image.frame")
-                            .id(index)
-//                            .background(Color.yellow)
-//                            .withoutAnimation()
-//                            .transaction { t in t.animation = nil }
-                    }
+                case .image(let galleryItem):
+                    MediaContentView(
+                        galleryItem: galleryItem,
+                        availableWidth: availableWidth,
+                        placeholderHeight: availableWidth * galleryItem.aspect,
+                        maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                        contentMode: .fit,
+                        autoload: shouldAutoload
+                    )
+                    .padding(.vertical, 10)
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
                         .padding(.vertical, 10)
