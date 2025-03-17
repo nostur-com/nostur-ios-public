@@ -29,8 +29,8 @@ struct WithSheets: ViewModifier {
     @State private var privateNote: CloudPrivateNote? = nil
     @State private var post: Event? = nil
     @State private var contact: Contact? = nil
-    @State private var fullImage: FullScreenItem? = nil
-    @State private var fullImage17: FullScreenItem17? = nil
+//    @State private var fullImage: FullScreenItem? = nil
+//    @State private var fullImage17: FullScreenItem17? = nil
     @State private var reportPost: ReportPost? = nil
     @State private var reportContact: ReportContact? = nil
     @State private var addRemoveContactFromList: NRContact? = nil
@@ -73,60 +73,60 @@ struct WithSheets: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .onReceive(receiveNotification(.fullScreenView)) { notification in
-                let item = notification.object as! FullScreenItem
-                fullImage = item
-            }
-            .fullScreenCover(item: $fullImage) { f in
-                NBNavigationStack {
-                    FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem, mediaPostPreview: $mediaPostPreview, sharableImage: $sharableImage, sharableGif: $sharableGif)
-                        .environmentObject(themes)
-                        .environmentObject(dim)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
-                        .onAppear(perform: {
-                            sharableImage = nil
-                            sharableGif = nil
-                        })
-                        .onDisappear(perform: {
-                            sharableImage = nil
-                            sharableGif = nil
-                        })
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button("Close", systemImage: "multiply") {
-                                    fullImage = nil
-                                    dismiss()
-                                }
-                                .font(.title2)
-                                .buttonStyle(.borderless)
-                                .foregroundColor(themes.theme.accent)
-                            }
-                            ToolbarItem(placement: .topBarTrailing) {
-                                if let sharableImage {
-                                    ShareMediaButton(sharableImage: sharableImage)
-                                }
-                                else if let sharableGif {
-                                    ShareGifButton(sharableGif: sharableGif)
-                                }
-                            }
-                        }
-                }
-                .nbUseNavigationStack(.never)
-            }
-            .onReceive(receiveNotification(.fullScreenView17)) { notification in
-                let item = notification.object as! FullScreenItem17
-                fullImage17 = item
-            }
-            .fullScreenCover(item: $fullImage17) { f in
-                NBNavigationStack {
-                    GalleryFullScreenSwiper(initialIndex: f.index, items: f.items)
-                        .environmentObject(themes)
-                        .environmentObject(dim)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
-                }
-                .nbUseNavigationStack(.never)
-            }
-        
+//            .onReceive(receiveNotification(.fullScreenView)) { notification in
+//                let item = notification.object as! FullScreenItem
+//                fullImage = item
+//            }
+//            .fullScreenCover(item: $fullImage) { f in
+//                NBNavigationStack {
+//                    FullImageViewer(fullImageURL: f.url, galleryItem: f.galleryItem, mediaPostPreview: $mediaPostPreview, sharableImage: $sharableImage, sharableGif: $sharableGif)
+//                        .environmentObject(themes)
+//                        .environmentObject(dim)
+//                        .presentationBackgroundCompat(themes.theme.listBackground)
+//                        .onAppear(perform: {
+//                            sharableImage = nil
+//                            sharableGif = nil
+//                        })
+//                        .onDisappear(perform: {
+//                            sharableImage = nil
+//                            sharableGif = nil
+//                        })
+//                        .toolbar {
+//                            ToolbarItem(placement: .topBarLeading) {
+//                                Button("Close", systemImage: "multiply") {
+//                                    fullImage = nil
+//                                    dismiss()
+//                                }
+//                                .font(.title2)
+//                                .buttonStyle(.borderless)
+//                                .foregroundColor(themes.theme.accent)
+//                            }
+//                            ToolbarItem(placement: .topBarTrailing) {
+//                                if let sharableImage {
+//                                    ShareMediaButton(sharableImage: sharableImage)
+//                                }
+//                                else if let sharableGif {
+//                                    ShareGifButton(sharableGif: sharableGif)
+//                                }
+//                            }
+//                        }
+//                }
+//                .nbUseNavigationStack(.never)
+//            }
+//            .onReceive(receiveNotification(.fullScreenView17)) { notification in
+//                let item = notification.object as! FullScreenItem17
+//                fullImage17 = item
+//            }
+//            .fullScreenCover(item: $fullImage17) { f in
+//                NBNavigationStack {
+//                    GalleryFullScreenSwiper(initialIndex: f.index, items: f.items)
+//                        .environmentObject(themes)
+//                        .environmentObject(dim)
+//                        .presentationBackgroundCompat(themes.theme.listBackground)
+//                }
+//                .nbUseNavigationStack(.never)
+//            }
+//        
             .onReceive(receiveNotification(.editingPrivateNote)) { notification in
                 let note = notification.object as! CloudPrivateNote
                 self.privateNote = note
@@ -472,9 +472,9 @@ struct WithSheets: ViewModifier {
                 }
                 
             }
-            .sheet(item: $sharablePostImage) { sharablePostImage in
-                ActivityView(activityItems: [sharablePostImage])
-            }
+//            .sheet(item: $sharablePostImage) { sharablePostImage in
+//                ActivityView(activityItems: [sharablePostImage])
+//            }
         
         // Share post weblink
             .onReceive(receiveNotification(.shareWeblink)) { notification in
@@ -506,9 +506,9 @@ struct WithSheets: ViewModifier {
                     self.shareableWeblink = ShareableWeblink(url: url)
                 }
             }
-            .sheet(item: $shareableWeblink) { shareableWeblink in
-                ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
-            }
+//            .sheet(item: $shareableWeblink) { shareableWeblink in
+//                ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
+//            }
         
             .onReceive(receiveNotification(.showMiniProfile)) { notification in
                 let miniProfileSheetInfo = notification.object as! MiniProfileSheetInfo

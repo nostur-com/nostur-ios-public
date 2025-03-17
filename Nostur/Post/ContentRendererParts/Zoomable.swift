@@ -70,13 +70,6 @@ struct Zoomable<Content: View>: View {
                 
                 if viewState == .zoomed {
                     ZStack(alignment: .topLeading) {
-//                        // Background overlay
-//                        Color.black.opacity(animationProgress)
-//                            .edgesIgnoringSafeArea(.all)
-//                            .onTapGesture {
-//                                closeWithAnimation()
-//                            }
-                        
                         // Content container
                         if let detailContent {
                             detailContent
