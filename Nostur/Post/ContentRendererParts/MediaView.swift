@@ -330,6 +330,7 @@ struct MediaPlaceholder: View {
                         .resizable()
                         .scaledToFill()
                         .animation(.smooth(duration: 0.5), value: vm.state)
+                        .frame(width: availableWidth, height: height, alignment: .center)
                 } detailContent: {
                     GalleryFullScreenSwiper(
                         initialIndex: galleryItems?.firstIndex(where: { $0.url == galleryItem.url }) ?? 0,
@@ -424,6 +425,7 @@ struct MediaPlaceholder: View {
                     GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .scaledToFill()
+                        .frame(width: availableWidth, height: height, alignment: .center)
                         .contentShape(Rectangle())
                         .task(id: galleryItem.url.absoluteString) {
                             try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
