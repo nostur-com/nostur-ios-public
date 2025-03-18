@@ -91,29 +91,6 @@ struct NXColumnView: View {
             }
             .nbUseNavigationStack(.never)
         })
-        
-        
-        // Resume on (re)connect or back from background
-        .onChange(of: scenePhase) { newScenePhase in
-            switch newScenePhase {
-            case .active:
-                if isVisible && !IS_CATALYST {
-                    if (NRState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
-                        viewModel.resume()
-                    }
-                }
-                else if isVisible {
-                    viewModel.resume()
-                }
-                
-            case .background:
-                if !IS_CATALYST && ((!config.id.starts(with: "Following-") || config.name == "Explore")) {
-                    viewModel.pause()
-                }
-            default:
-                break
-            }
-        }
     }
 }
 
