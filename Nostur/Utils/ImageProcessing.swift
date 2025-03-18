@@ -172,7 +172,9 @@ func pfpImageRequestFor(_ pictureUrl: URL) -> ImageRequest {
 // Use this function to make sure the image request is same in SingleImageViewer, SmoothList prefetch and SmoothList cancel prefetch.
 // else Nuke will prefetch wrong request
 func makeImageRequest(_ url: URL, label: String = "", overrideLowDataMode: Bool = false, size: CGFloat? = nil) -> ImageRequest {
+#if DEBUG
     L.og.debug("ImageRequest: \(url.absoluteString), \(label)")
+#endif
     return ImageRequest(url: url,
                  processors: [
                     .resize(size: CGSize(width: size ?? ScreenSpace.shared.screenSize.width, height: size ?? ScreenSpace.shared.screenSize.height), contentMode: .aspectFit, upscale: false)

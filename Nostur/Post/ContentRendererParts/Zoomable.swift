@@ -26,7 +26,6 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
                     .readSize(onChange: { size in
                         guard contentSize != size else { return }
                         contentSize = size
-                        print("contentSize: \(contentSize)")
                     })
                     .onTapGesture(coordinateSpace: .global) { _ in
                         let frame = geometry.frame(in: .global)
