@@ -390,11 +390,11 @@ struct GalleryItem: Identifiable, Equatable, Hashable {
         }
     }
     
-    var aspect: CGFloat {
+    var aspect: CGFloat? {
         if let dimensions {
-            return dimensions.height / dimensions.width
+            return dimensions.width / dimensions.height
         } else {
-            return 1
+            return nil
         }
     }
 

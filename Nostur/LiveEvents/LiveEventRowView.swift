@@ -79,9 +79,9 @@ struct LiveEventRowView: View {
                 MediaContentView(
                     galleryItem: GalleryItem(url: image, pubkey: nrPost.pubkey, eventId: nrPost.id),
                     availableWidth: availableWidth,
-                    placeholderHeight: availableWidth * 9/16,
+                    placeholderAspect: 16/9,
                     maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
-                    contentMode: .fill,
+                    contentMode: .fit,
                     upscale: true,
                     autoload: shouldAutoload
                 )

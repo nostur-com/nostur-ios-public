@@ -74,8 +74,8 @@ struct NukeImageProvider: ImageProvider {
             MediaContentView(
                 galleryItem: GalleryItem(url: url),
                 availableWidth: maxWidth,
-                placeholderHeight: maxWidth / 2, // 1:2 guess??
-                contentMode: .fill,
+                placeholderAspect: 2/1,
+                contentMode: .fit,
                 upscale: true,
                 autoload: true
             )

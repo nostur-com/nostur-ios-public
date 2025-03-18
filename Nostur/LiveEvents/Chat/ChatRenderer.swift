@@ -128,7 +128,6 @@ struct ChatRenderer: View { // VIEW things
                     MediaContentView(
                         galleryItem: galleryItem,
                         availableWidth: availableWidth,
-                        placeholderHeight: availableWidth * galleryItem.aspect,
                         maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                         contentMode: .fit,
                         autoload: shouldAutoload

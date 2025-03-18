@@ -375,11 +375,11 @@ struct iMetaInfo {
     var size: CGSize?
     var blurHash: String?
     
-    var aspect: CGFloat {
-        if let size = size {
-            return size.height / size.width
+    var aspect: CGFloat? {
+        if let size {
+            return size.width / size.height
         } else {
-            return 1.0
+            return nil
         }
     }
 }

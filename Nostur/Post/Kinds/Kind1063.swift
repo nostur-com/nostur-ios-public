@@ -124,9 +124,8 @@ struct Kind1063: View {
                         blurhash: fileMetadata.blurhash
                     ),
                     availableWidth: availableWidth + (fullWidth ? +20 : 0),
-                    placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * fileMetadata.aspect,
                     maxHeight: 800,
-                    contentMode: .fill,
+                    contentMode: .fit,
                     autoload: shouldAutoload
                 )
                 .padding(.horizontal, fullWidth ? -10 : 0)

@@ -14,8 +14,7 @@ class MediaViewVM: ObservableObject {
     
     private var task: AsyncImageTask?
     
-    public func load(_ url: URL, expectedImageSize: CGSize, contentMode: ContentMode = .fit,
-                     upscale: Bool = false, forceLoad: Bool = false, generateIMeta: Bool = false) async {
+    public func load(_ url: URL, forceLoad: Bool = false, generateIMeta: Bool = false) async {
         if SettingsStore.shared.lowDataMode && !forceLoad {
             Task { @MainActor in
                 state = .lowDataMode

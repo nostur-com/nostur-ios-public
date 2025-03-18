@@ -39,7 +39,7 @@ struct VideoEventView: View {
                         MediaContentView(
                             galleryItem: GalleryItem(url: imageUrl),
                             availableWidth: imageWidth,
-                            placeholderHeight: imageWidth * 9/16,
+                            placeholderAspect: 16/9,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,
                             autoload: autoload

@@ -102,9 +102,9 @@ struct Kind20: View {
                     MediaContentView(
                         galleryItem: galleryItem,
                         availableWidth: dim.listWidth,
-                        placeholderHeight: dim.listWidth * galleryItem.aspect,
+                        placeholderAspect: 1.0,
                         maxHeight: 800,
-                        contentMode: .fill,
+                        contentMode: .fit,
                         galleryItems: nrPost.galleryItems,
                         autoload: shouldAutoload
                     )
@@ -142,8 +142,8 @@ struct Kind20: View {
                 MediaContentView(
                     galleryItem: galleryItem,
                     availableWidth: dim.listWidth,
-                    placeholderHeight: dim.listWidth * galleryItem.aspect,
-                    contentMode: .fill,
+                    placeholderAspect: 1.0,
+                    contentMode: .fit,
                     galleryItems: nrPost.galleryItems,
                     autoload: true // We opened detail, so can autoload
                 )

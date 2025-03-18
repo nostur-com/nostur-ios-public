@@ -55,7 +55,7 @@ struct Gallery: View {
                                     }
                                 }
                                 .clipped()
-                                .aspectRatio(1, contentMode: .fit)
+                                .aspectRatio(1, contentMode: .fill)
 //                                    .id(index)
                                 .contentShape(Rectangle())
 //                                    .onTapGesture {
@@ -149,7 +149,7 @@ struct GalleryGridItemView: View {
         MediaContentView(
             galleryItem: currentItem,
             availableWidth: size,
-            placeholderHeight: size,
+            placeholderAspect: 1.0,
             maxHeight: size,
             contentMode: .fill,
             galleryItems: items,

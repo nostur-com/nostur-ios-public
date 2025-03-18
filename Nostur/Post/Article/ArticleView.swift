@@ -160,8 +160,8 @@ struct ArticleView: View {
                         MediaContentView(
                             galleryItem: GalleryItem(url: eventImageUrl, pubkey: article.pubkey, eventId: article.id),
                             availableWidth: dim.listWidth,
-                            placeholderHeight: dim.listWidth / 2, // 1:2 guess??
-                            contentMode: .fill,
+                            placeholderAspect: 2/1,
+                            contentMode: .fit,
                             upscale: true,
                             autoload: true // is detail so we can force true
                         )
@@ -240,8 +240,8 @@ struct ArticleView: View {
                     MediaContentView(
                         galleryItem: GalleryItem(url: image, pubkey: article.pubkey, eventId: article.id),
                         availableWidth: dim.listWidth,
-                        placeholderHeight: dim.listWidth / 2, // 1:2 guess??
-                        contentMode: .fill,
+                        placeholderAspect: 2/1,
+                        contentMode: .fit,
                         upscale: true,
                         autoload: shouldAutoload
                     )

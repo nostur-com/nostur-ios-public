@@ -203,7 +203,7 @@ struct NXContentRenderer: View { // VIEW things
                         MediaContentView(
                             galleryItem: galleryItem,
                             availableWidth: vc.availableWidth + (vc.fullWidthImages ? +20 : 0),
-                            placeholderHeight: (vc.availableWidth + (vc.fullWidthImages ? +20 : 0)) * galleryItem.aspect,
+                            placeholderAspect: 4/3,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,
                             autoload: shouldAutoload

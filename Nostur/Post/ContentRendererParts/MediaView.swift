@@ -12,7 +12,7 @@ import Nuke
 struct MediaContentView: View {
     public var galleryItem: GalleryItem
     public var availableWidth: CGFloat
-    public var placeholderHeight: CGFloat? // to reduce jumping
+    public var placeholderAspect: CGFloat? // to reduce jumping
     public var maxHeight: CGFloat = 4000.0
     public var contentMode: ContentMode = .fit // if placeholderHeight is set, probably should use fill!!
     public var fullScreen: Bool = false
@@ -34,7 +34,8 @@ struct MediaContentView: View {
         MediaPlaceholder(
             galleryItem: galleryItem,
             blurHash: galleryItem.blurhash,
-            expectedImageSize: expectedImageSize(availableWidth: availableWidth, maxHeight: maxHeight),
+            availableWidth: availableWidth,
+            placeholderAspect: placeholderAspect,
             maxHeight: maxHeight,
             contentMode: contentMode,
             fullScreen: fullScreen,
@@ -47,82 +48,6 @@ struct MediaContentView: View {
             generateIMeta: generateIMeta
         )
     }
-    
-    func expectedImageSize(availableWidth: CGFloat, maxHeight: CGFloat) -> CGSize {
-        // Keep it simple
-        // 1. Always scale to available width
-        // 2. If .fit and height > maxHeight, the scale down
-        
-        // If .fill just return availableWidth + min(placeholderHeight/maxHeight)
-        
-        if contentMode == .fill {
-            return CGSize(width: availableWidth, height: min(placeholderHeight ?? maxHeight, maxHeight))
-        }
-        
-        
-        // realDimensions load last, when we finally have them we use them instead of the info further down
-        if let realDimensions {
-            let aspect = realDimensions.width / realDimensions.height // 200 / 100 = 2
-            
-            // if 200 > 100
-            if realDimensions.height > maxHeight { // 200 > 100 so 100x200 -> 50x100
-                return CGSize(
-                    width: maxHeight / aspect, // 100 / 2 = 50
-                    height: maxHeight // = 100
-                )
-            }
-            
-            return CGSize(
-                width: availableWidth, // 400
-                height: availableWidth / aspect // 400 / 2 = // 200
-            )
-        }
-        
-        let metaSize: CGSize? = if let imageWidth = galleryItem.dimensions?.width, let imageHeight = galleryItem.dimensions?.height {
-            CGSize(width: imageWidth, height: imageHeight)
-        }
-        else { nil }
-        
-
-        if let metaSize {
-            let aspect = metaSize.width / metaSize.height // 200 / 100 = 2
-                        
-            let availableAspect = availableWidth / maxHeight
-            
-            if availableAspect < aspect { // Fit horizontal or vertical?
-                // Fit: scale width down if needed
-                if metaSize.width > availableWidth {
-                    return CGSize(
-                        width: availableWidth,
-                        height: availableWidth / aspect
-                    )
-                }
-            }
-            else {
-                // Fit: scale height down if needed
-                if metaSize.height > maxHeight {
-                    return CGSize(
-                        width: maxHeight / aspect,
-                        height: maxHeight
-                    )
-                }
-            }
-            
-            // Already fits, use max width
-            return CGSize(
-                width: availableWidth,
-                height: availableWidth / aspect
-            )
-        }
-        
-
-        // Don't have meta dimensions
-        // So scale to placeholder height or try 1:1 using availableWidth
-        return CGSize(
-            width: availableWidth,
-            height: placeholderHeight ?? availableWidth // (1:1 if we dont have placeholderHeight)
-        )
-    }
 }
 
 struct MediaPlaceholder: View {
@@ -132,7 +57,8 @@ struct MediaPlaceholder: View {
     
     public let galleryItem: GalleryItem
     public var blurHash: String?
-    public let expectedImageSize: CGSize
+    public let availableWidth: CGFloat
+    public let placeholderAspect: CGFloat?
     public let maxHeight: CGFloat
     public var contentMode: ContentMode = .fit
     public var fullScreen: Bool = false
@@ -151,17 +77,48 @@ struct MediaPlaceholder: View {
     @State private var loadTask: Task<Void, Never>?
     @State private var isVisible = false
     
+    private var aspect: CGFloat {
+        if let realDimensions { // real aspect
+            return realDimensions.width / realDimensions.height
+        }
+        
+        if let metaAspect = galleryItem.aspect { // aspect from imeta
+            return metaAspect
+        }
+        
+        // Aspect from placeholder param, else just guess 4:3
+        return placeholderAspect ?? 4/3
+    }
+    
+    private var height: CGFloat {
+        // if .fill, we fill to placeholder height (derived from placeholder aspect)
+        
+        if contentMode == .fill {
+            let fillHeight: CGFloat? = if let placeholderAspect {
+                availableWidth / placeholderAspect
+            }
+            else { nil }
+            
+            // but not bigger than maxHeight
+            return min(maxHeight, fillHeight ?? maxHeight)
+        }
+
+        // if .fit scale up height, but not bigger than maxHeight
+        return min(availableWidth / aspect, maxHeight)
+    }
+    
     var body: some View {
         if contentMode == .fit {
             mediaPlaceholder
                 .frame(
-                    width: expectedImageSize.width,
-                    height: min(expectedImageSize.height, maxHeight)
+                    width: availableWidth,
+                    height: height
                 )
                 .onAppear { isVisible = true }
                 .onDisappear { isVisible = false }
+//                .debugDimensions()
 //                .overlay(alignment: .center) {
-//                    Text("fit: \(expectedImageSize.width)x\(expectedImageSize.height)")
+//                    Text("fit: aW:\(availableWidth), aspect:\(aspect) h:\(height)")
 //                        .foregroundColor(Color.yellow)
 //                        .background(Color.black)
 //                        .font(.footnote)
@@ -170,15 +127,15 @@ struct MediaPlaceholder: View {
         else {
           mediaPlaceholder
                 .frame(
-                    width: expectedImageSize.width,
-                    height: min(expectedImageSize.height, maxHeight)
+                    width: availableWidth,
+                    height: height
                 )
                 .onAppear { isVisible = true }
                 .onDisappear { isVisible = false }
                 .clipped()
 //                .debugDimensions()
 //                .overlay(alignment: .center) {
-//                    Text("fill: \(expectedImageSize.width)x\(expectedImageSize.height)")
+//                    Text("fit: aW:\(availableWidth), aspect:\(aspect) h:\(height)")
 //                        .foregroundColor(Color.yellow)
 //                        .background(Color.black)
 //                        .font(.footnote)
@@ -207,17 +164,17 @@ struct MediaPlaceholder: View {
                         Image(uiImage: blurImage)
                             .resizable()
 //                            .animation(.smooth(duration: 0.2), value: vm.state)
-                            .aspectRatio(contentMode: .fill)
+                            .scaledToFill()
                             .frame(
-                                width: expectedImageSize.width,
-                                height: min(expectedImageSize.height, maxHeight)
+                                width: availableWidth,
+                                height: height
                             )
                             .clipped()
                     }
                 }
                 .frame(
-                    width: expectedImageSize.width,
-                    height: expectedImageSize.height
+                    width: availableWidth,
+                    height: height
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -231,10 +188,10 @@ struct MediaPlaceholder: View {
             if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
                 Image(uiImage: blurImage)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .scaledToFill()
                     .frame(
-                        width: expectedImageSize.width,
-                        height: min(expectedImageSize.height, maxHeight)
+                        width: availableWidth,
+                        height: height
                     )
                     .clipped()
                     .contentShape(Rectangle())
@@ -256,8 +213,8 @@ struct MediaPlaceholder: View {
             else {
                 themes.theme.listBackground.opacity(0.2)
                     .frame(
-                        width: expectedImageSize.width,
-                        height: min(expectedImageSize.height, maxHeight)
+                        width: availableWidth,
+                        height: height
                     )
                     .contentShape(Rectangle())
                     .onTapGesture {
@@ -293,17 +250,17 @@ struct MediaPlaceholder: View {
                     if let blurImage {
                         Image(uiImage: blurImage)
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
+                            .scaledToFill()
                             .frame(
-                                width: expectedImageSize.width,
-                                height: min(expectedImageSize.height, maxHeight)
+                                width: availableWidth,
+                                height: height
                             )
                             .clipped()
                     }
                 }
                 .frame(
-                    width: expectedImageSize.width,
-                    height: min(expectedImageSize.height, maxHeight)
+                    width: availableWidth,
+                    height: height
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -371,7 +328,7 @@ struct MediaPlaceholder: View {
                 ZoomableItem {
                     Image(uiImage: imageInfo.uiImage)
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .scaledToFill()
                         .animation(.smooth(duration: 0.5), value: vm.state)
                 } detailContent: {
                     GalleryFullScreenSwiper(
@@ -466,7 +423,7 @@ struct MediaPlaceholder: View {
                 ZoomableItem {
                     GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
-                        .aspectRatio(contentMode: .fill)
+                        .scaledToFill()
                         .contentShape(Rectangle())
                         .task(id: galleryItem.url.absoluteString) {
                             try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
@@ -507,17 +464,17 @@ struct MediaPlaceholder: View {
                     if let blurImage {
                         Image(uiImage: blurImage)
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
+                            .scaledToFill()
                             .frame(
-                                width: expectedImageSize.width,
-                                height: min(expectedImageSize.height, maxHeight)
+                                width: availableWidth,
+                                height: height
                             )
                             .clipped()
                     }
                 }
                 .frame(
-                    width: expectedImageSize.width,
-                    height: min(expectedImageSize.height, maxHeight)
+                    width: availableWidth,
+                    height: height
                 )
                 .clipped()
                 .contentShape(Rectangle())
@@ -562,11 +519,11 @@ struct MediaPlaceholder: View {
             else if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
                 Image(uiImage: blurImage)
                     .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .scaledToFill()
 //                    .animation(.smooth(duration: 0.2), value: vm.state)
                     .frame(
-                        width: expectedImageSize.width,
-                        height: min(expectedImageSize.height, maxHeight)
+                        width: availableWidth,
+                        height: height
                     )
                     .clipped()
                     .contentShape(Rectangle())
@@ -601,14 +558,14 @@ struct MediaPlaceholder: View {
             if !isVisible && !forceLoad { return }
             
             // Proceed with loading
-            await vm.load(galleryItem.url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
+            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta)
         }
     }
     
     @MainActor
     private func load(forceLoad: Bool = false) {
         Task.detached(priority: .low) {
-            await vm.load(galleryItem.url, expectedImageSize: expectedImageSize, contentMode: contentMode, upscale: upscale, forceLoad: forceLoad, generateIMeta: generateIMeta)
+            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta)
         }
     }
     

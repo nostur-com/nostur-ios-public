@@ -138,7 +138,6 @@ struct GalleryFullScreenSwiper: View {
         MediaContentView(
             galleryItem: items[index],
             availableWidth: screenSpace.screenSize.width,
-            placeholderHeight: screenSpace.screenSize.height,
             maxHeight: screenSpace.screenSize.height,
             contentMode: .fit,
             fullScreen: true,

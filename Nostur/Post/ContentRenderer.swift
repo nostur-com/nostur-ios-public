@@ -154,9 +154,9 @@ struct ContentRenderer: View { // VIEW things
                     MediaContentView(
                         galleryItem: galleryItem,
                         availableWidth: availableWidth + (fullWidth ? +20 : 0),
-                        placeholderHeight: (availableWidth + (fullWidth ? +20 : 0)) * galleryItem.aspect,
+                        placeholderAspect: 4/3,
                         maxHeight: isDetail ? 4000 : DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
-                        contentMode: fullWidth ? .fill : .fit,
+                        contentMode: .fit,
                         galleryItems: nrPost.galleryItems,
                         autoload: shouldAutoload,
                         generateIMeta: isPreviewContext
