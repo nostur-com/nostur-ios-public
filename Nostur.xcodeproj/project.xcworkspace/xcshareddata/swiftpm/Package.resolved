@@ -59,7 +59,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nostur-com/nostr-essentials",
       "state" : {
-        "revision" : "d5fe0ef72814d88eadf7cd891b130a40b40248ba"
+        "revision" : "2a7fa4c9c229753d793cdbcaf3990825d820f58f"
       }
     },
     {
@@ -67,8 +67,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kean/Nuke",
       "state" : {
-        "revision" : "4625c73ea00a9fb4b4f3e28d95d0021a44af7e59",
-        "version" : "12.5.0"
+        "revision" : "0ead44350d2737db384908569c012fe67c421e4d",
+        "version" : "12.8.0"
       }
     },
     {
