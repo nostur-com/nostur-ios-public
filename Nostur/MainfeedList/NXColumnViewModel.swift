@@ -323,6 +323,7 @@ class NXColumnViewModel: ObservableObject {
         listenForMuteListUpdatedSub(config)
     }
     
+    @MainActor
     private func firstLoad(_ config: NXColumnConfig) {
 
 #if DEBUG
