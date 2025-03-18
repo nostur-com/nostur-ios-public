@@ -16,7 +16,7 @@ struct NXPostsFeed: View {
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
     @ObservedObject private var vmInner: NXColumnViewModelInner
-    private let isVisible: Bool
+//    private let isVisible: Bool
     
     @Weak private var collectionView: UICollectionView?
     @State private var collectionPrefetcher: NXPostsFeedPrefetcher?
@@ -30,14 +30,13 @@ struct NXPostsFeed: View {
     @ObservedObject private var speedTest: NXSpeedTest
 #endif
     
-    init(vm: NXColumnViewModel, posts: [NRPost], isVisible: Bool) {
+    init(vm: NXColumnViewModel, posts: [NRPost]) {
         self.vm = vm
 #if DEBUG
         self.speedTest = vm.speedTest
 #endif
         self.posts = posts
         self.vmInner = vm.vmInner
-        self.isVisible = isVisible
     }
     
 #if DEBUG
@@ -215,12 +214,6 @@ struct NXPostsFeed: View {
                         updateIsAtTop()
                     }
                 }
-            }
-            .onChange(of: isVisible) { _ in
-#if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") onChange(of: isVisible) -> updateIsAtTop() BEFORE: \(vmInner.isAtTop)")
-#endif
-                updateIsAtTop()
             }
             .overlay(alignment: .topTrailing) {
                 unreadCounterView

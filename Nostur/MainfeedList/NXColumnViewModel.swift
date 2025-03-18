@@ -43,46 +43,7 @@ class NXColumnViewModel: ObservableObject {
                 }
             }
         }
-    }
-    
-    // During scrolling, don't put new posts on screen, use Delayur helper
-    private var delayur: NXDelayur?
-    private var haltedProcessing: Bool {
-        set {
-            if newValue {
-                if delayur == nil { delayur = NXDelayur() }
-                delayur?.setDelayur(true, seconds: 5.0) { [weak self] in
-                    guard (self?.isVisible ?? false) else { return }
-                    self?.resumeProcessing()
-                }
-            }
-            else {
-                delayur?.setDelayur(false)
-            }
-        }
-        get {
-            delayur?.isDelaying ?? false
-        }
-    }
-    
-    @MainActor
-    public func haltProcessing() {
-        guard let config else { return }
-#if DEBUG
-        L.og.debug("☘️☘️ \(config.name) haltProcessing isAtTop: \(self.vmInner.isAtTop)")
-#endif
-        haltedProcessing = true
-    }
-    
-    private func resumeProcessing() {
-        guard let config else { return }
-#if DEBUG
-        L.og.debug("☘️☘️ \(config.name) resumeProcessing isAtTop: \(self.vmInner.isAtTop)")
-#endif
-        // Will trigger listenForNewPosts() with maybe subscriptionIds still in queue
-        resumeSubject.send(Set())
-    }
-    
+    }    
    
     private var danglingIds: Set<NRPostID> = [] // posts that are transformed, but somehow not on screen (maybe not found on relays). either we put on on screen or not, dont transform over and over again.
     
@@ -98,7 +59,7 @@ class NXColumnViewModel: ObservableObject {
                 
                 if case .loading = viewState {
                     Task { @MainActor in
-                        self.load(config)
+                        self.initialize(config)
                     }
                 }
                 else if case .posts(_) = viewState {
@@ -280,7 +241,7 @@ class NXColumnViewModel: ObservableObject {
     private var loadLocalSubject = PassthroughSubject<(NXColumnConfig, Bool, (() -> Void)?), Never>()
 
     @MainActor
-    public func load(_ config: NXColumnConfig) {
+    public func initialize(_ config: NXColumnConfig) {
         self.subscriptions = Set<AnyCancellable>()
         self.config = config
         
@@ -302,33 +263,12 @@ class NXColumnViewModel: ObservableObject {
         guard isVisible else { return }
         startFetchFeedTimer()
         
-        // Change to loading if we were displaying posts before
-        if case .posts(_) = viewState {
-            viewState = .loading
-        }
+//        // Change to loading if we were displaying posts before
+//        if case .posts(_) = viewState {
+//            viewState = .loading
+//        }
         
-#if DEBUG
-            speedTest.firstEmptyFeedVisibleFinished()
-#endif
-        
-        // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
-        if case .someoneElses(let pubkey) = config.columnType {
-            // Reset all posts already seen for SomeoneElses Feed
-            allIdsSeen = []
-            fetchKind3ForSomeoneElsesFeed(pubkey, config: config) { [weak self] updatedConfig in
-                self?.config = updatedConfig
-                self?.loadLocal(updatedConfig) { // <-- instant, and works offline
-                    // callback to load remote
-                    self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
-                }
-            }
-        }
-        else { // Else we can start as normal with loadLocal
-            loadLocal(config) { [weak self] in // <-- instant, and works offline
-                // callback to load remote
-                self?.loadRemote(config) // <--- fetch new posts (with gap filler)
-            }
-        }
+        firstLoad(config)
         
         newPostSavedSub?.cancel()
         newPostSavedSub = nil
@@ -381,6 +321,32 @@ class NXColumnViewModel: ObservableObject {
         muteListUpdatedSub?.cancel()
         muteListUpdatedSub = nil
         listenForMuteListUpdatedSub(config)
+    }
+    
+    private func firstLoad(_ config: NXColumnConfig) {
+
+#if DEBUG
+            speedTest.firstEmptyFeedVisibleFinished()
+#endif
+        
+        // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
+        if case .someoneElses(let pubkey) = config.columnType {
+            // Reset all posts already seen for SomeoneElses Feed
+            allIdsSeen = []
+            fetchKind3ForSomeoneElsesFeed(pubkey, config: config) { [weak self] updatedConfig in
+                self?.config = updatedConfig
+                self?.loadLocal(updatedConfig) { // <-- instant, and works offline
+                    // callback to load remote
+                    self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
+                }
+            }
+        }
+        else { // Else we can start as normal with loadLocal
+            loadLocal(config) { [weak self] in // <-- instant, and works offline
+                // callback to load remote
+                self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+            }
+        }
     }
     
     private var muteListUpdatedSub: AnyCancellable?
@@ -586,6 +552,12 @@ class NXColumnViewModel: ObservableObject {
     }
     
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
+        if !isVisible || isPaused || NRState.shared.appIsInBackground {
+            #if DEBUG
+            L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. ")
+            #endif
+            return
+        }
 #if DEBUG
 L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and throttled first)")
 #endif
@@ -1249,7 +1221,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                 .receive(on: RunLoop.main) // main because .haltedProcessing must access .isDelaying on main
                 .sink { [weak self] subscriptionIds in
                     guard let self else { return }
-                    guard !haltedProcessing && (isVisible) && !isPaused && !NRState.shared.appIsInBackground else {
+                    guard isVisible && !isPaused && !NRState.shared.appIsInBackground else {
                         queuedSubscriptionIds.add(subscriptionIds)
                         return
                     }
@@ -1283,7 +1255,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
 #endif
                 Task { @MainActor in
                     self.watchForFirstConnection = false
-                    self.load(config)
+                    self.firstLoad(config)
                 }
             }
         
