@@ -173,7 +173,7 @@ struct NXPostsFeed: View {
                            rows > scrollToIndex
                         {
 #if DEBUG
-                            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y)")
+                            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y) -[LOG]-")
 #endif
                             
                             if collectionView.contentOffset.y == 0 {
@@ -320,11 +320,11 @@ struct NXPostsFeed: View {
     
     private func onPostAppear(_ nrPost: NRPost) {
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop)")
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
         updateIsAtTop()
         loadMoreIfNeeded()
-        vm.haltProcessing() // will stop new updates on screen for 5.0 seconds
+//        vm.haltProcessing() // will stop new updates on screen for 5.0 seconds
         
         // Don't update markAsRead if the onPostAppear is happening because of scrollToIndex (hidden scroll to keep scroll position)
         // Only update if it is actual user based scroll
@@ -341,7 +341,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
             if vmInner.isAtTop && appearedIndex == 0 && !vmInner.unreadIds.isEmpty {
 #if DEBUG
-                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() .isAtTop \(vmInner.isAtTop) appearedIndex == 0 --> vmInner.unreadIds = [:]")
+                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() .isAtTop \(vmInner.isAtTop) appearedIndex == 0 --> vmInner.unreadIds = [:] -[LOG]-")
 #endif
                 vmInner.unreadIds = [:]
                 vmInner.updateIsAtTopSubject.send()
@@ -368,14 +368,14 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
             if let collectionView {
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y)")
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y) -[LOG]-")
 #endif
                 
                 if collectionView.contentOffset.y <= 3 {
                     if !vmInner.isAtTop {
                         vmInner.isAtTop = true
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true")
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true -[LOG]-")
 #endif
                     }
                 }
@@ -425,7 +425,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true")
     
     private func onPostDisappear(_ nrPost: NRPost) {
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostDisappear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop)")
+L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostDisappear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
         updateIsAtTop()
     }

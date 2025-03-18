@@ -656,11 +656,11 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkeys(let feed):
-#if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeys)\(older ? "older" : "")")
-#endif
             let pubkeys = feed.contactPubkeys
-            
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeys)\(older ? "older" : "") \(pubkeys.count) pubkeys")
+#endif
+
             bg().perform { [weak self] in
                 guard let self else { return }
                 let fr = if !older {
@@ -1320,7 +1320,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                 
                 if !danglerIds.isEmpty {
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) fetchParents: \(danglers.count.description), fetching....")
+                    L.og.debug("☘️☘️ \(config.name) fetchParents: \(danglers.count.description), fetching.... -[LOG]-")
 #endif
                     req(RM.getEvents(ids: danglerIds, subscriptionId: taskId)) // TODO: req or outboxReq?
                 }
@@ -1329,7 +1329,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                 bg().perform { [weak self] in
                     let danglingEvents = danglers.compactMap { $0.event }
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) fetchParents.processResponseCommand")
+                    L.og.debug("☘️☘️ \(config.name) fetchParents.processResponseCommand -[LOG]-")
 #endif
                     
                     // Need to go to main context again to get current screen state
@@ -1344,7 +1344,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                         bg().perform { [weak self] in
                             guard let self else { return }
 #if DEBUG
-                            L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen")
+                            L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen -[LOG]-")
 #endif
                             self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
@@ -1420,7 +1420,7 @@ extension NXColumnViewModel {
     // allIdsSeen must be prefix / .shortId format
     private func processToScreen(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, completion: (() -> Void)? = nil) {
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) processToScreen()")
+        L.og.debug("☘️☘️ \(config.name) processToScreen() -[LOG]-")
 #endif
         // Apply WoT filter, remove already on screen
         let preparedEvents = prepareEvents(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
@@ -1493,7 +1493,7 @@ extension NXColumnViewModel {
         guard newCount > 0 else { return [] }
         
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(newCount.description)")
+        L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(newCount.description) -[LOG]-")
 #endif
         
         return newUnrenderedEvents
@@ -1537,7 +1537,7 @@ extension NXColumnViewModel {
             }
         
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) transformToNRPosts currentIdsOnScreen: \(currentIdsOnScreen.count.description) transformedNrPosts: \(transformedNrPosts.count.description)")
+        L.og.debug("☘️☘️ \(config.name) transformToNRPosts currentIdsOnScreen: \(currentIdsOnScreen.count.description) transformedNrPosts: \(transformedNrPosts.count.description) -[LOG]-")
 #endif
         
         return transformedNrPosts
@@ -1834,7 +1834,7 @@ extension NXColumnViewModel {
                 self.refreshedAt
             }
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0")
+            L.og.debug("☘️☘️ \(config.name) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0 -[LOG]-")
 #endif
             // Don't go older than 24 hrs ago
             let maxAgo = Int64(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
