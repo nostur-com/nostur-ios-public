@@ -532,6 +532,8 @@ class NXColumnViewModel: ObservableObject {
         guard let config else { return }
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop)")
+        speedTest.reset()
+        speedTest.firstEmptyFeedVisibleFinished()
 #endif
         
         self.startFetchFeedTimer()
