@@ -178,6 +178,7 @@ class InstantFeed {
                     bg().perform {
                         guard let self = self else { return }
                         let fr = Event.postsByRelays(self.relays, lastAppearedCreatedAt: Int64(self.since ?? 0), fetchLimit: 250, kinds: QUERY_FOLLOWING_KINDS)
+                        
                         guard let events = try? bg().fetch(fr) else {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return

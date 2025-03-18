@@ -43,7 +43,7 @@ class NXColumnViewModel: ObservableObject {
                 }
             }
         }
-    }    
+    }
    
     private var danglingIds: Set<NRPostID> = [] // posts that are transformed, but somehow not on screen (maybe not found on relays). either we put on on screen or not, dont transform over and over again.
     
@@ -1813,12 +1813,21 @@ extension NXColumnViewModel {
             
             bg().perform { [weak self] in
                 instantFeed.start(relays, since: mostRecentCreatedAt) { [weak self] events in
-                    guard let self, events.count > 0 else { return }
+                    guard let self, events.count > 0 else {
+#if DEBUG
+                        self?.speedTest.relayTimedout()
+#endif
+                        return
+                    }
+                    
+#if DEBUG
+                    speedTest.relayFinished()
+#endif
                     
                     // TODO: Check if we still hit .fetchLimit problem here
-    #if DEBUG
+#if DEBUG
                     L.og.debug("☘️☘️ \(config.name) loadRemoteRelays() instantFeed.onComplete events.count \(events.count.description)")
-    #endif
+#endif
                     
                     // Need to go to main context again to get current screen state
                     Task { @MainActor in

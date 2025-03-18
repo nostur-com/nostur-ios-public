@@ -20,7 +20,7 @@ struct AppLoader {
     }
 }
 
-@available (iOS 16, *)
+@available(iOS 16, *)
 struct New_iOSApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     var body: some Scene {

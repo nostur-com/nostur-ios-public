@@ -47,19 +47,21 @@ class NXSpeedTest: ObservableObject {
     }
 
     public func relayFinished() {
-        if timestampFirstFetchFinished == nil {
-            timestampFirstFetchFinished = Date()
+        Task { @MainActor in
+            if timestampFirstFetchFinished == nil {
+                timestampFirstFetchFinished = Date()
+            }
+            
+            if timestampFinalFirstUpdate == nil {
+                relaysFinishedAt.append(Date())
+                timestampFinalFirstUpdate = Date()
+                setTotalTimeSinceEmptyFeedVisible()
+            }
+            else {
+                relaysFinishedLater.append(Date())
+            }
+            
         }
-        
-        if timestampFinalFirstUpdate == nil {
-            relaysFinishedAt.append(Date())
-            timestampFinalFirstUpdate = Date()
-            setTotalTimeSinceEmptyFeedVisible()
-        }
-        else {
-            relaysFinishedLater.append(Date())
-        }
-        
     }
     
     public func relayTimedout() {
