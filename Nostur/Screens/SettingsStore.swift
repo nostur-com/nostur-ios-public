@@ -153,7 +153,7 @@ final class SettingsStore: ObservableObject {
             Keys.enableLiveEvents: true,
             Keys.autoScroll: false,
             Keys.fullWidthImages: false,
-            Keys.defaultMediaUploadService: "nostrcheck.me",
+            Keys.defaultMediaUploadService: "nostr.build",
             Keys.statusBubble: false,
             Keys.activeNWCconnectionId: "",
             Keys.fetchCounts: false,
