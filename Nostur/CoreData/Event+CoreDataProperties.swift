@@ -101,8 +101,11 @@ extension Event {
         guard let replyToId = replyToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = Event.fetchEvent(id: replyToId, context: ctx) {
-            self.replyTo = found
-            found.addToReplies(self)
+            CoreDataRelationFixer.shared.addTask({
+                guard contextWontCrash([self, found]) else { return }
+                self.replyTo = found
+                found.addToReplies(self)
+            })
             return found
         }
         return nil
@@ -116,8 +119,11 @@ extension Event {
         guard let replyToId = replyToId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = Event.fetchEvent(id: replyToId, context: ctx) {
-            self.replyTo = found
-            found.addToReplies(self)
+            CoreDataRelationFixer.shared.addTask({
+                guard contextWontCrash([self, found]) else { return }
+                self.replyTo = found
+                found.addToReplies(self)
+            })
             return found
         }
         return nil
@@ -128,7 +134,10 @@ extension Event {
         guard let firstQuoteId = firstQuoteId else { return nil }
         guard let ctx = managedObjectContext else { return nil }
         if let found = Event.fetchEvent(id: firstQuoteId, context: ctx) {
-            self.firstQuote = found
+            CoreDataRelationFixer.shared.addTask({
+                guard contextWontCrash([self, found]) else { return }
+                self.firstQuote = found
+            })
             return found
         }
         return nil
@@ -1088,7 +1097,10 @@ extension Event {
             if let replyToAtag = event.replyToAtag() { // Comment on article
                 if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
                     savedEvent.replyToId = dbArticle.id
-                    savedEvent.replyTo = dbArticle
+                    CoreDataRelationFixer.shared.addTask({
+                        guard contextWontCrash([savedEvent, dbArticle]) else { return }
+                        savedEvent.replyTo = dbArticle
+                    })
                     
                     dbArticle.addToReplies(savedEvent)
                     dbArticle.repliesCount += 1
@@ -1105,7 +1117,10 @@ extension Event {
                 // Comment has article as root, but replying to other comment, not to article.
                 if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
                     savedEvent.replyToRootId = dbArticle.id
-                    savedEvent.replyToRoot = dbArticle
+                    CoreDataRelationFixer.shared.addTask({
+                        guard contextWontCrash([savedEvent, dbArticle]) else { return }
+                        savedEvent.replyToRoot = dbArticle
+                    })
                 }
                 else {
                     // we don't have the article yet, store aTag in replyToRootId
