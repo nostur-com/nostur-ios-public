@@ -134,6 +134,10 @@ public final class NewPostModel: ObservableObject {
                 nip96apiUrl = "https://nostrcheck.me/api/v2/media"
             }
             
+            if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostr.build") { 
+                nip96apiUrl = "https://nostr.build/api/v2/nip96/upload"
+            }
+            
             if !nip96apiUrl.isEmpty { // new nip96 media services
                 guard let nip96apiURL = URL(string: nip96apiUrl) else {
                     sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
