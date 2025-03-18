@@ -254,6 +254,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.pubkey = event.pubkey
         self.kind = event.kind
         self.kTag = event.fastTags.first(where: { $0.0 == "k" })?.1
+        self.firstE = event.fastTags.first(where: { $0.0 == "e" })?.1
         self.createdAt = event.date
         self.created_at = event.created_at
         self.ago = event.ago
