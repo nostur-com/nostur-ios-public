@@ -183,7 +183,7 @@ class InstantFeed {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return
                         }
-                        guard events.count > 15 else {
+                        guard events.count > 1 else {
                             L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more.")
                             return
                         }
