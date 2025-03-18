@@ -488,6 +488,13 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func pause() {
         guard let config, !isPaused else { return }
+        
+        if IS_CATALYST { // Don't pause "Following" feed on macOS
+            if config.id.starts(with: "Following-") {
+                return
+            }
+        }
+        
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) pause()")
 #endif
