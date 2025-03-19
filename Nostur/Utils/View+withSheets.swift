@@ -443,7 +443,7 @@ struct WithSheets: ViewModifier {
                                 .foregroundColor(themes.theme.background)
                                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
                         )
-                        .frame(width: 600)
+                        .frame(width: min(402, UIScreen.main.bounds.width))
                         .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         .padding(.vertical, 10)
                         .environmentObject(screenshotDIM)
@@ -472,9 +472,9 @@ struct WithSheets: ViewModifier {
                 }
                 
             }
-//            .sheet(item: $sharablePostImage) { sharablePostImage in
-//                ActivityView(activityItems: [sharablePostImage])
-//            }
+            .sheet(item: $sharablePostImage) { sharablePostImage in
+                ActivityView(activityItems: [sharablePostImage])
+            }
         
         // Share post weblink
             .onReceive(receiveNotification(.shareWeblink)) { notification in
@@ -506,9 +506,9 @@ struct WithSheets: ViewModifier {
                     self.shareableWeblink = ShareableWeblink(url: url)
                 }
             }
-//            .sheet(item: $shareableWeblink) { shareableWeblink in
-//                ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
-//            }
+            .sheet(item: $shareableWeblink) { shareableWeblink in
+                ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
+            }
         
             .onReceive(receiveNotification(.showMiniProfile)) { notification in
                 let miniProfileSheetInfo = notification.object as! MiniProfileSheetInfo
@@ -680,4 +680,15 @@ struct Previews_View_withSheets_Previews: PreviewProvider {
             }
         }
     }
+}
+
+
+struct ActivityView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
