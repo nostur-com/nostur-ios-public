@@ -70,7 +70,7 @@ struct WithSheets: ViewModifier {
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
     
-    @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: 384, isScreenshot: true)
+    @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: min(402, UIScreen.main.bounds.width), isScreenshot: true)
     
     func body(content: Content) -> some View {
         content
