@@ -398,7 +398,3 @@ let LESS_CACHE = false // For testing, deletes all events and contacts at start 
 #else
     let IS_SIMULATOR = false
 #endif
-
-
-
-let DISABLE_BACKGROUND_TASKS: Bool = ProcessInfo.processInfo.arguments.contains("-disableBackgroundTasks")

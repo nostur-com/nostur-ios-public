@@ -22,6 +22,12 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             self.handleDatabaseCleaning(task: task as! BGProcessingTask)
         }
         
+        // Register appRefresh task here instead of in SwiftUI, should fix crash according to: https://developer.apple.com/forums/thread/775497?answerId=827147022#827147022
+        BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.nostur.app-refresh", using: nil) { task in
+            // Downcast the parameter to a processing task as this identifier is used for a processing request.
+            self.handleAppRefresh(task: task as! BGAppRefreshTask)
+        }
+        
         return true
     }
 
@@ -78,6 +84,27 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         }
         
         queue.addOperation(cleanDatabaseOperation)
+    }
+    
+    func handleAppRefresh(task: BGAppRefreshTask) {
+        L.og.debug(".appRefresh()")
+        if !IS_CATALYST {
+            NRState.shared.appIsInBackground = true
+        }
+        
+        guard SettingsStore.shared.receiveLocalNotifications else {
+            L.og.debug(".appRefresh() - receiveLocalNotifications: false - skipping")
+            task.setTaskCompleted(success: true)
+            return
+        }
+        // Always schedule the next refresh
+        scheduleAppRefresh(seconds: 180.0)
+        
+        // Check for any new notifications (relays), if there are unread mentions it will trigger a (iOS) notification
+        Task {
+            await checkForNotifications()
+            task.setTaskCompleted(success: true)
+        }
     }
 }
 
