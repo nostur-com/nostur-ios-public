@@ -19,6 +19,7 @@ struct ComposePost15: View {
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var screenSpace: ScreenSpace
     
     @StateObject private var vm = NewPostModel()
     @State private var gifSheetShown = false
@@ -53,6 +54,9 @@ struct ComposePost15: View {
         
         return true
     }
+    
+    // No need to refresh previewDIM, just pass to PostPreview to fix random width bug
+    @State private var previewDIM = DIMENSIONS()
     
     var body: some View {
         #if DEBUG
@@ -124,6 +128,8 @@ struct ComposePost15: View {
                             VStack(alignment: .leading) {
                                 PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                     .environmentObject(themes)
+                                    .environmentObject(previewDIM)
+                                    .environmentObject(screenSpace)
                                 
                                 if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                     AutoPilotSendPreview(nEvent: nEvent)

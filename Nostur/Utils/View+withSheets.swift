@@ -19,6 +19,7 @@ extension View {
 }
 
 struct WithSheets: ViewModifier {
+    @EnvironmentObject private var screenSpace: ScreenSpace
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
@@ -135,6 +136,7 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     EditPrivateNoteSheet(privateNote: note)
                         .environmentObject(themes)
+                        .environmentObject(screenSpace)
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
@@ -173,6 +175,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $reportPost, content: { reportPost in
                 NBNavigationStack {
                     ReportPostSheet(nrPost: reportPost.nrPost)
+                        .environmentObject(screenSpace)
                         .environmentObject(dim)
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
@@ -269,6 +272,7 @@ struct WithSheets: ViewModifier {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
+                                .environmentObject(screenSpace)
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                                 .environmentObject(themes)
@@ -277,6 +281,7 @@ struct WithSheets: ViewModifier {
                     }
                     else {
                         ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
+                            .environmentObject(screenSpace)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
@@ -290,6 +295,7 @@ struct WithSheets: ViewModifier {
                 if let account = account(), account.isNC {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                         QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
+                            .environmentObject(screenSpace)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .presentationDetents200()
@@ -300,6 +306,7 @@ struct WithSheets: ViewModifier {
                 }
                 else {
                     QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
+                        .environmentObject(screenSpace)
                         .environmentObject(NRState.shared)
                         .environmentObject(dim)
                         .presentationDetents200()
@@ -314,6 +321,7 @@ struct WithSheets: ViewModifier {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
+                                .environmentObject(screenSpace)
                                 .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                                 .presentationBackgroundCompat(themes.theme.background)
@@ -322,6 +330,7 @@ struct WithSheets: ViewModifier {
                     }
                     else {
                         ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
+                            .environmentObject(screenSpace)
                             .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
@@ -364,6 +373,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $newHighlight) { newHighlight in
                 NBNavigationStack {
                     HighlightComposer(highlight: newHighlight)
+                        .environmentObject(screenSpace)
                         .environmentObject(NRState.shared)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)

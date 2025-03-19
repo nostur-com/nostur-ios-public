@@ -241,7 +241,9 @@ struct NosturMainView: View {
         else {
             if IS_CATALYST && ss.proMode {
                 if #available(iOS 16.0, *) {
-                    MacListsView()
+                    Zoomable {
+                        MacListsView()
+                    }
                 } else {
                     // Fallback on earlier versions
                     Text("Not yet")

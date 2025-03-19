@@ -13,6 +13,8 @@ struct MainView: View {
     @EnvironmentObject private var ns: NRState
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var screenSpace: ScreenSpace
+    
     @State private var fg: FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn: FollowerNotifier = .shared
     @State private var newPost: NRPost? // Setting this will show shortcut to open a new just posted post in toolbar
@@ -69,6 +71,7 @@ struct MainView: View {
                                     .environmentObject(themes)
                                     .environmentObject(dim)
                                     .environmentObject(ns)
+                                    .environmentObject(screenSpace)
                             }
                         }
                         else {
@@ -76,6 +79,7 @@ struct MainView: View {
                                 .environmentObject(themes)
                                 .environmentObject(dim)
                                 .environmentObject(ns)
+                                .environmentObject(screenSpace)
                         }
                     }
                     .presentationBackgroundCompat(themes.theme.background)

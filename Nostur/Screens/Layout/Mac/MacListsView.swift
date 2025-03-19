@@ -14,6 +14,8 @@ let COLUMN_SPACING = 1.0
 struct MacListsView: View {
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var screenSpace: ScreenSpace
+    
     let SIDEBAR_WIDTH: CGFloat = 50.0
     @StateObject private var dim = DIMENSIONS()
     @StateObject private var childDM = DIMENSIONS()
