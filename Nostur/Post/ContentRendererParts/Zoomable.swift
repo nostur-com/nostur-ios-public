@@ -66,6 +66,7 @@ struct Zoomable<Content: View>: View {
         GeometryReader { geometry in
             ZStack {
                 content
+                    .environmentObject(screenSpace)
                 
                 if viewState == .zoomed {
                     ZStack(alignment: .topLeading) {
