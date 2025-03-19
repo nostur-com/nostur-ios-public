@@ -39,6 +39,7 @@ struct ComposePost: View {
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var screenSpace: ScreenSpace
     
     @StateObject private var vm = NewPostModel()
@@ -161,7 +162,7 @@ struct ComposePost: View {
                                     
                                     if let quotingNRPost = quotePost?.nrPost {
                                         KindResolver(nrPost: quotingNRPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, theme: themes.theme)
-                                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width, isScreenshot: false))
+                                            .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width != 0 ? geo.size.width : dim.listWidth, isScreenshot: false))
                                             .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
                                     }
                                 }
@@ -272,7 +273,7 @@ struct ComposePost: View {
                         }
                     })
                     .onAppear {
-                        previewDIM.listWidth = geo.size.width // - 80.0
+                        previewDIM.listWidth = geo.size.width != 0 ? geo.size.width : dim.listWidth
                         previewDIM.isPreviewContext = true
                     }
                 }
