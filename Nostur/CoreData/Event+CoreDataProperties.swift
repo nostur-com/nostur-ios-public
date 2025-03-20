@@ -900,6 +900,13 @@ extension Event {
             }
         #endif
         
+        if event.kind == .setMetadata {
+            QueuedFetcher.shared.addRecentP(pTag: event.publicKey)
+        }
+        else {
+            QueuedFetcher.shared.addRecentId(id: event.id)
+        }
+        
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
         savedEvent.id = event.id

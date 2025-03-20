@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import OrderedCollections
 
 class QueuedFetcher {
     static let shared = QueuedFetcher()
@@ -15,8 +16,9 @@ class QueuedFetcher {
     private var idQueue = Set<String>()
     
     // TODO: finish recent cache - add recently tried queue, to not retry the same over and over..
-    private var recentPs = Set<String>()
-    private var recentIds = Set<String>()
+    private var recentPs = OrderedSet<String>()
+    private var recentIds = OrderedSet<String>()
+    static let RECENT_LIMIT: Int = 300
     
     private var fetchSubscription: AnyCancellable?
     private var fetchSubject = PassthroughSubject<Void, Never>()
@@ -27,7 +29,26 @@ class QueuedFetcher {
         setupDebouncedFetcher()
     }
     
+    // call from bg context!
+    public func addRecentP(pTag: String) {
+        guard !recentPs.contains(pTag) else { return }
+        recentPs.append(pTag)
+        if recentPs.count > Self.RECENT_LIMIT {
+            recentPs.removeFirst(100)
+        }
+    }
+    
+    // call from bg context!
+    public func addRecentId(id: String) {
+        guard !recentIds.contains(id) else { return }
+        recentIds.append(id)
+        if recentIds.count > Self.RECENT_LIMIT {
+            recentIds.removeFirst(100)
+        }
+    }
+    
     public func enqueue(pTag: String) {
+        guard !recentPs.contains(pTag) else { return }
         ctx.perform { [weak self] in
             self?.pQueue.insert(pTag)
             self?.fetchSubject.send()
@@ -71,6 +92,7 @@ class QueuedFetcher {
     }
     
     public func enqueue(id: String) {
+        guard !recentIds.contains(id) else { return }
         ctx.perform { [weak self] in
             self?.idQueue.insert(id)
             self?.fetchSubject.send()
