@@ -143,6 +143,7 @@ struct ProfileZapButton: View {
         cancellationId = UUID()
         SoundManager.shared.playThunderzap()
         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: contact.pubkey, eTag: zapEtag, zapState: .initiated))
+        QueuedFetcher.shared.enqueue(pTag: contact.pubkey) // Get latest wallet info to be sure (from kind:0)
 
         bg().perform {
             guard let bgContact = contact.contact else { return }

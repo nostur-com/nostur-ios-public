@@ -172,6 +172,7 @@ struct ZapButtonInner: View {
         isZapped = true
         SoundManager.shared.playThunderzap()
         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrPost.pubkey, eTag: nrPost.id, zapState: .initiated))
+        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey) // Get latest wallet info to be sure (from kind:0) 
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
