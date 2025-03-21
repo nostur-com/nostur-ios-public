@@ -60,19 +60,20 @@ struct NXColumnView: View {
             guard viewModel.isVisible != newValue else { return }
             viewModel.isVisible = newValue
         }
-        .onChange(of: config) { newValue in
+        .onChange(of: config) { [config] newConfig in
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onChange(of: config)")
 #endif
-            guard viewModel.config != newValue else { return }
-            if let relaysData = newValue.feed?.relaysData {
+            guard viewModel.config != newConfig else { return }
+            if let relaysData = newConfig.feed?.relaysData {
                 for relay in relaysData {
                     ConnectionPool.shared.addConnection(relay) { conn in
                         conn.connect()
                     }
                 }
             }
-            viewModel.initialize(newValue)
+            viewModel.viewState = .loading
+            viewModel.initialize(newConfig)
         }
         .onChange(of: dim.availableNoteRowWidth) { newValue in
 #if DEBUG

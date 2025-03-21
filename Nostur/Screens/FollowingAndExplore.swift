@@ -304,9 +304,9 @@ struct FollowingAndExplore: View {
             createPictureFeed(la.account)
             createExploreFeed() // Also create Explore Feed
         }
-        .onChange(of: la.account, perform: { newAccount in
-            guard la.account != newAccount else { return }
-            L.og.info("Account changed from: \(la.account.name)/\(la.account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+        .onChange(of: la.account) { [oldAccount = la.account] newAccount in
+            guard oldAccount != newAccount else { return }
+            L.og.info("Account changed from: \(oldAccount.name)/\(oldAccount.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
             }

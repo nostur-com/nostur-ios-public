@@ -15,7 +15,10 @@ class AccountsState: ObservableObject {
         self._activeAccountPublicKey = UserDefaults.standard.string(forKey: "activeAccountPublicKey") ?? ""
     }
     
-    @Published var finishedTasks: Set<AccountTask> = []
+    @Published // Only for nil or not (onboarding), don't observe AccountsState for account switches, observe LoggedInAccount instead
+    public var loggedInAccount: LoggedInAccount? = nil {
+        didSet { loggedInAccount?.account.lastLoginAt = .now }
+    }
     
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     
@@ -34,13 +37,7 @@ class AccountsState: ObservableObject {
     // bgContext
     public var bgAccountPubkeys: Set<String> = []
     public var bgFullAccountPubkeys: Set<String> = []
-    
-    @Published public var loggedInAccount: LoggedInAccount? = nil {
-        didSet {
-            loggedInAccount?.account.lastLoginAt = .now
-        }
-    }
-    
+
     @MainActor public func loadAccountsState() {
         self.accounts = CloudAccount.fetchAccounts(context: context())
         let accountPubkeys = Set(accounts.map { $0.publicKey })
@@ -53,11 +50,7 @@ class AccountsState: ObservableObject {
         // No account selected
         if activeAccountPublicKey.isEmpty {
             self.loggedInAccount = nil
-            self.finishedTasks.removeAll()
             sendNotification(.clearNavigation)
-            Task { @MainActor in
-                self.changeAccount(nil)
-            }
             return
         }
         else {
@@ -76,11 +69,7 @@ class AccountsState: ObservableObject {
             }
             else { // we don't have any accounts
                 self.loggedInAccount = nil
-                self.finishedTasks.removeAll()
                 sendNotification(.clearNavigation)
-                Task { @MainActor in
-                    self.changeAccount(nil)
-                }
                 return
             }
         }
@@ -91,26 +80,18 @@ class AccountsState: ObservableObject {
         DataProvider.shared().save()
     }
 
-    @MainActor public func changeAccount(_ account: CloudAccount? = nil) {
-        guard let account = account else {
-            self.loggedInAccount = nil
-            self.activeAccountPublicKey = ""
-            return
-        }
-        
+    @MainActor // changeAccount changes th .account in LoggedInAccount, so cannot be nil. For nil, set loggedInAccount to nil instead
+    public func changeAccount(_ account: CloudAccount) {
         if account.isNC {
             NSecBunkerManager.shared.setAccount(account)
         }
         let pubkey = account.publicKey
-        self.loggedInAccount = LoggedInAccount(account, completion: {
-            DispatchQueue.main.async {
-                sendNotification(.activeAccountChanged, account)
-            }
-        })
         
-        if let loggedInAccount = self.loggedInAccount {
-            // TODO: timing this and sendNotification(.activeAccountChanged, account) is weird
-            self.finishedTasks.insert(.accountInfoReady(loggedInAccount))
+        if self.loggedInAccount == nil {
+            self.loggedInAccount = LoggedInAccount(account)
+        }
+        else {
+            self.loggedInAccount?.account = account
         }
         
         guard pubkey != self.activeAccountPublicKey else { return }

@@ -66,11 +66,8 @@ extension AppView {
     
     private func loadAccount() {
         AccountsState.shared.loadAccountsState()
-        if let matchingTask = AccountsState.shared.finishedTasks.first(where: {
-            if case .accountInfoReady(_) = $0 { return true }
-            return false
-        }), case .accountInfoReady(let la) = matchingTask {
-            viewState = .loggedIn(la)
+        if let loggedInAccount = AccountsState.shared.loggedInAccount {
+            viewState = .loggedIn(loggedInAccount)
         }
         else {
             viewState = .onboarding

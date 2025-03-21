@@ -21,21 +21,70 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
         lhs.account.publicKey == rhs.account.publicKey
     }
     
+    @MainActor
+    public init(_ account: CloudAccount) {
+        self.bg = Nostur.bg()
+        self.account = account
+        self.pubkey = account.publicKey
+        self.setupAccount(account)
+    }
+    
+    @Published
     public var pubkey: String
     
-    // VIEW
-    @Published public var viewFollowingPublicKeys: Set<String> = []
+    @Published
+    public var viewFollowingPublicKeys: Set<String> = []
+    
+    
+    
+    private var outboxLoader: OutboxLoader? = nil
+    
+    // BG high speed
+    public var accountCache: AccountCache?
+    public var followingPublicKeys: Set<String> = []
+    public var followingCache: [String: FollowCache] = [:]
+    
+    // View context
+    @Published
+    var account: CloudAccount {
+        didSet { // REMINDER, didSet does not run on init!
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if oldValue.publicKey != account.publicKey {
+                    self.setupAccount(account)
+                }
+            }
+        }
+    }
+    
+    // BG context
+    public var bgAccount: CloudAccount? = nil
+    public var mutedWords: [String] = []
+    
+   
+    
+    
+    
+    
+    // Other
+    private var bg: NSManagedObjectContext
+}
+
+extension LoggedInAccount {
     
     // USER ACTIONS/METHODS - TRIGGERED FROM VIEWS
-    @MainActor public func isFollowing(pubkey: String) -> Bool {
+    @MainActor
+    public func isFollowing(pubkey: String) -> Bool {
         viewFollowingPublicKeys.contains(pubkey)
     }
     
-    @MainActor public func isPrivateFollowing(pubkey: String) -> Bool {
+    @MainActor
+    public func isPrivateFollowing(pubkey: String) -> Bool {
         account.privateFollowingPubkeys.contains(pubkey)
     }
     
-    @MainActor public func follow(_ pubkey: String, privateFollow: Bool = false) {
+    @MainActor
+    public func follow(_ pubkey: String, privateFollow: Bool = false) {
         viewFollowingPublicKeys.insert(pubkey)
         if privateFollow {
             account.followingPubkeys.remove(pubkey)
@@ -80,7 +129,8 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
         }
     }
     
-    @MainActor public func unfollow(_ pubkey: String) {
+    @MainActor
+    public func unfollow(_ pubkey: String) {
         viewFollowingPublicKeys.remove(pubkey)
         account.followingPubkeys.remove(pubkey)
         account.privateFollowingPubkeys.remove(pubkey)
@@ -102,7 +152,8 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
         }
     }
     
-    @MainActor public func report(pubkey: String, eventId: String, reportType: ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
+    @MainActor
+    public func report(pubkey: String, eventId: String, reportType: ReportType, note:String = "", includeProfile:Bool = false) -> NEvent? {
         guard account.isFullAccount else { AppSheetsModel.shared.readOnlySheetVisible = true; return nil }
         
         let report = EventMessageBuilder.makeReportEvent(pubkey: pubkey, eventId: eventId, type: reportType, note: note, includeProfile: includeProfile)
@@ -114,7 +165,8 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
         return signedEvent
     }
     
-    @MainActor public func reportContact(pubkey:String, reportType:ReportType, note:String = "") -> NEvent? {
+    @MainActor
+    public func reportContact(pubkey:String, reportType:ReportType, note:String = "") -> NEvent? {
         guard account.isFullAccount else { AppSheetsModel.shared.readOnlySheetVisible = true; return nil }
         
         let report = EventMessageBuilder.makeReportContact(pubkey: pubkey, type: reportType, note: note)
@@ -126,7 +178,8 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
         return signedEvent
     }
     
-    @MainActor public func deletePost(_ eventId:String) -> NEvent? {
+    @MainActor
+    public func deletePost(_ eventId:String) -> NEvent? {
         guard account.isFullAccount else { AppSheetsModel.shared.readOnlySheetVisible = true; return nil }
         
         let deletion = EventMessageBuilder.makeDeleteEvent(eventId: eventId)
@@ -138,38 +191,10 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
         return signedEvent
     }
     
-    private var outboxLoader: OutboxLoader? = nil
     
-    // BG high speed
-    public var accountCache: AccountCache?
-    public var followingPublicKeys: Set<String> = []
-    public var followingCache: [String: FollowCache] = [:]
     
-    // View context
-    @Published var account: CloudAccount {
-        didSet { // REMINDER, didSet does not run on init!
-            Task { @MainActor [weak self] in
-                guard let self else { return }
-                if oldValue.publicKey != account.publicKey {
-                    self.setupAccount(account)
-                }
-            }
-        }
-    }
-    
-    // BG context
-    public var bgAccount: CloudAccount? = nil
-    
-    public var mutedWords: [String] = []
-    
-    @MainActor public init(_ account: CloudAccount, completion: (() -> Void)? = nil) {
-        self.bg = Nostur.bg()
-        self.account = account
-        self.pubkey = account.publicKey
-        self.setupAccount(account, completion: completion)
-    }
-    
-    @MainActor private func setupAccount(_ account: CloudAccount, completion: (() -> Void)? = nil) {
+    @MainActor
+    private func setupAccount(_ account: CloudAccount) {
         self.pubkey = account.publicKey
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
         if account.flagsSet.contains("nostur_created") {
@@ -198,8 +223,11 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
             self.followingPublicKeys = follows
             self.followingCache = bgAccount.loadFollowingCache()
             self.reprocessContactListIfNeeded(bgAccount)
-
-            completion?()
+            
+            DispatchQueue.main.async {
+                // Probably should not use this. Observe LoggedInAccount instead
+                sendNotification(.activeAccountChanged, account)
+            }
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
@@ -247,12 +275,6 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
             }
         }
     }
-    
-    
-    
-    
-    // Other
-    private var bg: NSManagedObjectContext
 }
 
 
