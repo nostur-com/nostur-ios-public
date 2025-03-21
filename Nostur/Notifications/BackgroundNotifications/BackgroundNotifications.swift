@@ -89,7 +89,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func handleAppRefresh(task: BGAppRefreshTask) {
         L.og.debug(".appRefresh()")
         if !IS_CATALYST {
-            NRState.shared.appIsInBackground = true
+            AppState.shared.appIsInBackground = true
         }
         
         guard SettingsStore.shared.receiveLocalNotifications else {
@@ -182,13 +182,13 @@ func scheduleDMNotification(name: String) {
 func checkForNotifications() async {
     await withCheckedContinuation { continuation in
         Task { @MainActor in
-            guard !NRState.shared.activeAccountPublicKey.isEmpty else { continuation.resume(); return }
+            guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { continuation.resume(); return }
             if !Importer.shared.didPreload {
                 Task {
                     await Importer.shared.preloadExistingIdsCache()
                 }
             }
-            guard let account = try? CloudAccount.fetchAccount(publicKey: NRState.shared.activeAccountPublicKey, context: context())
+            guard let account = try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context())
             else {
                 continuation.resume(); return
             }

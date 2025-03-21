@@ -37,7 +37,7 @@ public class RelayConnectionStats: Identifiable {
 
 func updateConnectionStats(receivedPubkey pubkey: String, fromRelay relay: String) {
     // Only track pubkey we follow
-    guard NRState.shared.loggedInAccount?.followingPublicKeys.contains(pubkey) ?? false else { return }
+    guard AccountsState.shared.loggedInAccount?.followingPublicKeys.contains(pubkey) ?? false else { return }
     ConnectionPool.shared.queue.async(flags: .barrier) {
         guard let relayStats = ConnectionPool.shared.connectionStats[relay] else { return }
         relayStats.receivedPubkeys.insert(pubkey)

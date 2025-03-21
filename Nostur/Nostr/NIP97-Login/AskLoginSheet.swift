@@ -22,7 +22,7 @@ struct AskLoginSheet: View {
     }
     
     private var accounts: [CloudAccount] {
-        NRState.shared.accounts
+        AccountsState.shared.accounts
             .sorted(by: { $0.publicKey < $1.publicKey })
             .filter { $0.isFullAccount }
     }

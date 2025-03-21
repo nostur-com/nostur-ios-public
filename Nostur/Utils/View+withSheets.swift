@@ -249,7 +249,7 @@ struct WithSheets: ViewModifier {
                         })
                     }
                     else {
-                        guard let signedDeletion = NRState.shared.loggedInAccount?.deletePost(deletePost.eventId) else {
+                        guard let signedDeletion = AccountsState.shared.loggedInAccount?.deletePost(deletePost.eventId) else {
                             return
                         }
                         Unpublisher.shared.publishNow(signedDeletion)

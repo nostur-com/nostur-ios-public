@@ -33,7 +33,7 @@ class ProfileInteractionsRepostsVM: ObservableObject {
     }
     
     public init(_ pubkey: String) {
-        self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
+        self.accountPubkey = account()?.publicKey ?? AccountsState.shared.activeAccountPublicKey
         self.pubkey = pubkey
         self.state = .initializing
         self.repostedIds = []
@@ -231,7 +231,7 @@ class ProfileInteractionsRepostsVM: ObservableObject {
     
     // for after account change
     public func reload() {
-        self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
+        self.accountPubkey = account()?.publicKey ?? AccountsState.shared.activeAccountPublicKey
         self.state = .loading
         self.backlog.clear()
         self.repostedIds = []
@@ -241,7 +241,7 @@ class ProfileInteractionsRepostsVM: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
-        self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
+        self.accountPubkey = account()?.publicKey ?? AccountsState.shared.activeAccountPublicKey
         self.state = .loading
         self.backlog.clear()
         

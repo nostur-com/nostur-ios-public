@@ -10,7 +10,6 @@ import NavigationBackport
 
 struct MainView: View {
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var ns: NRState
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var screenSpace: ScreenSpace

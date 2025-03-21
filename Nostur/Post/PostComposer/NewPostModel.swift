@@ -673,7 +673,7 @@ public final class NewPostModel: ObservableObject {
         bg().perform {
             let fr = Contact.fetchRequest()
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
-            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), NRState.shared.blockedPubkeys)
+            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), AppState.shared.bgAppState.blockedPubkeys)
             
             let contactSearchResults: [NRContact] = Array(((try? bg().fetch(fr)) ?? []).prefix(60))
                 .compactMap { NRContact.fetch($0.pubkey, contact: $0) }

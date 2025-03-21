@@ -59,7 +59,7 @@ struct RelayMastery: View {
         }
         .navigationTitle("Announced relays")
         .task {
-            accounts = NRState.shared.accounts
+            accounts = AccountsState.shared.accounts
                 .filter { $0.isFullAccount }
                 .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             

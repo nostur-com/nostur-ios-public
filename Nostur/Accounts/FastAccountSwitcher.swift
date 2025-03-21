@@ -8,19 +8,18 @@
 import SwiftUI
 
 struct FastAccountSwitcher: View, Equatable {
-
+    
+    @EnvironmentObject private var accountsState: AccountsState
+    
     static func == (lhs: FastAccountSwitcher, rhs: FastAccountSwitcher) -> Bool {
         lhs.activePubkey == rhs.activePubkey
     }
-    
-    @EnvironmentObject private var ns:NRState
-    
     public var activePubkey:String = ""
     public var sm:SideBarModel
     private let MAX_ACCOUNTS = 4
     
     var fewAccounts:ArraySlice<CloudAccount> {
-        ns.accounts
+        accountsState.accounts
             .filter { $0.publicKey != activePubkey }
             .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             .sorted(by: { $0.isFullAccount && !$1.isFullAccount })
@@ -36,8 +35,8 @@ struct FastAccountSwitcher: View, Equatable {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         if let account = fewAccounts[safe: index] { // Swift runtime failure: Index out of bounds + 0 (<compiler-generated>:0) . Added check because maybe tap gesture fires too late??
-                            ns.changeAccount(account)
-                            sm.showSidebar = false
+                            accountsState.changeAccount(account)
+                            showSidebar = false
                         }
                     }
             }

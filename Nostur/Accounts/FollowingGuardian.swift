@@ -38,10 +38,10 @@ class FollowingGuardian: ObservableObject {
     }
     
     func checkForUpdatedContactList() {
-        guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
+        guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { return }
         L.og.info("FollowingGuardian: Checking for updated contact list")
-        req(RM.getAuthorContactsList(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
-        req(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
+        req(RM.getAuthorContactsList(pubkey: AccountsState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
+        req(RM.getUserMetadata(pubkey: AccountsState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
     }
     
     func listenForAccountChanged() {
@@ -51,7 +51,7 @@ class FollowingGuardian: ObservableObject {
                 let account = notification.object as! CloudAccount
                 guard account.isFullAccount else { return }
                 req(RM.getAuthorContactsList(pubkey: account.publicKey, subscriptionId: "RM.getAuthorContactsList"))
-                req(RM.getUserMetadata(pubkey: NRState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
+                req(RM.getUserMetadata(pubkey: AccountsState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
             }
             .store(in: &subscriptions)
     }
@@ -62,8 +62,8 @@ class FollowingGuardian: ObservableObject {
             .sink { [weak self] notification in
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
-                guard nEvent.publicKey == NRState.shared.activeAccountPublicKey else { return }
-                guard let account = NRState.shared.loggedInAccount?.account else { return }
+                guard nEvent.publicKey == AccountsState.shared.activeAccountPublicKey else { return }
+                guard let account = AccountsState.shared.loggedInAccount?.account else { return }
                 
                 // TODO: Make this work for all accounts, not just active
                 let pubkeysOwn = account.followingPubkeys
@@ -119,7 +119,7 @@ class FollowingGuardian: ObservableObject {
             }
         }
         DataProvider.shared().save()
-        NRState.shared.loggedInAccount?.reloadFollows()
+        AccountsState.shared.loggedInAccount?.reloadFollows()
     }
     
     func followTags(_ tags:[String], account: CloudAccount) {
@@ -148,7 +148,7 @@ class FollowingGuardian: ObservableObject {
                 account.followingPubkeys.insert(pubkey)
             }
         }
-        NRState.shared.loggedInAccount?.reloadFollows()
+        AccountsState.shared.loggedInAccount?.reloadFollows()
         guard republish else { return }
         account.publishNewContactList()
     }
@@ -156,7 +156,7 @@ class FollowingGuardian: ObservableObject {
     func removeFollowing(_ pubkeys:Set<String>) {
         guard let account = account() else { return }
         account.followingPubkeys.subtract(pubkeys)
-        NRState.shared.loggedInAccount?.reloadFollows()
+        AccountsState.shared.loggedInAccount?.reloadFollows()
         DataProvider.shared().save()
     }
 }

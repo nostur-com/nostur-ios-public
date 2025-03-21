@@ -21,7 +21,7 @@ struct NXColumnConfigurator: View {
     @State private var repliesEnabled: Bool = false
     @State private var title: String = ""
     
-    private var accounts: [CloudAccount] { NRState.shared.accounts.filter { $0.publicKey != GUEST_ACCOUNT_PUBKEY } }
+    private var accounts: [CloudAccount] { AccountsState.shared.accounts.filter { $0.publicKey != GUEST_ACCOUNT_PUBKEY } }
     
     private var formIsValid: Bool {
         if columnType == "Following" && account != nil { return true }

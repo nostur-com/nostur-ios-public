@@ -100,13 +100,13 @@ struct RelayStatsRow: View {
         .onAppear {
             foundAccountRows = Array(stats.receivedPubkeys
                 .filter { pubkey in // We only care about pubkeys we follow
-                    return NRState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false
+                    return AccountsState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false
                 }
                 .compactMap { pubkey in
                     return (
                         pubkey,
-                        NRState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL,
-                        NRState.shared.loggedInAccount?.followingCache[pubkey]?.anyName ?? "..."
+                        AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL,
+                        AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.anyName ?? "..."
                     )
                 }
                 .prefix(10))
@@ -165,13 +165,13 @@ struct RelayStatsDetails: View {
                 .onAppear {
                     foundAccountRows = stats.receivedPubkeys
                         .filter { pubkey in // We only care about pubkeys we follow
-                            return NRState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false
+                            return AccountsState.shared.loggedInAccount?.viewFollowingPublicKeys.contains(pubkey) ?? false
                         }
                         .compactMap { pubkey in
                         return (
                             pubkey,
-                            NRState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL,
-                            NRState.shared.loggedInAccount?.followingCache[pubkey]?.anyName ?? "..."
+                            AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL,
+                            AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.anyName ?? "..."
                         )
                     }
                 }

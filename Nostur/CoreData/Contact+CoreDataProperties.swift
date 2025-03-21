@@ -401,7 +401,7 @@ extension Contact : Identifiable {
             }
         #endif
 
-        guard NRState.shared.accountPubkeys.contains(contact.pubkey) else { return }
+        guard AccountsState.shared.bgAccountPubkeys.contains(contact.pubkey) else { return }
         guard let account = try? CloudAccount.fetchAccount(publicKey: contact.pubkey, context: bg()) else { return }
         
         account.name = contact.name ?? ""
@@ -490,7 +490,7 @@ extension Contact : Identifiable {
     
     static func fetchByPubkey(_ pubkey: String, context: NSManagedObjectContext) -> Contact? {
         if !Thread.isMainThread { // Try to get from following cache first (bg only for now)
-            if let contact = NRState.shared.loggedInAccount?.followingCache[pubkey]?.bgContact {
+            if let contact = AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.bgContact {
                 return contact
             }
         }

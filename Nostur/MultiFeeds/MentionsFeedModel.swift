@@ -54,7 +54,7 @@ class MentionsFeedModel: ObservableObject {
     
     public func setup(pubkey: String) {
         self.pubkey = pubkey
-        self.account = NRState.shared.accounts.first(where: { $0.publicKey == pubkey })
+        self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey })
     }
     
     public func load(limit: Int?, includeSpam: Bool = false, completion: ((Int64) -> Void)? = nil) {
@@ -65,11 +65,11 @@ class MentionsFeedModel: ObservableObject {
             let r1 = Event.fetchRequest()
             r1.predicate = NSPredicate(
                 format: "NOT pubkey IN %@ AND kind IN {1,20,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
-                (NRState.shared.blockedPubkeys + [pubkey]),
+                (AppState.shared.bgAppState.blockedPubkeys + [pubkey]),
                 serializedP(pubkey),
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds)
+                AppState.shared.bgAppState.mutedRootIds,
+                AppState.shared.bgAppState.mutedRootIds,
+                AppState.shared.bgAppState.mutedRootIds)
             r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             if let limit {
                 r1.fetchLimit = limit

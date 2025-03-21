@@ -80,11 +80,11 @@ struct NotificationsRepostsGrouped: View {
                 format:
                     "created_at >= %i AND NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                     currentNewestCreatedAt,
-                NRState.shared.blockedPubkeys + [account.publicKey],
+                AppState.shared.bgAppState.blockedPubkeys + [account.publicKey],
                 serializedP(account.publicKey),
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds,
-                NRState.shared.mutedRootIds
+                AppState.shared.bgAppState.mutedRootIds,
+                AppState.shared.bgAppState.mutedRootIds,
+                AppState.shared.bgAppState.mutedRootIds
             )
             fl.loadNewer(250, taskId: "newReposts")
         }
@@ -125,11 +125,11 @@ struct NotificationsRepostsGrouped: View {
         didLoad = true
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
-            (NRState.shared.blockedPubkeys + [account.publicKey]),
+            (AppState.shared.bgAppState.blockedPubkeys + [account.publicKey]),
             serializedP(account.publicKey),
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds)
+            AppState.shared.bgAppState.mutedRootIds,
+            AppState.shared.bgAppState.mutedRootIds,
+            AppState.shared.bgAppState.mutedRootIds)
         
         
         fl.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -164,11 +164,11 @@ struct NotificationsRepostsGrouped: View {
                     format:
                         "created_at >= %i AND NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                         currentNewestCreatedAt,
-                    (NRState.shared.blockedPubkeys + [account.publicKey]),
+                    (AppState.shared.bgAppState.blockedPubkeys + [account.publicKey]),
                     serializedP(account.publicKey),
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds
+                    AppState.shared.bgAppState.mutedRootIds,
+                    AppState.shared.bgAppState.mutedRootIds,
+                    AppState.shared.bgAppState.mutedRootIds
                   )
                 fl.loadNewer(taskId: taskId)
             },
@@ -200,11 +200,11 @@ struct NotificationsRepostsGrouped: View {
         guard let account = account() else { return }
         fl.predicate = NSPredicate(
             format: "NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
-            (NRState.shared.blockedPubkeys + [account.publicKey]),
+            (AppState.shared.bgAppState.blockedPubkeys + [account.publicKey]),
             serializedP(account.publicKey),
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds,
-            NRState.shared.mutedRootIds)
+            AppState.shared.bgAppState.mutedRootIds,
+            AppState.shared.bgAppState.mutedRootIds,
+            AppState.shared.bgAppState.mutedRootIds)
         fl.loadMore(25)
         let fetchMoreTask = ReqTask(
             reqCommand: { [weak fl] (taskId) in
@@ -221,11 +221,11 @@ struct NotificationsRepostsGrouped: View {
                 guard let fl else { return }
                 fl.predicate = NSPredicate(
                     format: "NOT pubkey IN %@ AND kind == 6 AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@)",
-                    (NRState.shared.blockedPubkeys + [account.publicKey]),
+                    (AppState.shared.bgAppState.blockedPubkeys + [account.publicKey]),
                     serializedP(account.publicKey),
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds,
-                    NRState.shared.mutedRootIds)
+                    AppState.shared.bgAppState.mutedRootIds,
+                    AppState.shared.bgAppState.mutedRootIds,
+                    AppState.shared.bgAppState.mutedRootIds)
                 fl.loadMore(25)
             })
 

@@ -11,7 +11,6 @@ import Foundation
 
 struct NewAccountSheet: View {
     @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var ns:NRState
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -49,7 +48,7 @@ struct NewAccountSheet: View {
                         dismiss()
                     }
                     NRState.shared.onBoardingIsShown = false
-                    NRState.shared.loadAccountsState()
+                    AccountsState.shared.loadAccountsState()
                 } label: {
                     Text("Create")
                         .padding(.vertical, 10)
@@ -57,7 +56,7 @@ struct NewAccountSheet: View {
                 }
                 .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
                 
-                if (ns.accounts.first(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY}) == nil)  {
+                if (AccountsState.shared.accounts.first(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY}) == nil)  {
                     NavigationLink {
                         TryGuestAccountSheet()
                     } label: {
@@ -90,7 +89,6 @@ struct NewAccountSheet: View {
                 DataProvider.shared().bgSave()
             }
             
-            ns.changeAccount(newAccount)
             ns.onBoardingIsShown = false
         }
         catch {

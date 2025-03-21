@@ -263,7 +263,7 @@ struct Search_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             NBNavigationStack {
-                if let lia = NRState.shared.loggedInAccount {
+                if let lia = AccountsState.shared.loggedInAccount {
                     Search()
                         .environmentObject(lia)
                 }

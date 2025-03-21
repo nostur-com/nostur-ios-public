@@ -37,7 +37,7 @@ public class CloudAccount: NSManagedObject {
         if includeBlocked {
             return withSelfIncluded
         }
-        let withoutBlocked = withSelfIncluded.subtracting(NRState.shared.blockedPubkeys)
+        let withoutBlocked = withSelfIncluded.subtracting(AppState.shared.bgAppState.blockedPubkeys)
         return withoutBlocked
     }
     

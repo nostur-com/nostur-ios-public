@@ -66,7 +66,7 @@ struct AnySigner: View {
                         .disableAutocorrection(true)
                         .lineLimit(16)
                 }
-                if let account = NRState.shared.loggedInAccount?.account, account.privateKey != nil, tab == "Signer" {
+                if let account = AccountsState.shared.loggedInAccount?.account, account.privateKey != nil, tab == "Signer" {
                     HStack {
                         Text("Signing as")
                         PFP(pubkey: account.publicKey, account: account, size: 30)
@@ -111,7 +111,7 @@ struct AnySigner: View {
                                 error = String(localized:"Could not parse JSON", comment: "Error message"); return
                             }
                             
-                            guard let pk = NRState.shared.loggedInAccount?.account.privateKey else {
+                            guard let pk = AccountsState.shared.loggedInAccount?.account.privateKey else {
                                 error = String(localized:"Account has no private key", comment: "Error message"); return
                             }
                             
@@ -123,7 +123,7 @@ struct AnySigner: View {
                             input = signedNEvent.eventJson(.prettyPrinted)
                             self.signedNEvent = signedNEvent
                         }
-                        .disabled(NRState.shared.loggedInAccount?.account.privateKey == nil)
+                        .disabled(AccountsState.shared.loggedInAccount?.account.privateKey == nil)
                     }
                 }
             }

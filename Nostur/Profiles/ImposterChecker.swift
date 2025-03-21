@@ -112,11 +112,11 @@ class ImposterChecker {
         guard shouldRunCheck(contact: contact) else { return }
         
         guard contact.picture != nil, let cPic = contact.pictureUrl else { return }
-        guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+        guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
         
         let contactAnyName = contact.anyName.lowercased()
         let cPubkey = contact.pubkey
-        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+        let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
         
         bg().perform {
             guard let account = account() else { return }
@@ -135,7 +135,7 @@ class ImposterChecker {
                 L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
        
                 DispatchQueue.main.async {
-                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                    guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
                     
                     contact.couldBeImposter  = similarPFP ? 1 : 0
                     
@@ -152,11 +152,11 @@ class ImposterChecker {
         guard shouldRunCheck(nrContact: nrContact) else { return }
         
         guard let cPic = nrContact.pictureUrl else { return }
-        guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+        guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
         
         let contactAnyName = nrContact.anyName.lowercased()
         let cPubkey = nrContact.pubkey
-        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+        let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
         
         bg().perform {
             guard let account = account() else { return }
@@ -174,7 +174,7 @@ class ImposterChecker {
                 guard similarPFP else { return }
                 L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
                 DispatchQueue.main.async {
-                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                    guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
                     
                     let couldBeImposter: Int16 = similarPFP ? 1 : 0
                     nrContact.couldBeImposter = couldBeImposter

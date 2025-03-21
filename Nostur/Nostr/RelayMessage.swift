@@ -158,7 +158,7 @@ class RelayMessage {
                 }
                 
                 // We should always notify if we received a contact list this session, to enable Follow button
-                if mMessage.pubkey == NRState.shared.activeAccountPublicKey && mMessage.kind == 3 { // To enable Follow button we need to have received a contact list
+                if mMessage.pubkey == AccountsState.shared.activeAccountPublicKey && mMessage.kind == 3 { // To enable Follow button we need to have received a contact list
                     DispatchQueue.main.async {
                         FollowingGuardian.shared.didReceiveContactListThisSession = true
                     }

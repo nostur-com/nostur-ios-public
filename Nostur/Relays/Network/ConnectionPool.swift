@@ -207,7 +207,7 @@ public class ConnectionPool: ObservableObject {
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
             if NetworkMonitor.shared.isConnected {
-                if IS_CATALYST || !NRState.shared.appIsInBackground {
+                if IS_CATALYST || !AppState.shared.appIsInBackground {
                     self?.stayConnectedPing()
                 }
             }
@@ -559,7 +559,7 @@ public class ConnectionPool: ObservableObject {
             guard !pTags.isEmpty, let pubkey = message.clientMessage.event?.pubkey else { return }
             
             // don't use outbox if its not our message (maybe rebroadcast of existing reply/quote)
-            guard NRState.shared.fullAccountPubkeys.contains(pubkey) else { return }
+            guard AccountsState.shared.bgFullAccountPubkeys.contains(pubkey) else { return }
             
             self.sendToOthersPreferredReadRelays(message.clientMessage, pubkeys: pTags)
         }

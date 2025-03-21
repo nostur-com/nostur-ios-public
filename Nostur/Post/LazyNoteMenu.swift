@@ -246,7 +246,7 @@ struct LazyNoteMenuSheet: View {
             .foregroundColor(themes.theme.accent)
             .listRowBackground(themes.theme.background)
             
-            if (NRState.shared.activeAccountPublicKey == nrPost.pubkey) {
+            if (AccountsState.shared.activeAccountPublicKey == nrPost.pubkey) {
                 Button {
                     dismiss()
                     DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
@@ -264,7 +264,7 @@ struct LazyNoteMenuSheet: View {
                 guard let mainEvent = Event.fetchEvent(id: nrPost.id, context: viewContext()) else { return }
                 let nEvent = mainEvent.toNEvent()
                 
-                if nrPost.pubkey == NRState.shared.activeAccountPublicKey && mainEvent.flags == "nsecbunker_unsigned" && la.account.isNC {
+                if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey && mainEvent.flags == "nsecbunker_unsigned" && la.account.isNC {
                     NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
                         Unpublisher.shared.publishNow(signedEvent)
                     })
@@ -273,7 +273,7 @@ struct LazyNoteMenuSheet: View {
                     Unpublisher.shared.publishNow(nEvent)
                 }
             } label: {
-                if nrPost.pubkey == NRState.shared.activeAccountPublicKey {
+                if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey {
                     Label(String(localized:"Rebroadcast (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
                 }
                 else {
@@ -289,7 +289,7 @@ struct LazyNoteMenuSheet: View {
                         Text("Posted via \(via)", comment: "Showing from which app this post was posted")
                             .lineLimit(1)
                     }
-                    if NRState.shared.activeAccountPublicKey == nrPost.pubkey {
+                    if AccountsState.shared.activeAccountPublicKey == nrPost.pubkey {
                         Text("Sent to:", comment:"Heading for list of relays sent to")
                     }
                     else {

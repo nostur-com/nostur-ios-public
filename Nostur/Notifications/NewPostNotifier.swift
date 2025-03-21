@@ -46,7 +46,7 @@ class NewPostNotifier: ObservableObject {
     
     @MainActor
     public func runCheck() {
-        guard !NRState.shared.appIsInBackground else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, app in background."); return }
+        guard !AppState.shared.appIsInBackground else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, app in background."); return }
 #if DEBUG
         L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
 #endif

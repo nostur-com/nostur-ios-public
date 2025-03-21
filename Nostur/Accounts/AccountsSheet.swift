@@ -25,7 +25,7 @@ struct AccountsSheet: View {
             .sorted(by: { $0.lastLoginAt > $1.lastLoginAt })
             .sorted(by: { $0.privateKey != nil && $1.privateKey == nil })
             // always show current logged in account at top
-            .sorted(by: { NRState.shared.activeAccountPublicKey == $0.publicKey && NRState.shared.activeAccountPublicKey != $1.publicKey })
+            .sorted(by: { AccountsState.shared.activeAccountPublicKey == $0.publicKey && AccountsState.shared.activeAccountPublicKey != $1.publicKey })
     }
     
     @State private var logoutAccount: CloudAccount? = nil
@@ -38,7 +38,7 @@ struct AccountsSheet: View {
                     AccountRow(account: account)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            NRState.shared.changeAccount(account)
+                            AccountsState.shared.changeAccount(account)
                             sendNotification(.hideSideBar)
                             dismiss()
                         }
@@ -87,7 +87,7 @@ struct AccountsSheet: View {
                 buttons: !account.isNC && account.privateKey != nil
                 ? [
                     .destructive(Text("Log out", comment: "Button to log out"), action: {
-                        NRState.shared.logout(account)
+                        AccountsState.shared.logout(account)
                     }),
                     .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
                         if let pk = account.privateKey {
@@ -97,9 +97,9 @@ struct AccountsSheet: View {
                     .cancel(Text("Cancel"))
                 ] : [
                     .destructive(Text("Log out", comment: "Button to log out"), action: {
-                        NRState.shared.logout(account)
+                        AccountsState.shared.logout(account)
                         
-//                            if (NRState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
+//                            if (AccountsState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
 //                                sendNotification(.hideSideBar)
 //                            }
                         
@@ -113,7 +113,7 @@ struct AccountsSheet: View {
 
 struct AccountRow: View {
     @ObservedObject public var account: CloudAccount
-    @EnvironmentObject private var ns: NRState
+    @EnvironmentObject private var accountsState: AccountsState
     
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -142,7 +142,7 @@ struct AccountRow: View {
                     Spacer()
                 }
             }
-            if (account.publicKey == ns.activeAccountPublicKey) {
+            if (account.publicKey == accountsState.activeAccountPublicKey) {
                 Image(systemName: "checkmark.circle.fill")
                     .resizable()
                     .foregroundColor(.accentColor)

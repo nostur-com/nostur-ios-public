@@ -59,7 +59,7 @@ class LiveEventsModel: ObservableObject {
     }
     
     private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
-        guard let accountPubkey = NRState.shared.loggedInAccount?.pubkey else { return }
+        guard let accountPubkey = AccountsState.shared.loggedInAccount?.pubkey else { return }
         
         let blockedPubkeys = blocks()
         let fr = Event.fetchRequest()

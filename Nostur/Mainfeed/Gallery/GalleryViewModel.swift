@@ -386,7 +386,7 @@ struct GalleryItem: Identifiable, Equatable, Hashable {
         self.blurhash = blurhash
         self.dimensions = dimensions
         if let pubkey {
-            self.pfpPictureURL = NRState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL
+            self.pfpPictureURL = AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL
         }
     }
     

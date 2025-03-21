@@ -180,7 +180,7 @@ class UnknownKindModel: ObservableObject {
                         recommendedBy: self.appRecommendations.reduce([], { (partialResult: [(Pubkey, URL)], recommendation: Event) in
                             if let aRef = recommendation.fastTags.first(where: { $0.0 == "a" })?.1,
                                aRef == handler.aTag,
-                               let pfp = NRState.shared.loggedInAccount?.followingCache[recommendation.pubkey]?.pfpURL
+                               let pfp = AccountsState.shared.loggedInAccount?.followingCache[recommendation.pubkey]?.pfpURL
                             {
                                 return partialResult + [(recommendation.pubkey, pfp)]
                             }
@@ -210,7 +210,7 @@ class UnknownKindModel: ObservableObject {
         self.pubkey = pubkey
         self.dTag = dTag
         self.alt = alt
-        self.follows = NRState.shared.loggedInAccount?.followingPublicKeys ?? []
+        self.follows = AccountsState.shared.loggedInAccount?.followingPublicKeys ?? []
         
         self.fetchAppHandlers(unknownKind: unknownKind)
         self.fetchAppRecommendations(unknownKind: unknownKind)

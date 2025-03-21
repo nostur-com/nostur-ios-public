@@ -86,9 +86,9 @@ class NewPostsVM: ObservableObject {
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"", self.since, self.pubkeys,
                                        PROFILE_KINDS.subtracting(Set([6])), // not reposts
-                                       NRState.shared.mutedRootIds,
-                                       NRState.shared.mutedRootIds,
-                                       NRState.shared.mutedRootIds)
+                                       AppState.shared.bgAppState.mutedRootIds,
+                                       AppState.shared.bgAppState.mutedRootIds,
+                                       AppState.shared.bgAppState.mutedRootIds)
             fr.fetchLimit = 75
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
             guard let events = try? bg().fetch(fr) else { return }

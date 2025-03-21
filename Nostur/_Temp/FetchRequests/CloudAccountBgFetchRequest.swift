@@ -89,8 +89,8 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
         
         let accountsCount = accounts.count
         Task { @MainActor in
-            guard accountsCount != NRState.shared.accounts.count else { return }
-            NRState.shared.loadAccountsState()
+            guard accountsCount != AccountsState.shared.accounts.count else { return }
+            AccountsState.shared.loadAccountsState()
         }
     }
 }

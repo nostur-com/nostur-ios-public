@@ -12,7 +12,7 @@ struct PostingToggle: View {
     @ObservedObject private var settings: SettingsStore = .shared
     
     private var accounts:[CloudAccount] {
-        NRState.shared.accounts
+        AccountsState.shared.accounts
             .sorted(by: { $0.publicKey < $1.publicKey })
             .filter { $0.isFullAccount }
     }

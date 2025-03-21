@@ -48,7 +48,7 @@ struct LiveEventsBanner: View {
             showCreateNestsSheet = false
         }
         .fullScreenCover(isPresented: $showCreateNestsSheet, content: {
-            if let account = NRState.shared.loggedInAccount?.account {
+            if let account = AccountsState.shared.loggedInAccount?.account {
                 NBNavigationStack {
                     CreateNest(account: account)
                         .toolbar {

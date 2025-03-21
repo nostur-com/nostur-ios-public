@@ -96,7 +96,7 @@ class NewOnboardingTracker {
     
     private func stopAfterDelay() {
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(10)) {
-            if let account = Nostur.account(), !NRState.shared.activeAccountPublicKey.isEmpty && account.publicKey == NRState.shared.activeAccountPublicKey {
+            if let account = Nostur.account(), !AccountsState.shared.activeAccountPublicKey.isEmpty && account.publicKey == AccountsState.shared.activeAccountPublicKey {
                 WebOfTrust.shared.loadWoT()
             }
             self.bg.perform { [weak self] in
@@ -197,10 +197,10 @@ class NewOnboardingTracker {
             }
             
             DataProvider.shared().bgSave()
-            NRState.shared.loggedInAccount?.reloadFollows()
+            AccountsState.shared.loggedInAccount?.reloadFollows()
             
             DispatchQueue.main.async {
-                if NRState.shared.activeAccountPublicKey == pubkey {
+                if AccountsState.shared.activeAccountPublicKey == pubkey {
                     sendNotification(.followsChanged, followingPublicKeys)
                 }
             }

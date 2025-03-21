@@ -16,7 +16,7 @@ public class Contact: NSManagedObject {
     
     func followsYou() -> Bool {
         guard let clEvent = clEvent else { return false }
-        guard let accountPubkey = NRState.shared.loggedInAccount?.pubkey else { return false }
+        guard let accountPubkey = AccountsState.shared.loggedInAccount?.pubkey else { return false }
         return !clEvent.fastTags.filter { $0.0 == "p" && $0.1 == accountPubkey }.isEmpty
     }
 }

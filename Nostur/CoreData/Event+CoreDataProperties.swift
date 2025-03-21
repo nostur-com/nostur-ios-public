@@ -992,7 +992,7 @@ extension Event {
                             }
                         })
                     }
-                    if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
+                    if let zapRequest, zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, eTag: savedEvent.zappedEventId, zapState: .zapReceiptConfirmed))
                     }
@@ -1018,7 +1018,7 @@ extension Event {
                             }
                         })
                     }
-                    if let zapRequest, zapRequest.pubkey == NRState.shared.activeAccountPublicKey {
+                    if let zapRequest, zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, aTag: firstA, zapState: .zapReceiptConfirmed))
                     }
@@ -1225,7 +1225,7 @@ extension Event {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
                     // DM is sent from one of our current logged in pubkey
-                    if !dmState.accepted && NRState.shared.accountPubkeys.contains(event.publicKey) {
+                    if !dmState.accepted && AccountsState.shared.bgAccountPubkeys.contains(event.publicKey) {
                         dmState.accepted = true
                         
                         if let current = dmState.markedReadAt_, savedEvent.date > current {
@@ -1243,7 +1243,7 @@ extension Event {
                 else if let dmState = CloudDMState.fetchExisting(contactPubkey, contactPubkey: event.publicKey, context: context) {
                     
                     // if we already track the conversation, consider accepted if we replied to the DM
-                    if !dmState.accepted && NRState.shared.accountPubkeys.contains(event.publicKey) {
+                    if !dmState.accepted && AccountsState.shared.bgAccountPubkeys.contains(event.publicKey) {
                         dmState.accepted = true
                     }
                     // Let DirectMessageViewModel handle view updates
@@ -1252,7 +1252,7 @@ extension Event {
                 }
                 else {
                     // if we are sender with full account
-                    if NRState.shared.fullAccountPubkeys.contains(event.publicKey) {
+                    if AccountsState.shared.bgAccountPubkeys.contains(event.publicKey) {
                         let dmState = CloudDMState(context: context)
                         dmState.accountPubkey_ = event.publicKey
                         dmState.contactPubkey_ = contactPubkey
@@ -1264,7 +1264,7 @@ extension Event {
                     }
                     
                     // if we are receiver with full account
-                    else if NRState.shared.fullAccountPubkeys.contains(contactPubkey) {
+                    else if AccountsState.shared.bgAccountPubkeys.contains(contactPubkey) {
                         let dmState = CloudDMState(context: context)
                         dmState.accountPubkey_ = contactPubkey
                         dmState.contactPubkey_ = event.publicKey
@@ -1275,7 +1275,7 @@ extension Event {
                     }
                     
                     // if we are sender with read only account
-                    else if NRState.shared.accountPubkeys.contains(event.publicKey) {
+                    else if AccountsState.shared.bgAccountPubkeys.contains(event.publicKey) {
                         let dmState = CloudDMState(context: context)
                         dmState.accountPubkey_ = event.publicKey
                         dmState.contactPubkey_ = contactPubkey
@@ -1287,7 +1287,7 @@ extension Event {
                     }
                     
                     // if we are receiver with read only account
-                    else if NRState.shared.accountPubkeys.contains(contactPubkey) {
+                    else if AccountsState.shared.bgAccountPubkeys.contains(contactPubkey) {
                         let dmState = CloudDMState(context: context)
                         dmState.accountPubkey_ = contactPubkey
                         dmState.contactPubkey_ = event.publicKey

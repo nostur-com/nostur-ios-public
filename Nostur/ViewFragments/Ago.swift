@@ -33,7 +33,7 @@ struct Ago: View, Equatable {
                     agoText = date.agoString
                 }
             }
-            .onReceive(NRState.shared.agoTimer) { _ in
+            .onReceive(AppState.shared.agoTimer) { _ in
                 if date.agoString != agoText {
                     agoText = date.agoString
                 }

@@ -50,7 +50,7 @@ class PostReactionsModel: ObservableObject {
             r1.predicate = NSPredicate(
                 format: "reactionToId == %@ AND kind == 7 AND NOT pubkey IN %@",
                 eventId,
-                NRState.shared.blockedPubkeys
+                AppState.shared.bgAppState.blockedPubkeys
             )
             r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: true)]
             if let limit {

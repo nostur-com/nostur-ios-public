@@ -62,7 +62,7 @@ struct AccountSwitcher_Previews: PreviewProvider {
             pe.loadAccounts()
         }) {
             VStack {
-                let accounts = NRState.shared.accounts
+                let accounts = AccountsState.shared.accounts
                 AccountSwitcher(accounts: accounts, selectedAccount: $selectedAccount)
             }
         }

@@ -102,7 +102,7 @@ extension PreviewEnvironment {
     @MainActor func loadAccount() -> Bool {
 //        guard !didLoad else { return false }
 //        didLoad = true
-//        NRState.shared.loadAccounts()
+//        AccountsState.shared.loadAccounts()
         context.performAndWait {
             print("💄💄LOADING ACCOUNT")
             let account = CloudAccount(context: self.context)
@@ -374,7 +374,7 @@ extension PreviewEnvironment {
                                         "a3eb29554bd27fca7f53f66272e4bb59d066f2f31708cf341540cb4729fbd841",
                                         "c7dccba4fe4426a7b1ea239a5637ba40fab9862c8c86b3330fe65e9f667435f6",
                                         "7bdef7be22dd8e59f4600e044aa53a1cf975a9dc7d27df5833bc77db784a5805"]
-            NRState.shared.changeAccount(account)
+            AccountsState.shared.changeAccount(account)
             WebOfTrust.shared.webOfTrustLevel = SettingsStore.WebOfTrustLevel.off.rawValue
 //            return account
         }
@@ -443,13 +443,13 @@ extension PreviewEnvironment {
                 account7.name = "Alt"
                 account7.about = "5th account, with private kay"
                 
-                NRState.shared.accounts = [account, account2, account3, account4, account5, account6, account7]
+                AccountsState.shared.accounts = [account, account2, account3, account4, account5, account6, account7]
             } catch { }
         }
-//        NRState.shared.loadAccounts()
+//        AccountsState.shared.loadAccounts()
         
-        if let account = NRState.shared.accounts.first {
-            NRState.shared.changeAccount(account)
+        if let account = AccountsState.shared.accounts.first {
+            AccountsState.shared.changeAccount(account)
         }
     }
     
@@ -800,11 +800,12 @@ struct PreviewContainer<Content: View>: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            if didSetup, let la = NRState.shared.loggedInAccount {
+            if didSetup, let loggedInAccount = AccountsState.shared.loggedInAccount {
                 content()
                     .environment(\.managedObjectContext, pe.context)
-                    .environmentObject(NRState.shared)
-                    .environmentObject(la)
+                    .environmentObject(AppState.shared)
+                    .environmentObject(AccountsState.shared)
+                    .environmentObject(loggedInAccount)
                     .environmentObject(pe.ss)
                     .environmentObject(pe.er)
                     .environmentObject(pe.ss)

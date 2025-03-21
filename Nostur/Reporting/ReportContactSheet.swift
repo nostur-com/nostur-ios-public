@@ -64,7 +64,7 @@ struct ReportContactSheet: View {
                         })
                     }
                     else {
-                        guard let signedReport = NRState.shared.loggedInAccount?.reportContact(pubkey: reportContact.nrContact.pubkey, reportType: reason, note: comment) else {
+                        guard let signedReport = AccountsState.shared.loggedInAccount?.reportContact(pubkey: reportContact.nrContact.pubkey, reportType: reason, note: comment) else {
                             return
                         }
                         Unpublisher.shared.publishNow(signedReport)

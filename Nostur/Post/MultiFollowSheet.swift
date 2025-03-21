@@ -15,7 +15,7 @@ struct MultiFollowSheet: View {
     @EnvironmentObject private var themes: Themes
     
     private var accounts: [CloudAccount] { // Only accounts with private key
-        NRState.shared.accounts.filter { $0.isFullAccount }
+        AccountsState.shared.accounts.filter { $0.isFullAccount }
     }
     
     private var firstRow: ArraySlice<CloudAccount> {
@@ -190,7 +190,7 @@ struct MultiFollowSheet: View {
                 account.publishNewContactList()
                 
                 if account == Nostur.account() {
-                    NRState.shared.loggedInAccount?.reloadFollows()
+                    AccountsState.shared.loggedInAccount?.reloadFollows()
                     sendNotification(.followingAdded, pubkey) // For WoT
                 }
                 DataProvider.shared().save()
@@ -202,7 +202,7 @@ struct MultiFollowSheet: View {
     private func unfollow(_ pubkey: String, account: CloudAccount) {
         account.followingPubkeys.remove(pubkey)
         if account == Nostur.account() {
-            NRState.shared.loggedInAccount?.reloadFollows()
+            AccountsState.shared.loggedInAccount?.reloadFollows()
         }
         account.publishNewContactList()
         DataProvider.shared().save()

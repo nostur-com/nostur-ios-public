@@ -18,7 +18,7 @@ struct ContactSearchResultRow: View {
     @State var fixedPfp: URL?
     
     var couldBeImposter: Bool {
-        guard let la = NRState.shared.loggedInAccount else { return false }
+        guard let la = AccountsState.shared.loggedInAccount else { return false }
         guard la.account.publicKey != contact.pubkey else { return false }
         guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
@@ -113,7 +113,7 @@ struct NRContactSearchResultRow: View {
     @State var fixedPfp: URL?
     
     var couldBeImposter: Bool {
-        guard let la = NRState.shared.loggedInAccount else { return false }
+        guard let la = AccountsState.shared.loggedInAccount else { return false }
         guard la.account.publicKey != nrContact.pubkey else { return false }
         guard !la.isFollowing(pubkey: nrContact.pubkey) else { return false }
         guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }

@@ -60,7 +60,7 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
         return anyName
     }
     
-    if let anyName = NRState.shared.loggedInAccount?.followingCache[pubkey]?.anyName {
+    if let anyName = AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.anyName {
         return anyName
     }
     

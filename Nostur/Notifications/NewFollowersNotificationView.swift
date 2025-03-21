@@ -79,11 +79,11 @@ struct NewFollowersNotificationView: View {
         guard contact.couldBeImposter == -1 else { return }
         guard contact.picture != nil, let cPic = contact.pictureUrl else { return }
         guard !NewOnboardingTracker.shared.isOnboarding else { return }
-        guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+        guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
         
         let contactAnyName = contact.anyName.lowercased()
         let cPubkey = contact.pubkey
-        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+        let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
         
         bg().perform { [weak contact] in
             guard let account = account() else { return }
@@ -104,7 +104,7 @@ struct NewFollowersNotificationView: View {
                 
                 DispatchQueue.main.async {
                     guard let contact else { return }
-                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                    guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
                     self.similarPFP = similarPFP
                     self.similarToPubkey = followingPubkey
                     contact.couldBeImposter = similarPFP ? 1 : 0

@@ -91,7 +91,7 @@ struct ProfileOverlayCard: View {
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
     
     var couldBeImposter: Bool {
-        guard let la = NRState.shared.loggedInAccount else { return false }
+        guard let la = AccountsState.shared.loggedInAccount else { return false }
         guard la.account.publicKey != contact.pubkey else { return false }
         guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
         guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }

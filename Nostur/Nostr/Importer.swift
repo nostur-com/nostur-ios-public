@@ -196,7 +196,7 @@ class Importer {
                                         
                     guard existingIds[event.id]?.status != .SAVED else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
-                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -221,7 +221,7 @@ class Importer {
                         let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),
                         existingKind3.created_at > Int64(event.createdAt.timestamp)
                     {
-                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -256,10 +256,10 @@ class Importer {
                             // use explorer account p's for "Explorer" feed
                             let pTags = event.pTags()
                             Task { @MainActor in
-                                NRState.shared.rawExplorePubkeys = Set(pTags)
+                                AppState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }
-                        if event.publicKey == NRState.shared.activeAccountPublicKey { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == AccountsState.shared.activeAccountPublicKey { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -299,7 +299,7 @@ class Importer {
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
                         Event.updateLikeCountCache(savedEvent, content: event.content, context: bgContext)
-                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
                         }
@@ -312,7 +312,7 @@ class Importer {
                     if event.kind == .zapNote {
                         Event.updateZapTallyCache(savedEvent, context: bgContext)
                         
-                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
                         }
@@ -335,7 +335,7 @@ class Importer {
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPOSTS)
                     if event.kind == .repost {
                         Event.updateRepostsCountCache(savedEvent, context: bgContext)
-                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reposts, accountPubkey: otherPubkey))
                         }
@@ -432,7 +432,7 @@ class Importer {
                                          
                     guard existingIds[event.id]?.status != .SAVED else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
-                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -449,7 +449,7 @@ class Importer {
                         let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),
                         existingKind3.created_at > Int64(event.createdAt.timestamp)
                     {
-                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -484,10 +484,10 @@ class Importer {
                             // use explorer account p's for "Explorer" feed
                             let pTags = event.pTags()
                             Task { @MainActor in
-                                NRState.shared.rawExplorePubkeys = Set(pTags)
+                                AppState.shared.rawExplorePubkeys = Set(pTags)
                             }
                         }
-                        if event.publicKey == NRState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
                             }
@@ -524,7 +524,7 @@ class Importer {
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
                     if event.kind == .reaction {
                         Event.updateLikeCountCache(savedEvent, content:event.content, context: bgContext)
-                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
                         }
@@ -538,7 +538,7 @@ class Importer {
                     if event.kind == .zapNote {
                         Event.updateZapTallyCache(savedEvent, context: bgContext)
                         
-                        if let otherPubkey = savedEvent.otherPubkey, NRState.shared.accountPubkeys.contains(otherPubkey) {
+                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
                             // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
                             ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
                         }

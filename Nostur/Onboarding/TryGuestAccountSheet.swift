@@ -42,11 +42,11 @@ struct TryGuestAccountSheet: View {
         .frame(maxWidth: 300)
         .onAppear {
             // Start onboarding already.. speed up..
-            let countBefore = NRState.shared.accounts.count
-            if !NRState.shared.accounts.contains(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY }) {
+            let countBefore = AccountsState.shared.accounts.count
+            if !AccountsState.shared.accounts.contains(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY }) {
                 let guestAccount = GuestAccountManager.shared.createGuestAccount()
-                NRState.shared.changeAccount(guestAccount)
-                if NRState.shared.accounts.count > countBefore {
+                AccountsState.shared.changeAccount(guestAccount)
+                if AccountsState.shared.accounts.count > countBefore {
                     didCreate = true
                 }
             }
@@ -79,9 +79,9 @@ struct TryGuestAccountSheet: View {
         let guestAccount = try? CloudAccount.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
         
         if let guestAccount {
-            NRState.shared.changeAccount(guestAccount)
+            AccountsState.shared.changeAccount(guestAccount)
         }
-        NRState.shared.loadAccountsState()
+        AccountsState.shared.loadAccountsState()
     }
 }
 

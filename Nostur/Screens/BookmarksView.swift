@@ -13,7 +13,6 @@ import NavigationBackport
 struct BookmarksView: View {
     @ObservedObject var vm: BookmarksFeedModel
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject private var ns: NRState
     
     private var selectedSubTab: String {
         get { UserDefaults.standard.string(forKey: "selected_bookmarkssubtab") ?? "Bookmarks" }

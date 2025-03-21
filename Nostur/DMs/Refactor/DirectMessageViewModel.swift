@@ -127,11 +127,11 @@ class DirectMessageViewModel: ObservableObject {
     // NRState on startup if WoT is disabled
     // receiveNotification(.WoTReady) if WoT is enabled, after WoT has loaded
     public func load() {
-        guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
+        guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { return }
         conversationRows = []
         requestRows = []
         requestRowsNotWoT = []
-        self.pubkey = NRState.shared.activeAccountPublicKey
+        self.pubkey = AccountsState.shared.activeAccountPublicKey
         self.loadAcceptedConversations()
         self.loadMessageRequests()
         self.loadOutSideWoT() // even if we don't show it, we need to load to show how many there are in toggle.
@@ -413,7 +413,7 @@ class DirectMessageViewModel: ObservableObject {
     public func checkNeedsNotification(_ event: Event) {
         guard let account = account() else { return }
         guard let firstP = event.firstP() else { return }
-        guard firstP == NRState.shared.activeAccountPublicKey else { return }
+        guard firstP == AccountsState.shared.activeAccountPublicKey else { return }
         guard event.created_at > lastDMLocalNotifcationAt else { return }
         
         // Only continue if either limit to follows is not enabled, or if we are following the sender
@@ -426,7 +426,7 @@ class DirectMessageViewModel: ObservableObject {
                 
         // Show notification on Mac: ALWAYS
         // On iOS: Only if app is in background
-        if (IS_CATALYST || NRState.shared.appIsInBackground)  {
+        if (IS_CATALYST || AppState.shared.appIsInBackground)  {
             let name = contactUsername(fromPubkey: event.pubkey, event: event)
             scheduleDMNotification(name: name)
         }

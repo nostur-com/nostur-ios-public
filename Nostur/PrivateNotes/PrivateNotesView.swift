@@ -13,7 +13,6 @@ import NavigationBackport
 struct PrivateNotesView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var themes:Themes
-    @EnvironmentObject private var ns:NRState
     
     private var selectedSubTab: String {
         get { UserDefaults.standard.string(forKey: "selected_bookmarkssubtab") ?? "Private Notes" }

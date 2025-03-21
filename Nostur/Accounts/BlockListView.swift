@@ -151,10 +151,10 @@ struct BlockedAccounts:View {
         for index in offsets {
             let block = section[index]
             viewContext.delete(block)
-            NRState.shared.blockedPubkeys.remove(block.pubkey)
+            AppState.shared.bgAppState.blockedPubkeys.remove(block.pubkey)
         }
         viewContextSave()
-        sendNotification(.blockListUpdated, NRState.shared.blockedPubkeys)
+        sendNotification(.blockListUpdated, AppState.shared.bgAppState.blockedPubkeys)
     }
 }
 
@@ -199,7 +199,7 @@ struct MutedConversations: View {
                         .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
                             viewContext.delete(mutedRootId)
                             viewContextSave()
-                            NRState.shared.mutedRootIds.remove(mutedRootId.eventId)
+                            AppState.shared.bgAppState.mutedRootIds.remove(mutedRootId.eventId)
                             sendNotification(.muteListUpdated)
                         }
                     }

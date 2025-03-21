@@ -16,7 +16,7 @@ struct MainWoTaccountPicker: View {
         _selectedMainWoTaccountPubkey = State(initialValue: selectedMainWoTaccountPubkey)
     }
     
-    private var accounts: [CloudAccount] { NRState.shared.accounts.filter { $0.publicKey != GUEST_ACCOUNT_PUBKEY } }
+    private var accounts: [CloudAccount] { AccountsState.shared.accounts.filter { $0.publicKey != GUEST_ACCOUNT_PUBKEY } }
 
     var body: some View {
         Picker(selection: $selectedMainWoTaccountPubkey) {

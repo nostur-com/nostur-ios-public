@@ -159,7 +159,7 @@ import NavigationBackport
         pe.loadPosts()
     }) {
         VStack {
-            NotificationsReposts(pubkey: NRState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
+            NotificationsReposts(pubkey: AccountsState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
         }
     }
 }

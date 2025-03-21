@@ -27,7 +27,7 @@ struct ProfileToolbar: View {
                 
                 Spacer()
                 
-                if pubkey == NRState.shared.activeAccountPublicKey {
+                if pubkey == AccountsState.shared.activeAccountPublicKey {
                     Button {
                         guard let account = account() else { return }
                         guard isFullAccount(account) else { showReadOnlyMessage(); return }

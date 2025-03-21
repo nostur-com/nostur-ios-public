@@ -134,7 +134,7 @@ struct ProfileView: View {
                             ProfileLightningButton(nrContact: nrContact)
                         }
                         
-                        if nrContact.pubkey == NRState.shared.activeAccountPublicKey {
+                        if nrContact.pubkey == AccountsState.shared.activeAccountPublicKey {
                             Button {
                                 guard let account = account() else { return }
                                 guard isFullAccount(account) else { showReadOnlyMessage(); return }

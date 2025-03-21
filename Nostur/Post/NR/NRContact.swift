@@ -204,13 +204,13 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.objectWillChange.send()
         self.couldBeImposter = 0
         
-        guard let la = (laOrNil ?? NRState.shared.loggedInAccount) else { return }
+        guard let la = (laOrNil ?? AccountsState.shared.loggedInAccount) else { return }
         la.follow(pubkey, privateFollow: privateFollow)
     }
     
     @MainActor public func unfollow(_ laOrNil: LoggedInAccount? = nil) {
         self.objectWillChange.send()
-        guard let la = (laOrNil ?? NRState.shared.loggedInAccount) else { return }
+        guard let la = (laOrNil ?? AccountsState.shared.loggedInAccount) else { return }
         la.unfollow(pubkey)
     }
     

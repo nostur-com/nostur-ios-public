@@ -45,7 +45,7 @@ class GroupedReactionsFeedModel: ObservableObject {
     
     public func setup(pubkey: String) {
         self.pubkey = pubkey
-        self.account = NRState.shared.accounts.first(where: { $0.publicKey == pubkey })
+        self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey })
     }
     
     public func load(limit: Int?, includeSpam: Bool = false, completion: ((Int64) -> Void)? = nil) {
@@ -57,7 +57,7 @@ class GroupedReactionsFeedModel: ObservableObject {
             r1.predicate = NSPredicate(
                 format: "otherPubkey == %@ AND kind == 7 AND NOT pubkey IN %@",
                 pubkey,
-                NRState.shared.blockedPubkeys
+                AppState.shared.bgAppState.blockedPubkeys
             )
             r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             if let limit {

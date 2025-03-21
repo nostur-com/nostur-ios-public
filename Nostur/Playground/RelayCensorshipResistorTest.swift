@@ -50,8 +50,8 @@ struct RelayCensorshipResistorTest: View {
             }
         }
         .onAppear {
-            var pubkeys = NRState.shared.loggedInAccount?.followingPublicKeys ?? Set<String>()
-            pubkeys.remove(NRState.shared.activeAccountPublicKey)
+            var pubkeys = AccountsState.shared.loggedInAccount?.followingPublicKeys ?? Set<String>()
+            pubkeys.remove(AccountsState.shared.activeAccountPublicKey)
             
             rcr = RelayCensorshipResistor(followingPubkeys: pubkeys)
         }
@@ -91,8 +91,8 @@ class RelayCensorshipResistor {
     
     @MainActor
     public func fetchRelays() {
-        var pubkeys = NRState.shared.loggedInAccount?.followingPublicKeys ?? Set<String>()
-        pubkeys.remove(NRState.shared.activeAccountPublicKey)
+        var pubkeys = AccountsState.shared.loggedInAccount?.followingPublicKeys ?? Set<String>()
+        pubkeys.remove(AccountsState.shared.activeAccountPublicKey)
         
         let reqTask = ReqTask(debounceTime: 5.0,
                               prefix: "3-10002",

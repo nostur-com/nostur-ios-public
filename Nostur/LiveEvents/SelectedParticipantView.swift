@@ -36,7 +36,7 @@ struct SelectedParticipantView: View {
     @State private var isZapped = false
     
     var couldBeImposter: Bool {
-        guard let la = NRState.shared.loggedInAccount else { return false }
+        guard let la = AccountsState.shared.loggedInAccount else { return false }
         guard la.account.publicKey != nrContact.pubkey else { return false }
         guard !la.isFollowing(pubkey: nrContact.pubkey) else { return false }
         guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }

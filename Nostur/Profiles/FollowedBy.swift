@@ -77,7 +77,7 @@ struct FollowedBy: View {
             }
         }
         .task {
-            guard let pubkey, let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+            guard let pubkey, let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
             
             bg().perform {
                 let commonFollowerPubkeys = commonFollowers(for: pubkey)

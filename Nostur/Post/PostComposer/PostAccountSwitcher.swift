@@ -124,7 +124,7 @@ struct InlineAccountSwitcher: View, Equatable {
                 }
             }
             .task {
-                accounts = NRState.shared.accounts
+                accounts = AccountsState.shared.accounts
                     .filter { $0.isFullAccount }
 //                    .sorted(by: {
 //                        $0 == activeAccount && $1 != activeAccount
@@ -156,7 +156,7 @@ enum Direction {
 
 struct InlineAccountSwitcherPreviewWrap: View {
     public var fanOutDirection: Direction = .bottom
-    @State var activeAccount = NRState.shared.loggedInAccount!.account
+    @State var activeAccount = AccountsState.shared.loggedInAccount!.account
     
     var body: some View {
         InlineAccountSwitcher(activeAccount: activeAccount, onChange: { account in

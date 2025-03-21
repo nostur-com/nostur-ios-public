@@ -178,11 +178,11 @@ class NSecBunkerManager: ObservableObject {
                             
                             viewContextSave()
                             
-                            if NRState.shared.activeAccountPublicKey == oldAccountPubkey {
-                                NRState.shared.activeAccountPublicKey = newAccountPubkey
-                                NRState.shared.loggedInAccount?.pubkey = newAccountPubkey
+                            if AccountsState.shared.activeAccountPublicKey == oldAccountPubkey {
+                                AccountsState.shared.activeAccountPublicKey = newAccountPubkey
+                                AccountsState.shared.loggedInAccount?.account.publicKey = newAccountPubkey
                                 
-                                NRState.shared.loadAccountsState() // Need load account because pubkey changed
+                                AccountsState.shared.loadAccountsState() // Need load account because pubkey changed
                             }
                             
                             self.state = .connected

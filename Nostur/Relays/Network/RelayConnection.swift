@@ -533,7 +533,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 // restore subscriptions
                 if !isOutbox {
                     DispatchQueue.main.async { [weak self] in
-                        if IS_CATALYST || !NRState.shared.appIsInBackground {
+                        if IS_CATALYST || !AppState.shared.appIsInBackground {
                             if self?.relayData.auth ?? false {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                     NRState.shared.resumeFeeds()

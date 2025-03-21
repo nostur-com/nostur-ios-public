@@ -60,7 +60,7 @@ class PostZapsModel: ObservableObject {
             r1.predicate = NSPredicate(
                 format: "zappedEventId == %@ AND kind == 9735 AND NOT pubkey IN %@",
                 eventId,
-                NRState.shared.blockedPubkeys
+                AppState.shared.bgAppState.blockedPubkeys
             )
             r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: true)]
             if let limit {

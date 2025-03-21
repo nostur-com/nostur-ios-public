@@ -120,7 +120,7 @@ class WebOfTrust: ObservableObject {
         
         // never use the built-in guest account
         
-        if let fullAccount = NRState.shared.accounts
+        if let fullAccount = AccountsState.shared.accounts
             .filter({ $0.isFullAccount && $0.followingPubkeys.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY }) // only full accounts with 50+ follows (exclude guest account)
             .sorted(by: { $0.followingPubkeys.count > $1.followingPubkeys.count }).first // sorted to get the one with the most follows
         {
@@ -128,8 +128,8 @@ class WebOfTrust: ObservableObject {
             _mainAccountWoTpubkey = fullAccount.publicKey
         }
         // the currently logged in read only account, if it has 50+ follows but not if its the guest account
-        else if let readOnlyAccount = NRState.shared.accounts
-            .first(where: { $0.publicKey == NRState.shared.activeAccountPublicKey && $0.followingPubkeys.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY })
+        else if let readOnlyAccount = AccountsState.shared.accounts
+            .first(where: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $0.followingPubkeys.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY })
         {
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT read account guessed: \(readOnlyAccount.publicKey)")
             _mainAccountWoTpubkey = readOnlyAccount.publicKey
@@ -142,7 +142,7 @@ class WebOfTrust: ObservableObject {
         }
         guard mainAccountWoTpubkey != "" else { return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
-        guard let account = NRState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else { return }
+        guard let account = AccountsState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else { return }
         L.og.info("🕸️🕸️ WebOfTrust: Main account: \(account.anyName)")
         
         let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.privateFollowingPubkeys) // We don't include silent follows in WoT

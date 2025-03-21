@@ -24,7 +24,7 @@ struct FollowButton: View {
     var body: some View {
         Button {
             guard isFullAccount() else { showReadOnlyMessage(); return }
-            guard let la = NRState.shared.loggedInAccount else { return }
+            guard let la = AccountsState.shared.loggedInAccount else { return }
             
             if la.isFollowing(pubkey: pubkey) {
                 if !isPrivateFollowing(pubkey) {
@@ -46,7 +46,7 @@ struct FollowButton: View {
         .disabled(!fg.didReceiveContactListThisSession)
         
         .onAppear {
-            guard let la = NRState.shared.loggedInAccount else { return }
+            guard let la = AccountsState.shared.loggedInAccount else { return }
             followState = getFollowState(la.account, pubkey: pubkey)
         }
         
@@ -59,7 +59,7 @@ struct FollowButton: View {
         .onReceive(receiveNotification(.followsChanged)) { notification in
             guard notification.object is Set<String> else { return }
             
-            guard let la = NRState.shared.loggedInAccount else { return }
+            guard let la = AccountsState.shared.loggedInAccount else { return }
             followState = getFollowState(la.account, pubkey: pubkey)
         }
     }

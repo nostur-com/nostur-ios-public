@@ -101,10 +101,10 @@ struct PossibleImposterDetail: View {
             }
             else {
                 guard let mainContact = possibleImposterContact else { return }
-                guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+                guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
 
                 let contactAnyName = mainContact.anyName.lowercased()
-                let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+                let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
                 let cPubkey = mainContact.pubkey
                 guard let cPic = mainContact.pictureUrl else { return }
 
@@ -123,7 +123,7 @@ struct PossibleImposterDetail: View {
                             return
                         }
                         DispatchQueue.main.async {
-                            guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                            guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
                             mainContact.similarToPubkey = followingPubkey
                             followingContact = Contact.fetchByPubkey(followingPubkey, context: context())
                         }

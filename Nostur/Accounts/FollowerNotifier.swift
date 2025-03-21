@@ -37,20 +37,20 @@ class FollowerNotifier {
             .debounce(for: .seconds(5), scheduler: RunLoop.main) // Debounce 5 seconds to allow collection of more contact lists during import
             .sink { [weak self] accountPubkey in
                 // Should still be same account (account switch could have happened in 5 sec)
-                guard NRState.shared.activeAccountPublicKey == accountPubkey else { return }
+                guard AccountsState.shared.activeAccountPublicKey == accountPubkey else { return }
                 self?._generateNewFollowersNotification(accountPubkey)
             }
             .store(in: &subscriptions)
         
         checkForNewTimer = Timer.scheduledTimer(withTimeInterval: 14400, repeats: true, block: { [weak self] _ in
-            guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
-            let pubkey = NRState.shared.activeAccountPublicKey
+            guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { return }
+            let pubkey = AccountsState.shared.activeAccountPublicKey
             self?.checkForUpdatedContactList(pubkey: pubkey)
         })
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 15) { [weak self] in
-            guard !NRState.shared.activeAccountPublicKey.isEmpty else { return }
-            let pubkey = NRState.shared.activeAccountPublicKey
+            guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { return }
+            let pubkey = AccountsState.shared.activeAccountPublicKey
             self?.checkForUpdatedContactList(pubkey: pubkey)
         }
     }
@@ -74,7 +74,7 @@ class FollowerNotifier {
             if self.currentFollowerPubkeys.count <= Self.LIMIT { // Check all new followers
                 let rf = Filters(
                     kinds: [3],
-                    tagFilter: TagFilter(tag: "p", values: [NRState.shared.activeAccountPublicKey]),
+                    tagFilter: TagFilter(tag: "p", values: [AccountsState.shared.activeAccountPublicKey]),
                     since: since.timestamp
                 )
                 
@@ -84,7 +84,7 @@ class FollowerNotifier {
                     req(cm)
                 }
             }
-            else if let follows = NRState.shared.loggedInAccount?.followingPublicKeys { // Check only new following back (because data usage)
+            else if let follows = AccountsState.shared.loggedInAccount?.followingPublicKeys { // Check only new following back (because data usage)
 
                 // We need to REQ all that we follow (for follow-back check), but we don't need to check those already following us
                 let followsWithoutFollowers = follows.subtracting(self.currentFollowerPubkeys)
@@ -92,7 +92,7 @@ class FollowerNotifier {
                 let rf = Filters(
                     authors: followsWithoutFollowers,
                     kinds: [3],
-                    tagFilter: TagFilter(tag: "p", values: [NRState.shared.activeAccountPublicKey]),
+                    tagFilter: TagFilter(tag: "p", values: [AccountsState.shared.activeAccountPublicKey]),
                     since: since.timestamp
                 )
                 
@@ -149,14 +149,14 @@ class FollowerNotifier {
                 guard let self = self else { return }
                 let nEvent = notification.object as! NEvent
                 guard nEvent.kind == .contactList else { return }
-                guard nEvent.pTags().contains(NRState.shared.activeAccountPublicKey) else { return }
+                guard nEvent.pTags().contains(AccountsState.shared.activeAccountPublicKey) else { return }
                 bg().perform { [weak self] in
                     guard let self = self else { return }
                     guard !self.currentFollowerPubkeys.isEmpty else { return }
 
                     if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
                         self.newFollowerPubkeys.insert(nEvent.publicKey)
-                        self.generateNewFollowersNotification.send(NRState.shared.activeAccountPublicKey)
+                        self.generateNewFollowersNotification.send(AccountsState.shared.activeAccountPublicKey)
                     }
                 }
             }

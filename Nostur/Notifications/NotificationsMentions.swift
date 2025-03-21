@@ -151,7 +151,7 @@ struct NotificationsMentions: View {
         pe.loadPosts()
     }) {
         VStack {
-            NotificationsMentions(pubkey: NRState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
+            NotificationsMentions(pubkey: AccountsState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
         }
     }
 }

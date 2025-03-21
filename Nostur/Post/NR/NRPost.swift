@@ -89,11 +89,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     private var _replies: [NRPost] = []
 
     var replies: [NRPost] {
-        get { NRState.shared.nrPostQueue.sync { [weak self] in
+        get { AppState.shared.nrPostQueue.sync { [weak self] in
             self?._replies ?? []
         } }
         set {
-            NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+            AppState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
                 self?._replies = newValue
             }
         }
@@ -108,10 +108,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     }
 
     var repliesToRoot: [NRPost] {
-        get { NRState.shared.nrPostQueue.sync { [weak self] in
+        get { AppState.shared.nrPostQueue.sync { [weak self] in
             self?._repliesToRoot ?? []
         } }
-        set { NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+        set { AppState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
             self?._repliesToRoot = newValue
         } }
     }
@@ -131,19 +131,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var firstQuoteId: String?
     
     var replyTo: NRPost?  {
-        get { NRState.shared.nrPostQueue.sync { [weak self] in
+        get { AppState.shared.nrPostQueue.sync { [weak self] in
             self?._replyTo
         } }
-        set { NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+        set { AppState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
             self?._replyTo = newValue
         } }
     }
     
     var replyToRoot: NRPost? {
-        get { NRState.shared.nrPostQueue.sync { [weak self] in
+        get { AppState.shared.nrPostQueue.sync { [weak self] in
             self?._replyToRoot
         } }
-        set { NRState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
+        set { AppState.shared.nrPostQueue.async(flags: .barrier) { [weak self] in
             self?._replyToRoot = newValue
         } }
     }
@@ -264,7 +264,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         let replies = withReplies && withFooter ? event.replies_.map { NRPost(event: $0) } : []
         self._replies = replies
-        self.ownPostAttributes = OwnPostAttributes(id: event.id, isOwnPost: NRState.shared.fullAccountPubkeys.contains(pubkey), relays: event.relays, cancellationId: cancellationId, flags: event.flags)
+        self.ownPostAttributes = OwnPostAttributes(id: event.id, isOwnPost: AccountsState.shared.bgFullAccountPubkeys.contains(pubkey), relays: event.relays, cancellationId: cancellationId, flags: event.flags)
         
         if withReplies && withFooter {
             self.footerAttributes = FooterAttributes(replyPFPs: Array(_replies.compactMap { reply in
@@ -633,7 +633,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         
         // Only for our accounts, handle undo of this post.
-        guard NRState.shared.fullAccountPubkeys.contains(self.pubkey) else { return }
+        guard AccountsState.shared.bgFullAccountPubkeys.contains(self.pubkey) else { return }
         
         publishSubscription = receiveNotification(.publishingEvent)
             .sink { [weak self] notification in
@@ -1040,7 +1040,7 @@ extension NRPost { // Helpers for grouped replies
     // To make repliesSorted work we need repliesToRoot first (.loadRepliesToRoot())
     func sortGroupedReplies(_ nrPosts: [NRPost]) -> [NRPost] { // Read from bottom to top.
         
-        let followingPubkeys = NRState.shared.loggedInAccount?.followingPublicKeys ?? []
+        let followingPubkeys = AccountsState.shared.loggedInAccount?.followingPublicKeys ?? []
         
         if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
             return nrPosts
@@ -1063,7 +1063,7 @@ extension NRPost { // Helpers for grouped replies
         // With WoT enabled with add filter nr 5.
         return nrPosts
             // 5. People outside WoT last
-            .filter { $0.inWoT || NRState.shared.accountPubkeys.contains($0.pubkey) || $0.pubkey == self.pubkey }
+            .filter { $0.inWoT || AccountsState.shared.bgAccountPubkeys.contains($0.pubkey) || $0.pubkey == self.pubkey }
         
             // 4. Everything else in WoT last, newest at bottom
             .sorted(by: { $0.created_at < $1.created_at })
@@ -1083,7 +1083,7 @@ extension NRPost { // Helpers for grouped replies
     
     func sortGroupedRepliesNotWoT(_ nrPosts:[NRPost]) -> [NRPost] { // Read from bottom to top.
         return nrPosts
-            .filter { !$0.inWoT && !NRState.shared.accountPubkeys.contains($0.pubkey) && $0.pubkey != self.pubkey }
+            .filter { !$0.inWoT && !AccountsState.shared.bgAccountPubkeys.contains($0.pubkey) && $0.pubkey != self.pubkey }
             .sorted(by: { $0.created_at < $1.created_at })
     }
     
@@ -1114,7 +1114,7 @@ extension NRPost { // Helpers for grouped replies
                 EventRelationsQueue.shared.addAwaitingEvent(reply, debugInfo: "reply in .repliesToRoot")
             }
             let nrRepliesToRoot = repliesToRoot
-                .filter { !NRState.shared.blockedPubkeys.contains($0.pubkey) }
+                .filter { !AppState.shared.bgAppState.blockedPubkeys.contains($0.pubkey) }
                 .map { event in
                     let nrPost = NRPost(event: event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[event.id])
                     return nrPost
@@ -1181,7 +1181,7 @@ extension NRPost { // Helpers for grouped replies
             let groupedThreads = (replies + (self.replyToRootId != nil ? self.repliesToLeaf : self.repliesToRoot))
                 .uniqued(on: { $0.id })
                 .filter({ nrPost in
-                    return !NRState.shared.blockedPubkeys.contains(nrPost.pubkey)
+                    return !AppState.shared.bgAppState.blockedPubkeys.contains(nrPost.pubkey)
                 })
                 .filter { // Only take eventual replies by author, or direct replies to root by others
                     $0.pubkey == self.pubkey ||

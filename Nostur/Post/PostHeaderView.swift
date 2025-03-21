@@ -45,15 +45,15 @@ struct NRPostHeaderContainer: View {
                     guard nrContact.metadata_created_at != 0 else { return }
                     guard nrContact.couldBeImposter == -1 else { return }
                     
-                    guard let la = NRState.shared.loggedInAccount else { return }
+                    guard let la = AccountsState.shared.loggedInAccount else { return }
                     guard la.account.publicKey != nrContact.pubkey else { return }
                     guard !la.isFollowing(pubkey: nrContact.pubkey) else { return }
                     
                     guard !NewOnboardingTracker.shared.isOnboarding else { return }
-                    guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+                    guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
 
                     let contactAnyName = nrContact.anyName.lowercased()
-                    let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+                    let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
                     let cPubkey = nrContact.pubkey
 
                     bg().perform { [weak nrContact] in
@@ -69,7 +69,7 @@ struct NRPostHeaderContainer: View {
                             let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                             DispatchQueue.main.async { [weak nrContact] in
                                 guard let nrContact else { return }
-                                guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                                guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
                                 couldBeImposter = similarPFP ? 1 : 0
                                 nrContact.couldBeImposter = couldBeImposter
                                 bg().perform {
@@ -145,10 +145,10 @@ struct EventHeaderContainer: View {
                     guard contact.couldBeImposter == -1 else { return }
                     guard !isFollowing(contact.pubkey) else { return }
                     guard !NewOnboardingTracker.shared.isOnboarding else { return }
-                    guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+                    guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
 
                     let contactAnyName = contact.anyName.lowercased()
-                    let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+                    let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
                     let cPubkey = contact.pubkey
 
                     bg().perform { [weak contact] in
@@ -164,7 +164,7 @@ struct EventHeaderContainer: View {
                             let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                             DispatchQueue.main.async { [weak contact] in
                                 guard let contact else { return }
-                                guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                                guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
                                 contact.couldBeImposter = similarPFP ? 1 : 0
                                 couldBeImposter = similarPFP ? 1 : 0
                                 similarToPubkey = similarPFP ? followingPubkey : nil

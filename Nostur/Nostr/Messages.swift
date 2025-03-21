@@ -524,7 +524,7 @@ func outboxReq(_ cm: NostrEssentials.ClientMessage, activeSubscriptionId: String
     
     let _cm = NosturClientMessage(clientMessage: cm, relayType: relayType)
     
-    let pubkey = (accountPubkey ?? NRState.shared.activeAccountPublicKey)
+    let pubkey = (accountPubkey ?? AccountsState.shared.activeAccountPublicKey)
     
     if Thread.isMainThread {
         DispatchQueue.global().async {
@@ -553,7 +553,7 @@ func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayDat
     }
     #endif
     
-    let pubkey = (accountPubkey ?? NRState.shared.activeAccountPublicKey)
+    let pubkey = (accountPubkey ?? AccountsState.shared.activeAccountPublicKey)
     
     if Thread.isMainThread {
         DispatchQueue.global().async {

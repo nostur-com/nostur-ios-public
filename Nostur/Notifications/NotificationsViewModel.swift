@@ -262,11 +262,11 @@ class NotificationsViewModel: ObservableObject {
     
     // From now, stays active
     private func relayCheckNewestNotifications() {
-        guard NRState.shared.activeAccountPublicKey != "" else { return }
+        guard AccountsState.shared.activeAccountPublicKey != "" else { return }
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
-        req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS),
+        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS),
                            subscriptionId: "Notifications", since: sinceNTimestamp),
             activeSubscriptionId: "Notifications")
     }
@@ -287,14 +287,14 @@ class NotificationsViewModel: ObservableObject {
     // Check since last notification
     private func relayCheckSinceNotifications() {
         // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-        guard NRState.shared.activeAccountPublicKey != "" else { return }
+        guard AccountsState.shared.activeAccountPublicKey != "" else { return }
                 
         let since = NTimestamp(timestamp: Int(self.requestSince))
         bg().perform { [weak self] in
             self?.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [NRState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
+                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
             }
         }
     }
@@ -306,9 +306,9 @@ class NotificationsViewModel: ObservableObject {
     
     private func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
-            guard NRState.shared.activeAccountPublicKey != "" else { return }
+            guard AccountsState.shared.activeAccountPublicKey != "" else { return }
             bg().perform { [weak self] in
-                if NRState.shared.appIsInBackground {
+                if AppState.shared.appIsInBackground {
                     self?.checkForUnreadMentions()
                 }
                 else {
@@ -324,7 +324,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func checkForEverything() {
-        guard !NRState.shared.appIsInBackground else {
+        guard !AppState.shared.appIsInBackground else {
 #if DEBUG
             L.og.debug("NotificationViewModel.checkForEverything(): skipping, app in background.");
 #endif
@@ -417,10 +417,10 @@ class NotificationsViewModel: ObservableObject {
                     
                     // Show notification on Mac: ALWAYS
                     // On iOS: Only if app is in background
-                    if (IS_CATALYST || NRState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
+                    if (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
                         scheduleMentionNotification(mentionsForNotification)
                     }
-                    if NRState.shared.appIsInBackground { // If app is in background then we were called during a app refresh so we need to disconnect again
+                    if AppState.shared.appIsInBackground { // If app is in background then we were called during a app refresh so we need to disconnect again
 //                        ConnectionPool.shared.disconnectAll()
                     }
                 }
@@ -468,7 +468,7 @@ class NotificationsViewModel: ObservableObject {
                             
                             // Show notification on Mac: ALWAYS
                             // On iOS: Only if app is in background
-                            if (IS_CATALYST || NRState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
+                            if (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
                                 scheduleMentionNotification(mentionsForNotification)
                             }
                         }
@@ -808,8 +808,8 @@ fileprivate class NotificationFetchRequests {
     static let FETCH_LIMIT = 999
     
     func unreadMentionsQuery(resultType:NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event>? {
-        let mutedRootIds = NRState.shared.mutedRootIds
-        let blockedPubkeys = NRState.shared.blockedPubkeys
+        let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
+        let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
@@ -851,9 +851,9 @@ fileprivate class NotificationFetchRequests {
     
     func unreadRepostsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
-        let mutedRootIds = NRState.shared.mutedRootIds
+        let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
         let pubkey = account.publicKey
-        let blockedPubkeys = NRState.shared.blockedPubkeys
+        let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
         let lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
 
         let r = Event.fetchRequest()
@@ -892,7 +892,7 @@ fileprivate class NotificationFetchRequests {
     func unreadReactionsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
-        let blockedPubkeys = NRState.shared.blockedPubkeys
+        let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
@@ -913,7 +913,7 @@ fileprivate class NotificationFetchRequests {
     func unreadZapsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
-        let blockedPubkeys = NRState.shared.blockedPubkeys
+        let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
@@ -960,7 +960,7 @@ class OfflinePosts {
     static func checkForOfflinePosts(_ maxAgo:TimeInterval = 259_200) { // 3 days
         DispatchQueue.main.async {
             guard ConnectionPool.shared.anyConnected else { return }
-            let pubkey = NRState.shared.activeAccountPublicKey
+            let pubkey = AccountsState.shared.activeAccountPublicKey
             
             bg().perform {
                 let xDaysAgo = Date.now.addingTimeInterval(-(maxAgo))

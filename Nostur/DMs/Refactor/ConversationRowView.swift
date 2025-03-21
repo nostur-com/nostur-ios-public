@@ -65,15 +65,15 @@ struct ConversationRowView: View {
                     .task {
                         guard !SettingsStore.shared.lowDataMode else { return }
                         guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-                        guard let la = NRState.shared.loggedInAccount else { return }
+                        guard let la = AccountsState.shared.loggedInAccount else { return }
                         guard contact.metadata_created_at != 0 else { return }
                         guard contact.couldBeImposter == -1 else { return }
                         guard la.isFollowing(pubkey: contact.pubkey) else { return }
                         guard !NewOnboardingTracker.shared.isOnboarding else { return }
-                        guard let followingCache = NRState.shared.loggedInAccount?.followingCache else { return }
+                        guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
                         
                         let contactAnyName = contact.anyName.lowercased()
-                        let currentAccountPubkey = NRState.shared.activeAccountPublicKey
+                        let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
                         let cPubkey = contact.pubkey
                         
                         bg().perform { [weak conv] in
@@ -89,7 +89,7 @@ struct ConversationRowView: View {
                                 let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
                                 DispatchQueue.main.async { [weak contact] in
                                     guard let contact else { return }
-                                    guard currentAccountPubkey == NRState.shared.activeAccountPublicKey else { return }
+                                    guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
                                     if similarPFP && contact.couldBeImposter != 1 {
                                         conv.objectWillChange.send() // need to rerender
                                     }

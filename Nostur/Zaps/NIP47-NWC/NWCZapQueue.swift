@@ -46,7 +46,7 @@ class NWCZapQueue {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
-                        let notification = PersistentNotification.createFailedNWCZaps(pubkey: NRState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
+                        let notification = PersistentNotification.createFailedNWCZaps(pubkey: AccountsState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
                         NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     }
                 }
@@ -122,7 +122,7 @@ class Zap {
     
     init(isNC: Bool = false, amount: Int64, contact: Contact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "", withPending: Bool = false) {
         self.isNC = isNC
-        self.fromAccountPubkey = NRState.shared.activeAccountPublicKey
+        self.fromAccountPubkey = AccountsState.shared.activeAccountPublicKey
         self.queuedAt = .now
         self.amount = amount
         self.contact = contact
@@ -167,7 +167,7 @@ class Zap {
                 guard let self = self else { return }
                 if let eventId = self.eventId {
                     let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
-                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: bg())
+                    let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: bg())
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
                     
@@ -183,7 +183,7 @@ class Zap {
                 }
                 else {
                     let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
-                    let notification = PersistentNotification.createFailedNWCZap(pubkey: NRState.shared.activeAccountPublicKey, message: message, context: bg())
+                    let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: bg())
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
                 }

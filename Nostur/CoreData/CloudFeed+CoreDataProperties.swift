@@ -153,7 +153,7 @@ extension CloudFeed : Identifiable {
     // helper to get account
     var account: CloudAccount? {
         guard let accountPubkey = self.accountPubkey,
-              let account = NRState.shared.accounts.first(where: { $0.publicKey == accountPubkey })
+              let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey })
         else { return nil }
         return account
     }

@@ -34,7 +34,7 @@ class ProfileInteractionsZapsVM: ObservableObject {
     }
     
     public init(_ pubkey: String) {
-        self.accountPubkey = account()?.publicKey ?? NRState.shared.activeAccountPublicKey
+        self.accountPubkey = account()?.publicKey ?? AccountsState.shared.activeAccountPublicKey
         self.pubkey = pubkey
         self.state = .initializing
         self.zappedEventIds = []

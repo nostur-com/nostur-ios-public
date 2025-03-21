@@ -550,7 +550,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private func fetchFeedTimerNextTick() {
-        guard let config, !NRState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
+        guard let config, !AppState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
         bg().perform { [weak self] in
             guard !Importer.shared.isImporting else { return }
             setFirstTimeCompleted()
@@ -562,7 +562,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
-        if !isVisible || isPaused || NRState.shared.appIsInBackground {
+        if !isVisible || isPaused || AppState.shared.appIsInBackground {
             #if DEBUG
             L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. ")
             #endif
@@ -607,7 +607,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                     .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
-                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+                AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
             }
             else {
                 []
@@ -764,7 +764,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                     .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
-                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+                AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
             }
             else { [] }
             
@@ -871,7 +871,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                     .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
-                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+                AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
             }
             else { [] }
             
@@ -1021,7 +1021,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                     .union(account.privateFollowingPubkeys)
             }
             else if feed.accountPubkey == EXPLORER_PUBKEY {
-                NRState.shared.rawExplorePubkeys.subtracting(NRState.shared.blockedPubkeys)
+                AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
             }
             else { [] }
             
@@ -1188,11 +1188,11 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
     @MainActor
     private func listenForResumeFeed(_ config: NXColumnConfig) {
         guard resumeFeedSub == nil else { return }
-        resumeFeedSub = NRState.shared.resumeFeedsSubject
+        resumeFeedSub = FeedsCoordinator.shared.resumeFeedsSubject
             .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
 //            .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
-                guard let self, !NRState.shared.appIsInBackground && isVisible else { return }
+                guard let self, !AppState.shared.appIsInBackground && isVisible else { return }
                 self.resume()
             }
     }
@@ -1202,7 +1202,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
     @MainActor
     private func listenForPauseFeed(_ config: NXColumnConfig) {
         guard pauseFeedSub == nil else { return }
-        pauseFeedSub = NRState.shared.pauseFeedsSubject
+        pauseFeedSub = FeedsCoordinator.shared.pauseFeedsSubject
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.pause()
@@ -1231,7 +1231,7 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
                 .receive(on: RunLoop.main) // main because .haltedProcessing must access .isDelaying on main
                 .sink { [weak self] subscriptionIds in
                     guard let self else { return }
-                    guard isVisible && !isPaused && !NRState.shared.appIsInBackground else {
+                    guard isVisible && !isPaused && !AppState.shared.appIsInBackground else {
                         queuedSubscriptionIds.add(subscriptionIds)
                         return
                     }

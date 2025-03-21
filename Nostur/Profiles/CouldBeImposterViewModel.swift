@@ -13,7 +13,7 @@ class CouldBeImposterViewModel: ObservableObject {
     
     @MainActor
     public func runCheck(_ nrContact: NRContact) {
-        guard let la = NRState.shared.loggedInAccount else { return }
+        guard let la = AccountsState.shared.loggedInAccount else { return }
         guard la.account.publicKey != nrContact.pubkey else { return }
         guard !la.isFollowing(pubkey: nrContact.pubkey) else { return }
         if nrContact.couldBeImposter == 1 {

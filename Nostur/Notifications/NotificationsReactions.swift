@@ -214,7 +214,7 @@ struct NotificationsV_Previews: PreviewProvider {
             pe.loadRepliesAndReactions()
         }) {
             VStack {
-                NotificationsReactions(pubkey: NRState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
+                NotificationsReactions(pubkey: AccountsState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
             }
         }
     }
