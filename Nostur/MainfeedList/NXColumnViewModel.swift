@@ -2018,14 +2018,6 @@ enum ColumnViewState {
 let FETCH_FEED_INTERVAL = 9.0
 let FEED_MAX_VISIBLE: Int = 20
 
-func setFirstTimeCompleted() {
-    if !UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
-        DispatchQueue.main.async {
-            UserDefaults.standard.set(true, forKey: "firstTimeCompleted")
-        }
-    }
-}
-
 func fetchFollowingFeedKinds() -> Set<Int> {
     if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
         return FETCH_FOLLOWING_KINDS.subtracting([20])

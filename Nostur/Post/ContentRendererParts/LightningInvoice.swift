@@ -140,21 +140,6 @@ struct LightningInvoice: View {
     }
 }
 
-func fetchBitcoinPrice() async -> Double? {
-    guard let url = URL(string: "https://api.kraken.com/0/public/Ticker?pair=XXBTZUSD") else { return nil }
-    let request = URLRequest(url: url)
-    
-    do {
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let response = try JSONDecoder().decode(KrakenApiResponse.self, from: data)
-        return Double(response.result.XXBTZUSD.c[0])
-    }
-    catch {
-        L.og.debug("could not get price from kraken")
-        return nil
-    }
-}
-
 struct LightningInvoice_Previews: PreviewProvider {
     static var previews: some View {
         

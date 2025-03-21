@@ -268,8 +268,10 @@ enum AnyPlayerViewMode {
     case fullscreen
 }
 
-
-
-
-
-
+func configureAudioSession() {
+    do {
+        try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+    } catch {
+        L.og.error("Failed to configure audio session: \(error.localizedDescription)")
+    }
+}
