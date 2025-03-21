@@ -271,7 +271,7 @@ struct DMConversationView: View {
                             if isAccepted {
                                 ChatInputField(message: $text) {
                                     // Create and send DM (via unpublisher?)
-                                    guard let pk = la.account.privateKey else { NRState.shared.readOnlyAccountSheetShown = true; return }
+                                    guard let pk = la.account.privateKey else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
                                     guard let theirPubkey = self.theirPubkey else { return }
                                     var nEvent = NEvent(content: text)
                                     if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {

@@ -31,7 +31,7 @@ struct NewDMComposer: View {
             // the message
             ChatInputField(message: $message) {
                 // Create and send DM (via unpublisher?)
-                guard let pk = la.account.privateKey else { NRState.shared.readOnlyAccountSheetShown = true; return }
+                guard let pk = la.account.privateKey else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
                 guard let theirPubkey = toPubkey else { return }
                 var nEvent = NEvent(content: message)
                 nEvent.kind = .directMessage

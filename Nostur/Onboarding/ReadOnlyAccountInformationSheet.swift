@@ -24,7 +24,7 @@ struct ReadOnlyAccountInformationSheet: View {
         .toolbar(content: {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close") {
-                    NRState.shared.readOnlyAccountSheetShown = false
+                    AppSheetsModel.shared.readOnlySheetVisible = false
                     dismiss()
                 }
             }

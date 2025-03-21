@@ -132,7 +132,7 @@ let _ = Self._printChanges()
     
     private func submitMessage() {
         // Create and send DM (via unpublisher?)
-        guard let account = self.account, account.privateKey != nil else { NRState.shared.readOnlyAccountSheetShown = true; return }
+        guard let account = self.account, account.privateKey != nil else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
         guard !message.isEmpty else { return }
         var nEvent = NEvent(content: message)
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
