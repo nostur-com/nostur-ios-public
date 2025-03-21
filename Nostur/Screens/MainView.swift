@@ -166,7 +166,7 @@ struct MainView: View {
             }
         }
         .onReceive(receiveNotification(.newTemplatePost)) { _ in
-            // Note: use  NRState.shared.draft = ...
+            // Note: use  Drafts.shared.draft = ...
             showingNewNote = true
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in

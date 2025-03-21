@@ -141,7 +141,7 @@ struct StreamDetail: View {
                             if !IS_CATALYST && !IS_IPAD {
                                 AnyPlayerModel.shared.toggleViewMode()
                             }
-                            NRState.shared.draft = "\(liveEvent.title ?? "Watching") 👇\n\n" + "nostr:" + roomAddress
+                            Drafts.shared.draft = "\(liveEvent.title ?? "Watching") 👇\n\n" + "nostr:" + roomAddress
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 sendNotification(.newTemplatePost)
                             }

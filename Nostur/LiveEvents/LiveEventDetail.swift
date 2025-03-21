@@ -332,7 +332,7 @@ struct LiveEventDetail: View {
                             if !IS_CATALYST && !IS_IPAD {
                                 LiveKitVoiceSession.shared.visibleNest = nil
                             }
-                            NRState.shared.draft = "\(liveEvent.title ?? "Join") 👇\n\n" + "nostr:" + roomAddress
+                            Drafts.shared.draft = "\(liveEvent.title ?? "Join") 👇\n\n" + "nostr:" + roomAddress
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                                 sendNotification(.newTemplatePost)
                             }

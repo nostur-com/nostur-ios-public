@@ -82,8 +82,8 @@ struct OwnPostFooter: View {
                         Button("**Send now**") {
                             nrPost.sendNow()
                             DispatchQueue.main.async {
-                                NRState.shared.draft = ""
-                                NRState.shared.restoreDraft = ""
+                                Drafts.shared.draft = ""
+                                Drafts.shared.restoreDraft = ""
                             }
                         }
                         .buttonStyle(.borderless)
@@ -99,8 +99,8 @@ struct OwnPostFooter: View {
                             unpublishing = true
                             nrPost.unpublish()
                             DispatchQueue.main.async {
-                                NRState.shared.draft = NRState.shared.restoreDraft
-                                NRState.shared.restoreDraft = ""
+                                Drafts.shared.draft = Drafts.shared.restoreDraft
+                                Drafts.shared.restoreDraft = ""
                             }
                             
                         }

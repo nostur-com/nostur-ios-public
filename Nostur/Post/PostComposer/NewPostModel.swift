@@ -12,19 +12,19 @@ import NostrEssentials
 
 public final class TypingTextModel: ObservableObject {
     var draft: String {
-        get { NRState.shared.draft  }
-        set { 
+        get { Drafts.shared.draft  }
+        set {
             DispatchQueue.main.async {
-                NRState.shared.draft = newValue
+                Drafts.shared.draft = newValue
             }
         }
     }
     
     var restoreDraft: String {
-        get { NRState.shared.restoreDraft  }
-        set { 
+        get { Drafts.shared.restoreDraft  }
+        set {
             DispatchQueue.main.async {
-                NRState.shared.restoreDraft = newValue
+                Drafts.shared.restoreDraft = newValue
             }
         }
     }

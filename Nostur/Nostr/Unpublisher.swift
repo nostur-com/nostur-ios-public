@@ -158,8 +158,8 @@ class Unpublisher {
                     
                     // Clear draft
                     if nEvent.kind == .textNote || nEvent.kind == .picture {
-                        NRState.shared.draft = ""
-                        NRState.shared.restoreDraft = ""
+                        Drafts.shared.draft = ""
+                        Drafts.shared.restoreDraft = ""
                     }
                 }
                 
@@ -213,8 +213,8 @@ class Unpublisher {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     // Clear draft
                     if nEvent.kind == .textNote || nEvent.kind == .picture  {
-                        NRState.shared.draft = ""
-                        NRState.shared.restoreDraft = ""
+                        Drafts.shared.draft = ""
+                        Drafts.shared.restoreDraft = ""
                     }
                 }
                 
