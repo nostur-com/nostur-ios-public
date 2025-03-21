@@ -87,7 +87,7 @@ struct OverlayVideo: View {
                 ZStack(alignment: videoAlignment) {
                     // -- MARK: Fullscreen toolbar
                     if vm.viewMode == .fullscreen {
-                        NBNavigationStack {
+                        NRNavigationStack {
                             Color.black
                                 .toolbar {
                                     // CLOSE BUTTON
@@ -169,9 +169,6 @@ struct OverlayVideo: View {
                                         }
                                     }
                                 }
-                                .environmentObject(NRState.shared)
-                                .environmentObject(themes)
-                                .environmentObject(NewPostNotifier.shared)
                                 .onDisappear {
                                     isSaving = false
                                     didSave = false
@@ -181,7 +178,7 @@ struct OverlayVideo: View {
                     }
                         
                     VStack(spacing: 0) {
-                        NBNavigationStack {
+                        NRNavigationStack {
                             VStack(spacing: 0) {
                                 // -- MARK: Actual video/stream ( .overlay + full + stream)
                                 AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
@@ -352,9 +349,6 @@ struct OverlayVideo: View {
                                     }
                                 }
                             }
-                            .environmentObject(NRState.shared)
-                            .environmentObject(themes)
-                            .environmentObject(NewPostNotifier.shared)
                         }
                         .introspect(.navigationStack, on: .iOS(.v16...)) {
                             $0.viewControllers.forEach { controller in

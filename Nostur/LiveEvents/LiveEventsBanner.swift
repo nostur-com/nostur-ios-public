@@ -61,7 +61,7 @@ struct LiveEventsBanner: View {
             }
         })
         .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in
-            NBNavigationStack {
+            NRNavigationStack {
                 LiveEventDetail(liveEvent: visibleNest)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
@@ -87,12 +87,8 @@ struct LiveEventsBanner: View {
                             }
                         }
                     }
-                    .environmentObject(NRState.shared)
-                    .environmentObject(themes)
-                    .environmentObject(npn)
                     .presentationBackgroundCompat(themes.theme.listBackground)
             }
-            .nbUseNavigationStack(.never)
         }
 
     }

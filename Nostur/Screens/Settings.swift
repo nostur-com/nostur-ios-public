@@ -641,30 +641,21 @@ struct Settings: View {
         .nosturNavBgCompat(themes: themes)
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
-            NBNavigationStack {
+            NRNavigationStack {
                 DeleteAccountSheet()
-                    .environmentObject(themes)
-                    .environmentObject(NRState.shared)
             }
-            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
-            NBNavigationStack {
+            NRNavigationStack {
                 AlbyNWCConnectSheet()
-                    .environmentObject(themes)
-                    .environmentObject(NRState.shared)
             }
-            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .sheet(isPresented: $customNWCsheetShown) {
-            NBNavigationStack {
+            NRNavigationStack {
                 CustomNWCConnectSheet()
-                    .environmentObject(themes)
-                    .environmentObject(NRState.shared)
             }
-            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }

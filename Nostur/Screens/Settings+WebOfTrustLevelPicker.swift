@@ -43,11 +43,9 @@ struct WebOfTrustLevelPicker: View {
 import NavigationBackport
 
 #Preview {
-    NBNavigationStack {
+    NRNavigationStack {
         Form {
             WebOfTrustLevelPicker()
         }
-        .environmentObject(Themes.default)
-        .environmentObject(NRState.shared)
     }
 }

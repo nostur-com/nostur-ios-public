@@ -136,20 +136,20 @@ struct LiveEventDetail: View {
             .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
                 if let zapCustomizerSheetInfo {
-                    ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
-                        .environmentObject(NRState.shared)
-                        .presentationDetentsLarge()
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                    AppEnvironment {
+                        ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
+                            .presentationDetentsLarge()
+                            .presentationBackgroundCompat(themes.theme.listBackground)
+                    }
                 }
             })
             .nbNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
                 if let paymentInfo {
-                    PaymentAmountSelector(paymentInfo: paymentInfo)
-                        .environmentObject(NRState.shared)
-                        .presentationDetentsLarge()
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                    AppEnvironment {
+                        PaymentAmountSelector(paymentInfo: paymentInfo)
+                            .presentationDetentsLarge()
+                            .presentationBackgroundCompat(themes.theme.listBackground)
+                    }
                 }
             })
             .sheet(item: $selectedContact) { nrContact in

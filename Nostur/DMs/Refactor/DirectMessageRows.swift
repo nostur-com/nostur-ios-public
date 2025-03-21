@@ -19,10 +19,10 @@ struct DirectMessageRows: View {
         List {
             ForEach(conversationRows) { conv in
                 NBNavigationLink(value: conv) {
-                    ConversationRowView(conv)
-                        .environmentObject(themes)
-                        .environmentObject(dim)
-                        .environmentObject(NRState.shared)
+                    AppEnvironment {
+                        ConversationRowView(conv)
+                            .environmentObject(dim)
+                    }
                 }
                 .nbUseNavigationStack(.never)
                 .swipeActions {
