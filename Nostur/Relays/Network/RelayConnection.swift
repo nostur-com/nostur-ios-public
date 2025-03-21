@@ -536,12 +536,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         if IS_CATALYST || !AppState.shared.appIsInBackground {
                             if self?.relayData.auth ?? false {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                                    NRState.shared.resumeFeeds()
+                                    FeedsCoordinator.shared.resumeFeeds()
                                     NotificationsViewModel.shared.restoreSubscriptions()
                                 }
                             }
                             else {
-                                NRState.shared.resumeFeeds()
+                                FeedsCoordinator.shared.resumeFeeds()
                                 NotificationsViewModel.shared.restoreSubscriptions()
                             }
                         }
