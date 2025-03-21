@@ -13,10 +13,6 @@ struct NewNoteButton: View {
     
     var body: some View {
         Button {
-            // Start Task 1
-            signpost(NRState.shared, "New Post", .begin, "New Post tapped")
-            
-            timeTrackers["NewNote"] = CFAbsoluteTimeGetCurrent()
             guard isFullAccount() else { showReadOnlyMessage(); return }
             showingNewNote = true
         } label: {

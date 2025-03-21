@@ -824,7 +824,7 @@ struct PreviewContainer<Content: View>: View {
             }
         }
         .onAppear {
-            pe.themes.loadGreen()
+            pe.themes.loadDefault()
             if pe.loadAccount() {
                 if let setup {
                     setup(pe)

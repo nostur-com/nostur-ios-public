@@ -38,7 +38,7 @@ struct NosturTabsView: View {
                         }) {
                             MainView()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .environmentObject(la)
+//                                .environmentObject(la)
                                 .tabItem { Label("", systemImage: "house") }
                                 .tag("Main")
                                 .nosturTabsCompat(themes: themes)

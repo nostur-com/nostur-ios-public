@@ -81,7 +81,7 @@ struct LiveEventCapsule: View {
                    }
                    .onEnded { value in
                        // Never dismiss own event, except if its already ended
-                       if liveEvent.pubkey == NRState.shared.activeAccountPublicKey && liveEvent.status != "ended" {
+                       if liveEvent.pubkey == AccountsState.shared.activeAccountPublicKey && liveEvent.status != "ended" {
                            return
                        }
                        if value.translation.height < -50 { // Adjust the threshold as needed

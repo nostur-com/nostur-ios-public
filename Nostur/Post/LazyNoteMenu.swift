@@ -27,7 +27,6 @@ struct LazyNoteMenuButton: View {
             .highPriorityGesture(
                 TapGesture()
                     .onEnded { _ in
-                        signpost(NRState.shared, "Post Context Menu", .begin, "Tapped")
                         sendNotification(.showNoteMenu, nrPost)
                     }
             )
@@ -326,9 +325,6 @@ struct LazyNoteMenuSheet: View {
         .nbNavigationDestination(isPresented: $blockOptions) {
             BlockOptions(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
                 .environmentObject(themes)
-        }
-        .onAppear {
-            signpost(NRState.shared, "Post Context Menu", .begin, "onAppear")
         }
     }
 }

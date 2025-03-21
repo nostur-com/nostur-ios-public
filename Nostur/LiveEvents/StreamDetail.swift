@@ -179,7 +179,6 @@ struct StreamDetail: View {
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
                 if let zapCustomizerSheetInfo {
                     ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
-                        .environmentObject(NRState.shared)
                         .presentationDetentsLarge()
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
@@ -188,7 +187,6 @@ struct StreamDetail: View {
             .nbNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
                 if let paymentInfo {
                     PaymentAmountSelector(paymentInfo: paymentInfo)
-                        .environmentObject(NRState.shared)
                         .presentationDetentsLarge()
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)

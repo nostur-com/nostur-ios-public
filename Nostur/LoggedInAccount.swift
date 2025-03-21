@@ -9,14 +9,24 @@ import SwiftUI
 import CoreData
 import NostrEssentials
 
+// Helpers, cache etc for CloudAccount
 // Must be initialized with account
-class LoggedInAccount: ObservableObject {
+class LoggedInAccount: ObservableObject, Equatable, Hashable {
 
-    // VIEW
-    @Published public var pubkey: String
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(account.publicKey)
+    }
     
+    static func == (lhs: LoggedInAccount, rhs: LoggedInAccount) -> Bool {
+        lhs.account.publicKey == rhs.account.publicKey
+    }
+    
+    public var pubkey: String
+    
+    // VIEW
     @Published public var viewFollowingPublicKeys: Set<String> = []
     
+    // USER ACTIONS/METHODS - TRIGGERED FROM VIEWS
     @MainActor public func isFollowing(pubkey: String) -> Bool {
         viewFollowingPublicKeys.contains(pubkey)
     }
@@ -24,8 +34,6 @@ class LoggedInAccount: ObservableObject {
     @MainActor public func isPrivateFollowing(pubkey: String) -> Bool {
         account.privateFollowingPubkeys.contains(pubkey)
     }
-    
-    // USER ACTIONS - TRIGGERED FROM VIEWS
     
     @MainActor public func follow(_ pubkey: String, privateFollow: Bool = false) {
         viewFollowingPublicKeys.insert(pubkey)
@@ -156,15 +164,13 @@ class LoggedInAccount: ObservableObject {
     
     @MainActor public init(_ account: CloudAccount, completion: (() -> Void)? = nil) {
         self.bg = Nostur.bg()
-        self.pubkey = account.publicKey
         self.account = account
+        self.pubkey = account.publicKey
         self.setupAccount(account, completion: completion)
     }
     
     @MainActor private func setupAccount(_ account: CloudAccount, completion: (() -> Void)? = nil) {
-        NRContactCache.shared.clear() // No need to clear?
         self.pubkey = account.publicKey
-        
         // Set to true only if it is a brand new account, otherwise set to false and wait for kind 3 from relay
         if account.flagsSet.contains("nostur_created") {
             FollowingGuardian.shared.didReceiveContactListThisSession = true

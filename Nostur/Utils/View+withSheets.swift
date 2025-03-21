@@ -177,7 +177,6 @@ struct WithSheets: ViewModifier {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(screenSpace)
                         .environmentObject(dim)
-                        .environmentObject(NRState.shared)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.background)
                 }
@@ -191,7 +190,6 @@ struct WithSheets: ViewModifier {
             .sheet(item: $imposterDetails, content: { imposterDetails in
                 NBNavigationStack {
                     PossibleImposterDetail(possibleImposterPubkey: imposterDetails.pubkey, followingPubkey: imposterDetails.similarToPubkey)
-                        .environmentObject(NRState.shared)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.background)
                 }
@@ -273,7 +271,6 @@ struct WithSheets: ViewModifier {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                                 .environmentObject(screenSpace)
-                                .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                                 .environmentObject(themes)
                                 .presentationBackgroundCompat(themes.theme.background)
@@ -282,7 +279,6 @@ struct WithSheets: ViewModifier {
                     else {
                         ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                             .environmentObject(screenSpace)
-                            .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
                             .presentationBackgroundCompat(themes.theme.background)
@@ -296,7 +292,6 @@ struct WithSheets: ViewModifier {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                         QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
                             .environmentObject(screenSpace)
-                            .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .presentationDetents200()
                             .presentationDragIndicatorVisible()
@@ -307,7 +302,6 @@ struct WithSheets: ViewModifier {
                 else {
                     QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
                         .environmentObject(screenSpace)
-                        .environmentObject(NRState.shared)
                         .environmentObject(dim)
                         .presentationDetents200()
                         .presentationDragIndicatorVisible()
@@ -322,7 +316,6 @@ struct WithSheets: ViewModifier {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                                 .environmentObject(screenSpace)
-                                .environmentObject(NRState.shared)
                                 .environmentObject(dim)
                                 .presentationBackgroundCompat(themes.theme.background)
                         }
@@ -331,7 +324,6 @@ struct WithSheets: ViewModifier {
                     else {
                         ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                             .environmentObject(screenSpace)
-                            .environmentObject(NRState.shared)
                             .environmentObject(dim)
                             .environmentObject(themes)
                             .presentationBackgroundCompat(themes.theme.background)
@@ -374,7 +366,6 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     HighlightComposer(highlight: newHighlight)
                         .environmentObject(screenSpace)
-                        .environmentObject(NRState.shared)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
@@ -389,7 +380,6 @@ struct WithSheets: ViewModifier {
             .sheet(item: $contextMenuNrPost) { nrPost in
                 NBNavigationStack {
                     LazyNoteMenuSheet(nrPost: nrPost)
-                        .environmentObject(NRState.shared)
                         .presentationDetentsMedium()
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
@@ -405,7 +395,6 @@ struct WithSheets: ViewModifier {
             }
             .sheet(item: $zapCustomizerSheetInfo) { zapCustomizerSheetInfo in
                     ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
-                        .environmentObject(NRState.shared)
                         .presentationDetentsLarge()
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
@@ -457,7 +446,6 @@ struct WithSheets: ViewModifier {
                         .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         .padding(.vertical, 10)
                         .environmentObject(screenshotDIM)
-                        .environmentObject(NRState.shared)
                         .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                         .environment(\.colorScheme, colorScheme)
                         .environmentObject(themes)
