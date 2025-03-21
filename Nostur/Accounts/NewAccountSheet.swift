@@ -23,8 +23,7 @@ struct NewAccountSheet: View {
     
     @FocusState private var focusedField: FocusedField?
     
-    private var accentColor: Color = .orange
-    private var grayBackground: Color = Color.gray.opacity(0.2)
+    private var grayBackground: Color = Color.white.opacity(0.3)
     
     var body: some View {
             VStack {
@@ -44,17 +43,15 @@ struct NewAccountSheet: View {
                     
                 Button {
                     createAccount()
-                    if (!ns.onBoardingIsShown) {
-                        dismiss()
-                    }
-                    NRState.shared.onBoardingIsShown = false
                     AccountsState.shared.loadAccountsState()
                 } label: {
                     Text("Create")
-                        .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                .fontWeightBold()
+                .tint(.black.opacity(0.65))
+                .buttonStyle(.borderedProminent)
+                .clipShape(Capsule())
                 
                 if (AccountsState.shared.accounts.first(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY}) == nil)  {
                     NavigationLink {
@@ -74,6 +71,7 @@ struct NewAccountSheet: View {
             .onAppear { focusedField = .name }
             .navigationTitle(String(localized:"Create new account", comment: "Navigation title of create new account screen"))
             .navigationBarTitleDisplayMode(.inline)
+            .wowBackground()
     }
     
     func createAccount() {
@@ -89,7 +87,7 @@ struct NewAccountSheet: View {
                 DataProvider.shared().bgSave()
             }
             
-            ns.onBoardingIsShown = false
+            AccountsState.shared.changeAccount(newAccount)
         }
         catch {
             L.og.error("🔴🔴 could not ns.setAccount \(error)")

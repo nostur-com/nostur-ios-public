@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct TermsAndConditions: View {
-    @AppStorage("did_accept_terms") var didAcceptTerms = false
-    
+    @Environment(\.dismiss) var dismiss
+
     var body: some View {
         VStack {
             ScrollView {
@@ -61,10 +61,7 @@ For any questions, please contact feedback@nostur.com.
         }
             
             Button(String(localized:"Accept", comment: "Button to accept terms and conditions")) {
-                didAcceptTerms = true
-                if !NRState.shared.activeAccountPublicKey.isEmpty {
-                    NRState.shared.onBoardingIsShown = false
-                }
+                dismiss()
             }
             .buttonStyle(.borderedProminent)
             .padding(.bottom, 20)

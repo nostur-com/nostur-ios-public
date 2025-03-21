@@ -10,6 +10,8 @@ import NostrEssentials
 
 struct AddExistingAccountSheet: View {
     
+    @Environment(\.accountsState) var accountsState
+    
     init(offerTryOut: Bool = false) {
         self.offerTryOut = offerTryOut
     }
@@ -24,7 +26,7 @@ struct AddExistingAccountSheet: View {
     @State private var invalidKey = false
     
     
-    private var grayBackground: Color = Color.gray.opacity(0.2)
+    private var grayBackground: Color = Color.white.opacity(0.3)
     private var isNsecbunkerKey: Bool {
         key.starts(with: "bunker://") ||
         (key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64)
@@ -40,7 +42,7 @@ struct AddExistingAccountSheet: View {
             ZStack {
                 VStack {
                     if (key.isEmpty || key.lowercased().starts(with: "nsec1")) {
-                        SecureField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                        SecureField(String(localized:"nostr address / npub / nsec / signer url", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
                             .padding()
@@ -49,7 +51,7 @@ struct AddExistingAccountSheet: View {
                             .padding(.bottom, 20)
                     }
                     else {
-                        TextField(String(localized:"Public or private key (npub or nsec)", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                        TextField(String(localized:"Pnostr address / npub / nsec / signer url", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
                             .padding()
@@ -142,9 +144,7 @@ struct AddExistingAccountSheet: View {
                                     }
                                 }
                             }
-                            if (!NRState.shared.onBoardingIsShown) {
-                                dismiss()
-                            }
+                            dismiss()
                         }
                         
                     } label: {
@@ -166,7 +166,10 @@ struct AddExistingAccountSheet: View {
                         }
                     }
                     .frame(maxWidth: 300)
-                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                    .fontWeightBold()
+                    .tint(.black.opacity(0.65))
+                    .buttonStyle(.borderedProminent)
+                    .clipShape(Capsule())
                     .disabled(shouldDisableAddButton)
                     .opacity(shouldDisableAddButton ? 0.5 : 1.0)
                     
@@ -185,11 +188,9 @@ struct AddExistingAccountSheet: View {
                 }
                 VStack {
                     Spacer()
-                        Text("Note: You can also add someone elses public key to try out Nostur from their perspective.", comment: "Informational message on Add Existing Account screen").foregroundColor(.gray)
+                    Text("Note: You can also add someone elses public key to try out Nostur from their perspective.", comment: "Informational message on Add Existing Account screen").opacity(0.7)
                 }
             }
-            .controlSize(.large)
-            .buttonStyle(.bordered)
             .padding()
             .alert(String(localized:"Invalid key", comment: "Message shown when user has entered an invalid key"), isPresented: $invalidKey) {
                 Button("OK", role: .cancel) { }
@@ -231,8 +232,7 @@ struct AddExistingAccountSheet: View {
                         }
                         
                         DispatchQueue.main.async {
-                            NRState.shared.changeAccount(account)
-                            NRState.shared.onBoardingIsShown = false
+                            accountsState.changeAccount(account)
                             dismiss()
                             
                             do {
@@ -256,6 +256,7 @@ struct AddExistingAccountSheet: View {
                     bunkerManager.state = .disconnected
                 }
             }
+            .wowBackground()
     }
     
     private func addExistingAccount(privkey: String) {
@@ -269,9 +270,8 @@ struct AddExistingAccountSheet: View {
             existingAccount.privateKey = keys.privateKeyHex
             existingAccount.isNC = false
             existingAccount.flagsSet.insert("full_account")
-            NRState.shared.changeAccount(existingAccount)
-            NRState.shared.onBoardingIsShown = false
-            NRState.shared.loadAccountsState()
+            accountsState.changeAccount(existingAccount)
+            accountsState.loadAccountsState()
             return
         }
         
@@ -312,9 +312,8 @@ struct AddExistingAccountSheet: View {
             }
             
             DispatchQueue.main.async {
-                NRState.shared.changeAccount(account)
-                NRState.shared.onBoardingIsShown = false
-                NRState.shared.loadAccountsState()
+                accountsState.changeAccount(account)
+                accountsState.loadAccountsState()
                 
                 do {
                     try NewOnboardingTracker.shared.start(pubkey: pubkey)
@@ -328,9 +327,8 @@ struct AddExistingAccountSheet: View {
     
     private func addExistingReadOnlyAccount(pubkey: String) {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
-            NRState.shared.changeAccount(existingAccount)
-            NRState.shared.onBoardingIsShown = false
-            NRState.shared.loadAccountsState()
+            accountsState.changeAccount(existingAccount)
+            accountsState.loadAccountsState()
             return
         }
 
@@ -367,9 +365,8 @@ struct AddExistingAccountSheet: View {
             }
             
             DispatchQueue.main.async {
-                NRState.shared.changeAccount(account)
-                NRState.shared.onBoardingIsShown = false
-                NRState.shared.loadAccountsState()
+                accountsState.changeAccount(account)
+                accountsState.loadAccountsState()
                 do {
                     try NewOnboardingTracker.shared.start(pubkey: pubkey)
                 }
@@ -399,9 +396,8 @@ struct AddExistingAccountSheet: View {
         account.ncRelay = bunkerManager.ncRelay
         bunkerManager.connect(account, token: token)
  
-        NRState.shared.changeAccount(account)
-        NRState.shared.onBoardingIsShown = false
-        NRState.shared.loadAccountsState()
+        accountsState.changeAccount(account)
+        accountsState.loadAccountsState()
         return
     }
 }

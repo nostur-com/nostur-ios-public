@@ -15,7 +15,6 @@ struct TryGuestAccountSheet: View {
     @State var didCreate = false
     
     var body: some View {
-//        let _ = Self._printChanges()
         VStack(alignment: .center) {
             if letsGo {
                 ProgressView()
@@ -25,7 +24,7 @@ struct TryGuestAccountSheet: View {
                     .multilineTextAlignment(.center)
                     .font(.largeTitle)
                 
-                Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself", comment: "Message during onboarding about the Guest Account").multilineTextAlignment(.center)
+                Text("The guest account is already following some people. You can read posts and view profiles, but you cannot post or react to anything until you create a new account yourself", comment: "Message during onboarding about the Guest Account").multilineTextAlignment(.center)
                     .padding()
                 
                 Button {
@@ -35,8 +34,10 @@ struct TryGuestAccountSheet: View {
                         .padding(.vertical, 10)
                         .frame(maxWidth: .infinity)
                 }
-                .controlSize(.large)
-                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                .fontWeightBold()
+                .tint(.black.opacity(0.65))
+                .buttonStyle(.borderedProminent)
+                .clipShape(Capsule())
             }
         }
         .frame(maxWidth: 300)
@@ -71,11 +72,11 @@ struct TryGuestAccountSheet: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(letsGo)
+        .wowBackground()
     }
     
     func tryGuestAccount() {
         letsGo = true
-        NRState.shared.onBoardingIsShown = false
         let guestAccount = try? CloudAccount.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext)
         
         if let guestAccount {
