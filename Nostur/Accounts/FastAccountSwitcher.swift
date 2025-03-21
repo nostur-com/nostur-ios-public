@@ -14,8 +14,9 @@ struct FastAccountSwitcher: View, Equatable {
     static func == (lhs: FastAccountSwitcher, rhs: FastAccountSwitcher) -> Bool {
         lhs.activePubkey == rhs.activePubkey
     }
-    public var activePubkey:String = ""
-    public var sm:SideBarModel
+
+    public var activePubkey: String = ""
+    @Binding public var showSidebar: Bool
     private let MAX_ACCOUNTS = 4
     
     var fewAccounts:ArraySlice<CloudAccount> {
@@ -44,10 +45,12 @@ struct FastAccountSwitcher: View, Equatable {
     }
 }
 
-struct FastAccountSwitcher_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in pe.loadAccounts() }) {
-            FastAccountSwitcher(sm: PreviewEnvironment.shared.sm)
-        }
+@available(iOS 17.0, *)
+#Preview {
+    @Previewable @State var showSidebar: Bool = false
+    
+    PreviewContainer({ pe in pe.loadAccounts() }) {
+        FastAccountSwitcher(showSidebar: $showSidebar)
     }
 }
+
