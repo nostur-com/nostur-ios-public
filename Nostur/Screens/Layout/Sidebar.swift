@@ -8,16 +8,12 @@
 import SwiftUI
 import NavigationBackport
 
-final class SideBarModel: ObservableObject {
-    static let shared = SideBarModel()
-    private init() {}
-    @Published var showSidebar = false
-}
+let NOSTUR_SIDEBAR_WIDTH = 310.0
 
 struct SideBar: View {
     @EnvironmentObject private var themes: Themes
-    @ObservedObject private var sm: SideBarModel = .shared
-    @ObservedObject public var account: CloudAccount
+    @EnvironmentObject private var loggedInAccount: LoggedInAccount
+    @Binding var showSidebar: Bool
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -32,6 +28,10 @@ struct SideBar: View {
     static let ICON_WIDTH = 30.0
     static let MENU_TEXT_WIDTH = NOSTUR_SIDEBAR_WIDTH - 70.0
     static let BUTTON_VPADDING = 12.0
+    
+    private var account: CloudAccount {
+        loggedInAccount.account
+    }
     
     var body: some View {
         #if DEBUG
@@ -48,14 +48,14 @@ struct SideBar: View {
                         )
                         .onTapGesture {
                             if IS_IPAD {
-                                sm.showSidebar = false
+                                showSidebar = false
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                                     navigateTo(ContactPath(key: account.publicKey, navigationTitle: account.anyName))
                                 }
                             }
                             else {
                                 navigateTo(ContactPath(key: account.publicKey))
-                                sm.showSidebar = false
+                                showSidebar = false
                             }
                         }
                         .offset(x: 10, y: 37)
@@ -63,7 +63,7 @@ struct SideBar: View {
                 .overlay(alignment:.bottomTrailing) {
                     HStack(spacing: 10) {
                         Spacer()
-                        FastAccountSwitcher(activePubkey: account.publicKey, sm: sm)
+                        FastAccountSwitcher(activePubkey: account.publicKey, showSidebar: $showSidebar)
                             .equatable()
                         Button { accountsSheetIsShown = true } label: {
                             Image(systemName: "ellipsis.circle")
@@ -95,14 +95,14 @@ struct SideBar: View {
                      
                     Button {
                         if IS_IPAD {
-                            sm.showSidebar = false
+                            showSidebar = false
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                                 navigateTo(ContactPath(key: account.publicKey))
                             }
                         }
                         else {
                             navigateTo(ContactPath(key: account.publicKey))
-                            sm.showSidebar = false
+                            showSidebar = false
                         }
                     } label: {
                         Label(
@@ -125,7 +125,7 @@ struct SideBar: View {
                             UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                         }
                         navigateToOnMain(ViewPath.Lists)
-                        sm.showSidebar = false
+                        showSidebar = false
                     } label: {
                         Label(
                             title: { 
@@ -144,7 +144,7 @@ struct SideBar: View {
                     }
                     Button {
                         UserDefaults.standard.setValue("Bookmarks", forKey: "selected_tab")
-                        sm.showSidebar = false
+                        showSidebar = false
                     } label: {
                         Label(
                             title: {
@@ -167,7 +167,7 @@ struct SideBar: View {
                                 UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                             }
                             navigateToOnMain(ViewPath.Badges)
-                            sm.showSidebar = false
+                            showSidebar = false
                         } label: {
                             Label(
                                 title: {
@@ -198,7 +198,7 @@ struct SideBar: View {
                             UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                         }
                         navigateToOnMain(ViewPath.Settings)
-                        sm.showSidebar = false
+                        showSidebar = false
                     } label: {
                         Label(
                             title: {
@@ -220,7 +220,7 @@ struct SideBar: View {
                             UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                         }
                         navigateToOnMain(ViewPath.Blocklist)
-                        sm.showSidebar = false
+                        showSidebar = false
                     } label: {
                         Label(
                             title: {
@@ -257,9 +257,6 @@ struct SideBar: View {
                             }
                         }
                     }
-                    //                Button {} label: {
-                    //                    Label(String(localized:About", comment:"Side bar navigation button"), systemImage: "info")
-                    //                }
                     Button {
                         logoutAccount = account
                     } label: {
@@ -296,10 +293,10 @@ struct SideBar: View {
         }
         .edgesIgnoringSafeArea(.all)
         .onReceive(receiveNotification(.hideSideBar), perform: { _ in
-            sm.showSidebar = false
+            showSidebar = false
         })
         .onReceive(receiveNotification(.showSideBar), perform: { _ in
-            sm.showSidebar = true
+            showSidebar = true
         })
         .sheet(isPresented: $accountsSheetIsShown) {
             NBNavigationStack {
@@ -332,8 +329,8 @@ struct SideBar: View {
                 ,
                 buttons: !account.isNC && account.privateKey != nil ? [
                     .destructive(Text("Log out", comment: "Log out button"), action: {
-                        NRState.shared.logout(account)
-                        sm.showSidebar = false
+                        AccountsState.shared.logout(account)
+                        showSidebar = false
                     }),
                     .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
                         if let pk = account.privateKey {
@@ -343,17 +340,17 @@ struct SideBar: View {
                     .cancel(Text("Cancel"))
                 ] : [
                     .destructive(Text("Log out", comment:"Log out button"), action: {
-                        NRState.shared.logout(account)
-                        sm.showSidebar = false
+                        AccountsState.shared.logout(account)
+                        showSidebar = false
                     }),
                     .cancel(Text("Cancel"))
                 ])
         }
         .background(themes.theme.listBackground)
         .compositingGroup()
-        .opacity(sm.showSidebar ? 1.0 : 0)
+        .opacity(showSidebar ? 1.0 : 0)
         .offset(x: sidebarOffset)
-        .onChange(of: sm.showSidebar) { newValue in
+        .onChange(of: showSidebar) { newValue in
             withAnimation(.easeOut(duration: 0.1)) {
                 sidebarOffset = newValue ? 0 : -NOSTUR_SIDEBAR_WIDTH
             }
@@ -361,18 +358,70 @@ struct SideBar: View {
     }
 }
 
-
 struct SideBarOverlay: View {
-    @ObservedObject private var sm: SideBarModel = .shared
     @EnvironmentObject private var themes: Themes
+    @Binding var showSidebar: Bool
     
     var body: some View {
-        if sm.showSidebar {
-            themes.theme.listBackground
-                .opacity(0.75)
-                .onTapGesture {
-                    sm.showSidebar = false // TODO: Add swipe left/right to show/hide side menu
+        themes.theme.listBackground
+            .opacity(showSidebar ? 0.75 : 0.0)
+            .onTapGesture {
+                showSidebar = false // TODO: Add swipe left/right to show/hide side menu
+            }
+    }
+}
+
+struct WithSidebar<Content: View>: View {
+    @State private var showSidebar: Bool = false
+    
+    @ViewBuilder
+    public let content: Content
+    
+    var body: some View {
+        content
+            .environment(\.showSidebar, $showSidebar)
+            .overlay {
+                SideBarOverlay(showSidebar: $showSidebar)
+            }
+            .overlay(alignment: .topLeading) {
+                SideBar(showSidebar: $showSidebar)
+                    .frame(width: NOSTUR_SIDEBAR_WIDTH)
+                    .edgesIgnoringSafeArea(.all)
+            }
+#if DEBUG
+            .overlay(alignment: .topTrailing) {
+                if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+                    Button("Test Toggle") {
+                        showSidebar.toggle()
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
+            }
+#endif
+    }
+}
+
+struct ShowSidebarEnvironmentKey: EnvironmentKey {
+    static let defaultValue: Binding<Bool> = .constant(false)
+}
+
+extension EnvironmentValues {
+    var showSidebar:  Binding<Bool> {
+        get { self[ShowSidebarEnvironmentKey.self] }
+        set { self[ShowSidebarEnvironmentKey.self] = newValue }
+    }
+}
+
+#Preview("Side bar menu") {
+    PreviewContainer {
+        VStack {
+            if let loggedInAccount = AccountsState.shared.loggedInAccount {
+                NosturMainView()
+                    .environmentObject(loggedInAccount)
+            }
+        }
+        .onAppear {
+            Themes.default.loadRed()
         }
     }
 }

@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct MainView: View {
+    @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
@@ -63,33 +64,28 @@ struct MainView: View {
                     }
                 }
                 .sheet(isPresented: $showingNewNote) {
-                    NBNavigationStack {
+                    NRNavigationStack {
                         if la.account.isNC {
                             WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                                 ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
-                                    .environmentObject(themes)
                                     .environmentObject(dim)
-                                    .environmentObject(ns)
                                     .environmentObject(screenSpace)
                             }
                         }
                         else {
                             ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
-                                .environmentObject(themes)
                                 .environmentObject(dim)
-                                .environmentObject(ns)
                                 .environmentObject(screenSpace)
                         }
                     }
                     .presentationBackgroundCompat(themes.theme.background)
-                    .nbUseNavigationStack(.never)
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
                         HStack(spacing: 10) {
                             PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
                                 .onTapGesture {
-                                    SideBarModel.shared.showSidebar = true
+                                    showSidebar = true
                                 }
                                 .accessibilityLabel("Account menu")
                             
