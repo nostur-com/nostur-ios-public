@@ -42,7 +42,6 @@ struct MainView: View {
         #endif
         NBNavigationStack(path: $navPath) {
             FollowingAndExplore(showingOtherContact: $showingOtherContact)
-                .environmentObject(la)
                 .background(themes.theme.listBackground)
                 .withNavigationDestinations()
                 .overlay(alignment: .bottomTrailing) {

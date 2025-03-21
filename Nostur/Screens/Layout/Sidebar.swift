@@ -60,7 +60,7 @@ struct SideBar: View {
                         }
                         .offset(x: 10, y: 37)
                 })
-                .overlay(alignment:.bottomTrailing) {
+                .overlay(alignment: .bottomTrailing) {
                     HStack(spacing: 10) {
                         Spacer()
                         FastAccountSwitcher(activePubkey: account.publicKey, showSidebar: $showSidebar)

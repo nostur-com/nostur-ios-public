@@ -17,7 +17,7 @@ struct ReadOnlyAccountInformationSheet: View {
             Text("Read-only mode\n", comment:"Heading for message read-only mode").font(.title)
             Text("You are using a read-only account.\n\nSwitch to another account or add the private key to fully use this account.", comment: "Message about read-only mode")
         
-            AccountsSheet(withDismissButton:false)
+            AccountsSheet(withDismissButton: false)
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)

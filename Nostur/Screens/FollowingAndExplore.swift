@@ -312,7 +312,7 @@ struct FollowingAndExplore: View {
             }
             createFollowingFeed(newAccount)
             createPictureFeed(newAccount)
-        })
+        }
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(lists.publisher.collect()) { lists in

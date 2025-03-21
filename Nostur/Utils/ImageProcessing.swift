@@ -146,7 +146,9 @@ class ImageProcessing {
 
 // Force processing to 50x50 so we always get the same from cache and not redownload, do scaling down to 20x20 (or other) in SwiftUI if needed (.resizable())
 func pfpImageRequestFor(_ pictureUrl: URL) -> ImageRequest {
-    L.og.debug("pfpImageRequestFor: \(pictureUrl.absoluteString)")
+#if DEBUG
+    L.og.debug("pfpImageRequestFor: \(pictureUrl.absoluteString) -[LOG]-")
+#endif
     //    thumbOptions.createThumbnailFromImageAlways = true
     //    thumbOptions.shouldCacheImmediately = true
     let options: ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
@@ -173,7 +175,7 @@ func pfpImageRequestFor(_ pictureUrl: URL) -> ImageRequest {
 // else Nuke will prefetch wrong request
 func makeImageRequest(_ url: URL, label: String = "", overrideLowDataMode: Bool = false, size: CGFloat? = nil) -> ImageRequest {
 #if DEBUG
-    L.og.debug("ImageRequest: \(url.absoluteString), \(label)")
+    L.og.debug("ImageRequest: \(url.absoluteString), \(label) -[LOG]-")
 #endif
     return ImageRequest(url: url,
                  processors: [

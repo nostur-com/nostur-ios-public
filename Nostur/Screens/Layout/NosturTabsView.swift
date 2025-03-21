@@ -10,7 +10,6 @@ import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
 
 struct NosturTabsView: View {
-    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dm: DirectMessageViewModel
     
