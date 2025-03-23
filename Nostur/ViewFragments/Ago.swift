@@ -13,15 +13,15 @@ struct Ago: View, Equatable {
         lhs.agoText == rhs.agoText
     }
     
-    let date:Date
-    @State var agoText:String
+    private let date: Date
+    @State var agoText: String
     
-    init(_ date:Date, agoText:String? = nil) {
+    public init(_ date: Date, agoText: String? = nil) {
         self.date = date
         _agoText = State(wrappedValue: agoText ?? date.agoString)
     }
     
-    init(_ timestamp:Int64) {
+    public init(_ timestamp: Int64) {
         self.date = Date(timeIntervalSince1970: Double(timestamp))
         _agoText = State(wrappedValue: date.agoString)
     }
@@ -33,7 +33,7 @@ struct Ago: View, Equatable {
                     agoText = date.agoString
                 }
             }
-            .onReceive(AppState.shared.agoTimer) { _ in
+            .onReceive(AppState.shared.agoShouldUpdateSubject) { _ in
                 if date.agoString != agoText {
                     agoText = date.agoString
                 }

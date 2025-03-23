@@ -35,7 +35,7 @@ struct AppView: View {
                     .onOpenURL { url in
                         handleUrl(url, loggedInAccount: loggedInAccount)
                     }
-                    .onReceive(AppState.shared.agoTimer) { _ in
+                    .onReceive(AppState.shared.minuteTimer) { _ in
                         NewPostNotifier.shared.runCheck()
                     }
             case .databaseError:
@@ -79,6 +79,8 @@ extension AppView {
         case .active:
             UIApplication.shared.isIdleTimerDisabled = true // must be in Scene or it doesn't work?
             NewPostNotifier.shared.reload()
+            
+            AppState.shared.agoShouldUpdateSubject.send() // Update ago timestamps
             
             if !IS_CATALYST {
                 if (AppState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)

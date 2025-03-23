@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+import Combine
 
 class AppState: ObservableObject {
     
@@ -21,6 +21,7 @@ class AppState: ObservableObject {
         loadBlockedHashtags()
         loadMutedRootIds()
         handleDynamicFontSize()
+        initializeAgoUpdater()
     }
     
     // Published / Observed stuff
@@ -36,8 +37,20 @@ class AppState: ObservableObject {
     
     
     // Timers
-    let agoTimer = Timer.publish(every: 60, tolerance: 15.0, on: .main, in: .default).autoconnect()
+    public let minuteTimer = Timer.publish(every: 60, tolerance: 15.0, on: .main, in: .default).autoconnect()
         .delay(for: .seconds(5), scheduler: RunLoop.main)
+    
+    public let agoShouldUpdateSubject = PassthroughSubject<Void, Never>()
+    private var subscriptions: Set<AnyCancellable> = []
+    
+    private func initializeAgoUpdater() {
+        minuteTimer
+            .sink(receiveValue: { _ in
+                self.agoShouldUpdateSubject.send()
+            })
+            .store(in: &subscriptions)
+    }
+    
     private var taskTimers: [Timer] = []
     
     // Block timers
