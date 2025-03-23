@@ -292,15 +292,12 @@ struct SideBar: View {
             .padding(10)
         }
         .edgesIgnoringSafeArea(.all)
-        .onReceive(receiveNotification(.hideSideBar), perform: { _ in
-            showSidebar = false
-        })
-        .onReceive(receiveNotification(.showSideBar), perform: { _ in
-            showSidebar = true
-        })
         .sheet(isPresented: $accountsSheetIsShown) {
             NBNavigationStack {
-                AccountsSheet()
+                AccountsSheet(onDismiss: {
+                    accountsSheetIsShown = false
+                    showSidebar = false
+                })
                     .presentationDetents45ml()
                     .environmentObject(themes)
             }

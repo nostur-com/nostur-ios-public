@@ -9,11 +9,14 @@ import SwiftUI
 import NostrEssentials
 
 struct AddExistingAccountSheet: View {
-    
+    @Environment(\.showSidebar) @Binding var showSidebar
     @Environment(\.accountsState) var accountsState
     
-    init(offerTryOut: Bool = false) {
+    private var onDismiss: (() -> Void)?
+    
+    init(offerTryOut: Bool = false, onDismiss: (() -> Void)? = nil) {
         self.offerTryOut = offerTryOut
+        self.onDismiss = onDismiss
     }
     
     public var offerTryOut = false
@@ -144,7 +147,10 @@ struct AddExistingAccountSheet: View {
                                     }
                                 }
                             }
+                            
+                            showSidebar = false
                             dismiss()
+                            onDismiss?()
                         }
                         
                     } label: {
@@ -233,7 +239,9 @@ struct AddExistingAccountSheet: View {
                         
                         DispatchQueue.main.async {
                             accountsState.changeAccount(account)
+                            showSidebar = false
                             dismiss()
+                            onDismiss?()
                             
                             do {
                                 try NewOnboardingTracker.shared.start(pubkey: pubkey)
@@ -271,7 +279,9 @@ struct AddExistingAccountSheet: View {
             existingAccount.isNC = false
             existingAccount.flagsSet.insert("full_account")
             accountsState.changeAccount(existingAccount)
-            accountsState.loadAccountsState()
+            showSidebar = false
+            dismiss()
+            onDismiss?()
             return
         }
         
@@ -313,7 +323,9 @@ struct AddExistingAccountSheet: View {
             
             DispatchQueue.main.async {
                 accountsState.changeAccount(account)
-                accountsState.loadAccountsState()
+                showSidebar = false
+                dismiss()
+                onDismiss?()
                 
                 do {
                     try NewOnboardingTracker.shared.start(pubkey: pubkey)
@@ -328,7 +340,9 @@ struct AddExistingAccountSheet: View {
     private func addExistingReadOnlyAccount(pubkey: String) {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             accountsState.changeAccount(existingAccount)
-            accountsState.loadAccountsState()
+            showSidebar = false
+            dismiss()
+            onDismiss?()
             return
         }
 
@@ -366,7 +380,10 @@ struct AddExistingAccountSheet: View {
             
             DispatchQueue.main.async {
                 accountsState.changeAccount(account)
-                accountsState.loadAccountsState()
+                showSidebar = false
+                dismiss()
+                onDismiss?()
+                
                 do {
                     try NewOnboardingTracker.shared.start(pubkey: pubkey)
                 }
@@ -397,7 +414,9 @@ struct AddExistingAccountSheet: View {
         bunkerManager.connect(account, token: token)
  
         accountsState.changeAccount(account)
-        accountsState.loadAccountsState()
+        showSidebar = false
+        dismiss()
+        onDismiss?()
         return
     }
 }

@@ -11,10 +11,10 @@ import NavigationBackport
 struct AccountsSheet: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
-    @State private var newAccountSheetShown = false
-    @State private var addExistingAccountSheetShown = false
+    @Environment(\.showSidebar) @Binding private var showSidebar
     
     public var withDismissButton: Bool = true
+    public var onDismiss: (() -> Void)?
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudAccount.createdAt, ascending: false)],
@@ -39,8 +39,9 @@ struct AccountsSheet: View {
                         .contentShape(Rectangle())
                         .onTapGesture {
                             AccountsState.shared.changeAccount(account)
-                            sendNotification(.hideSideBar)
+                            showSidebar = false
                             dismiss()
+                            onDismiss?()
                         }
                         .swipeActions(edge: .trailing) {
                             Button(String(localized:"Log out", comment:"Log out button"), role: .destructive) {
@@ -58,7 +59,11 @@ struct AccountsSheet: View {
             } label: { Text("Create new account", comment:"Button to create a new account") }
             
             NavigationLink {
-                AddExistingAccountSheet()
+                AddExistingAccountSheet(onDismiss: {
+                    dismiss()
+                    showSidebar = false
+                    onDismiss?()
+                })
             } label: { Text("Add existing account", comment:"Button to add an existing account") }
             Spacer()
         }
@@ -68,7 +73,11 @@ struct AccountsSheet: View {
         .toolbar(content: {
             ToolbarItem(placement: .cancellationAction) {
                 if (withDismissButton) {
-                    Button(String(localized: "Close", comment: "Button to close this screen")) { dismiss() }
+                    Button(String(localized: "Close", comment: "Button to close this screen")) {
+                        dismiss()
+                        showSidebar = false
+                        onDismiss?()
+                    }
                 }
             }
         })

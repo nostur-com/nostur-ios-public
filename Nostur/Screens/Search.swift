@@ -12,6 +12,7 @@ import NavigationBackport
 
 @MainActor
 struct Search: View {
+    @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @State var nrPosts: [NRPost] = []
@@ -127,7 +128,7 @@ struct Search: View {
                         .toolbar {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 Button {
-                                    sendNotification(.showSideBar)
+                                    showSidebar = true
                                 } label: {
                                     PFP(pubkey: la.account.publicKey, account: la.account, size:30)
                                 }
