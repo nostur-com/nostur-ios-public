@@ -62,15 +62,16 @@ class EventRelationsQueue {
         guard let event else { return }
 #if DEBUG
         if event.managedObjectContext == nil {
-            print("event is nil, debugInfo: \(debugInfo ?? "")")
+            L.og.debug("🔴🔴 event is nil, debugInfo: \(debugInfo ?? "")")
             try? self.ctx.save()
         }
         else if event.managedObjectContext != self.ctx {
-            print("event is not bg")
+            L.og.debug("🔴🔴 event is not bg")
         }
 #endif
         
         if event.managedObjectContext == nil {
+            L.og.debug("🔴🔴 event is not yet saved")
             try? self.ctx.save()
         }
         

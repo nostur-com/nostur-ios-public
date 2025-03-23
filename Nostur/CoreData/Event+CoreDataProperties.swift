@@ -102,7 +102,7 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         if let found = Event.fetchEvent(id: replyToId, context: ctx) {
             CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([self, found]) else { return }
+                guard contextWontCrash([self, found], debugInfo: ".replyTo_") else { return }
                 self.replyTo = found
                 found.addToReplies(self)
             })
@@ -120,7 +120,7 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         if let found = Event.fetchEvent(id: replyToId, context: ctx) {
             CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([self, found]) else { return }
+                guard contextWontCrash([self, found], debugInfo: ".replyTo__") else { return }
                 self.replyTo = found
                 found.addToReplies(self)
             })
@@ -135,7 +135,7 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         if let found = Event.fetchEvent(id: firstQuoteId, context: ctx) {
             CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([self, found]) else { return }
+                guard contextWontCrash([self, found], debugInfo: ".firstQuote_") else { return }
                 self.firstQuote = found
             })
             return found
@@ -506,7 +506,7 @@ extension Event {
         
         CoreDataRelationFixer.shared.addTask({
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-            guard contextWontCrash([event, reactingToEvent]) else { return }
+            guard contextWontCrash([event, reactingToEvent], debugInfo: "updateReactionTo") else { return }
             event.reactionTo = reactingToEvent
             event.reactionToId = reactingToEvent.id
         })
@@ -569,7 +569,7 @@ extension Event {
         CoreDataRelationFixer.shared.addTask({
             for etag in mentionEtags {
                 if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
-                    guard contextWontCrash([mentioningEvent]) else { return }
+                    guard contextWontCrash([mentioningEvent], debugInfo: "updateMentionsCountCache") else { return }
                     mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
                 }
             }
@@ -925,7 +925,10 @@ extension Event {
         else {
             // 100.00 ms    0.6%    0 s                     static Contact.fetchByPubkey(_:context:)
             if let contact = Contact.fetchByPubkey(event.publicKey, context: context) {
-                savedEvent.contact = contact
+                CoreDataRelationFixer.shared.addTask({
+                    guard contextWontCrash([savedEvent, contact], debugInfo: "PP savedEvent.contact = contact") else { return }
+                    savedEvent.contact = contact
+                })
             }
         }
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags) // TODO: why encode again, need to just store what we received before (performance)
@@ -977,7 +980,7 @@ extension Event {
                     
                     if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
                         CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, awaitingEvent]) else { return }
+                            guard contextWontCrash([savedEvent, awaitingEvent], debugInfo: "OO savedEvent.zappedEvent = awaitingEvent") else { return }
                             savedEvent.zappedEvent = awaitingEvent
                         })
                          // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
@@ -987,7 +990,7 @@ extension Event {
                     else {
                         CoreDataRelationFixer.shared.addTask({
                             if let zappedEvent = Event.fetchEvent(id: firstE, context: context) {
-                                guard contextWontCrash([savedEvent, zappedEvent]) else { return }
+                                guard contextWontCrash([savedEvent, zappedEvent], debugInfo: "NN savedEvent.zappedEvent = zappedEvent") else { return }
                                 savedEvent.zappedEvent = zappedEvent
                             }
                         })
@@ -1003,7 +1006,7 @@ extension Event {
                     
                     if let awaitingEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstA) {
                         CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, awaitingEvent]) else { return }
+                            guard contextWontCrash([savedEvent, awaitingEvent], debugInfo: "MM savedEvent.zappedEvent = awaitingEvent") else { return }
                             savedEvent.zappedEvent = awaitingEvent
                         })
                         // Thread 3273: "Illegal attempt to establish a relationship 'zappedEvent' between objects in different contexts
@@ -1013,7 +1016,7 @@ extension Event {
                     else {
                         CoreDataRelationFixer.shared.addTask({
                             if let zappedEvent = Event.fetchEvent(id: firstA, context: context) {
-                                guard contextWontCrash([savedEvent, zappedEvent]) else { return }
+                                guard contextWontCrash([savedEvent, zappedEvent], debugInfo: "LL savedEvent.zappedEvent = zappedEvent") else { return }
                                 savedEvent.zappedEvent = zappedEvent
                             }
                         })
@@ -1046,7 +1049,7 @@ extension Event {
                 // here savedEvent is not saved yet, so appears it can crash on context, even when its the same context
                 CoreDataRelationFixer.shared.addTask({
                     if let reactionTo = Event.fetchEvent(id: lastE, context: context) {
-                        guard contextWontCrash([savedEvent, reactionTo]) else { return }
+                        guard contextWontCrash([savedEvent, reactionTo], debugInfo: "JJ savedEvent.reactionTo = reactionTo") else { return }
                         savedEvent.reactionTo = reactionTo
                     }
                 })

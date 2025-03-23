@@ -343,7 +343,7 @@ extension Contact : Identifiable {
             }
             contact.fixedPfp = contact.picture // For showing "Previously known as"
             Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
-            EventRelationsQueue.shared.addAwaitingContact(contact)
+            EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "saveOrUpdateContact")
             updateRelatedEvents(contact)
             updateRelatedAccounts(contact)
             ViewUpdates.shared.contactUpdated.send((event.publicKey, contact))

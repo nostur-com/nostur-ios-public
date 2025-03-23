@@ -22,7 +22,7 @@ struct ConversationRowView: View {
             PFP(pubkey: conv.contactPubkey, pictureUrl: pfpAttributes.pfpURL)
                 .onAppear {
                     if let nrContact = conv.nrContact, nrContact.metadata_created_at == 0, let contact = nrContact.contact {
-                        EventRelationsQueue.shared.addAwaitingContact(contact)
+                        EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "ConversationRowView.001")
                         QueuedFetcher.shared.enqueue(pTag: conv.contactPubkey)
                     }
                 }
@@ -58,7 +58,7 @@ struct ConversationRowView: View {
                     .onAppear {
                         if contact.metadata_created_at == 0 {
                             guard let bgContact = contact.contact else { return }
-                            EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "ConversationRowView.001")
+                            EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "ConversationRowView.002")
                             QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
                         }
                     }

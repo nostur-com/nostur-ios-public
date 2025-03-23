@@ -46,7 +46,7 @@ class ProfileViewModel: ObservableObject {
             self?.loadLuds(nrContact)
             
             guard let contact = nrContact.contact else { return }
-            EventRelationsQueue.shared.addAwaitingContact(contact)
+            EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "ProfileViewModel")
             
             // "Follows you"
             if contact.followsYou() {

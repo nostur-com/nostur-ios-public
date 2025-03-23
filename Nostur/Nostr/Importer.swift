@@ -285,7 +285,7 @@ class Importer {
                     }
                     if let kind6firstQuote {
                         CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, kind6firstQuote]) else { return }
+                            guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: "savedEvent.firstQuote = kind6firstQuote (not prio)") else { return }
                             savedEvent.firstQuote = kind6firstQuote
                         })
                     }
@@ -512,7 +512,7 @@ class Importer {
                     }
                     if let kind6firstQuote {
                         CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, kind6firstQuote]) else { return }
+                            guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: "savedEvent.firstQuote = kind6firstQuote (prio)") else { return }
                             savedEvent.firstQuote = kind6firstQuote
                         })
                     }

@@ -357,7 +357,7 @@ struct ProfileOverlayCard: View {
                 let npub = contact.npub
                 let isFollowingYou = contact.followsYou()
                 
-                EventRelationsQueue.shared.addAwaitingContact(contact)
+                EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "ProfileOverlayCard")
                 
                 DispatchQueue.main.async {
                     withAnimation {
