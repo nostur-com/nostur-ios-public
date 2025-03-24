@@ -156,7 +156,7 @@ final class SettingsStore: ObservableObject {
             Keys.defaultMediaUploadService: "nostr.build",
             Keys.statusBubble: false,
             Keys.activeNWCconnectionId: "",
-            Keys.fetchCounts: false,
+            Keys.fetchCounts: true,
             Keys.webOfTrustLevel: WebOfTrustLevel.normal.rawValue,
             Keys.includeSharedFrom: true,
             Keys.autoHideBars: false,
