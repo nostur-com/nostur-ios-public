@@ -43,7 +43,6 @@ struct NewAccountSheet: View {
                     
                 Button {
                     createAccount()
-                    AccountsState.shared.loadAccountsState()
                 } label: {
                     Text("Create")
                         .frame(maxWidth: .infinity)

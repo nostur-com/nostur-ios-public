@@ -182,7 +182,7 @@ class NSecBunkerManager: ObservableObject {
                                 AccountsState.shared.activeAccountPublicKey = newAccountPubkey
                                 AccountsState.shared.loggedInAccount?.account.publicKey = newAccountPubkey
                                 
-                                AccountsState.shared.loadAccountsState() // Need load account because pubkey changed
+                                AccountsState.shared.loadAccountsState(loadAnyAccount: false) // Need load account because pubkey changed
                             }
                             
                             self.state = .connected

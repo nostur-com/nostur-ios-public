@@ -45,8 +45,8 @@ struct TryGuestAccountSheet: View {
             // Start onboarding already.. speed up..
             let countBefore = AccountsState.shared.accounts.count
             if !AccountsState.shared.accounts.contains(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY }) {
-                let guestAccount = GuestAccountManager.shared.createGuestAccount()
-                AccountsState.shared.changeAccount(guestAccount)
+                _ = GuestAccountManager.shared.createGuestAccount()
+                viewContextSave() // save guest account, so its available in bg context
                 if AccountsState.shared.accounts.count > countBefore {
                     didCreate = true
                 }
@@ -82,7 +82,6 @@ struct TryGuestAccountSheet: View {
         if let guestAccount {
             AccountsState.shared.changeAccount(guestAccount)
         }
-        AccountsState.shared.loadAccountsState()
     }
 }
 

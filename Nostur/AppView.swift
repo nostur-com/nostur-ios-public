@@ -42,16 +42,24 @@ struct AppView: View {
                 DatabaseProblemView()
             }
         }
+        .onChange(of: accountsState.loggedInAccount) { newLoggedInAccount in
+            viewState = if let newLoggedInAccount {
+                .loggedIn(newLoggedInAccount)
+            } else {
+                .onboarding
+            }
+        }
         .task {
             if DataProvider.shared().databaseProblem {
                 viewState = .databaseError; return
             }
             await startNosturing()
-            loadAccount()
-        }
-        .onReceive(receiveNotification(.activeAccountChanged)) { _ in
-            guard case .loggedIn(_) = viewState else { return }
-            loadAccount()
+            
+            viewState = if let loggedInAccount = accountsState.loggedInAccount {
+                .loggedIn(loggedInAccount)
+            } else {
+                .onboarding
+            }
         }
     }
 }
@@ -65,7 +73,6 @@ extension AppView {
     }
     
     private func loadAccount() {
-        AccountsState.shared.loadAccountsState()
         if let loggedInAccount = AccountsState.shared.loggedInAccount {
             viewState = .loggedIn(loggedInAccount)
         }
