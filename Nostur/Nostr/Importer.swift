@@ -34,6 +34,7 @@ class Importer {
     var delayProcessingSub = PassthroughSubject<Void, Never>()
     var callbackSubscriptionIds = Set<String>()
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
+    var saveToDiskSubject = PassthroughSubject<Void, Never>()
     
     public var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
     public var importedPrioMessagesFromSubscriptionId = PassthroughSubject<ImportedPrioNotification, Never>()
@@ -70,6 +71,32 @@ class Importer {
                 self?.addedRelayMessage.send()
             }
             .store(in: &subscriptions)
+        
+        saveToDiskSubject
+            .debounce(for: .seconds(8.0), scheduler: RunLoop.main)
+            .sink { [unowned self] in
+                self.bgContext.perform { [unowned self] in
+                    if (bgContext.hasChanges) {
+                        do {
+                            try bgContext.save()
+#if DEBUG
+                            L.og.debug("💾💾 saveToDisk finished")
+#endif
+                        }
+                        catch {
+                            L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
+                        }
+                    }
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    public func saveToDisk() {
+#if DEBUG
+        L.og.debug("💾 saveToDisk requested")
+#endif
+        self.saveToDiskSubject.send()
     }
     
     
@@ -344,29 +371,9 @@ class Importer {
                         }
                     }
                     
-                    // batch save every 100
                     if count % 100 == 0 {
-                        if (bgContext.hasChanges) {
-                            do {
-                                try bgContext.save()
-                                L.importing.debug("💾💾 Saved \(count)/\(forImportsCount)")
-                                let mainQueueCount = count
-                                let mainQueueForImportsCount = forImportsCount
-                                self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
-                                self.listStatus.send("Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
-                                subscriptionIds.removeAll()
-                            }
-                            catch {
-                                L.importing.error("🏎️🏎️ 🔴🔴🔴 Error on batch \(count)/\(forImportsCount): \(error)")
-                            }
-                        }
-                    }
-                }
-                if (bgContext.hasChanges) {
-                    try bgContext.save()
-                    if (saved > 0) {
 #if DEBUG
-                        L.importing.debug("💾💾 Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped) -[LOG]-")
+                        L.importing.debug("💾💾 Processed \(count)/\(forImportsCount)")
 #endif
                         let mainQueueCount = count
                         let mainQueueForImportsCount = forImportsCount
@@ -374,19 +381,22 @@ class Importer {
                         self.listStatus.send("Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
                         subscriptionIds.removeAll()
                     }
-                    else {
+                }
+                if (saved > 0) {
 #if DEBUG
-                        L.importing.debug("💾   Finished, nothing saved. -- Processed: \(forImportsCount), saved: \(saved), skipped (db): \(alreadyInDBskipped) -[LOG]-")
+                    L.importing.debug("💾💾 Processed: \(forImportsCount), skipped (db): \(alreadyInDBskipped) -[LOG]-")
 #endif
-                    }
+                    let mainQueueCount = count
+                    let mainQueueForImportsCount = forImportsCount
+                    self.importedMessagesFromSubscriptionIds.send(subscriptionIds)
+                    self.listStatus.send("Processing \(mainQueueCount)/\(max(mainQueueCount,mainQueueForImportsCount)) items...")
+                    subscriptionIds.removeAll()
                 }
                 else {
-                    L.importing.debug("🏎️🏎️ Nothing imported, no changes in \(count) messages -[LOG]-")
-                    if count > 50 {
-                        sendNotification(.noNewEventsInDatabase)
-                    }
+#if DEBUG
+                    L.importing.debug("💾   Finished, nothing saved. -- Processed: \(forImportsCount), skipped (db): \(alreadyInDBskipped) -[LOG]-")
+#endif
                 }
-                CoreDataRelationFixer.shared.saveRelations()
             }
             catch {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
@@ -398,7 +408,7 @@ class Importer {
                 self.importEvents()
             }
             else {
-                bgSave()
+                self.saveToDisk()
             }
         }
     }
@@ -554,18 +564,12 @@ class Importer {
                         Event.updateMentionsCountCache(event.tags, context: bgContext)
                     }
                 }
-                if (bgContext.hasChanges) {
-                    try bgContext.save()
-                }
-                else {
-                    L.importing.debug("🏎️🏎️ Nothing imported, no changes in new prio message")
-                }
             }
             catch {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
 
-            bgSave()
+            self.saveToDisk()
         }
     }
 }

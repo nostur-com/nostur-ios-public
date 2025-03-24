@@ -33,9 +33,10 @@ class CoreDataRelationFixer {
     
     public func addTask(_ task: @escaping SaveRelationTask) {
         self.taskQueue.append(task)
+        self.saveRelations()
     }
     
-    public func saveRelations() {
+    private func saveRelations() {
         self.saveRelationsSubject.send()
     }
     
@@ -52,12 +53,7 @@ class CoreDataRelationFixer {
             // Optionally clear the queue after executing tasks
             self.taskQueue.removeAll()
             
-            do {
-                try self.bgContext.save()
-            }
-            catch {
-                L.og.error("🔴🔴 Could not save bgContext \(error)")
-            }
+            Importer.shared.saveToDisk()
         }
     }
     
