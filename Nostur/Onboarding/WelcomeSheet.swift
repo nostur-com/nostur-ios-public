@@ -13,7 +13,6 @@ struct WelcomeSheet: View {
     public var offerTryOut = false
     
     var body: some View {
-//        let _ = Self._printChanges()
         VStack {
             Text("Welcome to **Nostur**", comment: "Welcoming the user to the app").font(.largeTitle)
             Text("See what's happening on nostr right now", comment: "Nostur intro text").font(.callout)

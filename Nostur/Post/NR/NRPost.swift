@@ -368,7 +368,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
             anyName = cachedNRContact.anyName
         }
-        else if let contact = event.contact_ {
+        else if let contact = event.contact {
             self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(contact.pubkey, contact: contact), pubkey: pubkey)
             anyName = contact.anyName
         }
@@ -1162,7 +1162,7 @@ extension NRPost { // Helpers for grouped replies
     }
     
     private func traversesUpToThisPost(_ event: Event) -> Bool {
-        var currentEvent:Event? = event
+        var currentEvent: Event? = event
         while currentEvent != nil {
             if let replyToId = currentEvent?.replyToId, replyToId == self.id {
                 return true

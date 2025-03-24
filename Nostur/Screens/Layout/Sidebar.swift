@@ -385,16 +385,6 @@ struct WithSidebar<Content: View>: View {
                     .frame(width: NOSTUR_SIDEBAR_WIDTH)
                     .edgesIgnoringSafeArea(.all)
             }
-#if DEBUG
-            .overlay(alignment: .topTrailing) {
-                if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-                    Button("Test Toggle") {
-                        showSidebar.toggle()
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-            }
-#endif
     }
 }
 

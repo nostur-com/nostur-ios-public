@@ -204,11 +204,7 @@ extension Notification.Name {
     static var addRemoveToListsheet: Notification.Name {
         return Notification.Name("addRemoveToListsheet")
     }
-    
-    static var noNewEventsInDatabase: Notification.Name {
-        return Notification.Name("newEventsInDatabase")
-    }
-    
+
     static var newHighlight: Notification.Name {
         return Notification.Name("newHighlight")
     }

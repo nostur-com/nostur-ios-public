@@ -46,22 +46,19 @@ class NewPostNotifier: ObservableObject {
     
     @MainActor
     public func runCheck() {
-        guard !AppState.shared.appIsInBackground else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, app in background."); return }
+        guard !AppState.shared.appIsInBackground else { return }
 #if DEBUG
         L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
 #endif
         if let lastCheck = lastCheck {
             guard (Date.now.timeIntervalSince1970 - lastCheck.timeIntervalSince1970) > 60
-            else {
-                L.og.debug("NewPostNotifier.runCheck() - too soon, waiting a bit -[LOG]-")
-                return
-            }
+            else { return }
         }
         let accountPubkey = account()?.publicKey ?? activeAccountPublicKey
         let tasks = CloudTask.fetchAll(byType: .notifyOnPosts, andAccountPubkey: accountPubkey)
         enabledPubkeys = Set(tasks.compactMap { $0.value_ })
         
-        guard enabledPubkeys.count > 0 else { L.lvm.debug("NewPostNotifier.runCheck(): skipping, enabledPubkeys.count == 0."); return }
+        guard enabledPubkeys.count > 0 else { return }
         
         // since = "lastCheck" ?? "most recent notification" ?? "most recent task" ?? "8 hours ago"
         let since = (self.lastCheck?.timeIntervalSince1970 ?? (PersistentNotification.fetchPersistentNotification(byPubkey: accountPubkey, type: .newPosts)?.createdAt.timeIntervalSince1970 ?? tasks.first?.createdAt.timeIntervalSince1970)) ?? (Date.now.timeIntervalSince1970 - 28800)
@@ -153,7 +150,9 @@ class NewPostNotifier: ObservableObject {
     }
     
     private func createNewPostsNotification(_ newPosts:[Event], accountPubkey: String) {
+#if DEBUG
         L.og.debug("NewPostNotifier.createNewPostsNotification: newPosts: \(newPosts.count)")
+#endif
         let contacts = Contact.fetchByPubkeys(newPosts.map { $0.pubkey }).map { ContactInfo(name: $0.anyName, pubkey: $0.pubkey, pfp: $0.picture) }
         // Checking existing unread new posts notification(s), merge them into a new one, delete older.
         let existing = PersistentNotification.fetchUnreadNewPostNotifications(accountPubkey: accountPubkey)
@@ -170,20 +169,12 @@ class NewPostNotifier: ObservableObject {
         NotificationsViewModel.shared.checkNeedsUpdate(newPostNotification)
     }
 }
-//
-//struct NewPostsNotificationData: Codable {
-//    let contacts:[ContactInfo]
-//    
-//    public var pubkeys:[String] {
-//        contacts.map { $0.pubkey }
-//    }
-//}
 
 struct ContactInfo: Codable, Identifiable, Hashable, Equatable {
-    var id:String { pubkey }
-    let name:String
-    let pubkey:String
-    var pfp:String?
+    var id: String { pubkey }
+    let name: String
+    let pubkey: String
+    var pfp: String?
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(pubkey)
@@ -192,5 +183,4 @@ struct ContactInfo: Codable, Identifiable, Hashable, Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.pubkey == rhs.pubkey
     }
-    
 }

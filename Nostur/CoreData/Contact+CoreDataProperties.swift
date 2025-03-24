@@ -309,22 +309,6 @@ extension Contact : Identifiable {
         
         let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
         
-        for waitingEvent in awaitingEvents {
-            if (waitingEvent.pubkey == contact.pubkey) {
-//                waitingEvent.objectWillChange.send() // Needed for zaps on notification screen
-                if waitingEvent.contact == nil {
-                    waitingEvent.contact = contact
-//                    ViewUpdates.shared.contactUpdated.send(contact)
-                }
-            }
-            if let tagsSerialized = waitingEvent.tagsSerialized, tagsSerialized.contains(serializedP(contact.pubkey)) {
-//                waitingEvent.objectWillChange.send()
-//                if !waitingEvent.contacts_.contains(contact) {
-////                    waitingEvent.contactsUpdated.send(waitingEvent.contacts_) // TODO: Not used anywhere???
-//                }
-            }
-        }
-        
         let awaitingZaps = ZapperPubkeyVerificationQueue.shared.getQueuedZaps()
         awaitingZaps.forEach { zap in
             if (zap.otherPubkey == contact.pubkey) {
