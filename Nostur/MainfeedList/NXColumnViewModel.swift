@@ -564,7 +564,7 @@ class NXColumnViewModel: ObservableObject {
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
         if !isVisible || isPaused || AppState.shared.appIsInBackground {
             #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. ")
+            L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. isVisible: \(self.isVisible) isPaused: \(self.isPaused)")
             #endif
             return
         }

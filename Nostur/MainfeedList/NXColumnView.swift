@@ -74,6 +74,11 @@ struct NXColumnView: View {
             }
             viewModel.viewState = .loading
             viewModel.initialize(newConfig)
+            
+            // Fix feed paused by NXPostsFeed.onDisappear
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                viewModel.resume()
+            }
         }
         .onChange(of: dim.availableNoteRowWidth) { newValue in
 #if DEBUG
