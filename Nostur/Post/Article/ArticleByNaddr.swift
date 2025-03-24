@@ -14,7 +14,7 @@ struct ArticleByNaddr: View {
     public var navigationTitle: String? = nil
     public var navTitleHidden: Bool = false
     public var theme: Theme = Themes.default.theme
-    @StateObject private var vm = FetchVM<NRPost>(timeout: 5.0, debounceTime: 0.05)
+    @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
     var body: some View {
         VStack {

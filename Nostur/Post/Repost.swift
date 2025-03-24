@@ -19,7 +19,7 @@ struct Repost: View {
     private let grouped: Bool
     private var theme: Theme
     
-    @StateObject private var vm = FetchVM<NRPost>(timeout: 5.0, debounceTime: 0.05)
+    @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     @State private var relayHint: String?
 //#if DEBUG
 //    @State private var kind6Source: String?

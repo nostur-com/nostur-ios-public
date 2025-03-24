@@ -11,7 +11,7 @@ struct NoteById: View {
     @EnvironmentObject private var themes: Themes
     public let id: String
     public var navTitleHidden: Bool = false
-    @StateObject private var vm = FetchVM<NRPost>(timeout: 2.5, debounceTime: 0.05)
+    @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
     var body: some View {
         switch vm.state {
