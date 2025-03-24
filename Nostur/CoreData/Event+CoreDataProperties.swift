@@ -520,10 +520,6 @@ extension Event {
         })
     }
     
-    var fastPs: [FastTag] {
-        fastTags.filter { $0.0 == "p" && $0.1.count == 64 }
-    }
-    
     var fastEs: [FastTag] {
         fastTags.filter { $0.0 == "e" && $0.1.count == 64 }
     }

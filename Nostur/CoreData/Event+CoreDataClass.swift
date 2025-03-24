@@ -47,5 +47,10 @@ public class Event: NSManagedObject, Identifiable {
         //            .filter { $0.count >= 2 }
             .map { ($0[safe: 0] ?? "WTF", $0[safe: 1] ?? "WTF", $0[safe: 2], $0[safe: 3], $0[safe: 4], $0[safe: 4], $0[safe: 5], $0[safe: 6], $0[safe: 7], $0[safe: 8]) }
     }()
+    
+    
+    lazy var fastPs: [FastTag] = {
+        fastTags.filter { $0.0 == "p" && $0.1.count == 64 }
+    }()
 }
 
