@@ -70,6 +70,7 @@ struct WelcomeSheet: View {
             
         }
         .wowBackground()
+        .foregroundColor(Color.white)
     }
 }
 

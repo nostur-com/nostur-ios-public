@@ -73,6 +73,7 @@ struct TryGuestAccountSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(letsGo)
         .wowBackground()
+        .foregroundColor(Color.white)
     }
     
     func tryGuestAccount() {

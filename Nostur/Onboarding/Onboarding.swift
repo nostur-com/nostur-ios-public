@@ -17,6 +17,7 @@ struct Onboarding: View {
                 .foregroundColor(.white)
                 .interactiveDismissDisabled()
                 .wowBackground()
+                .foregroundColor(Color.white)
                 .fullScreenCover(isPresented: $networkMonitor.isDisconnected) {
                     NoInternetView()
                 }

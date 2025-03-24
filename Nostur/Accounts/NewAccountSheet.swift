@@ -72,6 +72,7 @@ struct NewAccountSheet: View {
             .navigationTitle(String(localized:"Create new account", comment: "Navigation title of create new account screen"))
             .navigationBarTitleDisplayMode(.inline)
             .wowBackground()
+            .foregroundColor(Color.white)
     }
     
     func createAccount() {
