@@ -2108,6 +2108,9 @@
         }
       }
     },
+    "Classic" : {
+
+    },
     "Clear" : {
       "comment" : "Button to clear cache",
       "localizations" : {
@@ -8079,6 +8082,7 @@
       "shouldTranslate" : false
     },
     "Test Toggle" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

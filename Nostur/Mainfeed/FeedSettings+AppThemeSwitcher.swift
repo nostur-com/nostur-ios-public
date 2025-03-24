@@ -22,6 +22,14 @@ struct AppThemeSwitcher: View {
                     Themes.default.loadDefault()
                     dismiss()
                 }
+            Color("classicAccentColor")
+                .frame(width: 25, height: 25)
+                .padding(3)
+                .background(selectedTheme == "classic" ? Color.secondary : .clear)
+                .onTapGesture {
+                    Themes.default.loadClassic()
+                    dismiss()
+                }
             Color("purpleAccentColor")
                 .frame(width: 25, height: 25)
                 .padding(3)

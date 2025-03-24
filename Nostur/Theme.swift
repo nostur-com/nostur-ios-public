@@ -43,6 +43,8 @@ class Themes: ObservableObject {
         switch selectedTheme {
         case "default":
             loadDefault()
+        case "classic":
+            loadClassic()
         case "purple":
             loadPurple()
         case "red":
@@ -63,6 +65,22 @@ class Themes: ObservableObject {
     public func loadDefault() {
         selectedTheme = "default"
         theme = Theme()
+    }
+    
+    public func loadClassic() {
+        selectedTheme = "classic"
+        theme = Theme(
+            id: "Classic",
+            primary: Color.primary,
+            secondary: Color.secondary,
+            accent: Color("classicAccentColor"),
+            background: Color("classicBackground"),
+            secondaryBackground: Color(.secondarySystemBackground),
+            listBackground: Color("classicListBackground"),
+            badge: Color.red,
+            lineColor: Color("classicLineColor"),
+            footerButtons: Color("classicAccentColor")
+        )
     }
     
     public func loadGreen() {

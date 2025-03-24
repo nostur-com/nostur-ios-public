@@ -22,6 +22,10 @@ struct ThemePicker: View {
                 .foregroundColor(Color("defaultAccentColor"))
                 .tag("default")
             
+            Label("Classic", systemImage: "circle.fill")
+                .foregroundColor(Color("classicAccentColor"))
+                .tag("classic")
+            
             Label("Purple", systemImage: "circle.fill")
                 .foregroundColor(Color("purpleAccentColor"))
                 .tag("purple")
@@ -55,6 +59,8 @@ struct ThemePicker: View {
             switch theme {
             case "default":
                 Themes.default.loadDefault()
+            case "classic":
+                Themes.default.loadClassic()
             case "purple":
                 Themes.default.loadPurple()
             case "red":
