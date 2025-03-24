@@ -111,7 +111,7 @@ struct FollowingAndExplore: View {
                         if la.viewFollowingPublicKeys.count > 10 && enablePictureFeed {
                             TabButton(
                                 action: { selectedSubTab = "Picture" },
-                                title: "📸",
+                                systemIcon: "photo",
                                 selected: selectedSubTab == "Picture")
                             Spacer()
                         }
@@ -131,7 +131,7 @@ struct FollowingAndExplore: View {
                         if la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed {
                             TabButton(
                                 action: { selectedSubTab = "Emoji" },
-                                title: emojiType,
+                                imageName: emojiType == "😂" ? "LaughterIcon" : "RageIcon",
                                 secondaryText: String(format: "%ih", emojiVM.ago),
                                 selected: selectedSubTab == "Emoji")
                             Spacer()

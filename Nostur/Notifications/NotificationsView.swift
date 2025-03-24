@@ -75,42 +75,42 @@ struct NotificationsView: View {
                             tab = "Mentions"
                             nvm.markMentionsAsRead()
                         }
-                    }, icon: "text.bubble", selected: tab == "Mentions", unread: nvm.unreadMentions)
+                    }, systemIcon: "text.bubble", selected: tab == "Mentions", unread: nvm.unreadMentions)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "New Posts"
                             nvm.markNewPostsAsRead()
                         }
-                    }, icon: "bell", selected: tab == "New Posts", unread: nvm.unreadNewPosts)
+                    }, systemIcon: "bell", selected: tab == "New Posts", unread: nvm.unreadNewPosts)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Reactions"
                             nvm.markReactionsAsRead()
                         }
-                    }, icon: "heart", selected: tab == "Reactions", unread: nvm.unreadReactions_, muted: nvm.muteReactions)
+                    }, systemIcon: "heart", selected: tab == "Reactions", unread: nvm.unreadReactions_, muted: nvm.muteReactions)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Reposts"
                             nvm.markRepostsAsRead()
                         }
-                    }, icon: "arrow.2.squarepath", selected: tab == "Reposts", unread: nvm.unreadReposts_, muted: nvm.muteReposts)
+                    }, systemIcon: "arrow.2.squarepath", selected: tab == "Reposts", unread: nvm.unreadReposts_, muted: nvm.muteReposts)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Zaps"
                             nvm.markZapsAsRead()
                         }
-                    }, icon: "bolt", selected: tab == "Zaps", unread: nvm.muteZaps ? nvm.unreadFailedZaps_ : (nvm.unreadZaps_ + nvm.unreadFailedZaps_), muted: nvm.muteZaps)
+                    }, systemIcon: "bolt", selected: tab == "Zaps", unread: nvm.muteZaps ? nvm.unreadFailedZaps_ : (nvm.unreadZaps_ + nvm.unreadFailedZaps_), muted: nvm.muteZaps)
                     
                     TabButton(action: {
                         withAnimation {
                             tab = "Followers"
                             nvm.markNewFollowersAsRead()
                         }
-                    }, icon: "person.3", selected: tab == "Followers", unread: nvm.unreadNewFollowers_, muted: nvm.muteFollows)
+                    }, systemIcon: "person.3", selected: tab == "Followers", unread: nvm.unreadNewFollowers_, muted: nvm.muteFollows)
                 }
                 .frame(minWidth: dim.listWidth)
             }

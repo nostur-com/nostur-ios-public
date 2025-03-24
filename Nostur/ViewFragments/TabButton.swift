@@ -11,7 +11,8 @@ import SwiftUI
 struct TabButton<Content: View>: View {
     @EnvironmentObject private var themes: Themes
     public var action: () -> Void
-    public var icon: String?
+    public var systemIcon: String?
+    public var imageName: String?
     public var title: String
     public var secondaryText: String?
     public var selected: Bool
@@ -21,7 +22,8 @@ struct TabButton<Content: View>: View {
     private let tools: () -> Content?
     
     init(action: @escaping () -> Void,
-         icon: String? = nil,
+         systemIcon: String? = nil,
+         imageName: String? = nil,
          title: String = "",
          secondaryText: String? = nil,
          selected: Bool = false,
@@ -30,7 +32,8 @@ struct TabButton<Content: View>: View {
          @ViewBuilder tools: @escaping () -> Content? = { EmptyView() }
     ) {
         self.action = action
-        self.icon = icon
+        self.systemIcon = systemIcon
+        self.imageName = imageName
         self.title = title
         self.secondaryText = secondaryText
         self.selected = selected
@@ -43,9 +46,16 @@ struct TabButton<Content: View>: View {
         Button { action() } label: {
             VStack(spacing: 0) {
                 HStack(alignment: .bottom, spacing: 3) {
-                    if let icon = icon {
-                        Image(systemName: icon)
+                    if let systemIcon = systemIcon {
+                        Image(systemName: systemIcon)
                             .font(.subheadline)
+                            .foregroundColor(themes.theme.accent)
+                    }
+                    else if let imageName = imageName {
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
                             .foregroundColor(themes.theme.accent)
                     }
                     else {
