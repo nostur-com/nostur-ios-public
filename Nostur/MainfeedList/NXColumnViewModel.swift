@@ -183,9 +183,9 @@ class NXColumnViewModel: ObservableObject {
                     feed.lastRead.removeAll { self.markAsReadSyncQueue.contains($0) }
                     feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
                     
-                    // if size of feed.lastRead is > 300, remove all beyond index 300
-                    if feed.lastRead.count > 300 {
-                        feed.lastRead = Array(feed.lastRead[..<300])
+                    // if size of feed.lastRead is > 350, remove all beyond index 350
+                    if feed.lastRead.count > 350 {
+                        feed.lastRead = Array(feed.lastRead[..<350])
                     }
                     
                     self.markAsReadSyncQueue.removeAll()
@@ -234,6 +234,13 @@ class NXColumnViewModel: ObservableObject {
         guard feed != nil else { return }
         guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
         markAsReadSyncQueue.insert(shortPostId)
+        syncFeedSubject.send()
+    }
+    
+    public func markAsRead(_ shortPostIds: [String]) {
+        guard feed != nil else { return }
+        guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
+        markAsReadSyncQueue.formUnion(Set(shortPostIds))
         syncFeedSubject.send()
     }
     

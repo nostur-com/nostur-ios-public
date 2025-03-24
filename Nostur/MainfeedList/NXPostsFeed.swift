@@ -334,6 +334,11 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
             vmInner.unreadIds[nrPost.id] = 0
             vmInner.updateIsAtTopSubject.send()
             vm.markAsRead(nrPost.shortId)
+            
+            if !nrPost.parentPosts.isEmpty {
+                vm.markAsRead(nrPost.parentPosts.map { $0.shortId })
+            }
+            
             if nrPost.isRepost, let shortId = nrPost.firstQuote?.shortId {
                 vm.markAsRead(shortId)
             }
@@ -352,6 +357,11 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
                     vmInner.unreadIds[posts[i].id] = 0
                     vmInner.updateIsAtTopSubject.send()
                     vm.markAsRead(posts[i].shortId)
+                    
+                    if !posts[i].parentPosts.isEmpty {
+                        vm.markAsRead(posts[i].parentPosts.map { $0.shortId })
+                    }
+                    
                     if posts[i].isRepost, let shortId = posts[i].firstQuote?.shortId {
                         vm.markAsRead(shortId)
                     }
