@@ -245,14 +245,19 @@ struct MainView: View {
     }
 }
 
-struct MainView_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadFollows()
-        }) {
-            MainView()
-        }
+#Preview {
+    PreviewContainer {
+        MainView()
+    }
+}
+
+
+#Preview("with Posts") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadFollows()
+    }) {
+        MainView()
     }
 }

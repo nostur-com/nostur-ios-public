@@ -184,37 +184,45 @@ class Themes: ObservableObject {
 
 import NavigationBackport
 
-struct Previews_Theme_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadPosts()
-            pe.loadReposts()
-        }) {
-            NBNavigationStack {
-                VStack {
-                    Button("Color Blue") {
-                        Themes.default.loadBlue()
-                    }                
-                    if let p = PreviewFetcher.fetchNRPost() {
-                        PostOrThread(nrPost: p)
-                            .onAppear {
-                                p.loadParents()
-                            }
-                    }
-                    if let p = PreviewFetcher.fetchNRPost() {
-                        PostOrThread(nrPost: p)
-                            .onAppear {
-                                p.loadParents()
-                            }
-                    }
+#Preview("Posts") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadReposts()
+    }) {
+        NBNavigationStack {
+            VStack {
+                Button("Color Blue") {
+                    Themes.default.loadBlue()
                 }
-                .onAppear {
-                    Themes.default.loadPurple()
+                if let p = PreviewFetcher.fetchNRPost() {
+                    PostOrThread(nrPost: p)
+                        .onAppear {
+                            p.loadParents()
+                        }
                 }
-                .environmentObject(Themes.default)
-                .tint(Themes.default.theme.accent)
+                if let p = PreviewFetcher.fetchNRPost() {
+                    PostOrThread(nrPost: p)
+                        .onAppear {
+                            p.loadParents()
+                        }
+                }
             }
+            .onAppear {
+                Themes.default.loadPurple()
+            }
+            .environmentObject(Themes.default)
+            .tint(Themes.default.theme.accent)
         }
+    }
+}
+
+#Preview("App") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadReposts()
+    }) {
+        NosturMainView()
     }
 }

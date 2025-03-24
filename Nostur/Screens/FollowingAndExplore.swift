@@ -512,12 +512,23 @@ struct FollowingAndExplore: View {
     }
 }
 
-struct FollowingAndExplore_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer {
-            NBNavigationStack {
-                FollowingAndExplore(showingOtherContact: .constant(nil))
-            }
+#Preview {
+    PreviewContainer {
+        NBNavigationStack {
+            FollowingAndExplore(showingOtherContact: .constant(nil))
+        }
+    }
+}
+
+
+#Preview("with Posts") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadFollows()
+    }) {
+        NBNavigationStack {
+            FollowingAndExplore(showingOtherContact: .constant(nil))
         }
     }
 }

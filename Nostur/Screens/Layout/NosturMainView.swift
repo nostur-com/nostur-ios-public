@@ -31,3 +31,19 @@ struct NosturMainView: View {
         }
     }
 }
+
+#Preview("NosturMainView") {
+    PreviewContainer {
+        NosturMainView()
+    }
+}
+
+#Preview("with Posts") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+        pe.loadFollows()
+    }) {
+        NosturMainView()
+    }
+}

@@ -315,3 +315,10 @@ func handleUrl(_ url: URL, loggedInAccount: LoggedInAccount) {
 
     }
 }
+}
+
+#Preview("NosturMainView.loggedIn") {
+    PreviewContainer {
+        NosturMainView()
+    }
+}
