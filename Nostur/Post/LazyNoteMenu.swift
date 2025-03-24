@@ -179,6 +179,7 @@ struct LazyNoteMenuSheet: View {
                 Button {
                     guard let contact = nrPost.contact else { return }
                     dismiss()
+                    sendNotification(.clearNavigation)
                     sendNotification(.showingSomeoneElsesFeed, contact)
                     sendNotification(.dismissMiniProfile)
                 } label: {

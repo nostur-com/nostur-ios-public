@@ -193,6 +193,7 @@ struct ProfileOverlayCard: View {
                             
                             Button("Show feed") {
                                 dismiss()
+                                sendNotification(.clearNavigation)
                                 sendNotification(.showingSomeoneElsesFeed, contact)
                                 sendNotification(.dismissMiniProfile)
                             }
