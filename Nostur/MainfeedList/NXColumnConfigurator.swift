@@ -209,13 +209,6 @@ private func getFollowingFeed(_ accountPubkey: String, accountName: String? = ni
         newFollowingFeed.type = CloudFeedType.following.rawValue
         DataProvider.shared().save()
         
-        // Check for existing ListState
-        let fr = ListState.fetchRequest()
-        fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", accountPubkey)
-        if let followingListState = try? context.fetch(fr).first {
-            newFollowingFeed.repliesEnabled = !followingListState.hideReplies
-        }
-        
         return newFollowingFeed
     }
 }

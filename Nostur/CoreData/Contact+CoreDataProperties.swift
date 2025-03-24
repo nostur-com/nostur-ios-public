@@ -34,7 +34,7 @@ extension Contact {
     @NSManaged public var zapperPubkey: String? // used to authorize kind 9735 zap notes. fetch from lud16 endpoint. updated to contain Set
     @NSManaged public var updated_at: Int64
     @NSManaged public var metadata_created_at: Int64
-    @NSManaged public var followedBy: NSSet?
+
     @NSManaged public var events: Set<Event>?
     @NSManaged public var lists: NSSet?
     @NSManaged public var privateFollow: Bool // Need to keep for old DB migration
@@ -72,23 +72,6 @@ extension Contact {
     }
 }
 
-// MARK: Generated accessors for lists
-extension Contact {
-
-    @objc(addNosturListsObject:)
-    @NSManaged public func addToNosturLists(_ value: NosturList)
-
-    @objc(removeNosturListsObject:)
-    @NSManaged public func removeFromNosturLists(_ value: NosturList)
-
-    @objc(addNosturLists:)
-    @NSManaged public func addToNosturLists(_ values: NSSet)
-
-    @objc(removeNosturLists:)
-    @NSManaged public func removeFromNosturLists(_ values: NSSet)
-
-}
-
 // MARK: Generated accessors for events
 extension Contact {
 
@@ -103,40 +86,6 @@ extension Contact {
 
     @objc(removeEvents:)
     @NSManaged public func removeFromEvents(_ values: NSSet)
-
-}
-
-// MARK: Generated accessors for followedBy
-extension Contact {
-
-    @objc(addFollowedByObject:)
-    @NSManaged public func addToFollowedBy(_ value: Account)
-
-    @objc(removeFollowedByObject:)
-    @NSManaged public func removeFromFollowedBy(_ value: Account)
-
-    @objc(addFollowedBy:)
-    @NSManaged public func addToFollowedBy(_ values: NSSet)
-
-    @objc(removeFollowedBy:)
-    @NSManaged public func removeFromFollowedBy(_ values: NSSet)
-
-}
-
-// MARK: Generated accessors for blockedBy
-extension Contact {
-
-    @objc(addBlockedByObject:)
-    @NSManaged public func addToBlockedBy(_ value: Account)
-
-    @objc(removeBlockedByObject:)
-    @NSManaged public func removeFromBlockedBy(_ value: Account)
-
-    @objc(addBlockedBy:)
-    @NSManaged public func addToBlockedBy(_ values: NSSet)
-
-    @objc(removeBlockedBy:)
-    @NSManaged public func removeFromBlockedBy(_ values: NSSet)
 
 }
 

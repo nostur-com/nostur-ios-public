@@ -43,8 +43,6 @@ extension Event {
     @NSManaged public var mentionsCount: Int64 // Cache
     @NSManaged public var zapsCount: Int64 // Cache
     
-    @NSManaged public var bookmarkedBy: Set<Account>?
-    @NSManaged public var contact: Contact?
     @NSManaged public var personZapping: Contact?
     @NSManaged public var replyTo: Event?
     @NSManaged public var replyToRoot: Event?
@@ -52,8 +50,6 @@ extension Event {
     @NSManaged public var zapTally: Int64
     
     @NSManaged public var replies: Set<Event>?
-    
-    @NSManaged public var contacts: Set<Contact>?
     
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
@@ -77,22 +73,11 @@ extension Event {
     // Calculate this events aTag
     var aTag: String { (String(kind) + ":" + pubkey  + ":" + dTag) }
     
-    var contact_: Contact? {
-        guard contact == nil else { return contact }
+    public var contact: Contact? {
         guard let ctx = managedObjectContext else { return nil }
-        if let found = Contact.fetchByPubkey(pubkey, context: ctx) {
-            if Thread.isMainThread {
-                found.objectWillChange.send()
-                self.contact = found
-            }
-            else {
-                self.contact = found
-            }
-            return found
-        }
-        return nil
+        return Contact.fetchByPubkey(pubkey, context: ctx)
     }
-    
+
     var replyTo_:Event? {
         guard replyTo == nil else { return replyTo }
         if replyToId == nil && replyToRootId != nil { // Only replyToRootId? Treat as replyToId
@@ -206,47 +191,6 @@ extension Event {
             return bg().object(with: self.objectID) as? Event
         }
     }
-}
-
-// MARK: Generated accessors for contacts
-extension Event {
-    
-    @objc(addContactsObject:)
-    @NSManaged public func addToContacts(_ value: Contact)
-    
-    @objc(removeContactsObject:)
-    @NSManaged public func removeFromContacts(_ value: Contact)
-    
-    @objc(addContacts:)
-    @NSManaged public func addToContacts(_ values: NSSet)
-    
-    @objc(removeContacts:)
-    @NSManaged public func removeFromContacts(_ values: NSSet)
-    
-}
-
-
-// MARK: Generated accessors for bookmarkedBy
-// Old bookmark relations, no longer needed, but can't remove yet because needed for
-// one time migration. After migration we can remove the code but need to figure out to do that
-extension Event {
-    
-    @objc(addBookmarkedByObject:)
-    @NSManaged public func addToBookmarkedBy(_ value: Account)
-    
-    @objc(removeBookmarkedByObject:)
-    @NSManaged public func removeFromBookmarkedBy(_ value: Account)
-    
-    @objc(addBookmarkedBy:)
-    @NSManaged public func addToBookmarkedBy(_ values: NSSet)
-    
-    @objc(removeBookmarkedBy:)
-    @NSManaged public func removeFromBookmarkedBy(_ values: NSSet)
-    
-    var bookmarkedBy_:Set<Account> {
-        get { bookmarkedBy ?? [] }
-    }
-    
 }
 
 // MARK: Generated accessors for replies
@@ -919,18 +863,7 @@ extension Event {
         savedEvent.isRepost = event.kind == .repost
         savedEvent.flags = flags
         savedEvent.otherAtag = savedEvent.firstA()
-        if let contact = EventRelationsQueue.shared.getAwaitingBgContacts().first(where: { $0.pubkey == event.publicKey }) {
-            savedEvent.contact = contact
-        }
-        else {
-            // 100.00 ms    0.6%    0 s                     static Contact.fetchByPubkey(_:context:)
-            if let contact = Contact.fetchByPubkey(event.publicKey, context: context) {
-                CoreDataRelationFixer.shared.addTask({
-                    guard contextWontCrash([savedEvent, contact], debugInfo: "PP savedEvent.contact = contact") else { return }
-                    savedEvent.contact = contact
-                })
-            }
-        }
+
         savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags) // TODO: why encode again, need to just store what we received before (performance)
         
         if let relays = relays?.split(separator: " ").map({ String($0) }) {

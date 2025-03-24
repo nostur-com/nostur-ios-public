@@ -89,23 +89,14 @@ struct Maintenance {
 //            Self.runSetAtagForReplacableEvents(context: context) // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
-            Self.runMigrateDMState(context: context)
             Self.runFixImposterFalsePositivesAgainAgain(context: context)
             Self.runFixZappedContactPubkey(context: context)
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
-            Self.runMigrateBookmarks(context: context)
-            Self.runMigratePrivateNotes(context: context)
-            Self.runMigrateCustomFeeds(context: context)
-            Self.runMigrateBlocks(context: context)
-            Self.runMigrateAccounts(context: context)
-            Self.runMigrateDMsToCloud(context: context)
-            Self.runMigrateRelays(context: context)
             Self.runUpdateKeychainInfo(context: context)
             Self.runSaveFullAccountFlag(context: context)
             Self.runFixMissingDMStates(context: context)
             Self.runInsertFixedPfps(context: context)
-            Self.runMigrateListStateToCustomFeeds(context: context)
             Self.runPutReferencedAtag(context: context)
             do {
                 if context.hasChanges {
@@ -703,127 +694,6 @@ struct Maintenance {
         migration.migrationCode = migrationCode.fixImposterFalsePositivesAgainAgain.rawValue
     }
     
-    // Run once to migrate DM info in "root" DM event to DMState record
-    static func runMigrateDMState(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateDMState, context: context) else { return }
-        
-        let frA = CloudAccount.fetchRequest()
-        let allAccounts = Array(try! context.fetch(frA))
-        // This one includes read-only accounts
-        _ = allAccounts.reduce([String]()) { partialResult, account in
-            var newResult = Array(partialResult)
-                newResult.append(account.publicKey)
-            return newResult
-        }
-        
-        // Need to do per account, because we can have multiple accounts in Nostur, can message eachother,
-        // Each account needs its own conversation state.
-        
-        typealias ConversationKeypair = String // "accountPubkey-contactPubkey"
-        typealias AccountPubkey = String
-        typealias ContactPubkey = String
-        typealias IsAccepted = Bool
-        typealias MarkedReadAt = Date?
-        
-        var dmStates:[ConversationKeypair: (AccountPubkey, ContactPubkey, IsAccepted, MarkedReadAt)] = [:]
-        
-        let existingDMStates = (try? context.fetch(DMState.fetchRequest())) ?? []
-        var existingDMkeys:Set<String> = []
-        for state in existingDMStates {
-            guard let accountPubkey = state.accountPubkey, let contactPubkey = state.contactPubkey else { continue }
-            let key = accountPubkey + "-"  + contactPubkey
-            dmStates[key] = (accountPubkey, contactPubkey, state.accepted, state.markedReadAt)
-            existingDMkeys.insert(key)
-        }
-        
-        for account in allAccounts {
-            let sent = Event.fetchRequest()
-            sent.predicate = NSPredicate(format: "kind == 4 AND pubkey == %@", account.publicKey)
-            sent.fetchLimit = 9999
-            sent.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-
-            if let sent = try? context.fetch(sent) {
-                for messageSent in sent {
-                    // sent is always "accepted"
-                    guard let contactPubkey = messageSent.firstP() else { continue }
-                    messageSent.otherPubkey = contactPubkey
-                    
-                    let accountPubkey = messageSent.pubkey
-                    
-                    guard accountPubkey != contactPubkey else { continue }
-                    
-                    let markedReadAt = messageSent.lastSeenDMCreatedAt != 0 ? Date(timeIntervalSince1970: TimeInterval(messageSent.lastSeenDMCreatedAt)) : nil
-                    
-                    // Set or update the DM conversation state, use the most recent markedReadAt (lastSeenDMCreatedAt)
-                    if let existingDMState = dmStates[accountPubkey + "-" + contactPubkey], let newerMarkedReadAt = markedReadAt, newerMarkedReadAt > (existingDMState.3 ?? Date(timeIntervalSince1970: 0) ) {
-                        dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, newerMarkedReadAt)
-                    }
-                    else {
-                        dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, markedReadAt)
-                    }
-                }
-            }
-            
-            
-            let received = Event.fetchRequest()
-            received.predicate = NSPredicate(
-                format: "kind == 4 AND tagsSerialized CONTAINS %@ AND NOT pubkey == %@", serializedP(account.publicKey), account.publicKey)
-            received.fetchLimit = 9999
-            received.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-            
-            if let received = try? context.fetch(received) {
-                for messageReceived in received {
-                    
-                    let contactPubkey = messageReceived.pubkey
-                    guard messageReceived.firstP() == account.publicKey || messageReceived.lastP() == account.publicKey else { continue }
-                    let accountPubkey = account.publicKey
-                    messageReceived.otherPubkey = accountPubkey
-                    
-                    guard accountPubkey != contactPubkey else { continue }
-                    
-                    let didSend = dmStates[accountPubkey + "-" + contactPubkey] != nil
-                    
-                    // received is "accepted" if we manually accepted before, or if we replied
-                    if messageReceived.dmAccepted || didSend {
-                        let markedReadAt = messageReceived.lastSeenDMCreatedAt != 0 ? Date(timeIntervalSince1970: TimeInterval(messageReceived.lastSeenDMCreatedAt)) : nil
-                        
-                        // Set or update the DM conversation state, use the most recent markedReadAt (lastSeenDMCreatedAt)
-                        if let existingDMState = dmStates[accountPubkey + "-" + contactPubkey], let newerMarkedReadAt = markedReadAt, newerMarkedReadAt > (existingDMState.3 ?? Date(timeIntervalSince1970: 0) ) {
-                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, newerMarkedReadAt)
-                        }
-                        else {
-                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, true, markedReadAt)
-                        }
-                    }
-                    else {
-                        let markedReadAt = messageReceived.lastSeenDMCreatedAt != 0 ? Date(timeIntervalSince1970: TimeInterval(messageReceived.lastSeenDMCreatedAt)) : nil
-                        
-                        // Set or update the DM conversation state, use the most recent markedReadAt (lastSeenDMCreatedAt)
-                        if let existingDMState = dmStates[accountPubkey + "-" + contactPubkey], let newerMarkedReadAt = markedReadAt, newerMarkedReadAt > (existingDMState.3 ?? Date(timeIntervalSince1970: 0) ) {
-                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, existingDMState.2, newerMarkedReadAt)
-                        }
-                        else {
-                            dmStates[accountPubkey + "-" + contactPubkey] = (accountPubkey, contactPubkey, false, markedReadAt)
-                        }
-                    }
-                }
-            }
-        }
-        
-        for (key, value) in dmStates {
-            if existingDMkeys.contains(key) { continue }
-            let record = DMState(context: context)
-            record.accountPubkey = value.0
-            record.contactPubkey = value.1
-            record.accepted = value.2
-            record.markedReadAt = value.3
-        }
-
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateDMState.rawValue
-    }
-    
     static func runTempAlways(context: NSManagedObjectContext) {
         
     }
@@ -950,280 +820,6 @@ struct Maintenance {
         migration.migrationCode = migrationCode.putReferencedAtag.rawValue
     }
     
-    // Migrate Bookmarks to iCloud-ready table
-    static func runMigrateBookmarks(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateBookmarks, context: context) else { return }
-        
-        // find all bookmarks, add them to Bookmark table
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "bookmarkedBy.@count > 0")
-        
-        var migratedBookmarks:Int = 0
-        if let bookmarks = try? context.fetch(fr) {
-            L.maintenance.info("migrateBookmarks: Found \(bookmarks.count) bookmarks")
-            for bookmark in bookmarks {
-                let migratedBookmark = Bookmark(context: context)
-                migratedBookmark.eventId = bookmark.id
-                migratedBookmark.json = bookmark.toNEvent().eventJson()
-                migratedBookmark.createdAt = bookmark.date // (We don't know when the bookmark was added, so use event created_at here)
-                migratedBookmarks += 1
-            }
-            L.maintenance.info("migrateBookmarks: Migrated \(migratedBookmarks) bokmarks")
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateBookmarks.rawValue
-    }
-    
-    // Migrate Bookmarks to iCloud-ready table
-    static func runMigratePrivateNotes(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migratePrivateNotes, context: context) else { return }
-        
-        // Oops code. Uncomment during testing if we need to run this again.
-//        let fr0 = CloudPrivateNote.fetchRequest()
-//        fr0.predicate = NSPredicate(value: true)
-//        if let cpns = try? context.fetch(fr0) {
-//            for cpn in cpns {
-//                context.delete(cpn)
-//            }
-//        }
-        
-        
-        // find all private notes, migrate to CloudPrivateNote
-        // set type, eventId or pubkey based on type, and json
-        let fr = PrivateNote.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-        
-        var migratedPrivateNotes:Int = 0
-        if let privateNotes = try? context.fetch(fr) {
-            L.maintenance.info("migratePrivateNotes: Found \(privateNotes.count) private notes")
-            for pn in privateNotes {
-                if let post = pn.post { // Note on post
-                    let migratedPN = CloudPrivateNote(context: context)
-                    migratedPN.type = CloudPrivateNote.PrivateNoteType.post.rawValue
-                    migratedPN.eventId = post.id
-                    migratedPN.content = pn.content
-                    migratedPN.createdAt = pn.createdAt
-                    migratedPN.updatedAt = pn.updatedAt
-                    migratedPN.json = post.toNEvent().eventJson()
-                }
-                else if let contact = pn.contact { // Note on contat
-                    let migratedPN = CloudPrivateNote(context: context)
-                    migratedPN.type = CloudPrivateNote.PrivateNoteType.contact.rawValue
-                    migratedPN.pubkey = contact.pubkey
-                    migratedPN.content = pn.content
-                    migratedPN.createdAt = pn.createdAt
-                    migratedPN.updatedAt = pn.updatedAt
-                    migratedPN.json = Event.fetchReplacableEvent(0, pubkey: contact.pubkey, context: context)?.toNEvent().eventJson() // probaby won't have the kind 0 eventd
-                    
-                }
-                migratedPrivateNotes += 1
-            }
-            L.maintenance.info("migratePrivateNotes: Migrated \(migratedPrivateNotes) private notes")
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migratePrivateNotes.rawValue
-    }
-    
-    // Migrate Custom feeds to iCloud-ready table
-    static func runMigrateCustomFeeds(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateCustomFeeds, context: context) else { return }
-        
-        // Oops code. Uncomment during testing if we need to run this again.
-//        let fr0 = CloudFeed.fetchRequest()
-//        fr0.predicate = NSPredicate(value: true)
-//        if let cfs = try? context.fetch(fr0) {
-//            for cf in cfs {
-//                context.delete(cf)
-//            }
-//        }
-        
-        
-        // find all custom feeds, migrate to CloudPrivateNote
-        // set same attributes and convert Contacts and Relays to space seperated strings of pubkeys and relay urls
-        let fr = NosturList.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-        
-        var migratedCustomFeed:Int = 0
-        if let customFeeds = try? context.fetch(fr) {
-            L.maintenance.info("migrateCustomFeeds: Found \(customFeeds.count) custom feeds")
-            for cf in customFeeds {
-                if let type = cf.type, type == ListType.relays.rawValue {
-                    // Relays
-                    let migratedCF = CloudFeed(context: context)
-                    migratedCF.type = ListType.relays.rawValue
-                    migratedCF.createdAt = cf.createdAt ?? .now
-                    migratedCF.followingHashtags_ = cf.followingHashtags_
-                    migratedCF.id = cf.id
-                    migratedCF.name = cf.name
-                    migratedCF.refreshedAt = cf.refreshedAt
-                    migratedCF.showAsTab = cf.showAsTab
-                    migratedCF.wotEnabled = cf.wotEnabled
-                    migratedCF.relays = cf.relays_.compactMap { $0.url }.joined(separator: " ")
-                }
-                else { // Pubkeys
-                    let migratedCF = CloudFeed(context: context)
-                    migratedCF.type = ListType.pubkeys.rawValue
-                    migratedCF.createdAt = cf.createdAt ?? .now
-                    migratedCF.followingHashtags_ = cf.followingHashtags_
-                    migratedCF.id = cf.id
-                    migratedCF.name = cf.name
-                    migratedCF.refreshedAt = cf.refreshedAt
-                    migratedCF.showAsTab = cf.showAsTab
-                    migratedCF.wotEnabled = cf.wotEnabled
-                    migratedCF.contactPubkeys = Set(cf.contacts_.map { $0.pubkey })
-                }
-                migratedCustomFeed += 1
-            }
-            L.maintenance.info("migrateCustomFeeds: Migrated \(migratedCustomFeed) custom feeds")
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateCustomFeeds.rawValue
-    }
-    
-    
-    // Migrate Blocks/Muted Conversations to iCloud-ready table
-    static func runMigrateBlocks(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateBlocks, context: context) else { return }
-        
-        // for all accounts, get mutedRootIds and blockedPubkeys
-        var mutedRootIds = Set<String>()
-        var blockedPubkeys = Set<String>()
-        
-        for account in Account.fetchAccounts(context: context) {
-            blockedPubkeys.formUnion(account.blockedPubkeys_)
-            mutedRootIds.formUnion(account.mutedRootIds_)
-        }
-        
-        L.maintenance.info("runMigrateBlocks: migrating \(mutedRootIds.count) muted conversations and \(blockedPubkeys.count) blocked contacts")
-        
-        // Create new records in iCloud tables
-        for blockedPubkey in blockedPubkeys {
-            let block = CloudBlocked(context: context)
-            block.type = .contact
-            block.fixedName = Contact.fetchByPubkey(blockedPubkey, context: context)?.fixedName ?? ""
-            block.pubkey = blockedPubkey
-            block.createdAt_ = .now // use .now because we don't know at migration
-        }
-        
-        for mutedRootId in mutedRootIds {
-            let block = CloudBlocked(context: context)
-            block.type = .post
-            block.eventId = mutedRootId
-            block.createdAt_ = .now // use .now because we don't know at migration
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateBlocks.rawValue
-    }
-    
-    // Migrate Accounts to iCloud-ready table
-    static func runMigrateAccounts(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateAccounts, context: context) else { return }
-        
-        // Oops code. Uncomment during testing if we need to run this again.
-//        let fr0 = CloudAccount.fetchRequest()
-//        fr0.predicate = NSPredicate(value: true)
-//        if let cfs = try? context.fetch(fr0) {
-//            for cf in cfs {
-//                context.delete(cf)
-//            }
-//        }
-        
-        
-        // find all Accounts, migrate to CloudAccount
-        // set same attributes and convert follows to followingPubkeys
-        let fr = Account.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-        
-        var migratedAccounts:Int = 0
-        if let accounts = try? context.fetch(fr) {
-            L.maintenance.info("migrateAccounts: Found \(accounts.count) accounts")
-            for account in accounts {
-                let migrated = CloudAccount(context: context)
-                migrated.about_ = account.about
-                migrated.banner_ = account.banner
-                migrated.createdAt = account.createdAt
-                migrated.display_name_ = account.display_name
-                migrated.flags = account.flags
-                migrated.followingHashtags_ = account.followingHashtags_
-                
-                // Account.follows DB relation is removed, so we fallback to kind 3 now
-                if let followingList = Event.fetchReplacableEvent(3, pubkey: account.publicKey, context: context) {
-                    let followingPubkeys = followingList.fastPs.map { $0.1 }
-                    let followingContacts = Contact.fetchByPubkeys(followingPubkeys, context: context)
-                    migrated.followingPubkeys_ = followingContacts.filter { !$0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
-                    migrated.privateFollowingPubkeys_ = followingContacts.filter { $0.privateFollow } .map { $0.pubkey }.joined(separator: " ")
-                }
-
-                migrated.isNC = account.isNC
-                migrated.lastFollowerCreatedAt = account.lastFollowerCreatedAt
-                migrated.lastProfileReceivedAt = account.lastProfileReceivedAt
-                migrated.lastSeenDMRequestCreatedAt = account.lastSeenDMRequestCreatedAt
-                migrated.lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
-                migrated.lastSeenReactionCreatedAt = account.lastSeenReactionCreatedAt
-                migrated.lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
-                migrated.lastSeenZapCreatedAt = account.lastSeenZapCreatedAt
-                migrated.lud06_ = account.lud06
-                migrated.lud16_ = account.lud16
-                migrated.name_ = account.name
-                migrated.ncRelay_ = account.ncRelay
-                migrated.nip05_ = account.nip05
-                migrated.picture_ = account.picture
-                migrated.publicKey_ = account.publicKey
-                
-                if let pk = account.privateKey { // This should sync for accounts that may not have .synchronizable(true) when initially created
-                    AccountManager.shared.storePrivateKey(privateKeyHex: pk, forPublicKeyHex: account.publicKey)
-                    migrated.flagsSet.insert("full_account")
-                }
-                
-                migratedAccounts += 1
-            }
-            L.maintenance.info("migrateAccounts: Migrated \(migratedAccounts) accounts")
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateAccounts.rawValue
-    }
-    
-    // Migrate DM conversation states to iCloud-ready table
-    static func runMigrateDMsToCloud(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateDMsToCloud, context: context) else { return }
-        
-        // Oops code. Uncomment during testing if we need to run this again.
-//        let fr0 = CloudDMState.fetchRequest()
-//        fr0.predicate = NSPredicate(value: true)
-//        if let dmStates = try? context.fetch(fr0) {
-//            for dmState in dmStates {
-//                context.delete(dmState)
-//            }
-//        }
-        
-        let fr = DMState.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-        
-        var migratedDMStates:Int = 0
-        if let dmStates = try? context.fetch(fr) {
-            L.maintenance.info("migrateDMs: Found \(dmStates.count) DM conversations")
-            for dmState in dmStates {
-                let migratedDMState = CloudDMState(context: context)
-                migratedDMState.accepted = dmState.accepted
-                migratedDMState.accountPubkey_ = dmState.accountPubkey
-                migratedDMState.contactPubkey_ = dmState.contactPubkey
-                migratedDMState.markedReadAt_ = dmState.markedReadAt
-                migratedDMState.isPinned = false
-                migratedDMState.isHidden = false
-                migratedDMStates += 1
-            }
-            L.maintenance.info("migrateDMs: Migrated \(migratedDMStates) DM conversations")
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateDMsToCloud.rawValue
-    }
-    
     // Fix private follows
     static func runFixPrivateFollows(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.fixPrivateFollows, context: context) else { return }
@@ -1246,33 +842,6 @@ struct Maintenance {
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.fixPrivateFollows.rawValue
-    }
-    
-    // Migrate Relays to iCloud-ready table
-    static func runMigrateRelays(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateRelays, context: context) else { return }
-        
-        let fr = Relay.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-        
-        var migrateRelays:Int = 0
-        if let relays = try? context.fetch(fr) {
-            L.maintenance.info("migrateRelays: Found \(relays.count) relays")
-            for r in relays {
-                // Relays
-                let migratedRelay = CloudRelay(context: context)
-                migratedRelay.createdAt_ = (r.createdAt ?? .now)
-                migratedRelay.excludedPubkeys_ = r.excludedPubkeys_
-                migratedRelay.read = r.read
-                migratedRelay.write = r.write
-                migratedRelay.url_ = r.url
-                migrateRelays += 1
-            }
-            L.maintenance.info("migrateCustomFeeds: Migrated \(migrateRelays) relays")
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateRelays.rawValue
     }
     
     // Add "full_account" flag to accounts for which we have private key
@@ -1388,38 +957,6 @@ struct Maintenance {
         migration.migrationCode = migrationCode.updateKeychainInfo.rawValue
     }
     
-    // Migrate ListState fields to CloudFeed
-    static func runMigrateListStateToCustomFeeds(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.migrateListStateToCloudFeed, context: context) else { return }
-        
-
-        // For every existing CloudFeed, find the related ListState, and migrate hideReplies to repliesEnabled (inverted)
-        let fr = CloudFeed.fetchRequest()
-        fr.predicate = NSPredicate(value: true)
-        
-        var migratedListStates: Int = 0
-        if let customFeeds = try? context.fetch(fr) {
-            L.maintenance.info("runMigrateListStateToCustomFeeds: Found \(customFeeds.count) custom feeds")
-            for cf in customFeeds {
-                
-                guard cf.subscriptionId.starts(with: "List-") else { continue }
-                
-                // We have related ListState?
-                let fr = ListState.fetchRequest()
-                fr.predicate = NSPredicate(format: "listId == %@", cf.subscriptionId)
-                
-                if let listState =  try? context.fetch(fr).first {
-                    cf.repliesEnabled = !listState.hideReplies
-                    migratedListStates += 1
-                }
-            }
-            L.maintenance.info("runMigrateListStateToCustomFeeds: Migrated \(migratedListStates) list states")
-        }
-                
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.migrateListStateToCloudFeed.rawValue
-    }
-    
     // Run once to fill aTag
     // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
 //    static func runSetAtagForReplacableEvents(context: NSManagedObjectContext) {
@@ -1468,8 +1005,6 @@ struct Maintenance {
         // Run once to fix false positive results incorrectly cached
         case fixImposterFalsePositives = "fixImposterFalsePositives"
         
-        case migrateDMState = "runMigrateDMState20231017"
-        
         // Need to run it again... false positives still
         // And again - found another bug during new account onboarding
         case fixImposterFalsePositivesAgainAgain = "fixImposterFalsePositivesAgainAgain"
@@ -1481,31 +1016,13 @@ struct Maintenance {
         case runPutRepostedPubkeyInOtherPubkey = "runPutRepostedPubkeyInOtherPubkey"
         
         // Cache .reactionTo.pubkey in .otherPubkey
-        case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"  
-        
-        // Migrate Bookmarks to iCloud table
-        case migrateBookmarks = "migrateBookmarks03112023"
+        case runPutReactionToPubkeyInOtherPubkey = "runPutReactionToPubkeyInOtherPubkey"
         
         // Migrate Private Notes to iCloud
-        case migratePrivateNotes = "migratePrivateNotes"        
-        
-        // Migrate Custom feeds to iCloud
-        case migrateCustomFeeds = "migrateCustomFeeds"   
-        
-        // Migrate blocks/mutes to iCloud
-        case migrateBlocks = "migrateBlocks"
-        
-        // Migrate Accounts to iCloud
-        case migrateAccounts = "migrateAccounts"
-        
-        // Migrate DM conversation state to iCloud
-        case migrateDMsToCloud = "migrateDMs"   
+        case migratePrivateNotes = "migratePrivateNotes"
         
         // Fix private follows
         case fixPrivateFollows = "fixPrivateFollows"
-        
-        // Migrate relays state to iCloud
-        case migrateRelays = "migrateRelays"        
         
         // Update keychain info
         case updateKeychainInfo = "updateKeychainInfo"
@@ -1515,9 +1032,6 @@ struct Maintenance {
 
         // Fix missing DM States
         case fixMissingDMStates = "fixMissingDMStates"
-        
-        // Migrate ListState fields to CloudFeed
-        case migrateListStateToCloudFeed = "migrateListStateToCloudFeed"
         
         // Put first A tag in .otherAtag
         case putReferencedAtag = "putReferencedAtag"

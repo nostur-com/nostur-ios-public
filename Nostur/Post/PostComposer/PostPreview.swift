@@ -107,7 +107,6 @@ func createPreviewEvent(_ event: NEvent) -> Event {
     previewEvent.pubkey = event.publicKey
     previewEvent.likesCount = 0
     previewEvent.isRepost = event.kind == .repost
-    previewEvent.contact = Contact.fetchByPubkey(event.publicKey, context: context)
     previewEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
     previewEvent.isScreenshot = true
             

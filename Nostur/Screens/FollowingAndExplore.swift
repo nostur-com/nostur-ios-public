@@ -418,13 +418,6 @@ struct FollowingAndExplore: View {
             DataProvider.shared().save() { // callback after save:
                 followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
             }
-            
-            // Check for existing ListState
-            let fr = ListState.fetchRequest()
-            fr.predicate = NSPredicate(format: "listId = %@ AND pubkey = %@", "Following", account.publicKey)
-            if let followingListState = try? context.fetch(fr).first {
-                newFollowingFeed.repliesEnabled = !followingListState.hideReplies
-            }
         }
     }
     
