@@ -189,7 +189,7 @@ class NRTextParser { // TEXT things
 
         var sanityIndex = 0
         for match in Self.npubNprofRegex.matches(in: replacedString, range: nsRange).reversed() {
-            if sanityIndex > 225 { break }
+            if sanityIndex > 600 { break }
             sanityIndex += 1
             var replacement = (replacedString as NSString).substring(with: match.range)
             

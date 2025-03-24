@@ -263,7 +263,7 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
                 let bgContext = bg()
                 bgContext.perform {
                     _ = Event.saveEvent(event: signedEvent, context: bgContext)
-                    Contact.saveOrUpdateContact(event: signedEvent)
+                    Contact.saveOrUpdateContact(event: signedEvent, context: bgContext)
                     DataProvider.shared().bgSave()
                 }
                 // broadcast to relays
@@ -279,7 +279,7 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
             let bgContext = bg()
             bgContext.perform {
                 _ = Event.saveEvent(event: signedEvent, context: bgContext)
-                Contact.saveOrUpdateContact(event: signedEvent)
+                Contact.saveOrUpdateContact(event: signedEvent, context: bgContext)
                 DataProvider.shared().bgSave()
             }
             // broadcast to relays

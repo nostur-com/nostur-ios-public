@@ -71,7 +71,7 @@ public class PreviewEnvironment {
                 let savedEvent = Event.saveEvent(event: event, context: context)
                 
                 if event.kind == .setMetadata {
-                    Contact.saveOrUpdateContact(event: event)
+                    Contact.saveOrUpdateContact(event: event, context: context)
                 }
                 
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)

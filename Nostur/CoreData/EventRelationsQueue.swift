@@ -128,13 +128,11 @@ class EventRelationsQueue {
     /// - Parameter contact: Contact should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingContact(_ contact: Contact, debugInfo: String? = "") {
         if contact.managedObjectContext == ctx {
-            ctx.perform { [unowned self] in
-                guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
-                self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)
+            guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
+            self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)
 #if DEBUG
-                    L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "") -[LOG]-")
+                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "") -[LOG]-")
 #endif
-            }
         }
         else {
             ctx.perform { [unowned self] in

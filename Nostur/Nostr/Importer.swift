@@ -291,7 +291,7 @@ class Importer {
                     }
                     
                     if event.kind == .setMetadata {
-                        Contact.saveOrUpdateContact(event: event)
+                        Contact.saveOrUpdateContact(event: event, context: bgContext)
                     }
                     
                     
@@ -518,7 +518,7 @@ class Importer {
                     }
                     
                     if event.kind == .setMetadata {
-                        Contact.saveOrUpdateContact(event: event)
+                        Contact.saveOrUpdateContact(event: event, context: bgContext)
                     }
                     
                     // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)

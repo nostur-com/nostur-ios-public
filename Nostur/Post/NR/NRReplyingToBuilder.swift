@@ -113,5 +113,7 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
         }
     }
     
+    // Save the cache miss so we don't try again for no reason
+    PubkeyUsernameCache.shared.setObject(for: pubkey, value: "...")
     return "..."
 }

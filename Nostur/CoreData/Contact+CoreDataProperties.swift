@@ -193,11 +193,9 @@ extension Contact : Identifiable {
         }
     }
 
-    static func saveOrUpdateContact(event:NEvent) {
+    static func saveOrUpdateContact(event: NEvent, context: NSManagedObjectContext) {
         #if DEBUG
-            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                fatalError("Should only be called from bg()")
-            }
+        shouldBeBg()
         #endif
         let decoder = JSONDecoder()
         guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
@@ -214,7 +212,7 @@ extension Contact : Identifiable {
             request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
             request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
             request.fetchLimit = 1
-            contact = try? bg().fetch(request).first
+            contact = try? context.fetch(request).first
         }
         
         if let contact {
@@ -258,6 +256,8 @@ extension Contact : Identifiable {
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
                 contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
                 
+                PubkeyUsernameCache.shared.setObject(for: event.publicKey, value: contact.anyName)
+                
                 // TODO: Should use this more?:
                 Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
                 
@@ -274,7 +274,7 @@ extension Contact : Identifiable {
         else {
             // Received metadata is not in any Contact
             // insert new contact
-            let contact = Contact(context: bg())
+            let contact = Contact(context: context)
             contact.pubkey = event.publicKey
             contact.name = metaData.name
             contact.display_name = metaData.display_name
@@ -291,6 +291,9 @@ extension Contact : Identifiable {
                 contact.fixedName = contact.anyName
             }
             contact.fixedPfp = contact.picture // For showing "Previously known as"
+            
+            PubkeyUsernameCache.shared.setObject(for: event.publicKey, value: contact.anyName)
+            
             Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
             EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "saveOrUpdateContact")
             updateRelatedEvents(contact)

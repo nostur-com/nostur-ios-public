@@ -82,7 +82,7 @@ struct NewAccountSheet: View {
             let bgContext = bg()
             bgContext.perform {
                 _ = Event.saveEvent(event: newKind0EventSigned, context: bgContext)
-                Contact.saveOrUpdateContact(event: newKind0EventSigned)
+                Contact.saveOrUpdateContact(event: newKind0EventSigned, context: bgContext)
                 
                 DataProvider.shared().bgSave()
             }
