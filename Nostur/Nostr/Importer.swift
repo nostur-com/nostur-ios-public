@@ -137,7 +137,9 @@ class Importer {
             .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
-                L.importing.debug("🏎️🏎️ importEvents() (PRIO) after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.05) -[LOG]-")
+#if DEBUG
+                L.importing.debug("🏎️🏎️ importEvents() (PRIO) after relay message received (throttle = 0.15 seconds), but sends first after debounce (0.05) -[LOG]-")
+#endif
                 self?.importPrioEvents()
             }
             .store(in: &subscriptions)
@@ -403,7 +405,9 @@ class Importer {
             }
             self.isImporting = false
             if (self.needsImport) {
+#if DEBUG
                 L.importing.debug("🏎️🏎️ Chaining next import ")
+#endif
                 self.needsImport = false
                 self.importEvents()
             }
@@ -417,7 +421,9 @@ class Importer {
         bgContext.perform { [unowned self] in
             let forImportsCount = MessageParser.shared.priorityBucket.count
             guard forImportsCount != 0 else {
+#if DEBUG
                 L.importing.debug("🏎️🏎️ importPrioEvents() nothing to import.")
+#endif
                 return
             }
             self.listStatus.send("Processing \(forImportsCount) items...")
@@ -429,13 +435,17 @@ class Importer {
                 while let message = MessageParser.shared.priorityBucket.popFirst() {
                     count = count + 1
                     guard let event = message.event else {
+#if DEBUG
                         L.importing.error("🔴🔴 message.event is nil \(message.message)")
+#endif
                         continue
                     }
                     
                     if (MessageParser.shared.isSignatureVerificationEnabled) {
                         guard try event.verified() else {
+#if DEBUG
                             L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
+#endif
                             continue
                         }
                     }

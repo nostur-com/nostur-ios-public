@@ -206,7 +206,7 @@ struct InnerPFP: View {
                 guard pubkey != newPubkey else { return }
                 self.updatedPictureUrl = nil
             }
-            .animation(.smooth, value: renderCase)
+//            .animation(.smooth, value: renderCase)
     }
 }
 

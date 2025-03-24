@@ -145,7 +145,7 @@ extension Event {
     static func getParentEvents(_ event:Event, fixRelations:Bool = false, until:String? = nil) -> [Event] {
         let RECURSION_LIMIT = 35 // PREVENT SPAM THREADS
         var parentEvents = [Event]()
-        var currentEvent:Event? = event
+        var currentEvent: Event? = event
         var i = 0
         while (currentEvent != nil) {
             if i > RECURSION_LIMIT {
@@ -766,10 +766,6 @@ extension Event {
         zapRequest.sig = event.signature
         zapRequest.pubkey = event.publicKey
         zapRequest.likesCount = 0
-        
-        
-        // set relation to Contact
-        zapRequest.contact = Contact.fetchByPubkey(event.publicKey, context: context)
         
         zapRequest.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
         

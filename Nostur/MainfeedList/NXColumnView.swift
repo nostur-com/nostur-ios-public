@@ -24,12 +24,12 @@ struct NXColumnView: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        NBNavigationStack {
+        ZStack {
             switch(viewModel.viewState) {
             case .loading:
                 ZStack(alignment: .center) {
-                    themes.theme.listBackground
-                    ProgressView()
+//                    themes.theme.listBackground
+                    CenteredProgressView()
                 }
             case .posts(let nrPosts):
                 NXPostsFeed(vm: viewModel, posts: nrPosts)
