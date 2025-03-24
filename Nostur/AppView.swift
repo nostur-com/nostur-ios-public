@@ -65,6 +65,7 @@ struct AppView: View {
 }
 
 extension AppView {
+    
     enum ViewState {
         case starting
         case onboarding
@@ -150,10 +151,8 @@ extension AppView {
             break
         }
     }
-}
-
-
-func handleUrl(_ url: URL, loggedInAccount: LoggedInAccount) {
+    
+    private func handleUrl(_ url: URL, loggedInAccount: LoggedInAccount) {
 #if DEBUG
     L.og.debug("handleUrl: \(url.absoluteString)")
 #endif

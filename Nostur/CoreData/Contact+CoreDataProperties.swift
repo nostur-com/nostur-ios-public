@@ -127,8 +127,8 @@ extension Contact : Identifiable {
 //        }
     }
     
-    var nip05nameOnly:String {
-        guard nip05veried else { return "" }
+    var nip05nameOnly: String {
+        guard nip05veried else { return "..." }
         guard let parts = nip05?.split(separator: "@"), parts.count >= 2 else { return "" }
         guard let name = parts[safe: 0] else { return "" }
         guard !name.isEmpty else { return "" }

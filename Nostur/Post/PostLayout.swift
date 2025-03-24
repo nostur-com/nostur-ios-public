@@ -157,6 +157,8 @@ struct PostLayout<Content: View>: View {
 
                 content
                 
+                // No need for DetailFooterFragment here because .isDetail will always be in .fullWidthLayout
+                
                 if (!hideFooter && settings.rowFooterEnabled) {
                     CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)

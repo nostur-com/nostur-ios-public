@@ -107,6 +107,7 @@ class AccountsState: ObservableObject {
 }
 
 extension AccountsState {
+    
     enum AccountTask: Hashable {
         case followListReady // kind:3
         case accountInfoReady(LoggedInAccount) // kind:0
@@ -114,6 +115,7 @@ extension AccountsState {
         case outboxRelaysReady // kind:10002
         case WoTready
     }
+    
 }
 
 

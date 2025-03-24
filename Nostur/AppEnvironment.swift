@@ -20,6 +20,7 @@ struct AppEnvironment<Content: View>: View {
     var body: some View {
         self.content
             .tint(themes.theme.accent)
+            .accentColor(themes.theme.accent)
             .environmentObject(themes)
             .environmentObject(AppState.shared)
             .environmentObject(AccountsState.shared)

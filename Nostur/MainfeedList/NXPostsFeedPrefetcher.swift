@@ -22,7 +22,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel, let availableWidth = columnViewModel.availableWidth else { return }
+            guard let columnViewModel else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []
@@ -30,7 +30,9 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
             for item in postsForIndexPaths {
                 if !item.missingPs.isEmpty {
                     QueuedFetcher.shared.enqueue(pTags: item.missingPs)
+#if DEBUG
                     L.fetching.debug("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")
+#endif
                 }
                 
                 // Everything below here is image or link preview fetching, skip if low data mode
@@ -51,17 +53,8 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                     switch element {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                        // SHOULD BE SAME AS IN ContentRenderer:
-                        if let dimensions = mediaContent.dimensions {
-                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
-                        }
-                        else {
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch (unscaled)"))
-                        }
+                        // SHOULD BE SAME AS IN MediaViewVM:
+                        imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
                     default:
                         continue
                     }
@@ -78,7 +71,9 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                         do {
                             let tags = try result.get()
                             LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
+#if DEBUG
                             L.og.debug("✓✓ Loaded link preview meta tags from \(url)")
+#endif
                         }
                         catch { }
                     }
@@ -107,7 +102,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel, let availableWidth = columnViewModel.availableWidth else { return }
+            guard let columnViewModel else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []
@@ -136,18 +131,8 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                     switch element {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                        // SHOULD BE SAME AS IN ContentRenderer:
-                        if let dimensions = mediaContent.dimensions {
-                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            
-                            
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
-                        }
-                        else {
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch (unscaled)"))
-                        }
+                        // SHOULD BE SAME AS IN MediaViewVM:
+                        imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
                     default:
                         continue
                     }
@@ -185,7 +170,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel, let availableWidth = columnViewModel.availableWidth else { return }
+            guard let columnViewModel else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []
@@ -193,7 +178,9 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
             for item in postsForIndexPaths {
                 if !item.missingPs.isEmpty {
                     QueuedFetcher.shared.enqueue(pTags: item.missingPs)
+#if DEBUG
                     L.fetching.debug("🟠🟠 Prefetcher: \(item.missingPs.count) missing contacts (event.pubkey or event.pTags) for: \(item.id)")
+#endif
                 }
                 
                 // Everything below here is image or link preview fetching, skip if low data mode
@@ -214,17 +201,8 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                     switch element {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                        // SHOULD BE SAME AS IN ContentRenderer:
-                        if let dimensions = mediaContent.dimensions {
-                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
-                        }
-                        else {
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch (unscaled)"))
-                        }
+                        // SHOULD BE SAME AS IN MediaViewVM:
+                        imageRequests.append(makeImageRequest(mediaContent.url, label: "prefetch"))
                     default:
                         continue
                     }
@@ -268,7 +246,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel, let availableWidth = columnViewModel.availableWidth else { return }
+            guard let columnViewModel else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []
@@ -297,18 +275,8 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                     switch element {
                     case .image(let mediaContent):
                         if mediaContent.url.absoluteString.prefix(7) == "http://" { continue }
-                        // SHOULD BE SAME AS IN ContentRenderer:
-                        if let dimensions = mediaContent.dimensions {
-                            let scaledDimensions = Nostur.scaledToFit(dimensions, scale: UIScreen.main.scale, maxWidth: dimensions.width, maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                            
-                            
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
-                        }
-                        else {
-                            // SHOULD BE EXACT SAME PARAMS AS IN SingleMediaViewer!!
-                            imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch (unscaled)"))
-                        }
+                        // SHOULD BE SAME AS IN MediaViewVM:
+                        imageRequests.append(makeImageRequest(mediaContent.url, label: "cancel prefetch"))
                     default:
                         continue
                     }

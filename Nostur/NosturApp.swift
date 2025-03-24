@@ -47,6 +47,8 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             AppView()
+                .environmentObject(accountsState)
+                .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
         }
     }
 }
