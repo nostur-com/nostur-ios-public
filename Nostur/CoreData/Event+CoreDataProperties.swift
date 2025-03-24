@@ -958,7 +958,12 @@ extension Event {
                 if let firstP = event.firstP() {
 //                    savedEvent.objectWillChange.send()
                     savedEvent.otherPubkey = firstP
-                    savedEvent.zappedContact = Contact.fetchByPubkey(firstP, context: context)
+                    if let zappedContact = Contact.fetchByPubkey(firstP, context: context) {
+                        CoreDataRelationFixer.shared.addTask({
+                            guard contextWontCrash([savedEvent, zappedContact], debugInfo: "KK savedEvent.zappedContact = zappedContact") else { return }
+                            savedEvent.zappedContact = zappedContact
+                        })
+                    }
                 }
             }
             
@@ -1006,7 +1011,7 @@ extension Event {
                 
                 if let kind6firstQuote = kind6firstQuote {
                     CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, kind6firstQuote]) else { return }
+                        guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: "#[0] savedEvent.firstQuote = kind6firstQuote") else { return }
                         savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
                     })
                 }
@@ -1014,7 +1019,7 @@ extension Event {
                     // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
                     if let repostedEvent = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                         CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, repostedEvent]) else { return }
+                            guard contextWontCrash([savedEvent, repostedEvent], debugInfo: "II savedEvent.firstQuote = repostedEvent") else { return }
                             savedEvent.firstQuote = repostedEvent
                         })
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
@@ -1037,7 +1042,7 @@ extension Event {
                 if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
                     savedEvent.replyToId = dbArticle.id
                     CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, dbArticle]) else { return }
+                        guard contextWontCrash([savedEvent, dbArticle], debugInfo: "HH savedEvent.replyTo = dbArticle") else { return }
                         savedEvent.replyTo = dbArticle
                     })
                     
@@ -1057,7 +1062,7 @@ extension Event {
                 if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
                     savedEvent.replyToRootId = dbArticle.id
                     CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, dbArticle]) else { return }
+                        guard contextWontCrash([savedEvent, dbArticle], debugInfo: "GG savedEvent.replyToRoot = dbArticle") else { return }
                         savedEvent.replyToRoot = dbArticle
                     })
                 }
@@ -1082,7 +1087,7 @@ extension Event {
                     CoreDataRelationFixer.shared.addTask({
                         // Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
                         // (when opening from bookmarks)
-                        guard contextWontCrash([savedEvent, parent]) else { return }
+                        guard contextWontCrash([savedEvent, parent], debugInfo: "FF savedEvent.replyTo = parent") else { return }
                         savedEvent.replyTo = parent
                     })
                     // Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
@@ -1107,7 +1112,7 @@ extension Event {
                 if let root = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     
                     CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, root]) else { return }
+                        guard contextWontCrash([savedEvent, root], debugInfo: "EE savedEvent.replyToRoot = root") else { return }
                         savedEvent.replyToRoot = root
                     })
                     
@@ -1117,7 +1122,7 @@ extension Event {
                     ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRootInverse, id:  root.id, event: savedEvent))
                     if (savedEvent.replyToId == savedEvent.replyToRootId) {
                         CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, root]) else { return }
+                            guard contextWontCrash([savedEvent, root], debugInfo: "DD savedEvent.replyTo = root") else { return }
                             savedEvent.replyTo = root // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                         })
                         root.addToReplies(savedEvent)
@@ -1134,7 +1139,7 @@ extension Event {
                 // so set replyToRoot (aTag) as replyTo
                 savedEvent.replyToId = savedEvent.replyToRootId
                 CoreDataRelationFixer.shared.addTask({
-                    guard let replyToRoot = savedEvent.replyToRoot, contextWontCrash([savedEvent, replyToRoot]) else { return }
+                    guard let replyToRoot = savedEvent.replyToRoot, contextWontCrash([savedEvent, replyToRoot], debugInfo: "CC savedEvent.replyTo = replyToRoot") else { return }
                     savedEvent.replyTo = replyToRoot
                     
                     if let parent = savedEvent.replyTo {
@@ -1241,7 +1246,7 @@ extension Event {
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 CoreDataRelationFixer.shared.addTask({
-                    guard contextWontCrash([savedEvent, firstQuote]) else { return }
+                    guard contextWontCrash([savedEvent, firstQuote], debugInfo: "BB savedEvent.firstQuote = firstQuote") else { return }
                     savedEvent.firstQuote = firstQuote
                 })
                 
@@ -1260,7 +1265,7 @@ extension Event {
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
                 CoreDataRelationFixer.shared.addTask({
-                    guard contextWontCrash([savedEvent, firstQuote]) else { return }
+                    guard contextWontCrash([savedEvent, firstQuote], debugInfo: "AA savedEvent.firstQuote = firstQuote") else { return }
                     savedEvent.firstQuote = firstQuote
                 })
                 
@@ -1274,7 +1279,7 @@ extension Event {
             savedEvent.firstQuoteId = kind6firstQuote?.id ?? event.firstE()
             if let kind6firstQuote = kind6firstQuote {
                 CoreDataRelationFixer.shared.addTask({
-                    guard contextWontCrash([savedEvent, kind6firstQuote]) else { return }
+                    guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: ".repost savedEvent.firstQuote = kind6firstQuote") else { return }
                     savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
                     
                     
@@ -1418,7 +1423,7 @@ extension Event {
             for waitingEvent in awaitingEvents {
                 if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
                     CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, waitingEvent]) else { return }
+                        guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyTo = savedEvent") else { return }
                         waitingEvent.replyTo = savedEvent
                     })
 //                    waitingEvent.replyToUpdated.send(savedEvent)
@@ -1426,7 +1431,7 @@ extension Event {
                 }
                 if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
                     CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, waitingEvent]) else { return }
+                        guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyToRoot = savedEvent") else { return }
                         waitingEvent.replyToRoot = savedEvent
                     })
 //                    waitingEvent.replyToRootUpdated.send(savedEvent)
@@ -1436,7 +1441,7 @@ extension Event {
                 if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
                     CoreDataRelationFixer.shared.addTask({
                         // Ensure both objects have a valid context
-                        guard contextWontCrash([waitingEvent, savedEvent]) else { return }
+                        guard contextWontCrash([waitingEvent, savedEvent], debugInfo: "waitingEvent.firstQuote = savedEvent") else { return }
                         waitingEvent.firstQuote = savedEvent
                     })
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))
@@ -1489,13 +1494,23 @@ extension Event {
 // Can't fix context crash. We only have main context and bg context
 // Sometimes there is suddely 0x0 context. Maybe when unsaved? Don't know how
 // Just use this guard everywhere so we never crash anymore
-func contextWontCrash(_ events: [Event]) -> Bool {
+func contextWontCrash(_ objects: [NSManagedObject], debugInfo: String? = nil) -> Bool {
     var theContext: NSManagedObjectContext? // <-- All events should have this context
     
-    for event in events {
+    if objects.filter({ $0.managedObjectContext == nil }).count == objects.count {
+        // if no objects have context, that should be fine too, none are saved yet
+#if DEBUG
+        L.og.debug("🟠🟠 all contexts nil, should be fine? - \(debugInfo ?? "")")
+#endif
+        return true
+    }
+    
+    for object in objects {
         // We should at least have A context
-        guard let context = event.managedObjectContext else {
-            L.og.debug("🔴🔴 Missing context, preventing crash.")
+        guard let context = object.managedObjectContext else {
+#if DEBUG
+            L.og.debug("🔴🔴 Missing context, preventing crash. - \(debugInfo ?? "")")
+#endif
             return false
         }
         
@@ -1504,7 +1519,9 @@ func contextWontCrash(_ events: [Event]) -> Bool {
         }
         else { // All other events should have the same context as the first event
             if theContext != context {
-                L.og.debug("🔴🔴 Context is not the same for all events, preventing crash.")
+#if DEBUG
+                L.og.debug("🔴🔴 Context is not the same for all events, preventing crash. - \(debugInfo ?? "")")
+#endif
                 return false
             }
         }
