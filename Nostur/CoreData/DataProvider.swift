@@ -137,11 +137,6 @@ class DataProvider: ObservableObject {
     
     func save(_ completion: (() -> Void)? = nil) { // TODO: replace all viewContext.save() with this save
         L.og.debug("💾💾 DataProvider.shared().save()")
-        #if DEBUG
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            return
-        }
-        #endif
         
         let bg = self.bgStored ?? self.bg
      
@@ -166,13 +161,7 @@ class DataProvider: ObservableObject {
         }
     }
     
-    func bgSave() { 
-        #if DEBUG
-        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-            return
-        }
-        #endif
-        
+    func bgSave() {
         let bg = self.bgStored ?? self.bg
         
         if Thread.isMainThread {
