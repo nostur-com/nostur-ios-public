@@ -121,12 +121,12 @@ class Importer {
     
     func triggerImportWhenRelayMessagesAreAdded() {
         addedRelayMessage
-            .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
-            .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
+            .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
 #if DEBUG
-                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.5 seconds), but sends first after debounce (0.15) -[LOG]-")
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.1) -[LOG]-")
 #endif
                 self?.importEvents()
             }
@@ -134,7 +134,7 @@ class Importer {
         
         addedPrioRelayMessage
             .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
-            .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
+            .throttle(for: 0.15, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
 #if DEBUG
