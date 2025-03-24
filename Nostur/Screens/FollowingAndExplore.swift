@@ -189,7 +189,7 @@ struct FollowingAndExplore: View {
                     }
                     .frame(minWidth: dim.listWidth)
                 }
-                .frame(width: dim.listWidth, height: 44.0)
+                .frame(width: dim.listWidth, height: 42.0)
             }
             
             if enableLiveEvents {

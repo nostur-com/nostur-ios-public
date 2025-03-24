@@ -84,7 +84,7 @@ struct TabButton<Content: View>: View {
                 .frame(height: 41)
                 .fixedSize()
                 themes.theme.accent
-                    .frame(height: 3)
+                    .frame(height: 1)
                     .opacity(selected ? 1 : 0.15)
             }
             .frame(maxWidth: .infinity)
