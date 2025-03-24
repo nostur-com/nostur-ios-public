@@ -417,8 +417,5 @@ extension EnvironmentValues {
                     .environmentObject(loggedInAccount)
             }
         }
-        .onAppear {
-            Themes.default.loadRed()
-        }
     }
 }

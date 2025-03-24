@@ -96,12 +96,6 @@ struct ComposePost15: View {
 
                             .padding(.horizontal, 10)
                             .onAppear {
-                                if let startTime = timeTrackers["NewNote"] {
-                                    let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-                                    print(String(format: "NewNote: Time elapsed: %.3f seconds", timeElapsed))
-                                }
-                            }
-                            .onAppear {
     //                            textHeight = 300
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                     withAnimation {

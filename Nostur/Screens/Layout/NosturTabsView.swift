@@ -150,59 +150,8 @@ struct NosturTabsView: View {
     }
 }
 
-
-extension Binding {
-    func onUpdate(_ closure: @escaping (Value, Value) -> Void) -> Binding<Value> {
-        Binding(get: {
-            wrappedValue
-        }, set: { newValue in
-            let oldValue = wrappedValue
-            wrappedValue = newValue
-            closure(oldValue, newValue)
-        })
-    }
-}
-
-
-struct NoInternetConnectionBanner: View {
-    @EnvironmentObject private var networkMonitor:NetworkMonitor
-    
-    var body: some View {
-        if networkMonitor.isDisconnected {
-            Text("\(Image(systemName: "wifi.exclamationmark")) No internet connection")
-                .font(.caption)
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(5)
-                .background(.red)
-        }
-        else {
-            EmptyView()
-        }
-    }
-}
-
-
-struct WithNavigationIf<Content: View>: View {
-    
-    let condition: Bool
-    let content: Content
-        
-    init(condition: Bool, @ViewBuilder _ content: () -> Content) {
-        self.condition = condition
-        self.content = content()
-    }
-    
-    var body: some View {
-        ZStack {
-            if condition {
-                NBNavigationStack {
-                    content
-                }
-            }
-            else {
-                content
-            }
-        }
+#Preview {
+    PreviewContainer {
+        NosturTabsView()
     }
 }
