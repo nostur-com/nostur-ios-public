@@ -11,16 +11,28 @@ import NavigationBackport
 struct ZoomableItem<Content: View, DetailContent: View>: View {
     private let content: Content
     private let detailContent: DetailContent
+    private var frameSize: CGSize? = nil
     @State private var contentSize: CGSize = CGSize(width: 50, height: 50)
     @State private var viewPosition: CGPoint = .zero
     
-    init(@ViewBuilder _ content: () -> Content, @ViewBuilder detailContent: () -> DetailContent) {
+    init(@ViewBuilder _ content: () -> Content, frameSize: CGSize? = nil, @ViewBuilder detailContent: () -> DetailContent) {
         self.content = content()
         self.detailContent = detailContent()
+        self.frameSize = frameSize
     }
     
     var body: some View {
-        if #available(iOS 16.0, *) {
+        if let frameSize, #available(iOS 16.0, *) {
+            GeometryReader { geometry in
+                content
+                    .onTapGesture(coordinateSpace: .global) { _ in
+                        let frame = geometry.frame(in: .global)
+                        triggerZoom(origin: CGPoint(x: frame.minX + (contentSize.width/2), y: frame.minY + (contentSize.height/2)))
+                    }
+            }
+            .frame(width: frameSize.width, height: frameSize.height)
+        }
+        else if #available(iOS 16.0, *) {
             GeometryReader { geometry in
                 content
                     .readSize(onChange: { size in
@@ -35,6 +47,9 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
         } else {
             // Fallback on earlier versions
             content
+                .onTapGesture {
+                    triggerZoom(origin: CGPoint(x: UIScreen.main.bounds.width/2, y: UIScreen.main.bounds.height/2))
+                }
         }
     }
     

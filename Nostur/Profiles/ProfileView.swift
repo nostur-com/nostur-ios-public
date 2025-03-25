@@ -43,7 +43,7 @@ struct ProfileView: View {
                     
                     ProfileBanner(banner: nrContact.banner, width: dim.listWidth)
                         .overlay(alignment: .bottomLeading, content: {
-                            ZoomableItem {
+                            ZoomableItem({
                                 PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
                                     .overlay(
                                         Circle()
@@ -63,7 +63,7 @@ struct ProfileView: View {
                                             FixedPFP(picture: fixedPfp)
                                         }
                                     }
-                            } detailContent: {
+                            }, frameSize: CGSize(width: DIMENSIONS.PFP_BIG, height: DIMENSIONS.PFP_BIG)) {
                                 if let pictureUrl = nrContact.pictureUrl {
                                     GalleryFullScreenSwiper(
                                         initialIndex: 0,
@@ -75,7 +75,7 @@ struct ProfileView: View {
                                         .strokeBorder(themes.theme.background, lineWidth: 3)
                                 }
                             }
-                                .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
+                            .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
                         })
                     
                     HStack(alignment: .top) {
@@ -416,12 +416,13 @@ struct ProfileView: View {
         pe.loadContacts()
         pe.loadPosts()
     }) {
-        NBNavigationStack {
+        NRNavigationStack {
             if let contact = PreviewFetcher.fetchNRContact("84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240") {
-                ProfileView(nrContact: contact)
+                Zoomable {
+                    ProfileView(nrContact: contact)
+                }
             }
         }
-        .nbUseNavigationStack(.never)
     }
 }
 
