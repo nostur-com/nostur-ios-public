@@ -16,53 +16,47 @@ struct EmbedById: View {
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
     var body: some View {
-        Group {
-            switch vm.state {
-            case .initializing, .loading, .altLoading:
-                CenteredProgressView()
-                    .frame(height: 250)
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .onBecomingVisible {
-                        self.load()
-                    }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(theme.lineColor, lineWidth: 1)
-                    )
-            case .ready(let nrPost):
+        switch vm.state {
+        case .initializing, .loading, .altLoading:
+            CenteredProgressView()
+                .frame(height: 250)
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .onBecomingVisible {
+                    self.load()
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
+        case .ready(let nrPost):
 //                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
-                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
 //                    .environmentObject(childDIM)
 //                    .padding(.vertical, 10)
-            case .timeout:
-                VStack {
-                    Text("Unable to fetch content")
-                    Button("Retry") { [weak vm] in
-                        vm?.state = .loading
-                        vm?.fetch()
-                    }
+        case .timeout:
+            VStack {
+                Text("Unable to fetch content")
+                Button("Retry") { [weak vm] in
+                    vm?.state = .loading
+                    vm?.fetch()
                 }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(theme.lineColor, lineWidth: 1)
+            )
+        case .error(let error):
+            Text(error)
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.lineColor, lineWidth: 1)
                 )
-            case .error(let error):
-                Text(error)
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(theme.lineColor, lineWidth: 1)
-                    )
-            }
         }
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 15)
-//                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
-//        )
     }
     
     private func load() {

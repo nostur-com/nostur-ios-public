@@ -325,7 +325,7 @@ let IS_APPLE_TYRANNY = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? St
 let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
 let EXPLORER_PUBKEY = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
 
-let LESS_CACHE = true // For testing, deletes all events and contacts at start up
+let LESS_CACHE = false // For testing, deletes all events and contacts at start up
 
 #if targetEnvironment(simulator)
     let IS_SIMULATOR = true
