@@ -490,7 +490,24 @@ class NXColumnViewModel: ObservableObject {
         loadLocal(config)
     }
     
+    // for pausing fetching / loading
     public var isPaused: Bool { self.fetchFeedTimer == nil }
+    
+    // only for pausing view updates (to fix to detail and back withAnimation { } issue_
+    public var isViewPaused: Bool = false
+    
+    @MainActor
+    public func pauseViewUpdates() {
+        isViewPaused = true
+    }
+    
+    @MainActor
+    public func resumeViewUpdates() {
+        guard let config, isViewPaused else { return }
+        isViewPaused = false
+        
+        self.loadLocal(config)
+    }
     
     @MainActor
     public func pause() {
@@ -567,9 +584,9 @@ class NXColumnViewModel: ObservableObject {
     }
     
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
-        if !isVisible || isPaused || AppState.shared.appIsInBackground {
+        if !isVisible || isPaused || isViewPaused || AppState.shared.appIsInBackground {
             #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. isVisible: \(self.isVisible) isPaused: \(self.isPaused)")
+            L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. isVisible: \(self.isVisible) isPaused: \(self.isPaused) isViewPaused: \(self.isViewPaused)")
             #endif
             return
         }
