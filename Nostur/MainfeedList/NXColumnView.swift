@@ -13,9 +13,17 @@ struct NXColumnView: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
-    public var config: NXColumnConfig
+    
     @StateObject private var viewModel = NXColumnViewModel()
-    public var isVisible: Bool
+    @StateObject private var speedTest = NXSpeedTest()
+    
+    private var config: NXColumnConfig
+    private var isVisible: Bool
+    
+    init(config: NXColumnConfig, isVisible: Bool) {
+        self.config = config
+        self.isVisible = isVisible
+    }
 
     @State private var feedSettingsFeed: CloudFeed?
     @State private var didLoad = false
@@ -44,8 +52,13 @@ struct NXColumnView: View {
             }
         }
         .overlay(alignment: .top) {
-            LoadingBar(vm: viewModel)
+            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
         }
+#if DEBUG
+        .overlay(alignment: .bottom) {
+            speedTestView
+        }
+#endif
         .onAppear {
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
             viewModel.isVisible = isVisible
@@ -60,7 +73,7 @@ struct NXColumnView: View {
                     }
                 }
             }
-            viewModel.initialize(config)
+            viewModel.initialize(config, speedTest: speedTest)
         }
         .onChange(of: isVisible) { newValue in
 #if DEBUG
@@ -81,8 +94,9 @@ struct NXColumnView: View {
                     }
                 }
             }
+
             viewModel.viewState = .loading
-            viewModel.initialize(newConfig)
+            viewModel.initialize(newConfig, speedTest: speedTest)
             
             // Fix feed paused by NXPostsFeed.onDisappear
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -107,6 +121,26 @@ struct NXColumnView: View {
             .nbUseNavigationStack(.never)
         })
     }
+    
+#if DEBUG
+    @ViewBuilder
+    private var speedTestView: some View {
+        VStack {
+            Text("First: \(speedTest.resultFirstFetch) Final: \(speedTest.resultLastFetch)")
+            if let timestampStart = speedTest.timestampStart {
+                ForEach(Array(speedTest.relaysFinishedAt.enumerated()), id: \.offset) { index, timestamp in
+                    Text("\(timestamp.timeIntervalSince(timestampStart))")
+                }
+                Divider()
+                ForEach(Array(speedTest.relaysTimeouts.enumerated()), id: \.offset) { index, timestamp in
+                    Text("\(timestamp.timeIntervalSince(timestampStart))")
+                }
+            }
+        }
+        .background(Color.black.opacity(0.7))
+        .foregroundColor(.white)
+    }
+#endif
 }
 
 #Preview {

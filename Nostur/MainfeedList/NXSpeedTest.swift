@@ -8,95 +8,84 @@
 import SwiftUI
 
 class NXSpeedTest: ObservableObject {
-    private var timestampFirstEmptyFeedVisible: Date?
-
-    public var timestampFirstFetchStarted: Date?
-    @Published var timestampFirstFetchFinished: Date?
-    private var timestampFinalFirstUpdate: Date?
+    public var timestampStart: Date?
+    private var firstLoadRemoteStartedAt: Date?
 
     @Published var relaysFinishedAt: [Date] = []
-    @Published var relaysFinishedLater: [Date] = []
     @Published var relaysTimeouts: [Date] = []
 
-    @Published var totalTimeSinceStarting: TimeInterval = 0
+    @Published var resultFirstFetch: TimeInterval = 0
+    @Published var resultLastFetch: TimeInterval = 0
     
+    // Never set .finished. Last state to set manually is .finalLoad which triggers final animation to .finished
     @Published var loadingBarViewState: LoadingBar.ViewState = .off
-    
-    private var _didPutOnScreen = false // first .putOnScreen() can be a bit slow, so don't finish loading bar before first .putOnScreen()
-    
-    public func didPutOnScreen() {
-        guard !_didPutOnScreen else { return }
-        self._didPutOnScreen = true
-        if case .fetching = loadingBarViewState {
-            loadingBarViewState = .earlyLoad
-        }
-        else {
-            loadingBarViewState = .finalLoad
-        }
-    }
     
     init() { }
     
-    public func reset() {
-        timestampFirstEmptyFeedVisible = nil
+    public func start() {
+        timestampStart = Date()
+        firstLoadRemoteStartedAt = nil
 
-        timestampFirstFetchStarted = nil
-        timestampFirstFetchFinished = nil
-        timestampFinalFirstUpdate = nil
+        Task { @MainActor in
+            relaysFinishedAt = []
+            relaysTimeouts = []
 
-        relaysFinishedAt = []
-        relaysFinishedLater = []
-        relaysTimeouts = []
-
-        totalTimeSinceStarting = 0
+            resultFirstFetch = 0
+            
+            if !ConnectionPool.shared.anyConnected {
+#if DEBUG
+                print("🏁🏁 NXSpeedTest.start loadingBarViewState = .connecting")
+#endif
+                loadingBarViewState = .connecting
+            }
+        }
     }
 
-    public func firstEmptyFeedVisibleFinished() {
-        guard timestampFirstEmptyFeedVisible == nil else { return }
-        timestampFirstEmptyFeedVisible = Date()
-        loadingBarViewState = .idle
-    }
-
-    public func firstFetchStarted() {
-        guard timestampFirstFetchStarted == nil else { return }
-        timestampFirstFetchStarted = Date()
-        loadingBarViewState = .fetching
+    public func loadRemoteStarted() { // called by loadRemote()
+        if firstLoadRemoteStartedAt == nil {
+            firstLoadRemoteStartedAt = Date()
+#if DEBUG
+            print("🏁🏁 NXSpeedTest.loadRemoteStarted loadingBarViewState = .fetching")
+#endif
+            loadingBarViewState = .fetching
+        }
     }
 
     public func relayFinished() {
         Task { @MainActor in
-            guard loadingBarViewState != .finished else { return }
-            if timestampFirstFetchFinished == nil {
-                timestampFirstFetchFinished = Date()
-            }
-            if timestampFinalFirstUpdate == nil {
-                relaysFinishedAt.append(Date())
-                timestampFinalFirstUpdate = Date()
-                setTotalTimeSinceEmptyFeedVisible()
+            guard let timestampStart else { return }
+            let currentTimestamp = Date()
+            if relaysFinishedAt.isEmpty {
+                relaysFinishedAt.append(currentTimestamp)
+#if DEBUG
+                print("🏁🏁 NXSpeedTest.relayFinished loadingBarViewState = .earlyLoad")
+#endif
                 loadingBarViewState = .earlyLoad
+                resultFirstFetch = currentTimestamp.timeIntervalSince(timestampStart)
             }
             else {
-                relaysFinishedLater.append(Date())
-                guard _didPutOnScreen else { return }
-                loadingBarViewState = .finalLoad
+                relaysFinishedAt.append(currentTimestamp)
+                resultLastFetch = currentTimestamp.timeIntervalSince(timestampStart)
+                
+                if loadingBarViewState == .earlyLoad {
+#if DEBUG
+                    print("🏁🏁 NXSpeedTest.relayFinished loadingBarViewState = .finalLoad")
+#endif
+                    loadingBarViewState = .finalLoad
+                }
             }
-            
         }
     }
     
     public func relayTimedout() {
-        relaysTimeouts.append(Date())
-        guard loadingBarViewState != .finished else { return }
-        loadingBarViewState = .finalLoad
-    }
-
-    public func setTotalTimeSinceEmptyFeedVisible() {
-        guard let timestampFirstEmptyFeedVisible, let timestampFinalFirstUpdate else { return }
         Task { @MainActor in
-            totalTimeSinceStarting = timestampFinalFirstUpdate.timeIntervalSince(timestampFirstEmptyFeedVisible)
-            guard _didPutOnScreen else { return }
-            loadingBarViewState = .finalLoad
+            if loadingBarViewState == .fetching || loadingBarViewState == .earlyLoad  {
+#if DEBUG
+                print("🏁🏁 NXSpeedTest.relayTimedout loadingBarViewState = .finalLoad")
+#endif
+                loadingBarViewState = .finalLoad
+            }
+            relaysTimeouts.append(Date())
         }
     }
-    
 }

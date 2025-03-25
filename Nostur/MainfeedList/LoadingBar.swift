@@ -8,75 +8,123 @@
 import SwiftUI
 
 struct LoadingBar: View {
-    
+    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
-    public let vm: NXColumnViewModel
+    public var loadingBarViewState: LoadingBar.ViewState
     public let height: CGFloat = 2.0
     
-    @State private var viewState: ViewState = .idle
+    static private let offStates: Set<LoadingBar.ViewState> = Set([.finished, .off, .timeout])
+    
+    @State private var didAppear = false
+    @State private var opacity: Double = 0.0
+    @State private var viewState: ViewState = .starting {
+        didSet {
+            if opacity != 0.0 && Self.offStates.contains(viewState) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    opacity = 0.0
+                }
+            }
+            
+            if viewState == .finalLoad {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    opacity = 0.0
+                    viewState = .finished
+                }
+            }
+        }
+    }
     
     private var percentage: CGFloat {
         switch viewState {
         case .off:
             0.0
-        case .idle:
+        case .starting:
             0.01
         case .connecting:
             0.1
         case .fetching:
-            0.2
+            0.15
         case .earlyLoad:
-            0.7
+            0.25
+        case .secondFetching:
+            0.80
         case .finalLoad:
             1.0
         case .finished:
-            1.0
+            0.01
+        case .timeout:
+            0.01
         }
     }
     
-    private func barWidth(_ maxWidth: CGFloat) -> CGFloat {
-        maxWidth * percentage
+    private var barWidth: CGFloat {
+        dim.listWidth * percentage
     }
     
     var body: some View {
-        GeometryReader { geo in
-            themes.theme.accent
-                .frame(width: barWidth(geo.size.width))
-                .opacity(viewState == .finished ? 0 : 1)
-        }
-        .frame(height: height)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 3.0)) {
-                viewState = .connecting
+        Color.clear
+            .overlay(alignment: .topLeading) {
+                themes.theme.accent
+                    .frame(width: barWidth)
+                    .frame(height: height)
             }
-        }
-        .onReceive(vm.speedTest.$loadingBarViewState) { newViewState in
-            
-            withAnimation(.snappy(duration: 0.05)) {
-                self.viewState = newViewState
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    if viewState == .finalLoad {
-                        self.viewState = .finished
+            .frame(width: dim.listWidth)
+            .frame(height: height)
+            .opacity(opacity)
+            .onChange(of: loadingBarViewState) { newViewState in
+                if newViewState == .finished && opacity != 0.0 {
+                    opacity = 0.0
+                }
+                else if newViewState != .off {
+                    opacity = 1.0
+                }
+                
+                
+                let duration = switch newViewState {
+                case .off, .starting:
+                    0.01
+                case .connecting:
+                    6.0
+                case .fetching, .secondFetching:
+                    3.5
+                case .earlyLoad, .finalLoad, .finished:
+                    0.05
+                case .timeout:
+                    0.1
+                }
+                
+                if opacity != 0.0 {
+                    withAnimation(.snappy(duration: duration)) {
+        #if DEBUG
+                        print("🏁🏁 LoadingBar.onChange(of: viewState = \(newViewState)")
+        #endif
+                        self.viewState = newViewState
                     }
                 }
+                else {
+                    self.viewState = newViewState
+                }
             }
-        }
     }
 }
 
 extension LoadingBar {
     enum ViewState {
         case off
-        case idle
+        case starting
         case connecting
         case fetching
         case earlyLoad
+        case secondFetching
         case finalLoad
         case finished
+        case timeout
     }
 }
 
+@available(iOS 17.0, *)
 #Preview {
-    LoadingBar(vm: .init())
+    @Previewable @State var loadingBarViewState: LoadingBar.ViewState = .starting
+    LoadingBar(loadingBarViewState: loadingBarViewState)
         .environmentObject(Themes.default)
 }

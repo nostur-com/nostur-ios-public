@@ -11,9 +11,7 @@ import NostrEssentials
 
 class NXColumnViewModel: ObservableObject {
 
-#if DEBUG
-    @ObservedObject public var speedTest = NXSpeedTest()
-#endif
+    public var speedTest: NXSpeedTest?
 
     // "Following-..." / "List-56D5EE90-17CB-4925" / ...
     public var id: String? { config?.id }
@@ -23,9 +21,15 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     private func didFinish() {
-        speedTest.didPutOnScreen()
         if !ConnectionPool.shared.anyConnected { // After finish we were never connected, watch for first connection to .load() again
             self.watchForFirstConnection = true
+        }
+
+        if let speedTest, !speedTest.relaysFinishedAt.isEmpty {
+#if DEBUG
+            print("🏁🏁 NXColumnViewModel.didFinish loadingBarViewState = .finalLoad")
+#endif
+            speedTest.loadingBarViewState = .finalLoad
         }
     }
     
@@ -48,17 +52,15 @@ class NXColumnViewModel: ObservableObject {
    
     private var danglingIds: Set<NRPostID> = [] // posts that are transformed, but somehow not on screen (maybe not found on relays). either we put on on screen or not, dont transform over and over again.
     
+    // isVisible should actually be isActiveTab (can still be not visible on navigate to detail)
     public var isVisible: Bool = false {
         didSet {
-            guard let config else { return }
+            guard let config, let speedTest else { return }
+            guard isVisible != oldValue else { return }
             if isVisible {
-
-                speedTest.reset()
-                speedTest.firstEmptyFeedVisibleFinished()
-                
                 if case .loading = viewState {
                     Task { @MainActor in
-                        self.initialize(config)
+                        self.initialize(config, speedTest: speedTest)
                     }
                 }
                 else if case .posts(_) = viewState {
@@ -247,9 +249,10 @@ class NXColumnViewModel: ObservableObject {
     private var loadLocalSubject = PassthroughSubject<(NXColumnConfig, Bool, (() -> Void)?), Never>()
 
     @MainActor
-    public func initialize(_ config: NXColumnConfig) {
+    public func initialize(_ config: NXColumnConfig, speedTest: NXSpeedTest) {
         self.subscriptions = Set<AnyCancellable>()
         self.config = config
+        self.speedTest = speedTest
         
         self.feed = config.feed
         
@@ -331,8 +334,7 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     private func firstLoad(_ config: NXColumnConfig) {
-
-        speedTest.firstEmptyFeedVisibleFinished()
+        speedTest?.start()
         
         // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
         if case .someoneElses(let pubkey) = config.columnType {
@@ -538,9 +540,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop)")
 #endif
-        speedTest.reset()
-        speedTest.firstEmptyFeedVisibleFinished()
-
+        speedTest?.start()
         
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
@@ -581,7 +581,6 @@ L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and thrott
 
     @MainActor
     public func _loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
-        
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
         
         if !currentNRPostsOnScreen.isEmpty, let feed = config.feed { // if we don't check if screen is empty we can have permanent spinner at first run
@@ -1456,10 +1455,11 @@ extension NXColumnViewModel {
         
         guard !partialThreadsWithParent.isEmpty else {
             Task { @MainActor in
-                if case .loading = viewState {
-                    if speedTest.loadingBarViewState == .earlyLoad {
-                        viewState = .timeout
-                    }
+                if let speedTest, !speedTest.relaysFinishedAt.isEmpty {
+#if DEBUG
+                    print("🏁🏁 NXColumnViewModel.processToScreen loadingBarViewState = .finalLoad")
+#endif
+                    speedTest.loadingBarViewState = .finalLoad
                 }
                 completion?()
             }
@@ -1627,7 +1627,7 @@ extension NXColumnViewModel {
     
     @MainActor
     public func putOnScreen(_ addedPosts: [NRPost], config: NXColumnConfig, insertAtEnd: Bool = false, completion: (() -> Void)? = nil) {
-        
+
         if case .posts(let existingPosts) = viewState { // There are already posts on screen
             
             // Somehow we still have duplicates here that should have been filtered in prev steps (bug?) so filter duplicates again here
@@ -1800,8 +1800,7 @@ extension NXColumnViewModel {
     
     @MainActor
     private func loadRemote(_ config: NXColumnConfig) {
-        
-        speedTest.firstFetchStarted()
+        speedTest?.loadRemoteStarted()
         
         #if DEBUG
         L.og.debug("☘️☘️ \(config.name) loadRemote(config)")
@@ -1823,7 +1822,7 @@ extension NXColumnViewModel {
             bg().perform { [weak self] in
                 instantFeed.start(relays, since: mostRecentCreatedAt) { [weak self] events in
                     guard let self, events.count > 0 else {
-                        self?.speedTest.relayTimedout()
+                        self?.speedTest?.relayTimedout()
                         Task { @MainActor in
                             if case .loading = self?.viewState {
                                 self?.viewState = .timeout
@@ -1832,7 +1831,7 @@ extension NXColumnViewModel {
                         return
                     }
                     
-                    speedTest.relayFinished()
+                    speedTest?.relayFinished()
                     
                     // TODO: Check if we still hit .fetchLimit problem here
 #if DEBUG

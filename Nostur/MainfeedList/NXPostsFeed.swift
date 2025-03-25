@@ -16,8 +16,7 @@ struct NXPostsFeed: View {
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
     @ObservedObject private var vmInner: NXColumnViewModelInner
-//    private let isVisible: Bool
-    
+
     @Weak private var collectionView: UICollectionView?
     @State private var collectionPrefetcher: NXPostsFeedPrefetcher?
     
@@ -26,41 +25,11 @@ struct NXPostsFeed: View {
     
     @State private var updateIsAtTopSubscription: AnyCancellable?
     
-#if DEBUG
-    @ObservedObject private var speedTest: NXSpeedTest
-#endif
-    
     init(vm: NXColumnViewModel, posts: [NRPost]) {
         self.vm = vm
-#if DEBUG
-        self.speedTest = vm.speedTest
-#endif
         self.posts = posts
         self.vmInner = vm.vmInner
     }
-    
-#if DEBUG
-    @ViewBuilder
-    private var speedTestView: some View {
-        VStack {
-            Text("Speed final: \(speedTest.totalTimeSinceStarting)")
-            if let timestampFirstFetchFinished = speedTest.timestampFirstFetchFinished, let sinceFetchStart = speedTest.timestampFirstFetchStarted {
-                Text("First fetch finished: \(timestampFirstFetchFinished.timeIntervalSince(sinceFetchStart))")
-            }
-            if let sinceFetchStart = speedTest.timestampFirstFetchStarted {
-                ForEach(Array(speedTest.relaysFinishedAt.enumerated()), id: \.offset) { index, timestamp in
-                    Text("\(timestamp.timeIntervalSince(sinceFetchStart))")
-                }
-                Divider()
-                ForEach(Array(speedTest.relaysFinishedLater.enumerated()), id: \.offset) { index, timestamp in
-                    Text("\(timestamp.timeIntervalSince(sinceFetchStart))")
-                }
-            }
-        }
-        .background(Color.black.opacity(0.7))
-        .foregroundColor(.white)
-    }
-#endif
     
     var body: some View {
         #if DEBUG
@@ -256,12 +225,6 @@ struct NXPostsFeed: View {
                         self._updateIsAtTop()
                     }
             }
-            
-#if DEBUG
-            .overlay(alignment: .bottom) {
-                speedTestView
-            }
-#endif
         }
     }
     
