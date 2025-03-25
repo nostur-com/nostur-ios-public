@@ -310,8 +310,6 @@ extension Contact : Identifiable {
 //        let name = (contact.display_name ?? "") != "" ? contact.display_name : contact.name
         PubkeyUsernameCache.shared.setObject(for: contact.pubkey, value: contact.anyName)
         
-        let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
-        
         let awaitingZaps = ZapperPubkeyVerificationQueue.shared.getQueuedZaps()
         awaitingZaps.forEach { zap in
             if (zap.otherPubkey == contact.pubkey) {

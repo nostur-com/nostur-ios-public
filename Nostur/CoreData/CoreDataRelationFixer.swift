@@ -44,7 +44,7 @@ class CoreDataRelationFixer {
         bgContext.perform {
             guard !self.taskQueue.isEmpty else { return }
 #if DEBUG
-            L.og.debug("💾💾 Saving \(self.taskQueue.count) relations")
+            L.og.debug("💾💾 Saving \(self.taskQueue.count) relations -[LOG]-")
 #endif
             for task in self.taskQueue {
                 task()

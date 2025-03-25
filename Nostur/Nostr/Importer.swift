@@ -94,7 +94,7 @@ class Importer {
     
     public func saveToDisk() {
 #if DEBUG
-        L.og.debug("💾 saveToDisk requested")
+        L.og.debug("💾💾 saveToDisk requested -[LOG]-")
 #endif
         self.saveToDiskSubject.send()
     }
