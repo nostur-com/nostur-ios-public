@@ -25,7 +25,7 @@ class NXColumnViewModel: ObservableObject {
             self.watchForFirstConnection = true
         }
 
-        if let speedTest, !speedTest.relaysFinishedAt.isEmpty {
+        if let speedTest, speedTest.loadingBarViewState != .finished, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
             print("🏁🏁 NXColumnViewModel.didFinish loadingBarViewState = .finalLoad")
 #endif
