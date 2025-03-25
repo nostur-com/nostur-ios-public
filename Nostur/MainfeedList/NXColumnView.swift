@@ -52,7 +52,7 @@ struct NXColumnView: View {
             }
         }
         .overlay(alignment: .top) {
-            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
+            LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
 #if DEBUG
         .overlay(alignment: .bottom) {

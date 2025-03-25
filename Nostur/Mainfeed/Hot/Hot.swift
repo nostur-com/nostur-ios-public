@@ -81,7 +81,7 @@ struct Hot: View {
         }
         .background(themes.theme.listBackground)
         .overlay(alignment: .top) {
-            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
+            LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
         .onAppear {
             guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }

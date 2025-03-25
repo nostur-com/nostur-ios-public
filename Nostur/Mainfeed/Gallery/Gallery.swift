@@ -96,7 +96,7 @@ struct Gallery: View {
         }
         .background(themes.theme.listBackground)
         .overlay(alignment: .top) {
-            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
+            LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
         .onAppear {
             // Load if tab is active OR if macOS (detail pane)

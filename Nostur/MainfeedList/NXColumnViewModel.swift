@@ -1476,7 +1476,9 @@ extension NXColumnViewModel {
 #if DEBUG
                     print("🏁🏁 NXColumnViewModel.processToScreen loadingBarViewState = .finalLoad")
 #endif
-                    speedTest.loadingBarViewState = .finalLoad
+                    if speedTest.loadingBarViewState != .finished {
+                        speedTest.loadingBarViewState = .finalLoad
+                    }
                 }
                 completion?()
             }
