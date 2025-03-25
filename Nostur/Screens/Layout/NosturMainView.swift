@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct NosturMainView: View {
-    @EnvironmentObject private var ss: SettingsStore
+    @ObservedObject private var ss: SettingsStore = .shared
     
     var body: some View {
         AppEnvironment {
