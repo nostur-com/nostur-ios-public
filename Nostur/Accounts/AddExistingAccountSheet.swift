@@ -54,7 +54,7 @@ struct AddExistingAccountSheet: View {
                             .padding(.bottom, 20)
                     }
                     else {
-                        TextField(String(localized:"Pnostr address / npub / nsec / signer url", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                        TextField(String(localized:"nostr address / npub / nsec / signer url", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
                             .padding()

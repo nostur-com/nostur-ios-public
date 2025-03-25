@@ -1981,6 +1981,16 @@
         }
       }
     },
+    "By continuing you agree to the" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wanneer je verder gaat accepteer je"
+          }
+        }
+      }
+    },
     "Caches" : {
       "comment" : "Settings heading",
       "localizations" : {
@@ -2109,7 +2119,14 @@
       }
     },
     "Classic" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klassiek"
+          }
+        }
+      }
     },
     "Clear" : {
       "comment" : "Button to clear cache",
@@ -2439,6 +2456,9 @@
           }
         }
       }
+    },
+    "connecting" : {
+      "shouldTranslate" : false
     },
     "contact" : {
       "comment" : "The word \"contact\" when used as contact #1, contact #2 and contact #3.",
@@ -3200,6 +3220,9 @@
         }
       }
     },
+    "earlyLoad" : {
+      "shouldTranslate" : false
+    },
     "Edit muted word" : {
       "comment" : "Navigation title for screen to edit muted word",
       "localizations" : {
@@ -3677,6 +3700,9 @@
         }
       }
     },
+    "fetching" : {
+      "shouldTranslate" : false
+    },
     "Fetching..." : {
       "localizations" : {
         "nl" : {
@@ -3739,6 +3765,9 @@
         }
       }
     },
+    "finalLoad" : {
+      "shouldTranslate" : false
+    },
     "Find author" : {
       "comment" : "Navigation title of Find author screen",
       "localizations" : {
@@ -3750,7 +3779,15 @@
         }
       }
     },
-    "First fetch finished: %lf" : {
+    "First: %lf Final: %lf" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "First: %1$lf Final: %2$lf"
+          }
+        }
+      },
       "shouldTranslate" : false
     },
     "Follow" : {
@@ -5178,6 +5215,7 @@
       }
     },
     "New Post" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5352,6 +5390,17 @@
         }
       }
     },
+    "nostr address / npub / nsec / signer url" : {
+      "comment" : "Input field to enter public or private key on Add Existing Account screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nostr adres / npub / nsec / signer url"
+          }
+        }
+      }
+    },
     "Nostr Dunbar Number" : {
       "localizations" : {
         "nl" : {
@@ -5492,6 +5541,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Niks gevonden"
+          }
+        }
+      }
+    },
+    "Nothing here :(" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niets hier :("
           }
         }
       }
@@ -6272,6 +6331,7 @@
     },
     "Public or private key (npub or nsec)" : {
       "comment" : "Input field to enter public or private key on Add Existing Account screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7344,6 +7404,9 @@
         }
       }
     },
+    "secondFetching" : {
+      "shouldTranslate" : false
+    },
     "See what's happening on nostr right now" : {
       "comment" : "Nostur intro text",
       "localizations" : {
@@ -7895,9 +7958,6 @@
         }
       }
     },
-    "Speed final: %lf" : {
-      "shouldTranslate" : false
-    },
     "Start listening" : {
       "localizations" : {
         "nl" : {
@@ -8047,6 +8107,16 @@
         }
       }
     },
+    "Terms and Conditions" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Algemene Voorwaarden"
+          }
+        }
+      }
+    },
     "Terms of Service" : {
       "localizations" : {
         "nl" : {
@@ -8144,11 +8214,23 @@
     },
     "The guest account is already following some people. You can read posts and view profiles, but you cannot post or like things until you create a new account yourself" : {
       "comment" : "Message during onboarding about the Guest Account",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Het gast account volgt al een aantal mensen. Je kan berichten lezen en profielen bekijken maar je kan niks plaatsen totdat je zelf een account aanmaakt"
+          }
+        }
+      }
+    },
+    "The guest account is already following some people. You can read posts and view profiles, but you cannot post or react to anything until you create a new account yourself" : {
+      "comment" : "Message during onboarding about the Guest Account",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Het gastaccount volgt al een paar mensen, je kan berichten bekijken maar je kan zelf niks plaatsen totdat je zelf een nieuw account maakt"
           }
         }
       }
