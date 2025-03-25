@@ -49,9 +49,15 @@ class QueuedFetcher {
     
     public func enqueue(pTag: String) {
         guard !recentPs.contains(pTag) else { return }
-        ctx.perform { [weak self] in
-            self?.pQueue.insert(pTag)
-            self?.fetchSubject.send()
+        if !Thread.isMainThread {
+            self.pQueue.insert(pTag)
+            self.fetchSubject.send()
+        }
+        else {
+            ctx.perform { [weak self] in
+                self?.pQueue.insert(pTag)
+                self?.fetchSubject.send()
+            }
         }
     }
     

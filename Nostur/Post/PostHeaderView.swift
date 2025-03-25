@@ -34,8 +34,10 @@ struct NRPostHeaderContainer: View {
                     }
                     if nrContact.metadata_created_at == 0 {
                         guard let bgContact = nrContact.contact else { return }
-                        EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "NRPostHeaderContainer.002")
-                        QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "NRPostHeaderContainer.002")
+                            QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
+                        }
                     }
                 }
                 .task {
