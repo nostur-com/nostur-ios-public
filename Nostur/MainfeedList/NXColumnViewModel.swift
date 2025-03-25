@@ -1458,6 +1458,11 @@ extension NXColumnViewModel {
         
         guard !partialThreadsWithParent.isEmpty else {
             Task { @MainActor in
+                if case .loading = viewState {
+                    if speedTest.loadingBarViewState == .earlyLoad {
+                        viewState = .timeout
+                    }
+                }
                 completion?()
             }
             return
@@ -1825,6 +1830,11 @@ extension NXColumnViewModel {
 #if DEBUG
                         self?.speedTest.relayTimedout()
 #endif
+                        Task { @MainActor in
+                            if case .loading = self?.viewState {
+                                self?.viewState = .timeout
+                            }
+                        }
                         return
                     }
                     
@@ -2019,6 +2029,7 @@ extension NXColumnViewModel {
 enum ColumnViewState {
     case loading
     case posts([NRPost]) // Posts
+    case timeout
     case error(String)
 }
 

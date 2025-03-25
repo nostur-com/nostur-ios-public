@@ -33,6 +33,12 @@ struct NXColumnView: View {
                 }
             case .posts(let nrPosts):
                 NXPostsFeed(vm: viewModel, posts: nrPosts)
+            case .timeout:
+                ZStack(alignment: .center) {
+                    Color.clear
+                    Text("Nothing here :(")
+                        .foregroundColor(themes.theme.accent)
+                }
             case .error(let errorMessage):
                 Text(errorMessage)
             }
