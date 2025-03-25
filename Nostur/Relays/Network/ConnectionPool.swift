@@ -665,7 +665,7 @@ public class ConnectionPool: ObservableObject {
                 ).json()
                 else { return }
 #if DEBUG
-            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
 #endif
                 conn.sendMessage(message)
             }
@@ -682,7 +682,7 @@ public class ConnectionPool: ObservableObject {
                     ).json()
                     else { return }
 #if DEBUG
-            L.og.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
+            L.sockets.debug("📤📤 Outbox 🟩 REQ (\(subscriptionId ?? "")) -- \(req.value.pubkeys.count): \(req.key) - \(req.value.filters.description) -[LOG]-")
 #endif
                     connection.sendMessage(message)
                 }
@@ -708,7 +708,7 @@ public class ConnectionPool: ObservableObject {
                 $0.value.count > $1.value.count
             }) {
             
-            L.og.debug("📤📤 Outbox 🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
+            L.sockets.debug("📤📤 Outbox 🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
             if let conn = self.outboxConnections[relay] {
                 if !conn.relayData.write {
                     conn.relayData.setWrite(true)
