@@ -269,6 +269,7 @@ class NXColumnViewModel: ObservableObject {
         
         // Set up gap filler, don't trigger yet here
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
+        isViewPaused = false
         guard isVisible else { return }
         startFetchFeedTimer()
         
@@ -334,6 +335,7 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     private func firstLoad(_ config: NXColumnConfig) {
+        isViewPaused = false
         speedTest?.start()
         
         // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
@@ -557,6 +559,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop)")
 #endif
+        isViewPaused = false
         speedTest?.start()
         
         self.startFetchFeedTimer()
