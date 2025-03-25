@@ -23,6 +23,7 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     private func didFinish() {
+        speedTest.didPutOnScreen()
         if !ConnectionPool.shared.anyConnected { // After finish we were never connected, watch for first connection to .load() again
             self.watchForFirstConnection = true
         }
@@ -52,10 +53,8 @@ class NXColumnViewModel: ObservableObject {
             guard let config else { return }
             if isVisible {
 
-#if DEBUG
                 speedTest.reset()
                 speedTest.firstEmptyFeedVisibleFinished()
-#endif
                 
                 if case .loading = viewState {
                     Task { @MainActor in
@@ -333,9 +332,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     private func firstLoad(_ config: NXColumnConfig) {
 
-#if DEBUG
-            speedTest.firstEmptyFeedVisibleFinished()
-#endif
+        speedTest.firstEmptyFeedVisibleFinished()
         
         // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
         if case .someoneElses(let pubkey) = config.columnType {
@@ -540,9 +537,10 @@ class NXColumnViewModel: ObservableObject {
         guard let config else { return }
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) resume() isAtTop: \(self.vmInner.isAtTop)")
+#endif
         speedTest.reset()
         speedTest.firstEmptyFeedVisibleFinished()
-#endif
+
         
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
@@ -1803,9 +1801,7 @@ extension NXColumnViewModel {
     @MainActor
     private func loadRemote(_ config: NXColumnConfig) {
         
-#if DEBUG
         speedTest.firstFetchStarted()
-#endif
         
         #if DEBUG
         L.og.debug("☘️☘️ \(config.name) loadRemote(config)")
@@ -1827,9 +1823,7 @@ extension NXColumnViewModel {
             bg().perform { [weak self] in
                 instantFeed.start(relays, since: mostRecentCreatedAt) { [weak self] events in
                     guard let self, events.count > 0 else {
-#if DEBUG
                         self?.speedTest.relayTimedout()
-#endif
                         Task { @MainActor in
                             if case .loading = self?.viewState {
                                 self?.viewState = .timeout
@@ -1838,9 +1832,7 @@ extension NXColumnViewModel {
                         return
                     }
                     
-#if DEBUG
                     speedTest.relayFinished()
-#endif
                     
                     // TODO: Check if we still hit .fetchLimit problem here
 #if DEBUG

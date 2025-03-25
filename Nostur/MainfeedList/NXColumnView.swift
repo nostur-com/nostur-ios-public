@@ -43,6 +43,9 @@ struct NXColumnView: View {
                 Text(errorMessage)
             }
         }
+        .overlay(alignment: .top) {
+            LoadingBar(vm: viewModel)
+        }
         .onAppear {
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
             viewModel.isVisible = isVisible

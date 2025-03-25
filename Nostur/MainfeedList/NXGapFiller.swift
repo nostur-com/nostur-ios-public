@@ -72,9 +72,9 @@ class NXGapFiller {
                 processResponseCommand: { [weak self] _, _, _ in
                     guard let self else { return }
                     self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
-#if DEBUG
+
                     self.columnVM?.speedTest.relayFinished()
-#endif
+                    
                     self.columnVM?.loadLocal(config)
                     
                     self.currentGap += 1
@@ -90,9 +90,9 @@ class NXGapFiller {
                 timeoutCommand: { [weak self] subId in
                     L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") timeout in fetchGap \(subId)")
                     Task { @MainActor in
-#if DEBUG
+
                         self?.columnVM?.speedTest.relayTimedout()
-#endif
+
                         self?.columnVM?.loadLocal(config)
                     }
                 })
