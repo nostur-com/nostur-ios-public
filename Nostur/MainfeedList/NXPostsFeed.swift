@@ -236,15 +236,15 @@ struct NXPostsFeed: View {
             
             // Handle going to detail and back
             .onAppear {
-                guard !vm.isVisible else { return }
-                vm.isVisible = true
+                guard vm.isPaused else { return }
+                vm.resume()
             }
             .onDisappear {
                 // When opening detail, the feed would still update in background using withAnimation { },
                 // but because its not visible the hack to keep scroll position doesn't work
-                // so we set .isVisible to false to pause updates (and resume by setting .isVisible to true in onAppear {})
-                guard vm.isVisible else { return }
-                vm.isVisible = false
+                // so we pause() updates (and resume() in onAppear {})
+                guard !vm.isPaused else { return }
+                vm.pause()
             }
             
             // Add updateIsAtTop() debounces
