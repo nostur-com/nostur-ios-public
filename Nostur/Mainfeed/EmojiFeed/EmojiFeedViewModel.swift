@@ -14,7 +14,7 @@ import Combine
 // Filter by emoji
 // Sort posts by unique (pubkey) likes/reposts
 class EmojiFeedViewModel: ObservableObject {
-    
+    private var speedTest: NXSpeedTest?
     @Published var state: FeedState
     private var posts: [PostID: RecommendedBy<Pubkey>]
     private var backlog: Backlog
@@ -54,13 +54,21 @@ class EmojiFeedViewModel: ObservableObject {
             if ago < oldValue {
                 self.state  = .loading
                 self.follows = Nostur.follows()
-                self.fetchPostsFromDB()
+                self.fetchPostsFromDB {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
             else {
                 self.state  = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.follows = Nostur.follows()
-                self.fetchReactionsFromRelays()
+                self.fetchReactionsFromRelays {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
         }
     }
@@ -80,6 +88,7 @@ class EmojiFeedViewModel: ObservableObject {
     }
     
     public func timeout() {
+        speedTest?.loadingBarViewState = .timeout
         self.state = .timeout
     }
     
@@ -117,6 +126,16 @@ class EmojiFeedViewModel: ObservableObject {
     
     // STEP 1: FETCH REACTIONS FROM FOLLOWS FROM RELAYS
     private func fetchReactionsFromRelays(_ onComplete: (() -> ())? = nil) {
+        
+        Task { @MainActor in
+            if !ConnectionPool.shared.anyConnected {
+                speedTest?.loadingBarViewState = .connecting
+            }
+            else {
+                speedTest?.loadingBarViewState = .fetching
+            }
+        }
+        
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "EMOJI",
@@ -161,6 +180,11 @@ class EmojiFeedViewModel: ObservableObject {
     
     // STEP 2: FETCH RECEIVED REACTIONS FROM DB, SORT MOST REACTED POSTS (WE ONLY HAVE IDs HERE)
     private func fetchReactionsFromDB(_ onComplete: (() -> ())? = nil) {
+        
+        Task { @MainActor in
+            speedTest?.loadingBarViewState = .earlyLoad
+        }
+        
         let emojiSet: Set<String> = if emojiSets[self.emojiType] != nil {
             emojiSets[self.emojiType]!
         } else {
@@ -190,6 +214,10 @@ class EmojiFeedViewModel: ObservableObject {
     
     // STEP 3: FETCH MOST REACTED-TO POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
+        
+        Task { @MainActor in
+            speedTest?.loadingBarViewState = .secondFetching
+        }
         
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
@@ -327,13 +355,20 @@ class EmojiFeedViewModel: ObservableObject {
         self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
     }
     
-    public func load() {
+    public func load(speedTest: NXSpeedTest) {
+        self.speedTest = speedTest
         guard shouldReload else { return }
         L.og.info("Feed: load()")
         self.follows = Nostur.follows()
         self.state = .loading
         self.feedPosts = []
-        self.fetchReactionsFromRelays()
+        
+        self.speedTest?.start()
+        self.fetchReactionsFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // for after account change
@@ -344,7 +379,13 @@ class EmojiFeedViewModel: ObservableObject {
         self.backlog.clear()
         self.follows = Nostur.follows()
         self.feedPosts = []
-        self.fetchReactionsFromRelays()
+        
+        self.speedTest?.start()
+        self.fetchReactionsFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // pull to refresh
@@ -354,8 +395,12 @@ class EmojiFeedViewModel: ObservableObject {
         self.backlog.clear()
         self.follows = Nostur.follows()
         
+        self.speedTest?.start()
         await withCheckedContinuation { continuation in
             self.fetchReactionsFromRelays {
+                Task { @MainActor in
+                    self.speedTest?.loadingBarViewState = .finalLoad
+                }
                 continuation.resume()
             }
         }

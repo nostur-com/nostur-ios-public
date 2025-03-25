@@ -22,7 +22,8 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     
     let id = UUID()
     
-    @Published var state:GalleryState
+    private var speedTest: NXSpeedTest?
+    @Published var state: GalleryState
     private var posts: [PostID: RecommendedBy<Pubkey>]
     private var backlog: Backlog
     private var follows:Set<Pubkey>
@@ -61,13 +62,21 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
             if ago < oldValue {
                 self.state = .loading
                 self.follows = Nostur.follows()
-                self.fetchPostsFromDB()
+                self.fetchPostsFromDB {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
             else {
                 self.state = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.follows = Nostur.follows()
-                self.fetchLikesAndRepostsFromRelays()
+                self.fetchLikesAndRepostsFromRelays {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
         }
     }
@@ -77,6 +86,7 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     }
     
     public func timeout() {
+        speedTest?.loadingBarViewState = .timeout
         self.state = .timeout
     }
     
@@ -97,6 +107,16 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     
     // STEP 1: FETCH LIKES AND REPOSTS FROM FOLLOWS FROM RELAYS
     private func fetchLikesAndRepostsFromRelays(_ onComplete: (() -> ())? = nil) {
+        
+        Task { @MainActor in
+            if !ConnectionPool.shared.anyConnected {
+                speedTest?.loadingBarViewState = .connecting
+            }
+            else {
+                speedTest?.loadingBarViewState = .fetching
+            }
+        }
+        
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "GALLERY",
@@ -142,6 +162,11 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     
     // STEP 2: FETCH RECEIVED LIKES/REPOSTS FROM DB, SORT MOST LIKED/REPOSTED POSTS (WE ONLY HAVE IDs HERE)
     private func fetchLikesAndRepostsFromDB(_ onComplete: (() -> ())? = nil) {
+        
+        Task { @MainActor in
+            speedTest?.loadingBarViewState = .earlyLoad
+        }
+        
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
         bg().perform { [weak self] in
@@ -177,7 +202,9 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
 
     // STEP 3: FETCH MOST LIKED/REPOSTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
-        
+        Task { @MainActor in
+            speedTest?.loadingBarViewState = .secondFetching
+        }
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
         bg().perform { [weak self] in
@@ -305,13 +332,20 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
         }
     }
     
-    public func load() {
+    public func load(speedTest: NXSpeedTest) {
+        self.speedTest = speedTest
         guard shouldReload else { return }
         L.og.info("Gallery feed: load()")
         self.follows = Nostur.follows()
         self.state = .loading
         self.items = []
-        self.fetchLikesAndRepostsFromRelays()
+        
+        self.speedTest?.start()
+        self.fetchLikesAndRepostsFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // for after account change
@@ -322,7 +356,13 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
         self.backlog.clear()
         self.follows = Nostur.follows()
         self.items = []
-        self.fetchLikesAndRepostsFromRelays()
+        
+        self.speedTest?.start()
+        self.fetchLikesAndRepostsFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // pull to refresh
@@ -333,8 +373,12 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
         self.backlog.clear()
         self.follows = Nostur.follows()
         
+        self.speedTest?.start()
         await withCheckedContinuation { continuation in
             self.fetchLikesAndRepostsFromRelays {
+                Task { @MainActor in
+                    self.speedTest?.loadingBarViewState = .finalLoad
+                }
                 continuation.resume()
             }
         }

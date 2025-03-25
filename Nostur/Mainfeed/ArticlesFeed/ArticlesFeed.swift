@@ -12,6 +12,7 @@ struct ArticlesFeed: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var vm: ArticlesFeedViewModel
+    @StateObject private var speedTest = NXSpeedTest()
     @State private var showSettings = false
     
     private var selectedTab: String {
@@ -80,21 +81,24 @@ struct ArticlesFeed: View {
             }
         }
         .background(themes.theme.listBackground)
+        .overlay(alignment: .top) {
+            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
+        }
         .onAppear {
             guard selectedTab == "Main" && selectedSubTab == "Articles" else { return }
-            vm.load()
+            vm.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
             guard selectedTab == "Main" && selectedSubTab == "Articles" else { return }
             guard vm.shouldReload else { return }
             vm.articles = []
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { // Reconnect delay
-                vm.load()
+                vm.load(speedTest: speedTest)
             }
         }
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Articles" else { return }
-            vm.load() // didLoad is checked in .load() so no need here
+            vm.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             showSettings = true

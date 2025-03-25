@@ -12,6 +12,7 @@ struct Hot: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject var settings: SettingsStore = .shared
     @EnvironmentObject var hotVM: HotViewModel
+    @StateObject private var speedTest = NXSpeedTest()
     @State private var showSettings = false
     
     private var selectedTab: String {
@@ -79,9 +80,12 @@ struct Hot: View {
             }
         }
         .background(themes.theme.listBackground)
+        .overlay(alignment: .top) {
+            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
+        }
         .onAppear {
             guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
-            hotVM.load()
+            hotVM.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
             guard !IS_CATALYST else { return }
@@ -89,12 +93,12 @@ struct Hot: View {
             guard hotVM.shouldReload else { return }
             hotVM.state = .loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { // Reconnect delay
-                hotVM.load()
+                hotVM.load(speedTest: speedTest)
             }
         }
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Hot" else { return }
-            hotVM.load() // didLoad is checked in .load() so no need here
+            hotVM.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             showSettings = true

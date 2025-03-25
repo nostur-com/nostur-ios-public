@@ -18,7 +18,7 @@ typealias Pubkey = String
 // Fetch all likes and reposts from your follows in the last 24/12/8/4/2 hours
 // Sort posts by unique (pubkey) likes/reposts
 class HotViewModel: ObservableObject {
-    
+    private var speedTest: NXSpeedTest?
     @Published var state: FeedState
     private var posts: [PostID: RecommendedBy<Pubkey>]
     private var backlog: Backlog
@@ -58,13 +58,21 @@ class HotViewModel: ObservableObject {
             if ago < oldValue {
                 self.state  = .loading
                 self.follows = Nostur.follows()
-                self.fetchPostsFromDB()
+                self.fetchPostsFromDB {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
             else {
                 self.state  = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.follows = Nostur.follows()
-                self.fetchLikesAndRepostsFromRelays()
+                self.fetchLikesAndRepostsFromRelays {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
         }
     }
@@ -74,6 +82,7 @@ class HotViewModel: ObservableObject {
     }
     
     public func timeout() {
+        speedTest?.loadingBarViewState = .timeout
         self.state = .timeout
     }
     
@@ -105,6 +114,15 @@ class HotViewModel: ObservableObject {
     
     // STEP 1: FETCH LIKES AND REPOSTS FROM FOLLOWS FROM RELAYS
     private func fetchLikesAndRepostsFromRelays(_ onComplete: (() -> ())? = nil) {
+        Task { @MainActor in
+            if !ConnectionPool.shared.anyConnected {
+                speedTest?.loadingBarViewState = .connecting
+            }
+            else {
+                speedTest?.loadingBarViewState = .fetching
+            }
+        }
+        
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "HOT",
@@ -149,6 +167,9 @@ class HotViewModel: ObservableObject {
     
     // STEP 2: FETCH RECEIVED LIKES/REPOSTS FROM DB, SORT MOST LIKED/REPOSTED POSTS (WE ONLY HAVE IDs HERE)
     private func fetchLikesAndRepostsFromDB(_ onComplete: (() -> ())? = nil) {
+        Task { @MainActor in
+            speedTest?.loadingBarViewState = .earlyLoad
+        }
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
         bg().perform { [weak self] in
@@ -184,7 +205,9 @@ class HotViewModel: ObservableObject {
     
     // STEP 3: FETCH MOST LIKED/REPOSTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
-        
+        Task { @MainActor in
+            speedTest?.loadingBarViewState = .secondFetching
+        }
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
         bg().perform { [weak self] in
@@ -321,13 +344,20 @@ class HotViewModel: ObservableObject {
         self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
     }
     
-    public func load() {
+    public func load(speedTest: NXSpeedTest) {
+        self.speedTest = speedTest
         guard shouldReload else { return }
+
         L.og.info("Hot feed: load()")
         self.follows = Nostur.follows()
         self.state = .loading
         self.hotPosts = []
-        self.fetchLikesAndRepostsFromRelays()
+        self.speedTest?.start()
+        self.fetchLikesAndRepostsFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // for after account change
@@ -338,7 +368,12 @@ class HotViewModel: ObservableObject {
         self.backlog.clear()
         self.follows = Nostur.follows()
         self.hotPosts = []
-        self.fetchLikesAndRepostsFromRelays()
+        self.speedTest?.start()
+        self.fetchLikesAndRepostsFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // pull to refresh
@@ -348,8 +383,12 @@ class HotViewModel: ObservableObject {
         self.backlog.clear()
         self.follows = Nostur.follows()
         
+        self.speedTest?.start()
         await withCheckedContinuation { continuation in
             self.fetchLikesAndRepostsFromRelays {
+                Task { @MainActor in
+                    self.speedTest?.loadingBarViewState = .finalLoad
+                }
                 continuation.resume()
             }
         }

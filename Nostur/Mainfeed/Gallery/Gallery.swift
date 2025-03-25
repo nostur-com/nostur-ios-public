@@ -12,6 +12,7 @@ import NavigationBackport
 struct Gallery: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject var vm: GalleryViewModel
+    @StateObject private var speedTest = NXSpeedTest()
     @State private var showSettings = false
     
     private var selectedTab: String {
@@ -94,10 +95,13 @@ struct Gallery: View {
             }
         }
         .background(themes.theme.listBackground)
+        .overlay(alignment: .top) {
+            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
+        }
         .onAppear {
             // Load if tab is active OR if macOS (detail pane)
             guard IS_CATALYST || (selectedTab == "Main" && selectedSubTab == "Gallery") else { return }
-            vm.load()
+            vm.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in
             vm.reload()
@@ -108,12 +112,12 @@ struct Gallery: View {
             guard selectedTab == "Main" && selectedSubTab == "Gallery" else { return }
             vm.state = .loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { // Reconnect delay
-                vm.load()
+                vm.load(speedTest: speedTest)
             }
         }
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Gallery" else { return }
-            vm.load() // didLoad is checked in .load() so no need here
+            vm.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             showSettings = true

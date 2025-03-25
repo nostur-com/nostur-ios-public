@@ -12,6 +12,7 @@ struct Discover: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject var settings: SettingsStore = .shared
     @EnvironmentObject var discoverVM: DiscoverViewModel
+    @StateObject private var speedTest = NXSpeedTest()
     @State private var showSettings = false
     
     private var selectedTab: String {
@@ -79,9 +80,12 @@ struct Discover: View {
             }
         }
         .background(themes.theme.listBackground)
+        .overlay(alignment: .top) {
+            LoadingBar(loadingBarViewState: speedTest.loadingBarViewState)
+        }
         .onAppear {
             guard selectedTab == "Main" && selectedSubTab == "Discover" else { return }
-            discoverVM.load()
+            discoverVM.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
             guard !IS_CATALYST else { return }
@@ -89,12 +93,12 @@ struct Discover: View {
             guard discoverVM.shouldReload else { return }
             discoverVM.state = .loading
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { // Reconnect delay
-                discoverVM.load()
+                discoverVM.load(speedTest: speedTest)
             }
         }
         .onChange(of: selectedSubTab) { newValue in
             guard newValue == "Discover" else { return }
-            discoverVM.load() // didLoad is checked in .load() so no need here
+            discoverVM.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             showSettings = true

@@ -12,7 +12,7 @@ import Combine
 // ArticlesFeed
 // Fetch all articles from your follows in the last 1/7/12/31/365 days
 class ArticlesFeedViewModel: ObservableObject {
-    
+    private var speedTest: NXSpeedTest?
     private var backlog:Backlog
     private var follows:Set<Pubkey>
     private var didLoad = false
@@ -47,13 +47,21 @@ class ArticlesFeedViewModel: ObservableObject {
             if ago < oldValue {
                 self.articles = []
                 self.follows = Nostur.follows()
-                self.fetchFromDB()
+                self.fetchFromDB {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
             else {
                 self.articles = []
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.follows = Nostur.follows()
-                self.fetchFromRelays()
+                self.fetchFromRelays {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                }
             }
         }
     }
@@ -89,6 +97,11 @@ class ArticlesFeedViewModel: ObservableObject {
     }
 
     private func fetchFromDB(_ onComplete: (() -> ())? = nil) {
+        
+        Task { @MainActor in
+            speedTest?.loadingBarViewState = .finalLoad
+        }
+        
         let blockedPubkeys = blocks()
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "created_at > %i AND kind == 30023 AND pubkey IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", agoTimestamp, follows, blockedPubkeys)
@@ -146,6 +159,16 @@ class ArticlesFeedViewModel: ObservableObject {
     }
     
     private func fetchFromRelays(_ onComplete: (() -> ())? = nil) {
+        
+        Task { @MainActor in
+            if !ConnectionPool.shared.anyConnected {
+                speedTest?.loadingBarViewState = .connecting
+            }
+            else {
+                speedTest?.loadingBarViewState = .fetching
+            }
+        }
+        
         let reqTask = ReqTask(
             debounceTime: 0.5,
             subscriptionId: "ARTICLES",
@@ -187,13 +210,20 @@ class ArticlesFeedViewModel: ObservableObject {
         reqTask.fetch()
     }
     
-    public func load() {
+    public func load(speedTest: NXSpeedTest) {
+        self.speedTest = speedTest
         guard shouldReload else { return }
         L.og.info("Article feed: load()")
         self.follows = Nostur.follows()
         self.nothingFound = false
         self.articles = []
-        self.fetchFromRelays()
+        
+        self.speedTest?.start()
+        self.fetchFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // for after account change
@@ -203,7 +233,13 @@ class ArticlesFeedViewModel: ObservableObject {
         self.backlog.clear()
         self.follows = Nostur.follows()
         self.articles = []
-        self.fetchFromRelays()
+        
+        self.speedTest?.start()
+        self.fetchFromRelays {
+            Task { @MainActor in
+                self.speedTest?.loadingBarViewState = .finalLoad
+            }
+        }
     }
     
     // pull to refresh
@@ -213,8 +249,12 @@ class ArticlesFeedViewModel: ObservableObject {
         self.backlog.clear()
         self.follows = Nostur.follows()
         
+        self.speedTest?.start()
         await withCheckedContinuation { continuation in
             self.fetchFromRelays {
+                Task { @MainActor in
+                    self.speedTest?.loadingBarViewState = .finalLoad
+                }
                 continuation.resume()
             }
         }
