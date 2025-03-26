@@ -86,8 +86,9 @@ struct NewAccountSheet: View {
                 
                 DataProvider.shared().bgSave()
             }
-            
+            dismiss()
             AccountsState.shared.changeAccount(newAccount)
+            
         }
         catch {
             L.og.error("🔴🔴 could not ns.setAccount \(error)")
