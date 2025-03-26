@@ -80,6 +80,7 @@ class NXColumnViewModel: ObservableObject {
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
     private var newPostSavedSub: AnyCancellable?
+    private var newSingleRelayPostSavedSub: AnyCancellable?
     private var newPostUndoSub: AnyCancellable?
     private var firstConnectionSub: AnyCancellable?
     private var reloadWhenNeededSub: AnyCancellable?
@@ -284,6 +285,10 @@ class NXColumnViewModel: ObservableObject {
         newPostSavedSub = nil
         listenForOwnNewPostSaved(config)
         
+        newSingleRelayPostSavedSub?.cancel()
+        newSingleRelayPostSavedSub = nil
+        listenForOwnNewSingleRelayPostSaved(config)
+        
         newPostUndoSub?.cancel()
         newPostUndoSub = nil
         listenForOwnNewPostUndo(config)
@@ -457,6 +462,35 @@ class NXColumnViewModel: ObservableObject {
                     
                     guard pubkeys.contains(event.pubkey), !currentIdsOnScreen.contains(event.id) else { return }
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NXColumnViewModel.listenForOwnNewPostSaved")
+                    // If we are not hiding replies, we render leafs + parents --> withParents: true
+                    //     and we don't load replies (withReplies) because any reply we follow should already be its own leaf (PostOrThread)
+                    // If we are hiding replies (view), we show mini pfp replies instead, for that we need reply info: withReplies: true
+                    let newOwnPost = NRPost(event: event, withParents: repliesEnabled, withReplies: !repliesEnabled, withRepliesCount: true, cancellationId: event.cancellationId)
+                    Task { @MainActor in
+                        self?.putOnScreen([newOwnPost], config: config)
+                    }
+                }
+            }
+    }
+    
+    @MainActor
+    private func listenForOwnNewSingleRelayPostSaved(_ config: NXColumnConfig) {
+        guard newSingleRelayPostSavedSub == nil else { return }
+        newSingleRelayPostSavedSub = receiveNotification(.newSingleRelayPostSaved)
+            .sink { [weak self] notification in
+                guard let self else { return }
+
+                let currentIdsOnScreen = self.currentIdsOnScreen
+                let repliesEnabled = config.repliesEnabled
+                
+                let (event, relayData) = notification.object as! (Event, RelayData)
+                guard case .relays(let feed) = config.columnType else { return }
+                guard feed.relaysData.contains(where: { $0.id == relayData.id }) else { return }
+                
+                bg().perform { [weak self] in    
+                    
+                    guard !currentIdsOnScreen.contains(event.id) else { return }
+                    EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NXColumnViewModel.listenForOwnNewSingleRelayPostSaved")
                     // If we are not hiding replies, we render leafs + parents --> withParents: true
                     //     and we don't load replies (withReplies) because any reply we follow should already be its own leaf (PostOrThread)
                     // If we are hiding replies (view), we show mini pfp replies instead, for that we need reply info: withReplies: true

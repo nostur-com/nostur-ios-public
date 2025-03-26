@@ -130,6 +130,10 @@ extension Notification.Name {
         return Notification.Name("newPostSaved")
     }
     
+    static var newSingleRelayPostSaved: Notification.Name {
+        return Notification.Name("newSingleRelayPostSaved")
+    }
+    
     static var publishingEvent: Notification.Name {
         return Notification.Name("publishingEvent")
     }

@@ -203,7 +203,12 @@ class Unpublisher {
                 DataProvider.shared().bgSave()
                 if ([1,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
-                        sendNotification(.newPostSaved, savedEvent)
+                        if let singleRelay = lockToThisRelay {
+                            sendNotification(.newSingleRelayPostSaved, (savedEvent, singleRelay))
+                        }
+                        else {
+                            sendNotification(.newPostSaved, savedEvent)
+                        }
                     }
                     if savedEvent.kind == 6 {
                         if let accountCache = accountCache(), accountCache.pubkey == savedEvent.pubkey, let firstquoteId = savedEvent.firstQuoteId  {
