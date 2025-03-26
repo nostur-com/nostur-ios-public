@@ -179,7 +179,7 @@ struct NRTextFixed: UIViewRepresentable {
 //        105.00 ms    0.9%    50.00 ms            NRTextFixed.makeUIView(context:)
 
         let view = UITextView()
-        _ = view.layoutManager // Maybe this fixes: <NSTextViewportLayoutController: 0x132c14eb0>: -[NSTextViewportLayoutController textViewportElementsInRect:] cannot be called during layout.
+        _ = view.layoutManager // Maybe this fixes: <NSTextViewportLayoutController: 0x132c14eb0>: -[NSTextViewportLayoutController textViewportElementsInRect:] cannot be called during layout. Seems to fix crash also.
         view.isScrollEnabled = false
         view.textColor = UIColor(fontColor)
         view.tintColor = UIColor(accentColor)
