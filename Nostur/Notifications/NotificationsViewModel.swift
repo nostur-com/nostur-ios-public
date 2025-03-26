@@ -983,6 +983,7 @@ class OfflinePosts {
                     guard !offlinePosts.isEmpty else { return }
                     for offlinePost in offlinePosts {
                         let nEvent = offlinePost.toNEvent()
+                        guard !nEvent.isRestricted else { continue }
 #if DEBUG
                         L.og.debug("Publishing offline post: \(offlinePost.id)")
 #endif
