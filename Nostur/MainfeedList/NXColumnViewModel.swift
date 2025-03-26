@@ -1866,6 +1866,7 @@ extension NXColumnViewModel {
         case .relays(let feed):
             let relays = feed.relaysData
             guard !relays.isEmpty else {
+                self.didFinish()
                 viewState = .error("No relays selected for this custom feed")
                 return
             }
@@ -1881,6 +1882,7 @@ extension NXColumnViewModel {
                         self?.speedTest?.relayTimedout()
                         Task { @MainActor in
                             if case .loading = self?.viewState {
+                                self?.didFinish()
                                 self?.viewState = .timeout
                             }
                         }
