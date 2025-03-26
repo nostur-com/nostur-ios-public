@@ -24,7 +24,7 @@ struct LoadingBar: View {
                 }
             }
             
-            if viewState == .finalLoad {
+            if viewState == .finalLoad && oldValue != .finalLoad {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     opacity = 0.0
                     viewState = .finished
@@ -69,10 +69,12 @@ struct LoadingBar: View {
         .frame(height: height)
         .opacity(opacity)
         .onChange(of: loadingBarViewState) { newViewState in
+            guard newViewState != self.viewState else { return }
+            
             if newViewState == .finished && opacity != 0.0 {
                 opacity = 0.0
             }
-            else if newViewState != .off {
+            else if newViewState != .off && opacity != 1.0 {
                 opacity = 1.0
             }
             

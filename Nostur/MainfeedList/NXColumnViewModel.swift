@@ -1513,7 +1513,7 @@ extension NXColumnViewModel {
 #if DEBUG
                     print("🏁🏁 NXColumnViewModel.processToScreen loadingBarViewState = .finalLoad")
 #endif
-                    if speedTest.loadingBarViewState != .finished {
+                    if speedTest.loadingBarViewState != .finished && speedTest.loadingBarViewState != .finalLoad {
                         speedTest.loadingBarViewState = .finalLoad
                     }
                 }

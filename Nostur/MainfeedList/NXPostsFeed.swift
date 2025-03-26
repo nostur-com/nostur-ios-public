@@ -173,14 +173,16 @@ struct NXPostsFeed: View {
                         }
                     }
                     
-                    // Re-enable animations
-                    UIView.setAnimationsEnabled(true)
-                    CATransaction.commit()
-                    
-                    // Reset flags after a short delay
+                    // Re-enable animations after a short delay to ensure all updates are complete
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        vmInner.isPerformingScroll = false
-                        updateIsAtTop()
+                        UIView.setAnimationsEnabled(true)
+                        CATransaction.commit()
+                        
+                        // Reset flags after animations are re-enabled
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            vmInner.isPerformingScroll = false
+                            updateIsAtTop()
+                        }
                     }
                 }
             }
