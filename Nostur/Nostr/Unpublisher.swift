@@ -31,15 +31,13 @@ class Unpublisher {
         case contactList
     }
     
-    let PUBLISH_DELAY:Double = 9.0 // SECONDS
-    var timer:Timer?
-    var viewContext:NSManagedObjectContext
-    var queue:[Unpublished] = []
+    let PUBLISH_DELAY: Double = 9.0 // SECONDS
+    var timer: Timer?
+    var queue: [Unpublished] = []
     
-    static var shared = Unpublisher()
+    static let shared = Unpublisher()
     
     init() {
-        self.viewContext = DataProvider.shared().viewContext
         self.timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(onNextTick), userInfo: nil, repeats: true)
         self.timer?.tolerance = 1.0
         NotificationCenter.default.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)
@@ -48,7 +46,7 @@ class Unpublisher {
     // Removes any existing ofType from the queue, before adding this one
     // For example after rapid follow/unfollow, creates new clEvents, only publish the last one
     // Also, we can have multiple of same type from different accounts, so check if pubkey is the same too before removing
-    func publishLast(_ nEvent:NEvent, ofType: Unpublisher.type) -> UUID {
+    func publishLast(_ nEvent: NEvent, ofType: Unpublisher.type) -> UUID {
         queue.removeAll(where: { $0.type == ofType && nEvent.publicKey == $0.nEvent.publicKey })
         let cancellationId = UUID()
         queue.append(Unpublished(type: ofType, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
@@ -60,8 +58,9 @@ class Unpublisher {
         if queue.first(where: { $0.nEvent.id == nEvent.id }) != nil {
             queue = queue.filter { $0.nEvent.id != nEvent.id } // remove existing
             
-            
+#if DEBUG
             L.og.info("Going to publish event.id after 9 sec: \(nEvent.id) - replaced existing event in queue")
+#endif
             let cancellationId = cancellationId ?? UUID()
             
             // add the new event
@@ -69,7 +68,9 @@ class Unpublisher {
             return cancellationId
         }
         
+#if DEBUG
         L.og.info("Going to publish event.id after 9 sec: \(nEvent.id)")
+#endif
         let cancellationId = cancellationId ?? UUID()
         queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
         return cancellationId
@@ -113,13 +114,17 @@ class Unpublisher {
         queue.removeAll()
         
         // lets also save context here...
+#if DEBUG
         L.og.debug("DataProvider.shared().save() from Unpublisher.appMovedToBackground ")
+#endif
         DataProvider.shared().save()
     }
     
     private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false) {
         if nEvent.kind == .nwcRequest {
-            L.og.info("⚡️ Sending .nwcRequest to NWC relay")
+#if DEBUG
+            L.og.debug("⚡️ Sending .nwcRequest to NWC relay")
+#endif
             ConnectionPool.shared.sendMessage(
                 NosturClientMessage(
                     clientMessage: NostrEssentials.ClientMessage(type: .REQ),

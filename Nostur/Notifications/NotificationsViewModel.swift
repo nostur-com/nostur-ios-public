@@ -982,8 +982,10 @@ class OfflinePosts {
                 if let offlinePosts = try? bg().fetch(r1) {
                     guard !offlinePosts.isEmpty else { return }
                     for offlinePost in offlinePosts {
-                        L.og.debug("Publishing offline post: \(offlinePost.id)")
                         let nEvent = offlinePost.toNEvent()
+#if DEBUG
+                        L.og.debug("Publishing offline post: \(offlinePost.id)")
+#endif
                         DispatchQueue.main.async {
                             Unpublisher.shared.publishNow(nEvent)
                         }

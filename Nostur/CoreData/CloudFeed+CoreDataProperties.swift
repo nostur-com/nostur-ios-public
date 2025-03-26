@@ -88,7 +88,7 @@ extension CloudFeed : Identifiable {
             let fr = CloudRelay.fetchRequest()
             fr.predicate = NSPredicate(value: true)
             let allRelays = (try? context.fetch(fr)) ?? []
-            var relays:[CloudRelay] = []
+            var relays: [CloudRelay] = []
             var didAddNew = false
             for url in relayUrls {
                 if let relay = allRelays.first(where: { $0.url_ == url || (($0.url_ ?? "") + "/") == url || $0.url_ == (url + "/") }) {
