@@ -54,7 +54,21 @@ public final class TypingTextModel: ObservableObject {
     }
 }
 
+func enableAuthAndSendChallengeOnSingleRelay(usingAccount: CloudAccount? = nil) {
+    guard let singleRelay = Drafts.shared.lockToThisRelay else { return }
+    ConnectionPool.shared.connections[singleRelay.id]?.relayData.setAuth(true)
+    ConnectionPool.shared.connections[singleRelay.id]?.sendAuthResponse(usingAccount: usingAccount)
+}
+
 public final class NewPostModel: ObservableObject {
+    
+    @Published var lockToSingleRelay: Bool = false {
+        didSet {
+            if lockToSingleRelay {
+                enableAuthAndSendChallengeOnSingleRelay(usingAccount: activeAccount)
+            }
+        }
+    }
     
     // For remote included images we need to download and fetch dimensions/blurhash
     var remoteIMetas: [String: iMetaInfo] = [:]
@@ -388,6 +402,12 @@ public final class NewPostModel: ObservableObject {
             nEvent.content = replaceNsecWithHunter2(nEvent.content)
         }
         
+        let lockToThisRelay: RelayData? = Drafts.shared.lockToThisRelay
+        
+        if lockToThisRelay != nil && lockToSingleRelay {
+            nEvent.tags.append(NostrTag(["-"]))
+        }
+        
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
@@ -418,7 +438,7 @@ public final class NewPostModel: ObservableObject {
 //                            savedEvent.updateNRPost.send(savedEvent)
                             ViewUpdates.shared.updateNRPost.send(savedEvent)
                             DispatchQueue.main.async {
-                                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+                                _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
                             }
                         }
                     })
@@ -442,7 +462,7 @@ public final class NewPostModel: ObservableObject {
                     }
                 }
             }
-            _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId)
+            _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
         }
         
         if let replyTo, !replyTo.nrPost.isRestricted { // Rebroadcast if not restricted
@@ -556,6 +576,10 @@ public final class NewPostModel: ObservableObject {
         
         qTags.forEach { qTag in
             nEvent.tags.append(NostrTag(["q", qTag]))
+        }
+        
+        if let lockToThisRelay = Drafts.shared.lockToThisRelay, lockToSingleRelay {
+            nEvent.tags.append(NostrTag(["-"]))
         }
 
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {

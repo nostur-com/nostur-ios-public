@@ -155,7 +155,7 @@ struct ComposePost: View {
                                         }).equatable()
                                         
                                         Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
-                                            .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 20)) : max(50, ((geo.size.height - 20) * 0.5 )) )
+                                            .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 90)) : max(50, ((geo.size.height - 90) * 0.5 )) )
                                             .id(textfield)
                                     }
                                     .padding(.top, 10)
@@ -164,6 +164,13 @@ struct ComposePost: View {
                                         KindResolver(nrPost: quotingNRPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, theme: themes.theme)
                                             .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width != 0 ? geo.size.width : dim.listWidth, isScreenshot: false))
                                             .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                                    }
+                                    
+                                    if let singleRelay = Drafts.shared.lockToThisRelay {
+                                        Toggle(isOn: $vm.lockToSingleRelay) {
+                                            Text("Lock post to \(singleRelay.url)")
+                                        }
+                                        .padding(10)
                                     }
                                 }
                                 

@@ -63,6 +63,17 @@ struct NXColumnView: View {
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
             viewModel.isVisible = isVisible
             
+            if isVisible {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { // This should always be a bit delayed else it will be cancelled out by other feeds .onChange(of: isVisible)
+                    if case .relays(let feed) = config.columnType, feed.relaysData.count == 1 {
+                        Drafts.shared.lockToThisRelay = feed.relaysData.first
+                    }
+                    else {
+                        Drafts.shared.lockToThisRelay = nil
+                    }
+                }
+            }
+            
             guard !didLoad else { return }
             didLoad = true
             viewModel.availableWidth = dim.availableNoteRowWidth
@@ -79,6 +90,18 @@ struct NXColumnView: View {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onChange(of: isVisible) newValue: \(newValue) -[LOG]-")
 #endif
+            
+            if newValue {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { // This should always be a bit delayed else it will be cancelled out by other feeds .onChange(of: isVisible)
+                    if case .relays(let feed) = config.columnType, feed.relaysData.count == 1 {
+                        Drafts.shared.lockToThisRelay = feed.relaysData.first
+                    }
+                    else {
+                        Drafts.shared.lockToThisRelay = nil
+                    }
+                }
+            }
+            
             guard viewModel.isVisible != newValue else { return }
             viewModel.isVisible = newValue
         }

@@ -53,7 +53,7 @@ class Unpublisher {
         return cancellationId
     }
     
-    func publish(_ nEvent:NEvent, cancellationId:UUID? = nil) -> UUID {
+    func publish(_ nEvent: NEvent, cancellationId: UUID? = nil, lockToThisRelay: RelayData? = nil) -> UUID {
         // if an event with the same id is already in the queue, replace it and reset the timer
         if queue.first(where: { $0.nEvent.id == nEvent.id }) != nil {
             queue = queue.filter { $0.nEvent.id != nEvent.id } // remove existing
@@ -64,7 +64,7 @@ class Unpublisher {
             let cancellationId = cancellationId ?? UUID()
             
             // add the new event
-            queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
+            queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now, lockToThisRelay: lockToThisRelay))
             return cancellationId
         }
         
@@ -72,12 +72,12 @@ class Unpublisher {
         L.og.info("Going to publish event.id after 9 sec: \(nEvent.id)")
 #endif
         let cancellationId = cancellationId ?? UUID()
-        queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now))
+        queue.append(Unpublished(type:.other, cancellationId: cancellationId, nEvent: nEvent, createdAt: Date.now, lockToThisRelay: lockToThisRelay))
         return cancellationId
     }
     
-    func publishNow(_ nEvent: NEvent, skipDB: Bool = false) {
-        sendToRelays(nEvent, skipDB: skipDB)
+    func publishNow(_ nEvent: NEvent, skipDB: Bool = false, lockToThisRelay: RelayData? = nil) {
+        sendToRelays(nEvent, skipDB: skipDB, lockToThisRelay: lockToThisRelay)
     }
     
     func cancel(_ cancellationId:UUID) -> Bool {
@@ -88,9 +88,9 @@ class Unpublisher {
     
     func sendNow(_ cancellationId:UUID) -> Bool {
         let beforeCount = queue.count
-        if let event = queue.first(where: { $0.cancellationId == cancellationId })?.nEvent {
+        if let queued = queue.first(where: { $0.cancellationId == cancellationId }) {
             queue.removeAll(where: { $0.cancellationId == cancellationId })
-            sendToRelays(event)
+            sendToRelays(queued.nEvent, lockToThisRelay: queued.lockToThisRelay)
         }
         return beforeCount != queue.count
     }
@@ -101,7 +101,7 @@ class Unpublisher {
         queue
             .filter { $0.createdAt < Date.now.addingTimeInterval(-(PUBLISH_DELAY)) }
             .forEach({ [weak self] item in
-                self?.sendToRelays(item.nEvent)
+                self?.sendToRelays(item.nEvent, lockToThisRelay: item.lockToThisRelay)
                 self?.queue.removeAll { q in
                     q.cancellationId == item.cancellationId
                 }
@@ -110,7 +110,7 @@ class Unpublisher {
     
     @objc func appMovedToBackground(notification: NSNotification) {
         guard !queue.isEmpty else { return }
-        queue.forEach({ sendToRelays($0.nEvent) })
+        queue.forEach({ sendToRelays($0.nEvent, lockToThisRelay: $0.lockToThisRelay) })
         queue.removeAll()
         
         // lets also save context here...
@@ -120,7 +120,7 @@ class Unpublisher {
         DataProvider.shared().save()
     }
     
-    private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false) {
+    private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false, lockToThisRelay: RelayData? = nil) {
         if nEvent.kind == .nwcRequest {
 #if DEBUG
             L.og.debug("⚡️ Sending .nwcRequest to NWC relay")
@@ -144,6 +144,7 @@ class Unpublisher {
                     relayType: .WRITE,
                     nEvent: nEvent
                 ),
+                relays: lockToThisRelay != nil ? Set([lockToThisRelay!]) : [],
                 accountPubkey: nEvent.publicKey
             )
             return
@@ -174,6 +175,7 @@ class Unpublisher {
                         relayType: .WRITE,
                         nEvent: nEvent
                     ),
+                    relays: lockToThisRelay != nil ? Set([lockToThisRelay!]) : [],
                     accountPubkey: nEvent.publicKey
                 )
                 
@@ -229,6 +231,7 @@ class Unpublisher {
                         relayType: .WRITE,
                         nEvent: nEvent
                     ),
+                    relays: lockToThisRelay != nil ? Set([lockToThisRelay!]) : [],
                     accountPubkey: nEvent.publicKey
                 )
             }
@@ -242,5 +245,6 @@ extension Unpublisher {
         var cancellationId: UUID
         var nEvent: NEvent
         var createdAt: Date
+        var lockToThisRelay: RelayData?
     }
 }

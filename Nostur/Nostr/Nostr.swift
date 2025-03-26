@@ -411,6 +411,11 @@ public struct NEvent: Codable {
 
 // FIX ALL REPLY MENTION ROOT DETECTION ETC
 extension NEvent {
+    
+    var isRestricted: Bool {
+        self.fastTags.first(where: { $0.0 == "-" }) != nil
+    }
+    
     @available(iOS 16.0, *)
     static let indexedMentionRegex = /#\[(\d+)\]/
     

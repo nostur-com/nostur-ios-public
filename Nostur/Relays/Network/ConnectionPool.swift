@@ -522,7 +522,8 @@ public class ConnectionPool: ObservableObject {
                     connection.sendMessage(message.message)
                 }
                 else if message.type == .EVENT {
-                    if message.relayType == .WRITE && !connection.relayData.write { continue }
+                    let isRestrictedForThisRelay = (message.nEvent?.isRestricted ?? false) && limitToRelayIds.contains(connection.url)
+                    if (message.relayType == .WRITE && !connection.relayData.write) && !isRestrictedForThisRelay { continue }
                     
                     if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
                         L.sockets.info("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description) ")
