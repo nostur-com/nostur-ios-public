@@ -138,8 +138,8 @@ struct NRContentTextRendererInner: View {
                         }
                     }
 //                    .transaction { t in t.animation = nil } // <-- needed or not?
-//                    .frame(height: textHeight, alignment: .topLeading)
-//                    .fixedSize(horizontal: false, vertical: true) // needed or text height stays at inital textHeight (90)
+                    .frame(height: textHeight, alignment: .topLeading) // <-- Fixes clipped text height, stuck at initial 60, this problem only happens inside LazyVStack
+//                    .fixedSize(horizontal: false, vertical: true) // needed or text height stays at inital textHeight (60) (bug only in happens in LazyVStack)
                     .onChange(of: availableWidth) { newWidth in
                         guard newWidth != textWidth else { return }
                         textWidth = newWidth

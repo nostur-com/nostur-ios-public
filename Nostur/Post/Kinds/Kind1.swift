@@ -124,7 +124,7 @@ struct Kind1: View {
 //                    .debugDimensions("Kind1.normalView2")
                 
                 ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
-                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
+//                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 1200 : 900, alignment: .top)
                     .clipBottom(height: !IS_IPHONE && didStart ? 1200 : 900)

@@ -260,7 +260,6 @@ struct PostLayout<Content: View>: View {
             VStack(alignment:.leading, spacing: 3) {// Post container
                 
                 content
-                    .frame(maxHeight: isDetail ? 44000 : DIMENSIONS.POST_MAX_ROW_HEIGHT, alignment: .topLeading)
                 
                 if isDetail {
                     DetailFooterFragment(nrPost: nrPost)
