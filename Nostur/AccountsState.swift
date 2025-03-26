@@ -51,12 +51,12 @@ class AccountsState: ObservableObject {
         }
         
         // No account selected
-        if activeAccountPublicKey.isEmpty {
+        if activeAccountPublicKey.isEmpty && !loadAnyAccount {
             self.loggedInAccount = nil
             sendNotification(.clearNavigation)
             return
         }
-        else if let account = accounts.first(where: { $0.publicKey == activeAccountPublicKey }) {
+        else if !activeAccountPublicKey.isEmpty, let account = accounts.first(where: { $0.publicKey == activeAccountPublicKey }) {
             if loggedInAccount?.account != account {
                 Task { @MainActor in
                     changeAccount(account)
