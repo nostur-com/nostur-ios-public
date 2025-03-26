@@ -80,13 +80,13 @@ class Unpublisher {
         sendToRelays(nEvent, skipDB: skipDB, lockToThisRelay: lockToThisRelay)
     }
     
-    func cancel(_ cancellationId:UUID) -> Bool {
+    func cancel(_ cancellationId: UUID) -> Bool {
         let beforeCount = queue.count
         queue.removeAll(where: { $0.cancellationId == cancellationId })
         return beforeCount != queue.count
     }
     
-    func sendNow(_ cancellationId:UUID) -> Bool {
+    func sendNow(_ cancellationId: UUID) -> Bool {
         let beforeCount = queue.count
         if let queued = queue.first(where: { $0.cancellationId == cancellationId }) {
             queue.removeAll(where: { $0.cancellationId == cancellationId })

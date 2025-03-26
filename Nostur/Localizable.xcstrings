@@ -1195,7 +1195,7 @@
       }
     },
     "Account: @%@ / %@" : {
-      "comment" : "Informational text during logout action, showing Account name/handle\ninformational message showing account name(s)",
+      "comment" : "informational message showing account name(s)",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1363,7 +1363,7 @@
       }
     },
     "Add existing account" : {
-      "comment" : "Button to add an existing account\nNavigation title for Add Existing Account screen",
+      "comment" : "Navigation title for Add Existing Account screen",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2360,7 +2360,7 @@
       }
     },
     "Confirm log out" : {
-      "comment" : "Action sheet title\nTitle of sheet that asks the user to confirm logout action",
+      "comment" : "Action sheet title",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2543,7 +2543,7 @@
       }
     },
     "Copy npub" : {
-      "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
+      "comment" : "Menu action",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2738,7 +2738,7 @@
       }
     },
     "Create new badge" : {
-      "comment" : "Button to create a new badge\nNavigation title for Badge creation screen",
+      "comment" : "Button to create a new badge",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3246,7 +3246,7 @@
       }
     },
     "Edit profile" : {
-      "comment" : "Button to edit own profile\nNavigation title for Edit Profile screen",
+      "comment" : "Button to edit own profile",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3886,7 +3886,7 @@
       }
     },
     "Follows you" : {
-      "comment" : "Label shown when someone follows you\nLabel that shows if someone is following you",
+      "comment" : "Label shown when someone follows you",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4705,8 +4705,11 @@
         }
       }
     },
+    "Lock post to %@" : {
+
+    },
     "Log out" : {
-      "comment" : "Button to log out\nLog out button\nSide bar navigation button",
+      "comment" : "Log out button\nSide bar navigation button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4792,7 +4795,7 @@
       }
     },
     "Make sure you have a back-up of your private key (nsec)\nNostur cannot recover your account without it" : {
-      "comment" : "Informational text during logout action\ninformational message",
+      "comment" : "informational message",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5728,6 +5731,9 @@
         }
       }
     },
+    "Or, skip and try as guest first" : {
+
+    },
     "Orange" : {
       "localizations" : {
         "nl" : {
@@ -5996,7 +6002,7 @@
       }
     },
     "Post.verb" : {
-      "comment" : "Button to post (publish) a post\nButton to post a highlight",
+      "comment" : "Button to post (publish) a post",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7071,7 +7077,7 @@
       }
     },
     "Report.verb" : {
-      "comment" : "Button to publish report\nPost context menu action to Report a post or user",
+      "comment" : "Post context menu action to Report a post or user",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -7840,7 +7846,7 @@
       }
     },
     "Skip and try as guest first" : {
-      "comment" : "Button to skip adding account and use the guest account instead\nButton to skip creating account and login as guest",
+      "comment" : "Button to skip adding account and use the guest account instead",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

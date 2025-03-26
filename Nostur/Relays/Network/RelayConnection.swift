@@ -56,7 +56,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     private var isDeviceConnected = false {
         didSet {
+#if DEBUG
             L.sockets.debug("connection.isDeviceConnected = \(self.isDeviceConnected) - \(self.url)")
+#endif
             if !isDeviceConnected {
                 isSocketConnecting = false
                 isSocketConnected = false
@@ -87,7 +89,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         NetworkMonitor.shared.actualVPNconnectionDetected = false
                     }
                     if SettingsStore.shared.enableVPNdetection {
+#if DEBUG
                         L.og.debug("RelayConnection \(self.url) - last disconnect")
+#endif
                         ConnectionPool.shared.disconnectAllAdditional()
                     }
                     sendNotification(.lastDisconnection)
@@ -96,7 +100,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 // Or if it is the first connection after all were disconnected,
                 // we should reset the exponential back off and connectAll
                 else if !wasConnected && isSocketConnected && !ConnectionPool.shared.anyConnected {
+#if DEBUG
                     L.og.debug("RelayConnection \(self.url) - first connection after all disconnected")
+#endif
 //                    ConnectionPool.shared.connectAll(resetExpBackOff: true) // <-- TODO: Causes duplicate connections, at start up .connectAll has first connection, and triggers .connectAll again
                     // Should trigger resume on any visible feed?
                     sendNotification(.firstConnection)
@@ -155,7 +161,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func connect(andSend: String? = nil, forceConnectionAttempt: Bool = false) {
         if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
+#if DEBUG
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(self.relayData.url)"); return
+#endif
         }
         DispatchQueue.main.async { [weak self] in
             let anyConnected = ConnectionPool.shared.anyConnected
@@ -163,13 +171,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self?.queue.async(flags: .barrier) { [weak self] in
                 guard let self = self else { return }
                 guard self.isDeviceConnected else {
+#if DEBUG
                     L.sockets.debug("\(self.url) - No internet, skipping connect()")
+#endif
                     self.isSocketConnecting = false
                     return
                 }
                 guard !self.isSocketConnecting || forceConnectionAttempt else {
+#if DEBUG
                     L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
-//                    self.isSocketConnecting = false
+#endif
                     if let andSend {
                         self.sendMessage(andSend)
                     }
@@ -181,7 +192,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard self.stats.errors == 0 || self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
                     self.skipped = self.skipped + 1
                     self.isSocketConnecting = false
+#if DEBUG
                     L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped) -[LOG]-")
+#endif
                     return
                 }
                 self.skipped = 0
@@ -208,7 +221,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     }
                     
                     self.webSocketTask?.resume()
+#if DEBUG
                     L.sockets.debug("\(self.url) webSocketTask?.resume()")
+#endif
                     
                     if self.exponentialReconnectBackOff >= 512 {
                         self.exponentialReconnectBackOff = 512
@@ -224,7 +239,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
                 
                 if self.relayData.auth {
+#if DEBUG
                     L.sockets.debug("\(self.url) relayData.auth == true")
+#endif
                     self.sendAfterAuthSubject.send()
                     return
                 }
@@ -242,7 +259,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     }
     
     public func sendAfterAuth() {
+#if DEBUG
         L.sockets.debug("\(self.url) sendAfterAuth()")
+#endif
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
@@ -261,14 +280,16 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             if !self.isDeviceConnected {
+#if DEBUG
                 L.sockets.debug("🔴🔴 No internet. Did not sendMessage \(self.url)")
+#endif
                 return
             }
             
             if bypassQueue { // To give prio to stuff like AUTH
-                #if DEBUG
+#if DEBUG
                 L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-                #endif
+#endif
                 webSocketTask?.send(.string(text)) { error in
                     if let error {
                         self.didReceiveError(error)
@@ -281,20 +302,24 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             self.outQueue.append(socketMessage)
             
             if self.webSocketTask == nil || !self.isSocketConnected {
+#if DEBUG
                 L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url). (Message queued): \(text.prefix(155))")
+#endif
                 return
             }
             
             if self.relayData.auth && !self.didAuth {
+#if DEBUG
                 L.sockets.debug("\(self.url) relayData.auth == true. Waiting 0.25 sec for: \(text.prefix(155))")
+#endif
                 self.sendAfterAuthSubject.send()
                 return
             }
             
             
-            #if DEBUG
+#if DEBUG
             L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-            #endif
+#endif
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             
             for out in outQueue {
@@ -402,9 +427,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             if !self.isSocketConnected {
                 self.isSocketConnected = true
             }
-            #if DEBUG
+#if DEBUG
             L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(string)")
-            #endif
+#endif
             MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url, client: self)
             self.lastMessageReceivedAt = .now
             self.exponentialReconnectBackOff = 0
@@ -554,7 +579,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             
             if self.relayData.auth && !self.didAuth {
+#if DEBUG
                 L.sockets.debug("relayData.auth == true but did not auth yet, waiting 0.25 secs")
+#endif
                 self.sendAfterAuthSubject.send()
                 return
             }
@@ -587,7 +614,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 sendNotification(.socketNotification, "Disconnected: \(self?.url ?? "")")
             }
         }
+#if DEBUG
         L.sockets.debug("🏎️🏎️🔌 DISCONNECTED \(self.url): \(String(describing: reason != nil ? String(data: reason!, encoding: .utf8) : "") )")
+#endif
     }
     
     private func startReceiving() {
