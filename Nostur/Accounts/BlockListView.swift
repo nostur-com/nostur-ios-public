@@ -200,7 +200,7 @@ struct MutedConversations: View {
                             viewContext.delete(mutedRootId)
                             viewContextSave()
                             AppState.shared.bgAppState.mutedRootIds.remove(mutedRootId.eventId)
-                            sendNotification(.muteListUpdated)
+                            sendNotification(.muteListUpdated, AppState.shared.bgAppState.mutedRootIds)
                         }
                     }
                     Spacer()
