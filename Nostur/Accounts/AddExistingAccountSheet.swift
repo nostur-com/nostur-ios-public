@@ -45,7 +45,7 @@ struct AddExistingAccountSheet: View {
             ZStack {
                 VStack {
                     if (key.isEmpty || key.lowercased().starts(with: "nsec1")) {
-                        SecureField(String(localized:"nostr address / npub / nsec / signer url", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                        SecureField("", text: $key, prompt: Text("nostr address / npub / nsec / signer url", comment: "Input field to enter public or private key on Add Existing Account screen").foregroundColor(Color.black))
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
                             .padding()
@@ -54,7 +54,7 @@ struct AddExistingAccountSheet: View {
                             .padding(.bottom, 20)
                     }
                     else {
-                        TextField(String(localized:"nostr address / npub / nsec / signer url", comment:"Input field to enter public or private key on Add Existing Account screen"), text: $key)
+                        TextField("", text: $key, prompt: Text("nostr address / npub / nsec / signer url", comment: "Input field to enter public or private key on Add Existing Account screen").foregroundColor(Color.black))
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
                             .padding()

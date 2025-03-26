@@ -27,14 +27,14 @@ struct NewAccountSheet: View {
     
     var body: some View {
             VStack {
-                TextField(String(localized: "Name", comment:"Label of Name text field on Create new account screen"), text: $name)
+                TextField("", text: $name, prompt: Text("Name", comment:"Label of Name text field on Create new account screen").foregroundColor(Color.black))
                     .disableAutocorrection(true)
                     .padding()
                     .background(grayBackground)
                     .cornerRadius(5.0)
                     .padding(.bottom, 20)
                     .focused($focusedField, equals: .name)
-                TextField(String(localized:"Something about yourself (bio)", comment:"Label of bio/about text field on Create new account screen"), text: $about)
+                TextField("", text: $about, prompt: Text("Something about yourself (bio)", comment:"Label of bio/about text field on Create new account screen").foregroundColor(Color.black))
                     .lineLimit(5)
                     .padding()
                     .background(grayBackground)
@@ -56,7 +56,7 @@ struct NewAccountSheet: View {
                     NavigationLink {
                         TryGuestAccountSheet()
                     } label: {
-                        Text("Skip and try as guest first", comment: "Button to skip creating account and login as guest")
+                        Text("Or, skip and try as guest first", comment: "Button to skip creating account and login as guest")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderless)
