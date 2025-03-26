@@ -26,7 +26,7 @@ class InstantFeed {
     private var since: Int?
     private var events:[Event]? {
         didSet {
-            if let events, events.count > 20 {
+            if let events, events.count > 0 {
                 self.isRunning = false
                 self.onComplete?(events)
                 self.backlog.clear()
@@ -183,7 +183,7 @@ class InstantFeed {
                             L.og.notice("🟪 \(taskId) Could not fetch posts from globalish relays using \(relayCount) relays.")
                             return
                         }
-                        guard events.count > 1 else {
+                        guard events.count > 0 else {
                             L.og.notice("🟪 \(taskId) Received only \(events.count) events, waiting for more.")
                             return
                         }
