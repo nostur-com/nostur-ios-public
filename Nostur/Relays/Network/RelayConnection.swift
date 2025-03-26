@@ -633,11 +633,11 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
 
-    public func sendAuthResponse() {
+    public func sendAuthResponse(usingAccount: CloudAccount? = nil) {
         guard self.relayData.auth else { return }
         
         DispatchQueue.main.async { [weak self] in
-            guard let self, let account = Nostur.account(), account.isFullAccount else { return }
+            guard let self, let account = usingAccount ?? Nostur.account(), account.isFullAccount else { return }
             guard !self.relayData.excludedPubkeys.contains(account.publicKey) else { return }
             
             self.queue.async { [weak self] in
@@ -646,20 +646,30 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard let challenge = self.lastAuthChallenge else { return }
                 guard self.recentAuthAttempts < 5 else { return }
                 
-                
                 var authResponse = NEvent(content: "")
                 authResponse.kind = .auth
                 authResponse.tags.append(NostrTag(["relay", relayData.url]))
                 authResponse.tags.append(NostrTag(["challenge", challenge]))
-
-                DispatchQueue.main.async { [weak self] in
-                    guard let self, let signedAuthResponse = try? account.signEvent(authResponse) else { return }
-                    self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
-                    
-                    self.queue.async(flags: .barrier) { [weak self] in
-                        guard let self else { return }
-                        self.recentAuthAttempts = self.recentAuthAttempts + 1
-                        self.didAuth = true
+                
+                DispatchQueue.main.async {
+                    if account.isNC {
+                        authResponse = authResponse.withId()
+                        NSecBunkerManager.shared.requestSignature(forEvent: authResponse, usingAccount: account, whenSigned: { signedAuthResponse in
+                            self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
+                            self.queue.async(flags: .barrier) { [weak self] in
+                                guard let self else { return }
+                                self.recentAuthAttempts = self.recentAuthAttempts + 1
+                                self.didAuth = true
+                            }
+                        })
+                    }
+                    else if let signedAuthResponse = try? account.signEvent(authResponse) {
+                        self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
+                        self.queue.async(flags: .barrier) { [weak self] in
+                            guard let self else { return }
+                            self.recentAuthAttempts = self.recentAuthAttempts + 1
+                            self.didAuth = true
+                        }
                     }
                 }
             }
