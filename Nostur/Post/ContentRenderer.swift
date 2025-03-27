@@ -159,6 +159,7 @@ struct ContentRenderer: View { // VIEW things
                         contentMode: .fit,
                         galleryItems: nrPost.galleryItems,
                         autoload: shouldAutoload,
+                        isNSFW: nrPost.isNSFW,
                         generateIMeta: isPreviewContext
                     )
                     .padding(.horizontal, fullWidth ? -10 : 0)

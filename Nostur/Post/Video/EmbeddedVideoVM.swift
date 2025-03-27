@@ -43,7 +43,7 @@ class EmbeddedVideoVM: ObservableObject {
     @Published var isAudio: Bool = false
     
     
-    public func load(_ url: URL, nrPost: NRPost? = nil, autoLoad: Bool = false, metaDimensions: CGSize? = nil, availableWidth: CGFloat? = nil, availableHeight: CGFloat = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, allowNonHttps: Bool = false) {
+    public func load(_ url: URL, nrPost: NRPost? = nil, autoLoad: Bool = false, metaDimensions: CGSize? = nil, availableWidth: CGFloat? = nil, availableHeight: CGFloat = DIMENSIONS.MAX_MEDIA_ROW_HEIGHT, loadAnyway: Bool = false) {
         self.videoUrl = url
         self.videoUrlString = url.absoluteString
         self.metaDimensions = metaDimensions
@@ -80,12 +80,16 @@ class EmbeddedVideoVM: ObservableObject {
             self.viewState = .loadedFirstFrame(cachedFirstFrame)
             self.cachedFirstFrame = cachedFirstFrame // need to keep it to revert back to after PIP
         }
+        // Warning if NSWF
+        else if !loadAnyway && (nrPost?.isNSFW ?? false) {
+            self.viewState = .nsfwWarning(url.absoluteString)
+        }
         // Warning if no https
-        else if (videoUrlString.prefix(7) == "http://" && !allowNonHttps) {
+        else if !loadAnyway && videoUrlString.prefix(7) == "http://" {
             self.viewState = .noHttpsWarning(videoUrlString)
         }
         // Don't load if we are in low data mode
-        else if SettingsStore.shared.lowDataMode {
+        else if !loadAnyway && SettingsStore.shared.lowDataMode {
             self.viewState = .lowDataMode(videoUrlString)
         }
         else if isAudio { // Load audio as stream (don't download/cache)
@@ -149,6 +153,12 @@ class EmbeddedVideoVM: ObservableObject {
             playStreamUrl(videoUrl)
         }
         else { // start downloading video
+            if case .loading(_) = viewState {
+
+            }
+            else {
+                viewState = .loading(1)
+            }
             self.downloadProgress = 1 // Need to be off 0 else looks like tapping play button is delayed (first view update would be 3% or higher)
             Task.detached(priority: .background) { [weak self] in
                 guard let self else { return }
@@ -506,6 +516,7 @@ extension EmbeddedVideoVM {
     enum ViewState {
         case initial
         case noHttpsWarning(String)
+        case nsfwWarning(String)
         case loading(Int)
         case cancelled
         case lowDataMode(String)

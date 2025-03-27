@@ -83,7 +83,8 @@ struct LiveEventRowView: View {
                     maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                     contentMode: .fit,
                     upscale: true,
-                    autoload: shouldAutoload
+                    autoload: shouldAutoload,
+                    isNSFW: liveEvent.isNSFW
                 )
                 .padding(.horizontal, fullWidth ? -10 : 0)
                 .padding(.vertical, 10)

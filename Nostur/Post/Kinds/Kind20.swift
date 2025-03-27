@@ -106,7 +106,8 @@ struct Kind20: View {
                         maxHeight: 800,
                         contentMode: .fit,
                         galleryItems: nrPost.galleryItems,
-                        autoload: shouldAutoload
+                        autoload: shouldAutoload,
+                        isNSFW: nrPost.isNSFW
                     )
                     .padding(.horizontal, -10)
                     .overlay(alignment: .bottomTrailing) {

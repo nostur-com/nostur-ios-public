@@ -288,7 +288,8 @@ struct Kind30023: View {
                     placeholderAspect: 2/1,
                     contentMode: .fit,
                     upscale: true,
-                    autoload: forceAutoload
+                    autoload: forceAutoload,
+                    isNSFW: nrPost.isNSFW
                 )
                 .padding(.horizontal, -20) // on article preview always use full width style
                 .padding(.vertical, 10)

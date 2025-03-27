@@ -130,7 +130,8 @@ struct ChatRenderer: View { // VIEW things
                         availableWidth: availableWidth,
                         maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                         contentMode: .fit,
-                        autoload: shouldAutoload
+                        autoload: shouldAutoload,
+                        isNSFW: nrChat.isNSFW
                     )
                     .padding(.vertical, 10)
                 case .linkPreview(let url):

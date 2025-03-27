@@ -126,7 +126,8 @@ struct Kind1063: View {
                     availableWidth: availableWidth + (fullWidth ? +20 : 0),
                     maxHeight: 800,
                     contentMode: .fit,
-                    autoload: shouldAutoload
+                    autoload: shouldAutoload,
+                    isNSFW: nrPost.isNSFW
                 )
                 .padding(.horizontal, fullWidth ? -10 : 0)
 //                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)

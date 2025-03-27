@@ -206,7 +206,8 @@ struct NXContentRenderer: View { // VIEW things
                             placeholderAspect: 4/3,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,
-                            autoload: shouldAutoload
+                            autoload: shouldAutoload,
+                            isNSFW: nxEvent.isNSFW
                         )
                         .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 

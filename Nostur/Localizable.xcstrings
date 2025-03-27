@@ -2491,6 +2491,15 @@
         }
       }
     },
+    "Content blocked" : {
+      "comment" : "Displayed when media in a post is blocked"
+    },
+    "Content blocked (No HTTPS)" : {
+      "comment" : "Displayed when media in a post is blocked"
+    },
+    "Content blocked (NSFW)" : {
+      "comment" : "Displayed when media in a post is blocked"
+    },
     "Content from these accounts you follow was received from this relay" : {
       "localizations" : {
         "nl" : {
@@ -4705,6 +4714,9 @@
         }
       }
     },
+    "Loading paused (Low data mode)" : {
+      "comment" : "Displayed when media in a post is blocked"
+    },
     "Lock post to %@" : {
 
     },
@@ -5617,6 +5629,9 @@
           }
         }
       }
+    },
+    "NSFW" : {
+
     },
     "Nudity" : {
       "comment" : "Menu item in choice list",

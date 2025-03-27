@@ -21,6 +21,7 @@ struct MediaContentView: View {
     
     public var upscale: Bool = false
     public var autoload: Bool = false
+    public var isNSFW: Bool = false
     public var imageInfo: ImageInfo? = nil
     public var gifInfo: GifInfo? = nil
     
@@ -43,6 +44,7 @@ struct MediaContentView: View {
             realDimensions: $realDimensions,
             upscale: upscale,
             autoload: autoload,
+            isNSFW: isNSFW,
             imageInfo: imageInfo,
             gifInfo: gifInfo,
             generateIMeta: generateIMeta
@@ -69,6 +71,7 @@ struct MediaPlaceholder: View {
     
     public var upscale: Bool = false
     public var autoload: Bool = false
+    public var isNSFW: Bool = false
     public var imageInfo: ImageInfo? = nil
     public var gifInfo: GifInfo? = nil
     public var generateIMeta: Bool = false
@@ -268,6 +271,10 @@ struct MediaPlaceholder: View {
                 }
                 .overlay(alignment: .center) {
                     VStack {
+                        if isNSFW {
+                            Text("NSFW")
+                                .fontWeightBold()
+                        }
                         Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                             .frame(maxWidth: .infinity, alignment: .center)
                         Text(galleryItem.url.absoluteString)
@@ -509,7 +516,7 @@ struct MediaPlaceholder: View {
                         vm.state = .gif(gifInfo)
                     }
             }
-            else if !autoload && !fullScreen {
+            else if (!autoload || isNSFW) && !fullScreen {
                 Color.clear
                     .onAppear {
                         if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {

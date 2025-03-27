@@ -55,15 +55,27 @@ struct EmbeddedVideoView: View {
                     }
                 }
                 .onAppear {
-                    vm.load(url, nrPost: nrPost)
+                    vm.load(url, nrPost: nrPost, autoLoad: autoload)
                 }
-        case .noHttpsWarning(let videoUrlString):
+        case .nsfwWarning(let videoUrlString), .lowDataMode(let videoUrlString), .noHttpsWarning(let videoUrlString):
             theme.listBackground
                 .frame(width: availableWidth, height: 95.0)
                 .overlay(alignment: .top) {
                     VStack(alignment: .center) {
-                        Text("non-https media blocked", comment: "Displayed when an image in a post is blocked")
-                            .fontWeightBold()
+                        switch vm.viewState {
+                        case .nsfwWarning:
+                            Text("Content blocked (NSFW)", comment: "Displayed when media in a post is blocked")
+                                .fontWeightBold()
+                        case .lowDataMode:
+                            Text("Loading paused (Low data mode)", comment: "Displayed when media in a post is blocked")
+                                .fontWeightBold()
+                        case .noHttpsWarning:
+                            Text("Content blocked (No HTTPS)", comment: "Displayed when media in a post is blocked")
+                                .fontWeightBold()
+                        default:
+                            Text("Content blocked", comment: "Displayed when media in a post is blocked")
+                                .fontWeightBold()
+                        }
                         Text(videoUrlString)
                             .fontItalic()
                             .lineLimit(1)
@@ -72,8 +84,9 @@ struct EmbeddedVideoView: View {
                             if (!IS_IPHONE) {
                                 didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
                             }
-                            vm.startPlaying()
+                            vm.load(url, nrPost: nrPost, autoLoad: autoload, loadAnyway: true)
                         }
+                        .foregroundColor(theme.accent)
                         .padding(.bottom, 10)
                     }
                     .padding(10)
@@ -88,6 +101,7 @@ struct EmbeddedVideoView: View {
                             .padding(5)
                     }
                 }
+
         case .loading(let percent):
             theme.listBackground
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
@@ -233,7 +247,7 @@ struct EmbeddedVideoView: View {
                     }
                     
                 }
-        case .noPreviewFound(let videoUrlString), .lowDataMode(let videoUrlString):
+        case .noPreviewFound(let videoUrlString):
             theme.listBackground
                 .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
