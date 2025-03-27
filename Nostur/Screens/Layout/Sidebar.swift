@@ -379,11 +379,13 @@ struct WithSidebar<Content: View>: View {
             .environment(\.showSidebar, $showSidebar)
             .overlay {
                 SideBarOverlay(showSidebar: $showSidebar)
+                    .opacity(showSidebar ? 1.0 : 0.0)
             }
             .overlay(alignment: .topLeading) {
                 SideBar(showSidebar: $showSidebar)
                     .frame(width: NOSTUR_SIDEBAR_WIDTH)
                     .edgesIgnoringSafeArea(.all)
+                    .opacity(showSidebar ? 1.0 : 0.0)
             }
     }
 }
