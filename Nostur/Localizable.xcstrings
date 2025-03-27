@@ -6096,6 +6096,9 @@
         }
       }
     },
+    "Posts from anyone which are most zapped by people you follow" : {
+
+    },
     "Posts from anyone which are reacted to with several specific emojis by people you follow" : {
       "localizations" : {
         "nl" : {
@@ -8287,6 +8290,9 @@
         }
       }
     },
+    "The Zapped feed shows posts from anyone which are most zapped by people you follow in the last %lld hours" : {
+
+    },
     "There are %lld new communities" : {
       "localizations" : {
         "nl" : {
@@ -9454,6 +9460,9 @@
         }
       }
     },
+    "Zapped" : {
+      "comment" : "Tab title for feed of most zapped posts\nTab title for the Zapped feed"
+    },
     "Zapped %@" : {
       "comment" : "Text in zap button after zapping",
       "localizations" : {
@@ -9476,6 +9485,9 @@
           }
         }
       }
+    },
+    "Zapped feed time frame" : {
+
     },
     "Zapping" : {
       "comment" : "Setting heading on settings screen",

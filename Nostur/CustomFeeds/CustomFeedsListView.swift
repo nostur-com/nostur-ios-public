@@ -20,6 +20,7 @@ struct CustomFeedsListView: View {
     @State var newListSheet = false
     @State private var didRemoveDuplicates = false
     
+    @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
@@ -51,6 +52,10 @@ struct CustomFeedsListView: View {
                     Toggle(isOn: $enablePictureFeed, label: {
                         Text("Pictures")
                         Text("Pictures-only feed from people you follow")
+                    })
+                    Toggle(isOn: $enableZappedFeed, label: {
+                        Text("Zapped")
+                        Text("Posts from anyone which are most zapped by people you follow")
                     })
                     Toggle(isOn: $enableHotFeed, label: {
                         Text("Hot")

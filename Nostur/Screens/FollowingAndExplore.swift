@@ -19,6 +19,7 @@ struct FollowingAndExplore: View {
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
     
+    @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
@@ -37,6 +38,7 @@ struct FollowingAndExplore: View {
     var lists: FetchedResults<CloudFeed>
     @State private var selectedList: CloudFeed?
 
+    @StateObject private var zappedVM = ZappedViewModel()
     @StateObject private var hotVM = HotViewModel()
     @StateObject private var emojiVM = EmojiFeedViewModel()
     @StateObject private var discoverVM = DiscoverViewModel()
@@ -65,6 +67,9 @@ struct FollowingAndExplore: View {
         if selectedSubTab == "Emoji" {
             return emojiType
         }
+        if selectedSubTab == "Zapped" {
+            return String(localized: "Zapped", comment: "Tab title for the Zapped feed")
+        }
         if selectedSubTab == "Hot" {
             return String(localized: "Hot", comment: "Tab title for the Hot feed")
         }
@@ -82,6 +87,7 @@ struct FollowingAndExplore: View {
 
     // If only the Following feed is enabled and all other feeds are disabled, we can hide the entire tab bar
     private var shouldHideTabBar: Bool {
+        if (la.viewFollowingPublicKeys.count > 10 && enableZappedFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableHotFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enablePictureFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed) { return false }
@@ -134,6 +140,15 @@ struct FollowingAndExplore: View {
                                 imageName: emojiType == "😂" ? "LaughterIcon" : "RageIcon",
                                 secondaryText: String(format: "%ih", emojiVM.ago),
                                 selected: selectedSubTab == "Emoji")
+                            Spacer()
+                        }
+                        
+                        if la.viewFollowingPublicKeys.count > 10 && enableZappedFeed {
+                            TabButton(
+                                action: { selectedSubTab = "Zapped" },
+                                title: String(localized:"Zapped", comment:"Tab title for feed of most zapped posts"),
+                                secondaryText: String(format: "%ih", zappedVM.ago),
+                                selected: selectedSubTab == "Zapped")
                             Spacer()
                         }
                         
@@ -257,13 +272,16 @@ struct FollowingAndExplore: View {
                     .opacity(selectedSubTab == "Explore" ? 1.0 : 0)
                 }
                 
-                // HOT/ARTICLES/GALLERY
+                // ZAPPED/HOT/ARTICLES/GALLERY
                 if la.viewFollowingPublicKeys.count > 10 {
                     AvailableWidthContainer {
                         switch selectedSubTab {
                         case "Emoji":
                             EmojiFeed()
                                 .environmentObject(emojiVM)
+                        case "Zapped":
+                            Zapped()
+                                .environmentObject(zappedVM)
                         case "Hot":
                             Hot()
                                 .environmentObject(hotVM)
@@ -292,9 +310,10 @@ struct FollowingAndExplore: View {
                     selectedList = lists.first
                 }
             }
-            // Make hot feed posts available to discover feed to not show the same posts
+            // Make hot/zapped feed posts available to discover feed to not show the same posts
             if discoverVM.hotVM == nil {
                 discoverVM.hotVM = hotVM
+                discoverVM.zappedVM = zappedVM
             }
             
             guard !didCreate else { return }

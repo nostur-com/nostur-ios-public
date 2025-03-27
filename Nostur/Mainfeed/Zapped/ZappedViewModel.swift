@@ -1,59 +1,57 @@
 //
-//  DiscoverViewModel.swift
+//  ZappedViewModel.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 29/06/2024.
+//  Created by Fabian Lachman on 27/03/2025.
 //
 
 import SwiftUI
 import NostrEssentials
 import Combine
 
-// Discover feed
-// Fetch all likes and reposts from your follows in the last 24/12/8/4/2 hours
-// Sort posts by unique (pubkey) likes/reposts
-// Exclude people you already follow
-class DiscoverViewModel: ObservableObject {
+typealias ZapStats = (Double, Int) // (Total value, Amount of zaps)
+
+
+// Most zapped feed
+// Fetch all zaps from your follows in the last 24/12/8/4/2 hours
+// Sort posts by most value zapped
+class ZappedViewModel: ObservableObject {
     private var speedTest: NXSpeedTest?
     @Published var state: FeedState
-    private var posts: [PostID: RecommendedBy<Pubkey>]
+    private var posts: [PostID: ZapStats]
     private var backlog: Backlog
     private var follows: Set<Pubkey>
     private var didLoad = false
     private static let POSTS_LIMIT = 75
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
-    private static let DISCOVER_KINDS: Set<Int64> = Set([1,20,9802,30032,34235])
+    private static let ZAPPED_KINDS: Set<Int64> = Set([1,20,9802,30032,34235])
     private var subscriptions = Set<AnyCancellable>()
     private var prefetchedIds = Set<String>()
     
-    // If we have posts already shown in Hot/Zapped feed we don't want to show them again here, so need hotVM/zappedVM.
-    public var hotVM: HotViewModel?
-    public var zappedVM: ZappedViewModel?
-    
     // From DB we always fetch the maximum time frame selected
-    private var agoTimestamp:Int {
+    private var agoTimestamp: Int {
         return Int(Date.now.addingTimeInterval(Double(ago) * -3600).timeIntervalSince1970)
     }
     
     // From relays we fetch maximum at first, and then from since the last fetch, but not if its outside of time frame
-    private var agoFetchTimestamp:Int {
+    private var agoFetchTimestamp: Int {
         if let lastFetch, Int(lastFetch.timeIntervalSince1970) < agoTimestamp {
             return Int(lastFetch.timeIntervalSince1970)
         }
         return agoTimestamp
     }
-    private var lastFetch:Date?
+    private var lastFetch: Date?
     
-    @Published var discoverPosts: [NRPost] = [] {
+    @Published var zappedPosts: [NRPost] = [] {
         didSet {
-            guard !discoverPosts.isEmpty else { return }
-            L.og.info("Discover feed: loaded \(self.discoverPosts.count) posts")
+            guard !zappedPosts.isEmpty else { return }
+            L.og.info("Zapped feed: loaded \(self.zappedPosts.count) posts")
         }
     }
     
-    @AppStorage("feed_discover_ago") var ago: Int = 12 {
+    @AppStorage("feed_zapped_ago") var ago:Int = 12 {
         didSet {
-            logAction("Discover feed time frame changed to \(self.ago)h")
+            logAction("Zapped feed time frame changed to \(self.ago)h")
             backlog.timeout = max(Double(ago / 4), 5.0)
             if ago < oldValue {
                 self.state  = .loading
@@ -68,7 +66,7 @@ class DiscoverViewModel: ObservableObject {
                 self.state  = .loading
                 lastFetch = nil // need to fetch further back, so remove lastFetch
                 self.follows = Nostur.follows()
-                self.fetchLikesAndRepostsFromRelays {
+                self.fetchZapsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
                     }
@@ -88,7 +86,7 @@ class DiscoverViewModel: ObservableObject {
     
     public init() {
         self.state = .initializing
-        self.posts = [PostID: RecommendedBy<Pubkey>]()
+        self.posts = [PostID: ZapStats]()
         self.backlog = Backlog(timeout: 5.0, auto: true)
         self.follows = Nostur.follows()
         
@@ -96,7 +94,7 @@ class DiscoverViewModel: ObservableObject {
             .sink { [weak self] notification in
                 guard let self else { return }
                 let blockedPubkeys = notification.object as! Set<String>
-                self.discoverPosts = self.discoverPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
+                self.zappedPosts = self.zappedPosts.filter { !blockedPubkeys.contains($0.pubkey)  }
             }
             .store(in: &self.subscriptions)
         
@@ -104,7 +102,7 @@ class DiscoverViewModel: ObservableObject {
             .sink { [weak self] notification in
                 guard let self else { return }
                 let mutedRootIds = notification.object as! Set<String>
-                self.discoverPosts = self.discoverPosts.filter { nrPost in
+                self.zappedPosts = self.zappedPosts.filter { nrPost in
                     return !mutedRootIds.contains(nrPost.id) && !mutedRootIds.contains(nrPost.replyToRootId ?? "!") // id not blocked
                         && !(nrPost.isRepost && mutedRootIds.contains(nrPost.firstQuoteId ?? "!")) // is not: repost + muted reposted id
                 }
@@ -112,8 +110,8 @@ class DiscoverViewModel: ObservableObject {
             .store(in: &self.subscriptions)
     }
     
-    // STEP 1: FETCH LIKES AND REPOSTS FROM FOLLOWS FROM RELAYS
-    private func fetchLikesAndRepostsFromRelays(_ onComplete: (() -> ())? = nil) {
+    // STEP 1: FETCH ZAPS FROM FOLLOWS FROM RELAYS
+    private func fetchZapsFromRelays(_ onComplete: (() -> ())? = nil) {
         Task { @MainActor in
             if !ConnectionPool.shared.anyConnected {
                 speedTest?.loadingBarViewState = .connecting
@@ -125,7 +123,7 @@ class DiscoverViewModel: ObservableObject {
         
         let reqTask = ReqTask(
             debounceTime: 0.5,
-            subscriptionId: "DISCOVER",
+            subscriptionId: "ZAPPED",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 if let cm = NostrEssentials
@@ -133,8 +131,8 @@ class DiscoverViewModel: ObservableObject {
                                            subscriptionId: taskId,
                                            filters: [
                                             Filters(
-                                                authors: self.follows,
-                                                kinds: Set([6,7]),
+                                                kinds: Set([9735]),
+                                                tagFilter: TagFilter(tag: "P", values: self.follows),
                                                 since: self.agoFetchTimestamp,
                                                 limit: 9999
                                             )
@@ -144,21 +142,21 @@ class DiscoverViewModel: ObservableObject {
                     self.lastFetch = Date.now
                 }
                 else {
-                    L.og.error("Discover feed: Problem generating request")
+                    L.og.error("Zapped feed: Problem generating request")
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 guard let self else { return }
                 self.backlog.clear()
-                self.fetchLikesAndRepostsFromDB(onComplete)
+                self.fetchZapsFromDB(onComplete)
 
-                L.og.info("Discover feed: ready to process relay response")
+                L.og.info("Zapped feed: ready to process relay response")
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
-                self.fetchLikesAndRepostsFromDB(onComplete)
-                L.og.info("Discover feed: timeout ")
+                self.fetchZapsFromDB(onComplete)
+                L.og.info("Zapped feed: timeout ")
             })
 
         backlog.add(reqTask)
@@ -166,39 +164,26 @@ class DiscoverViewModel: ObservableObject {
     }
     
     // STEP 2: FETCH RECEIVED LIKES/REPOSTS FROM DB, SORT MOST LIKED/REPOSTED POSTS (WE ONLY HAVE IDs HERE)
-    private func fetchLikesAndRepostsFromDB(_ onComplete: (() -> ())? = nil) {
-        
+    private func fetchZapsFromDB(_ onComplete: (() -> ())? = nil) {
         Task { @MainActor in
             speedTest?.loadingBarViewState = .earlyLoad
         }
-        
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind = 9735 AND zapFromRequest.pubkey IN %@", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let likesOrReposts = try? bg().fetch(fr) else { return }
-            for item in likesOrReposts {
-                switch item.kind {
-                case 6:
-                    guard let firstQuoteId = item.firstQuoteId else { continue }
-                    if self.posts[firstQuoteId] != nil {
-                        self.posts[firstQuoteId]!.insert(item.pubkey)
-                    }
-                    else {
-                        self.posts[firstQuoteId] = RecommendedBy([item.pubkey])
-                    }
-                case 7:
-                    guard let reactionToId = item.reactionToId else { continue }
-                    if self.posts[reactionToId] != nil {
-                        self.posts[reactionToId]!.insert(item.pubkey)
-                    }
-                    else {
-                        self.posts[reactionToId] = RecommendedBy([item.pubkey])
-                    }
-                default:
+            guard let zaps = try? bg().fetch(fr) else { return }
+            for item in zaps {
+                guard let zappedEventId = item.zappedEventId, !zappedEventId.contains(":") else {
+                    // Skip param replaceable events
                     continue
                 }
-                
+                if self.posts[zappedEventId] != nil {
+                    self.posts[zappedEventId]! = (self.posts[zappedEventId]!.0 + item.naiveSats, self.posts[zappedEventId]!.1 + 1)
+                }
+                else {
+                    self.posts[zappedEventId] = (item.naiveSats, 1)
+                }
             }
             
             self.fetchPostsFromRelays(onComplete)
@@ -207,11 +192,9 @@ class DiscoverViewModel: ObservableObject {
     
     // STEP 3: FETCH MOST LIKED/REPOSTED POSTS FROM RELAYS
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
-        
         Task { @MainActor in
             speedTest?.loadingBarViewState = .secondFetching
         }
-        
         // Skip ids we already have, so we can fit more into the default 500 limit
         let posts = self.posts
         bg().perform { [weak self] in
@@ -220,19 +203,19 @@ class DiscoverViewModel: ObservableObject {
                     Importer.shared.existingIds[postId] == nil
                 }
             
-            let sortedByLikesAndReposts = posts
+            let sortedByZappedValue = posts
                 .filter({ el in
                     onlyNewIds.contains(el.key)
                 })
-                .sorted(by: { $0.value.count > $1.value.count })
+                .sorted(by: { $0.value > $1.value })
                 .prefix(Self.REQ_IDS_LIMIT)
         
-            let ids = Set(sortedByLikesAndReposts.map { (postId, likedOrRepostedBy) in postId })
+            let ids = Set(sortedByZappedValue.map { (postId, totalZappedValue) in postId })
 
             guard !ids.isEmpty else {
-                L.og.debug("Discover feed: fetchPostsFromRelays: empty ids")
+                L.og.debug("Zapped feed: fetchPostsFromRelays: empty ids")
                 if (posts.count > 0) {
-                    L.og.debug("Discover feed: but we can render the duplicates")
+                    L.og.debug("Zapped feed: but we can render the duplicates")
                     DispatchQueue.main.async { [weak self] in
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
@@ -244,11 +227,11 @@ class DiscoverViewModel: ObservableObject {
                 return
             }
             
-            L.og.debug("Discover feed: fetching \(ids.count) posts, skipped \(posts.count - ids.count) duplicates")
+            L.og.debug("Zapped feed: fetching \(ids.count) posts, skipped \(posts.count - ids.count) duplicates")
             
             let reqTask = ReqTask(
                 debounceTime: 0.5,
-                subscriptionId: "DISCOVER-POSTS",
+                subscriptionId: "ZAPPEd-POSTS",
                 reqCommand: { taskId in
                     if let cm = NostrEssentials
                                 .ClientMessage(type: .REQ,
@@ -263,18 +246,18 @@ class DiscoverViewModel: ObservableObject {
                         req(cm)
                     }
                     else {
-                        L.og.error("Discover feed: Problem generating posts request")
+                        L.og.error("Zapped feed: Problem generating posts request")
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Discover feed: ready to process relay response")
+                    L.og.info("Zapped feed: ready to process relay response")
                 },
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Discover feed: timeout ")
+                    L.og.info("Zapped feed: timeout ")
                 })
 
             self?.backlog.add(reqTask)
@@ -284,7 +267,6 @@ class DiscoverViewModel: ObservableObject {
     }
     
     // STEP 4: FETCH RECEIVED POSTS FROM DB, SORT BY MOST LIKED/REPOSTED AND PUT ON SCREEN
-    // DIFFERENT FROM HOT FEED: WE FILTER OUR OWN FOLLOWS
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
@@ -292,33 +274,24 @@ class DiscoverViewModel: ObservableObject {
             onComplete?()
             return
         }
-        let hotVMpostIds: Set<String> = Set((hotVM?.hotPosts ?? []).map { $0.id }) // Post IDs already on Hot feed
-        let zappedVMpostIds: Set<String> = Set((zappedVM?.zappedPosts ?? []).map { $0.id }) // Post IDs already on Zapped feed
-        
-        let bothIds = hotVMpostIds.union(zappedVMpostIds)
-        
         let blockedPubkeys = blocks()
         bg().perform { [weak self] in
             guard let self else { return }
-            let sortedByLikesAndReposts = self.posts
-                .filter { post in // filter out posts already on hot feed
-                    guard !bothIds.isEmpty else { return true }
-                    return !bothIds.contains(post.key)
-                }
-                .sorted(by: { $0.value.count > $1.value.count })
+            let sortedByZappedValue = self.posts
+                .sorted(by: { $0.value > $1.value })
                 .prefix(Self.POSTS_LIMIT)
             
             var nrPosts: [NRPost] = []
-            for (postId, likesAndReposts) in sortedByLikesAndReposts {
-                if (likesAndReposts.count > 3) {
-                    L.og.debug("🔝🔝 id:\(postId): \(likesAndReposts.count)")
-                }
+            for (postId, zapStats) in sortedByZappedValue {
                 if let event = Event.fetchEvent(id: postId, context: bg()) {
-                    guard Self.DISCOVER_KINDS.contains(event.kind) else { continue } // not DMs or other weird stuff
+                    guard Self.ZAPPED_KINDS.contains(event.kind) else { continue } // not DMs or other weird stuff
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
-                    guard !follows.contains(event.pubkey) else { continue } // not from someone we follow
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
                     guard event.created_at > self.agoTimestamp else { continue } // post itself should be within timeframe also
+                    
+                    // fix tally
+                    event.zapsCount = Int64(zapStats.1) < event.zapsCount ? Int64(zapStats.1) : event.zapsCount
+                    event.zapTally = Int64(zapStats.0) < event.zapTally ? Int64(zapStats.0) : event.zapTally
                     
                     // withReplies for miniPFPs
                     nrPosts.append(NRPost(event: event, withParents: true, withReplies: true))
@@ -327,7 +300,7 @@ class DiscoverViewModel: ObservableObject {
             
             DispatchQueue.main.async { [weak self] in
                 onComplete?()
-                self?.discoverPosts = nrPosts
+                self?.zappedPosts = nrPosts
                 self?.state = .ready
             }
             
@@ -347,10 +320,10 @@ class DiscoverViewModel: ObservableObject {
     public func prefetch(_ post:NRPost) {
         guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
         guard !self.prefetchedIds.contains(post.id) else { return }
-        guard let index = self.discoverPosts.firstIndex(of: post) else { return }
+        guard let index = self.zappedPosts.firstIndex(of: post) else { return }
         guard index % 5 == 0 else { return }
         
-        let nextIds = self.discoverPosts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
+        let nextIds = self.zappedPosts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
         guard !nextIds.isEmpty else { return }
         L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
         fetchStuffForLastAddedNotes(ids: nextIds)
@@ -360,13 +333,13 @@ class DiscoverViewModel: ObservableObject {
     public func load(speedTest: NXSpeedTest) {
         self.speedTest = speedTest
         guard shouldReload else { return }
-        L.og.info("Discover feed: load()")
+
+        L.og.info("Zapped feed: load()")
         self.follows = Nostur.follows()
         self.state = .loading
-        self.discoverPosts = []
-        
+        self.zappedPosts = []
         self.speedTest?.start()
-        self.fetchLikesAndRepostsFromRelays {
+        self.fetchZapsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
             }
@@ -377,13 +350,12 @@ class DiscoverViewModel: ObservableObject {
     public func reload() {
         self.state = .loading
         self.lastFetch = nil
-        self.posts = [PostID: RecommendedBy<Pubkey>]()
+        self.posts = [PostID: ZapStats]()
         self.backlog.clear()
         self.follows = Nostur.follows()
-        self.discoverPosts = []
-        
+        self.zappedPosts = []
         self.speedTest?.start()
-        self.fetchLikesAndRepostsFromRelays {
+        self.fetchZapsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
             }
@@ -393,13 +365,13 @@ class DiscoverViewModel: ObservableObject {
     // pull to refresh
     public func refresh() async {
         self.lastFetch = nil
-        self.posts = [PostID: RecommendedBy<Pubkey>]()
+        self.posts = [PostID: ZapStats]()
         self.backlog.clear()
         self.follows = Nostur.follows()
         
         self.speedTest?.start()
         await withCheckedContinuation { continuation in
-            self.fetchLikesAndRepostsFromRelays {
+            self.fetchZapsFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
                 }
