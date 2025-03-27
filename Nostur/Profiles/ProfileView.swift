@@ -58,11 +58,6 @@ struct ProfileView: View {
                                     .onPreferenceChange(ScrollOffset.self) { position in
                                         self.scrollPosition.position = position
                                     }
-                                    .overlay(alignment: .bottomTrailing) {
-                                        if let fixedPfp = vm.fixedPfp {
-                                            FixedPFP(picture: fixedPfp)
-                                        }
-                                    }
                             }, frameSize: CGSize(width: DIMENSIONS.PFP_BIG, height: DIMENSIONS.PFP_BIG)) {
                                 if let pictureUrl = nrContact.pictureUrl {
                                     GalleryFullScreenSwiper(
@@ -73,6 +68,18 @@ struct ProfileView: View {
                                 else {
                                     Circle()
                                         .strokeBorder(themes.theme.background, lineWidth: 3)
+                                }
+                            }
+                            .overlay(alignment: .bottomTrailing) {
+                                if let fixedPfp = vm.fixedPfp {
+                                    ZoomableItem({
+                                        FixedPFP(picture: fixedPfp)
+                                    }, frameSize: .init(width: 20.0, height: 20.0)) {
+                                        GalleryFullScreenSwiper(
+                                            initialIndex: 0,
+                                            items: [GalleryItem(url: fixedPfp)]
+                                        )
+                                    }
                                 }
                             }
                             .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
