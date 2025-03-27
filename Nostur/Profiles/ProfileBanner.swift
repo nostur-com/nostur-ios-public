@@ -104,8 +104,8 @@ struct ProfileBanner: View {
                 }
             }
         }
-            .frame(height: BANNER_HEIGHT)
-            .ignoresSafeArea(edges: .top)
+        .frame(height: BANNER_HEIGHT)
+        .ignoresSafeArea(edges: .top)
     }
 }
 

@@ -54,11 +54,11 @@ struct NXColumnView: View {
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
-#if DEBUG
-        .overlay(alignment: .bottom) {
-            speedTestView
-        }
-#endif
+//#if DEBUG
+//        .overlay(alignment: .bottom) {
+//            speedTestView
+//        }
+//#endif
         .onAppear {
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
             viewModel.isVisible = isVisible
