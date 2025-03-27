@@ -346,7 +346,7 @@ class NotificationsViewModel: ObservableObject {
         
         needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
 #if DEBUG
-        L.og.debug("💜 NotificationsViewModelcheckForEverything() needsUpdate, updating unread counts...")
+        L.og.debug("💜 NotificationsViewModel.checkForEverything() needsUpdate, updating unread counts...")
 #endif
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?

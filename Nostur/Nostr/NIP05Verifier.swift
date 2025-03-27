@@ -14,7 +14,7 @@ import Combine
 class NIP05Verifier {
     static let shared = NIP05Verifier()
     private let maxConcurrentRequests:Int = 2
-    private let bufferSize:Int = 50
+    private let bufferSize: Int = 50
     private var verifySubject = PassthroughSubject<Contact, Never>()
     
     private var cancellables = Set<AnyCancellable>()
@@ -109,14 +109,14 @@ class NIP05Verifier {
 }
 
 struct NIP05Task {
-    var contact:Contact
-    let nip05url:URL?
-    let domain:String
-    let name:String
-    var nostrJson:NostrJson? = nil
+    var contact: Contact
+    let nip05url: URL?
+    let domain: String
+    let name: String
+    var nostrJson: NostrJson? = nil
 }
 
 
-struct NostrJson : Codable {
+struct NostrJson: Codable {
     var names: [String:String]
 }

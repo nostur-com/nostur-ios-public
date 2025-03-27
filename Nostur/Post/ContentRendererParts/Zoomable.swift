@@ -54,7 +54,6 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
     }
     
     private func triggerZoom(origin: CGPoint) {
-        print("triggerzoom from position: \(viewPosition)")
         let zoomRequest = ZoomRequested(origin: origin, startingSize: contentSize, content: detailContent)
         sendNotification(.zoomRequested, zoomRequest)
     }
