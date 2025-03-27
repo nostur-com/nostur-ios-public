@@ -124,14 +124,18 @@ class WebOfTrust: ObservableObject {
             .filter({ $0.isFullAccount && $0.followingPubkeys.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY }) // only full accounts with 50+ follows (exclude guest account)
             .sorted(by: { $0.followingPubkeys.count > $1.followingPubkeys.count }).first // sorted to get the one with the most follows
         {
+#if DEBUG
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT full account guessed: \(fullAccount.publicKey)")
+#endif
             _mainAccountWoTpubkey = fullAccount.publicKey
         }
         // the currently logged in read only account, if it has 50+ follows but not if its the guest account
         else if let readOnlyAccount = AccountsState.shared.accounts
             .first(where: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $0.followingPubkeys.count > 50 && $0.publicKey != GUEST_ACCOUNT_PUBKEY })
         {
+#if DEBUG
             L.og.info("🕸️🕸️ WebOfTrust: Main WoT read account guessed: \(readOnlyAccount.publicKey)")
+#endif
             _mainAccountWoTpubkey = readOnlyAccount.publicKey
         }
     }
@@ -143,7 +147,9 @@ class WebOfTrust: ObservableObject {
         guard mainAccountWoTpubkey != "" else { return }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
         guard let account = AccountsState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else { return }
+#if DEBUG
         L.og.info("🕸️🕸️ WebOfTrust: Main account: \(account.anyName)")
+#endif
         
         let wotFollowingPubkeys = account.getFollowingPublicKeys(includeBlocked: true).subtracting(account.privateFollowingPubkeys) // We don't include silent follows in WoT
         let followingPubkeys = account.getFollowingPublicKeys(includeBlocked: true)
@@ -157,27 +163,37 @@ class WebOfTrust: ObservableObject {
                     sendNotification(.WoTReady)
                     self.updatingWoT = false
                 }
+#if DEBUG
                 L.og.info("🕸️🕸️ WebOfTrust: Not enough follows to build WoT. Maybe still onboarding and contact list not received yet")
+#endif
                 return
             }
             
             switch SettingsStore.shared.webOfTrustLevel {
                 case SettingsStore.WebOfTrustLevel.off.rawValue:
+#if DEBUG
                     L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+#endif
                     sendNotification(.WoTReady)
                     self.updatingWoT = false
                 case SettingsStore.WebOfTrustLevel.normal.rawValue:
+#if DEBUG
                     L.og.info("🕸️🕸️ WebOfTrust: Normal")
+#endif
                     bg().perform { [weak self] in
                         self?.loadNormal(wotFollowingPubkeys: wotFollowingPubkeys, force: force)
                     }
                 case SettingsStore.WebOfTrustLevel.strict.rawValue:
+#if DEBUG
                     L.og.info("🕸️🕸️ WebOfTrust: Strict")
+#endif
                     self.addOwnFollowsIfNeeded()
                     sendNotification(.WoTReady)
                     self.updatingWoT = false
                 default:
+#if DEBUG
                     L.og.info("🕸️🕸️ WebOfTrust: Disabled")
+#endif
                     sendNotification(.WoTReady)
                     self.updatingWoT = false
             }
@@ -213,15 +229,21 @@ class WebOfTrust: ObservableObject {
         let task = ReqTask(
             subscriptionId: "RM.getAuthorContactsList",
             reqCommand: { taskId in
+#if DEBUG
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Fetching contact list for \(pubkey)")
+#endif
                 req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] taskId, _, _ in
+#if DEBUG
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Received contact list")
+#endif
                 self?.regenerateWoTWithFollowsOf(pubkey)
             },
             timeoutCommand: { [weak self] _ in
+#if DEBUG
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: updateWoTwithFollowsOf - Time-out")
+#endif
                 self?.regenerateWoTWithFollowsOf(pubkey)
             })
 
@@ -242,7 +264,9 @@ class WebOfTrust: ObservableObject {
             }
             if wotDunbarNumber == 0 || followsOfPubkey.count <= wotDunbarNumber {
                 self.followingFollowingPubkeys = self.followingFollowingPubkeys.union(followsOfPubkey)
+#if DEBUG
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
+#endif
                 self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
             }
         }
@@ -272,7 +296,9 @@ class WebOfTrust: ObservableObject {
         }
         self.loadFollowingFollowing(wotFollowingPubkeys:wotFollowingPubkeys, force: force)
         if let lastUpdated = lastUpdatedDate(mainAccountWoTpubkey) {
+#if DEBUG
             L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(self.mainAccountWoTpubkey).bin --> \(lastUpdated.description)")
+#endif
             DispatchQueue.main.async { [weak self] in
                 self?.lastUpdated = lastUpdated
             }
@@ -294,14 +320,18 @@ class WebOfTrust: ObservableObject {
         guard self.followingFollowingPubkeys.count < ENABLE_THRESHOLD || force == true else {
             self.addOwnFollowsIfNeeded()
             sendNotification(.WoTReady)
+#if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already have loaded enough from file")
+#endif
             return
         }
         
         guard !didWoT || force == true else {
             self.addOwnFollowsIfNeeded()
             sendNotification(.WoTReady)
+#if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already didWot")
+#endif
             return
         }
         didWoT = true
@@ -311,16 +341,22 @@ class WebOfTrust: ObservableObject {
             debounceTime: 5.0, // in test, default 0.1 stops at 2000 contacts, with 5.0 its 10000+ contacts
             prefix: "WoTFol-",
             reqCommand: { taskId in
+#if DEBUG
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Fetching contact lists for \(pubkeys.count) contacts")
+#endif
                 req(RM.getAuthorContactsLists(pubkeys: Array(pubkeys), subscriptionId: taskId))
             },
             processResponseCommand: { [weak self] taskId, _, _ in
                 self?.updatingWoT = true
+#if DEBUG
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Received contact list(s)")
+#endif
                 self?.generateWoT()
             },
             timeoutCommand: { [weak self] taskId in
+#if DEBUG
                 L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: Time-out")
+#endif
                 self?.generateWoT()
             })
 
@@ -363,7 +399,9 @@ class WebOfTrust: ObservableObject {
             }
             self.followingFollowingPubkeys = followFollows
             self.addOwnFollowsIfNeeded()
+#if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: allowList now has \(self.followingPubkeys.count) + \(self.followingFollowingPubkeys.count) pubkeys")
+#endif
             self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
@@ -382,14 +420,18 @@ class WebOfTrust: ObservableObject {
                    try data.write(to: filename)
 
             if let lastUpdated = lastUpdatedDate(pubkey) {
+#if DEBUG
                 L.og.info("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate: web-of-trust-\(pubkey).bin --> \(lastUpdated.description)")
+#endif
                 DispatchQueue.main.async { [weak self] in
                     self?.lastUpdated = lastUpdated
                 }
             }
         }
         catch {
+#if DEBUG
             L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to write file: web-of-trust-\(pubkey).bin: \(error)")
+#endif
         }
     }
     
@@ -407,17 +449,23 @@ class WebOfTrust: ObservableObject {
                 if pubkeys.count < 2 {
                     // Something wrong, delete corrupt file
                     try FileManager.default.removeItem(at: binFilename)
+#if DEBUG
                     L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Something wrong, deleting corrupt file: \(binFilename.lastPathComponent)")
+#endif
                     return Set<String>()
                 }
                 return pubkeys
             } else {
+#if DEBUG
                 L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to decode file: \(binFilename.lastPathComponent)")
+#endif
                 return Set<String>()
             }
         }
         catch {
+#if DEBUG
             L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Failed to read file: web-of-trust-\(pubkey).bin: \(error)")
+#endif
             return Set<String>()
         }
     }
@@ -434,9 +482,13 @@ class WebOfTrust: ObservableObject {
                 let pubkeys = Set(input.split(separator: "\n").map { String($0) })
                 storeData(pubkeys: pubkeys, pubkey: pubkey)
                 try fileManager.removeItem(at: txtFilename)
+#if DEBUG
                 L.og.info("🕸️🕸️ WebOfTrust/WoTFol: Successfully migrated data from .txt to .bin for pubkey: \(pubkey)")
+#endif
             } catch {
+#if DEBUG
                 L.og.error("🕸️🕸️ WebOfTrust/WoTFol: Migration failed for pubkey: \(pubkey): \(error)")
+#endif
             }
         }
     }
@@ -460,7 +512,9 @@ class WebOfTrust: ObservableObject {
             return date
         }
         catch {
+#if DEBUG
             L.og.debug("🕸️🕸️ WebOfTrust/WoTFol: lastUpdatedDate? doesn't exist yet: web-of-trust-\(pubkey).bin")
+#endif
             return nil
         }
     }

@@ -90,21 +90,21 @@ class EventRelationsQueue {
         
         guard let eventWithContext = eventWithContextOrNil else { return }
         
-        #if DEBUG
+#if DEBUG
             if eventWithContext.managedObjectContext != ctx && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
-        #endif
+#endif
         
         guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
         guard self.waitingEvents[eventWithContext.id] == nil else { return }
         self.waitingEvents[eventWithContext.id] = QueuedEvent(event: eventWithContext, queuedAt: Date.now)
         
-        #if DEBUG
+#if DEBUG
         if self.waitingEvents.count % 25 == 0 {
             L.og.debug("🟢🟢🟢🟢🟢 addAwaitingEvent. now in queue: \(self.waitingEvents.count) -- \(debugInfo ?? "")")
         }
-        #endif
+#endif
     }
     
     /// Returns events that are waiting for relations to be updated, like .contact, .contacts, .replyTo etc

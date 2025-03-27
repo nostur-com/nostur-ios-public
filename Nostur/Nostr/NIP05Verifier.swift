@@ -66,7 +66,9 @@ class NIP05Verifier {
                             if pubkey != "" && pubkey == task.contact.pubkey {
                                 task.contact.nip05verifiedAt = Date.now
                                 ViewUpdates.shared.nip05updated.send((pubkey, true, task.contact.nip05 ?? "", task.name))
-                                L.fetching.debug("👍 nip05 verified \(task.contact.nip05 ?? "")")
+#if DEBUG
+                                L.fetching.debug("verifySubject: 👍 nip05 verified \(task.contact.nip05 ?? "")")
+#endif
                             }
                         }
                     }
@@ -76,7 +78,7 @@ class NIP05Verifier {
     }
     
     public func verify(_ contact: Contact) {
-        #if DEBUG
+#if DEBUG
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             fatalError("Should only be called from bg()")
         }
@@ -84,21 +86,23 @@ class NIP05Verifier {
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return
         }
-        #endif
+#endif
 
+#if DEBUG
         L.fetching.debug("nip05: going to verify \(contact.nip05 ?? "") for \(contact.pubkey)")
+#endif
         self.verifySubject.send(contact)
     }
     
     static func shouldVerify(_ contact: Contact) -> Bool {
-        #if DEBUG
+#if DEBUG
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             return false
         }
         if Thread.isMainThread {
             fatalError("Should call from bg")
         }
-        #endif
+#endif
         guard contact.nip05 != nil else { return false }
         return (contact.nip05verifiedAt == nil || (contact.nip05verifiedAt != nil) && (contact.nip05verifiedAt! < Self.fourWeeksAgo))
     }

@@ -81,7 +81,9 @@ struct DetailFooterFragment: View {
                     await MainActor.run {
                         if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                             contact.zapperPubkeys.insert(zapperPubkey)
-                            L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#if DEBUG
+                            L.og.debug("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
                             reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
                         }
                     }
@@ -91,7 +93,9 @@ struct DetailFooterFragment: View {
                     await MainActor.run {
                         if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                             contact.zapperPubkeys.insert(zapperPubkey)
-                            L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#if DEBUG
+                            L.og.debug("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
                             reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
                         }
                     }

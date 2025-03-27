@@ -119,7 +119,9 @@ class FastLoader: ObservableObject {
     
     // Only for .nrPosts, not .events
     private func _loadNewer(_ limit: Int? = nil, taskId: String, includeSpam: Bool = false) {
+#if DEBUG
         L.og.debug("\(taskId) 🟠🟠🟠🟠 _loadNewer()")
+#endif
         let cancellationIds:[String: UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
         
         let next = Event.fetchRequest()
@@ -149,7 +151,9 @@ class FastLoader: ObservableObject {
             
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
+#if DEBUG
                 L.og.debug("\(taskId) 🟠🟠🟠🟠🟠 self.nrPosts = nextItems (\(nextItems.count)) + self.nrPosts ")
+#endif
                 self.nrPosts = nextItems + self.nrPosts
                 self.onComplete?()
             }
@@ -273,20 +277,20 @@ class Backlog {
     }
     
     public func task(with subscriptionId:String) -> ReqTask? {
-        #if DEBUG
+#if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
-        #endif
+#endif
         return tasks.first(where: { $0.subscriptionId == subscriptionId })
     }
     
     public func tasks(with subscriptionIds:Set<String>) -> [ReqTask] {
-        #if DEBUG
+#if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
-        #endif
+#endif
         return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
 }
@@ -365,7 +369,10 @@ class ReqTask: Identifiable, Hashable {
     
     public func onTimeout() {
         guard !didProcess && !skipTimeout else { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
-            L.og.debug("🟠🟠 didProcess or skipTimeout, timeout not needed"); return
+#if DEBUG
+            L.og.debug("🟠🟠 ReqTask: didProcess or skipTimeout, timeout not needed")
+#endif
+            return
         }
         self.timeoutCommand?(subscriptionId)
     }

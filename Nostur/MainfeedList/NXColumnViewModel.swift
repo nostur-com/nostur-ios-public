@@ -622,13 +622,13 @@ class NXColumnViewModel: ObservableObject {
     
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
         if !isVisible || isPaused || isViewPaused || AppState.shared.appIsInBackground {
-            #if DEBUG
+#if DEBUG
             L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. isVisible: \(self.isVisible) isPaused: \(self.isPaused) isViewPaused: \(self.isViewPaused)")
-            #endif
+#endif
             return
         }
 #if DEBUG
-L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and throttled first)")
+        L.og.debug("☘️☘️ \(config.name) loadLocal (request, debounced and throttled first)")
 #endif
         loadLocalSubject.send((config, older, completion))
     }
@@ -1525,11 +1525,11 @@ extension NXColumnViewModel {
         Task { @MainActor in
             self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
             
-            #if DEBUG
+#if DEBUG
             if availableWidth == nil {
                 fatalError("availableWidth was never set, pls check")
             }
-            #endif
+#endif
         }
     }
     
@@ -1737,9 +1737,9 @@ extension NXColumnViewModel {
                         }
                     }
                     else {
-                        #if DEBUG
+#if DEBUG
                         L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) - should restore using scrollToIndex, if we were not at top ")
-                        #endif
+#endif
                         
                         // ANTI-FLICKER:
                         if let previousFirstPostId, let restoreToIndex = addedAndExistingPostsTruncated.firstIndex(where: { $0.id == previousFirstPostId })  {
@@ -1755,9 +1755,9 @@ extension NXColumnViewModel {
                             // Set isAtTop to false since we'll be scrolling to a non-top position
                             vmInner.isAtTop = false
                             
-                            #if DEBUG
+#if DEBUG
                             L.og.debug("☘️☘️ \(config.name) putOnScreen restoreToIndex: \((addedAndExistingPostsTruncated[restoreToIndex].content ?? "").prefix(150))")
-                            #endif
+#endif
                             
                             // After a very short delay, trigger the scroll
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
@@ -1781,9 +1781,9 @@ extension NXColumnViewModel {
                 else {
                     self.vmInner.isPreparingForScrollRestore = false
                     self.vmInner.pendingScrollToIndex = nil
-                    #if DEBUG
+#if DEBUG
                     L.og.debug("☘️☘️📜 \(config.name) putOnScreen isAtTop: \(self.vmInner.isAtTop) withAnimation { }  + not at top, to keep scroll pos ")
-                    #endif
+#endif
                     withAnimation { // withAnimation and not at top keeps scroll position
                         viewState = .posts(addedAndExistingPostsTruncated)
                     }
@@ -1858,9 +1858,9 @@ extension NXColumnViewModel {
     private func loadRemote(_ config: NXColumnConfig) {
         speedTest?.loadRemoteStarted()
         
-        #if DEBUG
+#if DEBUG
         L.og.debug("☘️☘️ \(config.name) loadRemote(config)")
-        #endif
+#endif
         
         switch config.columnType {
         case .relays(let feed):
@@ -1953,11 +1953,15 @@ extension NXColumnViewModel {
         }
         
         guard !pubkeys.isEmpty else {
+#if DEBUG
             L.fetching.debug("not checking profiles, pubkeys isEmpty")
+#endif
             return
         }
         
-        L.fetching.info("checking profiles since: \(since?.description ?? "")")
+#if DEBUG
+        L.fetching.debug("checking profiles since: \(since?.description ?? "")")
+#endif
         
         let subscriptionId = "Profiles-" + feed.subscriptionId
         ConnectionPool.shared
@@ -1983,12 +1987,16 @@ extension NXColumnViewModel {
         let getContactListTask = ReqTask(
             prio: true,
             reqCommand: { taskId in
-                L.og.notice("🟪 Fetching clEvent from relays")
+#if DEBUG
+                L.og.debug("🟪 Fetching clEvent from relays")
+#endif
                 req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { taskId, _, clEvent in
                 bg().perform {
-                    L.og.notice("🟪 Processing clEvent response from relays")
+#if DEBUG
+                    L.og.debug("🟪 Processing clEvent response from relays")
+#endif
                     var updatedConfig = config
                     if let clEvent = clEvent {
                         updatedConfig.setPubkeys(Set(clEvent.fastPs.map { $0.1 }.filter { isValidPubkey($0) }))

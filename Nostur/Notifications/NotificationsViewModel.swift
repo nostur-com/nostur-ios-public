@@ -339,14 +339,14 @@ class NotificationsViewModel: ObservableObject {
                 
         guard !Importer.shared.isImporting else {
 #if DEBUG
-            L.og.info("⏳ Still importing, new notifications check skipped.");
+            L.og.debug("⏳ NotificationsViewModelcheckForEverything() Still importing, new notifications check skipped.");
 #endif
             return
         }
         
         needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
 #if DEBUG
-        L.og.info("💜 needsUpdate, updating unread counts...")
+        L.og.debug("💜 NotificationsViewModelcheckForEverything() needsUpdate, updating unread counts...")
 #endif
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?
@@ -438,7 +438,9 @@ class NotificationsViewModel: ObservableObject {
     
     // async for background fetch, copy paste of checkForUnreadMentions() with withCheckedContinuation added
     public func checkForUnreadMentionsBackground(accountData: AccountData) async {
+#if DEBUG
         L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground()")
+#endif
         await withCheckedContinuation { [weak self] continuation in
             bg().perform {
                 guard let self else { return }
@@ -450,7 +452,9 @@ class NotificationsViewModel: ObservableObject {
                     
                 let unreadMentionsCount = unreadMentions.count
                 
+#if DEBUG
                 L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground(): unreadMentionsCount \(unreadMentionsCount), with spam: \(unreadMentionsWithSpam.count)")
+#endif
                 
                 // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
                 // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
@@ -459,7 +463,9 @@ class NotificationsViewModel: ObservableObject {
                     .filter { ($0.created_at > self.lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || accountData.followingPubkeys.contains($0.pubkey)) }
                     .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
                 
+#if DEBUG
                 L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground(): mentions for notifications: \(mentionsForNotification.count)")
+#endif
                 
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
@@ -634,7 +640,9 @@ class NotificationsViewModel: ObservableObject {
                 }
             }
             else {
-                L.og.info("🔴🔴 Falling back to 2 days before (should not happen)")
+#if DEBUG
+                L.og.info("🔴🔴 markMentionsAsRead() - Falling back to 2 days before (should not happen)")
+#endif
                 let twoDaysAgoOrNewer = max(account.lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
                 if account.lastSeenPostCreatedAt != twoDaysAgoOrNewer {
                     account.lastSeenPostCreatedAt = twoDaysAgoOrNewer
