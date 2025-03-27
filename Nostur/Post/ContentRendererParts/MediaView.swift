@@ -31,6 +31,23 @@ struct MediaContentView: View {
     // The actual dimensions, once the image is actually processed and loaded, should be set after download/processing
     @State private var realDimensions: CGSize?
     
+    // Force fill and clip if image is too long
+    private var shouldForceToFill: Bool {
+        if fullScreen { return false }
+        if let realDimensions {
+            let aspect = realDimensions.width / realDimensions.height
+            if availableWidth > (maxHeight * aspect) {
+                return true
+            }
+        }
+        else if let placeholderAspect {
+            if availableWidth > (maxHeight * placeholderAspect) {
+                return true
+            }
+        }
+        return false
+    }
+    
     var body: some View {
         MediaPlaceholder(
             galleryItem: galleryItem,
@@ -38,7 +55,7 @@ struct MediaContentView: View {
             availableWidth: availableWidth,
             placeholderAspect: placeholderAspect,
             maxHeight: maxHeight,
-            contentMode: contentMode,
+            contentMode: shouldForceToFill ? .fill : contentMode,
             fullScreen: fullScreen,
             galleryItems: galleryItems,
             realDimensions: $realDimensions,
