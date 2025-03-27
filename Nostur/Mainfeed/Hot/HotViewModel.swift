@@ -178,7 +178,10 @@ class HotViewModel: ObservableObject {
             for item in likesOrReposts {
                 switch item.kind {
                 case 6:
-                    guard let firstQuoteId = item.firstQuoteId else { continue }
+                    guard let firstQuoteId = item.firstQuoteId, !firstQuoteId.contains(":") else {
+                        // Skip param replaceable events
+                        continue
+                    }
                     if self.posts[firstQuoteId] != nil {
                         self.posts[firstQuoteId]!.insert(item.pubkey)
                     }
@@ -186,7 +189,10 @@ class HotViewModel: ObservableObject {
                         self.posts[firstQuoteId] = RecommendedBy([item.pubkey])
                     }
                 case 7:
-                    guard let reactionToId = item.reactionToId else { continue }
+                    guard let reactionToId = item.reactionToId, !reactionToId.contains(":") else {
+                        // Skip param replaceable events
+                        continue
+                    }
                     if self.posts[reactionToId] != nil {
                         self.posts[reactionToId]!.insert(item.pubkey)
                     }
