@@ -153,6 +153,7 @@ struct MediaPlaceholder: View {
                 .onAppear { isVisible = true }
                 .onDisappear { isVisible = false }
                 .clipped()
+                .contentShape(Rectangle().inset(by: 10)) // needed or tap outside is buggy
 //                .debugDimensions()
 //                .overlay(alignment: .center) {
 //                    Text("fit: aW:\(availableWidth), aspect:\(aspect) h:\(height)")
@@ -276,6 +277,7 @@ struct MediaPlaceholder: View {
                                 height: height
                             )
                             .clipped()
+                            .contentShape(Rectangle())
                     }
                 }
                 .frame(
@@ -496,6 +498,7 @@ struct MediaPlaceholder: View {
                                 height: height
                             )
                             .clipped()
+                            .contentShape(Rectangle())
                     }
                 }
                 .frame(
