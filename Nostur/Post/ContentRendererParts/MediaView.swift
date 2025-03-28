@@ -654,6 +654,7 @@ struct MediaPostPreview: View {
                         }
                     }
                     .onAppear {
+                        // TODO: check .missingPs instead of .contact?
                         guard nrPost.contact == nil else { return }
                         bg().perform {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "FullImageViewer.001")

@@ -28,7 +28,7 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    public var needsUpdate:Bool = true // Importer or other parts will set this flag to true if anything incoming is part of a notification. Only then the notification queries will run. (instead of before, every 15 sec, even for no reason)
+    public var needsUpdate: Bool = true // Importer or other parts will set this flag to true if anything incoming is part of a notification. Only then the notification queries will run. (instead of before, every 15 sec, even for no reason)
     // is true at start, then false after each notification check
     
     public func checkNeedsUpdate(_ failedZapNotification: PersistentNotification) {
@@ -67,38 +67,38 @@ class NotificationsViewModel: ObservableObject {
     
     public var unreadPublisher = PassthroughSubject<Int, Never>()
     
-    public var unreadMentions:Int { unreadMentions_ }
+    public var unreadMentions: Int { unreadMentions_ }
     
-    public var unreadNewPosts:Int {
+    public var unreadNewPosts: Int {
         guard !muteNewPosts else { return 0 }
         return unreadNewPosts_
     }
         
-    public var unreadNewFollowers:Int {
+    public var unreadNewFollowers: Int {
         guard !muteFollows else { return 0 }
         return unreadNewFollowers_
     }
     
-    public var unreadReposts:Int {
+    public var unreadReposts: Int {
         guard !muteReposts else { return 0 }
         return unreadReposts_
     }
     
-    public var unreadReactions:Int {
+    public var unreadReactions: Int {
         guard !muteReactions else { return 0 }
         return unreadReactions_
     }
     
-    public var unreadZaps:Int {
+    public var unreadZaps: Int {
         guard !muteZaps else { return 0 }
         return unreadZaps_
     }
     
-    public var unreadFailedZaps:Int { unreadFailedZaps_ }
+    public var unreadFailedZaps: Int { unreadFailedZaps_ }
     
     
     // Don't read these @Published vars, only set them. Use the computed above instead because they correctly return 0 when muted
-    @Published var unreadMentions_:Int = 0 {      // 1,20,9802,30023,34235
+    @Published var unreadMentions_: Int = 0 {      // 1,20,9802,30023,34235
         didSet {
             if unreadMentions_ > oldValue {
                 sendNotification(.newMentions)
@@ -106,7 +106,7 @@ class NotificationsViewModel: ObservableObject {
             unreadPublisher.send(unread)
         }
     }
-    @Published var unreadNewPosts_:Int = 0 {      // 1,20,9802,30023,34235
+    @Published var unreadNewPosts_: Int = 0 {      // 1,20,9802,30023,34235
         didSet {
             if unreadNewPosts_ > oldValue {
                 sendNotification(.unreadNewPosts)
@@ -114,7 +114,7 @@ class NotificationsViewModel: ObservableObject {
             unreadPublisher.send(unread)
         }
     }
-    @Published var unreadNewFollowers_:Int = 0 {  // custom
+    @Published var unreadNewFollowers_: Int = 0 {  // custom
         didSet {
             if unreadNewFollowers_ > oldValue {
                 sendNotification(.newFollowers)
@@ -122,7 +122,7 @@ class NotificationsViewModel: ObservableObject {
             unreadPublisher.send(unread)
         }
     }
-    @Published var unreadReposts_:Int = 0 {     // 6
+    @Published var unreadReposts_: Int = 0 {     // 6
         didSet {
             if unreadReposts_ > oldValue {
                 sendNotification(.newReposts)
@@ -130,7 +130,7 @@ class NotificationsViewModel: ObservableObject {
             unreadPublisher.send(unread)
         }
     }
-    @Published var unreadReactions_:Int = 0 {  // 7
+    @Published var unreadReactions_: Int = 0 {  // 7
         didSet {
             if unreadReactions_ > oldValue {
                 sendNotification(.newReactions)
@@ -138,7 +138,7 @@ class NotificationsViewModel: ObservableObject {
             unreadPublisher.send(unread)
         }
     }
-    @Published var unreadZaps_:Int = 0 {       // 9735
+    @Published var unreadZaps_: Int = 0 {       // 9735
         didSet {
             if unreadZaps_ > oldValue {
                 sendNotification(.newZaps)
@@ -146,7 +146,7 @@ class NotificationsViewModel: ObservableObject {
             unreadPublisher.send(unread)
         }
     }
-    @Published var unreadFailedZaps_:Int = 0 {  // custom
+    @Published var unreadFailedZaps_: Int = 0 {  // custom
         didSet {
             unreadPublisher.send(unread)
         }
@@ -815,7 +815,7 @@ fileprivate class NotificationFetchRequests {
     
     static let FETCH_LIMIT = 999
     
-    func unreadMentionsQuery(resultType:NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event>? {
+    func unreadMentionsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event>? {
         let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
 
@@ -843,7 +843,7 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadNewPostsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
+    func unreadNewPostsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
 
@@ -857,7 +857,7 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadRepostsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
+    func unreadRepostsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
         let pubkey = account.publicKey
@@ -883,7 +883,7 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadNewFollowersQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
+    func unreadNewFollowersQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
 
@@ -897,7 +897,7 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadReactionsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
+    func unreadReactionsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
@@ -918,7 +918,7 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadZapsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
+    func unreadZapsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
@@ -939,7 +939,7 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadFailedZapsQuery(resultType:NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
+    func unreadFailedZapsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
         guard let account = account() else { return nil }
         let pubkey = account.publicKey
         
@@ -965,7 +965,7 @@ fileprivate class NotificationFetchRequests {
 class OfflinePosts {
     
     
-    static func checkForOfflinePosts(_ maxAgo:TimeInterval = 259_200) { // 3 days
+    static func checkForOfflinePosts(_ maxAgo: TimeInterval = 259_200) { // 3 days
         DispatchQueue.main.async {
             guard ConnectionPool.shared.anyConnected else { return }
             let pubkey = AccountsState.shared.activeAccountPublicKey
@@ -1007,7 +1007,7 @@ class OfflinePosts {
 
 
 struct NotificationsDebugger: View {
-    @EnvironmentObject var nvm:NotificationsViewModel
+    @EnvironmentObject var nvm: NotificationsViewModel
     
     var body: some View {
         HStack {
