@@ -84,10 +84,12 @@ class RelayMessage {
             guard let result = try? decoder.decode(CommandResult.self, from: dataFromString) else {
                 throw error.FAILED_TO_PARSE
             }
-            ViewUpdates.shared.eventStatChanged.send(EventStatChange(
-                id: result.id,
-                detectedRelay: relay
-            ))
+            if result.success { // only update view detected relay if success
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(
+                    id: result.id,
+                    detectedRelay: relay
+                ))
+            }
             return RelayMessage(relays: relay, type: .OK, message: text, id: result.id, success: result.success)
         }
         
