@@ -14,6 +14,7 @@ struct ChatRoom: View {
     public let theme: Theme
     public let anonymous: Bool
     @ObservedObject public var chatVM: ChatRoomViewModel
+    public var zoomableId: String = "Default"
 
     @State private var message: String = ""
     @State private var account: CloudAccount? = nil
@@ -57,7 +58,7 @@ let _ = Self._printChanges()
                                 else {
                                     ForEach(chatVM.messages) { rowContent in
                                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                                            ChatRow(content: rowContent, theme: theme)
+                                            ChatRow(content: rowContent, theme: theme, zoomableId: zoomableId)
                                         }
                                         .padding(.vertical, 5)
                                         .scaleEffect(x: 1, y: -1, anchor: .center)

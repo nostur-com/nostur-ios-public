@@ -15,10 +15,12 @@ struct ChatPendingZapRow: View {
     @ObservedObject private var pfpAttributes: PFPAttributes
     
     @State private var didStart = false
+    private var zoomableId: String
     
-    init(pendingZap: NRChatPendingZap) {
+    init(pendingZap: NRChatPendingZap, zoomableId: String = "Default") {
         self.pendingZap = pendingZap
         self.pfpAttributes = pendingZap.pfpAttributes
+        self.zoomableId = zoomableId
     }
     
     var body: some View {
@@ -78,7 +80,7 @@ struct ChatPendingZapRow: View {
             }
             .foregroundColor(themes.theme.accent)
             
-            NXContentRenderer(nxEvent: pendingZap.nxEvent, contentElements: pendingZap.content, didStart: $didStart)
+            NXContentRenderer(nxEvent: pendingZap.nxEvent, contentElements: pendingZap.content, didStart: $didStart, zoomableId: zoomableId)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(maxHeight: 450, alignment: .top)
         }

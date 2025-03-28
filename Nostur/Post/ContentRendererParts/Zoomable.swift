@@ -9,13 +9,15 @@ import SwiftUI
 import NavigationBackport
 
 struct ZoomableItem<Content: View, DetailContent: View>: View {
+    private let id: String
     private let content: Content
     private let detailContent: DetailContent
     private var frameSize: CGSize? = nil
     @State private var contentSize: CGSize = CGSize(width: 50, height: 50)
     @State private var viewPosition: CGPoint = .zero
     
-    init(@ViewBuilder _ content: () -> Content, frameSize: CGSize? = nil, @ViewBuilder detailContent: () -> DetailContent) {
+    init(id: String = "Default", @ViewBuilder _ content: () -> Content, frameSize: CGSize? = nil, @ViewBuilder detailContent: () -> DetailContent) {
+        self.id = id
         self.content = content()
         self.detailContent = detailContent()
         self.frameSize = frameSize
@@ -54,7 +56,7 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
     }
     
     private func triggerZoom(origin: CGPoint) {
-        let zoomRequest = ZoomRequested(origin: origin, startingSize: contentSize, content: detailContent)
+        let zoomRequest = ZoomRequested(id: self.id, origin: origin, startingSize: contentSize, content: detailContent)
         sendNotification(.zoomRequested, zoomRequest)
     }
 }
@@ -62,6 +64,7 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
 struct Zoomable<Content: View>: View {
     @StateObject private var screenSpace: ScreenSpace = .shared
     
+    public let id: String
     private let content: Content
     
     @State private var viewState: ZoomState = .off
@@ -72,7 +75,8 @@ struct Zoomable<Content: View>: View {
     @State private var startingSize = CGSize(width: 100, height: 100)
     @State private var screenSize: CGSize = .zero
     
-    init(@ViewBuilder _ content: () -> Content) {
+    init(id: String = "Default", @ViewBuilder _ content: () -> Content) {
+        self.id = id
         self.content = content()
     }
     
@@ -124,6 +128,7 @@ struct Zoomable<Content: View>: View {
 //        .edgesIgnoringSafeArea(.all)
         .onReceive(receiveNotification(.zoomRequested)) { notification in
             if let zoomRequest = notification.object as? ZoomRequested {
+                guard zoomRequest.id == self.id else { return }
                 if let typedContent = zoomRequest.content as? AnyView {
                     self.startingSize = zoomRequest.startingSize
                     self.originOffset = CGPoint(
@@ -151,6 +156,7 @@ struct Zoomable<Content: View>: View {
     }
     
     private func closeWithAnimation() {
+        guard viewState != .off else { return }
         withAnimation(.easeIn(duration: 0.1)) {
             self.animationProgress = 0
         }
@@ -173,11 +179,13 @@ enum ZoomState {
 }
 
 struct ZoomRequested {
+    let id: String
     let origin: CGPoint
     let startingSize: CGSize
     let content: any View
     
-    init<C: View>(origin: CGPoint, startingSize: CGSize, content: C) {
+    init<C: View>(id: String = "Default", origin: CGPoint, startingSize: CGSize, content: C) {
+        self.id = id
         self.origin = origin
         self.startingSize = startingSize
         self.content = AnyView(content)

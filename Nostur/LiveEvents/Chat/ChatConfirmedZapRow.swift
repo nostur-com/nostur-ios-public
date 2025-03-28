@@ -15,10 +15,12 @@ struct ChatConfirmedZapRow: View {
     @ObservedObject private var pfpAttributes: PFPAttributes
     
     @State private var didStart = false
+    private var zoomableId: String
     
-    init(confirmedZap: NRChatConfirmedZap) {
+    init(confirmedZap: NRChatConfirmedZap, zoomableId: String = "Default") {
         self.confirmedZap = confirmedZap
         self.pfpAttributes = confirmedZap.pfpAttributes
+        self.zoomableId = zoomableId
     }
     
     var body: some View {
@@ -81,7 +83,7 @@ struct ChatConfirmedZapRow: View {
                 }
                 .foregroundColor(themes.theme.accent)
                 
-                NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, didStart: $didStart)
+            NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, didStart: $didStart, zoomableId: zoomableId)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(maxHeight: 450, alignment: .top)
             }

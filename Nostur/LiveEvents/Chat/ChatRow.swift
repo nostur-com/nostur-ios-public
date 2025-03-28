@@ -10,15 +10,16 @@ import SwiftUI
 struct ChatRow: View {
     public let content: ChatRowContent
     public let theme: Theme
+    public var zoomableId: String = "Default"
     
     var body: some View {
         switch content {
             case .chatConfirmedZap(let confirmedZap):
-                ChatConfirmedZapRow(confirmedZap: confirmedZap)
+                ChatConfirmedZapRow(confirmedZap: confirmedZap, zoomableId: zoomableId)
             case .chatPendingZap(let pendingZap):
-                ChatPendingZapRow(pendingZap: pendingZap)
+                ChatPendingZapRow(pendingZap: pendingZap, zoomableId: zoomableId)
             case .chatMessage(let nrChat):
-                ChatMessageRow(nrChat: nrChat)
+                ChatMessageRow(nrChat: nrChat, zoomableId: zoomableId)
         }
     }
 }

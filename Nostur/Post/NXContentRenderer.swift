@@ -75,6 +75,7 @@ struct NXContentRenderer: View { // VIEW things
     public let contentElements: [ContentElement]
     @Binding var didStart: Bool
     public var forceAutoload: Bool = false
+    public var zoomableId: String = "Default"
     
     @State private var viewState: NXContentRendererViewState = .loading
     
@@ -200,14 +201,16 @@ struct NXContentRenderer: View { // VIEW things
                     case .image(let galleryItem):
                         MediaContentView(
                             galleryItem: galleryItem,
-                            availableWidth: vc.availableWidth + (vc.fullWidthImages ? +20 : 0),
+                            availableWidth: vc.availableWidth,
                             placeholderAspect: 4/3,
-                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT / 2,
                             contentMode: .fit,
                             autoload: shouldAutoload,
-                            isNSFW: nxEvent.isNSFW
+                            isNSFW: nxEvent.isNSFW,
+                            zoomableId: zoomableId
                         )
-                        .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
+                        .padding(.vertical, 10)
+//                        .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 
                     case .linkPreview(let url):
                         LinkPreviewView(url: url, autoload: shouldAutoload, theme: vc.theme)

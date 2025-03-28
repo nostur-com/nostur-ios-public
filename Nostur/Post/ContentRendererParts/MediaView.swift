@@ -28,6 +28,8 @@ struct MediaContentView: View {
     // will sendNotification with image dimensions / blurhash 
     public var generateIMeta: Bool = false
     
+    public var zoomableId: String = "Default"
+    
     // The actual dimensions, once the image is actually processed and loaded, should be set after download/processing
     @State private var realDimensions: CGSize?
     
@@ -69,7 +71,8 @@ struct MediaContentView: View {
             isNSFW: isNSFW,
             imageInfo: imageInfo,
             gifInfo: gifInfo,
-            generateIMeta: generateIMeta
+            generateIMeta: generateIMeta,
+            zoomableId: zoomableId
         )
     }
 }
@@ -97,6 +100,7 @@ struct MediaPlaceholder: View {
     public var imageInfo: ImageInfo? = nil
     public var gifInfo: GifInfo? = nil
     public var generateIMeta: Bool = false
+    public var zoomableId: String = "Default"
     
     @State private var blurImage: UIImage?
     @State private var loadTask: Task<Void, Never>?
@@ -324,7 +328,7 @@ struct MediaPlaceholder: View {
                     }
             }
             else if contentMode == .fit {
-                ZoomableItem {
+                ZoomableItem(id: zoomableId) {
                     Image(uiImage: imageInfo.uiImage)
                         .resizable()
                         .scaledToFit()
@@ -356,7 +360,7 @@ struct MediaPlaceholder: View {
                 }
             }
             else {
-                ZoomableItem {
+                ZoomableItem(id: zoomableId) {
                     Image(uiImage: imageInfo.uiImage)
                         .resizable()
                         .scaledToFill()
@@ -413,7 +417,7 @@ struct MediaPlaceholder: View {
                 }
             }
             else if contentMode == .fit {
-                ZoomableItem {
+                ZoomableItem(id: zoomableId) {
                     GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fit)
@@ -452,7 +456,7 @@ struct MediaPlaceholder: View {
                 }
             }
             else {
-                ZoomableItem {
+                ZoomableItem(id: zoomableId) {
                     GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .scaledToFill()
