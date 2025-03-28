@@ -60,19 +60,18 @@ class EventRelationsQueue {
     /// - Parameter event: Event should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingEvent(_ event: Event? = nil, debugInfo: String? = "") {
         guard let event else { return }
-#if DEBUG
-        if event.managedObjectContext == nil {
-            L.og.debug("🔴🔴 event is nil, debugInfo: \(debugInfo ?? "")")
-            try? self.ctx.save()
-        }
-        else if event.managedObjectContext != self.ctx {
-            L.og.debug("🔴🔴 event is not bg")
-        }
-#endif
+//#if DEBUG
+//        if event.managedObjectContext == nil {
+//            L.og.debug("🔴🔴 event is nil, debugInfo: \(debugInfo ?? "")")
+//            try? self.ctx.save()
+//        }
+//        else if event.managedObjectContext != self.ctx {
+//            L.og.debug("🔴🔴 event is not bg")
+//        }
+//#endif
         
         if event.managedObjectContext == nil {
-            L.og.debug("🔴🔴 event is not yet saved")
-            try? self.ctx.save()
+            L.og.debug("🔴🔴 addAwaitingEvent: event is not yet saved, problem???")
         }
         
         // nil can apparently happen when we have event.replyTo.replyToRoot. 
@@ -81,24 +80,29 @@ class EventRelationsQueue {
         //             has .managedObjectContext ---       |        |
         //                      has .managedObjectContext -         |
         //                           .managedObjectContext is nil  -
-        let eventWithContextOrNil: Event? = if event.managedObjectContext == nil {
-            self.ctx.object(with: event.objectID) as? Event
-        }
-        else {
-            event
-        }
+//        let eventWithContextOrNil: Event? = if event.managedObjectContext == nil {
+//            self.ctx.object(with: event.objectID) as? Event
+//        }
+//        else {
+//            event
+//        }
         
-        guard let eventWithContext = eventWithContextOrNil else { return }
+//        guard let eventWithContext = eventWithContextOrNil else { return }
         
 #if DEBUG
-            if eventWithContext.managedObjectContext != ctx && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            if event.managedObjectContext != ctx && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
 #endif
         
-        guard self.waitingEvents.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled"); return }
-        guard self.waitingEvents[eventWithContext.id] == nil else { return }
-        self.waitingEvents[eventWithContext.id] = QueuedEvent(event: eventWithContext, queuedAt: Date.now)
+        guard self.waitingEvents.count < SPAM_LIMIT else {
+#if DEBUG
+            L.og.debug("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled")
+#endif
+            return
+        }
+        guard self.waitingEvents[event.id] == nil else { return }
+        self.waitingEvents[event.id] = QueuedEvent(event: event, queuedAt: Date.now)
         
 #if DEBUG
         if self.waitingEvents.count % 25 == 0 {
