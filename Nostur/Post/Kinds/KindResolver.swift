@@ -33,6 +33,8 @@ struct KindResolver: View {
         case 0,3,4,5,7,1984,9734,30009,8,30008:
             // We don't expect to show these, but anyone can quote or reply to any event so we still need to show something
             OtherKnownKinds(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
         case 443:
             Kind443(nrPost: nrPost, theme: theme)
             // TODO: .navigationTitle should be somewhere else, only if isDetail
@@ -66,52 +68,78 @@ struct KindResolver: View {
         case 9735: // TODO: need to check
             if let zap = Event.fetchEvent(id: nrPost.id, context: viewContext()), let zapFrom = zap.zapFromRequest {
                 ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom, isEmbedded: isEmbedded)
+                    .onAppear { self.enqueue() }
+                    .onDisappear { self.dequeue() }
             }
             
         case 9802:
             Kind9802(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
             
         case 30311:
             if let liveEvent = nrPost.nrLiveEvent {
                 if isEmbedded {
                     LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
+                        .onAppear { self.enqueue() }
+                        .onDisappear { self.dequeue() }
                 }
                 else {
                     LiveEventDetail(liveEvent: liveEvent)
+                        .onAppear { self.enqueue() }
+                        .onDisappear { self.dequeue() }
                 }
             }
         case 30023:
             Kind30023(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
         case 1063:
             if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
                 Kind1063(nrPost: nrPost, fileMetadata: fileMetadata, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    .onAppear { self.enqueue() }
+                    .onDisappear { self.dequeue() }
             }
             else {
                 UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    .onAppear { self.enqueue() }
+                    .onDisappear { self.dequeue() }
             }
         case 20:
             Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
             
         case 99999: // Disabled and let NIP-89 handle it for now
             let title = nrPost.eventTitle ?? "Untitled"
             if let eventUrl = nrPost.eventUrl {
                 VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: theme)
                     .padding(.vertical, 10)
+                    .onAppear { self.enqueue() }
+                    .onDisappear { self.dequeue() }
             }
             else {
                 UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    .onAppear { self.enqueue() }
+                    .onDisappear { self.dequeue() }
             }
         
         case 1:
             if (nrPost.kTag ?? "" == "20"), let galleryItem = nrPost.galleryItems.first { // Generic Olas
                 Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    .onAppear { self.enqueue() }
+                    .onDisappear { self.dequeue() }
             }
             else {
                 Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    .onAppear { self.enqueue() }
+                    .onDisappear { self.dequeue() }
             }
             
         default:
             UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
             
         }
     }
@@ -121,6 +149,21 @@ struct KindResolver: View {
     private var replyButton: some View {
         Image("ReplyIcon")
         Text("Add comment")
+    }
+    
+    private func enqueue() {
+        if !nrPost.missingPs.isEmpty {
+            bg().perform {
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
+                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+            }
+        }
+    }
+    
+    private func dequeue() {
+        if !nrPost.missingPs.isEmpty {
+            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
+        }
     }
 }
 

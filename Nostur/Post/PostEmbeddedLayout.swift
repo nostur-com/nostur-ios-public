@@ -83,22 +83,6 @@ struct PostEmbeddedLayout<Content: View>: View {
                 .cornerRadius(8)
                 .onTapGesture(perform: navigateToPost)
         )
-        .onAppear {
-            if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
-                L.og.debug("🟢 NoteRow.onAppear event.contact == nil so: REQ.0:\(nrPost.pubkey)")
-                bg().perform {
-                    EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NoteRow.onAppear")
-                    QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                }
-            }
-        }
-        .onDisappear {
-            if (nrPost.contact == nil) || (nrPost.contact?.metadata_created_at == 0) {
-                bg().perform {
-                    QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-                }
-            }
-        }
         .task {
             guard let nrContact = nrPost.contact else { return }
             guard !SettingsStore.shared.lowDataMode else { return }

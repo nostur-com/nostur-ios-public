@@ -58,8 +58,6 @@ struct PostRowDeletable: View {
             }
             else { // IS NOT A REPOST
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, isEmbedded: isEmbedded, connect: connect, theme: theme)
-                    .onAppear { self.enqueue() }
-                    .onDisappear { self.dequeue() }
             }
         }
         else {
@@ -74,21 +72,6 @@ struct PostRowDeletable: View {
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
             .hCentered()
-        }
-    }
-    
-    private func enqueue() {
-        if !nrPost.missingPs.isEmpty {
-            bg().perform {
-                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.001")
-                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-            }
-        }
-    }
-    
-    private func dequeue() {
-        if !nrPost.missingPs.isEmpty {
-            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
         }
     }
 }

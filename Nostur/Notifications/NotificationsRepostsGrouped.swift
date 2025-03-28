@@ -33,19 +33,6 @@ struct NotificationsRepostsGrouped: View {
                     Box(nrPost: nrPost) {
                         // TODO: Put grouped repost header here
                         KindResolver(nrPost: nrPost, fullWidth: settings.fullWidthImages, hideFooter: !settings.rowFooterEnabled, missingReplyTo: true, isDetail: false, theme: themes.theme)
-                            .onAppear {
-                                if !nrPost.missingPs.isEmpty {
-                                    bg().perform {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KindResolver.RepostsGrouped")
-                                        QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                                    }
-                                }
-                            }
-                            .onDisappear {
-                                if !nrPost.missingPs.isEmpty {
-                                    QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-                                }
-                            }
                     }
                     .id(nrPost.id)
                 }

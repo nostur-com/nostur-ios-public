@@ -41,6 +41,8 @@ struct NotificationsReposts: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
                                     .offset(x: -35)
+                                    .onAppear { self.enqueue(nrPost) }
+                                    .onDisappear { self.dequeue(nrPost) }
                                 if let firstQuote = nrPost.firstQuote {
                                     MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5)
                                         .onTapGesture {
@@ -147,6 +149,21 @@ struct NotificationsReposts: View {
                 account.lastSeenRepostCreatedAt = mostCreatedAt
                 viewContextSave() // Account is from main context
             }
+        }
+    }
+    
+    private func enqueue(_ nrPost: NRPost) {
+        if !nrPost.missingPs.isEmpty {
+            bg().perform {
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "NotificationReposts.001")
+                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+            }
+        }
+    }
+    
+    private func dequeue(_ nrPost: NRPost) {
+        if !nrPost.missingPs.isEmpty {
+            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
         }
     }
 }

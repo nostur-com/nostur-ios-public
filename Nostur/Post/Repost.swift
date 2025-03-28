@@ -45,19 +45,9 @@ struct Repost: View {
     var body: some View {
         VStack(alignment: .leading) {
             RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
-                .onAppear {
-                    if !nrPost.missingPs.isEmpty {
-                        bg().perform {
-                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "Repost.001")
-                            QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
-                        }
-                    }
-                }
-                .onDisappear {
-                    if !nrPost.missingPs.isEmpty {
-                        QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
-                    }
-                }
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
+            
             if let firstQuote = noteRowAttributes.firstQuote {
                 // CASE - WE HAVE REPOSTED POST ALREADY
                 if firstQuote.blocked {
@@ -77,19 +67,7 @@ struct Repost: View {
                 }
                 else {
                     KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, forceAutoload: shouldForceAutoLoad, theme: theme)
-                        .onAppear {
-                            if !firstQuote.missingPs.isEmpty {
-                                bg().perform {
-                                    EventRelationsQueue.shared.addAwaitingEvent(firstQuote.event, debugInfo: "KindResolver.001")
-                                    QueuedFetcher.shared.enqueue(pTags: firstQuote.missingPs)
-                                }
-                            }
-                        }
-                        .onDisappear {
-                            if !firstQuote.missingPs.isEmpty {
-                                QueuedFetcher.shared.dequeue(pTags: firstQuote.missingPs)
-                            }
-                        }
+
                     // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
                     // so add the extra 10 here
                         .padding(.horizontal, firstQuote.kind == 30023 ? 10 : 0)
@@ -168,6 +146,21 @@ struct Repost: View {
                         vm.fetch()
                     }
             }
+        }
+    }
+    
+    private func enqueue() {
+        if !nrPost.missingPs.isEmpty {
+            bg().perform {
+                EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "Repost.001")
+                QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
+            }
+        }
+    }
+    
+    private func dequeue() {
+        if !nrPost.missingPs.isEmpty {
+            QueuedFetcher.shared.dequeue(pTags: nrPost.missingPs)
         }
     }
 }
