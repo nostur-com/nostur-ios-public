@@ -84,8 +84,13 @@ struct KindResolver: View {
                         .onAppear { self.enqueue() }
                         .onDisappear { self.dequeue() }
                 }
-                else {
+                else if isDetail {
                     LiveEventDetail(liveEvent: liveEvent)
+                        .onAppear { self.enqueue() }
+                        .onDisappear { self.dequeue() }
+                }
+                else {
+                    LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
                         .onAppear { self.enqueue() }
                         .onDisappear { self.dequeue() }
                 }
