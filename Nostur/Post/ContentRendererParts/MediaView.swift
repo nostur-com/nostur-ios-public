@@ -34,13 +34,18 @@ struct MediaContentView: View {
     // Force fill and clip if image is too long
     private var shouldForceToFill: Bool {
         if fullScreen { return false }
-        if let realDimensions {
+        if let realDimensions { // use aspect from actual dimensions from real image
             let aspect = realDimensions.width / realDimensions.height
             if availableWidth > (maxHeight * aspect) {
                 return true
             }
         }
-        else if let placeholderAspect {
+        else if let metaAspect = galleryItem.aspect { // use aspect from imeta
+            if availableWidth > (maxHeight * metaAspect) {
+                return true
+            }
+        }
+        else if let placeholderAspect { // use aspect from placeholder
             if availableWidth > (maxHeight * placeholderAspect) {
                 return true
             }
