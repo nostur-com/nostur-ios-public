@@ -10,10 +10,12 @@ import SwiftUI
 struct NEventView: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
+    
     public let identifier: ShareableIdentifier
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
     public var theme: Theme
+    
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
         
     var body: some View {
@@ -92,7 +94,7 @@ struct NEventView: View {
                     )
             case .ready(let nrPost):
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
-//                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
+
             case .timeout:
                 Text("Unable to fetch content")
                     .padding(10)
@@ -101,6 +103,7 @@ struct NEventView: View {
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(theme.lineColor, lineWidth: 1)
                     )
+                
             case .error(let error):
                 Text(error)
                     .padding(10)
@@ -111,10 +114,6 @@ struct NEventView: View {
                     )
             }
         }
-//        .overlay(
-//            RoundedRectangle(cornerRadius: 15)
-//                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
-//        )
     }
 }
 

@@ -45,22 +45,18 @@ struct ContentRenderer: View { // VIEW things
             ForEach(contentElements) { element in
                 switch element {
                 case .nrPost(let nrPost):
-//                    EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
                     KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
-                    // TODO: the enqueeu dequeue need to be added in KindResolver or somewhere
-//                        .onAppear { self.enqueue() }
-//                        .onDisappear { self.dequeue() }
                         .environmentObject(childDIM)
                         .padding(.vertical, 10)
 
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
-//                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
+                    
                 case .naddr1(let identifier):
                     NaddrView(naddr1: identifier.bech32string, fullWidth: fullWidth, theme: theme)
 //                        .frame(minHeight: 75)
@@ -69,6 +65,7 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
+                    
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey, theme: theme)
@@ -79,8 +76,10 @@ struct ContentRenderer: View { // VIEW things
                     else {
                         EmptyView()
                     }
+                    
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
+                    
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
@@ -98,6 +97,7 @@ struct ContentRenderer: View { // VIEW things
                     else {
                         EmptyView()
                     }
+                    
                 case .noteHex(let hex):
                     EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
 //                        .frame(minHeight: 75)
@@ -110,6 +110,7 @@ struct ContentRenderer: View { // VIEW things
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                    
                 case .code(let code): // For text notes
                     Text(verbatim: code)
                         .font(.system(.body, design: .monospaced))
@@ -117,6 +118,7 @@ struct ContentRenderer: View { // VIEW things
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                    
                 case .text(let attributedStringWithPs): // For text notes
 //                    Color.red
 //                        .frame(height: 50)
@@ -132,21 +134,26 @@ struct ContentRenderer: View { // VIEW things
                             navigateTo(nrPost)
                     })
                     .equatable()
+                    
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
                         .onTapGesture {
                             guard !isDetail else { return }
                             navigateTo(nrPost)
                         }
+                    
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, theme: theme)
                         .padding(.vertical, 10)
+                    
                 case .cashu(let text):
                     CashuTokenView(token: text, theme: theme)
                         .padding(.vertical, 10)
+                    
                 case .video(let mediaContent):
                     EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
                         .padding(.horizontal, fullWidth ? -10 : 0)
+                    
                 case .image(let galleryItem):
 //                    Color.red
 //                        .frame(height: 30)
@@ -171,11 +178,13 @@ struct ContentRenderer: View { // VIEW things
                     //  contentPadding: nrPost.kind == 30023 ? 10 : 0
                     //  imageUrls: nrPost.imageUrls
                     // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
+                    
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
+                    
                 case .postPreviewImage(let postedImageMeta):
                     Image(uiImage: postedImageMeta.imageData)
                         .resizable()

@@ -61,9 +61,10 @@ struct OtherKnownKinds: View {
                         }
                     }
                     .onAppear {
+                        // TODO: Check .missingPs instead of .contact?
                         guard nrPost.contact == nil else { return }
                         bg().perform {
-                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "KnownKindView.001")
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "OtherKnownKinds.001")
                             QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                         }
                     }

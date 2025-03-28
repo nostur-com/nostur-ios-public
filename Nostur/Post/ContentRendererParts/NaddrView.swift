@@ -10,12 +10,14 @@ import SwiftUI
 struct NaddrView: View {
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var dim: DIMENSIONS
+    
     public let naddr1: String
     public var navigationTitle: String? = nil
     public var navTitleHidden: Bool = false
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
     public var theme: Theme = Themes.default.theme
+    
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
     var body: some View {
@@ -45,7 +47,7 @@ struct NaddrView: View {
                         
                         let fetchParams: FetchVM.FetchParams = (
                             prio: true,
-                            req: { [weak vm, weak dim] taskId in
+                            req: { [weak vm] taskId in
                                 bg().perform { [weak vm] in // 1. CHECK LOCAL DB
                                     guard let vm else { return }
                                     if let event = Event.fetchReplacableEvent(kind,
@@ -102,12 +104,12 @@ struct NaddrView: View {
                     }
             case .ready(let nrPost):
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
-//                EmbeddedPost(nrPost, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme)
-                    .environmentObject(dim)
+                
             case .timeout:
                 Text("Unable to fetch content")
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
+                
             case .error(let error):
                 Text(error)
                     .padding(10)

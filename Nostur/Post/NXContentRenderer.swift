@@ -98,15 +98,13 @@ struct NXContentRenderer: View { // VIEW things
                     switch contentElements[index] {
                     case .nrPost(let nrPost):
                         KindResolver(nrPost: nrPost, fullWidth: vc.fullWidthImages, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload, theme: vc.theme)
-//                        EmbeddedPost(nrPost, fullWidth: vc.fullWidthImages, forceAutoload: shouldAutoload, theme: vc.theme)
-    //                        .frame(minHeight: 75)
                             .environmentObject(childDIM)
-                        //                        .fixedSize(horizontal: false, vertical: true)
     //                        .debugDimensions("EmbeddedPost")
                             .padding(.vertical, 10)
                             .id(index)
     //                        .withoutAnimation()
     //                        .transaction { t in t.animation = nil }
+                        
                     case .nevent1(let identifier):
                         NEventView(identifier: identifier, fullWidth: vc.fullWidthImages, forceAutoload: shouldAutoload, theme: vc.theme)
     //                        .frame(minHeight: 75)
