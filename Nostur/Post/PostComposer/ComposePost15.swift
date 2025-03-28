@@ -69,10 +69,11 @@ struct ComposePost15: View {
                         ScrollView {
                             VStack {
                                 if let replyToNRPost = replyToNRPost {
-                                    PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom, theme: themes.theme)
+                                    // Replyijg, so full-width false and connecting line to bottom
+                                    KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom, theme: themes.theme)
+//                                            PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom, theme: themes.theme)
                                         .onTapGesture { }
                                         .disabled(true)
-                                        .padding(.bottom, 10)
                                 }
                                 
                                 HStack(alignment: .top) {
@@ -85,13 +86,23 @@ struct ComposePost15: View {
                                         .id(textfield)
                                 }
                                 
-                                if let quotingNRPost = quotingNRPost {
-                                    KindResolver(nrPost: quotingNRPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, theme: themes.theme)
-                                        .environmentObject(DIMENSIONS.embeddedDim(availableWidth: geo.size.width, isScreenshot: false))
-                                        .padding(.leading, DIMENSIONS.ROW_PFP_SPACE - 5)
+                                if let quotingNRPost = quotePost?.nrPost {
+                                    KindResolver(nrPost: quotingNRPost, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: true, isEmbedded: true, theme: themes.theme)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .onTapGesture { }
+                                        .disabled(true)
+                                        .environmentObject(
+                                            DIMENSIONS.embeddedDim(availableWidth: geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20), isScreenshot: false)
+                                        )
+                                        .padding(.leading, SettingsStore.shared.fullWidthImages ? 0 : DIMENSIONS.ROW_PFP_SPACE)
                                 }
                                 
-                                Spacer()
+                                if let singleRelay = Drafts.shared.lockToThisRelay {
+                                    Toggle(isOn: $vm.lockToSingleRelay) {
+                                        Text("Lock post to \(singleRelay.url)")
+                                    }
+                                    .padding(10)
+                                }
                             }
 
                             .padding(.horizontal, 10)
