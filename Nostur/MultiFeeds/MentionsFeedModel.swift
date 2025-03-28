@@ -12,6 +12,7 @@ class MentionsFeedModel: ObservableObject {
     @Published public var mentions: [NRPost] = []
 
     private var pubkey: String?
+    private var npub: String?
     private var account: CloudAccount? // Main context
     
     // bg
@@ -55,10 +56,11 @@ class MentionsFeedModel: ObservableObject {
     public func setup(pubkey: String) {
         self.pubkey = pubkey
         self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey })
+        self.npub = self.account?.npub
     }
     
     public func load(limit: Int?, includeSpam: Bool = false, completion: ((Int64) -> Void)? = nil) {
-        guard let pubkey else { return }
+        guard let pubkey, let npub else { return }
         let bgContext = bg()
         bgContext.perform { [weak self] in
             guard let self else { return }
@@ -77,6 +79,31 @@ class MentionsFeedModel: ObservableObject {
             
             self.allMentionEvents = ((try? bgContext.fetch(r1)) ?? [])
                 .filter { includeSpam || !$0.isSpam }
+                
+                // Hellthread handling
+                .filter {
+                
+                    // check if actual mention is in content (if there are more than 20 Ps, potential hellthread)
+                    if $0.fastPs.count > 20 {
+                        // but always allow if direct reply to own post
+                        if let replyToId = $0.replyToId {
+                            if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
+                                if replyTo.pubkey == pubkey { // direct reply to our post
+                                    return true
+                                }
+                                // direct reply to someone elses post, check if we are actually mentioned in content. (we don't check old [0], [1] style...)
+                                return $0.content != nil && $0.content!.contains(npub)
+                            }
+                            // We don't have our own event? Maybe new app user
+                            return false // fallback to false
+                        }
+                        
+                        // our npub is in content? (we don't check old [0], [1] style...)
+                        return $0.content != nil && $0.content!.contains(npub)
+                    }
+                    
+                    return true
+                }
             
             let mentions = self.allMentionEvents.map { NRPost(event: $0, withFooter: true, withReplyTo: true, withParents: false, withReplies: false, plainText: false, withRepliesCount: true) }
             

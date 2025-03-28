@@ -65,4 +65,6 @@ public class CloudAccount: NSManagedObject {
     // Cache because:  20.00 ms    0.1%    10.00 ms                 CloudAccount.privateFollowingPubkeys.getter
     var followingPubkeysCache: Set<String> = []
     var privateFollowingPubkeysCache: Set<String> = []
+    
+    lazy var npub: String = { try! NIP19(prefix: "npub", hexString: publicKey).displayString }()
 }

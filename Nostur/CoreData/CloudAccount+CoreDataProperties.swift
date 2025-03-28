@@ -240,8 +240,6 @@ extension CloudAccount : Identifiable {
         return String(npub.prefix(11))
     }
     
-    var npub:String { try! NIP19(prefix: "npub", hexString: publicKey).displayString }
-    
     var isFullAccount: Bool {
         return self.flagsSet.contains("full_account")
     }
