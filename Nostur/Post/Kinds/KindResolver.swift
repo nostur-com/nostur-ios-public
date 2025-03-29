@@ -130,16 +130,9 @@ struct KindResolver: View {
             }
         
         case 1:
-            if (nrPost.kTag ?? "" == "20"), let galleryItem = nrPost.galleryItems.first { // Generic Olas
-                Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
-                    .onAppear { self.enqueue() }
-                    .onDisappear { self.dequeue() }
-            }
-            else {
-                Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
-                    .onAppear { self.enqueue() }
-                    .onDisappear { self.dequeue() }
-            }
+            Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth || (nrPost.kTag ?? "" == "20" && nrPost.galleryItems.count > 0), forceAutoload: shouldAutoload, theme: theme)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
             
         default:
             UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
