@@ -123,7 +123,7 @@ struct ProfileOverlayCard: View {
         Box {
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
-                    ZappablePFP(pubkey: contact.pubkey, contact: contact, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, zapEtag: zapEtag)
+                    ZappablePFP(pubkey: contact.pubkey, contact: contact, size: 75.0, zapEtag: zapEtag)
                         .onTapGesture {
                             dismiss()
                             navigateTo(contact)
