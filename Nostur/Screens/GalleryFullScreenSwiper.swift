@@ -175,7 +175,7 @@ struct GalleryFullScreenSwiper: View {
                 }
                 .font(.system(size: 50))
                 .padding(.leading, 10)
-                .opacity(mediaPostPreview && activeIndex != 0 ? 1.0 : 0)
+                .opacity(activeIndex != 0 ? 1.0 : 0)
             }
         }
     }
@@ -191,7 +191,7 @@ struct GalleryFullScreenSwiper: View {
                 }
                 .font(.system(size: 50))
                 .padding(.trailing, 10)
-                .opacity(mediaPostPreview && activeIndex != items.count-1 ? 1.0 : 0)
+                .opacity(activeIndex != items.count-1 ? 1.0 : 0)
             }
         }
     }
