@@ -80,8 +80,6 @@ struct ProfileOverlayCard: View {
     @EnvironmentObject private var npn: NewPostNotifier
     @ObservedObject private var fg: FollowingGuardian = .shared
     
-    @State private var similarPFP = false
-    @State private var similarToPubkey: String? = nil
     @State private var backlog = Backlog(timeout: 5.0, auto: true)
     @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false
@@ -89,14 +87,6 @@ struct ProfileOverlayCard: View {
     @State private var npub = ""
     
     static let grey = Color.init(red: 113/255, green: 118/255, blue: 123/255)
-    
-    var couldBeImposter: Bool {
-        guard let la = AccountsState.shared.loggedInAccount else { return false }
-        guard la.account.publicKey != contact.pubkey else { return false }
-        guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
-        guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
-        return similarPFP
-    }
     
     private var hasFixedName: Bool {
         if let fixedName = contact.fixedName, fixedName != contact.anyName {
@@ -207,7 +197,7 @@ struct ProfileOverlayCard: View {
                         Text(contact.anyName).font(.title).foregroundColor(.primary)
                             .lineLimit(1)
                         
-                        if !couldBeImposter && hasNip05Shortened {
+                        if contact.similarToPubkey == nil && hasNip05Shortened {
                             NostrAddress(nip05: contact.nip05 ?? "", shortened: true)
                                 .layoutPriority(3)
                                 .offset(y: -4)
@@ -231,10 +221,8 @@ struct ProfileOverlayCard: View {
                     Color.clear
                         .frame(height: 15)
                         .overlay(alignment: .leading) {
-                            if couldBeImposter {
-                                PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
-                            }
-                            else if let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() != contact.anyName.lowercased(), !hasNip05Shortened {
+                            NewPossibleImposterLabel(nrContact: contact)
+                            if contact.similarToPubkey == nil, let nip05 = contact.nip05, contact.nip05verified, contact.nip05nameOnly.lowercased() != contact.anyName.lowercased(), !hasNip05Shortened {
                                 NostrAddress(nip05: nip05, shortened: false)
                                     .layoutPriority(3)
                             }
@@ -341,11 +329,6 @@ struct ProfileOverlayCard: View {
                         }
                     }
                 }
-            }
-            
-            ImposterChecker.shared.runImposterCheck(nrContact: contact) { imposterYes in
-                self.similarPFP = true
-                self.similarToPubkey = imposterYes.similarToPubkey
             }
         }
         .task { [weak contact, weak backlog] in

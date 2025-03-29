@@ -29,6 +29,44 @@ struct PossibleImposterLabel: View {
     }
 }
 
+struct NewPossibleImposterLabel: View {
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var pfp: PFPAttributes
+    @State private var showDetails: Bool = false
+    
+    init(pfp: PFPAttributes) {
+        self.pfp = pfp
+    }
+    
+    init(nrContact: NRContact) {
+        self.pfp = PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey)
+    }
+    
+    var body: some View {
+        if let similarToPubkey = pfp.similarToPubkey {
+            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                .padding(.horizontal, 8)
+                .background(.red)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+                .padding(.top, 3)
+                .layoutPriority(2)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: pfp.pubkey, similarToPubkey: similarToPubkey))
+                }
+        }
+        else {
+            Rectangle()
+                .frame(height: 0)
+                .hidden()
+                .onAppear {
+                    pfp.runImposterCheck()
+                }
+        }
+    }
+}
+
 struct PossibleImposterDetail: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
@@ -136,12 +174,15 @@ struct PossibleImposterDetail: View {
 
 struct ImposterLabelToggle: View {
     @ObservedObject public var contact: Contact
+    @State private var addBackSimilarToPubkey: String? = nil
     
     var body: some View {
         if contact.couldBeImposter == 1 {
             Button {
                 withAnimation {
                     contact.couldBeImposter = 0
+                    addBackSimilarToPubkey = contact.similarToPubkey
+                    contact.similarToPubkey = nil
                 }
                 save()
             } label: {
@@ -153,6 +194,7 @@ struct ImposterLabelToggle: View {
             Button {
                 withAnimation {
                     contact.couldBeImposter = 1
+                    contact.similarToPubkey = addBackSimilarToPubkey
                 }
                 save()
             } label: {

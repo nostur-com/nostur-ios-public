@@ -160,10 +160,8 @@ struct ProfileView: View {
                     
                     HStack(spacing: 0) {
                         Text("\(nrContact.anyName) ").font(.system(size: 24, weight:.bold))
-                        if imposterVM.couldBeImposter {
-                            PossibleImposterLabel(possibleImposterPubkey: nrContact.pubkey, followingPubkey: nrContact.similarToPubkey)
-                        }
-                        else if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                        NewPossibleImposterLabel(nrContact: nrContact)
+                        if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
                             NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
                                 .layoutPriority(3)
                         }
@@ -401,7 +399,7 @@ struct ProfileView: View {
             }
             vm.load(nrContact)
             lastSeenVM.checkLastSeen(nrContact.pubkey)
-            imposterVM.runCheck(nrContact)
+//            imposterVM.runCheck(nrContact)
         }
         .onChange(of: nrContact.nip05) { nip05 in
             bg().perform {

@@ -1314,10 +1314,15 @@ class NoteRowAttributes: ObservableObject {
     }
 }
 
-class PFPAttributes: ObservableObject {
+class PFPAttributes: ObservableObject, Equatable {
+    
+    static func == (lhs: PFPAttributes, rhs: PFPAttributes) -> Bool {
+        return lhs.pubkey == rhs.pubkey
+    }
+    
     @Published var contact: NRContact? = nil
     private var contactUpdatedSubscription: AnyCancellable?
-    private let pubkey: String
+    public let pubkey: String
     
     public var anyName: String {
         contact?.anyName ?? String(pubkey.suffix(11))
@@ -1351,7 +1356,33 @@ class PFPAttributes: ObservableObject {
     }
     
     
-    // Listen here or somewhere in view?
+    @Published var similarToPubkey: String? = nil
+    private var didRunImposterCheck = false
+    
+    func runImposterCheck(_ nrContact: NRContact? = nil) {
+        bg().perform { [weak self] in
+            guard let self, let nrContact = (contact ?? nrContact) ?? NRContact.fetch(pubkey)
+            else { return }
+            
+            // Make sure passed in nrContact is same .pubkey
+            guard nrContact.pubkey == pubkey else { return }
+            guard nrContact.couldBeImposter == -1 else {
+                if nrContact.couldBeImposter == 1 {
+                    Task { @MainActor in
+                        self.similarToPubkey = nrContact.similarToPubkey
+                    }
+                }
+                return
+            }
+            
+            didRunImposterCheck = true
+            ImposterChecker.shared.runImposterCheck(nrContact: nrContact) { imposterYes in
+                Task { @MainActor in
+                    self.similarToPubkey = imposterYes.similarToPubkey
+                }
+            }
+        }
+    }
 }
 
 class HighlightAttributes: ObservableObject {

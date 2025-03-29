@@ -35,7 +35,6 @@ struct NewFollowersNotificationView: View {
                         .overlay(alignment: .topLeading) {
                             if index == 0 {
                                 NewPossibleImposterLabel(pfp: pfps[index])
-//                                PossibleImposterLabel(possibleImposterPubkey: pfps[index].pubkey, followingPubkey: pfps[index].similarToPubkey)
                                     .lineLimit(1)
                                     .fixedSize()
                                     .offset(x: -10, y: -10)
