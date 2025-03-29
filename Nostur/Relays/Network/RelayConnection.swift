@@ -173,6 +173,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             self?.queue.async(flags: .barrier) { [weak self] in
                 guard let self = self else { return }
+                guard !self.isConnected else { return } // already connected
                 guard self.isDeviceConnected else {
 #if DEBUG
                     L.sockets.debug("\(self.url) - No internet, skipping connect()")
@@ -185,7 +186,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
 #endif
                     if let andSend {
-                        self.sendMessage(andSend)
+                        let socketMessage = SocketMessage(text: andSend)
+                        self.outQueue.append(socketMessage)
                     }
                     return
                 }
@@ -248,15 +250,19 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     self.sendAfterAuthSubject.send()
                     return
                 }
-                
-                for out in self.outQueue {
-                    webSocketTask.send(.string(out.text)) { error in
-                        if let error {
-                            self.didReceiveError(error)
-                        }
-                    }
-                    self.outQueue.removeAll(where: { $0.id == out.id })
-                }
+//                else if self.isSocketConnected {
+//                    for out in self.outQueue {
+//#if DEBUG
+//                        L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(155))")
+//#endif
+//                        webSocketTask.send(.string(out.text)) { error in
+//                            if let error {
+//                                self.didReceiveError(error)
+//                            }
+//                        }
+//                        self.outQueue.removeAll(where: { $0.id == out.id })
+//                    }
+//                }
             }
         }
     }
@@ -267,7 +273,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
 #endif
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
-            guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
+            guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty, self.isSocketConnected else { return }
             for out in self.outQueue {
 #if DEBUG
                 L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE (AFTER AUTH) \(self.url): \(out.text.prefix(155))")
@@ -295,14 +301,21 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             }
             
             if bypassQueue { // To give prio to stuff like AUTH
+                if self.isSocketConnected {
 #if DEBUG
                 L.sockets.debug("🟠🟠🏎️🔌🔌 SEND (bypassQueue) \(self.url): \(text)")
 #endif
-                webSocketTask?.send(.string(text)) { error in
-                    if let error {
-                        self.didReceiveError(error)
+                    webSocketTask?.send(.string(text)) { error in
+                        if let error {
+                            self.didReceiveError(error)
+                        }
                     }
                 }
+                else {
+                    let socketMessage = SocketMessage(text: text)
+                    self.outQueue.insert(socketMessage, at: 0)
+                }
+                
                 return
             }
             
@@ -548,10 +561,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     // didOpenWithProtocol
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-        queue.async(flags: .barrier) { [weak self] in
 #if DEBUG
             L.sockets.debug("didOpenWithProtocol: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(`protocol` ?? "")")
 #endif
+        self.queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.stats.connected += 1
             self.startReceiving()
@@ -596,14 +609,18 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self.sendAfterAuthSubject.send()
                 return
             }
-            
-            for out in outQueue {
-                webSocketTask.send(.string(out.text)) { error in
-                    if let error {
-                        self.didReceiveError(error)
+            else {
+                for out in outQueue {
+#if DEBUG
+                    L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(155))")
+#endif
+                    webSocketTask.send(.string(out.text)) { error in
+                        if let error {
+                            self.didReceiveError(error)
+                        }
                     }
+                    self.outQueue.removeAll(where: { $0.id == out.id })
                 }
-                self.outQueue.removeAll(where: { $0.id == out.id })
             }
         }
 #if DEBUG
