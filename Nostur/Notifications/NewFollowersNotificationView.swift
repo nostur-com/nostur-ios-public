@@ -8,38 +8,34 @@
 import SwiftUI
 
 struct NewFollowersNotificationView: View {
-    var notification: PersistentNotification
-    @Environment(\.managedObjectContext) var viewContext
+    public var notification: PersistentNotification
     
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: false)], predicate: NSPredicate(value: false))
-    var contacts: FetchedResults<Contact>
+    private var notificationPubkeys: [String] {
+        notification.content.split(separator: ",").map(String.init)
+    }
+    
+    @State private var pfps: [PFPAttributes] = []
+    @State private var followingNotificationText: String = ""
     
     @State private var similarPFP = false
     @State private var similarToPubkey: String? = nil
     @State private var didCheck = false
     
-    init(notification: PersistentNotification) {
-        self.notification = notification
-        let fr = Contact.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.metadata_created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "pubkey IN %@", notification.content.split(separator: ","))
-        _contacts = FetchRequest(fetchRequest: fr)
-    }
-    
     var body: some View {
-        VStack(alignment:.leading) {
-            ZStack(alignment:.leading) {
-                ForEach(contacts.prefix(10).indices, id:\.self) { index in
-                    PFP(pubkey: contacts[index].pubkey, contact: contacts[index])
-                        .id(contacts[index].pubkey)
+        VStack(alignment: .leading) {
+            ZStack(alignment: .leading) {
+                ForEach(pfps.prefix(10).indices, id:\.self) { index in
+                    ObservedPFP(pfp: pfps[index])
+                        .id(pfps[index].pubkey)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: contacts[index].pubkey, navigationTitle: contacts[index].anyName))
+                            navigateTo(ContactPath(key: pfps[index].pubkey, navigationTitle: pfps[index].anyName))
                         }
                         .zIndex(-Double(index))
                         .offset(x:Double(0 + (30*index)))
                         .overlay(alignment: .topLeading) {
-                            if index == 0 && (similarPFP || contacts[index].couldBeImposter == 1) {
-                                PossibleImposterLabel(possibleImposterPubkey: contacts[index].pubkey, followingPubkey: contacts[index].similarToPubkey)
+                            if index == 0 {
+                                NewPossibleImposterLabel(pfp: pfps[index])
+//                                PossibleImposterLabel(possibleImposterPubkey: pfps[index].pubkey, followingPubkey: pfps[index].similarToPubkey)
                                     .lineLimit(1)
                                     .fixedSize()
                                     .offset(x: -10, y: -10)
@@ -47,12 +43,8 @@ struct NewFollowersNotificationView: View {
                         }
                 }
             }
-            if (contacts.count > 1) {
-                Text("**\(contacts.first?.anyName ?? "???")** and \(contacts.count - 1) others are now following you", comment: "Message when (name) and X others are now following yoru")
-                    
-            }
-            else {
-                Text("**\(contacts.first?.anyName ?? "???")** is now following you", comment: "Message when (name) is now following you")
+            if let first = pfps.first {
+                NowFollowingYouMessage(first: first, newFollowersCount: pfps.count)
             }
         }
         .frame(maxWidth:.infinity, alignment:.leading)
@@ -62,55 +54,42 @@ struct NewFollowersNotificationView: View {
         }
         .padding(10)
         .onAppear {
-            // Check if first could be imposter
-            self.checkIfFirstNameIsImposter()
+            loadPFPs()
         }
     }
     
-    func checkIfFirstNameIsImposter() {
-        // TODO: All imposter checker code is copy pasted in 10 places, need to make 1 reusable func
-        guard !didCheck else { return }
-        guard contacts.count > 0 else { return }
-        let contact = contacts[0]
-        guard !Nostur.isFollowing(contact.pubkey) else { return }
-        guard !SettingsStore.shared.lowDataMode else { return }
-        guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-        guard contact.metadata_created_at != 0 else { return }
-        guard contact.couldBeImposter == -1 else { return }
-        guard contact.picture != nil, let cPic = contact.pictureUrl else { return }
-        guard !NewOnboardingTracker.shared.isOnboarding else { return }
-        guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
-        
-        let contactAnyName = contact.anyName.lowercased()
-        let cPubkey = contact.pubkey
-        let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
-        
-        bg().perform { [weak contact] in
-            guard let account = account() else { return }
-            guard account.publicKey == currentAccountPubkey else { return }
-            guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
-                pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
-            }) else { return }
-            
-            guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
-            
-            L.og.debug("😎 ImposterChecker similar name: \(contactAnyName) - \(similarFollow.anyName)")
-            
-            Task.detached(priority: .background) {
-                let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                if similarPFP {
-                    L.og.debug("😎 ImposterChecker similar PFP: \(cPic) - \(wotPic) - \(cPubkey)")
+    func loadPFPs() {
+        let notificationPubkeys = notificationPubkeys
+        bg().perform {
+            let pfps = notificationPubkeys.prefix(10)
+                .map { pubkey in
+                    if let nrContact = NRContact.fetch(pubkey) {
+                        return PFPAttributes(contact: nrContact, pubkey: pubkey)
+                    }
+                    else {
+                        return PFPAttributes(pubkey: pubkey)
+                    }
                 }
-                
-                DispatchQueue.main.async {
-                    guard let contact else { return }
-                    guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
-                    self.similarPFP = similarPFP
-                    self.similarToPubkey = followingPubkey
-                    contact.couldBeImposter = similarPFP ? 1 : 0
-                    contact.similarToPubkey = similarPFP ? followingPubkey : nil
-                }
+            
+            let missingPs = pfps.filter { $0.contact == nil || $0.contact?.metadata_created_at == 0 }.map { $0.pubkey }
+            QueuedFetcher.shared.enqueue(pTags: missingPs)
+            Task { @MainActor in
+                self.pfps = pfps
             }
+        }
+    }
+}
+
+struct NowFollowingYouMessage: View {
+    @ObservedObject public var first: PFPAttributes
+    public let newFollowersCount: Int
+    
+    var body: some View {
+        if newFollowersCount > 1 {
+            Text("**\(first.anyName)** and \(newFollowersCount - 1) others are now following you")
+        }
+        else {
+            Text("**\(first.anyName)** is now following you")
         }
     }
 }
