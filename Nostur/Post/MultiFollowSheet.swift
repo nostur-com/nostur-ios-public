@@ -178,12 +178,14 @@ struct MultiFollowSheet: View {
         bg().perform {
             if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
                 contact.couldBeImposter = 0
+                contact.similarToPubkey = nil
             }
             else {
                 // if nil, create new contact
                 let contact = Contact(context: bg())
                 contact.pubkey = pubkey
                 contact.couldBeImposter = 0
+                contact.similarToPubkey = nil
             }
             
             Task { @MainActor in

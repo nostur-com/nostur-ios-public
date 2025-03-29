@@ -77,6 +77,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.banner = contact?.banner
         self.about = contact?.about
         self.couldBeImposter = contact?.couldBeImposter ?? -1
+        self.similarToPubkey = (contact?.couldBeImposter ?? -1 == 1) ? contact?.similarToPubkey : nil
         
         self.nip05verified = contact?.nip05veried ?? false
         self.nip05 = contact?.nip05
@@ -136,6 +137,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                     let banner = contact.banner
                     let about = contact.about
                     let couldBeImposter = contact.couldBeImposter
+                    let similarToPubkey = contact.couldBeImposter == 1 ? contact.similarToPubkey : nil
                     
                     let nip05verified = contact.nip05veried
                     let nip05 = contact.nip05
@@ -163,6 +165,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                         self.banner = banner
                         self.about = about
                         self.couldBeImposter = couldBeImposter
+                        self.similarToPubkey = similarToPubkey
                         
                         self.nip05verified = nip05verified
                         self.nip05 = nip05
@@ -203,6 +206,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     @MainActor public func follow(privateFollow: Bool = false, la laOrNil: LoggedInAccount? = nil) {
         self.objectWillChange.send()
         self.couldBeImposter = 0
+        self.similarToPubkey = nil
         
         guard let la = (laOrNil ?? AccountsState.shared.loggedInAccount) else { return }
         la.follow(pubkey, privateFollow: privateFollow)

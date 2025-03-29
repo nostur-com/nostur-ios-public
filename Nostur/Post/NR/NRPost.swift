@@ -1330,6 +1330,7 @@ class PFPAttributes: ObservableObject {
     init(contact: NRContact? = nil, pubkey: String) {
         self.contact = contact
         self.pubkey = pubkey
+        self.similarToPubkey = contact?.similarToPubkey
         
         if contact == nil {
             contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
@@ -1340,6 +1341,7 @@ class PFPAttributes: ObservableObject {
                         DispatchQueue.main.async { [weak self] in
                             self?.objectWillChange.send()
                             self?.contact = nrContact
+                            self?.similarToPubkey = nrContact?.similarToPubkey
                         }
                     }
                     self?.contactUpdatedSubscription?.cancel()

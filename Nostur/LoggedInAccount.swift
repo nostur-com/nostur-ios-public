@@ -105,6 +105,7 @@ extension LoggedInAccount {
             let contact: Contact = Contact.fetchByPubkey(pubkey, context: self.bg) ?? Contact(context: self.bg)
             contact.pubkey = pubkey
             contact.couldBeImposter = 0
+            contact.similarToPubkey = nil
             
             self.followingPublicKeys = viewFollowingPublicKeys
             

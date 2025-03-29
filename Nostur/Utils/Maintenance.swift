@@ -679,10 +679,12 @@ struct Maintenance {
             for contact in account.follows { // We are following so can't be imposter
                 if contact.couldBeImposter == 1 {
                     contact.couldBeImposter = 0
+                    contact.similarToPubkey = nil
                     imposterCacheFixedCount += 1
                 }
                 else if contact.couldBeImposter == -1 { // We are following so can't be imposter
                     contact.couldBeImposter = 0
+                    contact.similarToPubkey = nil
                     imposterCacheFollowCount += 1
                 }
             }
