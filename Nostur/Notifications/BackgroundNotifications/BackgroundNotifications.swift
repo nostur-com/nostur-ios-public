@@ -119,11 +119,10 @@ func scheduleAppRefresh(seconds: TimeInterval = 60.0) {
 // Request permissions to send local notifications
 func requestNotificationPermission(redirectToSettings:Bool = false) {
     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
-        if success {
-            L.og.debug("requestNotificationPermission: success")
-        }
-        else {
+        if !success {
+#if DEBUG
             L.og.error("\(error?.localizedDescription ?? "Error with UNUserNotificationCenter.current().requestAuthorization")")
+#endif
             DispatchQueue.main.async {
                 SettingsStore.shared.receiveLocalNotifications = false
                 if redirectToSettings {

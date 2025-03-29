@@ -57,7 +57,9 @@ class MessageParser {
                 
                 switch message.type {
                 case .AUTH:
+#if DEBUG
                     L.sockets.debug("🟢🟢 \(relayUrl): \(message.message)")
+#endif
                     client.handleAuth(message.message)
                 case .OK:
                     L.sockets.debug("\(relayUrl): \(message.message)")
@@ -78,7 +80,9 @@ class MessageParser {
                     }
                 case .CLOSED:
                     if message.message.prefix(14) == "auth-required:" {
+#if DEBUG
                         L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) (auth-required)")
+#endif
                         // Send auth response, but check first if its outbox relay, then remove from outbox relays
                         guard !client.isOutbox else {
                             DispatchQueue.main.async {
@@ -144,15 +148,15 @@ class MessageParser {
                     // TODO: Make generic -OPEN-, instead of "Following-" and "List-" etc..
                     if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" && String(subscriptionId.prefix(14)) != "-DB-1311-9735-" { 
                         // Send close message to this specific socket, not all.
-                        #if DEBUG
+#if DEBUG
                         L.sockets.debug("🔌🔌 \(relayUrl): EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId) -[LOG]-")
-                        #endif
+#endif
                         client.sendMessage(ClientMessage.close(subscriptionId: subscriptionId))
                     }
                     else {
-                        #if DEBUG
+#if DEBUG
                         L.sockets.debug("🔌🔌 \(relayUrl): EOSE received. keeping OPEN. \(client.url) for \(subscriptionId) -[LOG]-")
-                        #endif
+#endif
                     }
                     if subscriptionId.prefix(4) == "-DB-" {
                         try handleNoDbMessage(message: message)
@@ -249,32 +253,52 @@ class MessageParser {
         }
         
         let decoder = JSONDecoder()
-        guard let nwcConnection = Importer.shared.nwcConnection else { L.og.error("⚡️ NWC response but nwcConnection missing \(nEvent.eventJson())"); return }
-        guard let pk = nwcConnection.privateKey else { L.og.error("⚡️ NWC response but private key missing \(nEvent.eventJson())"); return }
+        guard let nwcConnection = Importer.shared.nwcConnection else {
+#if DEBUG
+            L.og.error("⚡️ NWC response but nwcConnection missing \(nEvent.eventJson())")
+#endif
+            return
+        }
+        guard let pk = nwcConnection.privateKey else {
+#if DEBUG
+            L.og.error("⚡️ NWC response but private key missing \(nEvent.eventJson())")
+#endif
+            return
+        }
         guard let decrypted = Keys.decryptDirectMessageContent(withPrivateKey: pk, pubkey: nEvent.publicKey, content: nEvent.content) ?? Keys.decryptDirectMessageContent44(withPrivateKey: pk, pubkey: nEvent.publicKey, content: nEvent.content) else {
+#if DEBUG
             L.og.error("⚡️ Could not decrypt nwcResponse, \(nEvent.eventJson())")
+#endif
             return
         }
         guard let nwcResponse = try? decoder.decode(NWCResponse.self, from: decrypted.data(using: .utf8)!) else {
+#if DEBUG
             L.og.error("⚡️ Could not parse/decode nwcResponse, \(nEvent.eventJson()) - \(decrypted)")
+#endif
             return
         }
         if balanceResponseHandled(nwcResponse) {
             return
         }
         guard let firstE = nEvent.eTags().first, let awaitingRequest = NWCRequestQueue.shared.getAwaitingRequest(byId: firstE) else {
+#if DEBUG
             L.og.error("⚡️ No matching nwc request for response, or e-tag missing, \(nEvent.eventJson()) - \(decrypted)")
+#endif
             return
         }
         if let awaitingZap = awaitingRequest.zap {
             // HANDLE ZAPS
             if let error = nwcResponse.error {
+#if DEBUG
                 L.og.info("⚡️ NWC response with error: \(error.code) - \(error.message)")
+#endif
                 if let eventId = awaitingZap.eventId {
                     let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
+#if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
+#endif
                     if (SettingsStore.shared.nwcShowBalance) {
                         nwcSendBalanceRequest()
                     }
@@ -286,18 +310,24 @@ class MessageParser {
                     let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
+#if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
+#endif
                 }
                 NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
                 NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                 return
             }
             guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+#if DEBUG
                 L.og.error("⚡️ Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+#endif
                 return
             }
             if let result = nwcResponse.result {
+#if DEBUG
                 L.og.info("⚡️ Zap success \(result.preimage ?? "-") - \(decrypted)")
+#endif
                 NWCZapQueue.shared.removeZap(byId: awaitingZap.id)
                 NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                 if (SettingsStore.shared.nwcShowBalance) {
@@ -312,16 +342,22 @@ class MessageParser {
                 let message = "Failed to pay lightning invoice.\n\(error.message)"
                 let notification = PersistentNotification.createFailedLightningInvoice(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
                 NotificationsViewModel.shared.checkNeedsUpdate(notification)
+#if DEBUG
                 L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
+#endif
                 NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                 return
             }
             guard let result_type = nwcResponse.result_type, result_type == "pay_invoice" else {
+#if DEBUG
                 L.og.error("⚡️ Unknown or missing result_type, \(nwcResponse.result_type ?? "") - \(decrypted)")
+#endif
                 return
             }
             if let result = nwcResponse.result {
+#if DEBUG
                 L.og.info("⚡️ Lighting Invoice Payment (Not Zap) success \(result.preimage ?? "-") - \(decrypted)")
+#endif
                 NWCRequestQueue.shared.removeRequest(byId: awaitingRequest.request.id)
                 if (SettingsStore.shared.nwcShowBalance) {
                     nwcSendBalanceRequest()
@@ -329,8 +365,10 @@ class MessageParser {
                 return
             }
         }
+#if DEBUG
         L.og.info("⚡️ NWC response not handled: \(nEvent.eventJson()) ")
-    }        
+#endif
+    }
     
     func handleNWCInfoResponse(message: RelayMessage, nEvent: NEvent) throws {
         guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
@@ -339,7 +377,9 @@ class MessageParser {
         
         guard let nwcConnection = Importer.shared.nwcConnection else { return }
         guard nEvent.publicKey == nwcConnection.walletPubkey else { return }
+#if DEBUG
         L.og.debug("⚡️ Received 13194 info event, saving methods: \(nEvent.content)")
+#endif
         nwcConnection.methods = nEvent.content
         DispatchQueue.main.async {
             sendNotification(.nwcInfoReceived, NWCInfoNotification(methods: nEvent.content))

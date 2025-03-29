@@ -160,6 +160,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     private var sendAfterAuthSubject = PassthroughSubject<Void, Never>()
     
     public func connect(andSend: String? = nil, forceConnectionAttempt: Bool = false) {
+#if DEBUG
+        L.sockets.debug("connect(\(andSend != nil ? "andSend" : "")) forceConnectionAttempt: \(forceConnectionAttempt) (\(self.relayData.url))")
+#endif
         if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
 #if DEBUG
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(self.relayData.url)"); return
@@ -266,6 +269,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             guard let self = self else { return }
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             for out in self.outQueue {
+#if DEBUG
+                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE (AFTER AUTH) \(self.url): \(out.text.prefix(155))")
+#endif
                 webSocketTask.send(.string(out.text)) { error in
                     if let error {
                         self.didReceiveError(error)
@@ -290,7 +296,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             if bypassQueue { // To give prio to stuff like AUTH
 #if DEBUG
-                L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
+                L.sockets.debug("🟠🟠🏎️🔌🔌 SEND (bypassQueue) \(self.url): \(text)")
 #endif
                 webSocketTask?.send(.string(text)) { error in
                     if let error {
@@ -318,13 +324,13 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 return
             }
             
-            
-#if DEBUG
-            L.sockets.debug("🟠🟠🏎️🔌🔌 SEND \(self.url): \(text)")
-#endif
+
             guard let webSocketTask = self.webSocketTask, !outQueue.isEmpty else { return }
             
             for out in outQueue {
+#if DEBUG
+                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text)")
+#endif
                 webSocketTask.send(.string(out.text)) { error in
                     if let error {
                         self.didReceiveError(error)
@@ -543,6 +549,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     // didOpenWithProtocol
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
         queue.async(flags: .barrier) { [weak self] in
+#if DEBUG
+            L.sockets.debug("didOpenWithProtocol: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(`protocol` ?? "")")
+#endif
             guard let self = self else { return }
             self.stats.connected += 1
             self.startReceiving()
