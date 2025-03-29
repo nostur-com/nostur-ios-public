@@ -690,7 +690,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
 
-    public func sendAuthResponse(usingAccount: CloudAccount? = nil) {
+    public func sendAuthResponse(usingAccount: CloudAccount? = nil, force: Bool = false) {
         guard self.relayData.auth else { return }
         
         DispatchQueue.main.async { [weak self] in
@@ -701,7 +701,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard let self else { return }
                 
                 guard let challenge = self.lastAuthChallenge else { return }
-                guard self.recentAuthAttempts < 5 else { return }
+                guard force || self.recentAuthAttempts < 5 else { return }
                 
                 var authResponse = NEvent(content: "")
                 authResponse.kind = .auth

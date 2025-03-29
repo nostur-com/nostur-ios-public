@@ -56,6 +56,9 @@ public final class TypingTextModel: ObservableObject {
 
 func enableAuthAndSendChallengeOnSingleRelay(usingAccount: CloudAccount? = nil) {
     guard let singleRelay = Drafts.shared.lockToThisRelay else { return }
+    if ( !(ConnectionPool.shared.connections[singleRelay.id]?.isConnected ?? true) ) {
+        ConnectionPool.shared.connections[singleRelay.id]?.connect()
+    }
     ConnectionPool.shared.connections[singleRelay.id]?.relayData.setAuth(true)
     ConnectionPool.shared.connections[singleRelay.id]?.sendAuthResponse(usingAccount: usingAccount)
 }
