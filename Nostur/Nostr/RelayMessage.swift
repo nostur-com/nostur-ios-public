@@ -90,7 +90,7 @@ class RelayMessage {
                     detectedRelay: relay
                 ))
             }
-            return RelayMessage(relays: relay, type: .OK, message: text, id: result.id, success: result.success)
+            return RelayMessage(relays: relay, type: .OK, message: result.message ?? "", id: result.id, success: result.success)
         }
         
         guard text.prefix(9) != ###"["CLOSED""### else {

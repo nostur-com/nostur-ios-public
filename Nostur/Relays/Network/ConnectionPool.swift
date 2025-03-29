@@ -532,6 +532,14 @@ public class ConnectionPool: ObservableObject {
                     if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
                         connection.connect()
                     }
+                    
+                    if let nEvent = message.nEvent, connection.relayData.auth {
+                        if connection.eventsThatMayNeedAuth.count > 10 {
+                            connection.eventsThatMayNeedAuth = [:]
+                        }
+                        connection.eventsThatMayNeedAuth[nEvent.id] = message.message
+                    }
+                    
                     L.sockets.info("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
                     connection.sendMessage(message.message)
                 }

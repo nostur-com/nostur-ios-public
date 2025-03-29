@@ -276,6 +276,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
+    public var eventsThatMayNeedAuth: [String: String] = [:] // [ post id : event message text string ]
+    
     public func sendMessage(_ text: String, bypassQueue: Bool = false) {
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }

@@ -66,6 +66,16 @@ class MessageParser {
                             Event.updateRelays(id, relays: message.relays, context: bgQueue)
                         }
                     }
+                    else if message.message.prefix(14) == "auth-required:", client.relayData.auth, let id = message.id {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            if let eventMessage = client.eventsThatMayNeedAuth[id] {
+#if DEBUG
+                                L.sockets.debug("🟢🟢 \(relayUrl): Trying again after auth-required")
+#endif
+                                client.sendMessage(eventMessage)
+                            }
+                        }
+                    }
                 case .CLOSED:
                     if message.message.prefix(14) == "auth-required:" {
                         L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) (auth-required)")
