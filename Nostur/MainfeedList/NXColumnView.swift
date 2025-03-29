@@ -77,7 +77,7 @@ struct NXColumnView: View {
             guard !didLoad else { return }
             didLoad = true
             viewModel.availableWidth = dim.availableNoteRowWidth
-            if let relaysData = config.feed?.relaysData {
+            if isVisible, let relaysData = config.feed?.relaysData {
                 for relay in relaysData {
                     ConnectionPool.shared.addConnection(relay) { conn in
                         conn.connect()
@@ -92,6 +92,13 @@ struct NXColumnView: View {
 #endif
             
             if newValue {
+                if isVisible, let relaysData = config.feed?.relaysData {
+                    for relay in relaysData {
+                        ConnectionPool.shared.addConnection(relay) { conn in
+                            conn.connect()
+                        }
+                    }
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { // This should always be a bit delayed else it will be cancelled out by other feeds .onChange(of: isVisible)
                     if case .relays(let feed) = config.columnType, feed.relaysData.count == 1 {
                         Drafts.shared.lockToThisRelay = feed.relaysData.first
