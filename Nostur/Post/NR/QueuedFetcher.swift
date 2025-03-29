@@ -134,17 +134,29 @@ class QueuedFetcher {
                     guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
                     
                     if self.idQueue.isEmpty {
-                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
+                        if self.pQueue.count > 300 {
+                            L.og.debug("🔴🔴 QueuedFetcher: fetching \(self.pQueue.count) Ps")
+                        }
+                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue.prefix(500))))
                         self.pQueue.removeAll()
                     }
                     else if self.pQueue.isEmpty {
-                        req(RM.getEvents(ids: Array(self.idQueue)))
+                        if self.idQueue.count > 300 {
+                            L.og.debug("🔴🔴 QueuedFetcher: fetching \(self.idQueue.count) ids")
+                        }
+                        req(RM.getEvents(ids: Array(self.idQueue.prefix(500))))
                         self.idQueue.removeAll()
                     }
                     else {
-                        // TODO COMBINE IN SINGLE REQUEST:
-                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue)))
-                        req(RM.getEvents(ids: Array(self.idQueue)))
+                        if self.pQueue.count > 300 {
+                            L.og.debug("🔴🔴 QueuedFetcher: fetching \(self.pQueue.count) Ps")
+                        }
+                        req(RM.getUserMetadata(pubkeys: Array(self.pQueue.prefix(500))))
+                        
+                        if self.idQueue.count > 300 {
+                            L.og.debug("🔴🔴 QueuedFetcher: fetching \(self.idQueue.count) ids")
+                        }
+                        req(RM.getEvents(ids: Array(self.idQueue.prefix(500))))
                         self.pQueue.removeAll()
                         self.idQueue.removeAll()
                     }
