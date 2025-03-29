@@ -89,12 +89,6 @@ class EventRelationsQueue {
         
 //        guard let eventWithContext = eventWithContextOrNil else { return }
         
-#if DEBUG
-            if event.managedObjectContext != ctx && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                fatalError("Should only be called from bg()")
-            }
-#endif
-        
         guard self.waitingEvents.count < SPAM_LIMIT else {
 #if DEBUG
             L.og.debug("🔴🔴 SPAM_LIMIT hit, addAwaitingEvent() cancelled")
