@@ -326,6 +326,7 @@ struct MediaPlaceholder: View {
                         // Communicate back to set container frame
                         realDimensions = imageInfo.realDimensions
                     }
+//                    .debugDimensions(".image fullscreen", alignment: .top)
             }
             else if contentMode == .fit {
                 ZoomableItem(id: zoomableId) {
@@ -403,6 +404,7 @@ struct MediaPlaceholder: View {
                     GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fit)
+//                        .debugDimensions(".gif fullscreen", alignment: .top)
                 }
                 .onAppear {
                     // Communicate back to set container frame

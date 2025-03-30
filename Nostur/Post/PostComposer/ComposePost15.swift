@@ -19,7 +19,7 @@ struct ComposePost15: View {
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject private var screenSpace: ScreenSpace
+//    @EnvironmentObject private var screenSpace: ScreenSpace
     
     @StateObject private var vm = NewPostModel()
     @State private var gifSheetShown = false
@@ -132,7 +132,7 @@ struct ComposePost15: View {
                                 PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                     .environmentObject(themes)
                                     .environmentObject(previewDIM)
-                                    .environmentObject(screenSpace)
+//                                    .environmentObject(screenSpace)
                                 
                                 if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                     AutoPilotSendPreview(nEvent: nEvent)

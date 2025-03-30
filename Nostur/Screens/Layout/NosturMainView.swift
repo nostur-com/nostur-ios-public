@@ -32,6 +32,17 @@ struct NosturMainView: View {
     }
 }
 
+struct FullScreenSizeEnvironmentKey: EnvironmentKey {
+    static let defaultValue: CGSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+}
+
+extension EnvironmentValues {
+    var fullScreenSize: CGSize {
+        get { self[FullScreenSizeEnvironmentKey.self] }
+        set { self[FullScreenSizeEnvironmentKey.self] = newValue }
+    }
+}
+
 #Preview("NosturMainView") {
     PreviewContainer {
         NosturMainView()

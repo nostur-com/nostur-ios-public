@@ -40,7 +40,7 @@ struct ComposePost: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var screenSpace: ScreenSpace
+//    @EnvironmentObject private var screenSpace: ScreenSpace
     
     @StateObject private var vm = NewPostModel()
     @StateObject private var ipm = MultipleImagePickerModel()
@@ -219,7 +219,7 @@ struct ComposePost: View {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                         .environmentObject(previewDIM)
-                                        .environmentObject(screenSpace)
+//                                        .environmentObject(screenSpace)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                         AutoPilotSendPreview(nEvent: nEvent)
@@ -234,7 +234,7 @@ struct ComposePost: View {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                         .environmentObject(previewDIM)
-                                        .environmentObject(screenSpace)
+//                                        .environmentObject(screenSpace)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                         AutoPilotSendPreview(nEvent: nEvent)

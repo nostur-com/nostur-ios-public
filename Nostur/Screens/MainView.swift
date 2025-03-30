@@ -13,7 +13,6 @@ struct MainView: View {
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject private var screenSpace: ScreenSpace
     
     @State private var fg: FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn: FollowerNotifier = .shared
@@ -68,13 +67,11 @@ struct MainView: View {
                             WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                                 ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                     .environmentObject(dim)
-                                    .environmentObject(screenSpace)
                             }
                         }
                         else {
                             ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                 .environmentObject(dim)
-                                .environmentObject(screenSpace)
                         }
                     }
                     .presentationBackgroundCompat(themes.theme.background)

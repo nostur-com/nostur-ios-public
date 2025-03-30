@@ -62,8 +62,6 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
 }
 
 struct Zoomable<Content: View>: View {
-    @StateObject private var screenSpace: ScreenSpace = .shared
-    
     public let id: String
     private let content: Content
     
@@ -74,6 +72,7 @@ struct Zoomable<Content: View>: View {
     @State private var animationProgress: CGFloat = 0
     @State private var startingSize = CGSize(width: 100, height: 100)
     @State private var screenSize: CGSize = .zero
+    @State private var fullScreenSize: CGSize = UIScreen.main.bounds.size
     
     init(id: String = "Default", @ViewBuilder _ content: () -> Content) {
         self.id = id
@@ -84,14 +83,14 @@ struct Zoomable<Content: View>: View {
         GeometryReader { geometry in
             ZStack {
                 content
-                    .environmentObject(screenSpace)
+//                    .environmentObject(screenSpace)
                 
                 if viewState == .zoomed {
                     ZStack(alignment: .topLeading) {
                         // Content container
                         if let detailContent {
                             detailContent
-                                .environmentObject(screenSpace)
+                                .environment(\.fullScreenSize, fullScreenSize)
                                 .frame(
                                     width: startingSize.width + (screenSize.width - startingSize.width) * animationProgress,
                                     height: startingSize.height + (screenSize.height - startingSize.height) * animationProgress
@@ -118,11 +117,19 @@ struct Zoomable<Content: View>: View {
             }
             .onAppear {
                 screenSize = geometry.size
-                screenSpace.screenSize = geometry.size
+                if id == "Default" {
+                    // Need to set because on Desktop full screen size should be just the window size
+                    fullScreenSize = geometry.size
+                    ScreenSpace.shared.screenSize = geometry.size
+                }
             }
             .onChange(of: geometry.size) { newSize in
                 screenSize = newSize
-                screenSpace.screenSize = newSize
+                if id == "Default" {
+                    // Need to set because on Desktop full screen size should be just the window size
+                    fullScreenSize = newSize
+                    ScreenSpace.shared.screenSize = newSize
+                }
             }
         }
 //        .edgesIgnoringSafeArea(.all)
@@ -242,8 +249,11 @@ struct ZoomRequested {
 // .edgesIgnoringSafeArea(.all)
 // .animation(.easeOut(duration: 0.5), value: showFullImage)
 
-class ScreenSpace: ObservableObject {
-    @Published var screenSize: CGSize = UIScreen.main.bounds.size
+// Only for FULL WIDTH (main + detailpane)
+// Normally use \.fullScreenSize environment key, but we need access in makeImageRequest() so store in this singleton
+// Only update from Zoomable.id == "Default" (.sheet on on Desktop can have separate Zoomable with smaller size)
+class ScreenSpace {
+    public var screenSize: CGSize = UIScreen.main.bounds.size
     
     static let shared = ScreenSpace()
     private init() { }

@@ -10,7 +10,7 @@ import Photos
 
 struct GalleryFullScreenSwiper: View {
     @EnvironmentObject private var themes: Themes
-    @EnvironmentObject private var screenSpace: ScreenSpace
+    @Environment(\.fullScreenSize) var fullScreenSize: CGSize
 
     public var initialIndex: Int
     public var items: [GalleryItem]
@@ -70,7 +70,7 @@ struct GalleryFullScreenSwiper: View {
         }
         .scrollTargetBehavior(.paging)
         .scrollPosition(id: $activeIndex)
-        .frame(width: screenSpace.screenSize.width, height: screenSpace.screenSize.height)
+        .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .scrollDisabled(items.count == 1 || scale > 1.0 || isDraggingToDismiss)
         .background(Color.black.opacity(1 - dismissProgress))
         .overlay(alignment: .leading) { navigationLeftButton }
@@ -124,7 +124,7 @@ struct GalleryFullScreenSwiper: View {
                 }
             }
         }
-        .frame(width: screenSpace.screenSize.width, height: screenSpace.screenSize.height)
+        .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .background(Color.black.opacity(1 - dismissProgress))
         .overlay(alignment: .leading) { navigationLeftButton }
         .overlay(alignment: .trailing) { navigationRightButton }
@@ -137,8 +137,8 @@ struct GalleryFullScreenSwiper: View {
     private func mediaItemView(for index: Int) -> some View {
         MediaContentView(
             galleryItem: items[index],
-            availableWidth: screenSpace.screenSize.width,
-            maxHeight: screenSpace.screenSize.height,
+            availableWidth: fullScreenSize.width,
+            maxHeight: fullScreenSize.height,
             contentMode: .fit,
             fullScreen: true,
             // Already fullscreen, so don't load "galleryItems" recursively
@@ -146,7 +146,7 @@ struct GalleryFullScreenSwiper: View {
             imageInfo: items[index].imageInfo,
             gifInfo: items[index].gifInfo
         )
-        .frame(width: screenSpace.screenSize.width, height: screenSpace.screenSize.height)
+        .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .scaleEffect(scale * (1.0 - (0.2 * dismissProgress)))
         .offset(position)
         .offset(y: dismissProgress * 200)
