@@ -12,7 +12,6 @@ import NavigationBackport
 
 struct ProfileView: View {
     @StateObject private var vm = ProfileViewModel()
-    @StateObject private var imposterVM = CouldBeImposterViewModel()
     @StateObject private var lastSeenVM = LastSeenViewModel()
     
     @ObservedObject public var nrContact: NRContact
