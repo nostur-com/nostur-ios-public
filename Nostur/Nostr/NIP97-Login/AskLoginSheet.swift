@@ -46,9 +46,19 @@ struct AskLoginSheet: View {
                     .buttonStyle(.borderedProminent)
                 }
             case .error:
-                Text("**Login error**")
+                VStack {
+                    Text("**Login error**")
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
             case .timeout:
-                Text("**Login timeout**")
+                VStack {
+                    Text("**Login timeout**")
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
             default:
                 Text("Approve login on \(vm.askLoginInfo.domain)?")
                 if accounts.count > 1 {

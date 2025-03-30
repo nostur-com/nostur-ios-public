@@ -20,7 +20,7 @@ class AppSheetsModel: ObservableObject {
 
 struct WithAppSheets: ViewModifier {
     
-    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var themes: Themes = .default
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @ObservedObject private var asm = AppSheetsModel.shared
     
