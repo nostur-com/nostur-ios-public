@@ -2797,6 +2797,9 @@
         }
       }
     },
+    "curated by " : {
+
+    },
     "Currently allowed by the filter: %lld contacts" : {
       "localizations" : {
         "nl" : {
@@ -4634,6 +4637,9 @@
           }
         }
       }
+    },
+    "List by %@" : {
+
     },
     "Listen anonymously" : {
       "localizations" : {
@@ -8053,6 +8059,12 @@
       "shouldTranslate" : false
     },
     "Subscribe" : {
+
+    },
+    "Subscribe to list updates" : {
+
+    },
+    "Support people who curate high quality lists by zapping them" : {
 
     },
     "Swipe to unblock/unmute" : {

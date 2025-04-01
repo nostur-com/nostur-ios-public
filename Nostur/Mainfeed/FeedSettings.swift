@@ -18,9 +18,53 @@ struct FeedSettings: View {
         let _ = Self._printChanges()
         #endif
         Form {
-            if #available(iOS 16, *) {
+            if #available(iOS 16, *), feed.type != "30000" && feed.listId == nil {
                 Section("App theme") {
                     AppThemeSwitcher()
+                }
+                .listRowBackground(themes.theme.background)
+            }
+            
+            if let aTagString = feed.listId, let aTag = try? ATag(aTagString) {
+                // Even if we change from 30000 to own pubkeys sheet, still show where the list came from, also makes easy to toggle on off subscribe updates again.
+            
+                // Feed managed by
+                // Updates by author automatic blabla
+                // TODO: show original name (if tab name changed)
+                Section {
+                
+                    ListManagedByView(feed: feed, aTag: aTag)
+                        .padding(.vertical, 10)
+                    
+//                    HStack {
+//                        VStack(alignment: .leading) {
+//                            Spacer()
+//                            ListManagedByView(feed: feed, aTag: aTag)
+//                            Spacer()
+//                        }
+//                        Spacer()
+//                    }
+                    .listRowInsets(EdgeInsets())
+                    .padding(.horizontal, 20)
+                    .listRowBackground(themes.theme.background)
+                }
+                
+                // Zap author
+                
+                Section {
+                    // Copy to own feed. No longer managed
+                    Toggle(isOn: Binding(get: {
+                        feed.type == "30000"
+                    }, set: { newValue in
+                        if newValue {
+                            feed.type = "30000"
+                        }
+                        else {
+                            feed.type = "pubkeys"
+                        }
+                    })) {
+                        Text("Subscribe to list updates")
+                    }
                 }
                 .listRowBackground(themes.theme.background)
             }
@@ -73,7 +117,7 @@ struct FeedSettings: View {
                 .listRowBackground(themes.theme.background)
             }
             
-            if feed.type == "pubkeys" || feed.type == nil {
+            if (feed.type == "pubkeys" || feed.type == nil) || feed.type == "30000"  {
                 Section("") {
                     Toggle(isOn: Binding(get: {
                         feed.repliesEnabled
@@ -83,8 +127,10 @@ struct FeedSettings: View {
                         Text("Show replies")
                     }
                     
-                    NavigationLink(destination: EditNosturList(list: feed)) {
-                        Text("Configure contacts...")
+                    if feed.type != "30000" { // no kind:30000, these are managed by other author
+                        NavigationLink(destination: EditNosturList(list: feed)) {
+                            Text("Configure contacts...")
+                        }
                     }
                 }
                 .listRowBackground(themes.theme.background)
@@ -132,3 +178,95 @@ struct FeedSettings_Previews: PreviewProvider {
     }
 }
 
+
+
+struct ListManagedByView: View {
+    @ObservedObject var feed: CloudFeed
+    public let aTag: ATag
+    
+    var body: some View {
+        SendSatsToSupportView(pfpAttributes: PFPAttributes(pubkey: aTag.pubkey), listName: feed.name)
+    }
+}
+
+
+struct SendSatsToSupportView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject public var pfpAttributes: PFPAttributes
+    @ObservedObject public var ss: SettingsStore = .shared
+    public var listName: String?
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            if let listName {
+                Text(listName)
+                    .font(.title)
+            }
+            HStack {
+                Text("curated by ")
+                PFPandName(pfpAttributes: pfpAttributes, dismissOnNavigate: true)
+            }
+            
+            if  ss.nwcReady { // TODO: FIX FOR NON NWC
+                if let nrContact = pfpAttributes.contact {
+                    ProfileZapButton(contact: nrContact) // TODO: Support zapATag
+                }
+                
+                // feed is based on a list of people managed by ....
+                // zap to support people who curate high quality lists
+                
+                Text("Support people who curate high quality lists by zapping them")
+                    .font(.footnote)
+            }
+            
+        }
+        .navigationTitle("List by \(pfpAttributes.anyName)")
+    }
+}
+
+
+
+
+// TODO: Should start reusing this everywhere? add flags and toggles for size / layout / position etc / in sheet or not (for dismiss)
+struct PFPandName: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject public var pfpAttributes: PFPAttributes
+    
+    public var dismissOnNavigate: Bool = false
+    
+    var body: some View {
+        HStack {
+            ObservedPFP(pfp: pfpAttributes, size: 20.0)
+                .onTapGesture(perform: navigateToContact)
+            Text(pfpAttributes.anyName)
+        }
+        .navigationTitle("List by \(pfpAttributes.anyName)")
+        .onAppear {
+            bg().perform {
+                if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
+                    QueuedFetcher.shared.enqueue(pTag: pfpAttributes.pubkey)
+                }
+            }
+        }
+        .onDisappear {
+            bg().perform {
+                if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
+                    QueuedFetcher.shared.dequeue(pTag: pfpAttributes.pubkey)
+                }
+            }
+        }
+    }
+    
+    private func navigateToContact() {
+        if dismissOnNavigate {
+            dismiss()
+            AppSheetsModel.shared.dismiss()
+        }
+        if let nrContact = pfpAttributes.contact {
+            navigateTo(nrContact)
+        }
+        else {
+            navigateTo(ContactPath(key: pfpAttributes.pubkey))
+        }
+    }
+}
