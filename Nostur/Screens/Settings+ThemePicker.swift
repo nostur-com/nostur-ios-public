@@ -49,6 +49,11 @@ struct ThemePicker: View {
             Label("Orange", systemImage: "circle.fill")
                 .foregroundColor(Color("orangeAccentColor"))
                 .tag("orange")
+            
+            Label("Black & White", systemImage: "circle.fill")
+                .foregroundColor(Color("bwAccentColor"))
+                .tag("bw")
+            
         } label: {
             Text("App theme")
         }
@@ -73,6 +78,8 @@ struct ThemePicker: View {
                 Themes.default.loadPink()
             case "orange":
                 Themes.default.loadOrange()
+            case "bw":
+                Themes.default.loadBlackAndWhite()
             default:
                 Themes.default.loadDefault()
             }

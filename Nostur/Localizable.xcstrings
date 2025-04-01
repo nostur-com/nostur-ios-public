@@ -1825,6 +1825,9 @@
         }
       }
     },
+    "Black & White" : {
+
+    },
     "Block %@" : {
       "comment" : "Menu action\nPost context menu action to Block (name)",
       "localizations" : {

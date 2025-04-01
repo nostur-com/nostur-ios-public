@@ -14,6 +14,7 @@ struct AppThemeSwitcher: View {
     var body: some View {
         HStack {
             Spacer()
+            
             Color("defaultAccentColor")
                 .frame(width: 25, height: 25)
                 .padding(3)
@@ -22,6 +23,7 @@ struct AppThemeSwitcher: View {
                     Themes.default.loadDefault()
                     dismiss()
                 }
+            
             Color("classicAccentColor")
                 .frame(width: 25, height: 25)
                 .padding(3)
@@ -76,6 +78,15 @@ struct AppThemeSwitcher: View {
                 .background(selectedTheme == "orange" ? Color.secondary : .clear)
                 .onTapGesture {
                     Themes.default.loadOrange()
+                    dismiss()
+                }
+            
+            Color("bwAccentColor")
+                .frame(width: 25, height: 25)
+                .padding(3)
+                .background(selectedTheme == "bw" ? Color.secondary : .clear)
+                .onTapGesture {
+                    Themes.default.loadBlackAndWhite()
                     dismiss()
                 }
             Spacer()

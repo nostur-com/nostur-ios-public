@@ -57,6 +57,8 @@ class Themes: ObservableObject {
             loadPink()
         case "orange":
             loadOrange()
+        case "bw":
+            loadBlackAndWhite()
         default:
             loadDefault()
         }
@@ -178,6 +180,22 @@ class Themes: ObservableObject {
             badge: Color.red,
             lineColor: Color("blueLineColor"),
             footerButtons: Color("blueAccentColor")
+        )
+    }
+    
+    public func loadBlackAndWhite() {
+        selectedTheme = "bw"
+        theme = Theme(
+            id: "BlackAndWhite",
+            primary: Color.primary,
+            secondary: Color.secondary,
+            accent: Color("bwAccentColor"),
+            background: Color("bwBackground"),
+            secondaryBackground: Color(.secondarySystemBackground),
+            listBackground: Color("bwListBackground"),
+            badge: Color.red,
+            lineColor: Color("bwLineColor"),
+            footerButtons: Color("bwAccentColor")
         )
     }
 }
