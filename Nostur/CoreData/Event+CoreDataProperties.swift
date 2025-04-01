@@ -659,7 +659,7 @@ extension Event {
         return try? context.fetch(fr).first
     }
     
-    static func fetchReplacableEvent(_ kind:Int64, pubkey:String, definition:String, context:NSManagedObjectContext) -> Event? {
+    static func fetchReplacableEvent(_ kind: Int64, pubkey: String, definition: String, context: NSManagedObjectContext) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND dTag == %@ AND mostRecentId == nil", kind, pubkey, definition)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -668,7 +668,11 @@ extension Event {
         return try? context.fetch(request).first
     }
     
-    static func fetchReplacableEvent(aTag:String, context:NSManagedObjectContext) -> Event? {
+    static func fetchReplacableEvent(aTag: ATag, context: NSManagedObjectContext) -> Event? {
+        return Self.fetchReplacableEvent(aTag.kind, pubkey: aTag.pubkey, definition: aTag.definition, context: context)
+    }
+    
+    static func fetchReplacableEvent(aTag: String, context: NSManagedObjectContext) -> Event? {
         let elements = aTag.split(separator: ":")
         guard elements.count >= 3 else { return nil }
         guard let kindString = elements[safe: 0], let kind = Int64(kindString) else { return nil }
@@ -1530,4 +1534,36 @@ func contextWontCrash(_ objects: [NSManagedObject], debugInfo: String? = nil) ->
     }
     
     return true
+}
+
+
+struct ATag {
+    
+    let kind: Int64
+    let pubkey: String
+    let definition: String
+    
+    init(_ aTag: String) throws {
+        let elements = aTag.split(separator: ":")
+        guard elements.count >= 3 else { throw NSError(domain: "", code: 0, userInfo: nil) }
+        
+        guard let kindString = elements[safe: 0], let kind = Int64(kindString) else { throw NSError(domain: "", code: 0, userInfo: nil) }
+        self.kind = kind
+        
+        guard let pubkey = elements[safe: 1] else { throw NSError(domain: "", code: 0, userInfo: nil) }
+        self.pubkey = String(pubkey)
+        
+        guard let definition = elements[safe: 2] else { throw NSError(domain: "", code: 0, userInfo: nil) }
+        self.definition = String(definition)
+    }
+    
+    init(kind: Int64, pubkey: String, definition: String) {
+        self.kind = kind
+        self.pubkey = pubkey
+        self.definition = definition
+    }
+    
+    public var aTag: String {
+        return String(format: "%lld:%@:%@", kind, pubkey, definition)
+    }
 }
