@@ -91,7 +91,7 @@ struct NosturTabsView: View {
                 }
             }
             .contentShape(Rectangle())
-            .background(themes.theme.background)
+            .background(themes.theme.listBackground)
             .withLightningEffect()
             .onChange(of: selectedTab) { newValue in
                 if newValue == "Notifications" {
