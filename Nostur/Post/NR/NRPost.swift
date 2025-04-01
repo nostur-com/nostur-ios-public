@@ -1339,6 +1339,23 @@ class PFPAttributes: ObservableObject, Equatable {
         self.pubkey = pubkey
         self.similarToPubkey = contact?.similarToPubkey
         
+        if Thread.isMainThread {
+            if contact == nil {
+                bg().perform {
+#if DEBUG
+                    L.og.debug("🏓🏓 PFPAttributes.init NRContact.fetch()")
+#endif
+                    if let nrContact = NRContact.fetch(pubkey, context: bg()) {
+                        Task { @MainActor in
+                            if self.contact == nil {
+                                self.contact = nrContact
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         if contact == nil {
             contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
                 .filter { pubkey == $0.0 }
