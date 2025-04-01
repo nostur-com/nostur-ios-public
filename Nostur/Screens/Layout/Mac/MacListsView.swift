@@ -47,7 +47,7 @@ struct MacListsView: View {
                             .tag("Search")
                             .toolbar(.hidden, for: .tabBar)
                         
-                        BookmarksAndPrivateNotes()
+                        BookmarksTab()
                             .tag("Bookmarks")
                             .toolbar(.hidden, for: .tabBar)
                     }

@@ -36,7 +36,6 @@ struct NXColumnView: View {
             switch(viewModel.viewState) {
             case .loading:
                 ZStack(alignment: .center) {
-//                    themes.theme.listBackground
                     CenteredProgressView()
                 }
             case .posts(let nrPosts):

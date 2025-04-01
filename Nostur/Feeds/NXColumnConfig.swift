@@ -13,6 +13,7 @@ struct NXColumnConfig: Identifiable, Equatable {
         lhs.id == rhs.id
     }
     
+    // Don't set id too long, because its also used for subscription ids and relays will fail if its too long
     var id: String
     var columnType: NXColumnType?
     var accountPubkey: String?
@@ -43,6 +44,8 @@ struct NXColumnConfig: Identifiable, Equatable {
             return feed
         case .pubkeys(let feed):
             return feed
+        case .followSet(let feed):
+            return feed
         case .relays(let feed):
             return feed
         case .hashtags(let feed):
@@ -62,8 +65,31 @@ struct NXColumnConfig: Identifiable, Equatable {
         return account
     }
     
-    // Temporary for SomeoneElses feed
-    var pubkeys: Set<String> = []
+    // Temporary only for .someoneElses feed
+    var _pubkeys: Set<String> = []
+    
+    var pubkeys: Set<String> {
+        get {
+            switch columnType {
+            case .pubkeysPreview(let pubkeys): // pubkeys are in the .columnType enum
+                return pubkeys
+            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed): // pubkeys are in the CloudFeed
+                return feed.contactPubkeys
+            default: // pubkeys are in the NXColumnConfig
+                return _pubkeys
+            }
+        }
+        set {
+            switch columnType {
+            case .pubkeysPreview(_): // pubkeys are in the .columnType enum
+                self.setPubkeys(newValue)
+            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed): // pubkeys are in the CloudFeed
+                feed.contactPubkeys = newValue
+            default: // pubkeys are in the NXColumnConfig
+                _pubkeys = newValue
+            }
+        }
+    }
     var hashtags: Set<String> = []
     
     mutating func setPubkeys(_ newPubkeys: Set<String>) {
@@ -78,10 +104,15 @@ struct NXColumnConfig: Identifiable, Equatable {
 enum NXColumnType {
     case following(CloudFeed) // kind:3 p + hashtags from CloudAccount.accountPubkey
     case pubkeys(CloudFeed) // input=specific pubkeys, no accountPubkey needed
+    
+    case pubkeysPreview(Set<String>) // Preview of shared lists
+    case followSet(CloudFeed) // Shared list subscribed to
+    
+    
     case pubkey // input=single pubkey - stalker
     case relays(CloudFeed)
     case hashtags(CloudFeed)
-    case someoneElses(String) // pubkeys
+    case someoneElses(String) // pubkey of whose feed
     case picture(CloudFeed) // kind:20 from follows
     
     case mentions

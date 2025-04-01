@@ -8,7 +8,7 @@
 import SwiftUI
 import NavigationBackport
 
-struct BookmarksAndPrivateNotes: View {
+struct BookmarksTab: View {
     @StateObject private var bookmarksVM = BookmarksFeedModel()
     @EnvironmentObject private var fa: LoggedInAccount
     @EnvironmentObject private var themes: Themes
@@ -54,18 +54,23 @@ struct BookmarksAndPrivateNotes: View {
                         selectedSubTab = "Private Notes"
                     }, title: String(localized: "Private Notes", comment: "Tab to switch to private notes"), secondaryText: privateNotesCount, selected: selectedSubTab == "Private Notes")
                 }
-                AvailableWidthContainer {
-                    switch selectedSubTab {
-                        case "Bookmarks":
-                            BookmarksView(vm: bookmarksVM, navPath: $navPath)
-                        case "Private Notes":
-                            PrivateNotesView(navPath: $navPath)
-                        default:
-                            Text("🥪")
+                ZStack {
+                    themes.theme.listBackground
+                    
+                    AvailableWidthContainer {
+                        switch selectedSubTab {
+                            case "Bookmarks":
+                                BookmarksScreen(vm: bookmarksVM, navPath: $navPath)
+                            case "Private Notes":
+                                PrivateNotesScreen(navPath: $navPath)
+                            default:
+                                Text("🥪")
+                        }
                     }
+                    .padding(.top, GUTTER)
                 }
             }
-            .background(themes.theme.listBackground)
+            .background(themes.theme.background) // screen / toolbar background
             .withNavigationDestinations()
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
@@ -93,6 +98,8 @@ struct BookmarksAndPrivateNotes: View {
                         .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.background)
+                .presentationDetents200()
             })
         }
         .nbUseNavigationStack(.never)
@@ -107,7 +114,7 @@ struct BookmarksAndPrivateNotes_Previews: PreviewProvider {
             pe.loadBookmarks()
             pe.loadPrivateNotes()
         }) {
-            BookmarksAndPrivateNotes()
+            BookmarksTab()
         }
     }
 }

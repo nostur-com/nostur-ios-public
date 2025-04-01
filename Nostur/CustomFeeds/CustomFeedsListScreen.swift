@@ -8,15 +8,13 @@
 import SwiftUI
 import NavigationBackport
 
-struct CustomFeedsListView: View {
+struct CustomFeedsListScreen: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.createdAt, order: .reverse)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture"]))
     var lists: FetchedResults<CloudFeed>
-    
-    @State var confirmDeleteShown = false
-    @State var listToDelete: CloudFeed? = nil
+
     @State var newListSheet = false
     @State private var didRemoveDuplicates = false
     
@@ -45,6 +43,7 @@ struct CustomFeedsListView: View {
                 } header: {
                     Text("Custom Feeds")
                 }
+                .listRowBackground(themes.theme.listBackground)
             }
             
             Section {
@@ -85,24 +84,20 @@ struct CustomFeedsListView: View {
                 .listRowBackground(themes.theme.background)
             } header: {
                 Text("Default feeds")
-                    .background(themes.theme.listBackground)
             } footer: {
                 Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
-                    .background(themes.theme.listBackground)
+                    .font(.footnote)
             }
-            .background(themes.theme.background)
             .listRowBackground(themes.theme.listBackground)
         }
         .scrollContentBackgroundCompat(.hidden)
         .background(themes.theme.listBackground)
-        .nosturNavBgCompat(themes: themes)
         .listStyle(.plain)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 EditButton()
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                
                 Button(action: {
                     newListSheet = true
                 }) {
@@ -113,20 +108,11 @@ struct CustomFeedsListView: View {
         }
         .navigationTitle(String(localized:"Feeds", comment: "Navigation title for Feeds screen"))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Delete feed \(listToDelete?.name ?? "")", isPresented: $confirmDeleteShown, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) {
-                guard let listToDelete = listToDelete else { return }
-                viewContext.delete(listToDelete)
-                DataProvider.shared().save()
-                self.listToDelete = nil
-            }
-        }
         .sheet(isPresented: $newListSheet) {
             NBNavigationStack {
                 NewListSheet()
                     .environmentObject(themes)
             }
-            .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .nosturNavBgCompat(themes: themes)
@@ -193,7 +179,7 @@ struct NosturListsView_Previews: PreviewProvider {
             pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
-                CustomFeedsListView()
+                CustomFeedsListScreen()
                     .withNavigationDestinations()
             }
         }

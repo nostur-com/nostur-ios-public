@@ -10,7 +10,7 @@ import Combine
 import CoreData
 import NavigationBackport
 
-struct PrivateNotesView: View {
+struct PrivateNotesScreen: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var themes:Themes
     
@@ -167,7 +167,7 @@ import NavigationBackport
         pe.loadPrivateNotes()
     }) {
         VStack {
-            BookmarksView(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
+            BookmarksScreen(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
         }
     }
 }
@@ -389,14 +389,14 @@ struct LazyPrivateNote: View {
 
 
 struct BookmarksCountPreferenceKeyx: PreferenceKey {
-    static var defaultValue: String = ""
+    static let defaultValue: String = ""
     
     static func reduce(value: inout String, nextValue: () -> String) {
         value = nextValue()
     }
 }
 struct PrivateNotesCountPreferenceKeyx: PreferenceKey {
-    static var defaultValue: String = ""
+    static let defaultValue: String = ""
     
     static func reduce(value: inout String, nextValue: () -> String) {
         value = nextValue()

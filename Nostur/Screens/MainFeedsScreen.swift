@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 import NavigationBackport
 
-struct FollowingAndExplore: View {
+struct MainFeedsScreen: View {
     
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
@@ -213,7 +213,7 @@ struct FollowingAndExplore: View {
             }
             
             ZStack {
-                themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
+                themes.theme.listBackground // needed to give this ZStack and parents size, else everything becomes weird small
                 
                 // FOLLOWING
                 if (showingOtherContact == nil && la.viewFollowingPublicKeys.count <= 1 && !didSend) {
@@ -323,6 +323,14 @@ struct FollowingAndExplore: View {
             createPictureFeed(la.account)
             createExploreFeed() // Also create Explore Feed
         }
+        .onChange(of: selectedListId) { newListId in
+            if !columnConfigs.contains(where: { $0.id == newListId }) {
+                loadColumnConfigs()
+            }
+            if let list = lists.first(where: { $0.subscriptionId == newListId }) {
+                selectedList = list
+            }
+        }
         .onChange(of: la.account) { [oldAccount = la.account] newAccount in
             guard oldAccount != newAccount else { return }
             L.og.info("Account changed from: \(oldAccount.name)/\(oldAccount.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
@@ -338,6 +346,10 @@ struct FollowingAndExplore: View {
             if !lists.isEmpty && self.lists.filter({ $0.showAsTab }) .count != columnConfigs.count {
                 removeDuplicateLists()
                 loadColumnConfigs()
+                
+                if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
+                    selectedList = list
+                }
             }
         }
         .onChange(of: shouldHideTabBar) { newValue in
@@ -395,6 +407,8 @@ struct FollowingAndExplore: View {
                     case .pubkeys(_):
                         return true
                     case .relays(_):
+                        return true
+                    case .followSet(_):
                         return true
                     default:
                         return false
@@ -527,7 +541,7 @@ struct FollowingAndExplore: View {
 #Preview {
     PreviewContainer {
         NBNavigationStack {
-            FollowingAndExplore(showingOtherContact: .constant(nil))
+            MainFeedsScreen(showingOtherContact: .constant(nil))
         }
     }
 }
@@ -540,7 +554,7 @@ struct FollowingAndExplore: View {
         pe.loadFollows()
     }) {
         NBNavigationStack {
-            FollowingAndExplore(showingOtherContact: .constant(nil))
+            MainFeedsScreen(showingOtherContact: .constant(nil))
         }
     }
 }

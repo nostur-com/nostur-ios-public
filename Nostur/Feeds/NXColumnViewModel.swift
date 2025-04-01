@@ -723,10 +723,10 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
-        case .pubkeys(let feed):
+        case .pubkeys(let feed), .followSet(let feed): // The pubkeys are in the CloudFeed
             let pubkeys = feed.contactPubkeys
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeys)\(older ? "older" : "") \(pubkeys.count) pubkeys")
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeys/.followSet)\(older ? "older" : "") \(pubkeys.count) pubkeys")
 #endif
 
             bg().perform { [weak self] in
@@ -754,6 +754,21 @@ class NXColumnViewModel: ObservableObject {
                 }
                 else {
                     Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: QUERY_FOLLOWING_KINDS)
+                }
+                guard let events: [Event] = try? bg().fetch(fr) else { return }
+                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+            }
+        case .pubkeysPreview(let pubkeys): // The pubkeys are in the NXConfig
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeysPreview)\(older ? "older" : "")")
+#endif
+            bg().perform { [weak self] in
+                guard let self else { return }
+                let fr = if !older {
+                    Event.postsByPubkeys(config.pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
+                }
+                else {
+                    Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
@@ -859,7 +874,7 @@ class NXColumnViewModel: ObservableObject {
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [20,5])
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
-        case .pubkeys(let feed):
+        case .pubkeys(let feed), .followSet(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
@@ -875,6 +890,13 @@ class NXColumnViewModel: ObservableObject {
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id)
+            }
+        case .pubkeysPreview(_):
+            guard config.pubkeys.count > 0 else { return }
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
+            
+            if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
+                req(message, activeSubscriptionId: config.id) // TODO: Toggle for outboxReq or not?
             }
         case .pubkey:
             let _: String? = nil
@@ -987,7 +1009,7 @@ class NXColumnViewModel: ObservableObject {
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
             }, subId: "RESUME-" + config.id + "-" + since.description)
             
-        case .pubkeys(let feed):
+        case .pubkeys(let feed), .followSet(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
             guard pubkeys.count > 0 || hashtags.count > 0 else {
@@ -1005,6 +1027,20 @@ class NXColumnViewModel: ObservableObject {
             return nil
         case .someoneElses(_):
             guard config.pubkeys.count > 0 || config.hashtags.count > 0 else {
+                L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
+                return nil
+            }
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
+            
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
+                return (cmd: {
+                    req(message)
+                }, subId: "RESUME-" + config.id + "-" + since.description)
+            }
+            return nil
+            
+        case .pubkeysPreview(_):
+            guard config.pubkeys.count > 0 else {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
@@ -1118,7 +1154,7 @@ class NXColumnViewModel: ObservableObject {
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
-        case .pubkeys(let feed):
+        case .pubkeys(let feed), .followSet(let feed):
             let pubkeys = feed.contactPubkeys
             let hashtags = feed.followingHashtags
             
@@ -1138,6 +1174,15 @@ class NXColumnViewModel: ObservableObject {
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
             }
+            
+        case .pubkeysPreview(_):
+            guard config.pubkeys.count > 0 else { return }
+            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
+            
+            if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
+                req(message)
+            }
+            
         case .pubkey:
             let _: String? = nil
         case .relays(let feed):
@@ -1946,8 +1991,10 @@ extension NXColumnViewModel {
                 .union(feed.account!.privateFollowingPubkeys)) ?? []
         case .pubkeys(let feed):
             feed.contactPubkeys
-        case .someoneElses(_):
+        case .someoneElses(_), .pubkeysPreview(_):
             config.pubkeys
+//        case .pubkeysPreview(_):
+//            config.pubkeys
         default:
             []
         }

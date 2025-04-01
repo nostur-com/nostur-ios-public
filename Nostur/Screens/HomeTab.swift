@@ -8,7 +8,7 @@
 import SwiftUI
 import NavigationBackport
 
-struct MainView: View {
+struct HomeTab: View {
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
@@ -40,8 +40,8 @@ struct MainView: View {
         let _ = Self._printChanges()
         #endif
         NBNavigationStack(path: $navPath) {
-            FollowingAndExplore(showingOtherContact: $showingOtherContact)
-                .background(themes.theme.listBackground)
+            MainFeedsScreen(showingOtherContact: $showingOtherContact)
+                .background(themes.theme.background)
                 .withNavigationDestinations()
                 .overlay(alignment: .bottomTrailing) {
                     NewNoteButton(showingNewNote: $showingNewNote)
@@ -244,7 +244,7 @@ struct MainView: View {
 
 #Preview {
     PreviewContainer {
-        MainView()
+        HomeTab()
     }
 }
 
@@ -255,6 +255,6 @@ struct MainView: View {
         pe.loadPosts()
         pe.loadFollows()
     }) {
-        MainView()
+        HomeTab()
     }
 }

@@ -166,7 +166,7 @@ extension View {
 //                            .equatable()
 //                            .debugDimensions("nbNavigationDestination2.PostDetailView", alignment: .topLeading)
                     case .Blocklist:
-                        BlockListView()
+                        BlockListScreen()
                     case .PostReactions(let eventId):
                         PostReactions(eventId: eventId)
                     case .NoteReposts(let id):
@@ -176,7 +176,7 @@ extension View {
                     case .Settings:
                         Settings()
                     case .Lists:
-                        CustomFeedsListView()
+                        CustomFeedsListScreen()
                     case .Relays:
                         RelaysView()    
                     case .Badges:

@@ -35,7 +35,7 @@ struct NosturTabsView: View {
                         TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
                             tabTapped(newTab, oldTab: oldTab)
                         }) {
-                            MainView()
+                            HomeTab()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
 //                                .environmentObject(la)
                                 .tabItem { Label("", systemImage: "house") }
@@ -47,7 +47,7 @@ struct NosturTabsView: View {
         //                        .tag("Communities")
                                 .nosturTabsCompat(themes: themes)
 
-                            BookmarksAndPrivateNotes()
+                            BookmarksTab()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "bookmark") }
                                 .tag("Bookmarks")

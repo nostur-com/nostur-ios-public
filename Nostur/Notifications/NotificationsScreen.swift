@@ -28,9 +28,9 @@ struct NotificationsContainer: View {
         let _ = Self._printChanges()
         #endif
         NBNavigationStack(path: $navPath) {
-            NotificationsView(account: la.account, navPath: $navPath)
-            .background(themes.theme.listBackground)
-            .withNavigationDestinations()
+            NotificationsScreen(account: la.account, navPath: $navPath)
+                .background(themes.theme.background)
+                .withNavigationDestinations()
         }
         .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.navigateTo)) { notification in
@@ -45,7 +45,7 @@ struct NotificationsContainer: View {
     }
 }
 
-struct NotificationsView: View {
+struct NotificationsScreen: View {
     @ObservedObject public var account: CloudAccount
     
     @AppStorage("selected_notifications_tab") private var tab = "Mentions"
@@ -134,6 +134,8 @@ struct NotificationsView: View {
                         EmptyView()
                 }
             }
+            .padding(.top, GUTTER)
+            .background(themes.theme.listBackground)
             Spacer()
         }
         .onReceive(receiveNotification(.notificationsTabAppeared)) { _ in

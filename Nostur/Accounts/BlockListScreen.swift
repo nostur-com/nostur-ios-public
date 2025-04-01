@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct BlockListView: View {
+struct BlockListScreen: View {
     @EnvironmentObject var themes: Themes
     @State var tab = "Blocked"
     
@@ -27,25 +27,24 @@ struct BlockListView: View {
             }
             switch tab {
             case "Blocked":
-                BlockedAccounts()
-                Text("Swipe to unblock/unmute", comment: "Informational text")
+                BlockedContactsView()
+                
             case "Muted":
-                MutedConversations()
-                Text("Swipe to unblock/unmute", comment: "Informational text")
+                MutedConversationsView()
                 //                case "Muted words":
                 //                    MutedWordsView()
             default:
-                BlockedAccounts()
+                BlockedContactsView()
             }
             Spacer()
         }
-        .background(themes.theme.listBackground)
+        .background(themes.theme.background)
         .navigationTitle(tab)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
-struct BlockedAccounts:View {
+struct BlockedContactsView: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.managedObjectContext) private var viewContext
@@ -115,7 +114,6 @@ struct BlockedAccounts:View {
         }
         .environment(\.defaultMinListRowHeight, 50)
         .listStyle(.plain)
-        .padding(0)
         .task {
             CloudTask.fetchAll(byType: .blockUntil)
                 .forEach { task in
@@ -158,58 +156,69 @@ struct BlockedAccounts:View {
     }
 }
 
-struct MutedConversations: View {
+struct MutedConversationsView: View {
     @EnvironmentObject var themes: Themes
     @ObservedObject var settings:SettingsStore = .shared
     
     @Environment(\.managedObjectContext) private var viewContext
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\.createdAt_, order: .reverse)], predicate: NSPredicate(format: "type_ == %@", CloudBlocked.BlockType.post.rawValue))
-    var mutedRootIds:FetchedResults<CloudBlocked>
+    var mutedRootIds: FetchedResults<CloudBlocked>
     
     var body: some View {
-        ScrollView {
-            if !mutedRootIds.isEmpty {
-                LazyVStack(spacing: GUTTER) {
-                    ForEach(mutedRootIds) { mutedRootId in
-                        Box {
-                            if let event = Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {
-                                HStack(spacing: 10) {
-                                    PFP(pubkey: event.pubkey, contact: event.contact, size: 25)
-                                        .onTapGesture {
-                                            navigateTo(ContactPath(key: event.pubkey))
-                                        }
-                                    MinimalNoteTextRenderViewText(plainText: event.plainText, lineLimit: 1)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { navigateTo(NotePath(id: event.id)) }
+        List {
+            ForEach(mutedRootIds, id: \.self) { mutedRootId in
+                Box {
+                    if let event = Event.fetchEvent(id: mutedRootId.eventId, context: viewContext) {
+                        HStack(spacing: 10) {
+                            PFP(pubkey: event.pubkey, contact: event.contact, size: 25)
+                                .onTapGesture {
+                                    navigateTo(ContactPath(key: event.pubkey))
                                 }
-                            }
-                            else {
-                                HStack(spacing: 10) {
-                                    PFP(pubkey: mutedRootId.eventId, size: 25)
-                                    NRTextDynamic("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId)) }
-                                }
-                            }
-                        }
-                        .id(mutedRootId.eventId)
-                        .onSwipe(tint: Color.green, label: "Unmute", icon: "speaker.wave.1") {
-                            viewContext.delete(mutedRootId)
-                            viewContextSave()
-                            AppState.shared.bgAppState.mutedRootIds.remove(mutedRootId.eventId)
-                            sendNotification(.muteListUpdated, AppState.shared.bgAppState.mutedRootIds)
+                            MinimalNoteTextRenderViewText(plainText: event.plainText, lineLimit: 1)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .onTapGesture { navigateTo(NotePath(id: event.id)) }
                         }
                     }
-                    Spacer()
+                    else {
+                        HStack(spacing: 10) {
+                            PFP(pubkey: mutedRootId.eventId, size: 25)
+                            NRTextDynamic("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                                .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId)) }
+                        }
+                    }
                 }
-                .onAppear {
-                    removeDuplicates()
-                }
+                .id(mutedRootId.eventId)
+                .listRowSeparator(.hidden)
+                .listRowBackground(themes.theme.listBackground)
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                .padding(.bottom, GUTTER)
+            }
+            .onDelete { indexSet in
+                unmute(section: Array(mutedRootIds), offsets: indexSet)
             }
         }
+        .toolbar {
+            EditButton()
+        }
+        .environment(\.defaultMinListRowHeight, 50)
+        .listStyle(.plain)
+        .onAppear {
+            removeDuplicates()
+        }
+    }
+    
+    private func unmute(section: [CloudBlocked], offsets: IndexSet) {
+        for index in offsets {
+            let mute = section[index]
+            viewContext.delete(mute)
+            AppState.shared.bgAppState.mutedRootIds.remove(mute.eventId)
+        }
+        viewContextSave()
+        sendNotification(.muteListUpdated, AppState.shared.bgAppState.mutedRootIds)
     }
     
     private func removeDuplicates() {
@@ -238,7 +247,7 @@ struct BlockListView_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer {
             VStack {
-                BlockListView()
+                BlockListScreen()
             }
         }
     }

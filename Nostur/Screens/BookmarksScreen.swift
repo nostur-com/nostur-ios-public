@@ -10,7 +10,7 @@ import Combine
 import CoreData
 import NavigationBackport
 
-struct BookmarksView: View {
+struct BookmarksScreen: View {
     @ObservedObject var vm: BookmarksFeedModel
     @EnvironmentObject private var themes: Themes
     
@@ -33,34 +33,28 @@ struct BookmarksView: View {
         ScrollViewReader { proxy in
             if vm.isLoading {
                 CenteredProgressView()
+                    .background(themes.theme.listBackground)
             }
-            else {
+            else if !vm.nrLazyBookmarks.isEmpty {
                 List {
-                    if !vm.nrLazyBookmarks.isEmpty {
-                        SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(themes.theme.listBackground)
-                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    
+                    ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
+                        ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
+                            LazyBookmark(nrLazyBookmark: nrLazyBookmark)
+                        }
+                        .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .padding(.bottom, GUTTER)
                         
-                        ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
-                            ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
-                                LazyBookmark(nrLazyBookmark: nrLazyBookmark)
-                            }
-                            .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(themes.theme.listBackground)
-                            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                            .padding(.bottom, GUTTER)
-                            
-                        }
-                        .onDelete { indexSet in
-                            deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
-                        }
                     }
-                    else {
-                        Text("When you bookmark a post it will show up here.")
-                            .hCentered()
-                            .padding(.top, 40)
+                    .onDelete { indexSet in
+                        deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
                     }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
@@ -102,6 +96,11 @@ struct BookmarksView: View {
                     }
                 }
             }
+            else {
+                Text("When you bookmark a post it will show up here.")
+                    .centered()
+                    .background(themes.theme.listBackground)
+            }
         }
         .onAppear {
             guard !didLoad else { return }
@@ -138,7 +137,7 @@ struct BookmarksView: View {
         pe.loadBookmarks()
     }) {
         VStack {
-            BookmarksView(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
+            BookmarksScreen(vm: BookmarksFeedModel(), navPath: .constant(NBNavigationPath()))
         }
     }
 }
