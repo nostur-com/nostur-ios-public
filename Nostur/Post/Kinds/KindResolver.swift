@@ -90,9 +90,20 @@ struct KindResolver: View {
                         .onDisappear { self.dequeue() }
                 }
                 else {
+                    // TODO: Needs clean up
+                    HStack {
+                        NRPostHeaderContainer(nrPost: nrPost, singleLine: true)
+                        Spacer()
+                        LazyNoteMenuButton(nrPost: nrPost)
+                    }
+                    
                     LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
                         .onAppear { self.enqueue() }
                         .onDisappear { self.dequeue() }
+                    
+                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme)
+                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
+                        .drawingGroup(opaque: true)
                 }
             }
         case 30023:
