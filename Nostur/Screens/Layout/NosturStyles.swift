@@ -25,7 +25,7 @@ struct NosturButton: ButtonStyle {
             .cornerRadius(15)
             .overlay {
                 RoundedRectangle(cornerRadius: 15)
-                    .stroke(.gray, lineWidth: 1)
+                    .stroke(bgColor, lineWidth: 1)
             }
     }
 }
