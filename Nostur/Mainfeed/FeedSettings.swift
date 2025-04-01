@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FeedSettings: View {
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     @ObservedObject public var feed: CloudFeed
     @EnvironmentObject private var la: LoggedInAccount
@@ -21,6 +22,7 @@ struct FeedSettings: View {
                 Section("App theme") {
                     AppThemeSwitcher()
                 }
+                .listRowBackground(themes.theme.background)
             }
             
             
@@ -34,6 +36,7 @@ struct FeedSettings: View {
                         Text("Show replies")
                     }
                 }
+                .listRowBackground(themes.theme.background)
                 
                 if feed.accountPubkey != nil, !la.account.followingHashtags.isEmpty {
                     Section("Included hashtags") {
@@ -43,6 +46,7 @@ struct FeedSettings: View {
                             la.account.publishNewContactList()
                         })
                     }
+                    .listRowBackground(themes.theme.background)
                 }
             }
             
@@ -66,6 +70,7 @@ struct FeedSettings: View {
                         Text("Configure relays...")
                     }
                 }
+                .listRowBackground(themes.theme.background)
             }
             
             if feed.type == "pubkeys" || feed.type == nil {
@@ -82,8 +87,10 @@ struct FeedSettings: View {
                         Text("Configure contacts...")
                     }
                 }
+                .listRowBackground(themes.theme.background)
             }
         }
+        .scrollContentBackgroundHidden()
         .navigationTitle("Feed settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

@@ -64,6 +64,7 @@ struct NosturTabButton: View {
                                 .environmentObject(themes)
                         }
                         .nbUseNavigationStack(.never)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                     })
                     .foregroundColor(themes.theme.accent)
                     .padding(.leading, 5)

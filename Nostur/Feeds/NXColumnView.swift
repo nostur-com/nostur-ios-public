@@ -36,18 +36,26 @@ struct NXColumnView: View {
             switch(viewModel.viewState) {
             case .loading:
                 ZStack(alignment: .center) {
+                    themes.theme.listBackground
                     CenteredProgressView()
                 }
             case .posts(let nrPosts):
                 NXPostsFeed(vm: viewModel, posts: nrPosts)
             case .timeout:
                 ZStack(alignment: .center) {
-                    Color.clear
+                    themes.theme.listBackground
                     Text("Nothing here :(")
                         .foregroundColor(themes.theme.accent)
+                        .centered()
                 }
             case .error(let errorMessage):
-                Text(errorMessage)
+                ZStack(alignment: .center) {
+                    themes.theme.listBackground
+                    Text(errorMessage)
+                        .foregroundColor(themes.theme.accent)
+                        .centered()
+                }
+                
             }
         }
         .overlay(alignment: .top) {
@@ -148,6 +156,7 @@ struct NXColumnView: View {
                 FeedSettings(feed: feed)
             }
             .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         })
     }
     

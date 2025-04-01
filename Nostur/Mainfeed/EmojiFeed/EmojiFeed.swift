@@ -109,6 +109,7 @@ struct EmojiFeed: View {
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }
     

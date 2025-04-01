@@ -109,6 +109,7 @@ struct Discover: View {
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }
     
