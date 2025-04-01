@@ -315,6 +315,9 @@
         }
       }
     },
+    "**%@** by " : {
+
+    },
     "**%@** is now following you" : {
       "comment" : "Message when (name) is now following you",
       "localizations" : {
@@ -2554,6 +2557,9 @@
         }
       }
     },
+    "Copy list address" : {
+
+    },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
       "localizations" : {
@@ -3033,6 +3039,7 @@
       }
     },
     "Delete feed %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3664,6 +3671,9 @@
           }
         }
       }
+    },
+    "Feed preview" : {
+
     },
     "Feed settings" : {
       "comment" : "Header for a feed setting",
@@ -6475,7 +6485,7 @@
       }
     },
     "Reactions" : {
-      "comment" : "Tab title",
+      "comment" : "Tab title\nTitle of list of reactions screen",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8042,8 +8052,12 @@
     "streaming" : {
       "shouldTranslate" : false
     },
+    "Subscribe" : {
+
+    },
     "Swipe to unblock/unmute" : {
       "comment" : "Informational text",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8893,6 +8907,7 @@
       }
     },
     "Unmute" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9515,7 +9530,7 @@
       }
     },
     "Zaps" : {
-      "comment" : "Tab title",
+      "comment" : "Tab title\nTitle of list of zaps screen",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

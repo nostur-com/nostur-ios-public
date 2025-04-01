@@ -24,7 +24,6 @@ struct Kind1: View {
     private let grouped: Bool
     private let forceAutoload: Bool
     @State private var didStart = false
-    @State private var couldBeImposter: Int16 // TODO: this is here but also in NRPostHeaderContainer, need to clean up
     
     private let THREAD_LINE_OFFSET = 24.0
     
@@ -58,7 +57,6 @@ struct Kind1: View {
         self.grouped = grouped
         self.theme = theme
         self.forceAutoload = forceAutoload
-        self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
     
     var body: some View {

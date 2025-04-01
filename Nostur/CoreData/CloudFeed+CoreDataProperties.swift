@@ -28,7 +28,7 @@ extension CloudFeed {
     // "hashtags" = Feed of posts with selected hashtag(s) (TODO)
     // "following" = Feed of posts with selected hashtag(s)
     // "..more??" = ...
-    @NSManaged public var type: String? // Use LVM.ListType enum
+    @NSManaged public var type: String? // Use CloudFeedType enum
     @NSManaged public var wotEnabled: Bool
     @NSManaged public var pubkeys: String?
     @NSManaged public var relays: String?
@@ -36,7 +36,7 @@ extension CloudFeed {
     // Fields from old ListState migrated to CloudFeed
     
     @NSManaged public var updatedAt: Date?
-    @NSManaged public var listId: String?
+    @NSManaged public var listId: String? // We can use this to store aTag for now
     @NSManaged public var repliesEnabled: Bool
     @NSManaged public var accountPubkey: String?
     @NSManaged public var profilesFetchedAt: Date? // use as "since" for checking new profiles for this feed
