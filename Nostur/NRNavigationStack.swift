@@ -22,3 +22,22 @@ struct NRNavigationStack<Content: View>: View {
         .nbUseNavigationStack(.never)
     }
 }
+
+// Note: dismiss doesn't work with NRSheetNavigationStack in .sheet. So use NBNavigationStack directly in sheet
+struct NRSheetNavigationStack<Content: View>: View {
+    
+    @ViewBuilder
+    public let content: Content
+    
+    var body: some View {
+        NBNavigationStack {
+            AvailableWidthContainer {
+                AppEnvironment {
+                    content
+                }
+            }
+        }
+        .nbUseNavigationStack(.never)
+        .presentationBackgroundCompat(Themes.default.theme.listBackground)
+    }
+}
