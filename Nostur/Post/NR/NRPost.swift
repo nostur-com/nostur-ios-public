@@ -437,6 +437,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 missingPs.insert(highlightAuthorPubkey)
             }
             self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
+        case 30000:
+            eventTitle = event.eventTitle
             
         case 30023, 34235, 30311:
             eventId = event.eventId

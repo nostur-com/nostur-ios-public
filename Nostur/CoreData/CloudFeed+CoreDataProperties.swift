@@ -128,6 +128,10 @@ extension CloudFeed : Identifiable {
             return ("List-" + String(id.prefix(min(idLength,18))))
         case "relays":
             return ("List-" + String(id.prefix(min(idLength,18))))
+            
+        case "30000":
+            return ("List-" + String(id.prefix(min(idLength,18))))
+            
         default:
             return ("List-" + String(id.prefix(min(idLength,18))))
         }
@@ -141,6 +145,12 @@ extension CloudFeed : Identifiable {
             .pubkeys(self)
         case "relays":
             .relays(self)
+            
+        // Nostr native lists
+        case "30000":
+            .followSet(self)
+            
+            
         default:
             .pubkeys(self)
         }
@@ -175,4 +185,7 @@ enum CloudFeedType: String {
     case relays = "relays"
     case mentions = "mentions"
     case hashtags = "hashtags"
+    
+    // nostr native lists
+    case followSet = "30000" // a "subscribed" follow set
 }

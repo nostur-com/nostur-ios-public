@@ -1,0 +1,217 @@
+//
+//  Kind30000.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 30/03/2025.
+//
+
+import SwiftUI
+
+// Kind 30000: Follow sets: categorized groups of users a client may choose to check out in different circumstances
+struct Kind30000: View {
+    private var theme: Theme
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var settings: SettingsStore = .shared
+    private let nrPost: NRPost
+    @ObservedObject private var pfpAttributes: PFPAttributes
+    
+    private let hideFooter: Bool // For rendering in NewReply
+    private let missingReplyTo: Bool // For rendering in thread
+    private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
+    private let isReply: Bool // is reply on PostDetail
+    private let isDetail: Bool
+    private let isEmbedded: Bool
+    private let fullWidth: Bool
+    private let grouped: Bool
+    private let forceAutoload: Bool
+    
+    private let THREAD_LINE_OFFSET = 24.0
+    
+    private var availableWidth: CGFloat {
+        if isDetail || fullWidth || isEmbedded {
+            return dim.listWidth - 20
+        }
+        
+        return dim.availableNoteRowImageWidth()
+    }
+    
+    private let title: String
+    private var followPs: [String]
+    @State private var followNRContacts: [String: NRContact] = [:]
+    
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+        self.nrPost = nrPost
+        self.pfpAttributes = nrPost.pfpAttributes
+        self.hideFooter = hideFooter
+        self.missingReplyTo = missingReplyTo
+        self.connect = connect
+        self.isReply = isReply
+        self.fullWidth = fullWidth
+        self.isDetail = isDetail
+        self.isEmbedded = isEmbedded
+        self.grouped = grouped
+        self.theme = theme
+        self.forceAutoload = forceAutoload
+        self.followPs = nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
+        self.title = (nrPost.eventTitle ?? nrPost.dTag) ?? "List"
+    }
+    
+    var body: some View {
+        if isEmbedded {
+            self.embeddedView
+        }
+        else {
+            self.normalView
+        }
+    }
+    
+    private var shouldAutoload: Bool {
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+    }
+    
+    @ViewBuilder
+    private var normalView: some View {
+//        #if DEBUG
+//        let _ = Self._printChanges()
+//        #endif
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme) {
+            if (isDetail) {
+                if missingReplyTo {
+                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
+                }
+                Text(title)
+                    .fontWeight(.bold)
+                    .lineLimit(3)
+                
+                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+            }
+            else {
+                Text(title)
+                    .fontWeight(.bold)
+                    
+                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+
+            }
+        }
+    }
+        
+    @State private var showMiniProfile = false
+    
+    @ViewBuilder
+    private var embeddedView: some View {
+        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
+            HStack {
+                Text(title)
+                    .fontWeight(.bold)
+                    .lineLimit(4)
+                Spacer()
+                Button("Feed preview") {
+                    let pubkeys = nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
+                    
+                    // 1. NXColumnConfig
+                    let config = NXColumnConfig(id: "FeedPreview", columnType: .pubkeysPreview(Set(pubkeys)), name: "Preview")
+                    let feedPreviewSheetInfo = FeedPreviewInfo(config: config, nrPost: nrPost)
+                    AppSheetsModel.shared.feedPreviewSheetInfo = feedPreviewSheetInfo
+                }
+                .buttonStyle(NosturButton(bgColor: theme.accent))
+                .layoutPriority(1)
+            }
+            
+            if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                Image(systemName: "exclamationmark.triangle.fill")
+            }
+            
+            // If more than 20, do LazyVStack
+            if followPs.count > 20 {
+                LazyVStack {
+                    contactRows
+                }
+            }
+            else {
+                contactRows
+            }
+    
+        }
+        .onAppear {
+            bg().perform {
+                let followNRContacts = followPs.compactMap { NRContact.fetch($0) }
+                // create key value dictionary of followNRContacts in from of [String: NRContact] where key is NRContact.pubkey
+                let followNRContactsDict = Dictionary(uniqueKeysWithValues: followNRContacts.map { ($0.pubkey, $0) })
+                
+                Task { @MainActor in
+                    self.followNRContacts = followNRContactsDict
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var contactRows: some View {
+        ForEach(followPs, id: \.self) { followP in
+            PubkeyRow(pfp: PFPAttributes(contact: followNRContacts[followP], pubkey: followP))
+                .id(followP)
+                .onAppear {
+                    bg().perform {
+                        if followNRContacts[followP] == nil || followNRContacts[followP]?.contact == nil || followNRContacts[followP]?.contact?.metadata_created_at == 0 {
+                            QueuedFetcher.shared.enqueue(pTag: followP)
+                        }
+                    }
+                }
+                .onDisappear {
+                    bg().perform {
+                        if followNRContacts[followP] == nil || followNRContacts[followP]?.contact == nil || followNRContacts[followP]?.contact?.metadata_created_at == 0 {
+                            QueuedFetcher.shared.dequeue(pTag: followP)
+                        }
+                    }
+                }
+        }
+    }
+    
+    
+    private func navigateToContact() {
+        if let nrContact = nrPost.contact {
+            navigateTo(nrContact)
+        }
+        else {
+            navigateTo(ContactPath(key: nrPost.pubkey))
+        }
+    }
+    
+    private func navigateToPost() {
+        navigateTo(nrPost)
+    }
+}
+
+
+struct PubkeyRow: View {
+    @ObservedObject var pfp: PFPAttributes
+    
+    var body: some View {
+        HStack {
+            ObservedPFP(pfp: pfp, size: 20.0)
+            Text(pfp.anyName)
+        }
+    }
+}
+
+#Preview("Sharing a list") {
+    PreviewContainer({ pe in
+        pe.parseMessages([
+            ###"["EVENT","sharing",{"tags":[["p","9ca0bd7450742d6a20319c0e3d4c679c9e046a9dc70e8ef55c2905e24052340b"],["client","noStrudel","31990:266815e0c9210dfa324c6cba3573b14bee49da4209a9456f9484e5106cd408a5:1686066542546"]],"sig":"069a80f42978c1c872d72ee26add0ad6e12875ae209838d432885123856a90810df1d1b3c18de716997e4530b1bba2b75973f39012be626a95be0589f9c38a6d","created_at":1743290622,"kind":1,"id":"294e9d025dfcc096ef52474fa9905537a7b0c9091af723b074a77f96c8c325e0","pubkey":"9ca0bd7450742d6a20319c0e3d4c679c9e046a9dc70e8ef55c2905e24052340b","content":"A growing list of those loveable rogues of nostr, The Curmudgeons\n\nnostr:naddr1qvzqqqr4xqpzp89qh469qapddgsrr8qw84xx08y7q34fm3cw3m64c2g9ufq9ydqtqy2hwumn8ghj7un9d3shjtnyv9kh2uewd9hj7qgwwaehxw309ahx7uewd3hkctcqz48k2k33xyuxzajyxp98s42ed9q4xc2xve5q3yzkzp"}]"###,
+            ###"["EVENT","list",{"tags":[["d","OeZ118avD0JxUYiASaFfh"],["title","curmudgeons"],["p","0c405798e0e39caf54d2b211879ba1d6a965109b1389fa55da5bb20dd96ba5a0"],["p","52b4a076bcbbbdc3a1aefa3735816cf74993b1b8db202b01c883c58be7fad8bd"],["p","4c800257a588a82849d049817c2bdaad984b25a45ad9f6dad66e47d3b47e3b2f"],["p","80caa3337d33760ee355697260af0a038ae6a82e6d0b195c7db3c7d02eb394ee"],["p","c55476b5799dd1dd158aec8e1f319f1cdcef2768919670f1ed3e8f3e733a1732"],["p","fd208ee8c8f283780a9552896e4823cc9dc6bfd442063889577106940fd927c1"],["p","3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"]],"kind":30000,"pubkey":"9ca0bd7450742d6a20319c0e3d4c679c9e046a9dc70e8ef55c2905e24052340b","sig":"2c858e84623d36b81964eb10cd2ca02f38590e4e931c16f0c941e2734cfa1f0d38f3d2bcd09dcb504b4b33d07360c91d136caf217dd000976a75b39340b0eb36","id":"c4dab9d7ced0a943bc48a0c831e646085f2426ecbf68afc37f3ebe4abb87c89c","content":"","created_at":1743290706}]"###
+        ])
+        
+    }) {
+        if let kind1withNaddr = PreviewFetcher.fetchNRPost("294e9d025dfcc096ef52474fa9905537a7b0c9091af723b074a77f96c8c325e0") {
+            Box {
+                KindResolver(nrPost: kind1withNaddr, theme: Themes.default.theme)
+            }
+        }
+    }
+}
+
+
