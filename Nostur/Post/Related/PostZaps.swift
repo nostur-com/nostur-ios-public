@@ -25,67 +25,72 @@ struct PostZaps: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                Color.clear.frame(height: 1).id(top)
-                LazyVStack(spacing: GUTTER) {
-                    ForEach(model.verifiedZaps) { nxZap in
-                        Box {
-                            NxZapReceipt(sats: nxZap.sats, receiptPubkey: nxZap.receiptPubkey, fromPubkey: nxZap.fromPubkey, nrZapFrom: nxZap.nrZapFrom)
-                        }
-                    }
-                    
-                    if !model.unverifiedZaps.isEmpty {
-                        Text("Unverified zaps", comment: "List of unverified zaps")
-                            .fontWeight(.bold)
-                            .padding(10)
-                        Text("This can be caused by the receiver switching to a different lightning address")
-                            .font(.caption)
-                            .italic()
-                            .padding(10)
-                        
-                        switch reverifier.state {
-                        case .idle:
-                            Button("Verify again") {
-                                reverifier.run(nrPost.pubkey)
-                            }
-                        case .loading:
-                            HStack {
-                                ProgressView()
-                                Text("Verifying...")
-                            }
-                        case .noKind0:
-                            Text("Could not find latest user profile (kind-0)")
-                        case .noLud:
-                            Text("User does not have a lightning address set")
-                        case .noZapperPubkey:
-                            Text("Users wallet does not support nostr")
-                        case .done:
-                            Text("Verifying... Done.")
-                        }
-                        
-                        ForEach(model.unverifiedZaps) { nxZap in
+            ZStack {
+                themes.theme.listBackground
+                ScrollView {
+                    Color.clear.frame(height: 1).id(top)
+                    LazyVStack(spacing: GUTTER) {
+                        ForEach(model.verifiedZaps) { nxZap in
                             Box {
                                 NxZapReceipt(sats: nxZap.sats, receiptPubkey: nxZap.receiptPubkey, fromPubkey: nxZap.fromPubkey, nrZapFrom: nxZap.nrZapFrom)
                             }
                         }
-                    }
-                    
-                    if model.foundSpam && !model.includeSpam {
-                        Button {
-                            model.includeSpam = true
-                            model.load(limit: 500, includeSpam: model.includeSpam)
-                                
-                        } label: {
-                           Text("Show more")
+                        
+                        if !model.unverifiedZaps.isEmpty {
+                            Text("Unverified zaps", comment: "List of unverified zaps")
+                                .fontWeight(.bold)
                                 .padding(10)
-                                .contentShape(Rectangle())
+                            Text("This can be caused by the receiver switching to a different lightning address")
+                                .font(.caption)
+                                .italic()
+                                .padding(10)
+                            
+                            switch reverifier.state {
+                            case .idle:
+                                Button("Verify again") {
+                                    reverifier.run(nrPost.pubkey)
+                                }
+                            case .loading:
+                                HStack {
+                                    ProgressView()
+                                    Text("Verifying...")
+                                }
+                            case .noKind0:
+                                Text("Could not find latest user profile (kind-0)")
+                            case .noLud:
+                                Text("User does not have a lightning address set")
+                            case .noZapperPubkey:
+                                Text("Users wallet does not support nostr")
+                            case .done:
+                                Text("Verifying... Done.")
+                            }
+                            
+                            ForEach(model.unverifiedZaps) { nxZap in
+                                Box {
+                                    NxZapReceipt(sats: nxZap.sats, receiptPubkey: nxZap.receiptPubkey, fromPubkey: nxZap.fromPubkey, nrZapFrom: nxZap.nrZapFrom)
+                                }
+                            }
                         }
-                        .padding(.bottom, 10)
+                        
+                        if model.foundSpam && !model.includeSpam {
+                            Button {
+                                model.includeSpam = true
+                                model.load(limit: 500, includeSpam: model.includeSpam)
+                                    
+                            } label: {
+                               Text("Show more")
+                                    .padding(10)
+                                    .contentShape(Rectangle())
+                            }
+                            .padding(.bottom, 10)
+                        }
                     }
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(themes.theme.background)
+        .navigationTitle(String(localized: "Zaps", comment: "Title of list of zaps screen"))
+        .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             model.setup(eventId: nrPost.id)
             model.load(limit: 500)

@@ -42,7 +42,7 @@ struct EditRelaysNosturList: View {
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
             }
-                .listRowBackground(themes.theme.background)
+            .listRowBackground(themes.theme.background)
             
             Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
                 .listRowBackground(themes.theme.background)
@@ -66,7 +66,7 @@ struct EditRelaysNosturList: View {
                         }
                     }
             }
-                .listRowBackground(themes.theme.background)
+            .listRowBackground(themes.theme.background)
             
             Section(header: Text("Spam filter", comment: "Header for a feed setting")) {
                 Toggle(isOn: $wotEnabled) {
@@ -74,7 +74,7 @@ struct EditRelaysNosturList: View {
                     Text("Only show content from your follows or follows-follows")
                 }
             }
-                .listRowBackground(themes.theme.background)
+            .listRowBackground(themes.theme.background)
         }
         .scrollContentBackgroundCompat(.hidden)
         .background(themes.theme.listBackground)
@@ -88,9 +88,9 @@ struct EditRelaysNosturList: View {
             showAsTab = list.showAsTab
         }
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
+//            ToolbarItem(placement: .cancellationAction) {
+//                Button("Cancel") { dismiss() }
+//            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Save") {
                     list.name = title

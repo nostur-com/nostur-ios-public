@@ -34,6 +34,7 @@ struct NewDM: View {
                         }
                     }
                 })
+                .padding(.top, 10)
                 .navigationTitle(String(localized:"Send DM to", comment:"Navigation title for screen to select a contact to send a Direct Message to"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

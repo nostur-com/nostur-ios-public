@@ -32,7 +32,7 @@ struct SearchBox: View {
         .padding(.leading, 25)
         .padding(.trailing, 25)
         .background {
-            themes.theme.background.opacity(0.5)
+            themes.theme.listBackground.opacity(0.5)
                 .overlay(alignment:.leading) {
                     Image(systemName: "magnifyingglass")
                         .imageScale(.medium)

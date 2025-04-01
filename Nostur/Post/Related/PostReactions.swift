@@ -22,45 +22,50 @@ struct PostReactions: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                Color.clear.frame(height: 1).id(top)
-                LazyVStack(spacing: 2) {
-                    ForEach(model.reactions) { nrPost in
-                        HStack(alignment: .top) {
-                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
-                                .onTapGesture {
-                                    navigateTo(ContactPath(key: nrPost.pubkey))
+            ZStack {
+                themes.theme.listBackground // list background
+                ScrollView {
+                    Color.clear.frame(height: 1).id(top)
+                    LazyVStack(spacing: GUTTER) {
+                        ForEach(model.reactions) { nrPost in
+                            HStack(alignment: .top) {
+                                PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
+                                    .onTapGesture {
+                                        navigateTo(ContactPath(key: nrPost.pubkey))
+                                    }
+                                VStack(alignment: .leading) {
+                                    NRPostHeaderContainer(nrPost: nrPost)
+                                    Text(nrPost.content == "+" ? "❤️" : nrPost.content ?? "")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                            VStack(alignment: .leading) {
-                                NRPostHeaderContainer(nrPost: nrPost)
-                                Text(nrPost.content == "+" ? "❤️" : nrPost.content ?? "")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                        }
-                        .padding()
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
-                        }
-                        .id(nrPost.id)
-                        Divider()
-                    }
-                }
-                if model.foundSpam && !model.includeSpam {
-                    Button {
-                        model.includeSpam = true
-                        model.load(limit: 500, includeSpam: model.includeSpam)
-                            
-                    } label: {
-                       Text("Show more")
                             .padding(10)
+                            .background(themes.theme.background) // each row
                             .contentShape(Rectangle())
+                            .onTapGesture {
+                                navigateTo(ContactPath(key: nrPost.pubkey))
+                            }
+                            .id(nrPost.id)
+                        }
                     }
-                    .padding(.bottom, 10)
+                    if model.foundSpam && !model.includeSpam {
+                        Button {
+                            model.includeSpam = true
+                            model.load(limit: 500, includeSpam: model.includeSpam)
+                                
+                        } label: {
+                           Text("Show more")
+                                .padding(10)
+                                .contentShape(Rectangle())
+                        }
+                        .padding(.bottom, 10)
+                    }
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .navigationTitle(String(localized: "Reactions", comment: "Title of list of reactions screen"))
+        .navigationBarTitleDisplayMode(.inline)
+        .background(themes.theme.background) // screen / toolbar
         .onAppear {
             model.setup(eventId: eventId)
             model.load(limit: 500)

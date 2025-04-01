@@ -66,7 +66,7 @@ struct Search: View {
         let _ = Self._printChanges()
         #endif
         NBNavigationStack(path: $navPath) {
-            VStack {
+            VStack(spacing: 0) {
                 Box { // @FocusState doesn't work when TextField is in ToolBarItem sigh...
                     SearchBox(prompt: String(localized: "Search...", comment: "Placeholder text in a search input box"), text: $searchText)
                         .padding(10)
@@ -124,7 +124,7 @@ struct Search: View {
                                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             }
                         }
-                        .padding(.top, 10)
+                        .padding(.top, GUTTER)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 Button {

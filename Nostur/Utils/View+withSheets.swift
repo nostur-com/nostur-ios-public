@@ -135,9 +135,9 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     EditPrivateNoteSheet(privateNote: note)
                         .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
@@ -148,9 +148,9 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     NewPrivateNoteSheet(post: post)
                         .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
@@ -161,9 +161,9 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     NewPrivateNoteSheet(contact: contact)
                         .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in

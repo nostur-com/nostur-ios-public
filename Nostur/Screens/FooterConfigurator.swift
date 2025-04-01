@@ -9,8 +9,10 @@ import SwiftUI
 
 struct FooterConfigurator: View {
     
-    @Binding public var footerButtons:String
-    @ObservedObject private var ss:SettingsStore = .shared
+    @EnvironmentObject private var themes: Themes
+    
+    @Binding public var footerButtons: String
+    @ObservedObject private var ss: SettingsStore = .shared
     
     var body: some View {
         Form(content: {
@@ -33,6 +35,7 @@ struct FooterConfigurator: View {
             }, footer: {
                 Text("Configure the reaction buttons for each post. You can also change the position or remove buttons you don't need.", comment: "Informational message")
             })
+            .listRowBackground(themes.theme.background)
             
             Section(content: {
                 if !ss.fullWidthImages {
@@ -51,27 +54,32 @@ struct FooterConfigurator: View {
             }, header: {
                 Text("Preview", comment: "Heading when entering Report details")
             })
+            .listRowBackground(themes.theme.background)
             
-            Button("Load default", action: {
-                footerButtons = IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
-            })
-            
-            Button("Load preset 1", action: {
-                footerButtons = "💬🔄+🫂💯🔖"
-            })
-            
-            Button("Load preset 2", action: {
-                footerButtons = "💬🔄+🔥🍿🔖"
-            })
-            
-            Button("Load preset 3", action: {
-                footerButtons = "🫂💯🔥🤯🔖"
-            })
-            
-            Button("Load preset 4", action: {
-                footerButtons = "+❤️💜💙🧡💚🖤"
-            })
+            Group {
+                Button("Load default", action: {
+                    footerButtons = IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
+                })
+                
+                Button("Load preset 1", action: {
+                    footerButtons = "💬🔄+🫂💯🔖"
+                })
+                
+                Button("Load preset 2", action: {
+                    footerButtons = "💬🔄+🔥🍿🔖"
+                })
+                
+                Button("Load preset 3", action: {
+                    footerButtons = "🫂💯🔥🤯🔖"
+                })
+                
+                Button("Load preset 4", action: {
+                    footerButtons = "+❤️💜💙🧡💚🖤"
+                })
+            }
+                .listRowBackground(themes.theme.background)
         })
+        .scrollContentBackgroundHidden()
     }
 }
 

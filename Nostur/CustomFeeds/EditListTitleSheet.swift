@@ -18,13 +18,15 @@ struct EditListTitleSheet: View {
     var body: some View {
         Form {
             Section(header: Text("Title", comment: "Header for entering title of a feed")) {
-                TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $newTitle)
-                    .textInputAutocapitalization(.never)
-                    .disableAutocorrection(true)
-                
-                Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                Group {
+                    TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $newTitle)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
+                    
+                    Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                }
+                .listRowBackground(themes.theme.background)
             }
-            .listRowBackground(themes.theme.background)
         }
         .scrollContentBackgroundCompat(.hidden)
         .background(themes.theme.listBackground)
@@ -36,9 +38,9 @@ struct EditListTitleSheet: View {
         .navigationTitle("Edit title")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
+//            ToolbarItem(placement: .cancellationAction) {
+//                Button("Cancel") { dismiss() }
+//            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Save") {
                     dismiss()

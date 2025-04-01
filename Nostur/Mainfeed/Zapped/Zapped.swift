@@ -79,7 +79,7 @@ struct Zapped: View {
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(themes.theme.background)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }

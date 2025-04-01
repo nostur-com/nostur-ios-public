@@ -22,7 +22,6 @@ struct HighlightComposer: View {
         VStack(spacing: 0) {
             if let account = activeAccount {
                 VStack {
-                    Divider()
                     HStack(alignment: .top, spacing: 10) {
                         InlineAccountSwitcher(activeAccount: account, onChange: { account in
                             activeAccount = account
@@ -74,8 +73,9 @@ struct HighlightComposer: View {
                             CustomizablePreviewFooterFragmentView()
                         }
                     }
-                    .padding(10)
-                    Divider()
+                    .padding(.horizontal, 10)
+                    .padding(.top, 10)
+                    .background(themes.theme.background)
                     Spacer()
                 }
                 .padding(.top, 20)

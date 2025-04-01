@@ -201,9 +201,7 @@ struct DMs: View {
             
             .navigationTitle(String(localized: "Messages", comment: "Navigation title for DMs (Direct Messages)"))
             .navigationBarTitleDisplayMode(.inline)
-            
-            .background(themes.theme.listBackground)
-            
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Image(systemName: "gearshape")
@@ -230,6 +228,7 @@ struct DMs: View {
                     }
                 }
             }
+            .background(themes.theme.background)
         }
         .nbUseNavigationStack(.never)
     }

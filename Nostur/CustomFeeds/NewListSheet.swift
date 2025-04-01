@@ -37,54 +37,56 @@ struct NewListSheet: View {
     
     var body: some View {
         List {
-            Section(header: Text("Title", comment: "Header for entering title of a feed")) {
-                TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $title)
-                    .textInputAutocapitalization(.never)
-                    .disableAutocorrection(true)
-            }
-            
-            Section(header: Text("Feed settings", comment: "Header for a feed setting")) {
-                Picker("Feed content", selection: $feedType) {
-                    Text("Posts from contacts")
-                        .tag(ListType.pubkeys)
-                    Text("Posts from relays")
-                        .tag(ListType.relays)
-                }
-            }
-            
-            if feedType == .relays {
-                Section(header: Text("Relay selection", comment: "Header for a feed setting")) {
-                    ForEach(relays, id:\.objectID) { relay in
-                            HStack {
-                                Image(systemName: selectedRelays.contains(relay) ? "checkmark.circle.fill" : "circle")
-                                    .foregroundColor(selectedRelays.contains(relay) ? Color.primary : Color.secondary)
-                                Text(relay.url_ ?? "(Missing relay address)")
-                            }
-                            .id(relay.objectID)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                if selectedRelays.contains(relay) {
-                                    selectedRelays.remove(relay)
-                                }
-                                else {
-                                    selectedRelays.insert(relay)
-                                }
-                            }
-                        }
+            Group {
+                Section(header: Text("Title", comment: "Header for entering title of a feed")) {
+                    TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $title)
+                        .textInputAutocapitalization(.never)
+                        .disableAutocorrection(true)
                 }
                 
-                Section(header: Text("Spam filter", comment: "Header for a feed setting")) {
-                    Toggle(isOn: $wotEnabled) {
-                        Text("Enable Web of Trust filter")
-                        Text("Only show content from your follows or follows-follows")
+                Section(header: Text("Feed settings", comment: "Header for a feed setting")) {
+                    Picker("Feed content", selection: $feedType) {
+                        Text("Posts from contacts")
+                            .tag(ListType.pubkeys)
+                        Text("Posts from relays")
+                            .tag(ListType.relays)
+                    }
+                }
+
+                if feedType == .relays {
+                    Section(header: Text("Relay selection", comment: "Header for a feed setting")) {
+                        ForEach(relays, id:\.objectID) { relay in
+                                HStack {
+                                    Image(systemName: selectedRelays.contains(relay) ? "checkmark.circle.fill" : "circle")
+                                        .foregroundColor(selectedRelays.contains(relay) ? Color.primary : Color.secondary)
+                                    Text(relay.url_ ?? "(Missing relay address)")
+                                }
+                                .id(relay.objectID)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if selectedRelays.contains(relay) {
+                                        selectedRelays.remove(relay)
+                                    }
+                                    else {
+                                        selectedRelays.insert(relay)
+                                    }
+                                }
+                            }
+                    }
+                    
+                    Section(header: Text("Spam filter", comment: "Header for a feed setting")) {
+                        Toggle(isOn: $wotEnabled) {
+                            Text("Enable Web of Trust filter")
+                            Text("Only show content from your follows or follows-follows")
+                        }
                     }
                 }
             }
-            
+            .listRowBackground(themes.theme.background)
         }
+        .scrollContentBackgroundCompat(.hidden)
         .navigationTitle(String(localized:"New feed", comment:"Navigation title for screen to create a new feed"))
         .navigationBarTitleDisplayMode(.inline)
-//        .toolbarRole(.navigationStack)
         .nbNavigationDestination(isPresented: $contactSelectionVisible) {
             ContactsSearch(followingPubkeys: follows(),
                            prompt: String(localized:"Search contacts", comment:"Placeholder in search contacts input field"), onSelectContacts: { selectedContacts in
@@ -98,6 +100,7 @@ struct NewListSheet: View {
             .equatable()
             .environmentObject(themes)
             .navigationTitle(String(localized:"Add contacts to feed", comment:"Navigation title for screen where you can add contacts to a feed"))
+            .background(themes.theme.listBackground)
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

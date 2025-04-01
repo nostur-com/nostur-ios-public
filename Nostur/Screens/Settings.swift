@@ -698,11 +698,13 @@ extension Localizable {
 }
 
 struct FooterConfiguratorLink: View {
+    @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
     
     var body: some View {
         NavigationLink(destination: {
             FooterConfigurator(footerButtons: $settings.footerButtons)
+                .background(themes.theme.listBackground)
         }, label: {
             HStack {
                 Text("Reaction buttons")

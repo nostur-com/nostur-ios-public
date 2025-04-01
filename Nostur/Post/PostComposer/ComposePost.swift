@@ -226,7 +226,7 @@ struct ComposePost: View {
                                     }
                                 }
                             }
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(themes.theme.background)
                         }
                         else {
                             NBNavigationStack {
@@ -242,7 +242,7 @@ struct ComposePost: View {
                                 }
                             }
                             .nbUseNavigationStack(.never)
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(themes.theme.background)
                         }
                     }
                     .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection,

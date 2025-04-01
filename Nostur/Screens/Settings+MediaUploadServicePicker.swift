@@ -29,6 +29,7 @@ struct MediaUploadServicePicker: View {
         } label: {
             Text("Media upload service", comment:"Setting on settings screen")
         }
+        .listRowBackground(themes.theme.background)
         .pickerStyleCompatNavigationLink()
         .onChange(of: settings.defaultMediaUploadService) { newValue in
             if newValue.name == "Custom File Storage (NIP-96)" {
@@ -53,7 +54,9 @@ struct MediaUploadServicePicker: View {
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
+        .scrollContentBackgroundHidden()
     }
 }
 

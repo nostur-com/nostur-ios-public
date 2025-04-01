@@ -117,7 +117,6 @@ struct NotificationsNewPosts: View {
                 .centered()
             }
         }
-        .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newPosts.rawValue)

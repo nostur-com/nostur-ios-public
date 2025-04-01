@@ -87,14 +87,13 @@ struct Gallery: View {
                 }
             case .timeout:
                 VStack {
-                    Spacer()
                     Text("Time-out while loading gallery")
                     Button("Try again") { vm.reload() }
-                    Spacer()
                 }
+                .centered()
             }
         }
-        .background(themes.theme.listBackground)
+        .background(themes.theme.background)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }

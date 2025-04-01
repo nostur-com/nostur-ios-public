@@ -35,6 +35,7 @@ struct AlbyNWCConnectSheet: View {
             else {
                 Text("Connect your **Alby** wallet with **Nostur** for a seamless zapping experience")
                     .multilineTextAlignment(.center)
+                    .padding(10)
             }
             
             if (nwcConnectSuccess) {

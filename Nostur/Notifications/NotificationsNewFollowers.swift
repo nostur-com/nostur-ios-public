@@ -45,13 +45,16 @@ struct NotificationsFollowers: View {
         let _ = Self._printChanges()
         #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: GUTTER) {
-                    ForEach(notifications) { notification in
-                        NewFollowersNotificationView(notification: notification)
-                            .padding(10)
-                            .background(themes.theme.background)
-                            .id(notification.id)
+            ZStack {
+                themes.theme.listBackground // List background, not toolbar / screen
+                ScrollView {
+                    LazyVStack(spacing: GUTTER) {
+                        ForEach(notifications) { notification in
+                            NewFollowersNotificationView(notification: notification)
+                                .padding(10)
+                                .background(themes.theme.background)
+                                .id(notification.id)
+                        }
                     }
                 }
             }
@@ -65,7 +68,7 @@ struct NotificationsFollowers: View {
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(themes.theme.background) // Screen / toolbar background
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newFollowers.rawValue)

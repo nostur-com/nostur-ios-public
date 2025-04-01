@@ -11,6 +11,7 @@ import NostrEssentials
 
 /// Sign any unsigned nostr event with your key
 struct AnySigner: View {
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     @State private var input = ""
     @State private var error: String?
@@ -54,23 +55,28 @@ struct AnySigner: View {
             }
             
             Form {
-                if #available(iOS 16.0, *) {
-                    TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                        .lineLimit(16, reservesSpace: true)
+                Group {
+                    if #available(iOS 16.0, *) {
+                        TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"), axis: .vertical)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .lineLimit(16, reservesSpace: true)
+                    }
+                    else {
+                        TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"))
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .lineLimit(16)
+                    }
                 }
-                else {
-                    TextField(String(localized:"Enter JSON", comment:"Label for field to enter a nostr json event"), text: $input, prompt: Text(verbatim: "{ \"some\": [\"json\"] }"))
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                        .lineLimit(16)
-                }
+                .listRowBackground(themes.theme.background)
+                
                 if let account = AccountsState.shared.loggedInAccount?.account, account.privateKey != nil, tab == "Signer" {
                     HStack {
                         Text("Signing as")
                         PFP(pubkey: account.publicKey, account: account, size: 30)
                     }
+                    .background(themes.theme.background)
                 }
                 if let error {
                     Text(error)
@@ -78,6 +84,7 @@ struct AnySigner: View {
                         .foregroundColor(.red)
                 }
             }
+            .scrollContentBackgroundHidden()
             .onChange(of: tab) { newTab in
                 if newTab == "Broadcaster" {
                     recheck(input)
