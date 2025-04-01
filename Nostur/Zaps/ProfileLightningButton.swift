@@ -57,7 +57,9 @@ struct ProfileLightningButton: View {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                Contact.addZapperPubkey(contactPubkey: nrContact!.pubkey, zapperPubkey: zapperPubkey)
+                                bg().perform {
+                                    Contact.addZapperPubkey(contactPubkey: nrContact!.pubkey, zapperPubkey: zapperPubkey)
+                                }
                                 nrContact!.zapperPubkeys.insert(zapperPubkey)
                             }
                             paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapEtag: zapEtag)
