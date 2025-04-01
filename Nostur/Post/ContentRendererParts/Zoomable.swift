@@ -101,17 +101,10 @@ struct Zoomable<Content: View>: View {
                                 )
                         }
                         
-                        // Close button
-                        Button(action: {
-                            closeWithAnimation()
-                        }) {
-                            Image(systemName: "multiply")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                                .padding()
-                        }
-                        .opacity(animationProgress)
-                        .zIndex(2)
+                        CloseButton(action: closeWithAnimation)
+                            .foregroundColor(.white)
+                            .opacity(animationProgress)
+                            .zIndex(2)
                     }
                 }
             }
