@@ -60,7 +60,7 @@ func enableAuthAndSendChallengeOnSingleRelay(usingAccount: CloudAccount? = nil) 
         ConnectionPool.shared.connections[singleRelay.id]?.connect()
     }
     ConnectionPool.shared.connections[singleRelay.id]?.relayData.setAuth(true)
-    ConnectionPool.shared.connections[singleRelay.id]?.sendAuthResponse(usingAccount: usingAccount)
+    ConnectionPool.shared.connections[singleRelay.id]?.sendAuthResponse(usingAccount: usingAccount, force: true)
 }
 
 public final class NewPostModel: ObservableObject {
@@ -96,7 +96,13 @@ public final class NewPostModel: ObservableObject {
     @Published var gifSheetShown = false
     
     @Published var contactSearchResults: [NRContact] = []
-    @Published var activeAccount: CloudAccount? = nil
+    @Published var activeAccount: CloudAccount? = nil {
+        didSet {
+            if lockToSingleRelay {
+                enableAuthAndSendChallengeOnSingleRelay(usingAccount: activeAccount)
+            }
+        }
+    }
     
     private var subscriptions = Set<AnyCancellable>()
     
