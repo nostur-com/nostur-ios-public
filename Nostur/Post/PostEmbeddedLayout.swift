@@ -19,8 +19,9 @@ struct PostEmbeddedLayout<Content: View>: View {
     @State private var couldBeImposter: Int16
 
     private let content: Content
+    private let authorAtBottom: Bool
     
-    init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme, @ViewBuilder _ content: () -> Content) {
+    init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme, authorAtBottom: Bool = false, @ViewBuilder _ content: () -> Content) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
@@ -28,6 +29,7 @@ struct PostEmbeddedLayout<Content: View>: View {
         self.fullWidth = fullWidth
         self.theme = theme
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
+        self.authorAtBottom = authorAtBottom
         self.content = content()
     }
     
@@ -35,36 +37,38 @@ struct PostEmbeddedLayout<Content: View>: View {
         VStack(alignment: .leading) {
             HStack(alignment: .top) { // name + reply + context menu
                 VStack(alignment: .leading) { // Name + menu "replying to"
-                    HStack(spacing: 5) {
-                        // profile image
-                        PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
-                            .onTapGesture(perform: navigateToContact)
-                        
-                        Text(pfpAttributes.anyName) // Name
-                            .animation(.easeIn, value: pfpAttributes.anyName)
-                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                            .fontWeightBold()
-                            .lineLimit(1)
-                            .onTapGesture(perform: navigateToContact)
+                    if !authorAtBottom {
+                        HStack(spacing: 5) {
+                            // profile image
+                            PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
+                                .onTapGesture(perform: navigateToContact)
                             
-                        if couldBeImposter == 1 {
-                            PossibleImposterLabel(possibleImposterPubkey: nrPost.pubkey, followingPubkey: nrPost.contact?.similarToPubkey)
-                        }
-                        
-                        Group {
-                            Text(verbatim: " ·") //
-                            Ago(nrPost.createdAt)
-                                .equatable()
-                            if let via = nrPost.via {
-                                Text(" · via \(via)") //
-                                    .lineLimit(1)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
+                            Text(pfpAttributes.anyName) // Name
+                                .animation(.easeIn, value: pfpAttributes.anyName)
+                                .font(.system(size: 14))
+                                .foregroundColor(.primary)
+                                .fontWeightBold()
+                                .lineLimit(1)
+                                .onTapGesture(perform: navigateToContact)
+                                
+                            if couldBeImposter == 1 {
+                                PossibleImposterLabel(possibleImposterPubkey: nrPost.pubkey, followingPubkey: nrPost.contact?.similarToPubkey)
                             }
+                            
+                            Group {
+                                Text(verbatim: " ·") //
+                                Ago(nrPost.createdAt)
+                                    .equatable()
+                                if let via = nrPost.via {
+                                    Text(" · via \(via)") //
+                                        .lineLimit(1)
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
                         }
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
                     }
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
@@ -73,6 +77,40 @@ struct PostEmbeddedLayout<Content: View>: View {
             }
             VStack(alignment: .leading) {
                 content
+            }
+            if authorAtBottom {
+                HStack(spacing: 5) {
+                    Spacer()
+                    // profile image
+                    PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
+                        .onTapGesture(perform: navigateToContact)
+                    
+                    Text(pfpAttributes.anyName) // Name
+                        .animation(.easeIn, value: pfpAttributes.anyName)
+                        .font(.system(size: 14))
+                        .foregroundColor(.primary)
+                        .fontWeightBold()
+                        .lineLimit(1)
+                        .onTapGesture(perform: navigateToContact)
+                        
+                    if couldBeImposter == 1 {
+                        PossibleImposterLabel(possibleImposterPubkey: nrPost.pubkey, followingPubkey: nrPost.contact?.similarToPubkey)
+                    }
+                    
+                    Group {
+                        Text(verbatim: " ·") //
+                        Ago(nrPost.createdAt)
+                            .equatable()
+                        if let via = nrPost.via {
+                            Text(" · via \(via)") //
+                                .lineLimit(1)
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                }
             }
         }
         .padding(.horizontal, 10)
