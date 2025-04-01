@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 import NavigationBackport
+import NostrEssentials
 
 struct MainFeedsScreen: View {
     
@@ -51,6 +52,8 @@ struct MainFeedsScreen: View {
     @State var followingConfig: NXColumnConfig?
     @State var pictureConfig: NXColumnConfig?
     @State var exploreConfig: NXColumnConfig?
+    
+    @State private var backlog = Backlog()
     
     @AppStorage("feed_emoji_type") var emojiType: String = "😂"
     
@@ -343,6 +346,8 @@ struct MainFeedsScreen: View {
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(lists.publisher.collect()) { lists in
+            guard didCreate else { return } // Only update here after .onAppear { } has ran.
+            
             if !lists.isEmpty && self.lists.filter({ $0.showAsTab }) .count != columnConfigs.count {
                 removeDuplicateLists()
                 loadColumnConfigs()
@@ -371,6 +376,15 @@ struct MainFeedsScreen: View {
             }
             createFollowingFeed(la.account)
             createPictureFeed(la.account)
+        }
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
+            bg().perform {
+                guard let backlog else { return }
+                let reqTasks = backlog.tasks(with: subscriptionIds)
+                reqTasks.forEach { task in
+                    task.process()
+                }
+            }
         }
     }
     
@@ -415,8 +429,71 @@ struct MainFeedsScreen: View {
                 }
             }
             .map { list in
-                NXColumnConfig(id: list.subscriptionId, columnType: list.feedType, accountPubkey: list.accountPubkey, name: list.name_)
+                return NXColumnConfig(id: list.subscriptionId, columnType: list.feedType, accountPubkey: list.accountPubkey, name: list.name_)
             }
+        
+        self.checkForListUpdates()
+    }
+    
+    private func checkForListUpdates() {
+        let followSetConfigs: [NXColumnConfig] = columnConfigs.filter {
+            if case .followSet(_) = $0.columnType {
+                return true
+            }
+            return false
+        }
+        
+        for config in followSetConfigs {
+            guard let aTagString = config.feed?.listId, let aTag: ATag = try? ATag(aTagString) else { continue }
+            let since: Int? = config.feed?.refreshedAt.map { Int($0.timeIntervalSince1970) }
+            let subscriptionId = config.feed?.subscriptionId ?? String(UUID().uuidString.prefix(48))
+            
+            L.og.debug("☘️☘️ \(config.name) loadColumnConfigs: Checking list update  -[LOG]-")
+            let reqTask = ReqTask(
+                debounceTime: 3.0,
+                subscriptionId: "KIND-30000-\(subscriptionId)",
+                reqCommand: { taskId in
+                    bg().perform {
+                        outboxReq(
+                            NostrEssentials.ClientMessage(
+                                type: .REQ,
+                                subscriptionId: taskId,
+                                filters: [
+                                    Filters(
+                                        authors: [aTag.pubkey],
+                                        kinds: [30000],
+                                        tagFilter: TagFilter(tag: "d", values: [aTag.definition]),
+                                        since: since,
+                                        limit: 5
+                                    )
+                                ]
+                            ),
+                            relayType: .READ
+                        )
+                    }
+                },
+                processResponseCommand: { (taskId, _, _) in
+                    bg().perform {
+                        if let kind3000Event = Event.fetchReplacableEvent(aTag: aTag, context: bg()) {
+                            let latestPubkeys = Set(kind3000Event.fastPs.map { $0.1 })
+                            Task { @MainActor in
+#if DEBUG
+                                L.og.debug("☘️☘️ \(config.name) loadColumnConfigs: Updating pubkeys to: \(latestPubkeys) -[LOG]-")
+#endif
+                                config.feed?.contactPubkeys = latestPubkeys
+                            }
+                        }
+                    }
+                },
+                timeoutCommand: { taskId in
+#if DEBUG
+                    L.og.debug("☘️☘️ \(config.name) loadColumnConfigs: no update needed -[LOG]-")
+#endif
+                })
+            
+            backlog.add(reqTask)
+            reqTask.fetch()
+        }
     }
     
     private func createFollowingFeed(_ account: CloudAccount) {
