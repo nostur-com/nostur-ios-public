@@ -85,6 +85,11 @@ class MentionsFeedModel: ObservableObject {
                 
                     // check if actual mention is in content (if there are more than 20 Ps, potential hellthread)
                     if $0.fastPs.count > 20 {
+                        // but always allow if its a root post
+                        if $0.replyToId == nil && $0.replyToRootId == nil {
+                            return true
+                        }
+                        
                         // but always allow if direct reply to own post
                         if let replyToId = $0.replyToId {
                             if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
