@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import OrderedCollections
 
 // Kind 30000: Follow sets: categorized groups of users a client may choose to check out in different circumstances
 struct Kind30000: View {
@@ -36,7 +37,7 @@ struct Kind30000: View {
     }
     
     private let title: String
-    private var followPs: [String]
+    private var followPs: OrderedSet<String>
     @State private var followNRContacts: [String: NRContact] = [:]
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
@@ -53,17 +54,30 @@ struct Kind30000: View {
         self.theme = theme
         self.forceAutoload = forceAutoload
         let followingPubkeys = follows()
-        self.followPs = nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
-            .sorted(by: { followingPubkeys.contains($0) && !followingPubkeys.contains($1) })
+        self.followPs = OrderedSet(nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
+            .sorted(by: { followingPubkeys.contains($0) && !followingPubkeys.contains($1) }))
         self.title = (nrPost.eventTitle ?? nrPost.dTag) ?? "List"
     }
     
     var body: some View {
-        if isEmbedded {
-            self.embeddedView
+        ZStack {
+            if isEmbedded {
+                self.embeddedView
+            }
+            else {
+                self.normalView
+            }
         }
-        else {
-            self.normalView
+        .onAppear {
+            bg().perform {
+                let followNRContacts = followPs.compactMap { NRContact.fetch($0) }
+                // create key value dictionary of followNRContacts in from of [String: NRContact] where key is NRContact.pubkey
+                let followNRContactsDict = Dictionary(uniqueKeysWithValues: followNRContacts.map { ($0.pubkey, $0) })
+                
+                Task { @MainActor in
+                    self.followNRContacts = followNRContactsDict
+                }
+            }
         }
     }
     
@@ -77,31 +91,77 @@ struct Kind30000: View {
 //        let _ = Self._printChanges()
 //        #endif
 //        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, authorAtBottom: true, theme: theme) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, theme: theme) {
             
-            Text(title)
-                .fontWeight(.bold)
-                .padding(.bottom, 10)
+            HStack {
+                Text(title)
+                    .fontWeight(.bold)
+                    .lineLimit(4)
+                Spacer()
+                Button("Feed preview") {
+                    let pubkeys = nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
+                    
+                    // 1. NXColumnConfig
+                    let config = NXColumnConfig(id: "FeedPreview", columnType: .pubkeysPreview(Set(pubkeys)), name: "Preview")
+                    let feedPreviewSheetInfo = FeedPreviewInfo(config: config, nrPost: nrPost)
+                    AppSheetsModel.shared.feedPreviewSheetInfo = feedPreviewSheetInfo
+                }
+                .buttonStyle(NosturButton(bgColor: theme.accent))
+                .layoutPriority(1)
+            }
             
-            // if more that 20 do 2 columns
-            if followPs.count > 20 { 
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
+            if isDetail { // Show full list
+                // if more that 20 do 2 columns
+                if followPs.count > 20 {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
+                        contactRows
+                    }
+                }
+                // If more than 20, do LazyVStack
+                else if followPs.count > 10 {
+                    LazyVStack(alignment: .leading) {
+                        contactRows
+                    }
+                }
+                else {
                     contactRows
                 }
             }
-            // If more than 20, do LazyVStack
-            else if followPs.count > 10 {
-                LazyVStack(alignment: .leading) {
-                    contactRows
-                }
-            }
-            else {
-                contactRows
+            else { // Row view, show 5 big PFPS (prio follows)
+                overlappingPFPs
+                    .frame(width: dim.articleRowImageWidth(), alignment: .leading)
+                    .drawingGroup(opaque: true)
             }
         }
     }
         
     @State private var showMiniProfile = false
+    
+    @ViewBuilder
+    private var overlappingPFPs: some View {
+        ZStack(alignment: .leading) {
+            ForEach(followPs.prefix(10).indices, id: \.self) { index in
+                ZStack(alignment: .leading) {
+                    ObservedPFP(pfp: PFPAttributes(contact: followNRContacts[followPs[index]], pubkey: followPs[index]), forceFlat: true)
+                        .id(followPs[index])
+                        .zIndex(-Double(index))
+                }
+                .offset(x:Double(0 + (30*index)))
+            }
+        }
+        
+        if !followNRContacts.isEmpty {
+            HStack {
+                Text(followNRContacts.prefix(3).map { $0.value.anyName }.joined(separator: ", "))
+                    .layoutPriority(1)
+                if followPs.count > 3 {
+                    Text("and \(followPs.count - 3) more")
+                        .layoutPriority(2)
+                }
+            }
+            .lineLimit(1)
+        }
+    }
     
     @ViewBuilder
     private var embeddedView: some View {
@@ -137,17 +197,6 @@ struct Kind30000: View {
                 contactRows
             }
     
-        }
-        .onAppear {
-            bg().perform {
-                let followNRContacts = followPs.compactMap { NRContact.fetch($0) }
-                // create key value dictionary of followNRContacts in from of [String: NRContact] where key is NRContact.pubkey
-                let followNRContactsDict = Dictionary(uniqueKeysWithValues: followNRContacts.map { ($0.pubkey, $0) })
-                
-                Task { @MainActor in
-                    self.followNRContacts = followNRContactsDict
-                }
-            }
         }
     }
     
