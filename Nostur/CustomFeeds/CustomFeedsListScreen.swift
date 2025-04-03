@@ -23,6 +23,7 @@ struct CustomFeedsListScreen: View {
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
+    @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
@@ -60,9 +61,13 @@ struct CustomFeedsListScreen: View {
                         Text("Hot")
                         Text("Posts from anyone which are most liked or reposted by people you follow")
                     })
-                    Toggle(isOn: $enableDiscoverFeed, label: {
+//                    Toggle(isOn: $enableDiscoverFeed, label: {
+//                        Text("Discover")
+//                        Text("Posts from people you don't follow which are most liked or reposted by people you follow")
+//                    })
+                    Toggle(isOn: $enableDiscoverListsFeed, label: {
                         Text("Discover")
-                        Text("Posts from people you don't follow which are most liked or reposted by people you follow")
+                        Text("Lists from people follow")
                     })
                     Toggle(isOn: $enableEmojiFeed, label: {
                         Text("Emoji Feed")

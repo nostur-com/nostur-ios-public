@@ -1493,6 +1493,9 @@
         }
       }
     },
+    "and %lld more" : {
+
+    },
     "and %lld others you follow" : {
       "localizations" : {
         "nl" : {
@@ -3142,7 +3145,7 @@
       }
     },
     "Discover" : {
-      "comment" : "Tab title for Discover feed\nTab title for the Discover feed",
+      "comment" : "Tab title for Discover Lists feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3172,6 +3175,9 @@
           }
         }
       }
+    },
+    "Discover Lists" : {
+      "comment" : "Tab title for the Discover Lists feed"
     },
     "Discover Nostr" : {
       "localizations" : {
@@ -4653,6 +4659,9 @@
           }
         }
       }
+    },
+    "Lists from people follow" : {
+
     },
     "Live Nests or streams from follows" : {
       "localizations" : {
@@ -6152,6 +6161,7 @@
       }
     },
     "Posts from people you don't follow which are most liked or reposted by people you follow" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

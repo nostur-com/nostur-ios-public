@@ -25,6 +25,7 @@ struct MainFeedsScreen: View {
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
+    @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
@@ -42,7 +43,8 @@ struct MainFeedsScreen: View {
     @StateObject private var zappedVM = ZappedViewModel()
     @StateObject private var hotVM = HotViewModel()
     @StateObject private var emojiVM = EmojiFeedViewModel()
-    @StateObject private var discoverVM = DiscoverViewModel()
+//    @StateObject private var discoverVM = DiscoverViewModel()
+    @StateObject private var discoverListsVM = DiscoverListsViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
 
@@ -76,8 +78,11 @@ struct MainFeedsScreen: View {
         if selectedSubTab == "Hot" {
             return String(localized: "Hot", comment: "Tab title for the Hot feed")
         }
-        if selectedSubTab == "Discover" {
-            return String(localized: "Discover", comment: "Tab title for the Discover feed")
+//        if selectedSubTab == "Discover" {
+//            return String(localized: "Discover", comment: "Tab title for the Discover feed")
+//        }
+        if selectedSubTab == "DiscoverLists" {
+            return String(localized: "Discover Lists", comment: "Tab title for the Discover Lists feed")
         }
         if selectedSubTab == "Gallery" {
             return String(localized: "Gallery", comment: "Tab title for the Gallery feed")
@@ -95,7 +100,8 @@ struct MainFeedsScreen: View {
         if (la.viewFollowingPublicKeys.count > 10 && enablePictureFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed) { return false }
-        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
+//        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 50 && enableDiscoverListsFeed) { return false }
         if enableExploreFeed { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableArticleFeed) { return false }
         if lists.count > 0 { return false }
@@ -164,14 +170,21 @@ struct MainFeedsScreen: View {
                             Spacer()
                         }
                         
-                        if la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed {
+                        if la.viewFollowingPublicKeys.count > 50 && enableDiscoverListsFeed {
                             TabButton(
-                                action: { selectedSubTab = "Discover" },
-                                title: String(localized: "Discover", comment:"Tab title for Discover feed"),
-                                secondaryText: String(format: "%ih", discoverVM.ago),
-                                selected: selectedSubTab == "Discover")
+                                action: { selectedSubTab = "DiscoverLists" },
+                                title: String(localized: "Discover", comment:"Tab title for Discover Lists feed"),
+                                selected: selectedSubTab == "DiscoverLists")
                             Spacer()
                         }
+//                        else if la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed {
+//                            TabButton(
+//                                action: { selectedSubTab = "Discover" },
+//                                title: String(localized: "Discover", comment:"Tab title for Discover feed"),
+//                                secondaryText: String(format: "%ih", discoverVM.ago),
+//                                selected: selectedSubTab == "Discover")
+//                            Spacer()
+//                        }
                         
                         if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {
                             TabButton(
@@ -276,6 +289,14 @@ struct MainFeedsScreen: View {
                 }
                 
                 // ZAPPED/HOT/ARTICLES/GALLERY
+                if la.viewFollowingPublicKeys.count > 50 && selectedSubTab == "DiscoverLists" {
+                    AvailableWidthContainer {
+                        DiscoverLists()
+                            .environmentObject(discoverListsVM)
+                    }
+                }
+                
+                // ZAPPED/HOT/ARTICLES/GALLERY
                 if la.viewFollowingPublicKeys.count > 10 {
                     AvailableWidthContainer {
                         switch selectedSubTab {
@@ -288,9 +309,9 @@ struct MainFeedsScreen: View {
                         case "Hot":
                             Hot()
                                 .environmentObject(hotVM)
-                        case "Discover":
-                            Discover()
-                                .environmentObject(discoverVM)
+//                        case "Discover":
+//                            Discover()
+//                                .environmentObject(discoverVM)
                         case "Articles":
                             ArticlesFeed()
                                 .environmentObject(articlesVM)
@@ -313,11 +334,11 @@ struct MainFeedsScreen: View {
                     selectedList = lists.first
                 }
             }
-            // Make hot/zapped feed posts available to discover feed to not show the same posts
-            if discoverVM.hotVM == nil {
-                discoverVM.hotVM = hotVM
-                discoverVM.zappedVM = zappedVM
-            }
+//            // Make hot/zapped feed posts available to discover feed to not show the same posts
+//            if discoverVM.hotVM == nil {
+//                discoverVM.hotVM = hotVM
+//                discoverVM.zappedVM = zappedVM
+//            }
             
             guard !didCreate else { return }
             didCreate = true
