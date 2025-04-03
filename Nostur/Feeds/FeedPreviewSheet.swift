@@ -32,7 +32,7 @@ struct FeedPreviewSheet: View {
             
             ToolbarItem(placement: .principal) {
                 HStack {
-                    Text("**\(nrPost.eventTitle ?? "List")** by ")
+                    Text("**\((nrPost.eventTitle ?? nrPost.dTag) ?? "List")** by ")
                     ObservedPFP(pfp: nrPost.pfpAttributes, size: 20.0)
                         .onTapGesture(perform: navigateToContact)
                     Text(pfpAttributes.anyName)
@@ -78,7 +78,7 @@ struct FeedPreviewSheet: View {
         // Create CloudFeed
         let newFeed = CloudFeed(context: DataProvider.shared().viewContext)
         newFeed.id = UUID()
-        newFeed.name = nrPost.eventTitle ?? "List"
+        newFeed.name = (nrPost.eventTitle ?? nrPost.dTag) ?? "List"
         newFeed.showAsTab = true
         newFeed.createdAt = .now
         newFeed.type = CloudFeedType.followSet.rawValue
