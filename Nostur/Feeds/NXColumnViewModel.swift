@@ -758,7 +758,7 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
-        case .pubkeysPreview(let pubkeys): // The pubkeys are in the NXConfig
+        case .pubkeysPreview(_): // The pubkeys are in the NXConfig
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeysPreview)\(older ? "older" : "")")
 #endif

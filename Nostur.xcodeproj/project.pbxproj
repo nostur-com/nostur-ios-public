@@ -22,6 +22,7 @@
 		1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */; };
 		1FA97AA62C3F61480091446A /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA97AA52C3F61480091446A /* LiveKit */; };
 		1FAC67AE29F5523200798661 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1FB448C62965F3D200038671 /* Assets.xcassets */; };
+		1FB4132C2D9C544C0069936C /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FB4132B2D9C544B0069936C /* CloudKit.framework */; };
 		1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */ = {isa = PBXBuildFile; productRef = 1FB6E6F429E31C71008BE8A6 /* HTMLEntities */; };
 		1FBCD61C2CAAB127008258C3 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBCD61B2CAAB127008258C3 /* XCTest.framework */; platformFilter = ios; };
 		1FBCD61D2CAAB127008258C3 /* XCTest.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBCD61B2CAAB127008258C3 /* XCTest.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -91,6 +92,7 @@
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
 		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
+		1FB4132B2D9C544B0069936C /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		1FB448BA2965F3D000038671 /* Nostur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nostur.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1FB448C62965F3D200038671 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		1FBCD61B2CAAB127008258C3 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/iPhoneOS.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
@@ -133,6 +135,7 @@
 				1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */,
+				1FB4132C2D9C544C0069936C /* CloudKit.framework in Frameworks */,
 				1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */,
@@ -172,6 +175,7 @@
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1FB4132B2D9C544B0069936C /* CloudKit.framework */,
 				1FBCD61B2CAAB127008258C3 /* XCTest.framework */,
 				1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */,
 			);

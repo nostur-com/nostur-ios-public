@@ -8,6 +8,7 @@
 
 import SwiftUI
 
+// TODO: Remove @FetchRequest
 struct ContactList: View {
     @EnvironmentObject private var themes: Themes
     

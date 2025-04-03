@@ -23,7 +23,7 @@ struct NRNavigationStack<Content: View>: View {
     }
 }
 
-// Note: dismiss doesn't work with NRSheetNavigationStack in .sheet. So use NBNavigationStack directly in sheet
+// Note: dismiss doesn't work with NRSheetNavigationStack in .sheet. So use NBNavigationStack directly in sheet. .presentationDetents also don't work when using this. wtf!
 struct NRSheetNavigationStack<Content: View>: View {
     
     @ViewBuilder

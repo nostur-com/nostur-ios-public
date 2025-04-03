@@ -608,7 +608,7 @@ extension Event {
         }
     }
     
-    static func fetchLastSeen(pubkey:String, context:NSManagedObjectContext) -> Event? {
+    static func fetchLastSeen(pubkey: String, context: NSManagedObjectContext) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -641,7 +641,7 @@ extension Event {
         return try? context.fetch(request).first
     }
     
-    static func fetchEventsBy(pubkey:String, andKind kind:Int, context:NSManagedObjectContext) -> [Event] {
+    static func fetchEventsBy(pubkey: String, andKind kind: Int, context: NSManagedObjectContext) -> [Event] {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, kind)
@@ -690,7 +690,7 @@ extension Event {
         return try? context.fetch(request).first
     }
     
-    static func fetchProfileBadgesByATag(_ badgeA:String, context:NSManagedObjectContext) -> [Event] {
+    static func fetchProfileBadgesByATag(_ badgeA: String, context: NSManagedObjectContext) -> [Event] {
         // find all kind 30008 where serialized tags contains
         // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
         // notify any related profile badge
@@ -739,7 +739,7 @@ extension Event {
     }
     
     
-    static func extractZapRequest(tags:[NostrTag]) -> NEvent? {
+    static func extractZapRequest(tags: [NostrTag]) -> NEvent? {
         let description:NostrTag? = tags.first(where: { $0.type == "description" })
         guard description?.tag[safe: 1] != nil else { return nil }
         
@@ -760,7 +760,7 @@ extension Event {
         return nil
     }
     
-    static func saveZapRequest(event:NEvent, context:NSManagedObjectContext) -> Event? {
+    static func saveZapRequest(event: NEvent, context: NSManagedObjectContext) -> Event? {
         if let existingZapReq = Event.fetchEvent(id: event.id, context: context) {
             return existingZapReq
         }
