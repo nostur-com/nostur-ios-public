@@ -212,7 +212,6 @@ struct DetailPane: View {
                         }
                         Spacer()
                     }
-                    .background(themes.theme.background)
                 }
                 .onChange(of: tm.tabs) { newTabs in
 //                    if (newTabs.count > oldTabs.count) {
@@ -221,6 +220,7 @@ struct DetailPane: View {
                         }
 //                    } 
                 }
+                .background(themes.theme.background)
             }
 
             ZStack {
