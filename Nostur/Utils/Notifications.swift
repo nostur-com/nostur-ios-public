@@ -145,8 +145,13 @@ extension Notification.Name {
     static var createNewReply: Notification.Name {
         return Notification.Name("createNewReply")
     }
+    
     static var createNewQuoteOrRepost: Notification.Name {
         return Notification.Name("createNewQuoteOrRepost")
+    }
+    
+    static var createNewQuotePost: Notification.Name {
+        return Notification.Name("createNewQuotePost")
     }
     
     static var followsChanged: Notification.Name {

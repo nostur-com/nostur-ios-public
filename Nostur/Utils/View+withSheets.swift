@@ -273,6 +273,10 @@ struct WithSheets: ViewModifier {
                 let paymentInfo = notification.object as! PaymentInfo
                 guard paymentInfo.zapAtag == nil else { return } // handle aTag in LiveEventDetail for now
                 self.paymentInfo = paymentInfo
+            }        
+            .onReceive(receiveNotification(.createNewQuotePost)) { notification in
+                let quotePost = notification.object as! QuotePost
+                self.quotePost = quotePost
             }
             .sheet(item: $paymentInfo) { paymentInfo in
                 PaymentAmountSelector(paymentInfo: paymentInfo)

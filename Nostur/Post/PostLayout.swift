@@ -21,7 +21,7 @@ struct PostLayout<Content: View>: View {
     private let isDetail: Bool
     private let fullWidth: Bool
     private let forceAutoload: Bool
-    private let authorAtBottom: Bool  // true to put more emphasis on the item when it is not a text post
+    private let isItem: Bool  // true to put more emphasis on the item when it is not a text post
     @State private var didStart = false
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -45,7 +45,7 @@ struct PostLayout<Content: View>: View {
     
     private let content: Content
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, authorAtBottom: Bool = false, theme: Theme, @ViewBuilder content: () -> Content) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, theme: Theme, @ViewBuilder content: () -> Content) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -56,7 +56,7 @@ struct PostLayout<Content: View>: View {
         self.isDetail = isDetail
         self.theme = theme
         self.forceAutoload = forceAutoload
-        self.authorAtBottom = authorAtBottom
+        self.isItem = isItem
         self.content = content()
     }
     
@@ -75,13 +75,13 @@ struct PostLayout<Content: View>: View {
     @ViewBuilder
     private var normalLayout: some View {
         HStack(alignment: .top, spacing: 10) {
-            if !authorAtBottom {
+            if !isItem {
                 regularPFP
             }
             
             VStack(alignment: .leading, spacing: 3) { // Post container
                 HStack(alignment: .top) { // name + reply + context menu
-                    if !authorAtBottom {
+                    if !isItem {
                         NRPostHeaderContainer(nrPost: nrPost)
                     }
                     Spacer()
@@ -90,13 +90,13 @@ struct PostLayout<Content: View>: View {
                 
                 content
                 
-                if authorAtBottom {
+                if isItem {
                     bottomAuthorInfo
                 }
                 // No need for DetailFooterFragment here because .isDetail will always be in .fullWidthLayout
                 
-                if (!hideFooter && settings.rowFooterEnabled) {
-                    CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
+                if (!hideFooter && settings.rowFooterEnabled) && !isItem { // also no footer for items (only in Detail)
+                    CustomizableFooterFragmentView(nrPost: nrPost, theme: theme, isItem: isItem)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
@@ -115,7 +115,7 @@ struct PostLayout<Content: View>: View {
     private var fullWidthLayout: some View {
         VStack(spacing: 10) {
             HStack(alignment: .center, spacing: 10) {
-                if !authorAtBottom {
+                if !isItem {
                     regularPFP
                     NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
                 }
@@ -126,7 +126,7 @@ struct PostLayout<Content: View>: View {
                 
                 content
                 
-                if authorAtBottom {
+                if isItem {
                     bottomAuthorInfo
                 }
                 
@@ -135,8 +135,8 @@ struct PostLayout<Content: View>: View {
                         .padding(.top, 10)
                 }
                 
-                if isDetail || (!hideFooter && settings.rowFooterEnabled) {
-                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme)
+                if isDetail || ((!hideFooter && settings.rowFooterEnabled) && !isItem) {
+                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme, isItem: isItem)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
@@ -224,67 +224,38 @@ struct PostLayout<Content: View>: View {
     }
     
     @ViewBuilder
-    private var itemPFP: some View {
-        if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
-            LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, forceFlat: nrPost.isScreenshot)
-                .frame(width: 20.0, height: 20.0)
-                .onTapGesture {
-                    if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
-                        if IS_CATALYST || IS_IPAD {
-                            navigateTo(liveEvent)
-                        }
-                        else {
-                            // LOAD NEST
-                            if liveEvent.isLiveKit {
-                                LiveKitVoiceSession.shared.activeNest = liveEvent
+    private var itemPFP: some View { // No live event animation for item PFP
+        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
+            .frame(width: 2.0, height: 20.0)
+            .onTapGesture {
+                withAnimation {
+                    showMiniProfile = true
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                if (showMiniProfile) {
+                    GeometryReader { geo in
+                        Color.clear
+                            .onAppear {
+                                sendNotification(.showMiniProfile,
+                                                 MiniProfileSheetInfo(
+                                                    pubkey: nrPost.pubkey,
+                                                    contact: nrPost.contact,
+                                                    zapEtag: nrPost.id,
+                                                    location: geo.frame(in: .global).origin
+                                                 )
+                                )
+                                showMiniProfile = false
                             }
-                            // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
-                            else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
-                                AnyPlayerModel.shared.viewMode = .detailstream
-                            }
-                            // LOAD NEW .DETAILSTREAM
-                            else {
-                                Task {
-                                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
-                                }
-                            }
-                        }
+                    }
+                    .frame(width: 10)
+                    .zIndex(100)
+                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                        showMiniProfile = false
                     }
                 }
-        }
-        else {
-            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
-                .frame(width: 2.0, height: 20.0)
-                .onTapGesture {
-                    withAnimation {
-                        showMiniProfile = true
-                    }
-                }
-                .overlay(alignment: .topLeading) {
-                    if (showMiniProfile) {
-                        GeometryReader { geo in
-                            Color.clear
-                                .onAppear {
-                                    sendNotification(.showMiniProfile,
-                                                     MiniProfileSheetInfo(
-                                                        pubkey: nrPost.pubkey,
-                                                        contact: nrPost.contact,
-                                                        zapEtag: nrPost.id,
-                                                        location: geo.frame(in: .global).origin
-                                                     )
-                                    )
-                                    showMiniProfile = false
-                                }
-                        }
-                        .frame(width: 10)
-                        .zIndex(100)
-                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                            showMiniProfile = false
-                        }
-                    }
-                }
-        }
+            }
     }
     
     

@@ -13,13 +13,15 @@ struct RepostButton: View {
     private var isFirst: Bool
     private var isLast: Bool
     private var theme: Theme
+    private var isItem: Bool
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme, isItem: Bool = false) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
         self.isFirst = isFirst
         self.isLast = isLast
         self.theme = theme
+        self.isItem = isItem // Only quote post, not repost
     }
     
     var body: some View {
@@ -35,7 +37,12 @@ struct RepostButton: View {
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
-                sendNotification(.createNewQuoteOrRepost, QuoteOrRepost(nrPost: nrPost))
+                if isItem {
+                    sendNotification(.createNewQuotePost, QuotePost(nrPost: nrPost))
+                }
+                else {
+                    sendNotification(.createNewQuoteOrRepost, QuoteOrRepost(nrPost: nrPost))
+                }
             }
     }
 }

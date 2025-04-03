@@ -16,11 +16,13 @@ struct CustomizableFooterFragmentView: View {
 
     private let nrPost: NRPost
     private var isDetail = false
+    private let isItem: Bool
     
-    init(nrPost: NRPost, isDetail: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, isDetail: Bool = false, theme: Theme, isItem: Bool = false) {
         self.nrPost = nrPost
         self.isDetail = isDetail
         self.theme = theme
+        self.isItem = isItem
     }
     
     var body: some View {
@@ -28,45 +30,11 @@ struct CustomizableFooterFragmentView: View {
 //        let _ = Self._printChanges()
 //        #endif
         VStack(alignment: .leading, spacing: 5) {
-            HStack(spacing: 0.0) {
-                ForEach(vmc.buttonRow) { button in
-                    switch button.id {
-                    case "💬":
-                        ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                    case "🔄":
-                        RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                    case "+":
-                        LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                    case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
-                        if IS_NOT_APPSTORE { // Only available in non app store version
-                            ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                                .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                                .disabled(!(nrPost.contact?.anyLud ?? false))
-                        }
-                        else {
-                            EmptyView()
-                        }
-                    case "🔖":
-                        BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
-                    default:
-                        ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
-                            .equatable()
-                    }
-                    // Add spacers between every button.
-                    // But if we have too many buttons (>=8) then remove spacers from a few special buttons:
-                    // But only for small screens UIScreen.main.bounds.width < 380.0
-                    
-                    if !button.isLast && UIScreen.main.bounds.width > 380.0 {
-                        Spacer()
-                    }
-                    else if !button.isLast && (vmc.buttonRow.count < 8) {
-                        Spacer()
-                    }
-                    // "⚡️","⚡" These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
-                    else if !button.isLast && (vmc.buttonRow.count >= 8 && !["💬","🔄","+","⚡️","⚡"].contains(button.id)) {
-                        Spacer()
-                    }
-                }
+            if isItem {
+                itemButtons
+            }
+            else {
+                postButtons
             }
             
             // UNDO SEND AND SENT TO RELAYS
@@ -77,6 +45,91 @@ struct CustomizableFooterFragmentView: View {
         .padding(.bottom, 16)
         .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
+    }
+    
+    @ViewBuilder
+    private var itemButtons: some View {
+        HStack(spacing: 0.0) {
+            ForEach(vmc.buttonRow) { button in
+                switch button.id {
+                case "🔄":
+                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme, isItem: true)
+                case "+":
+                    LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
+                    if IS_NOT_APPSTORE { // Only available in non app store version
+                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                            .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                            .disabled(!(nrPost.contact?.anyLud ?? false))
+                    }
+                    else {
+                        EmptyView()
+                    }
+                case "🔖":
+                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                default:
+                    EmptyView()
+                }
+                // Add spacers between every button.
+                // But if we have too many buttons (>=8) then remove spacers from a few special buttons:
+                // But only for small screens UIScreen.main.bounds.width < 380.0
+                
+                if !button.isLast && UIScreen.main.bounds.width > 380.0 {
+                    Spacer()
+                }
+                else if !button.isLast && (vmc.buttonRow.count < 8) {
+                    Spacer()
+                }
+                // "⚡️","⚡" These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
+                else if !button.isLast && (vmc.buttonRow.count >= 8 && !["💬","🔄","+","⚡️","⚡"].contains(button.id)) {
+                    Spacer()
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var postButtons: some View {
+        HStack(spacing: 0.0) {
+            ForEach(vmc.buttonRow) { button in
+                switch button.id {
+                case "💬":
+                    ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                case "🔄":
+                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                case "+":
+                    LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
+                    if IS_NOT_APPSTORE { // Only available in non app store version
+                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                            .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
+                            .disabled(!(nrPost.contact?.anyLud ?? false))
+                    }
+                    else {
+                        EmptyView()
+                    }
+                case "🔖":
+                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                default:
+                    ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
+                        .equatable()
+                }
+                // Add spacers between every button.
+                // But if we have too many buttons (>=8) then remove spacers from a few special buttons:
+                // But only for small screens UIScreen.main.bounds.width < 380.0
+                
+                if !button.isLast && UIScreen.main.bounds.width > 380.0 {
+                    Spacer()
+                }
+                else if !button.isLast && (vmc.buttonRow.count < 8) {
+                    Spacer()
+                }
+                // "⚡️","⚡" These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
+                else if !button.isLast && (vmc.buttonRow.count >= 8 && !["💬","🔄","+","⚡️","⚡"].contains(button.id)) {
+                    Spacer()
+                }
+            }
+        }
     }
 }
 
