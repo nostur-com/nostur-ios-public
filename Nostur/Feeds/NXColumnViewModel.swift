@@ -832,19 +832,30 @@ class NXColumnViewModel: ObservableObject {
     private func sendRealtimeReq(_ config: NXColumnConfig) {
         switch config.columnType {
         case .following(let feed):
-            let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys.union(Set([account.publicKey]))
-                    .union(account.privateFollowingPubkeys)
+            // Make sure max pubkeys is < 2000 (relay limits)
+            let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
+            let ownPubkey: Set<String> = if let account = feed.account {
+                Set([account.publicKey])
             }
-            else if feed.accountPubkey == EXPLORER_PUBKEY {
+            else {
+                Set<String>()
+            }
+            
+            let pubkeys = if feed.accountPubkey == EXPLORER_PUBKEY {
                 AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
             }
-            else { [] }
+            else if followingPubkeys.count > 1999 { // Take random 1999 + own pubkey if filter is too large
+                Set(followingPubkeys.shuffled().prefix(1999)).union(ownPubkey)
+            }
+            else {
+                followingPubkeys.union(ownPubkey)
+            }
             
-            let hashtags: Set<String> = if let account = feed.account {
+            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
+            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
                 account.followingHashtags
             }
-            else { [] }
+            else { [] } // Skip hashtags if filter is too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
@@ -858,16 +869,30 @@ class NXColumnViewModel: ObservableObject {
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
         case .picture(let feed):
-            let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys.union(Set([account.publicKey]))
-                    .union(account.privateFollowingPubkeys)
+            // Make sure max pubkeys is < 2000 (relay limits)
+            let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
+            let ownPubkey: Set<String> = if let account = feed.account {
+                Set([account.publicKey])
             }
-            else { [] }
+            else {
+                Set<String>()
+            }
             
-            let hashtags: Set<String> = if let account = feed.account {
+            let pubkeys = if feed.accountPubkey == EXPLORER_PUBKEY {
+                AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
+            }
+            else if followingPubkeys.count > 1999 { // Take random 1999 + own pubkey if filter is too large
+                Set(followingPubkeys.shuffled().prefix(1999)).union(ownPubkey)
+            }
+            else {
+                followingPubkeys.union(ownPubkey)
+            }
+            
+            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
+            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
                 account.followingHashtags
             }
-            else { [] }
+            else { [] } // Skip hashtags if filter is too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
@@ -875,8 +900,9 @@ class NXColumnViewModel: ObservableObject {
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
         case .pubkeys(let feed), .followSet(let feed):
-            let pubkeys = feed.contactPubkeys
-            let hashtags = feed.followingHashtags
+            let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
+            let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
+            
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
             
@@ -885,15 +911,20 @@ class NXColumnViewModel: ObservableObject {
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
             }
         case .someoneElses(_):
-            guard config.pubkeys.count > 0 || config.hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
+            let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
+            let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
+            
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id)
             }
         case .pubkeysPreview(_):
-            guard config.pubkeys.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
+            let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
+            
+            guard pubkeys.count > 0 else { return }
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id) // TODO: Toggle for outboxReq or not?
@@ -946,19 +977,31 @@ class NXColumnViewModel: ObservableObject {
     public func getFillGapReqStatement(_ config: NXColumnConfig, since: Int, until: Int? = nil) -> (cmd: () -> Void, subId: String)? {
         switch config.columnType {
         case .following(let feed):
-            let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys.union(Set([account.publicKey]))
-                    .union(account.privateFollowingPubkeys)
+            
+            // Make sure max pubkeys is < 2000 (relay limits)
+            let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
+            let ownPubkey: Set<String> = if let account = feed.account {
+                Set([account.publicKey])
             }
-            else if feed.accountPubkey == EXPLORER_PUBKEY {
+            else {
+                Set<String>()
+            }
+            
+            let pubkeys = if feed.accountPubkey == EXPLORER_PUBKEY {
                 AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
             }
-            else { [] }
+            else if followingPubkeys.count > 1999 { // Take random 1999 + own pubkey if filter is too large
+                Set(followingPubkeys.shuffled().prefix(1999)).union(ownPubkey)
+            }
+            else {
+                followingPubkeys.union(ownPubkey)
+            }
             
-            let hashtags: Set<String> = if let account = feed.account {
+            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
+            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
                 account.followingHashtags
             }
-            else { [] }
+            else { [] } // Skip hashtags if filter is too large
             
             let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
                 FETCH_FOLLOWING_KINDS.subtracting([20])
@@ -988,16 +1031,30 @@ class NXColumnViewModel: ObservableObject {
             }, subId: "RESUME-" + config.id + "-" + since.description)
 
         case .picture(let feed):
-            let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys.union(Set([account.publicKey]))
-                    .union(account.privateFollowingPubkeys)
+            // Make sure max pubkeys is < 2000 (relay limits)
+            let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
+            let ownPubkey: Set<String> = if let account = feed.account {
+                Set([account.publicKey])
             }
-            else { [] }
+            else {
+                Set<String>()
+            }
             
-            let hashtags: Set<String> = if let account = feed.account {
+            let pubkeys = if feed.accountPubkey == EXPLORER_PUBKEY {
+                AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
+            }
+            else if followingPubkeys.count > 1999 { // Take random 1999 + own pubkey if filter is too large
+                Set(followingPubkeys.shuffled().prefix(1999)).union(ownPubkey)
+            }
+            else {
+                followingPubkeys.union(ownPubkey)
+            }
+            
+            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
+            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
                 account.followingHashtags
             }
-            else { [] }
+            else { [] } // Skip hashtags if filter is too large
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: [20,5])
              
@@ -1010,8 +1067,9 @@ class NXColumnViewModel: ObservableObject {
             }, subId: "RESUME-" + config.id + "-" + since.description)
             
         case .pubkeys(let feed), .followSet(let feed):
-            let pubkeys = feed.contactPubkeys
-            let hashtags = feed.followingHashtags
+            let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
+            let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
+            
             guard pubkeys.count > 0 || hashtags.count > 0 else {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
@@ -1026,11 +1084,14 @@ class NXColumnViewModel: ObservableObject {
             }
             return nil
         case .someoneElses(_):
-            guard config.pubkeys.count > 0 || config.hashtags.count > 0 else {
+            let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
+            let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
+            
+            guard pubkeys.count > 0 || hashtags.count > 0 else {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
@@ -1040,11 +1101,13 @@ class NXColumnViewModel: ObservableObject {
             return nil
             
         case .pubkeysPreview(_):
-            guard config.pubkeys.count > 0 else {
+            let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
+            
+            guard pubkeys.count > 0 else {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
@@ -1110,19 +1173,30 @@ class NXColumnViewModel: ObservableObject {
 #endif
         switch config.columnType {
         case .following(let feed):
-            let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys.union(Set([account.publicKey]))
-                    .union(account.privateFollowingPubkeys)
+            // Make sure max pubkeys is < 2000 (relay limits)
+            let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
+            let ownPubkey: Set<String> = if let account = feed.account {
+                Set([account.publicKey])
             }
-            else if feed.accountPubkey == EXPLORER_PUBKEY {
+            else {
+                Set<String>()
+            }
+            
+            let pubkeys = if feed.accountPubkey == EXPLORER_PUBKEY {
                 AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
             }
-            else { [] }
+            else if followingPubkeys.count > 1999 { // Take random 1999 + own pubkey if filter is too large
+                Set(followingPubkeys.shuffled().prefix(1999)).union(ownPubkey)
+            }
+            else {
+                followingPubkeys.union(ownPubkey)
+            }
             
-            let hashtags: Set<String> = if let account = feed.account {
+            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
+            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
                 account.followingHashtags
             }
-            else { [] }
+            else { [] } // Skip hashtags if filter is too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
@@ -1137,16 +1211,30 @@ class NXColumnViewModel: ObservableObject {
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
         case .picture(let feed):
-            let pubkeys: Set<String> = if let account = feed.account {
-                account.followingPubkeys.union(Set([account.publicKey]))
-                    .union(account.privateFollowingPubkeys)
+            // Make sure max pubkeys is < 2000 (relay limits)
+            let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
+            let ownPubkey: Set<String> = if let account = feed.account {
+                Set([account.publicKey])
             }
-            else { [] }
+            else {
+                Set<String>()
+            }
             
-            let hashtags: Set<String> = if let account = feed.account {
+            let pubkeys = if feed.accountPubkey == EXPLORER_PUBKEY {
+                AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
+            }
+            else if followingPubkeys.count > 1999 { // Take random 1999 + own pubkey if filter is too large
+                Set(followingPubkeys.shuffled().prefix(1999)).union(ownPubkey)
+            }
+            else {
+                followingPubkeys.union(ownPubkey)
+            }
+            
+            let followingHashtags: Set<String> = (feed.account?.followingHashtags ?? [])
+            let hashtags: Set<String> = if (followingHashtags.count + pubkeys.count) <= 2000, let account = feed.account {
                 account.followingHashtags
             }
-            else { [] }
+            else { [] } // Skip hashtags if filter is too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
@@ -1155,8 +1243,8 @@ class NXColumnViewModel: ObservableObject {
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
         case .pubkeys(let feed), .followSet(let feed):
-            let pubkeys = feed.contactPubkeys
-            let hashtags = feed.followingHashtags
+            let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
+            let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
@@ -1168,16 +1256,20 @@ class NXColumnViewModel: ObservableObject {
             }
             
         case .someoneElses(_):
-            guard config.pubkeys.count > 0 || config.hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
+            let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
+            let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
+            
+            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
             }
             
         case .pubkeysPreview(_):
-            guard config.pubkeys.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(config.pubkeys, hashtags: config.hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
+            let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
+            guard pubkeys.count > 0 else { return }
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)

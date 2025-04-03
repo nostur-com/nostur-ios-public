@@ -77,10 +77,14 @@ public class OutboxLoader {
             debounceTime: 3.0,
             prefix: "OUTBOX1-",
             reqCommand: { [weak self] taskId in
-                guard let self, let cm = NostrEssentials
+                guard let self else { return }
+                      
+                let follows = self.follows.count <= 2000 ? self.follows : Set(self.follows.shuffled().prefix(2000))
+                        
+                guard let cm = NostrEssentials
                     .ClientMessage(type: .REQ,
                                    subscriptionId: taskId,
-                                   filters: [Filters(authors: self.follows, kinds: [10002], since: self.mostRecentKind10002At)]
+                                   filters: [Filters(authors: follows, kinds: [10002], since: self.mostRecentKind10002At)]
                     ).json()
                 else { return }
                 
