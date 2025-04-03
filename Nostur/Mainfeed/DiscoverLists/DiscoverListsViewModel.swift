@@ -105,7 +105,7 @@ class DiscoverListsViewModel: ObservableObject {
     // STEP 2: FETCH RECEIVED LISTS FROM DB
     private func fetchListsFromDB(_ onComplete: (() -> ())? = nil) {
         let yearAgo = Int(Date().timeIntervalSince1970 - 31536000)
-        let garbage: Set<String> = ["mute", "allowlist"]
+        let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND flags != \"is_update\" AND NOT dTag IN %@", yearAgo, follows, garbage)
         bg().perform { [weak self] in
@@ -118,11 +118,22 @@ class DiscoverListsViewModel: ObservableObject {
                 return
             }
             
+            // Only lists with between 2 and 500 pubkeys
             let listsWithLessGarbage = lists.filter { list in
-                list.fastPs.count > 2
+                list.fastPs.count > 2 && list.fastPs.count <= 500
             }
             
-            guard listsWithLessGarbage.count > 0 else {
+            // If there are too many lists, hide lists that have 5 or more pubkeys that we already follow
+            let listsWithoutAlreadyKnown = if listsWithLessGarbage.count > 75 {
+                listsWithLessGarbage.filter { list in
+                    Set(list.fastPs.map { $0.1 }).intersection(self.follows).count < 5
+                }
+            }
+            else {
+                listsWithLessGarbage
+            }
+            
+            guard listsWithoutAlreadyKnown.count > 0 else {
                 DispatchQueue.main.async { [weak self] in
                     onComplete?()
                     self?.state = .ready
@@ -130,7 +141,7 @@ class DiscoverListsViewModel: ObservableObject {
                 return
             }
             
-            let nrLists: [NRPost] = listsWithLessGarbage
+            let nrLists: [NRPost] = listsWithoutAlreadyKnown
                 .sorted { $0.fastPs.count > $1.fastPs.count }
                 .prefix(Self.POSTS_LIMIT)
                 .map { NRPost(event: $0) }
