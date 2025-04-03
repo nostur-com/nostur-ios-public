@@ -122,12 +122,13 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
             subscriptionId: "GALLERY",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
+                let follows = self.follows.count <= 2000 ? self.follows : Set(self.follows.shuffled().prefix(2000))
                 if let cm = NostrEssentials
                             .ClientMessage(type: .REQ,
                                            subscriptionId: taskId,
                                            filters: [
                                             Filters(
-                                                authors: self.follows,
+                                                authors: follows,
                                                 kinds: Set([6,7]),
                                                 since: self.agoFetchTimestamp,
                                                 limit: 9999

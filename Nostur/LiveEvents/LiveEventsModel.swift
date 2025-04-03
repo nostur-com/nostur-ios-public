@@ -115,6 +115,9 @@ class LiveEventsModel: ObservableObject {
             subscriptionId: "LIVE-FOLLOWS",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
+                
+                let follows = self.follows.count <= 1950 ? self.follows : Set(self.follows.shuffled().prefix(1950))
+                
                 if let cm = NostrEssentials
                     .ClientMessage(type: .REQ,
                                    subscriptionId: taskId,
@@ -154,6 +157,9 @@ class LiveEventsModel: ObservableObject {
             subscriptionId: "LIVE-PARTICIPATING",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
+                
+                let follows = self.follows.count <= 1950 ? self.follows : Set(self.follows.shuffled().prefix(1950))
+                
                 if let cm = NostrEssentials
                     .ClientMessage(type: .REQ,
                                    subscriptionId: taskId,

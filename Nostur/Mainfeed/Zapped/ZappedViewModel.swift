@@ -126,13 +126,14 @@ class ZappedViewModel: ObservableObject {
             subscriptionId: "ZAPPED",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
+                let follows = self.follows.count <= 1950 ? self.follows : Set(self.follows.shuffled().prefix(1950))
                 if let cm = NostrEssentials
                             .ClientMessage(type: .REQ,
                                            subscriptionId: taskId,
                                            filters: [
                                             Filters(
                                                 kinds: Set([9735]),
-                                                tagFilter: TagFilter(tag: "P", values: self.follows),
+                                                tagFilter: TagFilter(tag: "P", values: follows),
                                                 since: self.agoFetchTimestamp,
                                                 limit: 9999
                                             )
