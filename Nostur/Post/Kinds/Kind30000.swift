@@ -52,7 +52,9 @@ struct Kind30000: View {
         self.grouped = grouped
         self.theme = theme
         self.forceAutoload = forceAutoload
+        let followingPubkeys = follows()
         self.followPs = nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
+            .sorted(by: { followingPubkeys.contains($0) && !followingPubkeys.contains($1) })
         self.title = (nrPost.eventTitle ?? nrPost.dTag) ?? "List"
     }
     
@@ -74,27 +76,27 @@ struct Kind30000: View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, theme: theme) {
-            if (isDetail) {
-                if missingReplyTo {
-                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
+//        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, authorAtBottom: true, theme: theme) {
+            
+            Text(title)
+                .fontWeight(.bold)
+                .padding(.bottom, 10)
+            
+            // if more that 20 do 2 columns
+            if followPs.count > 20 { 
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
+                    contactRows
                 }
-                Text(title)
-                    .fontWeight(.bold)
-                    .lineLimit(3)
-                
-                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
-                    Image(systemName: "exclamationmark.triangle.fill")
+            }
+            // If more than 20, do LazyVStack
+            else if followPs.count > 10 {
+                LazyVStack(alignment: .leading) {
+                    contactRows
                 }
             }
             else {
-                Text(title)
-                    .fontWeight(.bold)
-                    
-                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
-                    Image(systemName: "exclamationmark.triangle.fill")
-                }
-
+                contactRows
             }
         }
     }
@@ -149,6 +151,8 @@ struct Kind30000: View {
         }
     }
     
+    
+    // TODO: Should show people you follow first, at least in non-detail truncated view
     @ViewBuilder
     private var contactRows: some View {
         ForEach(followPs, id: \.self) { followP in
@@ -214,4 +218,20 @@ struct PubkeyRow: View {
     }
 }
 
-
+#Preview("Browse lists") {
+    PreviewContainer({ pe in
+        pe.parseMessages(dummyKind30000s)
+    }) {
+        let lists = Event.fetchEventsBy(kind: 30000, context: bg())
+        let nrLists = lists.map { NRPost(event: $0) }
+        ScrollView {
+            LazyVStack {
+                ForEach(nrLists) { nrList in
+                    Box {
+                        KindResolver(nrPost: nrList, theme: Themes.default.theme)
+                    }
+                }
+            }
+        }
+    }
+}

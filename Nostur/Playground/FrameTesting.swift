@@ -88,3 +88,33 @@ struct FrameTesting_Previews: PreviewProvider {
         .frame(minHeight: 100, maxHeight: 250)
     }
 }
+
+
+@available(iOS 18.0, *)
+#Preview("Wow") {
+    @Previewable @State var index = 0
+    VStack {
+        
+        let colors: [Color] = [.green, .pink, .blue, .orange, .purple]
+        let titles: [String] = ["NEON", "GLOW", "LIGHT", "SHINE", "BRIGHT"]
+
+        Text(titles[index])
+            .font(.system(size: 70, weight: .thin))
+        
+            .contentTransition(.numericText())
+            .frame(width: 250)
+        
+            .onAppear {
+                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                    withAnimation {
+                        index = (index + 1) % colors.count
+                    }
+                }
+            }
+            .shadow(color: colors[index], radius: 5)
+            .shadow(color: colors[index], radius: 5)
+            .shadow(color: colors[index], radius: 50)
+            .shadow(color: colors[index], radius: 100)
+            .shadow(color: colors[index], radius: 200)
+    }
+}

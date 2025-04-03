@@ -648,7 +648,14 @@ extension Event {
         return (try? context.fetch(fr)) ?? []
     }
     
-    static func fetchMostRecentEventBy(pubkey:String, andOtherPubkey otherPubkey:String? = nil, andKind kind:Int, context:NSManagedObjectContext) -> Event? {
+    static func fetchEventsBy(kind: Int, context: NSManagedObjectContext) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind == %d", kind)
+        return (try? context.fetch(fr)) ?? []
+    }
+    
+    static func fetchMostRecentEventBy(pubkey: String, andOtherPubkey otherPubkey: String? = nil, andKind kind: Int, context: NSManagedObjectContext) -> Event? {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = otherPubkey != nil
