@@ -43,7 +43,7 @@ struct ProfileBanner: View {
                             else {
                                 HStack {
                                     LinearGradient(
-                                        gradient: Gradient(colors: [themes.theme.background, themes.theme.accent]),
+                                        gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
                                         startPoint: .bottom,
                                         endPoint: .top
                                     )
@@ -55,7 +55,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [themes.theme.background, themes.theme.accent]),
+                                    gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
@@ -80,7 +80,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [themes.theme.background, themes.theme.accent]),
+                                    gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
@@ -95,7 +95,7 @@ struct ProfileBanner: View {
             else {
                 HStack {
                     LinearGradient(
-                        gradient: Gradient(colors: [themes.theme.background, themes.theme.accent]),
+                        gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
                         startPoint: .bottom,
                         endPoint: .top
                     )

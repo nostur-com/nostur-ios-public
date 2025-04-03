@@ -205,12 +205,12 @@ struct ComposePost: View {
                     .overlay(alignment: .bottom) {
                         MediaUploadProgress(uploader: vm.uploader)
                             .frame(height: geo.size.height * 0.60)
-                            .background(themes.theme.background)
+                            .background(themes.theme.listBackground)
                     }
                     .overlay(alignment: .bottom) {
                         MentionChoices(vm: vm)
                             .frame(height: geo.size.height * 0.60)
-                            .background(themes.theme.background)
+                            .background(themes.theme.listBackground)
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         if #available(iOS 16, *) {
@@ -226,7 +226,7 @@ struct ComposePost: View {
                                     }
                                 }
                             }
-                            .presentationBackgroundCompat(themes.theme.background)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                         else {
                             NBNavigationStack {
@@ -242,7 +242,7 @@ struct ComposePost: View {
                                 }
                             }
                             .nbUseNavigationStack(.never)
-                            .presentationBackgroundCompat(themes.theme.background)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                     }
                     .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection,

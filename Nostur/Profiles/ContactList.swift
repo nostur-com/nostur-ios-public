@@ -42,8 +42,10 @@ struct ContactList: View {
         ForEach(contacts) { contact in
             ProfileRow(contact: contact)
                 .frame(height: 120)
-                .background(themes.theme.background)
-//            Divider()
+                .background(themes.theme.listBackground)
+                .overlay(alignment: .bottom) {
+                    themes.theme.background.frame(height: GUTTER)
+                }
         }
         .onAppear {
             guard !missing.isEmpty else { return }
@@ -58,7 +60,10 @@ struct ContactList: View {
         ForEach(noMetadata, id:\.self) { pubkey in
             ProfileRowMissing(pubkey: pubkey)
                 .frame(height: 120)
-//            Divider()
+                .background(themes.theme.listBackground)
+                .overlay(alignment: .bottom) {
+                    themes.theme.background.frame(height: GUTTER)
+                }
         }
     }
     

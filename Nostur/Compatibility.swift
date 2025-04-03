@@ -322,7 +322,7 @@ extension View {
     func nosturTabsCompat(themes: Themes) -> some View {
         if #available(iOS 16.0, *) {
             self
-                .toolbarBackground(themes.theme.background, for: .tabBar)
+                .toolbarBackground(themes.theme.listBackground, for: .tabBar)
                 .toolbarBackground(.visible, for: .tabBar)
         }
         else {
@@ -334,7 +334,7 @@ extension View {
     func nosturNavBgCompat(themes: Themes) -> some View {
         if #available(iOS 16.0, *) {
             self
-                .toolbarBackground(themes.theme.background, for: .navigationBar)
+                .toolbarBackground(themes.theme.listBackground, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
         }
         else {

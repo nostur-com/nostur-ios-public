@@ -121,7 +121,7 @@ struct WithSheets: ViewModifier {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(dim)
                         .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             })
@@ -134,7 +134,7 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     PossibleImposterDetail(possibleImposterPubkey: imposterDetails.pubkey, followingPubkey: imposterDetails.similarToPubkey)
                         .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             })
@@ -146,7 +146,7 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     ReportContactSheet(reportContact: reportContact)
                         .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             })
@@ -215,14 +215,14 @@ struct WithSheets: ViewModifier {
                             ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                                 .environmentObject(dim)
                                 .environmentObject(themes)
-                                .presentationBackgroundCompat(themes.theme.background)
+                                .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                     }
                     else {
                         ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                             .environmentObject(dim)
                             .environmentObject(themes)
-                            .presentationBackgroundCompat(themes.theme.background)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                     }
                 }
                 .nbUseNavigationStack(.never)
@@ -255,7 +255,7 @@ struct WithSheets: ViewModifier {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                                 .environmentObject(dim)
-                                .presentationBackgroundCompat(themes.theme.background)
+                                .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                         .environmentObject(themes)
                     }
@@ -263,7 +263,7 @@ struct WithSheets: ViewModifier {
                         ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                             .environmentObject(dim)
                             .environmentObject(themes)
-                            .presentationBackgroundCompat(themes.theme.background)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
                     }
                 }
                 .nbUseNavigationStack(.never)
@@ -375,7 +375,7 @@ struct WithSheets: ViewModifier {
                         .padding(10)
                         .background(
                             RoundedRectangle(cornerRadius: 10.0)
-                                .foregroundColor(themes.theme.background)
+                                .foregroundColor(themes.theme.listBackground)
                                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
                         )
                         .frame(width: min(402, UIScreen.main.bounds.width))

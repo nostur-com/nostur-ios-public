@@ -12,6 +12,7 @@ struct Box<Content: View>: View {
     private let kind: Int64
     private let navMode: NavigationMode
     private var nrPost: NRPost? = nil
+    private var showGutter: Bool
     private var theme: Theme
     
     public enum NavigationMode {
@@ -26,7 +27,7 @@ struct Box<Content: View>: View {
         case noNavigation // no navigation
     }
     
-    init(nrPost:NRPost? = nil, navMode:NavigationMode? = .background, theme:Theme = Themes.default.theme, @ViewBuilder content: () -> Content) {
+    init(nrPost: NRPost? = nil, navMode: NavigationMode? = .background, theme: Theme = Themes.default.theme, showGutter: Bool = true, @ViewBuilder content: () -> Content) {
         self.kind = nrPost?.kind ?? 1
         
         // if not deleted: use given navMode or fallback to .background
@@ -39,6 +40,7 @@ struct Box<Content: View>: View {
         
         self.nrPost = nrPost
         self.content = content()
+        self.showGutter = showGutter
         self.theme = theme
     }
     
@@ -46,7 +48,12 @@ struct Box<Content: View>: View {
         if navMode == .view {
             content
                 .padding(kind == 30023 ? 20 : 10)
-                .background(kind == 30023 ? theme.secondaryBackground : theme.background)
+                .background(kind == 30023 ? theme.secondaryBackground : Color.clear)
+                .overlay(alignment: .bottom) {
+                    if showGutter {
+                        theme.background.frame(height: GUTTER)
+                    }
+                }
                 .contentShape(Rectangle())
                 .onTapGesture {
                     navigate()
@@ -55,11 +62,12 @@ struct Box<Content: View>: View {
         else if navMode == .noNavigation {
             content
                 .padding(kind == 30023 ? 20 : 10)
-                .background(kind == 30023 ? theme.secondaryBackground : theme.background)
-//                .contentShape(Rectangle())
-//                .onTapGesture {
-//                    
-//                }
+                .background(kind == 30023 ? theme.secondaryBackground : Color.clear)
+                .overlay(alignment: .bottom) {
+                    if showGutter {
+                        theme.background.frame(height: GUTTER)
+                    }
+                }
         }
         else {
             content
@@ -72,10 +80,15 @@ struct Box<Content: View>: View {
                             }
                     }
                     else {
-                        theme.background
+                        theme.listBackground
                             .onTapGesture {
                                 navigate()
                             }
+                    }
+                }
+                .overlay(alignment: .bottom) {
+                    if showGutter {
+                        theme.background.frame(height: GUTTER)
                     }
                 }
         }

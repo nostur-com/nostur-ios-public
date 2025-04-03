@@ -81,7 +81,7 @@ struct NewPostsBy: View {
         }
         .navigationTitle("New Posts")
         .navigationBarTitleDisplayMode(.inline)
-        .background(themes.theme.background) // Screen / Toolbar background
+        .background(themes.theme.listBackground) // Screen / Toolbar background
         .onAppear {
             guard selectedTab == "Notifications" && selectedNotificationsTab == "New Posts" else { return }
             vm.load()

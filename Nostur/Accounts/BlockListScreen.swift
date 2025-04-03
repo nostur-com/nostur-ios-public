@@ -38,7 +38,7 @@ struct BlockListScreen: View {
             }
             Spacer()
         }
-        .background(themes.theme.background)
+        .background(themes.theme.listBackground)
         .navigationTitle(tab)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -57,10 +57,10 @@ struct BlockedContactsView: View {
     var body: some View {
         List {
             ForEach(blockedPubkeys, id: \.self) { blockedPubkey in
-                ZStack {
+                Box {
                     if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
                         ProfileRow(withoutFollowButton: true, contact: contact)
-                            .background(themes.theme.background)
+//                            .background(themes.theme.background)
                             .overlay(alignment: .topTrailing) {
                                 if let until = blocksUntil[blockedPubkey.pubkey] {
                                     Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
@@ -89,7 +89,7 @@ struct BlockedContactsView: View {
                         .onTapGesture {
                             navigateTo(ContactPath(key: blockedPubkey.pubkey))
                         }
-                        .background(themes.theme.background)
+                        .background(themes.theme.listBackground)
                         .overlay(alignment: .topTrailing) {
                             if let until = blocksUntil[blockedPubkey.pubkey] {
                                 Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
@@ -101,9 +101,9 @@ struct BlockedContactsView: View {
                     }
                 }
                 .listRowSeparator(.hidden)
-                .listRowBackground(themes.theme.listBackground)
+//                .listRowBackground(themes.theme.listBackground)
                 .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                .padding(.bottom, GUTTER)
+//                .padding(.bottom, GUTTER)
             }
             .onDelete { indexSet in
                 unblock(section: Array(blockedPubkeys), offsets: indexSet)

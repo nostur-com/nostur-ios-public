@@ -34,93 +34,42 @@ struct PostOrThread: View { //, Equatable {
         if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
             Box(nrPost: nrPost, theme: themes.theme) {
                 PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: themes.theme)
-//                    .transaction { t in
-//                        t.animation = nil
-//                    }
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-//            .withoutAnimation()
-//            .transaction { t in
-//                t.animation = nil
-//            }
             .background {
                 if nrPost.kind == 30023 {
                     themes.theme.secondaryBackground
-//                        .withoutAnimation()
-    //                    .transaction { t in
-    //                        t.animation = nil
-    //                    }
                 }
-                else {
-                    themes.theme.background
-//                        .withoutAnimation()
-    //                    .transaction { t in
-    //                        t.animation = nil
-    //                    }
-                }
-            } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
-            .padding(.top, GUTTER)
-            .background { // This is the background between PostOrThread's.
-                themes.theme.listBackground
-//                    .withoutAnimation()
-    //                .transaction { t in t.animation = nil }
             }
         }
         else { // Reply thread
             VStack(spacing: GUTTER) {
                 ForEach(postOrThreadAttributes.parentPosts) { nrParent in
-                    Box(nrPost: nrParent, theme: themes.theme) {
+                    Box(nrPost: nrParent, theme: themes.theme, showGutter: false) {
                         PostRowDeletable(nrPost: nrParent,
                                          hideFooter: true,
                                          missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
                                          connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: themes.theme)
-    //                    .transaction { t in
-    //                        t.animation = nil
-    //                    }
                     }
                     .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                     //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
 //                    .withoutAnimation()
                     .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-    //                .transaction { t in
-    //                    t.animation = nil
-    //                }
                 }
 
                 Box(nrPost: nrPost, theme: themes.theme) {
                     PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: themes.theme)
-    //                    .transaction { t in
-    //                        t.animation = nil
-    //                    }
                 }
                 .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
-//                .withoutAnimation()
                 .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
-    //            .transaction { t in
-    //                t.animation = nil
-    //            }
             }
-            .background {
+            .background { // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
                 if nrPost.kind == 30023 {
                     themes.theme.secondaryBackground
-//                        .withoutAnimation()
-    //                    .transaction { t in
-    //                        t.animation = nil
-    //                    }
                 }
                 else {
-                    themes.theme.background
-//                        .withoutAnimation()
-    //                    .transaction { t in
-    //                        t.animation = nil
-    //                    }
+                    themes.theme.listBackground // needs to be post background because it links together posts
                 }
-            } // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
-            .padding(.top, GUTTER)
-            .background { // This is the background between PostOrThread's.
-                themes.theme.listBackground
-//                    .withoutAnimation()
-    //                .transaction { t in t.animation = nil }
             }
         }
     }

@@ -117,7 +117,7 @@ struct PostEmbeddedLayout<Content: View>: View {
         .padding(.top, 10)
         .padding(.bottom, 5)
         .background(
-            theme.background
+            theme.listBackground
                 .cornerRadius(8)
                 .onTapGesture(perform: navigateToPost)
         )

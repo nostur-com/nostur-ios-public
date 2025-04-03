@@ -110,7 +110,7 @@ struct ProfileOverlayCard: View {
     }
     
     var body: some View {
-        Box {
+        Box(showGutter: false) {
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
                     ZappablePFP(pubkey: contact.pubkey, contact: contact, size: 75.0, zapEtag: zapEtag)
@@ -146,7 +146,7 @@ struct ProfileOverlayCard: View {
                                             .resizable()
                                             .frame(width: 10, height: 10)
                                             .foregroundColor(.green)
-                                            .background(themes.theme.background)
+                                            .background(themes.theme.listBackground)
                                             .offset(y: -3)
                                     }
                                     .offset(y: 3)
@@ -161,8 +161,8 @@ struct ProfileOverlayCard: View {
                                         Image(systemName: "plus")
                                             .resizable()
                                             .frame(width: 10, height: 10)
-                                            .background(themes.theme.background)
-                                            .border(themes.theme.background, width: 2.0)
+                                            .background(themes.theme.listBackground)
+                                            .border(themes.theme.listBackground, width: 2.0)
                                             .offset(y: -3)
                                     }
                                     .offset(y: 3)
@@ -294,12 +294,12 @@ struct ProfileOverlayCard: View {
                     }
                 }
                 .padding(.top, 10)
-                .background(themes.theme.background)
+//                .background(themes.theme.listBackground)
             }
         }
         .padding(10)
         .background {
-            themes.theme.background
+            themes.theme.listBackground
                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
         }
         .onChange(of: contact.pictureUrl) { newPictureUrl in

@@ -129,7 +129,7 @@ struct Entry: View {
                     .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
@@ -139,7 +139,7 @@ struct Entry: View {
                     .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
             }
             
             if kind != .picture {

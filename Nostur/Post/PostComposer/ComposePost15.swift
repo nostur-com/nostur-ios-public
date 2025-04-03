@@ -140,7 +140,7 @@ struct ComposePost15: View {
                             }
                         }
                         .nbUseNavigationStack(.never)
-                        .presentationBackgroundCompat(themes.theme.background)
+                        .presentationBackgroundCompat(themes.theme.listBackground)
                     }
                     .sheet(isPresented: $videoPickerShown) {
                         VideoPickerView(selectedVideoURL: $selectedVideoURL)

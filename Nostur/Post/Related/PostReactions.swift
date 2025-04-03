@@ -40,7 +40,10 @@ struct PostReactions: View {
                                 }
                             }
                             .padding(10)
-                            .background(themes.theme.background) // each row
+                            .background(themes.theme.listBackground) // each row
+                            .overlay(alignment: .bottom) {
+                                themes.theme.background.frame(height: GUTTER)
+                            }
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 navigateTo(ContactPath(key: nrPost.pubkey))
@@ -65,7 +68,7 @@ struct PostReactions: View {
         }
         .navigationTitle(String(localized: "Reactions", comment: "Title of list of reactions screen"))
         .navigationBarTitleDisplayMode(.inline)
-        .background(themes.theme.background) // screen / toolbar
+        .background(themes.theme.listBackground) // screen / toolbar
         .onAppear {
             model.setup(eventId: eventId)
             model.load(limit: 500)

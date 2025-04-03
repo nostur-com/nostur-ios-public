@@ -28,7 +28,7 @@ struct NosturTabsView: View {
         let _ = Self._printChanges()
         #endif
         Zoomable {
-            HStack {
+            HStack(spacing: GUTTER) {
                 AvailableWidthContainer {
                     VStack {
                         NoInternetConnectionBanner()
@@ -45,7 +45,7 @@ struct NosturTabsView: View {
         //                    DiscoverCommunities()
         //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
         //                        .tag("Communities")
-                                .nosturTabsCompat(themes: themes)
+//                                .nosturTabsCompat(themes: themes)
 
                             BookmarksTab()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
@@ -87,11 +87,12 @@ struct NosturTabsView: View {
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                     AvailableWidthContainer {
                         DetailPane()
+                            .background(themes.theme.listBackground)
                     }
                 }
             }
             .contentShape(Rectangle())
-            .background(themes.theme.listBackground)
+            .background(themes.theme.background) // GUTTER
             .withLightningEffect()
             .onChange(of: selectedTab) { newValue in
                 if newValue == "Notifications" {

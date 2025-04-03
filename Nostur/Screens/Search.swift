@@ -18,28 +18,6 @@ struct Search: View {
     @State var nrPosts: [NRPost] = []
     @State var contacts: [NRContact] = []
 
-//    @FetchRequest(
-//        sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
-//        predicate: NSPredicate(value: false),
-//        animation: .none)
-//    var contacts: FetchedResults<Contact>
-//    
-//    private var filteredContactSearchResults: [Contact] {
-//        let wot = WebOfTrust.shared
-//        if WOT_FILTER_ENABLED() {
-//            return contacts
-//                // WoT enabled, so put in-WoT before non-WoT
-//                .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
-//                // Put following before non-following
-//                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
-//        }
-//        else {
-//            // WoT disabled, just following before non-following
-//            return contacts
-//                .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
-//        }
-//    }
-
     @State var searching = false
     
     private var selectedTab: String {
@@ -93,7 +71,10 @@ struct Search: View {
                                     }
                                 }
                                 .padding(10)
-                                .background(themes.theme.background)
+                                .background(themes.theme.listBackground)
+                                .overlay(alignment: .bottom) {
+                                    themes.theme.background.frame(height: GUTTER)
+                                }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     navigateTo(NRContactPath(nrContact: nrContact))
@@ -124,7 +105,7 @@ struct Search: View {
                                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             }
                         }
-                        .padding(.top, GUTTER)
+//                        .padding(.top, GUTTER)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 Button {
@@ -156,7 +137,7 @@ struct Search: View {
                 }
             }
             .background(themes.theme.listBackground)
-            .nosturNavBgCompat(themes: themes)
+            .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)

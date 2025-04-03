@@ -43,7 +43,7 @@ struct PostAndParent: View {
                     let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
 //                            .padding(10)
-                        .background(themes.theme.background)
+                        .background(themes.theme.listBackground)
                 }
                 else {
                     Text("_Post deleted by author_", comment: "Message shown when a post is deleted")
@@ -82,7 +82,7 @@ struct PostAndParent: View {
                             catch { }
                         }
                     }
-                    .background(themes.theme.background)
+                    .background(themes.theme.listBackground)
                     .onDisappear {
                         timerTask?.cancel()
                         timerTask = nil
@@ -95,7 +95,7 @@ struct PostAndParent: View {
                     PostRowDeletable(nrPost: nrPost, connect: connect)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .background(
-                            themes.theme.background
+                            themes.theme.listBackground
                                 .onTapGesture {
                                     navigateTo(nrPost)
                                 }

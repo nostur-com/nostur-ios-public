@@ -215,7 +215,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         uiView.isScrollEnabled = false
         context.coordinator.updatingUIView = true
         
-        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.background)
+        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
         
         let highlightedText = HighlightedTextEditor.getHighlightedText(
             text: text,
@@ -292,7 +292,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         
         public func textViewDidChange(_ textView: UITextView) {
-            textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Themes.default.theme.background)
+            textView.backgroundColor = textView.text.isEmpty && textView.markedTextRange == nil ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
             
             // For Multistage Text Input
             guard textView.markedTextRange == nil else { return }

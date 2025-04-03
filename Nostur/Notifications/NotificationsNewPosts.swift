@@ -67,7 +67,11 @@ struct NotificationsNewPosts: View {
                                             .foregroundColor(.gray)
                                     }
                                     .padding(10)
-                                    .background(themes.theme.background)
+                                    .background(themes.theme.listBackground)
+                                    .overlay(alignment: .bottom) {
+                                        themes.theme.background.frame(height: GUTTER)
+                                    }
+                                    
                             })
                             .id(notification.id)
                         }

@@ -79,7 +79,7 @@ struct Hot: View {
                 }
             }
         }
-        .background(themes.theme.background)
+        .background(themes.theme.listBackground)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }

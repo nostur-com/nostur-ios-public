@@ -38,7 +38,10 @@ struct PostDetailView: View {
                         
                             // Around parents + detail (not replies)
                             .padding(10)
-                            .background(themes.theme.background)
+                            .background(themes.theme.listBackground)
+                            .overlay(alignment: .bottom) {
+                                themes.theme.background.frame(height: GUTTER)
+                            }
 //                            .background(themes.theme.background)
 //                            .background(Color.blue)
 //                        

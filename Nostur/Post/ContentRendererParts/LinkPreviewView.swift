@@ -66,7 +66,7 @@ struct LinkPreviewView: View {
                     .minimumScaleFactor(0.7)
     //                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
                 }
-                .background(theme.listBackground)
+                .background(theme.background)
                 .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
                 .cornerRadius(10.0)
                 .clipShape(RoundedRectangle(cornerRadius: 10.0))

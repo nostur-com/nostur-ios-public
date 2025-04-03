@@ -70,7 +70,8 @@ struct BookmarksTab: View {
                     .padding(.top, GUTTER)
                 }
             }
-            .background(themes.theme.background) // screen / toolbar background
+            .background(themes.theme.listBackground) // screen / toolbar background
+            .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
@@ -98,7 +99,7 @@ struct BookmarksTab: View {
                         .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
                 .presentationDetents200()
             })
         }

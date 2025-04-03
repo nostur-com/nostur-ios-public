@@ -180,6 +180,7 @@ struct RelayEditView: View {
             }
             .listRowBackground(themes.theme.background)
         }
+        .scrollContentBackgroundHidden()
         .navigationTitle(String(localized:"Edit relay", comment:"Navigation title for Edit relay screen"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

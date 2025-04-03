@@ -22,16 +22,16 @@ struct ReportPostSheet: View {
                     PostRowDeletable(nrPost: nrPost, hideFooter: true, missingReplyTo: true, theme: themes.theme)
                 }
                 .disabled(true)
-                .overlay(
-                    Rectangle().opacity(0.02)
-                        .onTapGesture {
-
-                        }
-                )
+//                .overlay(
+//                    Rectangle().opacity(0.02)
+//                        .onTapGesture {
+//
+//                        }
+//                )
             }
             .frame(maxHeight: 200)
             .padding(10)
-            .background(themes.theme.listBackground)
+//            .background(themes.theme.listBackground)
             .clipped()
             
             Form {
@@ -53,7 +53,9 @@ struct ReportPostSheet: View {
                         
                     TextField(String(localized:"Extra information", comment: "Label for report field to give extra information"), text: $comment)
                 }
+                .listRowBackground(themes.theme.background)
             }
+            .scrollContentBackgroundHidden()
             .frame(maxHeight: .infinity)
             Spacer()
         }

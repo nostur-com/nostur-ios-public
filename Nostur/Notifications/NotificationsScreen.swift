@@ -29,7 +29,8 @@ struct NotificationsContainer: View {
         #endif
         NBNavigationStack(path: $navPath) {
             NotificationsScreen(account: la.account, navPath: $navPath)
-                .background(themes.theme.background)
+                .background(themes.theme.listBackground)
+                .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
         }
         .nbUseNavigationStack(.never)

@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+// TODO: Remove @FetchRequest
 struct FollowersList: View {
     @EnvironmentObject private var themes: Themes
     public let pubkey: String // Pubkey of whose followers to view
@@ -96,14 +97,18 @@ struct FollowersList: View {
         ForEach(clEventsFollowingPubkeyWithContact) { event in
             ProfileRow(contact: event.contact!)
                 .frame(height: 120)
-                .background(themes.theme.background)
-            //            Divider()
+                .background(themes.theme.listBackground)
+                .overlay(alignment: .bottom) {
+                    themes.theme.background.frame(height: GUTTER)
+                }
         }
         ForEach(clEventsFollowingPubkeyMissingContact, id:\.self) { event in
             ProfileRowMissing(pubkey: event.pubkey)
                 .frame(height: 120)
-                .background(themes.theme.background)
-            //            Divider()
+                .background(themes.theme.listBackground)
+                .overlay(alignment: .bottom) {
+                    themes.theme.background.frame(height: GUTTER)
+                }
         }
     }
     

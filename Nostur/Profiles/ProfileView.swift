@@ -46,7 +46,7 @@ struct ProfileView: View {
                                 PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
                                     .overlay(
                                         Circle()
-                                            .strokeBorder(themes.theme.background, lineWidth: 3)
+                                            .strokeBorder(themes.theme.listBackground, lineWidth: 3)
                                     )
                                     .background {
                                         GeometryReader { geometry in
@@ -66,7 +66,7 @@ struct ProfileView: View {
                                 }
                                 else {
                                     Circle()
-                                        .strokeBorder(themes.theme.background, lineWidth: 3)
+                                        .strokeBorder(themes.theme.listBackground, lineWidth: 3)
                                 }
                             }
                             .overlay(alignment: .bottomTrailing) {
@@ -101,7 +101,7 @@ struct ProfileView: View {
                                         .resizable()
                                         .frame(width: 10, height: 10)
                                         .foregroundColor(.green)
-                                        .background(themes.theme.background)
+                                        .background(themes.theme.listBackground)
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
@@ -116,8 +116,8 @@ struct ProfileView: View {
                                     Image(systemName: "plus")
                                         .resizable()
                                         .frame(width: 10, height: 10)
-                                        .background(themes.theme.background)
-                                        .border(themes.theme.background, width: 2.0)
+                                        .background(themes.theme.listBackground)
+                                        .border(themes.theme.listBackground, width: 2.0)
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
@@ -255,7 +255,7 @@ struct ProfileView: View {
             .listSectionSeparator(.hidden)
             .listRowSeparator(.hidden)
             .listRowSpacing(10.0)
-            .background(themes.theme.background)
+            .background(themes.theme.listBackground)
             
             Section(content: {
                 switch selectedSubTab {
@@ -348,13 +348,13 @@ struct ProfileView: View {
                 }
                 .frame(width: dim.listWidth)
             })
-            .listRowSpacing(10.0)
+//            .listRowSpacing(10.0)
             .listRowInsets(EdgeInsets())
             .listSectionSeparator(.hidden)
             .listRowSeparator(.hidden)
         }
         .background(themes.theme.listBackground)
-        .listRowSpacing(10.0)
+//        .listRowSpacing(10.0)
         .listStyle(.plain)
         .toolbar {
             ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount, themes: themes)
@@ -390,7 +390,7 @@ struct ProfileView: View {
                 }
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.background)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .onAppear {
             if let tab = tab {

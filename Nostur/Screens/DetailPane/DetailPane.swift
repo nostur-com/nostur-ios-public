@@ -202,10 +202,17 @@ struct DetailPane: View {
                             )
                             .padding(.leading, index == 0 ? 30 : 0)
                             .id(tm.tabs[index].id)
-                            Divider().frame(height: 30).opacity(index == tm.tabs.count-1 ? 0 : 1)
+                            themes.theme.background
+                                .frame(width: 1.0, height: 30)
+                                .overlay {
+                                    themes.theme.listBackground
+                                        .frame(width: 1.0, height: 20)
+                                }
+                                .opacity(index == tm.tabs.count-1 ? 0 : 1)
                         }
                         Spacer()
                     }
+                    .background(themes.theme.background)
                 }
                 .onChange(of: tm.tabs) { newTabs in
 //                    if (newTabs.count > oldTabs.count) {
@@ -215,7 +222,7 @@ struct DetailPane: View {
 //                    } 
                 }
             }
-//            Divider().opacity(tm.tabs.count > 0 ? 1 : 0)
+
             ZStack {
                 ForEach(tm.tabs) { tab in
                     if !tab.suspended {
@@ -263,7 +270,7 @@ struct DetailPane: View {
         }
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
-//        .padding(.horizontal, -10)
+
         .background(themes.theme.listBackground)
         .onReceive(receiveNotification(.navigateTo)) { notification in
             // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up

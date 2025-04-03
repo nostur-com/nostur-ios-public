@@ -75,7 +75,7 @@ struct HighlightComposer: View {
                     }
                     .padding(.horizontal, 10)
                     .padding(.top, 10)
-                    .background(themes.theme.background)
+                    .background(themes.theme.listBackground)
                     Spacer()
                 }
                 .padding(.top, 20)

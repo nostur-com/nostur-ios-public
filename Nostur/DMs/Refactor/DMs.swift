@@ -228,7 +228,8 @@ struct DMs: View {
                     }
                 }
             }
-            .background(themes.theme.background)
+            .background(themes.theme.listBackground)
+            .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
         }
         .nbUseNavigationStack(.never)
     }

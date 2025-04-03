@@ -102,7 +102,7 @@ struct KindResolver: View {
                         .onDisappear { self.dequeue() }
                     
                     CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme)
-                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
+                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
             }

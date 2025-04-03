@@ -41,7 +41,8 @@ struct HomeTab: View {
         #endif
         NBNavigationStack(path: $navPath) {
             MainFeedsScreen(showingOtherContact: $showingOtherContact)
-                .background(themes.theme.background)
+                .background(themes.theme.listBackground)
+                .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
                 .overlay(alignment: .bottomTrailing) {
                     NewNoteButton(showingNewNote: $showingNewNote)
@@ -74,7 +75,7 @@ struct HomeTab: View {
                                 .environmentObject(dim)
                         }
                     }
-                    .presentationBackgroundCompat(themes.theme.background)
+                    .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {

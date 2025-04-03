@@ -59,7 +59,7 @@ struct StreamDetail: View {
                     if let vc {
                         VStack {
                             videoStreamView
-                                    .background(themes.theme.background)
+                                    .background(themes.theme.listBackground)
                         }
                         .onTapGesture {
                             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
@@ -211,7 +211,7 @@ struct StreamDetail: View {
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
                 .presentationDetents45ml()
             }
         }

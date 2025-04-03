@@ -55,7 +55,7 @@ struct PostPreview: View {
         .overlay(alignment: .bottom) {
             MediaUploadProgress(uploader: vm.uploader)
                 .frame(height: Double(vm.uploader.queued.count * 38))
-                .background(themes.theme.background)
+                .background(themes.theme.listBackground)
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -89,7 +89,7 @@ struct PostPreview: View {
         }
         .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
-        .background(themes.theme.background)
+        .background(themes.theme.listBackground)
         .frame(width: dim.listWidth)
         .fixedSize(horizontal: true, vertical: false)
     }

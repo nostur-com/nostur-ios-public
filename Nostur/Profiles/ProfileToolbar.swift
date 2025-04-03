@@ -21,7 +21,7 @@ struct ProfileToolbar: View {
                 PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 25)
                     .overlay(
                         Circle()
-                            .strokeBorder(themes.theme.background, lineWidth: 1)
+                            .strokeBorder(themes.theme.listBackground, lineWidth: 1)
                     )
                 Text("\(nrContact.anyName) ").font(.headline)
                 

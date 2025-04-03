@@ -73,7 +73,7 @@ struct NosturTabButton: View {
         .padding(.trailing, 23)
         .padding(.vertical, 10)
         .padding(.leading, 5)
-        .background(isSelected ? (isArticle ? themes.theme.secondaryBackground : themes.theme.background) : .clear)
+        .background(isSelected ? (isArticle ? themes.theme.secondaryBackground : themes.theme.listBackground) : themes.theme.background)
         .contentShape(Rectangle())
         .onHover { over in
             isHoveringTab = over

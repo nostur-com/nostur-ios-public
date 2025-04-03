@@ -181,11 +181,12 @@ struct NXColumnView: View {
 #endif
 }
 
-#Preview {
+#Preview("Single column") {
     PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadPosts()
         pe.loadCloudFeeds(1)
+        Themes.default.loadOrange()
     }) {
         
         if let list = PreviewFetcher.fetchList() {

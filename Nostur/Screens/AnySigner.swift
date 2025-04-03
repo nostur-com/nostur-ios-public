@@ -76,7 +76,8 @@ struct AnySigner: View {
                         Text("Signing as")
                         PFP(pubkey: account.publicKey, account: account, size: 30)
                     }
-                    .background(themes.theme.background)
+                    .listRowBackground(themes.theme.background)
+//                    .background(themes.theme.background)
                 }
                 if let error {
                     Text(error)

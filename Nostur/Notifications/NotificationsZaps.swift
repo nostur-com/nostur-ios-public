@@ -64,7 +64,10 @@ struct NotificationsZaps: View {
                         case .NOTIFICATION:
                             ZapNotificationView(notification: pNotification.notification!)
                                 .padding(10)
-                                .background(themes.theme.background)
+                                .background(themes.theme.listBackground)
+                                .overlay(alignment: .bottom) {
+                                    themes.theme.background.frame(height: GUTTER)
+                                }
                                 .id(pNotification.id)
                         case .ZAP:
                             VStack {
@@ -78,7 +81,10 @@ struct NotificationsZaps: View {
                                 }
                             }
                             .padding(10)
-                            .background(themes.theme.background)
+                            .background(themes.theme.listBackground)
+                            .overlay(alignment: .bottom) {
+                                themes.theme.background.frame(height: GUTTER)
+                            }
                             .id(pNotification.id)
                         }
                     }

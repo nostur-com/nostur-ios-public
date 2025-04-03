@@ -53,7 +53,7 @@ struct DirectMessageRows: View {
                     .tint(themes.theme.accent)
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(themes.theme.listBackground)
         }
         .listStyle(.plain)
     }

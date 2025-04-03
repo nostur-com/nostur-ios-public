@@ -52,7 +52,10 @@ struct NotificationsFollowers: View {
                         ForEach(notifications) { notification in
                             NewFollowersNotificationView(notification: notification)
                                 .padding(10)
-                                .background(themes.theme.background)
+                                .background(themes.theme.listBackground)
+                                .overlay(alignment: .bottom) {
+                                    themes.theme.background.frame(height: GUTTER)
+                                }
                                 .id(notification.id)
                         }
                     }
@@ -68,7 +71,7 @@ struct NotificationsFollowers: View {
                 }
             }
         }
-        .background(themes.theme.background) // Screen / toolbar background
+        .background(themes.theme.listBackground) // Screen / toolbar background
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newFollowers.rawValue)

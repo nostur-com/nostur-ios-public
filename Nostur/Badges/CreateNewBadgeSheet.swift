@@ -10,6 +10,7 @@ import NavigationBackport
 
 struct CreateNewBadgeSheet: View {
     
+    @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
@@ -31,26 +32,30 @@ struct CreateNewBadgeSheet: View {
     
     var body: some View {
         Form {
-            TextField(String(localized:"Code (bravery, verified_human, early_adoptor)", comment:"Label for input field for badge code on Badge creation screen"), text: $badgeCode)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                .lineLimit(1)
-                .focused($focusedField, equals: .badgeCode)
-            TextField(String(localized:"Name", comment:"Label for input field for badge name on Badge creation screen"), text: $name)
-                .lineLimit(1)
-            TextField(String(localized:"Description", comment:"Label for input field for badge description on Badge creation screen"), text: $description)
-                .lineLimit(2)
-            TextField(String(localized:"Image URL (1024x1024)", comment:"Label for input field for badge image on Badge creation screen"), text: $image1024)
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                .lineLimit(1)
-            TextField(String(localized:"Thumbnail URL (256x256)", comment:"Label for input field for badge image on Badge creation screen"), text: $image256)
-                .keyboardType(.URL)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
-                .lineLimit(1)
+            Group {
+                TextField(String(localized:"Code (bravery, verified_human, early_adoptor)", comment:"Label for input field for badge code on Badge creation screen"), text: $badgeCode)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .lineLimit(1)
+                    .focused($focusedField, equals: .badgeCode)
+                TextField(String(localized:"Name", comment:"Label for input field for badge name on Badge creation screen"), text: $name)
+                    .lineLimit(1)
+                TextField(String(localized:"Description", comment:"Label for input field for badge description on Badge creation screen"), text: $description)
+                    .lineLimit(2)
+                TextField(String(localized:"Image URL (1024x1024)", comment:"Label for input field for badge image on Badge creation screen"), text: $image1024)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .lineLimit(1)
+                TextField(String(localized:"Thumbnail URL (256x256)", comment:"Label for input field for badge image on Badge creation screen"), text: $image256)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    .disableAutocorrection(true)
+                    .lineLimit(1)
+            }
+            .listRowBackground(themes.theme.background)
         }
+        .scrollContentBackgroundHidden()
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(action: {

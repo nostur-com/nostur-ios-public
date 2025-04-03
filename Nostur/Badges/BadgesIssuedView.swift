@@ -48,7 +48,7 @@ struct BadgesIssuedView: View {
                 }
                 .listRowBackground(themes.theme.background)
             }
-            .scrollContentBackgroundCompat(.hidden)
+            .scrollContentBackgroundHidden()
             .background(themes.theme.listBackground)
         }
         .background(themes.theme.listBackground)

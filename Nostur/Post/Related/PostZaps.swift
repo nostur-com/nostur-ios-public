@@ -88,7 +88,7 @@ struct PostZaps: View {
                 }
             }
         }
-        .background(themes.theme.background)
+        .background(themes.theme.listBackground)
         .navigationTitle(String(localized: "Zaps", comment: "Title of list of zaps screen"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {

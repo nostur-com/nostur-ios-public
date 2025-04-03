@@ -39,25 +39,26 @@ struct ProfileMediaView: View {
             if !vm.items.isEmpty {
                 // No longer LazyVGrid here, because in List its not Lazy. We can just make 3 by 1 rows here, container List will make it lazy.
                 ForEach(Array(stride(from: 0, to: vm.items.count, by: 3)), id: \.self) { index in
-                    HStack {
+                    HStack(spacing: GUTTER) {
                         Group {
-                            GalleryGridItemView(size: ((dim.listWidth / 3.0) - 0.0), items: vm.items, currentIndex: index)
+                            GalleryGridItemView(size: ((dim.listWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index)
                                 .onBecomingVisible {
                                     vm.fetchMoreIfNeeded(index)
                                 }
                             
                             if (index+1) < vm.items.count {
-                                GalleryGridItemView(size: ((dim.listWidth / 3.0) - 0.0), items: vm.items, currentIndex: index + 1)
+                                GalleryGridItemView(size: ((dim.listWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 1)
                             }
                             if (index+2) < vm.items.count {
-                                GalleryGridItemView(size: ((dim.listWidth / 3.0) - 0.0), items: vm.items, currentIndex: index + 2)
+                                GalleryGridItemView(size: ((dim.listWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 2)
                             }
                         }
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: ((dim.listWidth / 3.0) - 0.0), height: ((dim.listWidth / 3.0) - 0.0))
+                        .frame(width: ((dim.listWidth - GUTTER*2) / 3.0), height: ((dim.listWidth - GUTTER*2) / 3.0))
                         .clipped()
                         .aspectRatio(1, contentMode: .fit)
-                    } 
+                        .padding(.bottom, GUTTER)
+                    }
                 }
             }
             else {

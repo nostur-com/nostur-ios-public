@@ -30,7 +30,7 @@ struct ReadOnlyAccountInformationSheet: View {
             }
         })
         .padding(20)
-        .background(themes.theme.background)
+        .background(themes.theme.listBackground)
     }
 }
 

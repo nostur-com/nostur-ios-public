@@ -44,7 +44,7 @@ struct SideBar: View {
                         .equatable()
                         .overlay(
                             Circle()
-                                .strokeBorder(themes.theme.background, lineWidth: 3)
+                                .strokeBorder(themes.theme.listBackground, lineWidth: 3)
                         )
                         .onTapGesture {
                             if IS_IPAD {

@@ -48,8 +48,8 @@ struct AccountsSheet: View {
                                 logoutAccount = account
                             }
                         }
+                        .listRowBackground(themes.theme.listBackground)
                 }
-                .listRowBackground(themes.theme.background)
             }
             .scrollContentBackgroundHidden()
             .listStyle(.plain)
@@ -116,7 +116,7 @@ struct AccountsSheet: View {
                     .cancel(Text("Cancel"))
                 ])
         }
-        .background(themes.theme.background)
+        .background(themes.theme.listBackground)
     }
 }
 

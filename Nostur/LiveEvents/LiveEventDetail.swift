@@ -79,7 +79,7 @@ struct LiveEventDetail: View {
                                     }
                                 
                                 videoStreamView
-                                    .background(themes.theme.background)
+                                    .background(themes.theme.listBackground)
                             }
                             .onTapGesture {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
@@ -106,7 +106,7 @@ struct LiveEventDetail: View {
                         .padding(10)
                         .layoutPriority(1)
                 }
-                .background(themes.theme.background)
+                .background(themes.theme.listBackground)
             }
             .onAppear {
                 if let relaysTag = liveEvent.nEvent.fastTags.first(where: { $0.0 == "relays" }) {
@@ -132,7 +132,7 @@ struct LiveEventDetail: View {
                     account = Nostur.account()
                 }
             }
-            .background(themes.theme.background)
+            .background(themes.theme.listBackground)
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
             .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
@@ -264,7 +264,7 @@ struct LiveEventDetail: View {
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(themes.theme.listBackground)
                 .presentationDetents45ml()
             }
             .withLightningEffect()

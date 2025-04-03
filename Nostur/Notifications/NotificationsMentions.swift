@@ -75,7 +75,7 @@ struct NotificationsMentions: View {
                 }
             }
         }
-        .background(themes.theme.background)
+        .background(themes.theme.listBackground)
         .onAppear {
             model.setup(pubkey: pubkey)
             model.load(limit: 50)
