@@ -21,6 +21,7 @@ struct PostLayout<Content: View>: View {
     private let isDetail: Bool
     private let fullWidth: Bool
     private let forceAutoload: Bool
+    private let authorAtBottom: Bool  // true to put more emphasis on the item when it is not a text post
     @State private var didStart = false
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -44,7 +45,7 @@ struct PostLayout<Content: View>: View {
     
     private let content: Content
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, theme: Theme, @ViewBuilder content: () -> Content) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, authorAtBottom: Bool = false, theme: Theme, @ViewBuilder content: () -> Content) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -55,13 +56,14 @@ struct PostLayout<Content: View>: View {
         self.isDetail = isDetail
         self.theme = theme
         self.forceAutoload = forceAutoload
+        self.authorAtBottom = authorAtBottom
         self.content = content()
     }
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+        //        #if DEBUG
+        //        let _ = Self._printChanges()
+        //        #endif
         if isDetail || fullWidth {
             fullWidthLayout
         }
@@ -71,97 +73,31 @@ struct PostLayout<Content: View>: View {
     }
     
     @ViewBuilder
-    var normalLayout: some View {
+    private var normalLayout: some View {
         HStack(alignment: .top, spacing: 10) {
-            if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
-                LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
-                    .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                    .background(alignment: .top) {
-                        if connect == .top || connect == .both {
-                            theme.lineColor
-                                .frame(width: 1, height: 20)
-                                .offset(x: -0.5, y: -10)
-                        }
-                    }
-                    .onTapGesture {
-                        if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
-                            if IS_CATALYST || IS_IPAD {
-                                navigateTo(liveEvent)
-                            }
-                            else {
-                                // LOAD NEST
-                                if liveEvent.isLiveKit {
-                                    LiveKitVoiceSession.shared.activeNest = liveEvent
-                                }
-                                // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
-                                else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
-                                    AnyPlayerModel.shared.viewMode = .detailstream
-                                }
-                                // LOAD NEW .DETAILSTREAM
-                                else {
-                                    Task {
-                                        await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
-                                    }
-                                }
-                            }
-                        }
-                    }
+            if !authorAtBottom {
+                regularPFP
             }
-            else {
-                ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
-                    .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                    .background(alignment: .top) {
-                        if connect == .top || connect == .both {
-                            theme.lineColor
-                                .frame(width: 1, height: 20)
-                                .offset(x: -0.5, y: -10)
-                        }
-                    }
-                    .onTapGesture {
-                        withAnimation {
-                            showMiniProfile = true
-                        }
-                    }
-                    .overlay(alignment: .topLeading) {
-                        if (showMiniProfile) {
-                            GeometryReader { geo in
-                                Color.clear
-                                    .onAppear {
-                                        sendNotification(.showMiniProfile,
-                                                         MiniProfileSheetInfo(
-                                                            pubkey: nrPost.pubkey,
-                                                            contact: pfpAttributes.contact,
-                                                            zapEtag: nrPost.id,
-                                                            location: geo.frame(in: .global).origin
-                                                         )
-                                        )
-                                        showMiniProfile = false
-                                    }
-                            }
-                            .frame(width: 10)
-                            .zIndex(100)
-                            .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                            .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                showMiniProfile = false
-                            }
-                        }
-                    }
-            }
-
+            
             VStack(alignment: .leading, spacing: 3) { // Post container
                 HStack(alignment: .top) { // name + reply + context menu
-                    NRPostHeaderContainer(nrPost: nrPost)
+                    if !authorAtBottom {
+                        NRPostHeaderContainer(nrPost: nrPost)
+                    }
                     Spacer()
                     LazyNoteMenuButton(nrPost: nrPost)
                 }
-
+                
                 content
                 
+                if authorAtBottom {
+                    bottomAuthorInfo
+                }
                 // No need for DetailFooterFragment here because .isDetail will always be in .fullWidthLayout
                 
                 if (!hideFooter && settings.rowFooterEnabled) {
                     CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
-                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
+                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
             }
@@ -176,90 +112,23 @@ struct PostLayout<Content: View>: View {
     }
     
     @ViewBuilder
-    var fullWidthLayout: some View {
+    private var fullWidthLayout: some View {
         VStack(spacing: 10) {
             HStack(alignment: .center, spacing: 10) {
-                if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
-                    LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
-                        .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                        .background(alignment: .top) {
-                            if connect == .top || connect == .both {
-                                theme.lineColor
-                                    .frame(width: 1, height: 20)
-                                    .offset(x: -0.5, y: -10)
-                            }
-                        }
-                        .onTapGesture {
-                            if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
-                                if IS_CATALYST || IS_IPAD {
-                                    navigateTo(liveEvent)
-                                }
-                                else {
-                                    // LOAD NEST
-                                    if liveEvent.isLiveKit {
-                                        LiveKitVoiceSession.shared.activeNest = liveEvent
-                                    }
-                                    // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
-                                    else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
-                                        AnyPlayerModel.shared.viewMode = .detailstream
-                                    }
-                                    // LOAD NEW .DETAILSTREAM
-                                    else {
-                                        Task {
-                                            await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                if !authorAtBottom {
+                    regularPFP
+                    NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
                 }
-                else {
-                    ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nrPost.isScreenshot)
-                        .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-                        .background(alignment: .top) {
-                            if connect == .top || connect == .both {
-                                theme.lineColor
-                                    .frame(width: 1, height: 20)
-                                    .offset(x: -0.5, y: -10)
-                            }
-                        }
-                        .onTapGesture {
-                            withAnimation {
-                                showMiniProfile = true
-                            }
-                        }
-                        .overlay(alignment: .topLeading) {
-                            if (showMiniProfile) {
-                                GeometryReader { geo in
-                                    Color.clear
-                                        .onAppear {
-                                            sendNotification(.showMiniProfile,
-                                                             MiniProfileSheetInfo(
-                                                                pubkey: nrPost.pubkey,
-                                                                contact: nrPost.contact,
-                                                                zapEtag: nrPost.id,
-                                                                location: geo.frame(in: .global).origin
-                                                             )
-                                            )
-                                            showMiniProfile = false
-                                        }
-                                }
-                                .frame(width: 10)
-                                .zIndex(100)
-                                .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                    showMiniProfile = false
-                                }
-                            }
-                        }
-                }
-                NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
                 Spacer()
                 LazyNoteMenuButton(nrPost: nrPost)
             }
             VStack(alignment:.leading, spacing: 3) {// Post container
                 
                 content
+                
+                if authorAtBottom {
+                    bottomAuthorInfo
+                }
                 
                 if isDetail {
                     DetailFooterFragment(nrPost: nrPost)
@@ -268,10 +137,196 @@ struct PostLayout<Content: View>: View {
                 
                 if isDetail || (!hideFooter && settings.rowFooterEnabled) {
                     CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme)
-                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.background)
+                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
             }
         }
+    }
+    
+    
+    @ViewBuilder
+    private var regularPFP: some View {
+        if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
+            LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                .background(alignment: .top) {
+                    if connect == .top || connect == .both {
+                        theme.lineColor
+                            .frame(width: 1, height: 20)
+                            .offset(x: -0.5, y: -10)
+                    }
+                }
+                .onTapGesture {
+                    if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
+                        if IS_CATALYST || IS_IPAD {
+                            navigateTo(liveEvent)
+                        }
+                        else {
+                            // LOAD NEST
+                            if liveEvent.isLiveKit {
+                                LiveKitVoiceSession.shared.activeNest = liveEvent
+                            }
+                            // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
+                            else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
+                                AnyPlayerModel.shared.viewMode = .detailstream
+                            }
+                            // LOAD NEW .DETAILSTREAM
+                            else {
+                                Task {
+                                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+        else {
+            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                .background(alignment: .top) {
+                    if connect == .top || connect == .both {
+                        theme.lineColor
+                            .frame(width: 1, height: 20)
+                            .offset(x: -0.5, y: -10)
+                    }
+                }
+                .onTapGesture {
+                    withAnimation {
+                        showMiniProfile = true
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if (showMiniProfile) {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    sendNotification(.showMiniProfile,
+                                                     MiniProfileSheetInfo(
+                                                        pubkey: nrPost.pubkey,
+                                                        contact: nrPost.contact,
+                                                        zapEtag: nrPost.id,
+                                                        location: geo.frame(in: .global).origin
+                                                     )
+                                    )
+                                    showMiniProfile = false
+                                }
+                        }
+                        .frame(width: 10)
+                        .zIndex(100)
+                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                            showMiniProfile = false
+                        }
+                    }
+                }
+        }
+    }
+    
+    @ViewBuilder
+    private var itemPFP: some View {
+        if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
+            LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, forceFlat: nrPost.isScreenshot)
+                .frame(width: 20.0, height: 20.0)
+                .onTapGesture {
+                    if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
+                        if IS_CATALYST || IS_IPAD {
+                            navigateTo(liveEvent)
+                        }
+                        else {
+                            // LOAD NEST
+                            if liveEvent.isLiveKit {
+                                LiveKitVoiceSession.shared.activeNest = liveEvent
+                            }
+                            // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
+                            else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
+                                AnyPlayerModel.shared.viewMode = .detailstream
+                            }
+                            // LOAD NEW .DETAILSTREAM
+                            else {
+                                Task {
+                                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
+                                }
+                            }
+                        }
+                    }
+                }
+        }
+        else {
+            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
+                .frame(width: 2.0, height: 20.0)
+                .onTapGesture {
+                    withAnimation {
+                        showMiniProfile = true
+                    }
+                }
+                .overlay(alignment: .topLeading) {
+                    if (showMiniProfile) {
+                        GeometryReader { geo in
+                            Color.clear
+                                .onAppear {
+                                    sendNotification(.showMiniProfile,
+                                                     MiniProfileSheetInfo(
+                                                        pubkey: nrPost.pubkey,
+                                                        contact: nrPost.contact,
+                                                        zapEtag: nrPost.id,
+                                                        location: geo.frame(in: .global).origin
+                                                     )
+                                    )
+                                    showMiniProfile = false
+                                }
+                        }
+                        .frame(width: 10)
+                        .zIndex(100)
+                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
+                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
+                            showMiniProfile = false
+                        }
+                    }
+                }
+        }
+    }
+    
+    
+    @ViewBuilder
+    private var bottomAuthorInfo: some View {
+        HStack(spacing: 15) {
+            Spacer()
+            
+            Text("by")
+                .foregroundColor(theme.secondary)
+            
+            itemPFP
+            
+            if let contact = nrPost.contact {
+                Text(contact.anyName)
+                    .foregroundColor(.primary)
+                    .fontWeight(.bold)
+                    .lineLimit(1)
+                    .layoutPriority(2)
+                    .onTapGesture {
+                        navigateTo(contact)
+                    }
+                
+                if contact.nip05verified, let nip05 = contact.nip05 {
+                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
+                        .layoutPriority(3)
+                }
+            }
+            else {
+                Text(nrPost.anyName)
+                    .onAppear {
+                        bg().perform {
+                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "ArticleView.001")
+                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
+                        }
+                    }
+                    .onDisappear {
+                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                    }
+            }
+        }
+        .padding(.vertical, 10)
+        .lineLimit(1)
     }
 }
