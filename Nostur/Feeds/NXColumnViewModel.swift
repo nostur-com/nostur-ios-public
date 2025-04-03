@@ -771,7 +771,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .relays(let feed):
 #if DEBUG
@@ -1583,7 +1583,9 @@ extension NXColumnViewModel {
     // Prepare events: apply WoT filter, remove already on screen, load .parentEvents
     private func prepareEvents(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
         shouldBeBg()
-        let filteredEvents: [Event] = (wotEnabled ? applyWoT(events, config: config) : events) // Apply WoT filter or not
+        let wotFilteredEvents: [Event] = (wotEnabled ? applyWoT(events, config: config) : events) // Apply WoT filter or not
+            
+        let seenFilteredEvents: [Event] = wotFilteredEvents
             .filter { // Apply (app wide) already-seen filter
                 if $0.isRepost, let firstQuoteId = $0.firstQuoteId {
                     return !allIdsSeen.contains(String(firstQuoteId.prefix(8)))
@@ -1591,8 +1593,8 @@ extension NXColumnViewModel {
                 return !allIdsSeen.contains($0.shortId)
             }
         
-        let newUnrenderedEvents: [Event] = filteredEvents
-            .filter { 
+        let newUnrenderedEvents: [Event] = seenFilteredEvents
+            .filter {
                 if !older {
                     return $0.created_at > Int64(sinceOrUntil) // skip all older than first on screen (check LEAFS only)
                 }
@@ -1610,8 +1612,26 @@ extension NXColumnViewModel {
 
         let newEventIds = getAllEventIds(newUnrenderedEvents)
         let newCount = newEventIds.subtracting(currentIdsOnScreen).count
-        
-        guard newCount > 0 else { return [] }
+
+        guard newCount > 0 else {
+            // If there is nothing new, but its the first load, then don't filter already seen
+            if case .loading = viewState {
+                let newUnrenderedEvents: [Event] = wotFilteredEvents
+                    .map {
+                        $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0, fixRelations: true)
+                        if repliesEnabled {
+                            _ = $0.replyTo__
+                        }
+                        return $0
+                    }
+#if DEBUG
+                L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(newUnrenderedEvents.count) (first load) -[LOG]-")
+#endif
+                return newUnrenderedEvents
+            }
+
+            return []
+        }
         
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) prepareEvents newCount \(newCount.description) -[LOG]-")
