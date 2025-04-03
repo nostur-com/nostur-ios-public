@@ -67,7 +67,7 @@ struct KindResolver: View {
             }
         case 9735: // TODO: need to check
             if let zap = Event.fetchEvent(id: nrPost.id, context: viewContext()), let zapFrom = zap.zapFromRequest {
-                ZapReceipt(sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom, isEmbedded: isEmbedded)
+                ZapReceipt(nrPost: nrPost, sats: zap.naiveSats, receiptPubkey: zap.pubkey, fromPubkey: zapFrom.pubkey, from: zapFrom, isEmbedded: isEmbedded)
                     .onAppear { self.enqueue() }
                     .onDisappear { self.dequeue() }
             }
