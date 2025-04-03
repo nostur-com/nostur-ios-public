@@ -10,7 +10,6 @@ import SwiftUI
 struct AskLoginSheet: View {
     @Environment(\.openURL) private var openURL
     @EnvironmentObject private var themes: Themes
-    @Environment(\.dismiss) private var dismiss
     
     @StateObject private var vm: Nip97LoginModel
     
@@ -28,7 +27,7 @@ struct AskLoginSheet: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(alignment: .center) {
             Spacer()
             switch vm.state {
             case .success:
@@ -41,7 +40,7 @@ struct AskLoginSheet: View {
                     Button("Continue") {
                         guard let url = URL(string: redirectUrl) else { return }
                         openURL(url)
-                        dismiss()
+                        AppSheetsModel.shared.dismiss()
                     }
                     .buttonStyle(.borderedProminent)
                 }
@@ -49,14 +48,14 @@ struct AskLoginSheet: View {
                 VStack {
                     Text("**Login error**")
                     Button("Close") {
-                        dismiss()
+                        AppSheetsModel.shared.dismiss()
                     }
                 }
             case .timeout:
                 VStack {
                     Text("**Login timeout**")
                     Button("Close") {
-                        dismiss()
+                        AppSheetsModel.shared.dismiss()
                     }
                 }
             default:
@@ -96,7 +95,7 @@ struct AskLoginSheet: View {
                 
                 HStack {
                     Button("Cancel") {
-                        dismiss()
+                        AppSheetsModel.shared.dismiss()
                     }
                     .buttonStyle(.borderedProminent)
                     

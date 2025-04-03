@@ -41,11 +41,14 @@ struct WithAppSheets: ViewModifier {
                 }
             }
             .sheet(item: $asm.askLoginInfo, content: { askLoginInfo in
-                NRSheetNavigationStack {
-                    AskLoginSheet(askLoginInfo: askLoginInfo, account: loggedInAccount.account)
-                        .presentationBackgroundCompat(themes.theme.background)
-                        .presentationDetents250medium()
+                NBNavigationStack {
+                    AppEnvironment {
+                        AskLoginSheet(askLoginInfo: askLoginInfo, account: loggedInAccount.account)
+                    }
                 }
+                .nbUseNavigationStack(.never)
+                .presentationDetents250medium()
+                .presentationBackgroundCompat(Themes.default.theme.listBackground)
             })
             .fullScreenCover(item: $asm.feedPreviewSheetInfo) { feedPreviewSheetInfo in
                 NRSheetNavigationStack {
