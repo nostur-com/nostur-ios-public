@@ -1,0 +1,58 @@
+//
+//  DiscoverLists+FeedSettings.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 03/04/2025.
+//
+
+import SwiftUI
+
+struct DiscoverListsFeedSettings: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var discoverListsVM: DiscoverListsViewModel
+    @State var needsReload = false
+    @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
+    
+    var body: some View {
+        Form {
+            if #available(iOS 16, *) {
+                Section("App theme") {
+                    AppThemeSwitcher()
+                }
+            }
+            
+            Toggle(isOn: $enableDiscoverListsFeed, label: {
+                Text("Show feed in tab bar")
+            })
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Done") { dismiss() }
+            }
+        }
+    }
+}
+
+import NavigationBackport
+
+struct DiscoverListsFeedSettingsTester: View {
+
+    var body: some View {
+        NBNavigationStack {
+            DiscoverListsFeedSettings(discoverListsVM: DiscoverListsViewModel())
+        }
+        .onAppear {
+            Themes.default.loadPurple()
+        }
+    }
+}
+
+
+struct DiscoverListsFeedSettings_Previews: PreviewProvider {
+    static var previews: some View {
+        PreviewContainer {
+            DiscoverListsFeedSettingsTester()
+        }
+    }
+}
+
