@@ -113,7 +113,24 @@ struct Kind30000: View {
             else { // Row view, show 5 big PFPS (prio follows)
                 overlappingPFPs
                     .frame(width: dim.articleRowImageWidth(), alignment: .leading)
+                    .background(theme.listBackground)
                     .drawingGroup(opaque: true)
+            }
+        } title: {
+            HStack {
+                Text(title).font(.title2)
+                    .fontWeightBold()
+                    .lineLimit(1)
+                Spacer()
+                Button("Show preview") {
+                    let pubkeys = nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
+                    
+                    // 1. NXColumnConfig
+                    let config = NXColumnConfig(id: "FeedPreview", columnType: .pubkeysPreview(Set(pubkeys)), name: "Preview")
+                    let feedPreviewSheetInfo = FeedPreviewInfo(config: config, nrPost: nrPost)
+                    AppSheetsModel.shared.feedPreviewSheetInfo = feedPreviewSheetInfo
+                }
+                .buttonStyle(NosturButton(bgColor: theme.accent))
             }
         }
     }
@@ -216,6 +233,14 @@ struct PubkeyRow: View {
         HStack {
             ObservedPFP(pfp: pfp, size: 20.0)
             Text(pfp.anyName)
+        }
+        .onTapGesture {
+            if let nrContact = pfp.contact {
+                navigateTo(nrContact)
+            }
+            else {
+                navigateTo(ContactPath(key: pfp.pubkey))
+            }
         }
     }
 }
