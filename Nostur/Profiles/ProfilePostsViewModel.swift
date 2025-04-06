@@ -35,7 +35,12 @@ class ProfilePostsViewModel: ObservableObject {
     @Published var posts: [NRPost] = [] {
         didSet {
             guard !posts.isEmpty else { return }
-            L.og.info("Profile posts feed loaded \(self.posts.count) items")
+            if state != .ready {
+                self.state = .ready
+            }
+#if DEBUG
+            L.og.debug("Profile posts feed loaded \(self.posts.count) items, pubkey: \(self.pubkey)")
+#endif
         }
     }
     
@@ -115,13 +120,17 @@ class ProfilePostsViewModel: ObservableObject {
                 self.backlog.clear()
                 self.fetchPostsFromDB(onComplete)
 
-                L.og.info("Profile posts feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("Profile posts feed: ready to process relay response \(taskId), pubkey: \(self.pubkey)")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchPostsFromDB(onComplete)
-                L.og.info("Profile posts feed: timeout ")
+#if DEBUG
+                L.og.debug("Profile posts feed: timeout \(taskId), pubkey: \(self.pubkey)")
+#endif
             })
 
         backlog.add(reqTask)
@@ -170,7 +179,9 @@ class ProfilePostsViewModel: ObservableObject {
                 EventRelationsQueue.shared.addAwaitingEvent(post.event)
             }
             let eventIds = posts.prefix(5).map { $0.id }
-            L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+#if DEBUG
+            L.fetching.debug("🔢 Fetching counts for \(eventIds.count) posts, pubkey: \(self.pubkey)")
+#endif
             fetchStuffForLastAddedNotes(ids: eventIds)
             self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
         }
@@ -217,7 +228,9 @@ class ProfilePostsViewModel: ObservableObject {
         
         let nextIds = self.posts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
         guard !nextIds.isEmpty else { return }
-        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
+#if DEBUG
+        L.fetching.debug("🔢 Fetching counts for \(nextIds.count) posts, pubkey: \(self.pubkey)")
+#endif
         fetchStuffForLastAddedNotes(ids: nextIds)
         self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
     }
@@ -304,7 +317,9 @@ class ProfilePostsViewModel: ObservableObject {
                 EventRelationsQueue.shared.addAwaitingEvent(post.event)
             }
             let eventIds = posts.prefix(5).map { $0.id }
-            L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+#if DEBUG
+            L.fetching.debug("🔢 Fetching counts for \(eventIds.count) posts, pubkey: \(self.pubkey)")
+#endif
             fetchStuffForLastAddedNotes(ids: eventIds)
             self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
         }

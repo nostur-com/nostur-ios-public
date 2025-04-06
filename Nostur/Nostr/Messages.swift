@@ -515,6 +515,7 @@ enum ReportType:String {
 //    ))
 import NostrEssentials
 
+// outbox req has filter in ClientMessage?
 func outboxReq(_ cm: NostrEssentials.ClientMessage, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
     #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
@@ -546,6 +547,8 @@ func outboxReq(_ cm: NostrEssentials.ClientMessage, activeSubscriptionId: String
     }
 }
 
+
+// old req, just string so cant do outbox with this
 func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
     #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {

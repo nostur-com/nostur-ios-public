@@ -223,20 +223,6 @@ struct Kind30000: View {
                 }
         }
     }
-    
-    
-    private func navigateToContact() {
-        if let nrContact = nrPost.contact {
-            navigateTo(nrContact)
-        }
-        else {
-            navigateTo(ContactPath(key: nrPost.pubkey))
-        }
-    }
-    
-    private func navigateToPost() {
-        navigateTo(nrPost)
-    }
 }
 
 

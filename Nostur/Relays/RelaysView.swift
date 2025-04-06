@@ -79,7 +79,9 @@ struct RelayRowView: View {
                 if let conn = await ConnectionPool.shared.getConnection(relayUrl.lowercased()) {
                     Task { @MainActor in
                         connection = conn
+#if DEBUG
                         L.sockets.debug("connection is now \(connection?.url ?? "")")
+#endif
                         
                         isConnected = conn.isConnected
                         connectedSub?.cancel()
@@ -98,7 +100,9 @@ struct RelayRowView: View {
                 if let conn = await ConnectionPool.shared.getConnection(relayUrl.lowercased()) {
                     Task { @MainActor in
                         connection = conn
+#if DEBUG
                         L.sockets.debug("connection is now \(connection?.url ?? "")")
+#endif
                         
                         isConnected = conn.isConnected
                         connectedSub?.cancel()

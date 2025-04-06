@@ -17,7 +17,7 @@ let SPECIAL_PURPOSE_RELAYS: Set<String> = [
     "wss://purplepag.es"
 ]
 
-// Popular relays that are widely known, we can keep a list and choose to avoid these relays when finding content using Enhanced Relay Routing
+// Popular relays that are widely known, we can keep a list and choose to avoid these relays when finding content using Relay Autopilot
 // The skipTopRelays param of createRequestPlan() probably gives the same result so we might not need this
 let POPULAR_RELAYS: Set<String> = [
     "wss://nos.lol",
@@ -639,7 +639,7 @@ public class ConnectionPool: ObservableObject {
                 .first!] // Because its "Following" subscription, we know we only need the first Filter, the second filter will be hashtags. See LVM.fetchRealtimeSinceNow()
         } else {
             filters
-                .filter { !$0.hasHashtags } // For any other query we always from hashtags from existing query (remove entire filter, not just hashtags
+                .filter { !$0.hasHashtags } // If other filter has hashtags we just remove it (remove entire filter, not just hashtags
         }
         
         let plan: RequestPlan = createRequestPlan(pubkeys: pubkeys, reqFilters: filtersWithoutHashtags, ourReadRelays: ourReadRelays, preferredRelays: preferredRelays, skipTopRelays: 3)

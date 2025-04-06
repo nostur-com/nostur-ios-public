@@ -49,7 +49,7 @@ class ZappedViewModel: ObservableObject {
         }
     }
     
-    @AppStorage("feed_zapped_ago") var ago:Int = 12 {
+    @AppStorage("feed_zapped_ago") var ago: Int = 12 {
         didSet {
             logAction("Zapped feed time frame changed to \(self.ago)h")
             backlog.timeout = max(Double(ago / 4), 5.0)
@@ -232,7 +232,7 @@ class ZappedViewModel: ObservableObject {
             
             let reqTask = ReqTask(
                 debounceTime: 0.5,
-                subscriptionId: "ZAPPEd-POSTS",
+                subscriptionId: "ZAPPED-POSTS",
                 reqCommand: { taskId in
                     if let cm = NostrEssentials
                                 .ClientMessage(type: .REQ,
