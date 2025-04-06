@@ -35,6 +35,7 @@ struct ArticlesFeed: View {
             if vm.nothingFound {
                 Text("No articles found from your follow list in selected time frame.")
                     .multilineTextAlignment(.center)
+                    .centered()
             }
             else if vm.articles.isEmpty {
                 CenteredProgressView()

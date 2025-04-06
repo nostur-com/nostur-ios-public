@@ -72,11 +72,10 @@ struct EmojiFeed: View {
                 .padding(0)
             case .timeout:
                 VStack {
-                    Spacer()
                     Text("Time-out while loading feed")
                     Button("Try again") { vm.reload() }
-                    Spacer()
                 }
+                .centered()
             }
         }
         .background(themes.theme.listBackground)

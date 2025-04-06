@@ -72,11 +72,10 @@ struct Hot: View {
                 .padding(0)
             case .timeout:
                 VStack {
-                    Spacer()
                     Text("Time-out while loading hot feed")
                     Button("Try again") { hotVM.reload() }
-                    Spacer()
                 }
+                .centered()
             }
         }
         .background(themes.theme.listBackground)

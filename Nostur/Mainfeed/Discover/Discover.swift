@@ -72,11 +72,10 @@ struct Discover: View {
                 .padding(0)
             case .timeout:
                 VStack {
-                    Spacer()
                     Text("Time-out while loading discover feed")
                     Button("Try again") { discoverVM.reload() }
-                    Spacer()
                 }
+                .centered()
             }
         }
         .background(themes.theme.listBackground)

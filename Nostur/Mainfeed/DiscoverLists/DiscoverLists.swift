@@ -70,11 +70,10 @@ struct DiscoverLists: View {
                 .padding(0)
             case .timeout:
                 VStack {
-                    Spacer()
                     Text("Time-out while loading discover feed")
                     Button("Try again") { discoverListsVM.reload() }
-                    Spacer()
                 }
+                .centered()
             }
         }
         .background(themes.theme.listBackground)
