@@ -41,7 +41,12 @@ struct ProfileInteractionsView: View {
                         .task(id: "profileInteractions") {
                             do {
                                 try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                                conversationsVM.state = .timeout
+                                
+                                Task { @MainActor in
+                                    if conversationsVM.state == .loading || conversationsVM.state == .initializing {
+                                        conversationsVM.state = .timeout
+                                    }
+                                }
                             } catch { }
                         }
                 case .ready:
@@ -79,7 +84,12 @@ struct ProfileInteractionsView: View {
                         .task(id: "profileInteractions") {
                             do {
                                 try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                                reactionsVM.state = .timeout
+                                
+                                Task { @MainActor in
+                                    if reactionsVM.state == .loading || reactionsVM.state == .initializing {
+                                        reactionsVM.state = .timeout
+                                    }
+                                }
                             } catch { }
                         }
                 case .ready:
@@ -124,7 +134,12 @@ struct ProfileInteractionsView: View {
                         .task(id: "profileInteractions") {
                             do {
                                 try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                                repostsVM.state = .timeout
+                                
+                                Task { @MainActor in
+                                    if repostsVM.state == .loading || repostsVM.state == .initializing {
+                                        repostsVM.state = .timeout
+                                    }
+                                }
                             } catch { }
                         }
                 case .ready:
@@ -162,7 +177,12 @@ struct ProfileInteractionsView: View {
                         .task(id: "profileInteractions") {
                             do {
                                 try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                                zapsVM.state = .timeout
+                                
+                                Task { @MainActor in
+                                    if zapsVM.state == .loading || zapsVM.state == .initializing {
+                                        zapsVM.state = .timeout
+                                    }
+                                }
                             } catch { }
                         }
                 case .ready:

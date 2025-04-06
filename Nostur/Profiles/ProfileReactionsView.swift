@@ -27,7 +27,12 @@ struct ProfileReactionsView: View {
                 .task(id: "profileReactions") {
                     do {
                         try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                        vm.state = .timeout
+                        
+                        Task { @MainActor in
+                            if vm.state == .loading || vm.state == .initializing {
+                                vm.state = .timeout
+                            }
+                        }
                     } catch { }
                 }
         case .ready:

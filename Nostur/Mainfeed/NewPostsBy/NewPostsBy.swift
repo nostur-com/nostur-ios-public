@@ -40,7 +40,13 @@ struct NewPostsBy: View {
                     .task(id: "new-posts") {
                         do {
                             try await Task.sleep(nanoseconds: UInt64(8) * NSEC_PER_SEC)
-                            vm.timeout()
+                            
+                            Task { @MainActor in
+                                if vm.state == .loading || vm.state == .initializing {
+                                    vm.timeout()
+                                }
+                            }
+                            
                         } catch { }
                     }
             case .ready:

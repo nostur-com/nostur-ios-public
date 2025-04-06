@@ -36,7 +36,12 @@ struct Hot: View {
                     .task(id: "hot") {
                         do {
                             try await Task.sleep(nanoseconds: UInt64(hotVM.timeoutSeconds) * NSEC_PER_SEC)
-                            hotVM.timeout()
+
+                            Task { @MainActor in
+                                if hotVM.hotPosts.isEmpty {
+                                    hotVM.timeout()
+                                }
+                            }
                         } catch { }
                     }
             case .ready:

@@ -36,7 +36,12 @@ struct DiscoverLists: View {
                     .task(id: "discoverLists") {
                         do {
                             try await Task.sleep(nanoseconds: UInt64(8) * NSEC_PER_SEC)
-                            discoverListsVM.timeout()
+                            
+                            Task { @MainActor in
+                                if discoverListsVM.discoverLists.isEmpty {
+                                    discoverListsVM.timeout()
+                                }
+                            }
                         } catch { }
                     }
             case .ready:

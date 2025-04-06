@@ -36,7 +36,12 @@ struct Zapped: View {
                     .task(id: "zapped") {
                         do {
                             try await Task.sleep(nanoseconds: UInt64(zappedVM.timeoutSeconds) * NSEC_PER_SEC)
-                            zappedVM.timeout()
+                            
+                            Task { @MainActor in
+                                if zappedVM.zappedPosts.isEmpty {
+                                    zappedVM.timeout()
+                                }
+                            }
                         } catch { }
                     }
             case .ready:

@@ -41,7 +41,12 @@ struct Gallery: View {
                     .task(id: "gallery") {
                         do {
                             try await Task.sleep(nanoseconds: UInt64(vm.timeoutSeconds) * NSEC_PER_SEC)
-                            vm.timeout()
+                            
+                            Task { @MainActor in
+                                if vm.items.isEmpty {
+                                    vm.timeout()
+                                }
+                            }
                         } catch { }
                     }
             case .ready:

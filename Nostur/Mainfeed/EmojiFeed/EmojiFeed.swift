@@ -36,7 +36,12 @@ struct EmojiFeed: View {
                     .task(id: "emoji") {
                         do {
                             try await Task.sleep(nanoseconds: UInt64(vm.timeoutSeconds) * NSEC_PER_SEC)
-                            vm.timeout()
+
+                            Task { @MainActor in
+                                if vm.feedPosts.isEmpty {
+                                    vm.timeout()
+                                }
+                            }
                         } catch { }
                     }
             case .ready:

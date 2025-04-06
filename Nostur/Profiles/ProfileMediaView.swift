@@ -30,8 +30,11 @@ struct ProfileMediaView: View {
                     vm.load(pubkey)
                     do {
                         try await Task.sleep(nanoseconds: UInt64(10) * NSEC_PER_SEC)
-                        if vm.state == .initializing || vm.state == .loading {
-                            vm.state = .timeout
+                        
+                        Task { @MainActor in
+                            if vm.state == .loading || vm.state == .initializing {
+                                vm.state = .timeout
+                            }
                         }
                     } catch { }
                 }
