@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PostLayout<Content: View>: View {
+struct PostLayout<Content: View, TitleContent: View>: View {
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
@@ -42,10 +42,12 @@ struct PostLayout<Content: View>: View {
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
     
     @State var showMiniProfile = false
-    
+
     private let content: Content
+    private let titleContent: TitleContent
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, theme: Theme, @ViewBuilder content: () -> Content) {
+    
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, theme: Theme, @ViewBuilder content: () -> Content, @ViewBuilder title: () -> TitleContent) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -58,6 +60,7 @@ struct PostLayout<Content: View>: View {
         self.forceAutoload = forceAutoload
         self.isItem = isItem
         self.content = content()
+        self.titleContent = title()
     }
     
     var body: some View {
@@ -80,12 +83,15 @@ struct PostLayout<Content: View>: View {
             }
             
             VStack(alignment: .leading, spacing: 3) { // Post container
-                HStack(alignment: .top) { // name + reply + context menu
-                    if !isItem {
+                if isItem {
+                    titleContent
+                }
+                else {
+                    HStack(alignment: .top) { // name + reply + context menu
                         NRPostHeaderContainer(nrPost: nrPost)
+                        Spacer()
+                        LazyNoteMenuButton(nrPost: nrPost)
                     }
-                    Spacer()
-                    LazyNoteMenuButton(nrPost: nrPost)
                 }
                 
                 content
@@ -114,14 +120,22 @@ struct PostLayout<Content: View>: View {
     @ViewBuilder
     private var fullWidthLayout: some View {
         VStack(spacing: 10) {
+            
             HStack(alignment: .center, spacing: 10) {
-                if !isItem {
+                if isItem {
+                    titleContent
+                }
+                else {
                     regularPFP
                     NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
                 }
-                Spacer()
-                LazyNoteMenuButton(nrPost: nrPost)
+                
+                if !isItem || isDetail {
+                    Spacer()
+                    LazyNoteMenuButton(nrPost: nrPost)
+                }
             }
+            
             VStack(alignment:.leading, spacing: 3) {// Post container
                 
                 content
@@ -299,5 +313,16 @@ struct PostLayout<Content: View>: View {
         }
         .padding(.vertical, 10)
         .lineLimit(1)
+    }
+}
+
+// Makes optional title possible in: PostLayout { } title: { }
+
+extension PostLayout where TitleContent == EmptyView {
+    
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, theme: Theme, @ViewBuilder content: () -> Content) {
+     
+        self.init(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, isItem: isItem, theme: theme, content: content, title: { EmptyView() })
+        
     }
 }

@@ -93,23 +93,6 @@ struct Kind30000: View {
 //        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, theme: theme) {
             
-            HStack {
-                Text(title)
-                    .fontWeight(.bold)
-                    .lineLimit(4)
-                Spacer()
-                Button("Feed preview") {
-                    let pubkeys = nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
-                    
-                    // 1. NXColumnConfig
-                    let config = NXColumnConfig(id: "FeedPreview", columnType: .pubkeysPreview(Set(pubkeys)), name: "Preview")
-                    let feedPreviewSheetInfo = FeedPreviewInfo(config: config, nrPost: nrPost)
-                    AppSheetsModel.shared.feedPreviewSheetInfo = feedPreviewSheetInfo
-                }
-                .buttonStyle(NosturButton(bgColor: theme.accent))
-                .layoutPriority(1)
-            }
-            
             if isDetail { // Show full list
                 // if more that 20 do 2 columns
                 if followPs.count > 20 {
