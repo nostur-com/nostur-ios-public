@@ -122,7 +122,7 @@ struct EmbeddedVideoView: View {
                 .overlay {
                     HStack(spacing: 5) {
                         ProgressView()
-                        Text(percent, format:.percent)
+                        Text(vm.downloadProgress, format: .percent) // percent from case enum is not updating so use @Published var
                             .frame(width: 48, alignment: .leading)
                         Image(systemName: "multiply.circle.fill")
                             .onTapGesture {
