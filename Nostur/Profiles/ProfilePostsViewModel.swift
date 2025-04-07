@@ -97,23 +97,18 @@ class ProfilePostsViewModel: ObservableObject {
             subscriptionId: String("PROFILEPOSTS" + UUID().uuidString.suffix(11)),
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
-                if let cm = NostrEssentials
-                            .ClientMessage(type: .REQ,
-                                           subscriptionId: taskId,
-                                           filters: [
-                                            Filters(
-                                                authors: Set([self.pubkey]),
-                                                kinds: self.type == .articles ? ARTICLE_KINDS : PROFILE_KINDS,
-                                                limit: 25
-                                            )
-                                           ]
-                            ).json() {
-                    req(cm)
-                    self.lastFetch = Date.now
-                }
-                else {
-                    L.og.error("Profile posts feed: Problem generating request")
-                }
+                outboxReq(NostrEssentials
+                    .ClientMessage(type: .REQ,
+                                   subscriptionId: taskId,
+                                   filters: [
+                                    Filters(
+                                        authors: Set([self.pubkey]),
+                                        kinds: self.type == .articles ? ARTICLE_KINDS : PROFILE_KINDS,
+                                        limit: 25
+                                    )
+                                   ]
+                    ))
+                self.lastFetch = Date.now
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 guard let self else { return }
@@ -202,7 +197,7 @@ class ProfilePostsViewModel: ObservableObject {
     
     private func prefetchOnSixthPost() {
         guard let oldestPostDate = self.posts.last?.createdAt else { return }
-        if let cm = NostrEssentials
+        outboxReq(NostrEssentials
                     .ClientMessage(type: .REQ,
                                    filters: [
                                     Filters(
@@ -212,12 +207,7 @@ class ProfilePostsViewModel: ObservableObject {
                                         limit: 50
                                     )
                                    ]
-                    ).json() {
-            req(cm)
-        }
-        else {
-            L.og.error("Profile posts feed: Problem generating request")
-        }
+        ))
     }
     
     private func fetchPostStats(_ index:Int, postId:String) {
@@ -326,7 +316,7 @@ class ProfilePostsViewModel: ObservableObject {
     }
     
     public func fetchMore(after: NRPost, amount: Int) {
-        if let cm = NostrEssentials
+        outboxReq(NostrEssentials
                     .ClientMessage(type: .REQ,
                                    filters: [
                                     Filters(
@@ -336,12 +326,7 @@ class ProfilePostsViewModel: ObservableObject {
                                         limit: amount
                                     )
                                    ]
-                    ).json() {
-            req(cm)
-        }
-        else {
-            L.og.error("Profile posts feed: Problem generating .fetchMore request")
-        }
+                    ))
     }
     
     public enum State {
