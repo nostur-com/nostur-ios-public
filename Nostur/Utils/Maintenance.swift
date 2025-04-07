@@ -240,7 +240,7 @@ struct Maintenance {
             return eventId
         }))
         
-        let xDaysAgo = Date.now.addingTimeInterval(-345_600) // 4 days
+        let xDaysAgo = IS_CATALYST ? Date.now.addingTimeInterval(-2_678_400) : Date.now.addingTimeInterval(-345_600) // 4 days on phone, 31 days on Desktop
         
         
         
