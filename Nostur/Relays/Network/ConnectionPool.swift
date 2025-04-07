@@ -556,7 +556,7 @@ public class ConnectionPool: ObservableObject {
         
         // SEND REQ TO WHERE OTHERS WRITE (TO FIND THEIR POSTS, SO WE CAN READ)
         if message.type == .REQ && !preferredRelays.findEventsRelays.isEmpty {
-            self.sendToOthersPreferredWriteRelays(message.clientMessage, subscriptionId: subscriptionId)
+            self.sendToOthersPreferredWriteRelays(message.clientMessage, subscriptionId: subscriptionId ?? message.clientMessage.subscriptionId)
         }
         
         // SEND EVENT TO WHERE OTHERS READ (TO SEND REPLIES ETC SO THEY CAN READ IT)
