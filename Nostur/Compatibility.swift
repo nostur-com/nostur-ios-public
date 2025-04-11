@@ -201,6 +201,16 @@ extension View {
     }
     
     
+    @ViewBuilder
+    func contentTransitionOpacity() -> some View {
+        if #available(iOS 16.0, *) {
+            self.contentTransition(.opacity)
+        }
+        else {
+            self
+        }
+    }
+    
     
     @ViewBuilder
     func presentationDetents250medium() -> some View {

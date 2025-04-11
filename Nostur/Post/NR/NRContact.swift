@@ -154,14 +154,17 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                     DispatchQueue.main.async { [weak self] in
                         guard let self else { return }
                         
-                        self.objectWillChange.send()
+//                        self.objectWillChange.send()
                         
-                        self.anyName = anyName
+                        withAnimation {
+                            self.anyName = anyName
+                            self.pictureUrl = pictureUrl
+                        }
                         self.fixedName = fixedName
                         self.fixedPfp = fixedPfp
                         self.display_name = display_name
                         self.name = name
-                        self.pictureUrl = pictureUrl
+                        
                         self.banner = banner
                         self.about = about
                         self.couldBeImposter = couldBeImposter

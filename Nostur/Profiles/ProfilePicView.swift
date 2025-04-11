@@ -153,7 +153,7 @@ struct InnerPFP: View {
                         }
                     
                 case .flat(let url):
-                    LazyImage(request: pfpImageRequestFor(url)) { state in
+                    LazyImage(request: pfpImageRequestFor(url), transaction: .init(animation: .easeIn)) { state in
                         if let image = state.image {
                             if state.imageContainer?.type == .gif {
                                 image
@@ -161,14 +161,12 @@ struct InnerPFP: View {
                                     .interpolation(.none)
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: size, height: size)
-//                                    .withoutAnimation()
                             }
                             else {
                                 image
                                     .resizable()
                                     .interpolation(.none)
                                     .frame(width: size, height: size)
-//                                    .withoutAnimation()
                             }
                         }
                         else { color }
@@ -181,7 +179,7 @@ struct InnerPFP: View {
                     }
                     
                 case .animatedGif(let url):
-                    LazyImage(request: pfpImageRequestFor(url)) { state in
+                    LazyImage(request: pfpImageRequestFor(url), transaction: .init(animation: .easeIn)) { state in
                         if let container = state.imageContainer {
                             if !ProcessInfo.processInfo.isLowPowerModeEnabled, container.type == .gif, let gifData = container.data {
                                 ZStack {
@@ -225,7 +223,6 @@ struct InnerPFP: View {
                 guard pubkey != newPubkey else { return }
                 self.updatedPictureUrl = nil
             }
-//            .animation(.smooth, value: renderCase)
     }
 }
 
@@ -301,7 +298,7 @@ struct MiniPFP: View {
     
     var body: some View {
         if let pictureUrl {
-            LazyImage(request: pfpImageRequestFor(pictureUrl)) { state in
+            LazyImage(request: pfpImageRequestFor(pictureUrl), transaction: .init(animation: .easeIn)) { state in
                 if let image = state.image {
                     if state.imageContainer?.type == .gif {
                         image
