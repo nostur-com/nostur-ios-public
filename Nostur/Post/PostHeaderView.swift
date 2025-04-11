@@ -120,7 +120,7 @@ struct PostHeaderView: View {
             Text(name)
                 .foregroundColor(.primary)
                 .fontWeightBold()
-                .animation(.smooth, value: name)
+                .contentTransitionOpacity()
                 .lineLimit(1)
                 .layoutPriority(2)
                 .onTapGesture { onTap?() }
