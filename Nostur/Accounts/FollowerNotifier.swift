@@ -89,8 +89,11 @@ class FollowerNotifier {
                 // We need to REQ all that we follow (for follow-back check), but we don't need to check those already following us
                 let followsWithoutFollowers = follows.subtracting(self.currentFollowerPubkeys)
                 
+                // if too many, pick random 1900
+                let followsNotTooMany = followsWithoutFollowers.count <= 2000 ? followsWithoutFollowers : Set(followsWithoutFollowers.shuffled().prefix(2000))
+                
                 let rf = Filters(
-                    authors: followsWithoutFollowers,
+                    authors: followsNotTooMany,
                     kinds: [3],
                     tagFilter: TagFilter(tag: "p", values: [AccountsState.shared.activeAccountPublicKey]),
                     since: since.timestamp
