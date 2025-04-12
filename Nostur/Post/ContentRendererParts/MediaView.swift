@@ -178,7 +178,7 @@ struct MediaPlaceholder: View {
     private var mediaPlaceholder: some View {
         switch vm.state {
         case .loading(let percentage), .paused(let percentage):
-            themes.theme.listBackground.opacity(0.2)
+            themes.theme.background.opacity(0.7)
                 .onAppear {
                     guard case .paused(_) = vm.state else { return }
                     debounceLoad(forceLoad: true)
@@ -241,7 +241,7 @@ struct MediaPlaceholder: View {
                     }
             }
             else {
-                themes.theme.listBackground.opacity(0.2)
+                themes.theme.background.opacity(0.7)
                     .frame(
                         width: availableWidth,
                         height: height
@@ -275,7 +275,7 @@ struct MediaPlaceholder: View {
                 }
             }
         case .dontAutoLoad, .cancelled:
-            themes.theme.listBackground.opacity(0.2)
+            themes.theme.background.opacity(0.7)
                 .overlay {
                     if let blurImage {
                         Image(uiImage: blurImage)
@@ -498,7 +498,7 @@ struct MediaPlaceholder: View {
                 }
             }
         case .error(_):
-            themes.theme.listBackground.opacity(0.2)
+            themes.theme.background.opacity(0.7)
                 .overlay {
                     if let blurImage {
                         Image(uiImage: blurImage)

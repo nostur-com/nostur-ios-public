@@ -27,7 +27,7 @@ struct EmbeddedVideoView: View {
     var body: some View {
         switch vm.viewState {
         case .initial:
-            theme.listBackground
+            theme.background.opacity(0.7)
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     if let thumbnail {
@@ -58,7 +58,7 @@ struct EmbeddedVideoView: View {
                     vm.load(url, nrPost: nrPost, autoLoad: autoload)
                 }
         case .nsfwWarning(let videoUrlString), .lowDataMode(let videoUrlString), .noHttpsWarning(let videoUrlString):
-            theme.listBackground
+            theme.background.opacity(0.7)
                 .frame(width: availableWidth, height: 95.0)
                 .overlay(alignment: .top) {
                     VStack(alignment: .center) {
@@ -103,7 +103,7 @@ struct EmbeddedVideoView: View {
                 }
 
         case .loading(_):
-            theme.listBackground
+            theme.background.opacity(0.7)
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     if let thumbnail {
@@ -131,7 +131,7 @@ struct EmbeddedVideoView: View {
                     }
                 }
         case .loadedFirstFrame(let firstFrame):
-            theme.listBackground
+            theme.background.opacity(0.7)
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     Image(uiImage: firstFrame.uiImage)
@@ -196,7 +196,7 @@ struct EmbeddedVideoView: View {
                     }
                 }
         case .loadedFullVideo(let cachedVideo):
-            theme.listBackground
+            theme.background.opacity(0.7)
                 .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay(alignment: .center) {
                     if didStart {
@@ -248,7 +248,7 @@ struct EmbeddedVideoView: View {
                     
                 }
         case .noPreviewFound(let videoUrlString):
-            theme.listBackground
+            theme.background.opacity(0.7)
                 .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     if SettingsStore.shared.lowDataMode {
@@ -308,7 +308,7 @@ struct EmbeddedVideoView: View {
                     }
                 }
         case .streaming(let streamingUrl):
-            theme.listBackground
+            theme.background.opacity(0.7)
                 .frame(width: availableWidth, height: vm.isAudio ? 75.0 : (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {
                     EmbeddedAVPlayerRepresentable(url: streamingUrl, timeControlStatus: $vm.timeControlStatus, isMuted: $vm.isMuted)
