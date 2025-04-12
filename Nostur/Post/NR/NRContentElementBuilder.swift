@@ -191,7 +191,7 @@ class NRContentElementBuilder {
                 result.append(ContentElement.md(NRTextParser.shared.parseMD(event, text:nonMatch)))
                 
                 if !matchString.matchingStrings(regex: Self.npubPattern).isEmpty {
-                    let match = matchString.replacingOccurrences(of: "nostr:", with: "")
+                    let match = matchString.replacingOccurrences(of: "\n", with: "")
                                             .replacingOccurrences(of: "@", with: "")
                     result.append(ContentElement.npub1(match))
                 }
@@ -228,7 +228,7 @@ class NRContentElementBuilder {
                 }
                 else if !matchString.matchingStrings(regex: Self.nprofilePattern).isEmpty {
                     do {
-                        let match = matchString.replacingOccurrences(of: "nostr:", with: "")
+                        let match = matchString.replacingOccurrences(of: "\n", with: "")
                                                 .replacingOccurrences(of: "@", with: "")
                         let identifier = try ShareableIdentifier(match)
                         result.append(ContentElement.nprofile1(identifier))
@@ -272,9 +272,9 @@ class NRContentElementBuilder {
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4#?|mov#?|m3u8#?|m4v#?|mp3#?|m4a#?)(\??\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
     static let cashuTokenPattern = ###"cashuA([A-Za-z0-9=\-]+)"###
-    static let notePattern = ###"(nostr:|@)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
-    static let neventPattern = ###"(nostr:|@)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
-    static let naddrPattern = ###"(nostr:|@)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
+    static let neventPattern = ###"(nostr:|@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let naddrPattern = ###"(nostr:|@?)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     static let codePattern = ###"```([\s\S]*?)```"###
     
     // These become cards so
