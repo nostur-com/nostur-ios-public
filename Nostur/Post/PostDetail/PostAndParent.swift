@@ -92,7 +92,7 @@ struct PostAndParent: View {
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 0) {
                 if isParent {
-                    PostRowDeletable(nrPost: nrPost, connect: connect)
+                    PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: connect)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .background(
                             themes.theme.listBackground
