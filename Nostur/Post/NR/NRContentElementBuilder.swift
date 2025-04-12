@@ -17,7 +17,7 @@ class NRContentElementBuilder {
     static let shared = NRContentElementBuilder()
     let context = bg()
     
-    func buildElements(input: String, fastTags: [FastTag], event: Event? = nil, primaryColor: Color? = nil, previewImages: [PostedImageMeta] = [], previewVideos: [PostedVideoMeta] = []) -> ([ContentElement], [URL], [GalleryItem]) {
+    func buildElements(input: String, fastTags: [FastTag], event: Event? = nil, primaryColor: Color? = nil, previewImages: [PostedImageMeta] = [], previewVideos: [PostedVideoMeta] = [], isPreviewContext: Bool = false) -> ([ContentElement], [URL], [GalleryItem]) {
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             L.og.info("☠️☠️☠️☠️ renderElements on MAIN thread....")
         }
@@ -29,7 +29,7 @@ class NRContentElementBuilder {
         var galleryItems: [GalleryItem] = []
         var lastMatchEnd = 0
         
-        Self.regex.enumerateMatches(in: input, options: [], range: range) { match, _, _ in
+        (isPreviewContext ? Self.previewRegex : Self.regex).enumerateMatches(in: input, options: [], range: range) { match, _, _ in
             if let match = match {
                 let matchRange = match.range
                 let nonMatchRange = NSRange(location: lastMatchEnd, length: matchRange.location - lastMatchEnd)
@@ -74,7 +74,7 @@ class NRContentElementBuilder {
                                             .replacingOccurrences(of: "@", with: "")
                     result.append(ContentElement.npub1(match))
                 }
-                else if !matchString.matchingStrings(regex: Self.notePattern).isEmpty {
+                else if !matchString.matchingStrings(regex: isPreviewContext ? Self.previewNotePattern : Self.notePattern).isEmpty {
                     let match = matchString.replacingOccurrences(of: "nostr:", with: "")
                                             .replacingOccurrences(of: "@", with: "")
                     result.append(ContentElement.note1(match))
@@ -101,7 +101,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.code(code))
                     }
                 }
-                else if !matchString.matchingStrings(regex: Self.neventPattern).isEmpty {
+                else if !matchString.matchingStrings(regex: isPreviewContext ? Self.previewNeventPattern : Self.neventPattern).isEmpty {
                     do {
                         let match = matchString.replacingOccurrences(of: "nostr:", with: "")
                                                 .replacingOccurrences(of: "@", with: "")
@@ -114,7 +114,7 @@ class NRContentElementBuilder {
                         result.append(ContentElement.text(NRTextParser.shared.parseText(fastTags: fastTags, event: event, text:matchString, primaryColor: primaryColor)))
                     }
                 }
-                else if !matchString.matchingStrings(regex: Self.naddrPattern).isEmpty {
+                else if !matchString.matchingStrings(regex: isPreviewContext ? Self.previewNaddrPattern : Self.naddrPattern).isEmpty {
                     do {
                         let match = matchString.replacingOccurrences(of: "nostr:", with: "")
                                                 .replacingOccurrences(of: "@", with: "")
@@ -272,6 +272,13 @@ class NRContentElementBuilder {
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4#?|mov#?|m3u8#?|m4v#?|mp3#?|m4a#?)(\??\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
     static let cashuTokenPattern = ###"cashuA([A-Za-z0-9=\-]+)"###
+    
+    // In preview, don't render without "nostr:" to discourage wrong creation
+    static let previewNotePattern = ###"(nostr:|@)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
+    static let previewNeventPattern = ###"(nostr:|@)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let previewNaddrPattern = ###"(nostr:|@)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    
+    // Try to render everything, including wrong
     static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
     static let neventPattern = ###"(nostr:|@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     static let naddrPattern = ###"(nostr:|@?)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
@@ -288,6 +295,9 @@ class NRContentElementBuilder {
     // For kind 1 or similar text notes
     static let pattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(naddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
     static let regex = try! NSRegularExpression(pattern: pattern)
+    
+    static let previewPattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(imageUrlPattern)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(previewNotePattern)|\(nprofilePattern)|\(previewNeventPattern)|\(previewNaddrPattern)|\(videoUrlPattern)|\(otherUrlsPattern)|\(codePattern)"
+    static let previewRegex = try! NSRegularExpression(pattern: previewPattern)
     
     // For long form articles (kind 30023), no image urls, video urls, other urls, as these are handled by markdown
     static let articlePattern = "\(previewImagePlaceholder)|\(previewVideoPlaceholder)|\(lightningInvoicePattern)|\(cashuTokenPattern)|\(npubPattern)|\(notePattern)|\(nprofilePattern)|\(neventPattern)|\(naddrPattern)|\(codePattern)"
