@@ -58,7 +58,7 @@ struct NewPossibleImposterLabel: View {
         }
         else {
             Rectangle()
-                .frame(height: 0)
+                .frame(width: 0, height: 0)
                 .hidden()
                 .onAppear {
                     pfp.runImposterCheck()
