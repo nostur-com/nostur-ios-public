@@ -28,7 +28,7 @@ struct ReplyButton: View {
             Image(footerAttributes.replied ? "ReplyIconActive" : "ReplyIcon")
                 .foregroundColor(footerAttributes.replied ? theme.accent : theme.footerButtons)
                 .overlay(alignment: .topLeading) {
-                    if !isDetail && !footerAttributes.replyPFPs.isEmpty {
+                    if !isDetail && !footerAttributes.replyPFPs.isEmpty { // TODO: Mabye this shouldn't be here but in PostLayout() or Kind1()
                         ZStack(alignment:.leading) {
                             ForEach(footerAttributes.replyPFPs.indices, id:\.self) { index in
                                 MiniPFP(pictureUrl: footerAttributes.replyPFPs[index])

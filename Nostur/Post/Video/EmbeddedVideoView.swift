@@ -102,7 +102,7 @@ struct EmbeddedVideoView: View {
                     }
                 }
 
-        case .loading(let percent):
+        case .loading(_):
             theme.listBackground
                 .frame(width: availableWidth, height: (availableHeight ?? (availableWidth / vm.aspect)))
                 .overlay {

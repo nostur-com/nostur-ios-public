@@ -65,19 +65,21 @@ struct PreviewFeed<Content: View>: View {
         #if DEBUG
         let _ = Self._printChanges()
         #endif
-        ScrollViewReader { proxy in
-            List {
-                content
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(themes.theme.listBackground)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+        AvailableWidthContainer {
+            ScrollViewReader { proxy in
+                List {
+                    content
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                }
+                .environment(\.defaultMinListRowHeight, 50)
+                .listStyle(.plain)
+                .scrollContentBackgroundHidden()
             }
-            .environment(\.defaultMinListRowHeight, 50)
-            .listStyle(.plain)
-            .scrollContentBackgroundHidden()
-        }
-        .overlay(alignment: .center) {
-            OverlayVideo()
+            .overlay(alignment: .center) {
+                OverlayVideo()
+            }
         }
     }
 }
