@@ -415,13 +415,33 @@ struct ProfileView: View {
 
 
 
-#Preview("ProfileView") {
+#Preview("ProfileView - snowden") {
     PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadPosts()
     }) {
         NRNavigationStack {
             if let contact = PreviewFetcher.fetchNRContact("84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240") {
+                Zoomable {
+                    ProfileView(nrContact: contact)
+                }
+            }
+        }
+    }
+}
+
+#Preview("ProfileView - fabian") {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadPosts()
+    }) {
+        NRNavigationStack {
+            if let contact = PreviewFetcher.fetchNRContact("9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e") {
+                
+                let _ = contact.nip05 = "fabian@nostur.com"
+                let _ = contact.nip05nameOnly = "fabian"
+                let _ = contact.nip05verified = true
+                
                 Zoomable {
                     ProfileView(nrContact: contact)
                 }
