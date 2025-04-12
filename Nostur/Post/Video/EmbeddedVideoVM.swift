@@ -160,7 +160,7 @@ class EmbeddedVideoVM: ObservableObject {
                 viewState = .loading(1)
             }
             self.downloadProgress = 1 // Need to be off 0 else looks like tapping play button is delayed (first view update would be 3% or higher)
-            Task.detached(priority: .background) { [weak self] in
+            Task.detached(priority: .high) { [weak self] in
                 guard let self else { return }
                 await self.downloadVideo()
             }
