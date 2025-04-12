@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 11/05/2023.
 //
 
-import Foundation
+import SwiftUI
 import Combine
 
 public typealias NRPostID = String
@@ -1291,7 +1291,7 @@ func getKindFileMetadata(event: Event) -> KindFileMetadata {
 // PostOrThreadAttributes, PostRowDeletableAttributes, NoteRowAttributes, PFPAttributes
 
 class PostOrThreadAttributes: ObservableObject {
-    @Published var parentPosts:[NRPost] = []
+    @Published var parentPosts: [NRPost] = []
     
     init(parentPosts: [NRPost] = []) {
         self.parentPosts = parentPosts
@@ -1364,7 +1364,9 @@ class PFPAttributes: ObservableObject, Equatable {
                         let nrContact = NRContact.fetch(contact.pubkey, contact: contact)
                         DispatchQueue.main.async { [weak self] in
                             self?.objectWillChange.send()
-                            self?.contact = nrContact
+                            withAnimation {
+                                self?.contact = nrContact
+                            }
                             self?.similarToPubkey = nrContact?.similarToPubkey
                         }
                     }

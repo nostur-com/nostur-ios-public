@@ -18,11 +18,12 @@ struct NProfileView: View {
     }
     
     struct NProfileViewInner: View {
-        
+        @EnvironmentObject private var themes: Themes
         @EnvironmentObject private var settings: SettingsStore
         @State var nrPost: NRPost?
         @State var fetchTask: Task<Void, Never>?
         
+        // TODO: Remove @FetchRequest
         private var fetchRequest: FetchRequest<Contact>
         private var contacts: FetchedResults<Contact> {
             fetchRequest.wrappedValue
@@ -84,8 +85,8 @@ struct NProfileView: View {
                 }
             }
             .overlay(
-                RoundedRectangle(cornerRadius: 15)
-                    .stroke(.regularMaterial, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(themes.theme.lineColor, lineWidth: 1)
             )
         }
     }
