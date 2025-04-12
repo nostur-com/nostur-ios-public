@@ -208,6 +208,7 @@ struct MediaPlaceholder: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    guard case .paused(_) = vm.state else { return }
                     debounceLoad(forceLoad: true)
                 }
                 .overlay(alignment:. topTrailing) {
@@ -228,16 +229,20 @@ struct MediaPlaceholder: View {
                     .onTapGesture {
                         debounceLoad(forceLoad: true)
                     }
-                    .overlay(alignment: .bottomTrailing) {
-                        Text(galleryItem.url.absoluteString)
-                            .foregroundColor(themes.theme.accent)
-                            .truncationMode(.middle)
-                            .lineLimit(1)
-                            .font(.footnote)
-                            .onTapGesture {
+                    .overlay(alignment: .center) {
+                        VStack(alignment: .center) {
+                            Text("Loading paused (Low data mode)", comment: "Displayed when media in a post is blocked")
+                                .fontWeightBold()
+                            Text(galleryItem.url.absoluteString)
+                                .fontItalic()
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Button(String(localized: "Load anyway", comment: "Button to show the blocked content anyway")) {
                                 debounceLoad(forceLoad: true)
                             }
-                            .padding(3)
+                            .padding(.bottom, 10)
+                        }
+                        .padding(10)
                     }
             }
             else {
@@ -250,16 +255,20 @@ struct MediaPlaceholder: View {
                     .onTapGesture {
                         debounceLoad(forceLoad: true)
                     }
-                    .overlay(alignment: .bottomTrailing) {
-                        Text(galleryItem.url.absoluteString)
-                            .foregroundColor(themes.theme.accent)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .font(.footnote)
-                            .onTapGesture {
+                    .overlay(alignment: .center) {
+                        VStack(alignment: .center) {
+                            Text("Loading paused (Low data mode)", comment: "Displayed when media in a post is blocked")
+                                .fontWeightBold()
+                            Text(galleryItem.url.absoluteString)
+                                .fontItalic()
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Button(String(localized: "Load anyway", comment: "Button to show the blocked content anyway")) {
                                 debounceLoad(forceLoad: true)
                             }
-                            .padding(3)
+                            .padding(.bottom, 10)
+                        }
+                        .padding(10)
                     }
             }
         case .httpBlocked:
@@ -585,6 +594,7 @@ struct MediaPlaceholder: View {
     private func debounceLoad(forceLoad: Bool = false) {
         // Cancel any existing load task
         cancelLoad()
+        vm.state = .loading(0)
         
         // Create a new debounced load task
         loadTask = Task.detached(priority: .low) {

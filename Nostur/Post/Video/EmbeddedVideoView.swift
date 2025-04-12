@@ -84,6 +84,8 @@ struct EmbeddedVideoView: View {
                             if (!IS_IPHONE) {
                                 didStart = true // (will increase size of Kind1Both frame, not needed on iPhone floating player)
                             }
+                            vm.viewState = .loading(0)
+                            vm.downloadProgress = 0
                             vm.load(url, nrPost: nrPost, autoLoad: autoload, loadAnyway: true)
                         }
                         .foregroundColor(theme.accent)

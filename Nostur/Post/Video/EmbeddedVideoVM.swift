@@ -105,6 +105,13 @@ class EmbeddedVideoVM: ObservableObject {
             self.viewState = .noPreviewFound(videoUrlString)
             
         }
+        else if loadAnyway { // Download full video
+            self.downloadProgress = 0 // Need to be off 0 else looks like tapping play button is delayed (first view update would be 3% or higher)
+            Task.detached(priority: .high) { [weak self] in
+                guard let self else { return }
+                await self.downloadVideo()
+            }
+        }
         else { // OK, lets load first frame
             Task {
                 await loadFirstFrame(videoUrl)
@@ -157,9 +164,9 @@ class EmbeddedVideoVM: ObservableObject {
 
             }
             else {
-                viewState = .loading(1)
+                viewState = .loading(0)
             }
-            self.downloadProgress = 1 // Need to be off 0 else looks like tapping play button is delayed (first view update would be 3% or higher)
+            self.downloadProgress = 0
             Task.detached(priority: .high) { [weak self] in
                 guard let self else { return }
                 await self.downloadVideo()
