@@ -102,7 +102,7 @@ struct PostAndParent: View {
                         )
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: themes.theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: themes.theme)
 //                        .id(nrPost.id)
                         .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
                         .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
