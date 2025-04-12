@@ -28,7 +28,7 @@ struct LinkPreviewView: View {
                             request: ImageRequest(url: URL(string:image),
                                                   processors: [.resize(size: CGSize(width:DIMENSIONS.PREVIEW_HEIGHT * Self.aspect, height:DIMENSIONS.PREVIEW_HEIGHT), upscale: true)],
                             options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
+                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .easeIn)) { state in
                                 if let image = state.image {
                                     image.interpolation(.none)
                                 }

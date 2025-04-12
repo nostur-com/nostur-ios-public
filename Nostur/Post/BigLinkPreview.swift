@@ -28,7 +28,7 @@ struct BigLinkPreview: View {
                             request: ImageRequest(url: URL(string:image),
                                                   processors: [.resize(height: Self.BIG_PREVIEW_IMAGE_HEIGHT, upscale: false)],
                             options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .none)) { state in
+                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .easeIn)) { state in
                                 if let image = state.image {
                                     image
                                         .resizable()
