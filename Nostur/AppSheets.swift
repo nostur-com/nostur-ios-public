@@ -52,7 +52,15 @@ struct WithAppSheets: ViewModifier {
             })
             .fullScreenCover(item: $asm.feedPreviewSheetInfo) { feedPreviewSheetInfo in
                 NRSheetNavigationStack {
-                    FeedPreviewSheet(nrPost: feedPreviewSheetInfo.nrPost, config: feedPreviewSheetInfo.config)
+                    ZStack(alignment: .center) {
+                        if !IS_IPHONE {
+                            Color.black.opacity(0.5)
+                        }
+                        AvailableWidthContainer {
+                            FeedPreviewSheet(nrPost: feedPreviewSheetInfo.nrPost, config: feedPreviewSheetInfo.config)
+                        }
+                        .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
+                    }
                 }
             }
     }
