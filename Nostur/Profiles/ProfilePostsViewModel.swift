@@ -144,10 +144,10 @@ class ProfilePostsViewModel: ObservableObject {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND flags != \"is_update\" AND replyToId == nil AND replyToRootId == nil", self.pubkey, ARTICLE_KINDS)
             }
             else if self.type == .posts {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToId == nil AND replyToRootId == nil", self.pubkey, PROFILE_KINDS)
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToId == nil AND replyToRootId == nil", self.pubkey, PROFILE_KINDS.subtracting([5]))
             }
             else {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToId != nil OR replyToRootId != nil)", self.pubkey, PROFILE_KINDS)
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToId != nil OR replyToRootId != nil)", self.pubkey, PROFILE_KINDS.subtracting([5]))
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = 0
@@ -277,10 +277,10 @@ class ProfilePostsViewModel: ObservableObject {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND flags != \"is_update\" AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, ARTICLE_KINDS, Int(firstPostCreatedAt))
             }
             else if self.type == .posts {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, PROFILE_KINDS.subtracting([5]), Int(firstPostCreatedAt))
             }
             else {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToRootId != nil OR replyToId != nil) AND created_at <= %i", self.pubkey, PROFILE_KINDS, Int(firstPostCreatedAt))
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToRootId != nil OR replyToId != nil) AND created_at <= %i", self.pubkey, PROFILE_KINDS.subtracting([5]), Int(firstPostCreatedAt))
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = offset

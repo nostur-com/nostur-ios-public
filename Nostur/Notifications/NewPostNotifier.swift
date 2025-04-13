@@ -92,7 +92,7 @@ class NewPostNotifier: ObservableObject {
                     guard let self else { return }
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.subtracting(Set([6]))) // not reposts
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.subtracting(Set([5,6]))) // not reposts or delete requests
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
                     }
@@ -107,7 +107,7 @@ class NewPostNotifier: ObservableObject {
                 bg().perform { [weak self] in
                     guard let self else { return }
                     let fr = Event.fetchRequest()
-                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.subtracting(Set([6]))) // not reposts
+                    fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.subtracting(Set([5,6]))) // not reposts or delete requests
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
                         self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
                     }
