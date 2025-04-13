@@ -11,7 +11,8 @@ class NRReplyingToBuilder {
     
     static let shared = NRReplyingToBuilder()
 
-    func replyingToUsernamesMarkDownString(_ event:Event) -> String? {
+    // TODO: Add replyTo pfpUrl or pubkey or nrContact here also, and return, but only if missingReplyTo
+    func replyingToUsernamesMarkDownString(_ event: Event) -> String? {
         guard event.replyToId != nil || event.replyTo != nil else { return nil }
         
         if let replyTo = event.replyTo, replyTo.kind == 30023 {
