@@ -518,6 +518,16 @@
         }
       }
     },
+    "%@ by %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ by %2$@"
+          }
+        }
+      }
+    },
     "%@ Checking relays..." : {
       "localizations" : {
         "nl" : {
@@ -2803,9 +2813,6 @@
         }
       }
     },
-    "curated by " : {
-
-    },
     "Currently allowed by the filter: %lld contacts" : {
       "localizations" : {
         "nl" : {
@@ -4647,9 +4654,6 @@
         }
       }
     },
-    "List by %@" : {
-
-    },
     "Listen anonymously" : {
       "localizations" : {
         "nl" : {
@@ -4660,7 +4664,7 @@
         }
       }
     },
-    "Lists from people follow" : {
+    "Lists from people you follow" : {
 
     },
     "Live Nests or streams from follows" : {
@@ -4826,6 +4830,9 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "Maintained by " : {
+
     },
     "Make moderator" : {
       "localizations" : {
@@ -8987,6 +8994,9 @@
           }
         }
       }
+    },
+    "Updates refer to people added or removed from this list, not posts or content." : {
+
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",
