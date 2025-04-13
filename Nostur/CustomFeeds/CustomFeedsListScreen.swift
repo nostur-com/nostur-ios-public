@@ -67,7 +67,7 @@ struct CustomFeedsListScreen: View {
 //                    })
                     Toggle(isOn: $enableDiscoverListsFeed, label: {
                         Text("Discover")
-                        Text("Lists from people follow")
+                        Text("Lists from people you follow")
                     })
                     Toggle(isOn: $enableEmojiFeed, label: {
                         Text("Emoji Feed")
