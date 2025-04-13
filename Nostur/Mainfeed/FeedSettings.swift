@@ -65,6 +65,9 @@ struct FeedSettings: View {
                     })) {
                         Text("Subscribe to list updates")
                     }
+                } footer: {
+                    Text("Updates refer to people added or removed from this list, not posts or content.")
+                        .font(.footnote)
                 }
                 .listRowBackground(themes.theme.background)
             }
@@ -203,7 +206,7 @@ struct SendSatsToSupportView: View {
                     .font(.title)
             }
             HStack {
-                Text("curated by ")
+                Text("Maintained by ")
                 PFPandName(pfpAttributes: pfpAttributes, dismissOnNavigate: true)
             }
             
@@ -220,7 +223,7 @@ struct SendSatsToSupportView: View {
             }
             
         }
-        .navigationTitle("List by \(pfpAttributes.anyName)")
+        .navigationTitle("\(listName ?? "List") by \(pfpAttributes.anyName)")
     }
 }
 
@@ -240,7 +243,7 @@ struct PFPandName: View {
                 .onTapGesture(perform: navigateToContact)
             Text(pfpAttributes.anyName)
         }
-        .navigationTitle("List by \(pfpAttributes.anyName)")
+//        .navigationTitle("List by \(pfpAttributes.anyName)")
         .onAppear {
             bg().perform {
                 if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
