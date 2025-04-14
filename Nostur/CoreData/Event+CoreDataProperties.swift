@@ -263,7 +263,7 @@ extension Event {
         return false
     }
     
-    var inWoT:Bool {
+    var inWoT: Bool {
         if kind == 9735, let zapReq = zapFromRequest {
             return WebOfTrust.shared.isAllowed(zapReq.pubkey)
         }
@@ -760,7 +760,9 @@ extension Event {
                 return zapReqNEvent
             }
             catch {
+#if DEBUG
                 L.og.error("extractZapRequest \(error)")
+#endif
                 return nil
             }
         }

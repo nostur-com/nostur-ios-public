@@ -276,6 +276,7 @@ class WebOfTrust: ObservableObject {
     
     public func isAllowed(_ pubkey: String) -> Bool {
         guard mainAccountWoTpubkey != "" else { return true }
+        guard webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return true }
         if webOfTrustLevel != SettingsStore.WebOfTrustLevel.strict.rawValue && allowedKeysCount < ENABLE_THRESHOLD { return true }
         
         // Maybe check small set first, faster?
@@ -522,4 +523,13 @@ class WebOfTrust: ObservableObject {
 
 func WOT_FILTER_ENABLED() -> Bool {
     WebOfTrust.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
+}
+
+extension NEvent {
+    var inWoT: Bool { // Similar as in Event
+        if kind == .zapNote, let zapReq = Event.extractZapRequest(tags: self.tags) {
+            return WebOfTrust.shared.isAllowed(zapReq.publicKey)
+        }
+        return WebOfTrust.shared.isAllowed(publicKey)
+    }
 }

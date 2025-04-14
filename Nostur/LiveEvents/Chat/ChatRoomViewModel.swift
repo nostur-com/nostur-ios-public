@@ -124,8 +124,10 @@ class ChatRoomViewModel: ObservableObject {
             guard let self else { return }
             
             guard let events = try? bgContext.fetch(fr) else { return }
-            
-            let rows: [ChatRowContent] = events.compactMap { event in
+                        
+            let rows: [ChatRowContent] = events
+                .filter { $0.inWoT }
+                .compactMap { event in
                 let row: ChatRowContent? = if event.kind == 9735, let nZapRequest = Event.extractZapRequest(tags: event.tags()) {
                     ChatRowContent.chatConfirmedZap(
                         NRChatConfirmedZap(
@@ -216,6 +218,7 @@ class ChatRoomViewModel: ObservableObject {
                 guard let event = message.event else { return }
                 guard !blocks().contains(event.publicKey) else { return }
                 guard event.kind == .chatMessage || event.kind == .zapNote else { return }
+                guard event.inWoT else { return }
                 guard event.tags.first(where: { $0.type == "a" && $0.value == aTag }) != nil else { return }
 
                 if self.state != .ready {
@@ -225,10 +228,10 @@ class ChatRoomViewModel: ObservableObject {
                 
                 // TODO: check zapRequest.pubkey for blocks(), or maybe "P" (not "p")
                 
-                #if DEBUG
-                L.nests.debug("Chat message/zap received \(event.kind == .zapNote ? "ZAP" : "MESSAGE"): \(event.content)")
-                #endif
-                // TODO: Filter WoT before adding? or already filtered in MessageParser?
+#if DEBUG
+                L.og.debug("Chat message/zap received \(event.kind == .zapNote ? "ZAP" : "MESSAGE"): \(event.content)")
+#endif
+
                 bg().perform {
                     let confirmedZap: ChatRowContent = if event.kind == .zapNote, let nZapRequest = Event.extractZapRequest(tags: event.tags) {
                         ChatRowContent.chatConfirmedZap(
