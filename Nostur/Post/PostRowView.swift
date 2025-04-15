@@ -62,7 +62,7 @@ struct PostRowDeletable: View {
         }
         else {
             HStack {
-                Text("_Post deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)")
+                Text("_Deleted by \(nrPost.anyName)_", comment: "Message shown when a post is deleted by (name)")
                 Button(String(localized: "Undelete", comment: "Button to undelete a deleted post")) { nrPost.undelete() }
                     .buttonStyle(.bordered)
             }

@@ -46,7 +46,7 @@ struct PostAndParent: View {
                         .background(themes.theme.listBackground)
                 }
                 else {
-                    Text("_Post deleted by author_", comment: "Message shown when a post is deleted")
+                    Text("_Deleted by author_", comment: "Message shown when a post is deleted")
                         .hCentered()
                     Button("Undelete") {
                         nrPost.objectWillChange.send()
