@@ -66,6 +66,16 @@ struct ContactList: View {
                     themes.theme.background.frame(height: GUTTER)
                 }
         }
+        
+        if !contacts.isEmpty {
+            Button("Add all to custom list") {
+                AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: Set(pubkeys))
+            }
+            .buttonStyle(NRButtonStyle(theme: themes.theme))
+            .frame(height: 120)
+            .background(themes.theme.listBackground)
+            .hCentered()
+        }
     }
     
 }

@@ -10,7 +10,7 @@ import SwiftUI
 // Generic reusable fetcher
 class FetchVM<T: Equatable>: ObservableObject {
     
-    public typealias FetchParams = (prio: Bool?, req: (String?) -> Void, onComplete: (RelayMessage?, Event?) -> Void, altReq: ((String?) -> Void)?)
+    public typealias FetchParams = (prio: Bool?, req: (String) -> Void, onComplete: (RelayMessage?, Event?) -> Void, altReq: ((String) -> Void)?)
     
     @Published var state: State
     private let backlog: Backlog

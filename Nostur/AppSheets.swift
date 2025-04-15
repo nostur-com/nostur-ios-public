@@ -17,12 +17,14 @@ class AppSheetsModel: ObservableObject {
     @Published var readOnlySheetVisible: Bool = false
     @Published var askLoginInfo: AskLoginInfo? = nil
     @Published var feedPreviewSheetInfo: FeedPreviewInfo? = nil
+    @Published var addContactsToListInfo: AddContactsToListInfo? = nil
     
     // Workaround because .sheet / .fullScreenCover has some issues with NavigationBackPort where dismiss() doesn't work
     @MainActor func dismiss() {
         readOnlySheetVisible = false
         askLoginInfo = nil
         feedPreviewSheetInfo = nil
+        addContactsToListInfo = nil
     }
 }
 
@@ -34,6 +36,12 @@ struct WithAppSheets: ViewModifier {
     
     func body(content: Content) -> some View {
         content
+            .sheet(item: $asm.addContactsToListInfo, content: { info in
+                NRSheetNavigationStack {
+                    AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys, theme: themes.theme)
+                        .presentationDetentsLarge()
+                }
+            })
             .sheet(isPresented: $asm.readOnlySheetVisible) {
                 NRSheetNavigationStack {
                     ReadOnlyAccountInformationSheet()
@@ -41,7 +49,7 @@ struct WithAppSheets: ViewModifier {
                 }
             }
             .sheet(item: $asm.askLoginInfo, content: { askLoginInfo in
-                NBNavigationStack {
+                NBNavigationStack { // Note: Can't use NRSheetNavigationStack here but forgot why
                     AppEnvironment {
                         AskLoginSheet(askLoginInfo: askLoginInfo, account: loggedInAccount.account)
                     }

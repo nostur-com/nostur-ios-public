@@ -1332,6 +1332,9 @@
         }
       }
     },
+    "Add all to custom list" : {
+
+    },
     "Add back" : {
       "comment" : "Button to add back 'possible imposter' label from a contact (only visible right after removing)",
       "localizations" : {
@@ -1427,6 +1430,12 @@
           }
         }
       }
+    },
+    "Add to existing list" : {
+
+    },
+    "Add to new list" : {
+
     },
     "Add to stage" : {
       "localizations" : {
@@ -2109,6 +2118,9 @@
           }
         }
       }
+    },
+    "Choose existing list" : {
+
     },
     "Choose feed" : {
       "localizations" : {
@@ -5244,6 +5256,9 @@
           }
         }
       }
+    },
+    "New list name" : {
+
     },
     "New message" : {
       "comment" : "Navigation title for a new Direct Message",
