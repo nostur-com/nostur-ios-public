@@ -11,6 +11,7 @@ import NostrEssentials
 class ProfileViewModel: ObservableObject {
     @Published var isFollowingYou = false
     @Published var showArticlesTab = false
+    @Published var showListsTab = false
     @Published var fixedPfp: URL?
     @Published var npub = ""
     
@@ -30,6 +31,7 @@ class ProfileViewModel: ObservableObject {
         self.loadOldPFP(nrContact)
         self.loadProfileKinds(nrContact)
         self.loadArticles(nrContact)
+        self.loadLists(nrContact)
         
         bg().perform { [weak self] in
             
@@ -182,6 +184,36 @@ class ProfileViewModel: ObservableObject {
                     Task { @MainActor [weak self] in
                         withAnimation {
                             self?.showArticlesTab = true
+                        }
+                    }
+                }
+            }
+        })
+        
+        backlog.add(reqTask)
+        reqTask.fetch()
+    }
+    
+    public func loadLists(_ nrContact: NRContact) {
+        let reqTask = ReqTask(prefix: "HASLIST-", reqCommand: { taskId in
+            let filters = [Filters(authors: [nrContact.pubkey], kinds: [30000], limit: 15)]
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
+        }, processResponseCommand: { taskId, _, _ in
+            bg().perform {
+                if Event.fetchMostRecentEventBy(pubkey: nrContact.pubkey, andKind: 30000, context: bg()) != nil {
+                    Task { @MainActor [weak self] in
+                        withAnimation {
+                            self?.showListsTab = true
+                        }
+                    }
+                }
+            }
+        }, timeoutCommand: { taskId in
+            bg().perform {
+                if Event.fetchMostRecentEventBy(pubkey: nrContact.pubkey, andKind: 30000, context: bg()) != nil {
+                    Task { @MainActor [weak self] in
+                        withAnimation {
+                            self?.showListsTab = true
                         }
                     }
                 }

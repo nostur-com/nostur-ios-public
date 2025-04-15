@@ -12,6 +12,7 @@ import Combine
 
 let PROFILE_KINDS = Set([1,5,6,20,9802,34235])
 let ARTICLE_KINDS = Set([30023])
+let LIST_KINDS = Set([30000])
 
 // For profile view, try to load first 10 posts as fast as possible
 // Then reload remaining later
@@ -21,6 +22,7 @@ class ProfilePostsViewModel: ObservableObject {
         case posts
         case replies
         case articles
+        case lists
     }
     
     @Published var state: State
@@ -97,13 +99,23 @@ class ProfilePostsViewModel: ObservableObject {
             subscriptionId: String("PROFILEPOSTS" + UUID().uuidString.suffix(11)),
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
+                
+                let kinds = switch self.type {
+                case .posts, .replies:
+                    PROFILE_KINDS
+                case .articles:
+                    ARTICLE_KINDS
+                case .lists:
+                    LIST_KINDS
+                }
+                
                 outboxReq(NostrEssentials
                     .ClientMessage(type: .REQ,
                                    subscriptionId: taskId,
                                    filters: [
                                     Filters(
                                         authors: Set([self.pubkey]),
-                                        kinds: self.type == .articles ? ARTICLE_KINDS : PROFILE_KINDS,
+                                        kinds: kinds,
                                         limit: 25
                                     )
                                    ]
@@ -140,8 +152,11 @@ class ProfilePostsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             let fr = Event.fetchRequest()
-            if self.type == .articles {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND flags != \"is_update\" AND replyToId == nil AND replyToRootId == nil", self.pubkey, ARTICLE_KINDS)
+            if self.type == .lists {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil", self.pubkey, LIST_KINDS)
+            }
+            else if self.type == .articles {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil", self.pubkey, ARTICLE_KINDS)
             }
             else if self.type == .posts {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToId == nil AND replyToRootId == nil", self.pubkey, PROFILE_KINDS.subtracting([5]))
@@ -197,12 +212,20 @@ class ProfilePostsViewModel: ObservableObject {
     
     private func prefetchOnSixthPost() {
         guard let oldestPostDate = self.posts.last?.createdAt else { return }
+        let kinds = switch self.type {
+        case .posts, .replies:
+            PROFILE_KINDS
+        case .articles:
+            ARTICLE_KINDS
+        case .lists:
+            LIST_KINDS
+        }
         outboxReq(NostrEssentials
                     .ClientMessage(type: .REQ,
                                    filters: [
                                     Filters(
                                         authors: Set([self.pubkey]),
-                                        kinds: self.type == .articles ? ARTICLE_KINDS : PROFILE_KINDS,
+                                        kinds: kinds,
                                         until: Int(oldestPostDate.timeIntervalSince1970),
                                         limit: 50
                                     )
@@ -273,8 +296,11 @@ class ProfilePostsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             let fr = Event.fetchRequest()
-            if self.type == .articles {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND flags != \"is_update\" AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, ARTICLE_KINDS, Int(firstPostCreatedAt))
+            if self.type == .lists {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil AND created_at <= %i", self.pubkey, LIST_KINDS, Int(firstPostCreatedAt))
+            }
+            else if self.type == .articles {
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil AND created_at <= %i", self.pubkey, ARTICLE_KINDS, Int(firstPostCreatedAt))
             }
             else if self.type == .posts {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, PROFILE_KINDS.subtracting([5]), Int(firstPostCreatedAt))
@@ -316,12 +342,20 @@ class ProfilePostsViewModel: ObservableObject {
     }
     
     public func fetchMore(after: NRPost, amount: Int) {
+        let kinds = switch self.type {
+        case .posts, .replies:
+            PROFILE_KINDS
+        case .articles:
+            ARTICLE_KINDS
+        case .lists:
+            LIST_KINDS
+        }
         outboxReq(NostrEssentials
                     .ClientMessage(type: .REQ,
                                    filters: [
                                     Filters(
                                         authors: Set([self.pubkey]),
-                                        kinds: self.type == .articles ? ARTICLE_KINDS : PROFILE_KINDS,
+                                        kinds: kinds,
                                         until: Int(after.created_at),
                                         limit: amount
                                     )

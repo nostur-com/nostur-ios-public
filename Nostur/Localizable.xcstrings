@@ -4686,6 +4686,9 @@
         }
       }
     },
+    "Lists" : {
+      "comment" : "Tab title"
+    },
     "Lists & Feeds" : {
       "comment" : "Side bar navigation button"
     },

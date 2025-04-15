@@ -267,6 +267,9 @@ struct ProfileView: View {
                 case "Replies":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .replies)
                         .background(themes.theme.listBackground)
+                case "Lists":
+                    ProfilePostsView(pubkey: nrContact.pubkey, type: .lists)
+                        .background(themes.theme.listBackground)
                 case "Articles":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
                         .background(themes.theme.listBackground)
@@ -299,45 +302,52 @@ struct ProfileView: View {
                     HStack(spacing: 0) {
                         TabButton(
                             action: { selectedSubTab = "Posts" },
-                            title: String(localized:"Posts", comment:"Tab title"),
+                            title: String(localized: "Posts", comment:"Tab title"),
                             selected: selectedSubTab == "Posts")
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Replies" },
-                            title: String(localized:"Replies", comment:"Tab title"),
+                            title: String(localized: "Replies", comment:"Tab title"),
                             selected: selectedSubTab == "Replies")
                         Spacer()
+                        if vm.showListsTab {
+                            TabButton(
+                                action: { selectedSubTab = "Lists" },
+                                title: String(localized: "Lists", comment:"Tab title"),
+                                selected: selectedSubTab == "Lists")
+                            Spacer()
+                        }
                         if vm.showArticlesTab {
                             TabButton(
                                 action: { selectedSubTab = "Articles" },
-                                title: String(localized:"Articles", comment:"Tab title"),
+                                title: String(localized: "Articles", comment:"Tab title"),
                                 selected: selectedSubTab == "Articles")
                             Spacer()
                         }
                         TabButton(
                             action: { selectedSubTab = "Interactions" },
-                            title: String(localized:"Interactions", comment:"Tab title"),
+                            title: String(localized: "Interactions", comment:"Tab title"),
                             selected: selectedSubTab == "Interactions")
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Following" },
-                            title: String(localized:"Following", comment:"Tab title"),
+                            title: String(localized: "Following", comment:"Tab title"),
                             selected: selectedSubTab == "Following")
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Media" },
-                            title: String(localized:"Media", comment:"Tab title"),
+                            title: String(localized: "Media", comment:"Tab title"),
                             selected: selectedSubTab == "Media")
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Reactions" },
-                            title: String(localized:"Reactions", comment:"Tab title"),
+                            title: String(localized: "Reactions", comment:"Tab title"),
                             selected: selectedSubTab == "Reactions")
                         Spacer()
                         if #available(iOS 16.0, *) {
                             TabButton(
                                 action: { selectedSubTab = "Zaps" },
-                                title: String(localized:"Zaps", comment:"Tab title"),
+                                title: String(localized: "Zaps", comment:"Tab title"),
                                 selected: selectedSubTab == "Zaps")
                             Spacer()
                         }
