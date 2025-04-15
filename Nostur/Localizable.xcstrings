@@ -63,8 +63,15 @@
         }
       }
     },
+    "_Deleted by %@_" : {
+      "comment" : "Message shown when a post is deleted by (name)"
+    },
+    "_Deleted by author_" : {
+      "comment" : "Message shown when a post is deleted"
+    },
     "_Post deleted by %@_" : {
       "comment" : "Message shown when a post is deleted by (name)",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -76,6 +83,7 @@
     },
     "_Post deleted by author_" : {
       "comment" : "Message shown when a post is deleted",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
