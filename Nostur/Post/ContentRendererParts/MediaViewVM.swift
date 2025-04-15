@@ -14,7 +14,7 @@ class MediaViewVM: ObservableObject {
     
     private var task: AsyncImageTask?
     
-    public func load(_ url: URL, forceLoad: Bool = false, generateIMeta: Bool = false) async {
+    public func load(_ url: URL, forceLoad: Bool = false, generateIMeta: Bool = false, usePFPpipeline: Bool = false) async {
         if SettingsStore.shared.lowDataMode && !forceLoad {
             Task { @MainActor in
                 state = .lowDataMode
@@ -29,13 +29,11 @@ class MediaViewVM: ObservableObject {
             return
         }
         
-
-        let imageRequest = makeImageRequest(url,
-                                            label: "MediaViewVM.load",
-                                            overrideLowDataMode: forceLoad
-        )
-        
-        self.task = ImageProcessing.shared.content.imageTask(with: imageRequest)
+        self.task = usePFPpipeline
+            ? ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(url))
+            : ImageProcessing.shared.content.imageTask(with: makeImageRequest(url,
+                                                                              label: "MediaViewVM.load",
+                                                                              overrideLowDataMode: forceLoad))
         
         Task { @MainActor in
             state = .loading(0)

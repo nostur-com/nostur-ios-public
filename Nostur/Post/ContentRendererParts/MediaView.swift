@@ -24,6 +24,7 @@ struct MediaContentView: View {
     public var isNSFW: Bool = false
     public var imageInfo: ImageInfo? = nil
     public var gifInfo: GifInfo? = nil
+    public var usePFPpipeline: Bool = false
     
     // will sendNotification with image dimensions / blurhash 
     public var generateIMeta: Bool = false
@@ -71,6 +72,7 @@ struct MediaContentView: View {
             isNSFW: isNSFW,
             imageInfo: imageInfo,
             gifInfo: gifInfo,
+            usePFPpipeline: usePFPpipeline,
             generateIMeta: generateIMeta,
             zoomableId: zoomableId
         )
@@ -99,6 +101,7 @@ struct MediaPlaceholder: View {
     public var isNSFW: Bool = false
     public var imageInfo: ImageInfo? = nil
     public var gifInfo: GifInfo? = nil
+    public var usePFPpipeline: Bool = false
     public var generateIMeta: Bool = false
     public var zoomableId: String = "Default"
     
@@ -608,14 +611,14 @@ struct MediaPlaceholder: View {
             if !isVisible && !forceLoad { return }
             
             // Proceed with loading
-            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta)
+            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
         }
     }
     
     @MainActor
     private func load(forceLoad: Bool = false) {
         Task.detached(priority: .low) {
-            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta)
+            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
         }
     }
     

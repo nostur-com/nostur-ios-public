@@ -14,6 +14,7 @@ struct GalleryFullScreenSwiper: View {
 
     public var initialIndex: Int
     public var items: [GalleryItem]
+    public var usePFPpipeline: Bool = false // set true to load fixed PFP from cache (else nothing in cache)
     
     @State private var activeIndex: Int?
     @State private var sharableImage: UIImage? = nil
@@ -144,7 +145,8 @@ struct GalleryFullScreenSwiper: View {
             // Already fullscreen, so don't load "galleryItems" recursively
             autoload: true,
             imageInfo: items[index].imageInfo,
-            gifInfo: items[index].gifInfo
+            gifInfo: items[index].gifInfo,
+            usePFPpipeline: usePFPpipeline
         )
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
         .scaleEffect(scale * (1.0 - (0.2 * dismissProgress)))

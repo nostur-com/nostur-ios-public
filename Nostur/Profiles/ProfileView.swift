@@ -61,7 +61,8 @@ struct ProfileView: View {
                                 if let pictureUrl = nrContact.pictureUrl {
                                     GalleryFullScreenSwiper(
                                         initialIndex: 0,
-                                        items: [GalleryItem(url: pictureUrl)]
+                                        items: [GalleryItem(url: pictureUrl)],
+                                        usePFPpipeline: false // false or we only get 50x50 version scaled up blurry
                                     )
                                 }
                                 else {
@@ -76,7 +77,8 @@ struct ProfileView: View {
                                     }, frameSize: .init(width: 20.0, height: 20.0)) {
                                         GalleryFullScreenSwiper(
                                             initialIndex: 0,
-                                            items: [GalleryItem(url: fixedPfp)]
+                                            items: [GalleryItem(url: fixedPfp)],
+                                            usePFPpipeline: true // needs to be from pfp cache, will be blurry scaled up but too bad
                                         )
                                     }
                                 }
