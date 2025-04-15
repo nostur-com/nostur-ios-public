@@ -284,6 +284,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
         bgContext.perform {
             let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned", context: bgContext)
             let savedEvent2 = Event.saveEvent(event: deleteReq, flags: "nsecbunker_unsigned", context: bgContext)
+            savedEvent.deletedById = savedEvent2.id
             DataProvider.shared().bgSave()
             
             DispatchQueue.main.async {
@@ -309,21 +310,28 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
         }
     }
     else {
-        if let signedEvent = try? account.signEvent(nEvent) {
+        if let signedDeleteEvent = try? account.signEvent(deleteReq) {
+            let deleteEventId = signedDeleteEvent.id
             let bgContext = bg()
             bgContext.perform {
-                _ = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
+                _ = Event.saveEvent(event: signedDeleteEvent, flags: "awaiting_send", context: bgContext)
                 DataProvider.shared().bgSave()
             }
-            Unpublisher.shared.publishNow(signedEvent)
-        }
-        if let signedEvent2 = try? account.signEvent(deleteReq) {
-            let bgContext = bg()
-            bgContext.perform {
-                _ = Event.saveEvent(event: signedEvent2, flags: "awaiting_send", context: bgContext)
-                DataProvider.shared().bgSave()
+            _ = Unpublisher.shared.publish(signedDeleteEvent) // is published after wipe event (timer)
+            
+            if let signedWipedEvent = try? account.signEvent(nEvent) {
+                let bgContext = bg()
+                bgContext.perform {
+                    let wipedEvent = Event.saveEvent(event: signedWipedEvent, flags: "awaiting_send", context: bgContext)
+                    wipedEvent.deletedById = deleteEventId
+                    DataProvider.shared().bgSave()
+                    Task { @MainActor in
+                        ViewUpdates.shared.postDeleted.send((wipedEvent.id, deleteEventId))
+                    }
+                }
+                Unpublisher.shared.publishNow(signedWipedEvent) // is published before delete req (Now)
             }
-            _ = Unpublisher.shared.publish(signedEvent2)
+            
         }
     }
     

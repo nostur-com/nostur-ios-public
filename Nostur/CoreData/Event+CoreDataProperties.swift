@@ -1363,6 +1363,7 @@ extension Event {
         
         if event.kind == .delete {
             let eventIdsToDelete = event.eTags()
+            // TODO: Also do aTags
             
             let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
             eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,6,20,9802,30023,34235} AND id IN %@", eventIdsToDelete)
