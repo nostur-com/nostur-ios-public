@@ -30,6 +30,7 @@ struct EditNosturList: View {
                 .swipeActions(edge: .trailing) {
                     Button(role: .destructive) {
                         list.contactPubkeys.remove(nrContact.pubkey)
+                        listNRContacts.removeAll(where: { $0.pubkey == nrContact.pubkey })
                         DataProvider.shared().save()
                         sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                     } label: {
