@@ -206,6 +206,8 @@ struct PhoneViewIsh: View {
             newFollowingFeed.createdAt = .now
             newFollowingFeed.accountPubkey = account.publicKey
             newFollowingFeed.type = CloudFeedType.following.rawValue
+            newFollowingFeed.order = 0
+            
             DataProvider.shared().save() { // callback after save:
                 followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
             }

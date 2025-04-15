@@ -100,6 +100,7 @@ struct NXColumnConfigurator: View {
             newCloudFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
             newCloudFeed.id = UUID()
             newCloudFeed.createdAt = .now
+            newCloudFeed.order = 0
             
             newCloudFeed.accountPubkey = if columnType == "Following" || columnType == "Mentions" {
                 accountPubkey
@@ -207,6 +208,8 @@ private func getFollowingFeed(_ accountPubkey: String, accountName: String? = ni
         newFollowingFeed.createdAt = .now
         newFollowingFeed.accountPubkey = accountPubkey
         newFollowingFeed.type = CloudFeedType.following.rawValue
+        newFollowingFeed.order = 0
+        
         DataProvider.shared().save()
         
         return newFollowingFeed

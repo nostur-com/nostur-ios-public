@@ -113,6 +113,7 @@ struct NewListSheet: View {
                     newList?.name = title
                     newList?.showAsTab = true
                     newList?.createdAt = .now
+                    newList?.order = 0
                     
                     if feedType == .relays, let newList = newList {
                         newList.relays_ = selectedRelays

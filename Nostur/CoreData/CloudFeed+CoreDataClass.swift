@@ -24,6 +24,7 @@ public class CloudFeed: NSManagedObject {
             feed.followingHashtags = ["bitcoin","nostr"]
             feed.showAsTab = true
             feed.wotEnabled = false
+            feed.order = 0
         }
     }
 }

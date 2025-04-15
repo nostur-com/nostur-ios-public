@@ -85,6 +85,8 @@ struct FeedPreviewSheet: View {
         newFeed.wotEnabled = false
         newFeed.contactPubkeys = config.pubkeys // TODO: Need to keep updated from kind:30000 updates
         newFeed.listId = nrPost.aTag
+        newFeed.order = 0
+        
         DataProvider.shared().save()
         
         // Close sheet

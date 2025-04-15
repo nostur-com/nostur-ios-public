@@ -42,6 +42,7 @@ extension CloudFeed {
     @NSManaged public var profilesFetchedAt: Date? // use as "since" for checking new profiles for this feed
     
     @NSManaged public var lastRead_: String? // same as on CloudAccount
+    @NSManaged public var order: Int16 // manual sorting order
 }
 
 extension CloudFeed : Identifiable {

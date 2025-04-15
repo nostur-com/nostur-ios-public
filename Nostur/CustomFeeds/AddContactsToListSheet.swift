@@ -244,6 +244,7 @@ struct AddContactsToListSheet: View {
             list.wotEnabled = false
             list.type = ListType.pubkeys.rawValue
             list.contactPubkeys = selectedContactPubkeys
+            list.order = 0
             
             viewContextSave()
         }
