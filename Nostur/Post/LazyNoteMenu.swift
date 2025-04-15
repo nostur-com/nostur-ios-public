@@ -117,9 +117,18 @@ struct LazyNoteMenuSheet: View {
                     Divider()
                     Button {
                         let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
-                        if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
-                            UIPasteboard.general.string = "nostr:\(si.identifier)"
-                            dismiss()
+                        
+                        if nrPost.kind >= 30000 && nrPost.kind < 40000 {
+                            if let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: Int(nrPost.kind), pubkey: nrPost.pubkey, dTag: nrPost.dTag, relays: Array(relaysForHint)) {
+                                UIPasteboard.general.string = "nostr:\(si.identifier)"
+                                dismiss()
+                            }
+                        }
+                        else {
+                            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
+                                UIPasteboard.general.string = "nostr:\(si.identifier)"
+                                dismiss()
+                            }
                         }
                     } label: {
                         Text("ID", comment:"Label for post identifier (ID)")
@@ -133,9 +142,17 @@ struct LazyNoteMenuSheet: View {
                     )
                     .onTapGesture {
                         let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
-                        if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
-                            UIPasteboard.general.string = "nostr:\(si.identifier)"
-                            dismiss()
+                        if nrPost.kind >= 30000 && nrPost.kind < 40000 {
+                            if let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: Int(nrPost.kind), pubkey: nrPost.pubkey, dTag: nrPost.dTag, relays: Array(relaysForHint)) {
+                                UIPasteboard.general.string = "nostr:\(si.identifier)"
+                                dismiss()
+                            }
+                        }
+                        else {
+                            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
+                                UIPasteboard.general.string = "nostr:\(si.identifier)"
+                                dismiss()
+                            }
                         }
                     }
                     
