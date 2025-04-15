@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import NostrEssentials
 
 // Message ready to be sent, with envelope  EVENT/REQ/CLOSE
 struct ClientMessage {
@@ -593,6 +594,25 @@ func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayDat
             relays: relays,
             accountPubkey: pubkey
         )
+    }
+}
+
+// Helper
+func nxReq(_ filter: NostrEssentials.Filters, subscriptionId: String, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
+    
+    let pubkey = (accountPubkey ?? AccountsState.shared.activeAccountPublicKey)
+    
+    if let cm = NostrEssentials
+        .ClientMessage(type: .REQ,
+                       subscriptionId: subscriptionId,
+                       filters: [filter]
+        ).json() {
+        req(cm, activeSubscriptionId: subscriptionId, relays: relays, accountPubkey: accountPubkey, relayType: relayType)
+    }
+    else {
+#if DEBUG
+        L.og.debug("🔴🔴 Problem generting REQ (nxReq)")
+#endif
     }
 }
 
