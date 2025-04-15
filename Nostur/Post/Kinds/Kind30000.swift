@@ -187,9 +187,15 @@ struct Kind30000: View {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             
-            // If more than 20, do LazyVStack
+            // if more that 20 do 2 columns
             if followPs.count > 20 {
-                LazyVStack {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
+                    contactRows
+                }
+            }
+            // If more than 20, do LazyVStack
+            else if followPs.count > 10 {
+                LazyVStack(alignment: .leading) {
                     contactRows
                 }
             }
