@@ -153,7 +153,8 @@ class ProfilePostsViewModel: ObservableObject {
             guard let self else { return }
             let fr = Event.fetchRequest()
             if self.type == .lists {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil", self.pubkey, LIST_KINDS)
+                let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", self.pubkey, LIST_KINDS, garbage)
             }
             else if self.type == .articles {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil", self.pubkey, ARTICLE_KINDS)
@@ -170,8 +171,18 @@ class ProfilePostsViewModel: ObservableObject {
             
             var posts: [NRPost] = []
             guard let events = try? bg().fetch(fr) else { return }
+            
+            let filteredEvents = if self.type == .lists {
+                // Only lists with between 2 and 500 pubkeys
+                events.filter { list in
+                    list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
+                }
+            }
+            else {
+                events
+            }
 
-            for event in events {
+            for event in filteredEvents {
                 posts.append(NRPost(event: event, cancellationId: cancellationIds[event.id] ?? event.cancellationId))
             }
             
@@ -297,7 +308,8 @@ class ProfilePostsViewModel: ObservableObject {
             guard let self else { return }
             let fr = Event.fetchRequest()
             if self.type == .lists {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil AND created_at <= %i", self.pubkey, LIST_KINDS, Int(firstPostCreatedAt))
+                let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil AND created_at <= %i AND content == \"\" AND NOT dTag IN %@", self.pubkey, LIST_KINDS, Int(firstPostCreatedAt), garbage)
             }
             else if self.type == .articles {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND mostRecentId == nil AND created_at <= %i", self.pubkey, ARTICLE_KINDS, Int(firstPostCreatedAt))
@@ -314,8 +326,18 @@ class ProfilePostsViewModel: ObservableObject {
             
             var posts: [NRPost] = []
             guard let events = try? bg().fetch(fr) else { return }
+            
+            let filteredEvents = if self.type == .lists {
+                // Only lists with between 2 and 500 pubkeys
+                events.filter { list in
+                    list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
+                }
+            }
+            else {
+                events
+            }
 
-            for event in events {
+            for event in filteredEvents {
                 guard !currentVisibleIds.contains(event.id) else { continue }
                 posts.append(NRPost(event: event, cancellationId: cancellationIds[event.id] ?? event.cancellationId))
             }
@@ -369,4 +391,13 @@ class ProfilePostsViewModel: ObservableObject {
         case ready
         case timeout
     }
+}
+
+
+func noGarbageDtag(_ dTag: String) -> Bool {
+    if dTag.starts(with: "notifications/") { return false }
+    if dTag.starts(with: "chats/") { return false }
+    if dTag.starts(with: "notifications/") { return false }
+    if dTag.starts(with: "notifications/") { return false }
+    return true
 }

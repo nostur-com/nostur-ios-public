@@ -196,11 +196,23 @@ class ProfileViewModel: ObservableObject {
     
     public func loadLists(_ nrContact: NRContact) {
         let reqTask = ReqTask(prefix: "HASLIST-", reqCommand: { taskId in
-            let filters = [Filters(authors: [nrContact.pubkey], kinds: [30000], limit: 15)]
+            let filters = [Filters(authors: [nrContact.pubkey], kinds: [30000], limit: 25)]
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
         }, processResponseCommand: { taskId, _, _ in
             bg().perform {
-                if Event.fetchMostRecentEventBy(pubkey: nrContact.pubkey, andKind: 30000, context: bg()) != nil {
+                let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
+                let request = NSFetchRequest<Event>(entityName: "Event")
+                request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", 30000, nrContact.pubkey, garbage)
+                request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                request.fetchLimit = 30
+                let lists = (try? bg().fetch(request)) ?? []
+                
+                // Only lists with between 2 and 500 pubkeys
+                let listsWithLessGarbage = lists.filter { list in
+                    list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
+                }
+                
+                if listsWithLessGarbage.count > 0 {
                     Task { @MainActor [weak self] in
                         withAnimation {
                             self?.showListsTab = true
@@ -210,7 +222,19 @@ class ProfileViewModel: ObservableObject {
             }
         }, timeoutCommand: { taskId in
             bg().perform {
-                if Event.fetchMostRecentEventBy(pubkey: nrContact.pubkey, andKind: 30000, context: bg()) != nil {
+                let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
+                let request = NSFetchRequest<Event>(entityName: "Event")
+                request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", 30000, nrContact.pubkey, garbage)
+                request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+                request.fetchLimit = 30
+                let lists = (try? bg().fetch(request)) ?? []
+                
+                // Only lists with between 2 and 500 pubkeys
+                let listsWithLessGarbage = lists.filter { list in
+                    list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
+                }
+                
+                if listsWithLessGarbage.count > 0 {
                     Task { @MainActor [weak self] in
                         withAnimation {
                             self?.showListsTab = true

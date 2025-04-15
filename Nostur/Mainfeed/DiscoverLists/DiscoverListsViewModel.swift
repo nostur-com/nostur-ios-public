@@ -110,7 +110,7 @@ class DiscoverListsViewModel: ObservableObject {
         let yearAgo = Int(Date().timeIntervalSince1970 - 31536000)
         let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND NOT dTag IN %@", yearAgo, follows, garbage)
+        fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", yearAgo, follows, garbage)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let lists = try? bg().fetch(fr) else {
@@ -123,7 +123,7 @@ class DiscoverListsViewModel: ObservableObject {
             
             // Only lists with between 2 and 500 pubkeys
             let listsWithLessGarbage = lists.filter { list in
-                list.fastPs.count > 2 && list.fastPs.count <= 500
+                list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
             }
             
             // If there are too many lists, hide lists that have 5 or more pubkeys that we already follow
