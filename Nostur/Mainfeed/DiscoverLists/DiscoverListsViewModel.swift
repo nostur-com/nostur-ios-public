@@ -110,7 +110,7 @@ class DiscoverListsViewModel: ObservableObject {
         let yearAgo = Int(Date().timeIntervalSince1970 - 31536000)
         let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND flags != \"is_update\" AND NOT dTag IN %@", yearAgo, follows, garbage)
+        fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND NOT dTag IN %@", yearAgo, follows, garbage)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let lists = try? bg().fetch(fr) else {
