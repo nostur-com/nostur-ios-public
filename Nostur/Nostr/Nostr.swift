@@ -112,6 +112,7 @@ public enum NEventKind: Codable, Equatable {
     case nwcRequest
     case nwcResponse
     case ncMessage
+    case followSet
     case badgeDefinition
     case badgeAward
     case profileBadges
@@ -142,6 +143,7 @@ public enum NEventKind: Codable, Equatable {
         case 23194: self = .nwcRequest
         case 23195: self = .nwcResponse
         case 24133: self = .ncMessage
+        case 30000: self = .followSet
         case 30009: self = .badgeDefinition
         case     8: self = .badgeAward
         case 30008: self = .profileBadges
@@ -176,6 +178,7 @@ public enum NEventKind: Codable, Equatable {
         case .ncMessage:            return 24133
         case .badgeDefinition:      return 30009
         case .badgeAward:           return 8
+        case .followSet:        return 30000
         case .profileBadges:        return 30008
         case .article:              return 30023
         case .video:                return 34235

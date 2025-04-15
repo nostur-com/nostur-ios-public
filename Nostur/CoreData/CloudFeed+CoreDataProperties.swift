@@ -43,11 +43,21 @@ extension CloudFeed {
     
     @NSManaged public var lastRead_: String? // same as on CloudAccount
     @NSManaged public var order: Int16 // manual sorting order
+    
+    @NSManaged public var sharedList: Bool // for turning this list into a public kind:30000. Requires accountPubkey to be set
+    @NSManaged public var sharedTitle: String? // Public title (title-tag), different from local title in tabs
 }
 
 extension CloudFeed : Identifiable {
     
-    // MARK: DB functions
+    var aTag: ATag? {
+        guard let listId else { return nil }
+        guard let aTag = try? ATag(listId) else {
+            return nil
+        }
+        return aTag
+    }
+    
     static func fetchAll(context: NSManagedObjectContext) -> [CloudFeed] {
         let fr = CloudFeed.fetchRequest()
         return (try? context.fetch(fr)) ?? []
@@ -116,6 +126,10 @@ extension CloudFeed : Identifiable {
     var name_: String {
         get { name ?? "" }
         set { name = newValue }
+    }   
+    var sharedTitle_: String {
+        get { sharedTitle ?? "" }
+        set { sharedTitle = newValue }
     }
     
     var subscriptionId: String {

@@ -13,130 +13,131 @@ struct FeedSettings: View {
     @ObservedObject public var feed: CloudFeed
     @EnvironmentObject private var la: LoggedInAccount
     
+    private var isOwnManagedList: Bool {
+        feed.accountPubkey != nil && (feed.type == "pubkeys" || feed.type == nil) && feed.listId != nil
+    }
+    
     var body: some View {
-        #if DEBUG
+
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
-        Form {
-            if #available(iOS 16, *), feed.type != "30000" && feed.listId == nil {
-                Section("App theme") {
-                    AppThemeSwitcher()
-                }
-                .listRowBackground(themes.theme.background)
-            }
-            
-            if let aTagString = feed.listId, let aTag = try? ATag(aTagString) {
-                // Even if we change from 30000 to own pubkeys sheet, still show where the list came from, also makes easy to toggle on off subscribe updates again.
-            
-                // Feed managed by
-                // Updates by author automatic blabla
-                // TODO: show original name (if tab name changed)
-                Section {
-                
-                    ListManagedByView(feed: feed, aTag: aTag)
-                        .padding(.vertical, 10)
-                    
-//                    HStack {
-//                        VStack(alignment: .leading) {
-//                            Spacer()
-//                            ListManagedByView(feed: feed, aTag: aTag)
-//                            Spacer()
-//                        }
-//                        Spacer()
-//                    }
-                    .listRowInsets(EdgeInsets())
-                    .padding(.horizontal, 20)
+#endif
+        Group {
+            switch feed.type {
+            case "following":
+                Form {
+                    Section {
+                        Toggle(isOn: Binding(get: {
+                            feed.repliesEnabled
+                        }, set: { newValue in
+                            feed.repliesEnabled = newValue
+                        })) {
+                            Text("Show replies")
+                        }
+                    }
                     .listRowBackground(themes.theme.background)
-                }
-                
-                // Zap author
-                
-                Section {
-                    // Copy to own feed. No longer managed
-                    Toggle(isOn: Binding(get: {
-                        feed.type == "30000"
-                    }, set: { newValue in
-                        if newValue {
-                            feed.type = "30000"
+                    
+                    if feed.accountPubkey != nil, !la.account.followingHashtags.isEmpty {
+                        Section("Included hashtags") {
+                            FeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
+                                la.account.followingHashtags = Set(hashtags)
+                                la.account.publishNewContactList()
+                            })
                         }
-                        else {
-                            feed.type = "pubkeys"
-                        }
-                    })) {
-                        Text("Subscribe to list updates")
-                    }
-                } footer: {
-                    Text("Updates refer to people added or removed from this list, not posts or content.")
-                        .font(.footnote)
-                }
-                .listRowBackground(themes.theme.background)
-            }
-            
-            
-            if feed.type == "following" {
-                Section("") {
-                    Toggle(isOn: Binding(get: {
-                        feed.repliesEnabled
-                    }, set: { newValue in
-                        feed.repliesEnabled = newValue
-                    })) {
-                        Text("Show replies")
+                        .listRowBackground(themes.theme.background)
                     }
                 }
-                .listRowBackground(themes.theme.background)
                 
-                if feed.accountPubkey != nil, !la.account.followingHashtags.isEmpty {
-                    Section("Included hashtags") {
-                        FeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
-                            la.account.followingHashtags = Set(hashtags)
-//                            needsReload = true
-                            la.account.publishNewContactList()
-                        })
+            case "relays":
+                Form {
+                    Section {
+                        Toggle(isOn: Binding(get: {
+                            feed.repliesEnabled
+                        }, set: { newValue in
+                            feed.repliesEnabled = newValue
+                        })) {
+                            Text("Show replies")
+                        }
+                        Toggle(isOn: Binding(get: {
+                            feed.wotEnabled
+                        }, set: { newValue in
+                            feed.wotEnabled = newValue
+                        })) {
+                            Text("Web of Trust filter")
+                        }
+                        NavigationLink(destination: EditRelaysNosturList(list: feed)) {
+                            Text("Configure relays...")
+                        }
                     }
                     .listRowBackground(themes.theme.background)
                 }
-            }
             
-            if feed.type == "relays" {
-                Section("") {
-                    Toggle(isOn: Binding(get: {
-                        feed.repliesEnabled
-                    }, set: { newValue in
-                        feed.repliesEnabled = newValue
-                    })) {
-                        Text("Show replies")
-                    }
-                    Toggle(isOn: Binding(get: {
-                        feed.wotEnabled
-                    }, set: { newValue in
-                        feed.wotEnabled = newValue
-                    })) {
-                        Text("Web of Trust filter")
-                    }
-                    NavigationLink(destination: EditRelaysNosturList(list: feed)) {
-                        Text("Configure relays...")
-                    }
-                }
-                .listRowBackground(themes.theme.background)
-            }
-            
-            if (feed.type == "pubkeys" || feed.type == nil) || feed.type == "30000"  {
-                Section("") {
-                    Toggle(isOn: Binding(get: {
-                        feed.repliesEnabled
-                    }, set: { newValue in
-                        feed.repliesEnabled = newValue
-                    })) {
-                        Text("Show replies")
-                    }
+            case "pubkeys", nil, "30000":
+                // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000")
+                if !isOwnManagedList, let aTagString = feed.listId, let aTag = try? ATag(aTagString) {
+                    Form {
+                        // Even if we change from 30000 to own pubkeys sheet, still show where the list came from, also makes easy to toggle on off subscribe updates again.
                     
-                    if feed.type != "30000" { // no kind:30000, these are managed by other author
-                        NavigationLink(destination: EditNosturList(list: feed)) {
-                            Text("Configure contacts...")
+                        // Feed managed by... zap author...
+                        Section {
+                            ListManagedByView(feed: feed, aTag: aTag)
+                                .padding(.vertical, 10)
+                                .listRowInsets(EdgeInsets())
+                                .padding(.horizontal, 20)
                         }
+                        .listRowBackground(themes.theme.background)
+                        
+                        Section {
+                            // Copy to own feed. No longer managed
+                            Toggle(isOn: Binding(get: {
+                                feed.type == "30000"
+                            }, set: { newValue in
+                                if newValue {
+                                    feed.type = "30000"
+                                }
+                                else {
+                                    feed.type = "pubkeys"
+                                }
+                            })) {
+                                Text("Subscribe to list updates")
+                            }
+                        } footer: {
+                            Text("Updates refer to people added or removed from this list, not posts or content.")
+                                .font(.footnote)
+                        }
+                        .listRowBackground(themes.theme.background)
                     }
                 }
-                .listRowBackground(themes.theme.background)
+                else if !isOwnManagedList { // regular "pubkeys" (not and was never kind:30000)
+                    Form {
+                        Section {
+                            Toggle(isOn: Binding(get: {
+                                feed.repliesEnabled
+                            }, set: { newValue in
+                                feed.repliesEnabled = newValue
+                            })) {
+                                Text("Show replies")
+                            }
+                        } footer: {
+                            Text("This feed shows posts from contacts in this list.")
+                                .font(.footnote)
+                        }
+                        .listRowBackground(themes.theme.background)
+                    }
+                }
+                else if isOwnManagedList { // Note no Form wrap
+                    EditNosturList(list: feed)
+                }
+                
+            default:
+                Form {
+                    if #available(iOS 16, *), feed.type != "30000" && feed.listId == nil {
+                       Section("App theme") {
+                           AppThemeSwitcher()
+                       }
+                       .listRowBackground(themes.theme.background)
+                   }
+                }
             }
         }
         .scrollContentBackgroundHidden()

@@ -148,7 +148,7 @@ struct NXColumnView: View {
             viewModel.availableWidth = newValue
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
-            guard isVisible, let config = viewModel.config else { return }
+            guard viewModel.isVisible, let config = viewModel.config else { return }
             feedSettingsFeed = config.feed
         }
         .sheet(item: $feedSettingsFeed, content: { feed in

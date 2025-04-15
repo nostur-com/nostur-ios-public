@@ -1356,6 +1356,9 @@
         }
       }
     },
+    "Add contact" : {
+
+    },
     "Add contacts" : {
       "comment" : "Navigation title of sheet to add contacts to feed",
       "localizations" : {
@@ -2322,6 +2325,7 @@
       }
     },
     "Configure contacts..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2514,6 +2518,9 @@
           }
         }
       }
+    },
+    "Contacts in list" : {
+
     },
     "Contacts:" : {
       "localizations" : {
@@ -2824,6 +2831,9 @@
           }
         }
       }
+    },
+    "Creates a public list on nostr relays" : {
+
     },
     "Currently allowed by the filter: %lld contacts" : {
       "localizations" : {
@@ -3707,7 +3717,7 @@
 
     },
     "Feed settings" : {
-      "comment" : "Header for a feed setting",
+      "comment" : "Header for a feed setting\nHeader for entering title of a feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3718,7 +3728,7 @@
       }
     },
     "Feeds" : {
-      "comment" : "Navigation title for Feeds screen\nSide bar navigation button",
+      "comment" : "Navigation title for Feeds screen",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4676,6 +4686,9 @@
         }
       }
     },
+    "Lists & Feeds" : {
+      "comment" : "Side bar navigation button"
+    },
     "Lists from people you follow" : {
 
     },
@@ -4845,6 +4858,9 @@
     },
     "Maintained by " : {
 
+    },
+    "Make list public" : {
+      "comment" : "Toggle to make list public"
     },
     "Make moderator" : {
       "localizations" : {
@@ -7684,6 +7700,9 @@
         }
       }
     },
+    "Share this list with a different title" : {
+
+    },
     "Shared from **Nostur**" : {
       "localizations" : {
         "nl" : {
@@ -7693,6 +7712,9 @@
           }
         }
       }
+    },
+    "Sharing" : {
+      "comment" : "Header Feed sharing settings"
     },
     "Show" : {
       "comment" : "Button to show more items in a post",
@@ -7844,6 +7866,9 @@
           }
         }
       }
+    },
+    "Shown in the tab bar (not public)" : {
+
     },
     "Shows 'Shared from Nostur' caption when sharing post screenshots" : {
       "comment" : "Setting on settings screen",
@@ -8134,6 +8159,9 @@
     },
     "Tab 5" : {
       "shouldTranslate" : false
+    },
+    "Tab title" : {
+      "comment" : "Placeholder for input field to enter title of a feed"
     },
     "Take a photo" : {
       "localizations" : {
@@ -8453,6 +8481,9 @@
         }
       }
     },
+    "This feed shows posts from contacts in this list." : {
+
+    },
     "This gives more screen space when scrolling" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8697,7 +8728,7 @@
       }
     },
     "Title" : {
-      "comment" : "Header for entering title of a feed",
+      "comment" : "Header for entering title of a feed\nPlaceholder for input field to enter title of a shared list",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

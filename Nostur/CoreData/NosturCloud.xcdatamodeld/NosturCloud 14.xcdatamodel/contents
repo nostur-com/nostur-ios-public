@@ -68,6 +68,8 @@
         <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="relays" optional="YES" attributeType="String"/>
         <attribute name="repliesEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="sharedList" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="sharedTitle" optional="YES" attributeType="String"/>
         <attribute name="showAsTab" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="type" optional="YES" attributeType="String"/>
         <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>

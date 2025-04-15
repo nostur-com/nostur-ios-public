@@ -129,7 +129,7 @@ struct SideBar: View {
                     } label: {
                         Label(
                             title: { 
-                                Text("Feeds", comment: "Side bar navigation button")
+                                Text("Lists & Feeds", comment: "Side bar navigation button")
                                     .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
                             },
                             icon: { Image(systemName: "list.bullet.rectangle")
