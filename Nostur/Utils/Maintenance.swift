@@ -98,6 +98,7 @@ struct Maintenance {
             Self.runFixMissingDMStates(context: context)
             Self.runInsertFixedPfps(context: context)
             Self.runPutReferencedAtag(context: context)
+            Self.runSetCloudFeedOrder(context: context)
             do {
                 if context.hasChanges {
                     try context.save()
@@ -986,8 +987,32 @@ struct Maintenance {
 //        migration.migrationCode = migrationCode.runSetAtagForReplacableEvents.rawValue
 //    }
     
+    // Run once to set current feed order
+    static func runSetCloudFeedOrder(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.setCloudFeedOrder, context: context) else { return }
+        
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(value: true)
+        
+        guard let feeds = try? context.fetch(fr).reversed() else {
+            L.maintenance.error("runSetCloudFeedOrder: Could not fetch")
+            return
+        }
+        
+        L.maintenance.info("runSetCloudFeedOrder: Setting order for \(feeds.count) feeds")
+        
+        var index = 0
+        for feed in feeds {
+            feed.order = Int16(index)
+            index += 1
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.setCloudFeedOrder.rawValue
+    }
+    
     // All available migrations
-    enum migrationCode:String {
+    enum migrationCode: String {
         
         // Run once to delete events without id (old bug)
         case deleteEventsWithoutId = "deleteEventsWithoutId"
@@ -1037,6 +1062,9 @@ struct Maintenance {
         
         // Put first A tag in .otherAtag
         case putReferencedAtag = "putReferencedAtag"
+        
+        // Set cloud feed manual order
+        case setCloudFeedOrder = "setCloudFeedOrder"
         
         // make aTag field for easy lookups
         // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
