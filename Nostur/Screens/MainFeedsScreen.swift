@@ -36,7 +36,8 @@ struct MainFeedsScreen: View {
     @State private var noteCancellationId: UUID?
     @State private var didCreate = false
     
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath:\CloudFeed.createdAt, ascending: false)], predicate: NSPredicate(format: "showAsTab == true"))
+    
+    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)], predicate: NSPredicate(format: "showAsTab == true"))
     var lists: FetchedResults<CloudFeed>
     @State private var selectedList: CloudFeed?
 

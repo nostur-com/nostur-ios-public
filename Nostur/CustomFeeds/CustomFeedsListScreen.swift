@@ -12,7 +12,7 @@ struct CustomFeedsListScreen: View {
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
-    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.createdAt, order: .reverse)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture"]))
+    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture"]))
     var lists: FetchedResults<CloudFeed>
 
     @State var newListSheet = false
@@ -41,6 +41,14 @@ struct CustomFeedsListScreen: View {
                     .onDelete { indexSet in
                         deleteList(section: Array(lists), offsets: indexSet)
                     }
+                    .onMove(perform: { indices, newOffset in
+                            var s = lists.sorted(by: { $0.order < $1.order })
+                            s.move(fromOffsets: indices, toOffset: newOffset)
+                            for (index, item) in s.enumerated() {
+                                item.order = Int16(index)
+                            }
+                            viewContextSave()
+                     })
                 } header: {
                     Text("Custom Feeds")
                 }
