@@ -16,7 +16,7 @@ struct NaddrView: View {
     public var navTitleHidden: Bool = false
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
-    public var theme: Theme = Themes.default.theme
+    public var theme: Theme
     
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
@@ -33,75 +33,79 @@ struct NaddrView: View {
                         Text("Trying more relays...")
                     }
                 }
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .onBecomingVisible { [weak vm, weak dim] in
-                        guard let naddr = try? ShareableIdentifier(naddr1),
-                              let kind = naddr.kind,
-                              let pubkey = naddr.pubkey,
-                              let definition = naddr.eventId
-                        else {
-                            return
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .onBecomingVisible { [weak vm] in
+                    guard let naddr = try? ShareableIdentifier(naddr1),
+                            let kind = naddr.kind,
+                            let pubkey = naddr.pubkey,
+                            let definition = naddr.eventId
+                    else {
+                        return
+                    }
+                    
+                    
+                    let fetchParams: FetchVM.FetchParams = (
+                        prio: true,
+                        req: { [weak vm] taskId in
+                            bg().perform { [weak vm] in // 1. CHECK LOCAL DB
+                                guard let vm else { return }
+                                if let event = Event.fetchReplacableEvent(kind,
+                                                                            pubkey: pubkey,
+                                                                            definition: definition,
+                                                                            context: bg()) {
+                                    vm.ready(NRPost(event: event))
+                                }
+                                else { // 2. ELSE CHECK RELAY
+                                    req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId))
+                            
+                                }
+                            }
+                        },
+                        onComplete: { [weak vm] relayMessage, event in
+                            guard let vm else { return }
+                            if let event = event {
+                                vm.ready(NRPost(event: event))
+                            }
+                            else if let event = Event.fetchReplacableEvent(kind,
+                                                                                pubkey: pubkey,
+                                                                                definition: definition,
+                                                                                context: bg()) { // 3. WE FOUND IT ON RELAY
+                                if vm.state == .altLoading, let relay = naddr.relays.first {
+                                    L.og.debug("Event found on using relay hint: \(event.id) - \(relay)")
+                                }
+                                vm.ready(NRPost(event: event))
+                            }
+                            // Still don't have the event? try to fetch from relay hint
+                            // TODO: Should try a relay we don't already have in our relay set
+                            else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
+                                // try search relays and relay hint
+                                vm.altFetch()
+                            }
+                            else { // 5. TIMEOUT
+                                vm.timeout()
+                            }
+                        },
+                        altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                            // Try search relays
+                            req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId), relayType: .SEARCH)
+                            guard let relay = naddr.relays.first else { return }
+                            
+                            L.og.debug("FetchVM.3 HINT \(relay)")
+                            ConnectionPool.shared.sendEphemeralMessage(
+                                RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId),
+                                relay: relay
+                            )
                         }
                         
-                        
-                        let fetchParams: FetchVM.FetchParams = (
-                            prio: true,
-                            req: { [weak vm] taskId in
-                                bg().perform { [weak vm] in // 1. CHECK LOCAL DB
-                                    guard let vm else { return }
-                                    if let event = Event.fetchReplacableEvent(kind,
-                                                                              pubkey: pubkey,
-                                                                              definition: definition,
-                                                                              context: bg()) {
-                                        vm.ready(NRPost(event: event))
-                                    }
-                                    else { // 2. ELSE CHECK RELAY
-                                        req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId))
-                              
-                                    }
-                                }
-                            },
-                            onComplete: { [weak vm] relayMessage, event in
-                                guard let vm else { return }
-                                if let event = event {
-                                    vm.ready(NRPost(event: event))
-                                }
-                                else if let event = Event.fetchReplacableEvent(kind,
-                                                                                    pubkey: pubkey,
-                                                                                    definition: definition,
-                                                                                    context: bg()) { // 3. WE FOUND IT ON RELAY
-                                    if vm.state == .altLoading, let relay = naddr.relays.first {
-                                        L.og.debug("Event found on using relay hint: \(event.id) - \(relay)")
-                                    }
-                                    vm.ready(NRPost(event: event))
-                                }
-                                // Still don't have the event? try to fetch from relay hint
-                                // TODO: Should try a relay we don't already have in our relay set
-                                else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
-                                    // try search relays and relay hint
-                                    vm.altFetch()
-                                }
-                                else { // 5. TIMEOUT
-                                    vm.timeout()
-                                }
-                            },
-                            altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
-                                // Try search relays
-                                req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId), relayType: .SEARCH)
-                                guard let relay = naddr.relays.first else { return }
-                                
-                                L.og.debug("FetchVM.3 HINT \(relay)")
-                                ConnectionPool.shared.sendEphemeralMessage(
-                                    RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId),
-                                    relay: relay
-                                )
-                            }
-                            
-                        )
-                        vm?.setFetchParams(fetchParams)
-                        vm?.fetch()
-                    }
+                    )
+                    vm?.setFetchParams(fetchParams)
+                    vm?.fetch()
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
             case .ready(let nrPost):
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
                 
@@ -109,11 +113,19 @@ struct NaddrView: View {
                 Text("Unable to fetch content")
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
                 
             case .error(let error):
                 Text(error)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(theme.lineColor, lineWidth: 1)
+                    )
             }
         }
     }
@@ -130,7 +142,7 @@ struct NaddrView_Previews: PreviewProvider {
         }) {
             NBNavigationStack {
                 if let identifier = try? ShareableIdentifier("naddr1qqjrgep5xs6kgefh943kvces956rydnz94skvdp594nrwvfkxa3nxve48pjxgq3qeaz6dwsnvwkha5sn5puwwyxjgy26uusundrm684lg3vw4ma5c2jsxpqqqpmxwqgcwaehxw309aex2mrp0yh8xmn0wf6zuum0vd5kzmqpp4mhxue69uhkummn9ekx7mqpz3mhxue69uhhyetvv9ujuerpd46hxtnfduq3vamnwvaz7tmjv4kxz7fwdehhxarj9e3xzmnyt86q2r") {
-                    NaddrView(naddr1: identifier.bech32string)
+                    NaddrView(naddr1: identifier.bech32string, theme: Themes.default.theme)
                 }
             }
         }

@@ -31,67 +31,67 @@ struct NEventView: View {
                         Text("Trying more relays...")
                     }
                 }
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .onBecomingVisible { [weak vm, weak dim] in
-                        guard let eventId = identifier.eventId else {
-                            vm?.error("Problem parsing nostr identifier")
-                            return
-                        }
-                        let fetchParams: FetchVM.FetchParams = (
-                            prio: true,
-                            req: { [weak vm, weak dim] taskId in
-                                bg().perform { [weak vm, weak dim] in // 1. CHECK LOCAL DB
-                                    guard let vm, let dim else { return }
-                                    if let event = Event.fetchEvent(id: eventId, context: bg()) {
-                                        vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
-                                    }
-                                    else { // 2. ELSE CHECK RELAY
-                                        req(RM.getEvent(id: eventId, subscriptionId: taskId))
-                                    }
-                                }
-                            },
-                            onComplete: { [weak vm, weak dim] relayMessage, event in
-                                guard let vm, let dim else { return }
-                                if let event = event {
-                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
-                                }
-                                else if let event = Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
-                                    if vm.state == .altLoading, let relay = identifier.relays.first {
-                                        L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
-                                    }
-                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
-                                }
-                                // Still don't have the event? try to fetch from relay hint
-                                // TODO: Should try a relay we don't already have in our relay set
-                                else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
-                                    // try search relays and relay hint
-                                    vm.altFetch()
-                                }
-                                else { // 5. TIMEOUT
-                                    vm.timeout()
-                                }
-                            },
-                            altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
-                                // Try search relays
-                                req(RM.getEvent(id: eventId, subscriptionId: taskId), relayType: .SEARCH)
-                                guard let relay = identifier.relays.first else { return }
-                                
-                                L.og.debug("FetchVM.3 HINT \(eventId)")
-                                ConnectionPool.shared.sendEphemeralMessage(
-                                    RM.getEvent(id: eventId, subscriptionId: taskId),
-                                    relay: relay
-                                )
-                            }
-                            
-                        )
-                        vm?.setFetchParams(fetchParams)
-                        vm?.fetch()
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .onBecomingVisible { [weak vm, weak dim] in
+                    guard let eventId = identifier.eventId else {
+                        vm?.error("Problem parsing nostr identifier")
+                        return
                     }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(theme.lineColor, lineWidth: 1)
+                    let fetchParams: FetchVM.FetchParams = (
+                        prio: true,
+                        req: { [weak vm, weak dim] taskId in
+                            bg().perform { [weak vm, weak dim] in // 1. CHECK LOCAL DB
+                                guard let vm, let dim else { return }
+                                if let event = Event.fetchEvent(id: eventId, context: bg()) {
+                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                                }
+                                else { // 2. ELSE CHECK RELAY
+                                    req(RM.getEvent(id: eventId, subscriptionId: taskId))
+                                }
+                            }
+                        },
+                        onComplete: { [weak vm, weak dim] relayMessage, event in
+                            guard let vm, let dim else { return }
+                            if let event = event {
+                                vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                            }
+                            else if let event = Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
+                                if vm.state == .altLoading, let relay = identifier.relays.first {
+                                    L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
+                                }
+                                vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                            }
+                            // Still don't have the event? try to fetch from relay hint
+                            // TODO: Should try a relay we don't already have in our relay set
+                            else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
+                                // try search relays and relay hint
+                                vm.altFetch()
+                            }
+                            else { // 5. TIMEOUT
+                                vm.timeout()
+                            }
+                        },
+                        altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                            // Try search relays
+                            req(RM.getEvent(id: eventId, subscriptionId: taskId), relayType: .SEARCH)
+                            guard let relay = identifier.relays.first else { return }
+                            
+                            L.og.debug("FetchVM.3 HINT \(eventId)")
+                            ConnectionPool.shared.sendEphemeralMessage(
+                                RM.getEvent(id: eventId, subscriptionId: taskId),
+                                relay: relay
+                            )
+                        }
+                        
                     )
+                    vm?.setFetchParams(fetchParams)
+                    vm?.fetch()
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
             case .ready(let nrPost):
                 KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
 
