@@ -51,6 +51,7 @@ struct ZappedFeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             ZappedFeedSettings(zappedVM: ZappedViewModel())
+                .environmentObject(Themes.default)
         }
         .onAppear {
             Themes.default.loadPurple()

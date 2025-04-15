@@ -51,6 +51,7 @@ struct DiscoverFeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             DiscoverFeedSettings(discoverVM: DiscoverViewModel())
+                .environmentObject(Themes.default)
         }
         .onAppear {
             Themes.default.loadPurple()

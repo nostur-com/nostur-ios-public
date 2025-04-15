@@ -154,6 +154,7 @@ struct NXColumnView: View {
         .sheet(item: $feedSettingsFeed, content: { feed in
             NBNavigationStack {
                 FeedSettings(feed: feed)
+                    .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)

@@ -51,6 +51,7 @@ struct GalleryFeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             GalleryFeedSettings(vm: GalleryViewModel())
+                .environmentObject(Themes.default)
         }
         .onAppear {
             Themes.default.loadPurple()

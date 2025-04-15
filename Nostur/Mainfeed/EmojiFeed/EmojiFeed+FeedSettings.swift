@@ -60,6 +60,7 @@ struct EmojiFeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             EmojiFeedSettings(vm: EmojiFeedViewModel())
+                .environmentObject(Themes.default)
         }
         .onAppear {
             Themes.default.loadPurple()

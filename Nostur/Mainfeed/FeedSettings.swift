@@ -160,6 +160,7 @@ struct FeedSettingsTester: View {
             VStack {
                 if let feed = PreviewFetcher.fetchList() {
                     FeedSettings(feed: feed)
+                        .environmentObject(Themes.default)
                 }
                 Spacer()
             }

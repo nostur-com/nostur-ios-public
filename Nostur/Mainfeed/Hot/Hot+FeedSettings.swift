@@ -51,6 +51,7 @@ struct HotFeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             HotFeedSettings(hotVM: HotViewModel())
+                .environmentObject(Themes.default)
         }
         .onAppear {
             Themes.default.loadPurple()

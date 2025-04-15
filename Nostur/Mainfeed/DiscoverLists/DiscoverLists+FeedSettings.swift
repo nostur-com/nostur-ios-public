@@ -40,6 +40,7 @@ struct DiscoverListsFeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             DiscoverListsFeedSettings(discoverListsVM: DiscoverListsViewModel())
+                .environmentObject(Themes.default)
         }
         .onAppear {
             Themes.default.loadPurple()

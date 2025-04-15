@@ -50,6 +50,7 @@ struct ArticleFeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             ArticleFeedSettings(vm: ArticlesFeedViewModel())
+                .environmentObject(Themes.default)
         }
         .onAppear {
             Themes.default.loadPurple()
