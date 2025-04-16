@@ -335,11 +335,6 @@ struct MainFeedsScreen: View {
                     selectedList = lists.first
                 }
             }
-//            // Make hot/zapped feed posts available to discover feed to not show the same posts
-//            if discoverVM.hotVM == nil {
-//                discoverVM.hotVM = hotVM
-//                discoverVM.zappedVM = zappedVM
-//            }
             
             guard !didCreate else { return }
             didCreate = true
@@ -466,33 +461,29 @@ struct MainFeedsScreen: View {
         }
         
         for config in followSetConfigs {
-            guard let aTagString = config.feed?.listId, let aTag: ATag = try? ATag(aTagString) else { continue }
+            guard let aTag = config.feed?.aTag else { continue }
             let since: Int? = config.feed?.refreshedAt.map { Int($0.timeIntervalSince1970) }
             let subscriptionId = config.feed?.subscriptionId ?? String(UUID().uuidString.prefix(48))
             
-            L.og.debug("☘️☘️ \(config.name) loadColumnConfigs: Checking list update  -[LOG]-")
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) loadColumnConfigs: Checking list update -[LOG]-")
+#endif
+            
             let reqTask = ReqTask(
                 debounceTime: 3.0,
                 subscriptionId: "KIND-30000-\(subscriptionId)",
                 reqCommand: { taskId in
-                    bg().perform {
-                        outboxReq(
-                            NostrEssentials.ClientMessage(
-                                type: .REQ,
-                                subscriptionId: taskId,
-                                filters: [
-                                    Filters(
-                                        authors: [aTag.pubkey],
-                                        kinds: [30000],
-                                        tagFilter: TagFilter(tag: "d", values: [aTag.definition]),
-                                        since: since,
-                                        limit: 5
-                                    )
-                                ]
-                            ),
-                            relayType: .READ
-                        )
-                    }
+                    nxReq(
+                        Filters(
+                            authors: [aTag.pubkey],
+                            kinds: [30000],
+                            tagFilter: TagFilter(tag: "d", values: [aTag.definition]),
+                            since: since,
+                            limit: 5
+                        ),
+                        subscriptionId: taskId,
+                        isActiveSubscription: false
+                    )
                 },
                 processResponseCommand: { (taskId, _, _) in
                     bg().perform {

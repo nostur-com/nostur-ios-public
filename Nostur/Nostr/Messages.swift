@@ -597,8 +597,8 @@ func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayDat
     }
 }
 
-// Helper
-func nxReq(_ filter: NostrEssentials.Filters, subscriptionId: String, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
+// Helper. isActiveSubscription for things where we need only 1 active subscription kept alive.
+func nxReq(_ filter: NostrEssentials.Filters, subscriptionId: String, isActiveSubscription: Bool = false, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
     
     let pubkey = (accountPubkey ?? AccountsState.shared.activeAccountPublicKey)
     
@@ -607,7 +607,7 @@ func nxReq(_ filter: NostrEssentials.Filters, subscriptionId: String, relays: Se
                        subscriptionId: subscriptionId,
                        filters: [filter]
         ).json() {
-        req(cm, activeSubscriptionId: subscriptionId, relays: relays, accountPubkey: accountPubkey, relayType: relayType)
+        req(cm, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays, accountPubkey: accountPubkey, relayType: relayType)
     }
     else {
 #if DEBUG
