@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import NostrEssentials
 
 struct EditNosturList: View {
     @ObservedObject public var list: CloudFeed
@@ -21,6 +22,7 @@ struct EditNosturList: View {
     @State private var selectedContacts: Set<Contact> = []
     @State private var listNRContacts: [NRContact] = []
     @State private var wasShared: Bool = false
+    @State private var listNaddr: String? = nil
     
     var body: some View {
         List {
@@ -48,9 +50,19 @@ struct EditNosturList: View {
                     VStack(alignment: .leading) {
                         Toggle(isOn: $list.sharedList, label: { Text("Make list public", comment: "Toggle to make list public")})
                             .disabled(!list.sharedList && list.contactPubkeys.isEmpty)
-                        Text("Creates a public list on nostr relays")
-                            .font(.footnote)
-                            .foregroundColor(Color.secondary)
+                        if list.aTag != nil, let listNaddr = listNaddr {
+                            CopyableTextView(text: "Public list address: \(listNaddr)", copyText: "nostr:\(listNaddr)")
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .font(.footnote)
+                                .foregroundColor(Color.secondary)
+                                .padding(.trailing, 70)
+                        }
+                        else {
+                            Text("Creates a public list on nostr relays")
+                                .font(.footnote)
+                                .foregroundColor(Color.secondary)
+                        }
                     }
 
                     if list.sharedList {
@@ -158,11 +170,22 @@ struct EditNosturList: View {
         .onAppear {
             let listContactPubkeys = list.contactPubkeys
             wasShared = list.sharedList
+            let aTag = list.aTag
             bg().perform {
                 let listNRContacts: [NRContact] = Contact.fetchByPubkeys(listContactPubkeys)
                     .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                
                 Task { @MainActor in
                     self.listNRContacts = listNRContacts
+                }
+                
+                if let aTag {
+                    let relaysForHint: Set<String> = resolveRelayHint(forPubkey: aTag.pubkey)
+                    if let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: Int(aTag.kind), pubkey: aTag.pubkey, dTag: aTag.definition, relays: Array(relaysForHint)) {
+                        Task { @MainActor in
+                            listNaddr = si.identifier
+                        }
+                    }
                 }
             }
         }
