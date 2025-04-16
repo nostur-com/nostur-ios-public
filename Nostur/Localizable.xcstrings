@@ -1317,6 +1317,9 @@
         }
       }
     },
+    "Add %lld contacts to custom feed" : {
+      "comment" : "Post context menu button"
+    },
     "Add +7" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7725,7 +7728,7 @@
       }
     },
     "Sharing" : {
-      "comment" : "Header Feed sharing settings"
+      "comment" : "Header of Feed sharing settings"
     },
     "Show" : {
       "comment" : "Button to show more items in a post",
@@ -8502,6 +8505,9 @@
           }
         }
       }
+    },
+    "This list is public" : {
+
     },
     "This NWC connection does not support payments" : {
       "comment" : "Error message during NWC setup",

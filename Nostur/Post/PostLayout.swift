@@ -240,7 +240,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     @ViewBuilder
     private var itemPFP: some View { // No live event animation for item PFP
         ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
-            .frame(width: 2.0, height: 20.0)
+            .frame(width: 20.0, height: 20.0)
             .onTapGesture {
                 withAnimation {
                     showMiniProfile = true
@@ -275,11 +275,12 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     
     @ViewBuilder
     private var bottomAuthorInfo: some View {
-        HStack(spacing: 15) {
+        HStack(spacing: 3) {
             Spacer()
             
             Text("by")
                 .foregroundColor(theme.secondary)
+                .padding(.trailing, 5)
             
             itemPFP
             

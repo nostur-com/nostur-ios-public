@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NostrEssentials
+import CoreData
 
 class ProfileViewModel: ObservableObject {
     @Published var isFollowingYou = false

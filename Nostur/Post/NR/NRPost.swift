@@ -56,7 +56,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var contentElementsDetail: [ContentElement] = [] // PostDetail.Kind1
     var via: String?
     
-    var contact: NRContact?  {
+    var contact: NRContact? {
         get { pfpAttributes.contact }
         set {
             DispatchQueue.main.async { [weak self] in
@@ -65,7 +65,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
     }
     
-    var replyingToUsernamesMarkDown:AttributedString?  {
+    var replyingToUsernamesMarkDown:AttributedString? {
         get { replyingToAttributes.replyingToUsernamesMarkDown }
         set {
             DispatchQueue.main.async { [weak self] in
@@ -130,7 +130,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var firstQuoteId: String?
     
-    var replyTo: NRPost?  {
+    var replyTo: NRPost? {
         get { AppState.shared.nrPostQueue.sync { [weak self] in
             self?._replyTo
         } }

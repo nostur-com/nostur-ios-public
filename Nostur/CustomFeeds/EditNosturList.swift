@@ -43,7 +43,7 @@ struct EditNosturList: View {
                 .listRowBackground(themes.theme.listBackground)
             }
             
-            Section(header: Text("Sharing", comment: "Header Feed sharing settings")) {
+            Section(header: Text("Sharing", comment: "Header of Feed sharing settings")) {
                 Group {
                     VStack(alignment: .leading) {
                         Toggle(isOn: $list.sharedList, label: { Text("Make list public", comment: "Toggle to make list public")})
@@ -346,7 +346,7 @@ struct EditList_Previews: PreviewProvider {
             NBNavigationStack {
                 if let list = PreviewFetcher.fetchList() {
                     EditNosturList(list: list)
-                    .withNavigationDestinations()
+                        .withNavigationDestinations()
                 }
             }
         }
