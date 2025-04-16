@@ -197,8 +197,11 @@ struct AddContactsToListSheet: View {
                         }
                     }
                 }
+                .scrollDisabledCompat()
+                .contentMarginsTopCompat(0)
                 .listStyle(.plain)
-                .frame(height: 90)
+                .frame(height: 80)
+                
             }
 //            else {
 //                Text("Choose existing list")

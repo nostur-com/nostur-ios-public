@@ -41,6 +41,16 @@ extension List {
             self
         }
     }
+    
+    @ViewBuilder
+    func contentMarginsTopCompat(_ length: CGFloat? = nil) -> some View {
+        if #available(iOS 17.0, *) {
+            self.contentMargins(.top, length, for: .scrollContent)
+        }
+        else {
+            self
+        }
+    }
 }
 
 extension Form {
@@ -73,9 +83,29 @@ extension Form {
             self
         }
     }
+    
+    @ViewBuilder
+    func contentMarginsTopCompat(_ length: CGFloat? = nil) -> some View {
+        if #available(iOS 17.0, *) {
+            self.contentMargins(.top, length, for: .scrollContent)
+        }
+        else {
+            self
+        }
+    }
 }
 
 extension View {
+    
+    @ViewBuilder
+    func contentMarginsTopCompat(_ length: CGFloat? = nil) -> some View {
+        if #available(iOS 17.0, *) {
+            self.contentMargins(.top, length, for: .scrollContent)
+        }
+        else {
+            self
+        }
+    }
     
     @ViewBuilder
     func scrollDismissesKeyboardCompat() -> some View {
