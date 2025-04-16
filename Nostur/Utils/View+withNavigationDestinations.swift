@@ -156,7 +156,8 @@ extension View {
                     EditRelaysNosturList(list: list)
                 }
                 else {
-                    EditNosturList(list: list)
+//                    EditNosturList(list: list)
+                    FeedSettings(feed: list)
                 }
             }
             .nbNavigationDestination(for: ViewPath.self) { path in

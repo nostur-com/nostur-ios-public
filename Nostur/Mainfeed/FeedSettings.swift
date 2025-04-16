@@ -108,30 +108,13 @@ struct FeedSettings: View {
                         .listRowBackground(themes.theme.background)
                     }
                 }
-                else if !isOwnManagedList { // regular "pubkeys" (not and was never kind:30000)
-                    Form {
-                        Section {
-                            Toggle(isOn: Binding(get: {
-                                feed.repliesEnabled
-                            }, set: { newValue in
-                                feed.repliesEnabled = newValue
-                            })) {
-                                Text("Show replies")
-                            }
-                        } footer: {
-                            Text("This feed shows posts from contacts in this list.")
-                                .font(.footnote)
-                        }
-                        .listRowBackground(themes.theme.background)
-                    }
-                }
-                else if isOwnManagedList { // Note no Form wrap
+                else {
                     EditNosturList(list: feed)
                 }
-                
+
             default:
                 Form {
-                    if #available(iOS 16, *), feed.type != "30000" && feed.listId == nil {
+                    if #available(iOS 16, *) {
                        Section("App theme") {
                            AppThemeSwitcher()
                        }

@@ -8492,9 +8492,6 @@
         }
       }
     },
-    "This feed shows posts from contacts in this list." : {
-
-    },
     "This gives more screen space when scrolling" : {
       "extractionState" : "stale",
       "localizations" : {
