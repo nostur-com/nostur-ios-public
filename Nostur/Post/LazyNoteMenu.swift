@@ -41,6 +41,7 @@ struct LazyNoteMenuSheet: View {
     private let NEXT_SHEET_DELAY = 0.05
     @State private var followToggles = false
     @State private var blockOptions = false
+    @State private var pubkeysInPost: Set<String> = []
     
     var body: some View {
         List {
@@ -89,6 +90,16 @@ struct LazyNoteMenuSheet: View {
                     }
                 } label: {
                     Label(String(localized:"Add/Remove \(nrPost.anyName) from custom feed", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
+                }
+                if pubkeysInPost.count > 1 {
+                    Button {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY + 0.35) { // Short delay freezes????
+                            AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: pubkeysInPost)
+                        }
+                    } label: {
+                        Label(String(localized:"Add \(pubkeysInPost.count) contacts to custom feed", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
+                    }
                 }
                 Button {
                     dismiss()
@@ -343,6 +354,14 @@ struct LazyNoteMenuSheet: View {
         .nbNavigationDestination(isPresented: $blockOptions) {
             BlockOptions(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
                 .environmentObject(themes)
+        }
+        .onAppear {
+            let onlyPtags: [String] = nrPost.fastTags.compactMap({ fastTag in
+                if (fastTag.0 != "p" || !isValidPubkey(fastTag.1)) { return nil }
+                return fastTag.1
+            })
+            let pTagPubkeys: Set<String> = Set(onlyPtags).union([nrPost.pubkey])
+            pubkeysInPost = pTagPubkeys
         }
     }
 }
