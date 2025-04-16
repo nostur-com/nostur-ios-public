@@ -43,6 +43,9 @@ struct AppView: View {
             }
         }
         .onChange(of: accountsState.loggedInAccount) { newLoggedInAccount in
+            // Don't set to .loggedIn too soon, need to wait for startNosturing() to have finished or .connections will be empty (needed in MainFeedsScreen)
+            guard AppState.shared.finishedTasks.contains(.didRunConnectAll) else { return }
+
             viewState = if let newLoggedInAccount {
                 .loggedIn(newLoggedInAccount)
             } else {
@@ -53,8 +56,10 @@ struct AppView: View {
             if DataProvider.shared().databaseProblem {
                 viewState = .databaseError; return
             }
-            await startNosturing()
+
+            await startNosturing() // Need stuff to be ready before NosturMainView() appears
             
+            // viewState = .loggedIn makes NosturMainView() appear
             viewState = if let loggedInAccount = accountsState.loggedInAccount {
                 .loggedIn(loggedInAccount)
             } else {
@@ -66,7 +71,7 @@ struct AppView: View {
 
 extension AppView {
     
-    enum ViewState {
+    enum ViewState: Equatable {
         case starting
         case onboarding
         case loggedIn(LoggedInAccount)
