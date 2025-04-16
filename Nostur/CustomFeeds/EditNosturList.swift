@@ -45,7 +45,7 @@ struct EditNosturList: View {
                 .listRowBackground(themes.theme.listBackground)
             }
             
-            Section(header: Text("Sharing", comment: "Header of Feed sharing settings")) {
+            Section(header: Text("Share list", comment: "Header of Feed/List sharing settings")) {
                 Group {
                     VStack(alignment: .leading) {
                         Toggle(isOn: $list.sharedList, label: { Text("Make list public", comment: "Toggle to make list public")})
@@ -127,14 +127,6 @@ struct EditNosturList: View {
 
             }
         }
-//        .sheet(item: $editList, content: { list in
-//            NBNavigationStack {
-//                EditListTitleSheet(list: list)
-//                    .environmentObject(themes)
-//            }
-//            .nbUseNavigationStack(.never)
-//            .presentationBackgroundCompat(themes.theme.listBackground)
-//        })
         .sheet(isPresented: $addContactsSheetShown) {
             NBNavigationStack {
                 ContactsSearch(followingPubkeys: follows(),

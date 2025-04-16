@@ -7714,6 +7714,9 @@
         }
       }
     },
+    "Share list" : {
+      "comment" : "Header of Feed/List sharing settings"
+    },
     "Share this list with a different title" : {
 
     },
@@ -7726,9 +7729,6 @@
           }
         }
       }
-    },
-    "Sharing" : {
-      "comment" : "Header of Feed sharing settings"
     },
     "Show" : {
       "comment" : "Button to show more items in a post",
