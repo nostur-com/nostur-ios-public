@@ -161,33 +161,41 @@ struct AddContactsToListSheet: View {
         .safeAreaInset(edge: .top) {
             if !showChooseListView {
                 Form {
-                    TextField("New list name", text: $listName)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                        .focused($isFocused)
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                isFocused = true
-                            }
-                        }
-                        .disabled(selectedList != nil)
-                        .listRowBackground(theme.listBackground)
-                        .padding(.trailing, 150)
-                        .overlay(alignment: .trailing) {
-                            if selectedList == nil {
-                                Button("Choose existing list", systemImage: "folder") {
-                                    showChooseListView = true
+                    Section {
+                        TextField("New list name", text: $listName)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .focused($isFocused)
+                            .onAppear {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    isFocused = true
                                 }
-                                .labelStyle(.iconOnly)
                             }
-                            else {
-                                Button("Clear", systemImage: "multiply.circle.fill") {
-                                    selectedList = nil
-                                    listName = ""
+                            .disabled(selectedList != nil)
+                            .listRowBackground(theme.listBackground)
+                            .padding(.trailing, 150)
+                            .overlay(alignment: .trailing) {
+                                if selectedList == nil {
+                                    Button("Choose existing list", systemImage: "folder") {
+                                        showChooseListView = true
+                                    }
+                                    .labelStyle(.iconOnly)
                                 }
-                                .labelStyle(.iconOnly)
+                                else {
+                                    Button("Clear", systemImage: "multiply.circle.fill") {
+                                        selectedList = nil
+                                        listName = ""
+                                    }
+                                    .labelStyle(.iconOnly)
+                                }
                             }
+                    } footer: {
+                        if let selectedList, selectedList.sharedList {
+                            Text("This list is public")
+                                .font(.footnote)
+                                .foregroundColor(Color.secondary)
                         }
+                    }
                 }
                 .listStyle(.plain)
                 .frame(height: 90)
