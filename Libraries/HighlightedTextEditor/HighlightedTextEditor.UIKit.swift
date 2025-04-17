@@ -40,7 +40,6 @@ class NosturTextView: UITextView {
 
     // This gets called when user presses menu "Paste" option
     override func paste(_ sender: Any?) {
-        print(UIPasteboard.general.types)
         if let gifData = UIPasteboard.general.data(forPasteboardType: "com.compuserve.gif") {
             pastedMediaDelegate?.didPasteGif(gifData)
         }
