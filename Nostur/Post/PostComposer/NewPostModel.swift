@@ -104,6 +104,8 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
+    @Published var selectedAuthor: Contact? // To include in 9802 highlight
+    
     private var subscriptions = Set<AnyCancellable>()
     
     public init(dueTime: TimeInterval = 0.2) {
@@ -297,153 +299,28 @@ public final class NewPostModel: ObservableObject {
         }
     }
     
-    // TODO: NOTE: When updating this func, also update HighlightComposer.send or refactor.
     private func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
         Importer.shared.delayProcessing()
         guard let account = activeAccount else { return }
         account.lastLoginAt = .now
         guard isFullAccount(account) else { showReadOnlyMessage(); return }
-        let publicKey = account.publicKey
-        var nEvent = nEvent ?? NEvent(content: "")
-        nEvent.publicKey = publicKey
-        var pTags:[String] = []
-        nEvent.createdAt = NTimestamp.init(date: Date())
         
-        // Handle images
-        if !imetas.isEmpty || !remoteIMetas.isEmpty {
-             
-            // imetas from local uploaded / pasted images
-            for imeta in imetas {
-                
-                // don't add image urls in .content for kind:20
-                if nEvent.kind != .picture {
-                    nEvent.content += "\n\(imeta.url)"
-                }
-                
-                var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
-                if let dim = imeta.dim, !dim.isEmpty {
-                    imetaParts.append("dim \(dim)")
-                }
-                if let blurhash = imeta.blurhash, !blurhash.isEmpty {
-                    imetaParts.append("blurhash \(blurhash)")
-                }
-                if let hash = imeta.hash, !hash.isEmpty {
-                    imetaParts.append("sha256 \(hash)")
-                }
-
-                nEvent.tags.append(NostrTag(imetaParts))
-            }
-            
-            // imetas from included image urls (generated from MediaContentView)
-            for (key: imageUrl, value: imeta) in remoteIMetas {
-                if nEvent.content.contains(imageUrl) {
-                    
-                    var imetaParts: [String] = ["imeta", "url \(imageUrl)"]
-                    if let size = imeta.size {
-                        imetaParts.append("dim \(Int(size.width.rounded(.up)))x\(Int(size.height.rounded(.up)))")
-                    }
-                    if let blurHash = imeta.blurHash, !blurHash.isEmpty {
-                        imetaParts.append("blurhash \(blurHash)")
-                    }
-                    
-                    nEvent.tags.append(NostrTag(imetaParts))
-                    
-                }
-            }
-        }
         
-        // Typed @mentions to nostr:npub
-        if #available(iOS 16.0, *) {
-            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
-        }
-        else {
-            nEvent.content = replaceMentionsWithNpubs15(nEvent.content, selected: typingTextModel.selectedMentions)
-        }
+        guard var finalEvent = buildFinalEvent(imetas: imetas, replyTo: replyTo, quotePost: quotePost) else { return }
         
-        // @npubs to nostr:npub and return pTags
-        let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
-        nEvent.content = content
-        let atPtags = atNpubs.compactMap { Keys.hex(npub: $0) }
-        
-        // Scan for any nostr:npub and return pTags
-        let npubs = getNostrNpubs(nEvent.content)
-        let nostrNpubTags = npubs.compactMap { Keys.hex(npub: $0) }
-        
-        // Scan for any nostr:note1 or nevent1 and return q tags
-        let qTags = Set(getQuoteTags(nEvent.content)) // TODO: Should resolve p-tags from quoted events and include those too.
-        
-        // #hashtags to .t tags
-        nEvent = putHashtagsInTags(nEvent)
-
-        var unselectedPtags = typingTextModel.unselectedMentions.map { $0.pubkey }
-        
-        // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
-        if let requiredP = requiredP {
-            pTags.append(requiredP)
-            unselectedPtags.removeAll(where: { $0 == requiredP })
-        }
-        
-        if let replyTo, let replyToMain = replyTo.nrPost.event?.toMain()  {
-            // pTags from replyTo.pTags
-            let replyToPTags = replyToMain.pTags() + [replyToMain.pubkey]
-            pTags.append(contentsOf: replyToPTags)
-        }
-        
-        // Merge and deduplicate all p pubkeys, remove all unselected p pubkeys and turn into NostrTag
-        let nostrTags = Set(pTags + atPtags + nostrNpubTags)
-            .subtracting(Set(unselectedPtags))
-            .map { NostrTag(["p", $0]) }
-        
-        nEvent.tags.append(contentsOf: nostrTags)
-        
-        // If we are quote reposting, include the quoted post as nostr:nevent at the end
-        if let quotePost, let quotePostMain = quotePost.nrPost.event?.toMain() {
-            
-            let relayHint: String? = resolveRelayHint(forPubkey: quotePost.nrPost.pubkey, receivedFromRelays: quotePostMain.relays_).first
-            
-            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotePost.nrPost.id, kind: Int(quotePost.nrPost.kind), pubkey: quotePost.nrPost.pubkey, relays: [relayHint].compactMap { $0 }) {
-                nEvent.content = (nEvent.content + "\nnostr:" + si.identifier)
-            }
-            else if let note1id = note1(quotePost.nrPost.id) {
-                nEvent.content = (nEvent.content + "\nnostr:" + note1id)
-            }
-            
-            nEvent.tags.insert(NostrTag(["q", quotePost.nrPost.id, relayHint ?? "", quotePost.nrPost.pubkey]), at: 0)
-            
-            if !nEvent.pTags().contains(quotePost.nrPost.pubkey) {
-                nEvent.tags.append(NostrTag(["p", quotePost.nrPost.pubkey]))
-            }
-        }
-        
-        qTags.forEach { qTag in
-            nEvent.tags.append(NostrTag(["q", qTag]))
-        }
-        
-        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-            nEvent.content = replaceNsecWithHunter2(nEvent.content)
-        }
-        
-        let lockToThisRelay: RelayData? = Drafts.shared.lockToThisRelay
-        
-        if lockToThisRelay != nil && lockToSingleRelay {
-            nEvent.tags.append(NostrTag(["-"]))
-        }
-        
-        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
-            nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
-        }
-
         // Need draft here because it might be cleared before we need it because async later
         self.typingTextModel.restoreDraft = self.typingTextModel.draft
         
+        let lockToThisRelay: RelayData? = Drafts.shared.lockToThisRelay
+        
         let cancellationId = UUID()
         if account.isNC {
-            nEvent = nEvent.withId()
+            finalEvent = finalEvent.withId()
             
             // Save unsigned event:
             let bgContext = bg()
             bgContext.perform {
-                let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned", context: bgContext)
+                let savedEvent = Event.saveEvent(event: finalEvent, flags: "nsecbunker_unsigned", context: bgContext)
                 savedEvent.cancellationId = cancellationId
                 DispatchQueue.main.async {
                     if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
@@ -456,7 +333,7 @@ public final class NewPostModel: ObservableObject {
                 DataProvider.shared().bgSave()
                 
                 DispatchQueue.main.async {
-                    NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+                    NSecBunkerManager.shared.requestSignature(forEvent: finalEvent, usingAccount: account, whenSigned: { signedEvent in
                         bg().perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
@@ -471,13 +348,13 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
-        else if let signedEvent = try? account.signEvent(nEvent) {
+        else if let signedEvent = try? account.signEvent(finalEvent) {
             let bgContext = bg()
             bgContext.perform {
                 let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
                 savedEvent.cancellationId = cancellationId
                 // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                if nEvent.kind == .reaction {
+                if finalEvent.kind == .reaction {
                     Event.updateReactionTo(savedEvent, context: bg()) // TODO: Revert this on 'undo'
                 }
                 
@@ -524,47 +401,100 @@ public final class NewPostModel: ObservableObject {
         sendNotification(.didSend)
     }
     
-    func showPreview(quotePost: QuotePost? = nil, replyTo: ReplyTo? = nil) {
-        // TODO: Make _sendNow() more reusable and reuse those parts here so we can't forget to make chances twice and forget half.
-        guard let account = activeAccount else { return }
-        Importer.shared.delayProcessing()
-        var nEvent = nEvent ?? NEvent(content: "")
-        nEvent.publicKey = account.publicKey
+    private func buildFinalEvent(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, isPreviewContext: Bool = false) -> NEvent? {
+        guard var nEvent = self.nEvent else { return nil }
+        guard let account = activeAccount else { return nil }
+        let publicKey = account.publicKey
+
+        nEvent.publicKey = publicKey
         var pTags: [String] = []
         nEvent.createdAt = NTimestamp.init(date: Date())
         
+        if nEvent.kind == .highlight {
+            if let selectedAuthor = selectedAuthor {
+                nEvent.tags.append(NostrTag(["p", selectedAuthor.pubkey]))
+            }
+        }
+        
+        var content: String = typingTextModel.text // put this eventually in .content or comment tag, depending on kind 9802 or not
+        
+        // Handle images
+        if !imetas.isEmpty || !remoteIMetas.isEmpty {
+             
+            // imetas from local uploaded / pasted images
+            for imeta in imetas {
+                
+                // don't add image urls in .content for kind:20
+                if nEvent.kind != .picture {
+                    content += "\n\(imeta.url)"
+                }
+                
+                var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
+                if let dim = imeta.dim, !dim.isEmpty {
+                    imetaParts.append("dim \(dim)")
+                }
+                if let blurhash = imeta.blurhash, !blurhash.isEmpty {
+                    imetaParts.append("blurhash \(blurhash)")
+                }
+                if let hash = imeta.hash, !hash.isEmpty {
+                    imetaParts.append("sha256 \(hash)")
+                }
+
+                nEvent.tags.append(NostrTag(imetaParts))
+            }
+            
+            // imetas from included image urls (generated from MediaContentView)
+            for (key: imageUrl, value: imeta) in remoteIMetas {
+                if content.contains(imageUrl) {
+                    
+                    var imetaParts: [String] = ["imeta", "url \(imageUrl)"]
+                    if let size = imeta.size {
+                        imetaParts.append("dim \(Int(size.width.rounded(.up)))x\(Int(size.height.rounded(.up)))")
+                    }
+                    if let blurHash = imeta.blurHash, !blurHash.isEmpty {
+                        imetaParts.append("blurhash \(blurHash)")
+                    }
+                    
+                    nEvent.tags.append(NostrTag(imetaParts))
+                    
+                }
+            }
+        }
+        
         // Handle preview images
-        for index in typingTextModel.pastedImages.indices {
-            nEvent.content = nEvent.content + "\n--@!^@\(index)@^!@--"
+        if isPreviewContext {
+            for index in typingTextModel.pastedImages.indices {
+                content = content + "\n--@!^@\(index)@^!@--"
+            }
+            
+            for index in typingTextModel.pastedVideos.indices {
+                content = content + "\n-V-@!^@\(index)@^!@-V-"
+            }
         }
         
-        for index in typingTextModel.pastedVideos.indices {
-            nEvent.content = nEvent.content + "\n-V-@!^@\(index)@^!@-V-"
-        }
-        
-        // @mentions to nostr:npub
+        // Typed @mentions to nostr:npub
         if #available(iOS 16.0, *) {
-            nEvent.content = replaceMentionsWithNpubs(nEvent.content, selected: typingTextModel.selectedMentions)
+            content = replaceMentionsWithNpubs(content, selected: typingTextModel.selectedMentions)
         }
         else {
-            nEvent.content = replaceMentionsWithNpubs15(nEvent.content, selected: typingTextModel.selectedMentions)
+            content = replaceMentionsWithNpubs15(content, selected: typingTextModel.selectedMentions)
         }
         
         // @npubs to nostr:npub and return pTags
-        let (content, atNpubs) = replaceAtWithNostr(nEvent.content)
-        nEvent.content = content
+        let (contentNpubsReplaced, atNpubs) = replaceAtWithNostr(content)
+        content = contentNpubsReplaced
         let atPtags = atNpubs.compactMap { Keys.hex(npub: $0) }
         
         // Scan for any nostr:npub and return pTags
-        let npubs = getNostrNpubs(nEvent.content)
+        let npubs = getNostrNpubs(content)
         let nostrNpubTags = npubs.compactMap { Keys.hex(npub: $0) }
         
         // Scan for any nostr:note1 or nevent1 and return q tags
-        let qTags = Set(getQuoteTags(nEvent.content))
-
-        // #hashtags to .t tags
-        nEvent = putHashtagsInTags(nEvent)
+        let qTags = Set(getQuoteTags(content)) // TODO: Should resolve p-tags from quoted events and include those too.
         
+        // #hashtags to .t tags
+        nEvent = putHashtagsInTags(nEvent, content: content)
+
         var unselectedPtags = typingTextModel.unselectedMentions.map { $0.pubkey }
         
         // always include the .p of pubkey we are replying to (not required by spec, but more healthy for nostr)
@@ -573,7 +503,7 @@ public final class NewPostModel: ObservableObject {
             unselectedPtags.removeAll(where: { $0 == requiredP })
         }
         
-        if let replyTo, let replyToMain = replyTo.nrPost.event?.toMain() {
+        if let replyTo, let replyToMain = replyTo.nrPost.event?.toMain()  {
             // pTags from replyTo.pTags
             let replyToPTags = replyToMain.pTags() + [replyToMain.pubkey]
             pTags.append(contentsOf: replyToPTags)
@@ -592,10 +522,10 @@ public final class NewPostModel: ObservableObject {
             let relayHint: String? = resolveRelayHint(forPubkey: quotePost.nrPost.pubkey, receivedFromRelays: quotePostMain.relays_).first
             
             if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: quotePost.nrPost.id, kind: Int(quotePost.nrPost.kind), pubkey: quotePost.nrPost.pubkey, relays: [relayHint].compactMap { $0 }) {
-                nEvent.content = (nEvent.content + "\nnostr:" + si.identifier)
+                content = (content + "\nnostr:" + si.identifier)
             }
             else if let note1id = note1(quotePost.nrPost.id) {
-                nEvent.content = (nEvent.content + "\nnostr:" + note1id)
+                content = (content + "\nnostr:" + note1id)
             }
             
             nEvent.tags.insert(NostrTag(["q", quotePost.nrPost.id, relayHint ?? "", quotePost.nrPost.pubkey]), at: 0)
@@ -609,21 +539,37 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["q", qTag]))
         }
         
-        if let lockToThisRelay = Drafts.shared.lockToThisRelay, lockToSingleRelay {
+        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+            content = replaceNsecWithHunter2(content)
+        }
+        
+        let lockToThisRelay: RelayData? = Drafts.shared.lockToThisRelay
+        
+        if lockToThisRelay != nil && lockToSingleRelay {
             nEvent.tags.append(NostrTag(["-"]))
         }
-
-        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-            nEvent.content = replaceNsecWithHunter2(nEvent.content)
-        }
-
+        
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
         
+        if nEvent.kind == .highlight { // for highlight the content is in the comment tag
+            nEvent.tags.append(NostrTag(["comment", content]))
+        }
+        else {
+            nEvent.content = content
+        }
+        
+        return nEvent
+    }
+    
+    func showPreview(quotePost: QuotePost? = nil, replyTo: ReplyTo? = nil) {
+        
+        guard let finalNEvent = buildFinalEvent(imetas: [], replyTo: replyTo, quotePost: quotePost, isPreviewContext: true) else { return }
+        
         bg().perform { [weak self] in
             guard let self else { return }
-            let previewEvent = createPreviewEvent(nEvent)
+            let previewEvent = createPreviewEvent(finalNEvent)
             if (!self.typingTextModel.pastedImages.isEmpty) {
                 previewEvent.previewImages = self.typingTextModel.pastedImages
             }
@@ -632,7 +578,7 @@ public final class NewPostModel: ObservableObject {
             }
             let nrPost = NRPost(event: previewEvent, withFooter: false, isScreenshot: true, isPreview: true)
             DispatchQueue.main.async { [weak self] in
-                self?.previewNEvent = nEvent
+                self?.previewNEvent = finalNEvent
                 self?.previewNRPost = nrPost
             }
             bg().delete(previewEvent)
@@ -693,12 +639,6 @@ public final class NewPostModel: ObservableObject {
     }
     
     public func textChanged(_ newText:String) {
-        if (nEvent == nil) {
-            nEvent = NEvent(content: newText)
-        } else {
-            nEvent!.content = newText
-        }
-        
         guard textView != nil else { return }
         if let mentionTerm = mentionTerm(newText, textView: textView) {
             if mentionTerm == lastHit {

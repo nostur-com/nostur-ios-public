@@ -305,8 +305,12 @@ struct WithSheets: ViewModifier {
             }
             .sheet(item: $newHighlight) { newHighlight in
                 NBNavigationStack {
-                    HighlightComposer(highlight: newHighlight)
+                    ComposePostCompat(onDismiss: {
+                        self.newHighlight = nil
+                    }, kind: .highlight, highlight: newHighlight)
+                        .environmentObject(dim)
                         .environmentObject(themes)
+                        .environment(\.managedObjectContext, viewContext())
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)

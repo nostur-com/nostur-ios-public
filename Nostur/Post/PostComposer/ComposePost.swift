@@ -12,23 +12,6 @@ import UniformTypeIdentifiers
 // TODO: Should add drafts and auto-save
 // TODO: Need to create better solution for typing @mentions
 
-struct ComposePostCompat: View {
-    public var replyTo: ReplyTo? = nil
-    public var quotePost: QuotePost? = nil
-    public var directMention: NRContact? = nil // For initiating a post from profile view
-    public var onDismiss: () -> Void
-    public var kind: NEventKind? = nil
-    
-    var body: some View {
-        if #available(iOS 16.0, *) {
-            ComposePost(replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: onDismiss, kind: kind)
-        }
-        else {
-            ComposePost15(replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: onDismiss) // No image picker yet on iOS 15 so remove kind:20 detection
-        }
-    }
-}
-
 @available(iOS 16.0, *)
 struct ComposePost: View {
     public var replyTo: ReplyTo? = nil
@@ -36,6 +19,9 @@ struct ComposePost: View {
     public var directMention: NRContact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
     public var kind: NEventKind? = nil
+    public var highlight: NewHighlight?
+    
+    @State private var isAuthorSelectionShown = false
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
@@ -79,6 +65,90 @@ struct ComposePost: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             switch kind {
+                            case .highlight:
+                                VStack {
+                                    HStack(alignment: .top) {
+                                        InlineAccountSwitcher(activeAccount: account, onChange: { account in
+                                            vm.activeAccount = account
+                                        }).equatable()
+                                        
+                                        textEntry
+                                            .frame(height: max(50, ((geo.size.height - 90) * 0.5 )))
+                                            .id(textfield)
+                                    }
+                                    .padding(.top, 10)
+                                    
+                                    if let highlight {
+                                        VStack {
+                                            Text(highlight.selectedText)
+                                                .italic()
+                                                .padding(20)
+                                                .overlay(alignment:.topLeading) {
+                                                    Image(systemName: "quote.opening")
+                                                        .foregroundColor(Color.secondary)
+                                                }
+                                                .overlay(alignment:.bottomTrailing) {
+                                                    Image(systemName: "quote.closing")
+                                                        .foregroundColor(Color.secondary)
+                                                }
+                                            
+                                            if let selectedAuthor = vm.selectedAuthor {
+                                                HStack {
+                                                    Spacer()
+                                                    PFP(pubkey: selectedAuthor.pubkey, contact: selectedAuthor, size: 20)
+                                                    Text(selectedAuthor.authorName)
+                                                }
+                                                .padding(.trailing, 40)
+                                            }
+                                            HStack {
+                                                Spacer()
+                                                if let md = try? AttributedString(markdown:"[\(highlight.url)](\(highlight.url))") {
+                                                    Text(md)
+                                                        .lineLimit(1)
+                                                        .font(.caption)
+                                                }
+                                            }
+                                            .padding(.trailing, 40)
+                                        }
+                                        .padding(10)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 15)
+                                                .stroke(.regularMaterial, lineWidth: 1)
+                                        )
+                                        .navigationTitle(String(localized:"Share highlight", comment:"Navigation title for screen to Share a Highlighted Text"))
+                                        .sheet(isPresented: $isAuthorSelectionShown) {
+                                            NBNavigationStack {
+                                                ContactsSearch(followingPubkeys: follows(),
+                                                               prompt: "Search", onSelectContact: { selectedContact in
+                                                    vm.selectedAuthor = selectedContact
+                                                    isAuthorSelectionShown = false
+                                                })
+                                                .equatable()
+                                                .environmentObject(themes)
+                                                .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
+                                                .navigationBarTitleDisplayMode(.inline)
+                                                .toolbar {
+                                                    ToolbarItem(placement: .cancellationAction) {
+                                                        Button("Cancel") {
+                                                            isAuthorSelectionShown = false
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            .nbUseNavigationStack(.never)
+                                            .presentationBackgroundCompat(themes.theme.listBackground)
+                                        }
+                                    }
+                                }
+                                
+                                .padding(10)
+                                .onAppear {
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                        withAnimation {
+                                            proxy.scrollTo(textfield)
+                                        }
+                                    }
+                                }
                             case .picture:
                                 VStack(alignment: .leading) {
                                     HStack(alignment: .top) {
@@ -121,9 +191,7 @@ struct ComposePost: View {
                                         .font(.largeTitle)
                                     }
                                     
-                                    Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: .picture)
-//                                        .frame(height: max(50, (geo.size.height - 70)))
-//                                        .padding(.horizontal, -10)
+                                    textEntry
                                         .id(textfield)
                                         .onReceive(receiveNotification(.newPostFirstImageAppeared), perform: { _ in
                                             guard kind == .picture else { return }
@@ -152,9 +220,8 @@ struct ComposePost: View {
                                 
                                 VStack {
                                     if let replyToNRPost = replyToNRPost {
-                                        // Replyijg, so full-width false and connecting line to bottom
+                                        // Reply, so full-width false and connecting line to bottom
                                         KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom, theme: themes.theme)
-//                                            PostRowDeletable(nrPost: replyToNRPost, hideFooter: true, connect: .bottom, theme: themes.theme)
                                             .onTapGesture { }
                                             .disabled(true)
                                     }
@@ -164,7 +231,7 @@ struct ComposePost: View {
                                             vm.activeAccount = account
                                         }).equatable()
                                         
-                                        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind)
+                                        textEntry
                                             .frame(height: replyTo == nil && quotePost == nil ? max(50, (geo.size.height - 90)) : max(50, ((geo.size.height - 90) * 0.5 )) )
                                             .id(textfield)
                                     }
@@ -191,7 +258,6 @@ struct ComposePost: View {
                                 
                                 .padding(10)
                                 .onAppear {
-        //                            textHeight = 300
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                                         withAnimation {
                                             proxy.scrollTo(textfield)
@@ -377,6 +443,12 @@ struct ComposePost: View {
                 pictureEvent.kind = .picture
                 vm.nEvent = pictureEvent
             }
+            else if kind == .highlight, let highlight {
+                var highlightEvent = NEvent(content: highlight.selectedText)
+                highlightEvent.kind = .highlight
+                highlightEvent.tags.append(NostrTag(["r", highlight.url]))
+                vm.nEvent = highlightEvent
+            }
             else if let replyTo {
                 vm.loadReplyTo(replyTo)
                 self.replyToNRPost = replyTo.nrPost
@@ -385,9 +457,17 @@ struct ComposePost: View {
                 vm.loadQuotingEvent()
                 self.quotingNRPost = quotePost.nrPost
             }
+            else {
+                vm.nEvent = NEvent(content: "")
+            }
             ConnectionPool.shared.connectAllWrite()
         }
         .background(themes.theme.listBackground)
+    }
+    
+    @ViewBuilder
+    var textEntry: some View {
+        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, selectedAuthor: $vm.selectedAuthor)
     }
 }
 
@@ -420,6 +500,27 @@ struct ComposePost: View {
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
                         ComposePostCompat(onDismiss: { }, kind: .picture)
+                    }
+                    .nbUseNavigationStack(.never)
+                }
+        }
+    }
+}
+
+#Preview("New Highlight") {
+    PreviewContainer({ pe in
+        pe.loadAccounts()
+        pe.loadPosts()
+        pe.loadContacts()
+    }) {
+        VStack {
+            Button("New Highlight") { }
+                .sheet(isPresented: .constant(true)) {
+                    NBNavigationStack {
+                        
+                        let example = NewHighlight(url: "https://nostur.com", selectedText: "This is amazing, this is some text that is being highlighted by Nostur highlightur", title:"Nostur - a nostr client for iOS/macOS")
+
+                        ComposePostCompat(onDismiss: { }, kind: .highlight, highlight: example)
                     }
                     .nbUseNavigationStack(.never)
                 }

@@ -17,6 +17,8 @@ struct Entry: View {
     @Binding var videoPickerShown: Bool
     @Binding var gifSheetShown: Bool
     @Binding var cameraSheetShown: Bool
+    @Binding var selectedAuthor: Contact?
+    
     private var replyTo: ReplyTo?
     private var quotePost: QuotePost?
     private var directMention: NRContact?
@@ -27,16 +29,20 @@ struct Entry: View {
         switch kind {
             case .picture:
             String(localized:"Add a caption", comment: "Placeholder text for adding a caption")
+            case .highlight:
+            String(localized:"Add comment", comment: "Placeholder text for adding a comment")
             default:
             String(localized:"What's happening?", comment: "Placeholder text for typing a new post")
         }
     }
     
+    @State private var isAuthorSelectionShown = false
+    
     private var shouldDisablePostButton: Bool {
-        (kind == .picture && typingTextModel.pastedImages.isEmpty) || typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty)
+        (kind == .picture && typingTextModel.pastedImages.isEmpty) || typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && kind != .highlight)
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, selectedAuthor: Binding<Contact?>) {
         self.replyTo = replyTo
         self.quotePost = quotePost
         self.directMention = directMention
@@ -49,6 +55,7 @@ struct Entry: View {
         _videoPickerShown = videoPickerShown
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
+        _selectedAuthor = selectedAuthor
     }
     
     var body: some View {
@@ -164,7 +171,7 @@ struct Entry: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
                     if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
-                        if kind != .picture {
+                        if kind != .picture && kind != .highlight {
                             Button {
                                 if IS_CATALYST { // MacOS can reuse same weird sheet
                                     sendNotification(.showCreateNestsSheet)
@@ -195,7 +202,7 @@ struct Entry: View {
                             .buttonStyle(.borderless)
                             .disabled(typingTextModel.uploading)
                             
-                            if kind != .picture {
+                            if kind != .picture && kind != .highlight {
                                 Button { videoPickerShown = true } label: {
                                     Image(systemName: "video")
                                 }
@@ -213,11 +220,20 @@ struct Entry: View {
                         }
                     }
                     
-                    if kind != .picture {
+                    if kind != .picture && kind != .highlight {
                         Button(String(localized: "Preview", comment:"Preview button when creating a new post")) {
                             vm.showPreview(quotePost: quotePost, replyTo: replyTo)
                         }
                         .disabled(typingTextModel.uploading)
+                    }
+                    
+                    if kind == .highlight {
+                        if selectedAuthor != nil {
+                            Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight")) { selectedAuthor = nil }
+                        }
+                        else {
+                            Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
+                        }
                     }
                     
                     Button {
@@ -245,6 +261,28 @@ struct Entry: View {
                     Text(uploadError).foregroundColor(.red)
                 }
             }
+        }
+        .sheet(isPresented: $isAuthorSelectionShown) {
+            NBNavigationStack {
+                ContactsSearch(followingPubkeys: follows(),
+                               prompt: "Search", onSelectContact: { selectedContact in
+                    selectedAuthor = selectedContact
+                    isAuthorSelectionShown = false
+                })
+                .equatable()
+                .environmentObject(themes)
+                .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            isAuthorSelectionShown = false
+                        }
+                    }
+                }
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }
 }
