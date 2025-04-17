@@ -26,6 +26,9 @@ struct FeedSettings: View {
             switch feed.type {
             case "following":
                 Form {
+                    
+                    feedSettingsSection
+                    
                     Section {
                         Toggle(isOn: Binding(get: {
                             feed.repliesEnabled
@@ -50,6 +53,8 @@ struct FeedSettings: View {
                 
             case "relays":
                 Form {
+                    feedSettingsSection
+                    
                     Section {
                         Toggle(isOn: Binding(get: {
                             feed.repliesEnabled
@@ -76,6 +81,8 @@ struct FeedSettings: View {
                 // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000")
                 if !isOwnManagedList, let aTagString = feed.listId, let aTag = try? ATag(aTagString) {
                     Form {
+                        feedSettingsSection
+                        
                         // Even if we change from 30000 to own pubkeys sheet, still show where the list came from, also makes easy to toggle on off subscribe updates again.
                     
                         // Feed managed by... zap author...
@@ -130,6 +137,29 @@ struct FeedSettings: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") { dismiss() }
             }
+        }
+    }
+    
+    
+    @ViewBuilder
+    private var feedSettingsSection: some View {
+        Section(header: Text("Feed settings", comment: "Header for entering title of a feed")) {
+            Group {
+                Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                
+                if feed.showAsTab {
+                    VStack(alignment: .leading) {
+                        TextField(String(localized:"Tab title", comment:"Placeholder for input field to enter title of a feed"), text: $feed.name_)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                        
+                        Text("Shown in the tab bar (not public)")
+                            .font(.footnote)
+                            .foregroundColor(Color.secondary)
+                    }
+                }
+            }
+            .listRowBackground(themes.theme.listBackground)
         }
     }
 }
