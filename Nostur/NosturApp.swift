@@ -25,6 +25,7 @@ struct iOSApp: App {
     private let nsecBunker = NSecBunkerManager.shared
     private let feedsCoordinator = FeedsCoordinator.shared
     private let screenSpace = ScreenSpace.shared // Needed for "full screen" window size on desktop
+    private let unpublisher = Unpublisher.shared
     
     private let dataProvider = DataProvider.shared()
     private let ceb: NRContentElementBuilder = .shared
