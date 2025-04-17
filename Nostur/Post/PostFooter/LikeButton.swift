@@ -79,8 +79,12 @@ struct LikeButton: View {
                 accountCache()?.addLike(nrPost.id)
             }
             
+            likeNEvent.publicKey = account.publicKey
+            if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(likeNEvent.publicKey)) {
+                likeNEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+            }
+            
             if account.isNC {
-                likeNEvent.publicKey = account.publicKey
                 likeNEvent = likeNEvent.withId()
                 NSecBunkerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
                     if let unpublishLikeId = self.unpublishLikeId {

@@ -122,6 +122,12 @@ struct CreateNest: View {
                 let streaming = "wss+livekit://\(server)"
                 var nestsEvent = createNestsEvent(title: title, summary: "", service: service, streaming: streaming, starts: .now, relays: selectedRelays, roomId: response.roomId)
                 
+                nestsEvent.publicKey = account.publicKey
+                
+                if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nestsEvent.publicKey)) {
+                    nestsEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                }
+                
                 let signedNestsEvent: NEvent
                 
                 if account.isNC {
@@ -271,6 +277,12 @@ struct ScheduleNestSheet: View {
             if let response: CreateRoomResponse = try? await createRoom(baseURL: service, account: account, relays: selectedRelays, hlsStream: false) {
                 let streaming = "wss+livekit://\(server)"
                 var nestsEvent = createNestsEvent(title: title, summary: "", service: service, streaming: streaming, starts: selectedDate, relays: selectedRelays, roomId: response.roomId)
+                
+                nestsEvent.publicKey = account.publicKey
+                
+                if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nestsEvent.publicKey)) {
+                    nestsEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                }
                 
                 let signedNestsEvent: NEvent
                 

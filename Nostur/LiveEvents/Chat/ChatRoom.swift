@@ -143,6 +143,10 @@ let _ = Self._printChanges()
         nEvent.tags.append(NostrTag(["a", aTag]))
         
         nEvent.publicKey = account.publicKey
+                
+        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
+            nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+        }
         
         if account.isNC {
             nEvent = nEvent.withId()
