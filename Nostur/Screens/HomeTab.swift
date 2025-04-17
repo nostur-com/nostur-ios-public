@@ -66,13 +66,13 @@ struct HomeTab: View {
                     NRNavigationStack {
                         if la.account.isNC {
                             WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                                ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
+                                ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                     .environmentObject(dim)
                             }
                             .environmentObject(themes)
                         }
                         else {
-                            ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
+                            ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                 .environmentObject(dim)
                                 .environmentObject(themes)
                         }

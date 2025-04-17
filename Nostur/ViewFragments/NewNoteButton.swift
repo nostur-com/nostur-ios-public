@@ -34,7 +34,7 @@ struct NewNoteButton_Previews: PreviewProvider {
         PreviewContainer {
             NewNoteButton(showingNewNote: $showingNewNote)
                 .sheet(isPresented: $showingNewNote) {
-                    ComposePostCompat(onDismiss: { })
+                    ComposePost(onDismiss: { })
                 }
         }
     }

@@ -212,14 +212,14 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
+                            ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                                 .environmentObject(dim)
                                 .environmentObject(themes)
                                 .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                     }
                     else {
-                        ComposePostCompat(replyTo: replyTo, onDismiss: { self.replyTo = nil })
+                        ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                             .environmentObject(dim)
                             .environmentObject(themes)
                             .presentationBackgroundCompat(themes.theme.listBackground)
@@ -253,14 +253,14 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
+                            ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                                 .environmentObject(dim)
                                 .presentationBackgroundCompat(themes.theme.listBackground)
                         }
                         .environmentObject(themes)
                     }
                     else {
-                        ComposePostCompat(quotePost: quotePost, onDismiss: { self.quotePost = nil })
+                        ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                             .environmentObject(dim)
                             .environmentObject(themes)
                             .presentationBackgroundCompat(themes.theme.listBackground)
@@ -305,7 +305,7 @@ struct WithSheets: ViewModifier {
             }
             .sheet(item: $newHighlight) { newHighlight in
                 NBNavigationStack {
-                    ComposePostCompat(onDismiss: {
+                    ComposePost(onDismiss: {
                         self.newHighlight = nil
                     }, kind: .highlight, highlight: newHighlight)
                         .environmentObject(dim)

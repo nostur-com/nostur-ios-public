@@ -12,7 +12,6 @@ import UniformTypeIdentifiers
 // TODO: Should add drafts and auto-save
 // TODO: Need to create better solution for typing @mentions
 
-@available(iOS 16.0, *)
 struct ComposePost: View {
     public var replyTo: ReplyTo? = nil
     public var quotePost: QuotePost? = nil
@@ -26,10 +25,9 @@ struct ComposePost: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
-//    @EnvironmentObject private var screenSpace: ScreenSpace
     
     @StateObject private var vm = NewPostModel()
-    @StateObject private var ipm = MultipleImagePickerModel()
+    
     @State private var gifSheetShown = false
     @State private var photoPickerShown = false
     @State private var videoPickerShown = false
@@ -56,9 +54,9 @@ struct ComposePost: View {
     @State private var previewDIM = DIMENSIONS()
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         ZStack { // Needed because else we are stuck in ProgressView() forever
             if let account = vm.activeAccount {
                 GeometryReader { geo in
@@ -285,7 +283,6 @@ struct ComposePost: View {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                         .environmentObject(previewDIM)
-//                                        .environmentObject(screenSpace)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                         AutoPilotSendPreview(nEvent: nEvent)
@@ -300,7 +297,6 @@ struct ComposePost: View {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
                                         .environmentObject(previewDIM)
-//                                        .environmentObject(screenSpace)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                         AutoPilotSendPreview(nEvent: nEvent)
@@ -309,51 +305,6 @@ struct ComposePost: View {
                             }
                             .nbUseNavigationStack(.never)
                             .presentationBackgroundCompat(themes.theme.listBackground)
-                        }
-                    }
-                    .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection,
-                                  maxSelectionCount: kind == .picture ? 1 : 8,
-                                  matching: .images, photoLibrary: .shared())
-                    .onChange(of: ipm.newImages) { newImages in
-                        if kind == .picture, let firstImage = newImages.first {
-                            guard let data = firstImage.pngData() else { return }
-//                            vm.typingTextModel.objectWillChange.send()
-                            let imageType: PostedImageMeta.ImageType = firstImage.gifData() != nil ? .gif : .jpeg
-                            vm.typingTextModel.pastedImages = [PostedImageMeta(
-                                index: 0,
-                                data: data,
-                                type: imageType,
-                                uniqueId: UUID().uuidString
-                            )]
-                        }
-                        else {
-                            for (index, newImage) in newImages.enumerated() {
-                                guard let data = newImage.pngData() else { return }
-//                                vm.typingTextModel.objectWillChange.send()
-                                let imageType: PostedImageMeta.ImageType = newImage.gifData() != nil ? .gif : .jpeg
-                                vm.typingTextModel.pastedImages.append(
-                                    PostedImageMeta(
-                                        index: vm.typingTextModel.pastedImages.count + index,
-                                        data: data,
-                                        type: imageType,
-                                        uniqueId: UUID().uuidString
-                                    )
-                                )
-                            }
-                        }
-                        ipm.newImages = []
-                    }
-                    .onChange(of: photoPickerShown) { isShown in
-                        // Dismiss whole sheet if no image was picked (for kind:20)
-                        guard kind == .picture else { return }
-                        guard !isShown else { return }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            guard ipm.imageSelection.isEmpty else { return }
-                            guard ipm.newImages.isEmpty else { return }
-                            if vm.typingTextModel.pastedImages.isEmpty && !photoPickerShown {
-                                L.og.debug("No image selected, dismiss")
-                                onDismiss()
-                            }
                         }
                     }
                     .sheet(isPresented: $videoPickerShown) {
@@ -390,6 +341,10 @@ struct ComposePost: View {
                                 .multilineTextAlignment(.center)
                             }
                             .animation(.default, value: isTargeted)
+                        }
+                        
+                        if #available(iOS 16, *) {
+                            PhotosPicker16(vm: vm, kind: kind, photoPickerShown: $photoPickerShown)
                         }
                     }
                 }
@@ -479,7 +434,7 @@ struct ComposePost: View {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
-                        ComposePostCompat(onDismiss: { })
+                        ComposePost(onDismiss: { })
                     }
                     .nbUseNavigationStack(.never)
                 }
@@ -497,7 +452,7 @@ struct ComposePost: View {
             Button("New Post") { }
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
-                        ComposePostCompat(onDismiss: { }, kind: .picture)
+                        ComposePost(onDismiss: { }, kind: .picture)
                     }
                     .nbUseNavigationStack(.never)
                 }
@@ -518,7 +473,7 @@ struct ComposePost: View {
                         
                         let example = NewHighlight(url: "https://nostur.com", selectedText: "This is amazing, this is some text that is being highlighted by Nostur highlightur", title:"Nostur - a nostr client for iOS/macOS")
 
-                        ComposePostCompat(onDismiss: { }, kind: .highlight, highlight: example)
+                        ComposePost(onDismiss: { }, kind: .highlight, highlight: example)
                     }
                     .nbUseNavigationStack(.never)
                 }
@@ -537,10 +492,54 @@ struct ComposePost: View {
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
                         if let nrReplyTo = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
-                            ComposePostCompat(replyTo: ReplyTo(nrPost: nrReplyTo), onDismiss: { })
+                            ComposePost(replyTo: ReplyTo(nrPost: nrReplyTo), onDismiss: { })
                         }
                     }
                 }
         }
+    }
+}
+
+
+@available(iOS 16.0, *)
+struct PhotosPicker16: View {
+    @ObservedObject public var vm: NewPostModel
+    public var kind: NEventKind? = nil
+    @Binding public var photoPickerShown: Bool
+    @StateObject private var ipm = MultipleImagePickerModel()
+    
+    var body: some View {
+        Color.clear
+            .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection,
+                      maxSelectionCount: kind == .picture ? 1 : 8,
+                      matching: .images, photoLibrary: .shared())
+        
+            .onChange(of: ipm.newImages) { newImages in
+                if kind == .picture, let firstImage = newImages.first {
+                    guard let data = firstImage.pngData() else { return }
+                    let imageType: PostedImageMeta.ImageType = firstImage.gifData() != nil ? .gif : .jpeg
+                    vm.typingTextModel.pastedImages = [PostedImageMeta(
+                        index: 0,
+                        data: data,
+                        type: imageType,
+                        uniqueId: UUID().uuidString
+                    )]
+                }
+                else {
+                    for (index, newImage) in newImages.enumerated() {
+                        guard let data = newImage.pngData() else { return }
+                        let imageType: PostedImageMeta.ImageType = newImage.gifData() != nil ? .gif : .jpeg
+                        vm.typingTextModel.pastedImages.append(
+                            PostedImageMeta(
+                                index: vm.typingTextModel.pastedImages.count + index,
+                                data: data,
+                                type: imageType,
+                                uniqueId: UUID().uuidString
+                            )
+                        )
+                    }
+                }
+                ipm.newImages = []
+            }
     }
 }

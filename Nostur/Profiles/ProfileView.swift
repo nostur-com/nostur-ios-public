@@ -389,13 +389,13 @@ struct ProfileView: View {
                 if let account = Nostur.account() {
                     if account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePostCompat(directMention: nrContact, onDismiss: { showingNewNote = false })
+                            ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
                                 .environmentObject(themes)
 //                                .environmentObject(screenSpace)
                         }
                     }
                     else {
-                        ComposePostCompat(directMention: nrContact, onDismiss: { showingNewNote = false })
+                        ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
                             .environmentObject(themes)
 //                            .environmentObject(screenSpace)
                     }
