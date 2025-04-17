@@ -599,25 +599,20 @@ struct MediaPlaceholder: View {
         vm.state = .loading(0)
         
         // Create a new debounced load task
-        loadTask = Task.detached(priority: .low) {
+        loadTask = Task.detached(priority: .userInitiated) {
             // Wait for a short delay to debounce rapid scrolling
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
             
             // Check if the task was cancelled during the delay
             if Task.isCancelled { return }
             
-            // Check if the view is still visible
-            if !isVisible && !forceLoad { return }
-            
-            // Proceed with loading
-            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
-        }
-    }
-    
-    @MainActor
-    private func load(forceLoad: Bool = false) {
-        Task.detached(priority: .low) {
-            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
+            Task { @MainActor in
+                // Check if the view is still visible
+                if !isVisible && !forceLoad { return }
+                
+                // Proceed with loading
+                await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
+            }
         }
     }
     
