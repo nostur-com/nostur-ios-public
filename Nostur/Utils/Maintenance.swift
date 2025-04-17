@@ -61,8 +61,13 @@ struct Maintenance {
                 if (relaysCount == 0) {
                     for url in BOOTSTRAP_RELAYS {
                         let bootstrapRelay = CloudRelay(context: context)
+                        
+                        
                         bootstrapRelay.read = ["wss://relay.nostr.band","wss://relay.damus.io"].contains(url) ? false : true // write only bootstrap
-                        bootstrapRelay.write = true
+                        
+                        // don't try to write if payment is required for new first-time user
+                        bootstrapRelay.write = ["wss://nostr.wine"].contains(url) ? false : true
+                        
                         bootstrapRelay.createdAt = Date.now
                         bootstrapRelay.url_ = url
                         if ["wss://relay.nostr.band","wss://relay.damus.io"].contains(url) {
