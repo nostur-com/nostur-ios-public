@@ -272,7 +272,7 @@ public struct NEvent: Codable {
         case EOSE
     }
 
-    init(content:NSetMetadata) {
+    init(content: NSetMetadata) {
         self.createdAt = NTimestamp.init(date: Date())
         self.kind = .setMetadata
         self.content = try! content.encodedString()
@@ -282,7 +282,7 @@ public struct NEvent: Codable {
         self.signature = ""
     }
 
-    init(content:String) {
+    init(content: String) {
         self.kind = .textNote
         self.createdAt = NTimestamp.init(date: Date())
         self.content = content

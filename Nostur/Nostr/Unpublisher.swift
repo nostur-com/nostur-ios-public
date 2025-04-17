@@ -37,7 +37,7 @@ class Unpublisher {
     
     static let shared = Unpublisher()
     
-    init() {
+    private init() {
         self.timer = Timer.scheduledTimer(timeInterval: 3, target: self, selector: #selector(onNextTick), userInfo: nil, repeats: true)
         self.timer?.tolerance = 1.0
         NotificationCenter.default.addObserver(self, selector: #selector(appMovedToBackground), name: UIApplication.willResignActiveNotification, object: nil)

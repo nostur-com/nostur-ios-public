@@ -14,7 +14,7 @@ class AccountManager {
     
     static let shared = AccountManager()
     
-    func generateAccount(name:String = "", about:String = "", context: NSManagedObjectContext) -> CloudAccount? {
+    func generateAccount(name: String = "", about: String = "", context: NSManagedObjectContext) -> CloudAccount? {
         guard let newKeys = try? Keys.newKeys() else {
             L.og.error("🔴🔴 Could not generate keys 🔴🔴")
             return nil
@@ -111,7 +111,6 @@ class AccountManager {
 
         do {
             if (account.picture.prefix(30) == "https://profilepics.nostur.com") || (account.banner.prefix(30) == "https://profilepics.nostur.com") {
-//                print("Sending delete PFP and BANNER request")
                 deletePFPandBanner(pk: pk, pubkey: account.publicKey)
             }
             

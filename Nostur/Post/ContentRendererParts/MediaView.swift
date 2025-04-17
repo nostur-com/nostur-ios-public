@@ -572,7 +572,6 @@ struct MediaPlaceholder: View {
                 Image(uiImage: blurImage)
                     .resizable()
                     .scaledToFill()
-//                    .animation(.smooth(duration: 0.2), value: vm.state)
                     .frame(
                         width: availableWidth,
                         height: height

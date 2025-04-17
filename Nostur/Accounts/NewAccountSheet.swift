@@ -10,7 +10,7 @@ import secp256k1
 import Foundation
 
 struct NewAccountSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -68,7 +68,7 @@ struct NewAccountSheet: View {
             .controlSize(.large)
             .buttonStyle(.bordered)
             .onAppear { focusedField = .name }
-            .navigationTitle(String(localized:"Create new account", comment: "Navigation title of create new account screen"))
+            .navigationTitle(String(localized: "Create new account", comment: "Navigation title of create new account screen"))
             .navigationBarTitleDisplayMode(.inline)
             .wowBackground()
             .foregroundColor(Color.white)

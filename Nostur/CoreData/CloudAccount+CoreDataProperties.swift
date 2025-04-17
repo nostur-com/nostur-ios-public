@@ -361,7 +361,7 @@ extension CloudAccount : Identifiable {
     }
     
     
-    func signEvent(_ event:NEvent) throws -> NEvent {
+    func signEvent(_ event: NEvent) throws -> NEvent {
         guard let privateKey = self.privateKey else {
             L.og.error("🔴🔴🔴🔴🔴 private key missing, could not sign 🔴🔴🔴🔴🔴")
             throw "account or keys missing, could not sign"
