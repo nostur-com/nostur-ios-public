@@ -209,7 +209,7 @@ class NotificationsViewModel: ObservableObject {
                 self?.unreadReactions_ = 0
                 self?.unreadZaps_ = 0
                 self?.unreadFailedZaps_ = 0
-                self?.addNotificationSubscriptions()
+                NotificationsViewModel.shared.restoreSubscriptions()
             }
             .store(in: &subscriptions)
         
@@ -244,19 +244,6 @@ class NotificationsViewModel: ObservableObject {
                 let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
                 setAppIconBadgeCount(self.unread + dmsCount)
             }
-        }
-    }
-    
-    public func addNotificationSubscriptions() {
-        // Check relays for newest messages NOW+NEWER ("Notifications") realtime
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            self.relayCheckNewestNotifications()
-        }
-        
-        // Check relays for since... later
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            self.relayCheckSinceNotifications()
         }
     }
     
