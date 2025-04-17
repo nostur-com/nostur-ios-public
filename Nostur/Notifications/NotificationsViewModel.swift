@@ -1021,7 +1021,11 @@ class OfflinePosts {
                     guard !offlinePosts.isEmpty else { return }
                     for offlinePost in offlinePosts {
                         let nEvent = offlinePost.toNEvent()
+
+                        // don't publish restricted events
                         guard !nEvent.isRestricted else { continue }
+                        // make sure that event is older than 15 seconds to prevent interfering with undo timer
+                        guard offlinePost.created_at < Int64(Date.now.timeIntervalSince1970 - 15) else { continue }
 #if DEBUG
                         L.og.debug("Publishing offline post: \(offlinePost.id)")
 #endif
