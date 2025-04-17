@@ -41,6 +41,14 @@ struct EditNosturList: View {
                                 .foregroundColor(Color.secondary)
                         }
                     }
+                    
+                    Toggle(isOn: Binding(get: {
+                        list.repliesEnabled
+                    }, set: { newValue in
+                        list.repliesEnabled = newValue
+                    })) {
+                        Text("Show replies")
+                    }
                 }
                 .listRowBackground(themes.theme.listBackground)
             }

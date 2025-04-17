@@ -29,17 +29,6 @@ struct FeedSettings: View {
                     
                     feedSettingsSection
                     
-                    Section {
-                        Toggle(isOn: Binding(get: {
-                            feed.repliesEnabled
-                        }, set: { newValue in
-                            feed.repliesEnabled = newValue
-                        })) {
-                            Text("Show replies")
-                        }
-                    }
-                    .listRowBackground(themes.theme.background)
-                    
                     if feed.accountPubkey != nil, !la.account.followingHashtags.isEmpty {
                         Section("Included hashtags") {
                             FeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
@@ -56,20 +45,6 @@ struct FeedSettings: View {
                     feedSettingsSection
                     
                     Section {
-                        Toggle(isOn: Binding(get: {
-                            feed.repliesEnabled
-                        }, set: { newValue in
-                            feed.repliesEnabled = newValue
-                        })) {
-                            Text("Show replies")
-                        }
-                        Toggle(isOn: Binding(get: {
-                            feed.wotEnabled
-                        }, set: { newValue in
-                            feed.wotEnabled = newValue
-                        })) {
-                            Text("Web of Trust filter")
-                        }
                         NavigationLink(destination: EditRelaysNosturList(list: feed)) {
                             Text("Configure relays...")
                         }
@@ -156,6 +131,24 @@ struct FeedSettings: View {
                         Text("Shown in the tab bar (not public)")
                             .font(.footnote)
                             .foregroundColor(Color.secondary)
+                    }
+                }
+                
+                Toggle(isOn: Binding(get: {
+                    feed.repliesEnabled
+                }, set: { newValue in
+                    feed.repliesEnabled = newValue
+                })) {
+                    Text("Show replies")
+                }
+                
+                if feed.type == "relays" {
+                    Toggle(isOn: Binding(get: {
+                        feed.wotEnabled
+                    }, set: { newValue in
+                        feed.wotEnabled = newValue
+                    })) {
+                        Text("Web of Trust filter")
                     }
                 }
             }
