@@ -462,7 +462,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
-            let (contentElementsDetail, linkPreviewURLs, galleryItems) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(input: event.noteTextPrepared, fastTags: event.fastTags, event: event, previewImages: event.previewImages, previewVideos: event.previewVideos, isPreviewContext: isPreview)
+            
+            let input = if kind == 9802, let comment = self.comment {
+                comment
+            }
+            else {
+                event.noteTextPrepared
+            }
+            
+            let (contentElementsDetail, linkPreviewURLs, galleryItems) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event)
+                : NRContentElementBuilder.shared.buildElements(
+                    input: input,
+                    fastTags: event.fastTags,
+                    event: event,
+                    previewImages: event.previewImages,
+                    previewVideos: event.previewVideos,
+                    isPreviewContext: isPreview
+            )
             self.linkPreviewURLs = linkPreviewURLs
             self.galleryItems = galleryItems
             

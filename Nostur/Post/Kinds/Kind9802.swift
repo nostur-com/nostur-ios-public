@@ -23,8 +23,18 @@ struct Kind9802: View {
     private let isEmbedded: Bool
     private let fullWidth: Bool
     private let forceAutoload: Bool
+    @State private var didStart = false
     
     private let THREAD_LINE_OFFSET = 24.0
+    
+    
+    private var availableWidth: CGFloat {
+        if isDetail || fullWidth || isEmbedded {
+            return dim.listWidth - 20
+        }
+        
+        return dim.availableNoteRowImageWidth()
+    }
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -90,6 +100,10 @@ struct Kind9802: View {
     
     @ViewBuilder
     var content: some View {
+        
+        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
+            .frame(maxWidth: .infinity, alignment:.leading)
+        
         VStack {
             Text(nrPost.content ?? "")
                 .lineLimit(isDetail ? 500 : 25)
