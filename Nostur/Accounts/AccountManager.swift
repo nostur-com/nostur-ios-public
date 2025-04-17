@@ -149,86 +149,64 @@ class AccountManager {
         }
     }
     
-    static func createMetadataEvent(account: CloudAccount) throws -> NEvent? {
-        guard account.privateKey != nil else {
-            throw "Account has no private key"
-        }
+    static func createUserMetadataEvent(account: CloudAccount) -> NEvent? {
+        guard account.privateKey != nil else { return nil }
         
-        // create nostr .setMetadata event
+        // Create nostr .setMetadata event
         var setMetadataContent = NSetMetadata(name: account.name, about: account.about, picture: account.picture)
         if account.nip05 != "" { setMetadataContent.nip05 = account.nip05 }
         if account.lud16 != "" { setMetadataContent.lud16 = account.lud16 }
         if account.lud06 != "" { setMetadataContent.lud06 = account.lud06 }
         if account.banner != "" { setMetadataContent.banner = account.banner }
-        
-        if (account.privateKey != nil) {
-            do {
-                let keys = try Keys(privateKeyHex: account.privateKey!)
-                
-                var newKind0Event = NEvent(content: setMetadataContent)
-                
-                let newKind0EventSigned = try newKind0Event.sign(keys)
-                
-//                print(newKind0EventSigned.eventJson())
-//                print(newKind0EventSigned.wrappedEventJson())
-                
-                return newKind0EventSigned
-            }
-            catch {
-                L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
-                return nil
-            }
-        }
-        return nil
+
+        return try? account.signEvent(NEvent(content: setMetadataContent))
     }
     
-    static func createContactListEvent(account:CloudAccount) throws -> NEvent? {
+    // kind:10002 relay metadata for new first time user created in app
+    static func createRelayListMetadataEvent(account: CloudAccount) -> NEvent? {
+        return try? account.signEvent(NEvent(
+            kind: .relayList,
+            tags: [
+                NostrTag(["r", "wss://nostr.wine", "read"]),
+                NostrTag(["r", "wss://nos.lol"]),
+                NostrTag(["r", "wss://relay.damus.io", "write"])
+            ]
+        ))
+    }
+    
+    static func createContactListEvent(account: CloudAccount) -> NEvent? {
         guard let ctx = account.managedObjectContext else {
-            L.og.error("🔴🔴 createContactListEvent: account does not have managedObjectContext??")
+            L.og.error("🔴🔴 createContactListEvent: account does not have managedObjectContext")
             return nil
         }
-        guard account.privateKey != nil else {
-            throw "Account has no private key"
+        guard account.privateKey != nil else { return nil }
+        
+        var newKind3Event = NEvent(kind: .contactList)
+
+        // keep existing content if we have it. Should be ignored as per spec https://github.com/nostr-protocol/nips/blob/master/02.md
+        // but some clients use it to store their stuff
+        if let existingKind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: ctx)?.first {
+            newKind3Event.content = existingKind3.content ?? ""
         }
         
-        if (account.privateKey != nil) {
-            do {
-                let keys = try Keys(privateKeyHex: account.privateKey!)
-                
-                var newKind3Event = NEvent(content: "")
-                newKind3Event.kind = .contactList
-                
-                // keep existing content if we have it. Should be ignored as per spec https://github.com/nostr-protocol/nips/blob/master/02.md
-                // but some clients use it to store their stuff
-                if let existingKind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: ctx)?.first {
-                    newKind3Event.content = existingKind3.content ?? ""
-                }
-                
-                for pubkey in account.followingPubkeys {
-                    newKind3Event.tags.append(NostrTag(["p", pubkey]))
-                }
-                
-                for tag in account.followingHashtags {
-                    newKind3Event.tags.append(NostrTag(["t", tag]))
-                }
-                
-                if account.isNC {
-                    newKind3Event.publicKey = account.publicKey
-                    newKind3Event = newKind3Event.withId()
-                    return newKind3Event
-                }
-                else {
-                    let newKind3EventSigned = try newKind3Event.sign(keys)
-                    
-                    return newKind3EventSigned
-                }
-            }
-            catch {
-                L.og.error("🔴🔴🔴🔴 Could not sign/save/broadcast event 🔴🔴🔴🔴")
-                return nil
-            }
+        // add contacts
+        for pubkey in account.followingPubkeys {
+            newKind3Event.tags.append(NostrTag(["p", pubkey]))
         }
-        return nil
+        
+        // add hashtags
+        for tag in account.followingHashtags {
+            newKind3Event.tags.append(NostrTag(["t", tag]))
+        }
+        
+        if account.isNC {
+            newKind3Event.publicKey = account.publicKey
+            newKind3Event = newKind3Event.withId()
+            return newKind3Event
+        }
+        else {
+            return try? account.signEvent(newKind3Event)
+        }
     }
 }
 

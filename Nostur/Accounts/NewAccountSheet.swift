@@ -75,31 +75,33 @@ struct NewAccountSheet: View {
     }
     
     func createAccount() {
-        do {
-            guard let newAccount = AccountManager.shared.generateAccount(name: name, about: about, context: viewContext),
-                    let newKind0EventSigned = try AccountManager.createMetadataEvent(account: newAccount)
-            else { throw "could not create newKind0EventSigned " }
-            let bgContext = bg()
-            bgContext.perform {
-                _ = Event.saveEvent(event: newKind0EventSigned, context: bgContext)
-                Contact.saveOrUpdateContact(event: newKind0EventSigned, context: bgContext)
-                
-                DataProvider.shared().bgSave()
-            }
-            dismiss()
-            AccountsState.shared.changeAccount(newAccount)
+        guard let newAccount = AccountManager.shared.generateAccount(name: name, about: about, context: viewContext),
+              let newKind0EventSigned = AccountManager.createUserMetadataEvent(account: newAccount),
+              let newKind10002Eventsigned = AccountManager.createRelayListMetadataEvent(account: newAccount)
+        else { L.og.error("🔴🔴 could not createAccount()"); return }
+        
+        let bgContext = bg()
+        bgContext.perform {
+            // create profile kind:0
+            _ = Event.saveEvent(event: newKind0EventSigned, context: bgContext)
+            Contact.saveOrUpdateContact(event: newKind0EventSigned, context: bgContext)
             
+            // create relays kind:10002
+            _ = Event.saveEvent(event: newKind10002Eventsigned, context: bgContext)
+            
+            DataProvider.shared().bgSave()
+            
+            // Publish kind:0 and kind:10002
+            Unpublisher.shared.publishNow(newKind0EventSigned)
+            Unpublisher.shared.publishNow(newKind10002Eventsigned)
         }
-        catch {
-            L.og.error("🔴🔴 could not ns.setAccount \(error)")
-        }
+        dismiss()
+        AccountsState.shared.changeAccount(newAccount)
     }
 }
 
-struct NewAccountSheet_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer {
-            NewAccountSheet()
-        }
+#Preview {
+    PreviewContainer {
+        NewAccountSheet()
     }
 }

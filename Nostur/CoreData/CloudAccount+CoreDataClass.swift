@@ -42,7 +42,7 @@ public class CloudAccount: NSManagedObject {
     }
     
     public func publishNewContactList(_ safeMode: Bool = false) {
-        guard var clEvent: NEvent = try? AccountManager.createContactListEvent(account: self)
+        guard var clEvent: NEvent = AccountManager.createContactListEvent(account: self)
         else {
             L.og.error("🔴🔴 Could not create new clEvent")
             return
