@@ -177,16 +177,22 @@ struct ComposePost15: View {
                 .onDrop(of: [.image], isTargeted: $isTargeted) { providers in
                     guard let provider = providers.first else { return false }
                     _ = provider.loadDataRepresentation(forTypeIdentifier:  UTType.image.identifier) { data, error in
-                        if error == nil, let data, let imageData = UIImage(data: data) {
-                            DispatchQueue.main.async {
-                                self.vm.typingTextModel.pastedImages.append(
-                                    PostedImageMeta(
-                                        index: self.vm.typingTextModel.pastedImages.count,
-                                        imageData: imageData,
-                                        type: .jpeg,
-                                        uniqueId: UUID().uuidString
+                        
+                        if error == nil, let data  {
+                            // Check if the data is a GIF
+                            let isGif = data.starts(with: [0x47, 0x49, 0x46]) // GIF magic number
+                            if let imageData = UIImage(data: data) {
+                                let imageType: PostedImageMeta.ImageType = isGif ? .gif : .jpeg
+                                DispatchQueue.main.async {
+                                    self.vm.typingTextModel.pastedImages.append(
+                                        PostedImageMeta(
+                                            index: self.vm.typingTextModel.pastedImages.count,
+                                            data: data,
+                                            type: imageType,
+                                            uniqueId: UUID().uuidString
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }

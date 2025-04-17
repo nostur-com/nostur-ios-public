@@ -175,23 +175,35 @@ public final class NewPostModel: ObservableObject {
                 // [(MediaRequestBag, String?)] <-- String? is blurhash
                 let mediaRequestBags: [(MediaRequestBag, String?)] = typingTextModel.pastedImages
                     .compactMap { imageMeta in // Resize images
-                        let scale = imageMeta.imageData.size.width > maxWidth ? imageMeta.imageData.size.width / maxWidth : 1
-                        let size = CGSize(width: imageMeta.imageData.size.width / scale, height: imageMeta.imageData.size.height / scale)
+                        
+                        // .GIF
+                        if imageMeta.type == .gif {
+                            // Resize first for faster blurhash
+                            if let scaledImage = UIImage(data: imageMeta.data) {
+                                let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                                let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                                return (imageMeta.data, PostedImageMeta.ImageType.gif, blurhash, imageMeta.index)
+                            }
+                            return (imageMeta.data, PostedImageMeta.ImageType.gif, nil, imageMeta.index)
+                        }
+                        
+                        // NOT .GIF
+                        guard let imageData = imageMeta.uiImage else { return nil }
+                        let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
+                        let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
                         
                         let format = UIGraphicsImageRendererFormat()
                         format.scale = 1 // 1x scale, for 2x use 2, and so on
                         let renderer = UIGraphicsImageRenderer(size: size, format: format)
                         let scaledImage = renderer.image { _ in
-                            imageMeta.imageData.draw(in: CGRect(origin: .zero, size: size))
+                            imageData.draw(in: CGRect(origin: .zero, size: size))
                         }
                         
-                        
-                        
-                        if let imageData = scaledImage.jpegData(compressionQuality: 0.85) {
+                        if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
                             // Resize first for faster blurhash
-                            let resized = imageMeta.imageData.resized(to: CGSize(width: 32, height: 32))
+                            let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
                             let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                            return (imageData, PostedImageMeta.ImageType.jpeg, blurhash, imageMeta.index)
+                            return (scaledData, PostedImageMeta.ImageType.jpeg, blurhash, imageMeta.index)
                         }
                         return nil
                     }

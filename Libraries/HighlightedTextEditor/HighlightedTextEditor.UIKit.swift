@@ -17,7 +17,12 @@ public typealias NestsTappedCallback = () -> Void
 
 protocol PastedMediaDelegate: UITextViewDelegate {
     func didPasteImage(_ image: UIImage)
+    func didPasteGif(_ data: Data)
     func didPasteVideo(_ video: URL)
+    
+    func didPastePlaceholderForGif(_ info: (UIImage, UUID))
+    func didFetchActualGif(_ info: (Data, UUID))
+    
     func photoPickerTapped()
     func videoTapped()
     func gifsTapped()
@@ -35,9 +40,32 @@ class NosturTextView: UITextView {
 
     // This gets called when user presses menu "Paste" option
     override func paste(_ sender: Any?) {
-        if let image = UIPasteboard.general.image {
+        print(UIPasteboard.general.types)
+        if let gifData = UIPasteboard.general.data(forPasteboardType: "com.compuserve.gif") {
+            pastedMediaDelegate?.didPasteGif(gifData)
+        }
+        else if let url = UIPasteboard.general.value(forPasteboardType: "public.url") as? URL, url.absoluteString.hasSuffix(".gif") {
+            if let image = UIPasteboard.general.image { // First get placeholder image
+                let placeholderId = UUID()
+                pastedMediaDelegate?.didPastePlaceholderForGif((image, placeholderId))
+                
+                // then fetch gif
+                URLSession.shared.dataTask(with: url) { data, response, error in
+                    if let data = data {
+                        DispatchQueue.main.async {
+                            self.pastedMediaDelegate?.didFetchActualGif((data, placeholderId))
+                        }
+                    }
+                }.resume()
+            } // no placeholder image? probably pasting something else then
+            else {
+                super.paste(sender)
+            }
+        }
+        else if let image = UIPasteboard.general.image {
             pastedMediaDelegate?.didPasteImage(image)
-        } else {
+        }
+        else {
             // Call the normal paste action
             super.paste(sender)
         }
@@ -249,7 +277,33 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public final class Coordinator: NSObject, UITextViewDelegate, PastedMediaDelegate {
         
         func didPasteImage(_ image: UIImage) {
-            self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, imageData: image, type: .jpeg, uniqueId: UUID().uuidString))
+            if let gifData = image.gifData() {
+                self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: gifData, type: .gif, uniqueId: UUID().uuidString))
+            }
+            else {
+                guard let pngData = image.pngData() else { return }
+                self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: pngData, type: .png, uniqueId: UUID().uuidString))
+            }
+        }
+        
+        func didPasteGif(_ data: Data) {
+            self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: data, type: .gif, uniqueId: UUID().uuidString))
+        }
+        
+        func didPastePlaceholderForGif(_ info: (UIImage, UUID)) {
+            guard let pngData = info.0.pngData() else { return }
+            self.parent.pastedImages.append(PostedImageMeta(index: self.parent.pastedImages.count, data: pngData, type: .png, uniqueId: info.1.uuidString, isGifPlaceholder: true))
+        }
+        
+        func didFetchActualGif(_ info: (Data, UUID)) {
+            // Replace placeholder first frame with actual gif
+            self.parent.pastedImages = self.parent.pastedImages
+                .map { meta in
+                    if meta.uniqueId == info.1.uuidString {
+                        return PostedImageMeta(index: meta.index, data: info.0, type: .gif, uniqueId: UUID().uuidString, isGifPlaceholder: false) // Give new id so view updates
+                    }
+                    return meta
+                }
         }
         
         func didPasteVideo(_ video: URL) {

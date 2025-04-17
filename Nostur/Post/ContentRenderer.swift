@@ -188,12 +188,26 @@ struct ContentRenderer: View { // VIEW things
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                     
-                case .postPreviewImage(let postedImageMeta):
-                    Image(uiImage: postedImageMeta.imageData)
-                        .resizable()
-                        .scaledToFill()
-                        .padding(.horizontal, -10)
-                        .padding(.vertical, 10)
+                case .postPreviewImage(let postedImageMeta): // no full width for previews, its broken
+                    if postedImageMeta.type == .gif {
+                        GIFImage(data: postedImageMeta.data, isPlaying: .constant(true))
+                            .scaledToFill()
+                            .frame(width: availableWidth, height: availableWidth / postedImageMeta.aspect, alignment: .center)
+                            .contentShape(Rectangle())
+                            .padding(.vertical, 10)
+                    }
+                    else if let imageData = postedImageMeta.uiImage {
+                        Image(uiImage: imageData)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: availableWidth, height: availableWidth / postedImageMeta.aspect, alignment: .center)
+                            .padding(.vertical, 10)
+                    }
+                    else {
+                        Color.secondary
+                            .frame(width: availableWidth)
+                            .padding(.vertical, 10)
+                    }
                     
                 case .postPreviewVideo(let postedVideoMeta):
                     if let thumbnail = postedVideoMeta.thumbnail {

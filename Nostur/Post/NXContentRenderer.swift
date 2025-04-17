@@ -218,14 +218,24 @@ struct NXContentRenderer: View { // VIEW things
                             .id(index)
     //                        .withoutAnimation()
     //                        .transaction { t in t.animation = nil }
+                        
                     case .postPreviewImage(let postedImageMeta):
-                        Image(uiImage: postedImageMeta.imageData)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: 600)
-                            .padding(.top, 10)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .id(index)
+                        if let uiImage = postedImageMeta.uiImage {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 600)
+                                .padding(.top, 10)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .id(index)
+                        }
+                        else {
+                            Color.secondary
+                                .frame(maxWidth: 600)
+                                .padding(.top, 10)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .id(index)
+                        }
                     case .postPreviewVideo(let postedVideoMeta):
                         if let thumbnail = postedVideoMeta.thumbnail {
                             Image(uiImage: thumbnail)

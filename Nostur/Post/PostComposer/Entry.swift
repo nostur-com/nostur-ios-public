@@ -134,7 +134,8 @@ struct Entry: View {
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
                     CameraView(onUse: { uiImage in
-                        typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, imageData: uiImage, type: .jpeg, uniqueId: UUID().uuidString))
+                        guard let pngData = uiImage.pngData() else { return }
+                        typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, data: pngData, type: .png, uniqueId: UUID().uuidString))
                     })
                     .environmentObject(themes)
                 }

@@ -250,14 +250,28 @@ struct ComposePost: View {
                                   matching: .images, photoLibrary: .shared())
                     .onChange(of: ipm.newImages) { newImages in
                         if kind == .picture, let firstImage = newImages.first {
-                            vm.typingTextModel.objectWillChange.send()
-                            vm.typingTextModel.pastedImages = [PostedImageMeta(index: 0, imageData: firstImage, type: .jpeg, uniqueId: UUID().uuidString)]
+                            guard let data = firstImage.pngData() else { return }
+//                            vm.typingTextModel.objectWillChange.send()
+                            let imageType: PostedImageMeta.ImageType = firstImage.gifData() != nil ? .gif : .jpeg
+                            vm.typingTextModel.pastedImages = [PostedImageMeta(
+                                index: 0,
+                                data: data,
+                                type: imageType,
+                                uniqueId: UUID().uuidString
+                            )]
                         }
                         else {
                             for (index, newImage) in newImages.enumerated() {
-                                vm.typingTextModel.objectWillChange.send()
+                                guard let data = newImage.pngData() else { return }
+//                                vm.typingTextModel.objectWillChange.send()
+                                let imageType: PostedImageMeta.ImageType = newImage.gifData() != nil ? .gif : .jpeg
                                 vm.typingTextModel.pastedImages.append(
-                                    PostedImageMeta(index: vm.typingTextModel.pastedImages.count + index, imageData: newImage, type: .jpeg, uniqueId: UUID().uuidString)
+                                    PostedImageMeta(
+                                        index: vm.typingTextModel.pastedImages.count + index,
+                                        data: data,
+                                        type: imageType,
+                                        uniqueId: UUID().uuidString
+                                    )
                                 )
                             }
                         }
@@ -315,28 +329,33 @@ struct ComposePost: View {
                 }
                 .onDrop(of: [.image], isTargeted: $isTargeted) { providers in
                     guard let provider = providers.first else { return false }
-                    _ = provider.loadDataRepresentation(forTypeIdentifier:  UTType.image.identifier) { data, error in
-                        if error == nil, let data, let imageData = UIImage(data: data) {
-                            DispatchQueue.main.async {
-                                if kind == .picture { // Only 1 main picture for kind:20
-                                    self.vm.typingTextModel.pastedImages = [
-                                        PostedImageMeta(
-                                            index: 0,
-                                            imageData: imageData,
-                                            type: .jpeg,
-                                            uniqueId: UUID().uuidString
+                    _ = provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, error in
+                        if error == nil, let data {
+                            // Check if the data is a GIF
+                            let isGif = data.starts(with: [0x47, 0x49, 0x46]) // GIF magic number
+                            if let imageData = UIImage(data: data) {
+                                DispatchQueue.main.async {
+                                    let imageType: PostedImageMeta.ImageType = isGif ? .gif : .jpeg
+                                    if kind == .picture { // Only 1 main picture for kind:20
+                                        self.vm.typingTextModel.pastedImages = [
+                                            PostedImageMeta(
+                                                index: 0,
+                                                data: data,
+                                                type: imageType,
+                                                uniqueId: UUID().uuidString
+                                            )
+                                        ]
+                                    }
+                                    else { // multiple images possible for others
+                                        self.vm.typingTextModel.pastedImages.append(
+                                            PostedImageMeta(
+                                                index: self.vm.typingTextModel.pastedImages.count,
+                                                data: data,
+                                                type: imageType,
+                                                uniqueId: UUID().uuidString
+                                            )
                                         )
-                                    ]
-                                }
-                                else { // multiple images possible for others
-                                    self.vm.typingTextModel.pastedImages.append(
-                                        PostedImageMeta(
-                                            index: self.vm.typingTextModel.pastedImages.count,
-                                            imageData: imageData,
-                                            type: .jpeg,
-                                            uniqueId: UUID().uuidString
-                                        )
-                                    )
+                                    }
                                 }
                             }
                         }
