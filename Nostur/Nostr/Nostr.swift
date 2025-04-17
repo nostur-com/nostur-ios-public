@@ -292,6 +292,16 @@ public struct NEvent: Codable {
         self.signature = ""
     }
     
+    init(content: String = "", kind: NEventKind, tags: [NostrTag] = []) {
+        self.kind = kind
+        self.createdAt = NTimestamp.init(date: Date())
+        self.content = content
+        self.id = ""
+        self.tags = tags
+        self.publicKey = ""
+        self.signature = ""
+    }
+    
     mutating func withId() -> NEvent {
 
         let serializableEvent = NSerializableEvent(publicKey: self.publicKey, createdAt: self.createdAt, kind:self.kind, tags: self.tags, content: self.content)
