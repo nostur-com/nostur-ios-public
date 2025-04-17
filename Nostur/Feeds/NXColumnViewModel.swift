@@ -1594,6 +1594,7 @@ class NXColumnViewModel: ObservableObject {
     @MainActor
     public func prefetch(_ post: NRPost) {
         guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
+        guard !post.ownPostAttributes.isGoingToSend else { return } // don't prefetch unsent
         
         if case .posts(let nrPosts) = viewState {
             guard let index = nrPosts.firstIndex(of: post) else { return }
