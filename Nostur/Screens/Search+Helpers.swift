@@ -570,32 +570,45 @@ extension Search {
             },
             timeoutCommand: { taskId in
                 guard let account = account(), let pk = account.privateKey else { return  }
+                let isNC = account.isNC
                 let bgContext = bg()
-                bgContext.perform {
-                    var kind443 = NEvent(content: "Comments on \(term)")
-                    kind443.publicKey = account.publicKey
-                    kind443.kind = .custom(443)
-                    kind443.tags.append(NostrTag(["r", term]))
-                    
-                    if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(kind443.publicKey)) {
-                        kind443.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                var kind443 = NEvent(content: "Comments on \(term)")
+                kind443.publicKey = account.publicKey
+                kind443.kind = .custom(443)
+                kind443.tags.append(NostrTag(["r", term]))
+                
+                if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(kind443.publicKey)) {
+                    kind443.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                }
+                
+                if isNC {
+                    let kind443NEvent = kind443.withId()
+                    NSecBunkerManager.shared.requestSignature(forEvent: kind443NEvent, usingAccount: account, whenSigned: { signedEvent in
+                        bgContext.perform {
+                            let unpublishedKind443 = Event.saveEvent(event: signedEvent, context: bgContext)
+                            try? bgContext.save()
+                            let nrPost = NRPost(event: unpublishedKind443)
+                            DispatchQueue.main.async {
+                                self.nrPosts = [nrPost]
+                                searching = false
+                            }
+                        }
+                    })
+                }
+                else {
+                    guard let signedKind443NEvent = try? account.signEvent(kind443) else {
+                        L.og.error("🔴🔴🔴🔴🔴 COULD NOT SIGN EVENT 🔴🔴🔴🔴🔴")
+                        return
                     }
-                    
-                    
-                    do {
-                        let signedKind443 = try kind443.sign(Keys(privateKeyHex: pk))
-                        let unpublishedKind443 = Event.saveEvent(event: signedKind443, context: bgContext)
-                        try? bgContext.save() 
+                    bgContext.perform {
+                        let unpublishedKind443 = Event.saveEvent(event: signedKind443NEvent, context: bgContext)
+                        try? bgContext.save()
                         let nrPost = NRPost(event: unpublishedKind443)
                         DispatchQueue.main.async {
                             self.nrPosts = [nrPost]
                             searching = false
                         }
                     }
-                    catch {
-                        L.og.error("Problem signing kind 443")
-                    }
-                    
                 }
             })
         backlog.add(searchTask1)
