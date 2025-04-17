@@ -23,7 +23,7 @@ import NukeVideo
         ])
     }) {
         PreviewFeed { // CHANGE 1 == 2 to 1 == 1 to preview
-            let testMe: Set<Int> = [25]
+            let testMe: Set<Int> = [20]
             Group {
                 if testMe.contains(1), let p = PreviewFetcher.fetchNRPost("1920b9351f01dd92dad21a9eef04781b896cb45260dfc02d9e9c05bda6dfef77") {
                         // A POST WITH CODE IN QUOTE
@@ -192,10 +192,19 @@ import NukeVideo
                 }
 
 
-                if testMe.contains(20), let p = PreviewFetcher.fetchNRPost("68b3330358ab3e554183724bed09cc704e62e9b3e790efbb7e819c81905e71a3") {
-                    // A HIGHLIGHT (KIND 9802)
-                    Box {
-                        PostRowDeletable(nrPost: p)
+                if testMe.contains(20) {
+//                    if let p = PreviewFetcher.fetchNRPost("68b3330358ab3e554183724bed09cc704e62e9b3e790efbb7e819c81905e71a3") {
+//                        // A HIGHLIGHT (KIND 9802)
+//                        Box {
+//                            PostRowDeletable(nrPost: p)
+//                        }
+//                    }
+                    
+                    if let p = PreviewFetcher.fetchNRPost("16c11b81c745a0e6f9a0b0c4d86265e3c3b989525826f55e2d96bbe3c8b89170") {
+                        // A QUOTE HIGHLIGHT (KIND 9802), quote in comment tag
+                        Box {
+                            PostRowDeletable(nrPost: p)
+                        }
                     }
                 }
 

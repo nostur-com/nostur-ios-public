@@ -214,8 +214,8 @@ func replaceNsecWithHunter2(_ text:String) -> String {
     return newText
 }
 
-func putHashtagsInTags(_ event:NEvent) -> NEvent {
-    let hashtags = event.content.matchingStrings(regex:"(?<![/\\?]|\\b)(\\#)([^\\s\\[]{2,})\\b")
+func putHashtagsInTags(_ event: NEvent, content: String) -> NEvent {
+    let hashtags = content.matchingStrings(regex:"(?<![/\\?]|\\b)(\\#)([^\\s\\[]{2,})\\b")
         .map { String( $0[0].dropFirst()) }
     
     var eventWithHashtags = event

@@ -88,7 +88,7 @@ public final class NewPostModel: ObservableObject {
     var textView: SystemTextView?
     
     @Published var uploadError: String?
-    var requiredP:String? = nil
+    var requiredP: String? = nil
     @Published var availableContacts: Set<NRContact> = [] // are available to toggle on/off for notifications
     
     @Published var previewNEvent: NEvent? // needed for AutoPilot preview (and probably should use this more and reduce use of Event)
