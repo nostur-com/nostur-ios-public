@@ -216,5 +216,6 @@ struct ComposePost15: View {
             }
             ConnectionPool.shared.connectAllWrite()
         }
+        .background(themes.theme.listBackground)
     }
 }

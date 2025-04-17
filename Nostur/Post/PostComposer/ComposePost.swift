@@ -368,6 +368,7 @@ struct ComposePost: View {
             }
             ConnectionPool.shared.connectAllWrite()
         }
+        .background(themes.theme.listBackground)
     }
 }
 

@@ -69,10 +69,12 @@ struct HomeTab: View {
                                 ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                     .environmentObject(dim)
                             }
+                            .environmentObject(themes)
                         }
                         else {
                             ComposePostCompat(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                                 .environmentObject(dim)
+                                .environmentObject(themes)
                         }
                     }
                     .presentationBackgroundCompat(themes.theme.listBackground)
