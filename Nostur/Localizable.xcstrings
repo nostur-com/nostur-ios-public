@@ -6101,7 +6101,7 @@
       }
     },
     "Post.verb" : {
-      "comment" : "Button to post (publish) a post\nButton to post a highlight",
+      "comment" : "Button to post (publish) a post",
       "localizations" : {
         "en" : {
           "stringUnit" : {
