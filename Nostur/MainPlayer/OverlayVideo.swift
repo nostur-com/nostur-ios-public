@@ -260,6 +260,7 @@ struct OverlayVideo: View {
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
                                     .onDisappear {
+                                        // Restore normal idle behavior
                                         UIApplication.shared.isIdleTimerDisabled = false
                                     }
                                 

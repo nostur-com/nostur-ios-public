@@ -90,7 +90,8 @@ extension AppView {
     private func handleNewScenePhase(_ newScenePhase: ScenePhase) {
         switch newScenePhase {
         case .active:
-            UIApplication.shared.isIdleTimerDisabled = true // must be in Scene or it doesn't work?
+            // Prevent auto-lock while playing
+            UIApplication.shared.isIdleTimerDisabled = AnyPlayerModel.shared.isPlaying
             NewPostNotifier.shared.reload()
             
             AppState.shared.agoShouldUpdateSubject.send() // Update ago timestamps

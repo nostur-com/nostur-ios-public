@@ -211,6 +211,8 @@ class AnyPlayerModel: ObservableObject {
         isPlaying = true
         player.play()
         try? AVAudioSession.sharedInstance().setActive(true)
+        // Prevent auto-lock while playing
+        UIApplication.shared.isIdleTimerDisabled = true
     }
     
     @MainActor
@@ -254,6 +256,8 @@ class AnyPlayerModel: ObservableObject {
         self.didFinishPlaying = false
         isPlaying = false
         isShown = false
+        // Restore normal idle behavior
+        UIApplication.shared.isIdleTimerDisabled = false
     }
     
     deinit {
