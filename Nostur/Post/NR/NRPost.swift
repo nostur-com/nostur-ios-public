@@ -55,6 +55,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var contentElements: [ContentElement] = [] // NoteRow.Kind1
     var contentElementsDetail: [ContentElement] = [] // PostDetail.Kind1
     var via: String?
+    var proxy: String?
+    var comment: String? // treat as content for kind 9802
     
     var contact: NRContact? {
         get { pfpAttributes.contact }
@@ -253,8 +255,75 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.shortId = String(event.id.prefix(8))
         self.pubkey = event.pubkey
         self.kind = event.kind
-        self.kTag = event.fastTags.first(where: { $0.0 == "k" })?.1
-        self.firstE = event.fastTags.first(where: { $0.0 == "e" })?.1
+        
+        // Process tags
+        for tag in event.fastTags {
+            switch tag.0 {
+            case "k":
+                if self.kTag == nil {
+                    self.kTag = tag.1
+                }
+            case "e":
+                if self.firstE == nil {
+                    self.firstE = tag.1
+                }
+            case "client":
+                // Show if ["client", "Name", ""31990:..." ...]
+                // Hide if ["client", ""31990:..." ..]
+                if self.via == nil && tag.1.prefix(6) != "31990:" {
+                    self.via = tag.1
+                }
+            case "proxy":
+                if self.proxy == nil, let proxyValue = tag.2 {
+                    self.proxy = String(format: "%@ (proxy)", proxyValue)
+                }
+                
+            case "subject":
+                if self.subject == nil {
+                    self.subject = String(tag.1.prefix(255)) // 255 SPAM LIMIT
+                }
+                
+            case "alt", "title":
+                if self.alt == nil {
+                    self.alt = tag.1
+                }
+                
+            case "t":
+                if !self.isNSFW {
+                    if tag.1.lowercased() == "nsfw" {
+                        self.isNSFW = true
+                    }
+                }
+                
+            case "content-warning": // TODO: check labels/reports
+                self.isNSFW = true
+                
+            case "comment":
+                if self.comment == nil {
+                    self.comment = tag.1
+                }
+                
+            default:
+                break
+            }
+        }
+        
+        // Replace via with proxy if there is a proxy tag
+        // ["proxy", "https:\/\/....", "activitypub"]
+        self.via = if self.via == nil, let proxy = self.proxy {
+            proxy
+        }
+        else {
+            self.via
+        }
+        
+        // Fallback for alt
+        if ![1,6,1063,9802,30023,99999].contains(event.kind) {
+            if self.alt == nil, let content = event.content, content.prefix(1) != "{" {
+                self.alt = String(content.prefix(255))
+            }
+        }
+        
         self.createdAt = event.date
         self.created_at = event.created_at
         self.ago = event.ago
@@ -337,16 +406,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             return fastTag.1.lowercased()
         }))
         
-        // Show if ["client", "Name", ""31990:..." ...]
-        // Hide if ["client", ""31990:..." ..]
-        // Also show if  ["proxy", "https:\/\/....", "activitypub"]
-        self.via = self.fastTags.first(where: { $0.0 == "client" && $0.1.prefix(6) != "31990:" })?.1
+        
         self.isRestricted = event.isRestricted
-        if self.via == nil {
-            if let proxy = self.fastTags.first(where: { $0.0 == "proxy" && $0.2 != nil })?.2 {
-                self.via = String(format: "%@ (proxy)", proxy)
-            }
-        }
         
         let pTags = event.fastPs.map { $0.1 }
         let cachedContacts = pTags.compactMap { NRContactCache.shared.retrieveObject(at: $0) }
@@ -405,17 +466,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         if kind >= 30000 && kind < 40000 {
             dTag = event.dTag
-        }
-        
-        if ![1,6,1063,9802,30023,99999].contains(event.kind) {
-            // Try to get a title by checking "alt" or "title" tag, else take content if its not json
-            let alt = event.fastTags.first(where: { $0.0 == "alt" || $0.0 == "title" })?.1
-            if alt == nil, let content = event.content, content.prefix(1) != "{" {
-                self.alt = String(content.prefix(255))
-            }
-            else {
-                self.alt = alt
-            }
         }
         
         switch kind {
@@ -534,27 +584,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             self.content = content
         }
         
-        self.subject = fastTags.first(where: { $0.0 == "subject" })?.1
-        if let subject {
-            self.subject = String(subject.prefix(255)) // 255 SPAM LIMIT
-        }
-        
         // Moved from .body to here because String interpolation is expensive (https://developer.apple.com/wwdc23/10160)
         self.repostedHeader = String(localized:"\(anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
         
-        self.isNSFW = self.hasNSFWContent()
-        
         setupSubscriptions()
-    }
-    
-    private func hasNSFWContent() -> Bool {        
-        return fastTags.contains(where: { tag in
-            // contains nsfw hashtag?
-            tag.0 == "t" && tag.1.lowercased() == "nsfw" ||
-            // contains content-warning tag
-            tag.0 == "content-warning"
-        })
-        // TODO: check labels/reports
     }
     
     private static func isBlocked(pubkey:String) -> Bool {
