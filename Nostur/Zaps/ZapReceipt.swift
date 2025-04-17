@@ -35,11 +35,6 @@ struct ZapReceipt: View {
     var body: some View {
         if isEmbedded {
             embeddedView
-                .padding(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(themes.theme.lineColor, lineWidth: 1)
-                )
         }
         else {
             normalView
