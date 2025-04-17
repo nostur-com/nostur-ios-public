@@ -152,7 +152,7 @@ struct FeedSettings: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.listBackground)
+            .listRowBackground(themes.theme.background)
         }
     }
 }
