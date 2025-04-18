@@ -251,9 +251,13 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                             completion?(authToken)
                         }
                     }
+#if DEBUG
                     print("JSON Response: \(jsonResponse)")
+#endif
                 } catch {
+#if DEBUG
                     print("Failed to fetch data: \(error.localizedDescription)")
+#endif
                 }
             }
         }
@@ -286,9 +290,13 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                         completion?(authToken)
                     }
                 }
+#if DEBUG
                 print("JSON Response: \(jsonResponse)")
+#endif
             } catch {
+#if DEBUG
                 print("Failed to fetch data: \(error.localizedDescription)")
+#endif
             }
         }
 
@@ -353,7 +361,9 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
             req(cm, activeSubscriptionId: "-DB-ROOMPRESENCE")
         }
         else {
+#if DEBUG
             L.og.error("fetchPresentInRoom feed: Problem generating request")
+#endif
         }
     }
     

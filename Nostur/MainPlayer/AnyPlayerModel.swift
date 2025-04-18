@@ -79,31 +79,38 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen], nrPost: NRPost? = nil) async {
         
-        try? AVAudioSession.sharedInstance().setActive(true)
+        // View updates
         sendNotification(.stopPlayingVideo)
-        
         self.nrPost = nil
         self.didFinishPlaying = false
         self.isShown = true
         self.nrLiveEvent = nrLiveEvent
+        self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
         self.cachedFirstFrame = nil
         self.thumbnailUrl = nrLiveEvent.thumbUrl
-        
-        if nrLiveEvent.streamHasEnded, let recordingUrl = nrLiveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            isStream = false
-            player.replaceCurrentItem(with: AVPlayerItem(url: url))
-            self.currentlyPlayingUrl = url.absoluteString
-        }
-        else if let url = nrLiveEvent.url {
-            isStream = true
-            player.replaceCurrentItem(with: AVPlayerItem(url: url))
-            self.currentlyPlayingUrl = url.absoluteString
-        }
-
         // Don't reuse existing viewMode
         self.viewMode = availableViewModes.first ?? .detailstream
         isPlaying = true
+        
+        if nrLiveEvent.streamHasEnded, let recordingUrl = nrLiveEvent.recordingUrl, let url = URL(string: recordingUrl) {
+            isStream = false
+            self.currentlyPlayingUrl = url.absoluteString
+            
+            Task.detached(priority: .userInitiated) {
+                try? AVAudioSession.sharedInstance().setActive(true)
+                self.player.replaceCurrentItem(with: AVPlayerItem(url: url))
+            }
+            
+        }
+        else if let url = nrLiveEvent.url {
+            isStream = true
+            self.currentlyPlayingUrl = url.absoluteString
+            Task.detached(priority: .userInitiated) {
+                try? AVAudioSession.sharedInstance().setActive(true)
+                self.player.replaceCurrentItem(with: AVPlayerItem(url: url))
+            }
+        }
     }
     
     // VIDEO URL
