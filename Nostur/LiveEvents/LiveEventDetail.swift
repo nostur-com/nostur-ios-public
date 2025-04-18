@@ -439,7 +439,7 @@ struct LiveEventDetail: View {
             NestButtons(liveKitVoiceSession: liveKitVoiceSession)
                 .frame(height: 100)
         }
-        else if case .connecting = liveKitVoiceSession.state {
+        else if liveEvent.joining {
             Button { } label: {
                 Image(systemName: "hourglass")
                 .foregroundColor(.white)

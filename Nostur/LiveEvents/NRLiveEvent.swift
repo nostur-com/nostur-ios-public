@@ -68,6 +68,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     public var nEvent: NEvent
     
     @Published public var chatVM = ChatRoomViewModel()
+    @Published var joining = false
     
     var isNSFW: Bool = false
     
@@ -199,6 +200,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     @MainActor
     public func joinRoom(account: CloudAccount, completion: ((String) -> Void)? = nil) {
+        joining = true
         guard let liveKitJoinUrl = self.liveKitJoinUrl else { return }
         
         var nEvent = NEvent(content: "")
@@ -259,6 +261,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     @MainActor
     public func joinRoomAnonymously(keys: Keys, completion: ((String) -> Void)? = nil) {
+        joining = true
         guard let liveKitJoinUrl = self.liveKitJoinUrl else { return }
         
         var nEvent = NEvent(content: "")

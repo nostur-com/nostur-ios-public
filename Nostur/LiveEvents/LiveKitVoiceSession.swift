@@ -27,7 +27,12 @@ class LiveKitVoiceSession: ObservableObject {
     
     @Published public var visibleNest: NRLiveEvent? = nil
     
-    @Published public var state: LiveKitVoiceSessionState = .disconnected
+    @Published public var state: LiveKitVoiceSessionState = .disconnected {
+        didSet {
+            if case .connecting = state { }
+            else { activeNest?.joining = false }
+        }
+    }
     
     @Published public var isRecording: Bool = false
     
@@ -72,6 +77,7 @@ class LiveKitVoiceSession: ObservableObject {
            } catch {
                L.nests.debug("Failed to connect: \(error)")
                self.state = .error(error.localizedDescription)
+
            }
        }
     }
