@@ -182,21 +182,10 @@ struct MediaPlaceholder: View {
         switch vm.state {
         case .loading(let percentage), .paused(let percentage):
             themes.theme.background.opacity(0.7)
-                .onAppear {
-                    guard case .paused(_) = vm.state else { return }
-                    debounceLoad(forceLoad: true)
-                }
-                .onDisappear {
-                    guard case .loading(let percentage) = vm.state else { return }
-                    if percentage < 98 {
-                        pauseLoad()
-                    }
-                }
                 .overlay {
                     if let blurImage {
                         Image(uiImage: blurImage)
                             .resizable()
-//                            .animation(.smooth(duration: 0.2), value: vm.state)
                             .scaledToFill()
                             .frame(
                                 width: availableWidth,
@@ -211,12 +200,23 @@ struct MediaPlaceholder: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    guard case .paused(_) = vm.state else { return }
-                    debounceLoad(forceLoad: true)
+                    if case .loading(_) = vm.state {
+                        pauseLoad()
+                    }
+                    else {
+                        load(forceLoad: true)
+                    }
                 }
                 .overlay(alignment:. topTrailing) {
                     Text(percentage, format: .percent)
                     .padding(5)
+                }
+                .overlay {
+                    if case .paused(_) = vm.state {
+                        Button("Resume") {
+                            load(forceLoad: true)
+                        }
+                    }
                 }
         case .lowDataMode:
             if let blurHash, let blurImage = UIImage(blurHash: blurHash, size: CGSize(width: 32, height: 32)) {
@@ -230,7 +230,7 @@ struct MediaPlaceholder: View {
                     .clipped()
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        debounceLoad(forceLoad: true)
+                        load(forceLoad: true)
                     }
                     .overlay(alignment: .center) {
                         VStack(alignment: .center) {
@@ -241,7 +241,7 @@ struct MediaPlaceholder: View {
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                             Button(String(localized: "Load anyway", comment: "Button to show the blocked content anyway")) {
-                                debounceLoad(forceLoad: true)
+                                load(forceLoad: true)
                             }
                             .padding(.bottom, 10)
                         }
@@ -256,7 +256,7 @@ struct MediaPlaceholder: View {
                     )
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        debounceLoad(forceLoad: true)
+                        load(forceLoad: true)
                     }
                     .overlay(alignment: .center) {
                         VStack(alignment: .center) {
@@ -267,7 +267,7 @@ struct MediaPlaceholder: View {
                                 .lineLimit(1)
                                 .truncationMode(.middle)
                             Button(String(localized: "Load anyway", comment: "Button to show the blocked content anyway")) {
-                                debounceLoad(forceLoad: true)
+                                load(forceLoad: true)
                             }
                             .padding(.bottom, 10)
                         }
@@ -283,10 +283,10 @@ struct MediaPlaceholder: View {
                     .fontItalic()
                     .foregroundColor(themes.theme.accent)
                 Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
-                    debounceLoad(forceLoad: true)
+                    load(forceLoad: true)
                 }
             }
-        case .dontAutoLoad, .cancelled:
+        case .dontAutoLoad:
             themes.theme.background.opacity(0.7)
                 .overlay {
                     if let blurImage {
@@ -307,7 +307,7 @@ struct MediaPlaceholder: View {
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    debounceLoad(forceLoad: true)
+                    load(forceLoad: true)
                 }
                 .overlay(alignment: .center) {
                     VStack {
@@ -324,7 +324,7 @@ struct MediaPlaceholder: View {
                             .fontItalic()
                             .font(.footnote)
                             .onTapGesture {
-                                debounceLoad(forceLoad: true)
+                                load(forceLoad: true)
                             }
                             .padding(3)
                     }
@@ -531,7 +531,7 @@ struct MediaPlaceholder: View {
                 .clipped()
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    debounceLoad(forceLoad: true)
+                    load(forceLoad: true)
                 }
                 .overlay(alignment: .center) {
                     VStack {
@@ -542,7 +542,7 @@ struct MediaPlaceholder: View {
                             .fontItalic()
                             .foregroundColor(themes.theme.accent)
                         Button(String(localized: "Try again", comment: "Button try again")) {
-                            debounceLoad(forceLoad: true)
+                            load(forceLoad: true)
                         }
                     }
                 }
@@ -580,55 +580,29 @@ struct MediaPlaceholder: View {
                     .contentShape(Rectangle())
                     .onAppear {
                         self.blurImage = blurImage // reuse in other view states
-                        debounceLoad(forceLoad: fullScreen)
+                        load(forceLoad: fullScreen)
                     }
             }
             else {
                 Color.clear
                     .onAppear {
-                        debounceLoad(forceLoad: fullScreen)
+                        load(forceLoad: fullScreen)
                     }
             }
         }
     }
     
     @MainActor
-    private func debounceLoad(forceLoad: Bool = false) {
-        // Cancel any existing load task
-        cancelLoad()
-        vm.state = .loading(0)
-        
-        // Create a new debounced load task
-        loadTask = Task.detached(priority: .userInitiated) {
-            // Wait for a short delay to debounce rapid scrolling
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-            
-            // Check if the task was cancelled during the delay
-            if Task.isCancelled { return }
-            
-            Task { @MainActor in
-                // Check if the view is still visible
-                if !isVisible && !forceLoad { return }
-                
-                // Proceed with loading
-                await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
-            }
+    private func load(forceLoad: Bool = false) {
+        Task { @MainActor in
+            await vm.load(galleryItem.url, forceLoad: forceLoad, generateIMeta: generateIMeta, usePFPpipeline: usePFPpipeline)
         }
     }
     
     @MainActor // Pause is because onDisappear, and will resume automatically on onAppear
     private func pauseLoad() {
-        loadTask?.cancel()
         guard case .loading(let progress) = vm.state else { return }
         vm.pause(progress)
-    }
-    
-    @MainActor // Cancel is by user
-    private func cancelLoad() {
-        loadTask?.cancel()
-        loadTask = nil
-        guard case .loading(_) = vm.state else { return }
-        vm.cancel()
     }
 }
 

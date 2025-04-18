@@ -35,15 +35,20 @@ class MediaViewVM: ObservableObject {
                                                                               label: "MediaViewVM.load",
                                                                               overrideLowDataMode: forceLoad))
         
-        Task { @MainActor in
-            state = .loading(0)
-        }
-        
         guard let task = self.task else {
             Task { @MainActor in
                 state = .error("Error loading media")
             }
             return
+        }
+        
+        Task { @MainActor in
+            
+            // resume from paused?
+            let progress = if case .paused(let progress) = state { progress }
+            else { 0 } // resume from 0
+            
+            state = .loading(progress)
         }
         
         for await progress in task.progress {            
@@ -93,13 +98,6 @@ class MediaViewVM: ObservableObject {
         }
     }
     
-    public func cancel() {
-        task?.cancel()
-        Task { @MainActor in
-            state = .cancelled
-        }
-    }
-    
     public func pause(_ atProgress: Int = 0) {
         task?.cancel()
         Task { @MainActor in
@@ -118,7 +116,6 @@ enum MediaViewState: Equatable {
     case image(ImageInfo)
     case gif(GifInfo) // TODO: handle  if !dim.isScreenshot
     case error(String) // error message
-    case cancelled
 }
 
 struct ImageInfo: Equatable {
