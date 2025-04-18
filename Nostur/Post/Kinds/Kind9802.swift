@@ -101,9 +101,11 @@ struct Kind9802: View {
     @ViewBuilder
     var content: some View {
         
+        // Comment on quote from "comment" tag
         ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
             .frame(maxWidth: .infinity, alignment:.leading)
         
+        // The highlight, from .content
         VStack {
             Text(nrPost.content ?? "")
                 .lineLimit(isDetail ? 500 : 25)

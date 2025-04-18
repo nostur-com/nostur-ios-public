@@ -513,8 +513,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         if !plainText { // plainText is actually plainTextOnly, for rendering in muted spam stuff
             
-            let input = if kind == 9802, let comment = self.comment {
-                comment
+            let input = if kind == 9802 {
+                self.comment ?? ""
             }
             else {
                 event.noteTextPrepared
