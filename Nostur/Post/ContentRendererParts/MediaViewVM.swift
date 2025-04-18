@@ -52,18 +52,21 @@ class MediaViewVM: ObservableObject {
         
         for await progress in task.progress {            
             Task { @MainActor in
-                state = .loading(Int(ceil(progress.fraction * 100)))
+                // Don't update loading if not loading, (could already be finished) (because async out of order)
+                if case .loading(_) = state {
+                    state = .loading(Int(ceil(progress.fraction * 100)))
+                }
             }
         }
-        
+    
         do {
             let response = try await task.response
             if response.container.type == .gif, let gifData = response.container.data {
                 Task { @MainActor in
-                    withAnimation(.smooth(duration: 0.5)) {
-                        state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
-                    }
-                    
+                    // Can't use withAnimation. Bug keeps sometimes stuck at loading %0
+//                    withAnimation(.smooth(duration: 0.15)) {
+                      state = .gif(GifInfo(gifData: gifData, realDimensions: response.container.image.size))
+//                    }
                     if generateIMeta {
                         let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
                         let pixelSize = CGSize(width: response.container.image.size.width * UIScreen.main.scale, height: response.container.image.size.height * UIScreen.main.scale)
@@ -74,9 +77,10 @@ class MediaViewVM: ObservableObject {
             }
             else {
                 Task { @MainActor in
-                    withAnimation(.smooth(duration: 0.5)) {
+                    // Can't use withAnimation. Bug keeps sometimes stuck at loading %0
+//                    withAnimation(.smooth(duration: 0.15)) {
                         state = .image(ImageInfo(uiImage: response.image, realDimensions: response.image.size))
-                    }
+//                    }
                 }
                 if generateIMeta {
                     let blurhash: String? = response.image.blurHash(numberOfComponents: (4, 3))
@@ -100,7 +104,9 @@ class MediaViewVM: ObservableObject {
     public func pause(_ atProgress: Int = 0) {
         task?.cancel()
         Task { @MainActor in
-            state = .paused(atProgress)
+            if case .loading(_) = state { // only if loading, could be already finished so don't reset to paused
+                state = .paused(atProgress)
+            }
         }
     }
 }
