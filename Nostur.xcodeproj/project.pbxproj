@@ -26,10 +26,10 @@
 		1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */ = {isa = PBXBuildFile; productRef = 1FB6E6F429E31C71008BE8A6 /* HTMLEntities */; };
 		1FBCD61C2CAAB127008258C3 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBCD61B2CAAB127008258C3 /* XCTest.framework */; platformFilter = ios; };
 		1FBCD61D2CAAB127008258C3 /* XCTest.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 1FBCD61B2CAAB127008258C3 /* XCTest.framework */; platformFilter = ios; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		1FBF0BF02DB1969C001FF318 /* Share selected text with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FC7A54429FA46F000645FEF /* Share selected text with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC4D40A2997E58E004E88CD /* KeychainAccess */; };
 		1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */; };
 		1FC7A54529FA46F000645FEF /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */; };
-		1FCFDDCB29FCC735005320B8 /* Share selected text with Nostur.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1FC7A54429FA46F000645FEF /* Share selected text with Nostur.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE8828A2B48E9DC00A903F0 /* NavigationBackport */; };
 /* End PBXBuildFile section */
 
@@ -78,7 +78,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				1FCFDDCB29FCC735005320B8 /* Share selected text with Nostur.appex in Embed Foundation Extensions */,
+				1FBF0BF02DB1969C001FF318 /* Share selected text with Nostur.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -733,6 +733,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "Highlight with Nostur/Highlight with Nostur.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -752,6 +753,7 @@
 				MARKETING_VERSION = "$(APPSTORE_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -767,6 +769,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "Highlight with Nostur/Highlight with Nostur.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -786,6 +789,7 @@
 				MARKETING_VERSION = "$(APPSTORE_VERSION)";
 				PRODUCT_BUNDLE_IDENTIFIER = "nostur.com.Nostur.Share-highlight-with-Nostur";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
