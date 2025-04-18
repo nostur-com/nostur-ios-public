@@ -888,8 +888,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.0.0;
+				kind = upToNextMinorVersion;
+				minimumVersion = 12.8.0;
 			};
 		};
 		1F77AD092A42133000585E12 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
