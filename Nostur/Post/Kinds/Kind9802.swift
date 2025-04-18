@@ -23,7 +23,6 @@ struct Kind9802: View {
     private let isEmbedded: Bool
     private let fullWidth: Bool
     private let forceAutoload: Bool
-    @State private var didStart = false
     
     private let THREAD_LINE_OFFSET = 24.0
     
@@ -102,7 +101,7 @@ struct Kind9802: View {
     var content: some View {
         
         // Comment on quote from "comment" tag
-        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
+        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, isPreviewContext: dim.isPreviewContext)
             .frame(maxWidth: .infinity, alignment:.leading)
         
         // The highlight, from .content

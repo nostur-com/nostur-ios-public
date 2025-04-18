@@ -80,10 +80,6 @@ struct NosturTabsView: View {
                     }
                 }
                 .frame(maxWidth: 600)
-                .overlay(alignment: .center) {
-                    OverlayVideo()
-                        .edgesIgnoringSafeArea(.bottom)
-                }
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                     AvailableWidthContainer {
                         DetailPane()
@@ -133,6 +129,10 @@ struct NosturTabsView: View {
                 if unread != self.unread {
                     self.unread = unread
                 }
+            }
+            .overlay(alignment: .center) {
+                OverlayVideo()
+                    .edgesIgnoringSafeArea(.bottom)
             }
         }
     }

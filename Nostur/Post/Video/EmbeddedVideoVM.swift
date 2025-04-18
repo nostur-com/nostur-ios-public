@@ -15,11 +15,10 @@ import Combine
 class EmbeddedVideoVM: ObservableObject {
     @Published var viewState: ViewState = .initial
     @Published var downloadProgress: Int = 0
-    @Published var didStart = false
     @Published var timeControlStatus: AVPlayer.TimeControlStatus = .paused
     
     @Published var isMuted = false
-    private var downloadTask: AsyncImageTask?
+    
     
     private var videoUrl: URL?
     private var videoUrlString: String?
@@ -64,19 +63,9 @@ class EmbeddedVideoVM: ObservableObject {
             self.viewState = .playingInPIP
             return
         }
-        
-        // Do we have the fully cached video?
-        if let cachedVideo = AVAssetCache.shared.get(url: videoUrlString) {
-            self.viewState = .loadedFullVideo(cachedVideo)
-            if let cachedFirstFrame = AVAssetCache.shared.getFirstFrame(url: videoUrlString) {
-                self.cachedFirstFrame = cachedFirstFrame
-            }
-            else if let firstFrame = cachedVideo.firstFrame {
-                self.cachedFirstFrame = CachedFirstFrame(url: videoUrlString, uiImage: firstFrame, dimensions: cachedVideo.dimensions, duration: cachedVideo.duration)
-            }
-        }
+
         // Do we have the first frame cached?
-        else if let cachedFirstFrame = AVAssetCache.shared.getFirstFrame(url: videoUrlString) {
+        if let cachedFirstFrame = AVAssetCache.shared.getFirstFrame(url: videoUrlString) {
             self.viewState = .loadedFirstFrame(cachedFirstFrame)
             self.cachedFirstFrame = cachedFirstFrame // need to keep it to revert back to after PIP
         }
@@ -92,9 +81,6 @@ class EmbeddedVideoVM: ObservableObject {
         else if !loadAnyway && SettingsStore.shared.lowDataMode {
             self.viewState = .lowDataMode(videoUrlString)
         }
-        else if isAudio { // Load audio as stream (don't download/cache)
-            self.viewState = .streaming(videoUrl)
-        }
         else if isStream { // For streams, try to get type of steam first
             Task {
                 await loadStream(videoUrl)
@@ -103,13 +89,10 @@ class EmbeddedVideoVM: ObservableObject {
         else if AVAssetCache.shared.failedFirstFrameUrls.contains(videoUrlString) {
             // Don't try to load first frame again if we already failed recently
             self.viewState = .noPreviewFound(videoUrlString)
-            
         }
         else if loadAnyway { // Download full video
-            self.downloadProgress = 0 // Need to be off 0 else looks like tapping play button is delayed (first view update would be 3% or higher)
-            Task.detached(priority: .high) { [weak self] in
-                guard let self else { return }
-                await self.downloadVideo()
+            Task { @MainActor in
+                playUrl(videoUrl)
             }
         }
         else { // OK, lets load first frame
@@ -119,84 +102,41 @@ class EmbeddedVideoVM: ObservableObject {
         }
     }
     
-    
-    // Play in embedded video on macOS/iPad or show "pip logo" and play in  floating/fullscreen player on iPhone
+    // Show "pip logo" and play in floating/fullscreen player
     @MainActor
-    fileprivate func playCachedVideo(_ cachedVideo: CachedVideo) {
-        if IS_IPHONE { // Play in new fullscreen/floating player
-            self.viewState = .playingInPIP
-            AnyPlayerModel.shared.loadVideo(cachedVideo: cachedVideo, nrPost: self.nrPost)
+    fileprivate func playUrl(_ videoUrl: URL) {
+        let cachedFirstFrame: CachedFirstFrame? = if case .loadedFirstFrame(let firstFrame) = self.viewState {
+            firstFrame
+        } else { nil }
+        self.viewState = .playingInPIP
+        AnyPlayerModel.shared.isShown = true // <-- need here or SwiftUI doesn't update fast enough
+        guard let videoUrlString else { return }
+        Task { @MainActor in
+            await AnyPlayerModel.shared.loadVideo(url: videoUrlString, nrPost: self.nrPost, cachedFirstFrame: cachedFirstFrame)
         }
-        else { // Play in old embedded player
-            self.viewState = .loadedFullVideo(cachedVideo)
-            self.timeControlStatus = .playing
-        }
-    }
-    
-    // Play in embedded video on macOS/iPad or show "pip logo" and play in floating/fullscreen player on iPhone
-    @MainActor
-    fileprivate func playStreamUrl(_ videoUrl: URL) {
-        if IS_IPHONE { // Play in new fullscreen/floating player
-            self.viewState = .playingInPIP
-            guard let videoUrlString else { return }
-            Task { @MainActor in
-                await AnyPlayerModel.shared.loadVideo(url: videoUrlString, nrPost: self.nrPost)
-            }
-        }
-        else { // open stream url view in old embedded player
-            self.viewState = .streaming(videoUrl)
-            self.timeControlStatus = .playing
-        }
+//        self.timeControlStatus = .playing
     }
     
     @MainActor
     public func startPlaying() {
-        guard let videoUrl, let videoUrlString else { return }
-        if let cachedVideo = AVAssetCache.shared.get(url: videoUrlString) {
-            playCachedVideo(cachedVideo)
-        }
-        
-        if isStream || isAudio {
-            playStreamUrl(videoUrl)
-        }
-        else { // start downloading video
-            if case .loading(_) = viewState {
-
-            }
-            else {
-                viewState = .loading(0)
-            }
-            self.downloadProgress = 0
-            Task.detached(priority: .high) { [weak self] in
-                guard let self else { return }
-                await self.downloadVideo()
-            }
-        }
+        guard let videoUrl else { return }
+        playUrl(videoUrl)
     }
     
     @MainActor
-    public func cancel() {
-        downloadTask?.cancel()
-        downloadProgress = 0
+    public func pause() {
+        viewState = .paused(self.downloadProgress)
     }
     
     @MainActor
-    public func restoreToFirstFrame(cachedFirstFrame cachedFirstFrameFromPIP: CachedFirstFrame? = nil, cachedVideo cachedVideoFromPIP: CachedVideo? = nil) {
-        if isAudio {
-            guard let videoUrl else { return }
-            self.viewState = .streaming(videoUrl)
-        }
-        else if let cachedFirstFrameFromPIP {
+    public func restoreToFirstFrame(cachedFirstFrame cachedFirstFrameFromPIP: CachedFirstFrame? = nil) {
+        if let cachedFirstFrameFromPIP {
             self.downloadProgress = 0
             self.viewState = .loadedFirstFrame(cachedFirstFrameFromPIP)
         }
-        else if let cachedVideoFromPIP {
-            self.downloadProgress = 0
-            self.viewState = .loadedFullVideo(cachedVideoFromPIP)
-        }
-        else if isStream {
+        else {
             guard let videoUrl else { return }
-            self.viewState = .streaming(videoUrl)
+            self.viewState = .noPreviewFound(videoUrl.absoluteString)
         }
     }
     
@@ -212,7 +152,9 @@ class EmbeddedVideoVM: ObservableObject {
             if streamType == .unknown { // probably audio
                 self.isAudio = true
             }
-            self.viewState = .streaming(videoURL)
+            Task {
+                await loadFirstFrame(videoURL)
+            }
         }
     }
     
@@ -450,87 +392,18 @@ class EmbeddedVideoVM: ObservableObject {
         config.urlCache = nil
         return URLSession(configuration: config, delegate: NoRedirectDelegate(), delegateQueue: nil)
     }()
-    
-    private func downloadVideo() async {
-        guard let videoUrl, let videoUrlString else { return }
-        self.downloadTask = ImageProcessing.shared.video.imageTask(with: videoUrl)
-        let availableWidth = self.availableWidth ?? UIScreen.main.bounds.width
-        
-        if let downloadTask {
-//            DispatchQueue.main.async {
-//                videoState = .loading
-//            }
-            for await progress in downloadTask.progress {
-                let percent = Int(ceil(progress.fraction * 100))
-                if percent % 3 == 0 { // only update view every 3 percent for performance
-                    Task { @MainActor [weak self] in
-                        self?.downloadProgress = percent
-                    }
-                }
-            }
-        }
-        
-        if let response = try? await downloadTask?.response {
-            if let type = response.container.type, type.isVideo, let asset = response.container.userInfo[.videoAssetKey] as? AVAsset {
-                Task.detached(priority: .background) { [weak self] in
-                    guard let self else { return }
-                    if let videoSize = await getVideoDimensions(asset: asset) {
-                        
-                        let scaledDimensions = Nostur.scaledToFit(videoSize, scale: 1, maxWidth: availableWidth, maxHeight: self.availableHeight ?? DIMENSIONS.MAX_MEDIA_ROW_HEIGHT)
-                        
-                        
-                        let firstFrame: UIImage? = if case .loadedFirstFrame(let cachedFirstFrame) = viewState {
-                            cachedFirstFrame.uiImage
-                        } else {
-                            nil
-                        }
-                        
-                        let duration: CMTime? = if case .loadedFirstFrame(let cachedFirstFrame) = viewState {
-                            cachedFirstFrame.duration
-                        } else {
-                            nil
-                        }
-                        
-                        let cachedVideo = CachedVideo(url: videoUrlString, asset: asset,
-                                                      dimensions: videoSize,
-                                                      scaledDimensions: scaledDimensions, duration: duration, firstFrame: firstFrame)
-                        AVAssetCache.shared.set(url: videoUrlString, asset: cachedVideo)
-                        
-                        Task { @MainActor [weak self] in
-                            self?.playCachedVideo(cachedVideo)
-                        }
-                    }
-                    else {
-                        Task { @MainActor [weak self] in
-                            self?.viewState = .error("Error downloading video")
-                        }
-                    }
-                }
-            }
-            else {
-                DispatchQueue.main.async {
-                    Task { @MainActor [weak self] in
-                        self?.viewState = .error("Error downloading video")
-                    }
-                }
-            }
-        }
-    }
-    
 }
 
 extension EmbeddedVideoVM {
     enum ViewState {
         case initial
+        case loading(Int)
+        case paused(Int)
         case noHttpsWarning(String)
         case nsfwWarning(String)
-        case loading(Int)
-        case cancelled
         case lowDataMode(String)
         case loadedFirstFrame(CachedFirstFrame)
-        case loadedFullVideo(CachedVideo)
         case noPreviewFound(String)
-        case streaming(URL)
         case playingInPIP
         case error(String)
     }

@@ -27,9 +27,9 @@ struct OverlayVideo: View {
     
     private var videoWidth: CGFloat {
         if vm.viewMode != .overlay {
-            return UIScreen.main.bounds.width
+            return ScreenSpace.shared.screenSize.width
         }
-        return UIScreen.main.bounds.width * 0.45
+        return ScreenSpace.shared.screenSize.width * 0.45
     }
     
     private var avPlayerHeight: CGFloat {
@@ -106,7 +106,7 @@ struct OverlayVideo: View {
                                     
                                     // BOOKMARK BUTTON
                                     ToolbarItem(placement: .topBarTrailing) {
-                                        if let nrPost = vm.nrPost, vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
+                                        if vm.nrPost != nil, vm.availableViewModes.contains(.overlay) && vm.viewMode != .overlay {
                                             Button("Bookmark", systemImage: bookmarkState ? "bookmark.fill" : "bookmark") {
                                                 bookmarkState.toggle()
                                             }
@@ -124,17 +124,20 @@ struct OverlayVideo: View {
                                                     saveAVAssetToPhotos()
                                                 }
                                                 Button("Copy video URL") {
-                                                    if let url = vm.cachedVideo?.url {
+                                                    if let url = vm.currentlyPlayingUrl {
                                                         UIPasteboard.general.string = url
                                                         sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
                                                     }
                                                 }
                                             }, label: {
                                                 if isSaving {
-                                                    ProgressView()
-                                                        .foregroundColor(Color.white)
-                                                        .tint(Color.white)
-                                                        .padding(5)
+                                                    HStack {
+                                                        ProgressView()
+                                                        Text(vm.downloadProgress, format: .percent)
+                                                    }
+                                                    .foregroundColor(Color.white)
+                                                    .tint(Color.white)
+                                                    .padding(5)
                                                 }
                                                 else if didSave {
                                                     Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
@@ -170,6 +173,7 @@ struct OverlayVideo: View {
                                     }
                                 }
                                 .onDisappear {
+                                    AnyPlayerModel.shared.downloadTask?.cancel()
                                     isSaving = false
                                     didSave = false
                                 }
@@ -301,7 +305,7 @@ struct OverlayVideo: View {
                                             .foregroundColor(themes.theme.accent)
                                             
                                             Button("Copy video URL") {
-                                                if let url = vm.cachedVideo?.url {
+                                                if let url = vm.currentlyPlayingUrl {
                                                     UIPasteboard.general.string = url
                                                     sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
                                                 }
@@ -310,10 +314,13 @@ struct OverlayVideo: View {
                                             
                                         }, label: {
                                             if isSaving {
-                                                ProgressView()
-                                                    .foregroundColor(Color.white)
-                                                    .tint(themes.theme.accent)
-                                                    .padding(5)
+                                                HStack {
+                                                    ProgressView()
+                                                    Text(vm.downloadProgress, format: .percent)
+                                                }
+                                                .foregroundColor(Color.white)
+                                                .tint(themes.theme.accent)
+                                                .padding(5)
                                             }
                                             else if didSave {
                                                 Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
@@ -404,7 +411,6 @@ struct OverlayVideo: View {
                         }
                     }
                     .ultraThinMaterialIfDetail(vm.viewMode)
-//                    .frame(maxHeight: UIScreen.main.bounds.height - 75) // TODO: Fix magic number 75 or make sure its correct
                     .frame(
                         width: videoWidth * currentScale,
                         height: frameHeight
@@ -573,35 +579,39 @@ struct OverlayVideo: View {
     func saveAVAssetToPhotos() {
         guard !didSave else { return }
         isSaving = true
+        vm.downloadProgress = 0
+        
+        Task {
+            if let avAsset = await vm.downloadVideo() {
+                exportAsset(avAsset) { exportedURL in
+                    guard let url = exportedURL else {
+                        sendNotification(.anyStatus, ("Failed to export video", "APP_NOTICE"))
+                        isSaving = false
+                        return
+                    }
 
-        guard let avAsset = vm.cachedVideo?.asset else {
-            sendNotification(.anyStatus, ("Failed to get video", "APP_NOTICE"))
-            isSaving = false
-            return
-        }
-
-        exportAsset(avAsset) { exportedURL in
-            guard let url = exportedURL else {
-                sendNotification(.anyStatus, ("Failed to export video", "APP_NOTICE"))
+                    requestPhotoLibraryAccess { granted in
+                        if granted {
+                            saveVideoToPhotoLibrary(videoURL: url) { success, error in
+                                if success {
+                                    didSave = true
+                                    sendNotification(.anyStatus, ("Saved to Photo Library", "APP_NOTICE"))
+                                } else {
+                                    sendNotification(.anyStatus, ("Failed to save video: \(error?.localizedDescription ?? "Unknown error")", "APP_NOTICE"))
+                                }
+                                isSaving = false
+                            }
+                        } else {
+                            sendNotification(.anyStatus, ("Photo Library access was denied.", "APP_NOTICE"))
+                            isSaving = false
+                        }
+                    }
+                }
+            }
+            else {
+                sendNotification(.anyStatus, ("Failed to get video", "APP_NOTICE"))
                 isSaving = false
                 return
-            }
-
-            requestPhotoLibraryAccess { granted in
-                if granted {
-                    saveVideoToPhotoLibrary(videoURL: url) { success, error in
-                        if success {
-                            didSave = true
-                            sendNotification(.anyStatus, ("Saved to Photo Library", "APP_NOTICE"))
-                        } else {
-                            sendNotification(.anyStatus, ("Failed to save video: \(error?.localizedDescription ?? "Unknown error")", "APP_NOTICE"))
-                        }
-                        isSaving = false
-                    }
-                } else {
-                    sendNotification(.anyStatus, ("Photo Library access was denied.", "APP_NOTICE"))
-                    isSaving = false
-                }
             }
         }
     }

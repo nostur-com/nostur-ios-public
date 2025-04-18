@@ -73,7 +73,6 @@ struct NXContentRenderer: View { // VIEW things
     @EnvironmentObject private var vc: ViewingContext
     public let nxEvent: NXEvent
     public let contentElements: [ContentElement]
-    @Binding var didStart: Bool
     public var forceAutoload: Bool = false
     public var zoomableId: String = "Default"
     
@@ -195,7 +194,7 @@ struct NXContentRenderer: View { // VIEW things
                             .padding(.vertical, 10)
                             .id(index)
                     case .video(let mediaContent):
-                        EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey, availableWidth: vc.availableWidth + (vc.fullWidthImages ? 20 : 0), autoload: shouldAutoload, theme: vc.theme, didStart: $didStart)
+                        EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey, availableWidth: vc.availableWidth + (vc.fullWidthImages ? 20 : 0), autoload: shouldAutoload, theme: vc.theme)
                             .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 
                     case .image(let galleryItem):
@@ -280,6 +279,6 @@ struct NXContentRenderer: View { // VIEW things
     let attributedStringWithPs: AttributedStringWithPs = AttributedStringWithPs(input: "Hello!", output: NSAttributedString(string: "Hello!"), pTags: [])
     let contentElements: [ContentElement] = [ContentElement.text(attributedStringWithPs)]
     
-    return NXContentRenderer(nxEvent: nxEvent, contentElements: contentElements, didStart: .constant(false))
+    return NXContentRenderer(nxEvent: nxEvent, contentElements: contentElements)
         .environmentObject(viewingContext)
 }

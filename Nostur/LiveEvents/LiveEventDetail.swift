@@ -19,7 +19,6 @@ struct LiveEventDetail: View {
     @ObservedObject public var liveEvent: NRLiveEvent
     @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession = .shared
     
-    @State private var didStart = false
     @State private var account: CloudAccount? = nil
     
     
@@ -513,14 +512,14 @@ struct LiveEventDetail: View {
     @ViewBuilder
     private var videoStreamView: some View {
         if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, thumbnail: liveEvent.thumbUrl)
         }
         else if liveEvent.streamHasEnded {
             EmptyView()
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
-                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, thumbnail: liveEvent.thumbUrl)
             }
             else if liveEvent.liveKitConnectUrl == nil {
                 Button {

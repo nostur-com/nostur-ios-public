@@ -20,11 +20,10 @@ struct ContentRenderer: View { // VIEW things
     private let contentElements: [ContentElement]
     private let forceAutoload: Bool
     private let isPreviewContext: Bool
-    @Binding public var didStart: Bool
     private var zoomableId: String
     @StateObject private var childDIM: DIMENSIONS
     
-    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false), isPreviewContext: Bool = false, zoomableId: String = "Default") {
+    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, isPreviewContext: Bool = false, zoomableId: String = "Default") {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
@@ -34,7 +33,6 @@ struct ContentRenderer: View { // VIEW things
         self.theme = theme
         self.isPreviewContext = isPreviewContext
         self.zoomableId = zoomableId
-        _didStart = didStart
         _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreviewContext: isPreviewContext))
     }
     
@@ -153,7 +151,7 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme)
                         .padding(.horizontal, fullWidth ? -10 : 0)
                     
                 case .image(let galleryItem):

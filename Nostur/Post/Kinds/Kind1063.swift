@@ -23,7 +23,7 @@ struct Kind1063: View {
     private let fullWidth: Bool
     private let grouped: Bool
     private let forceAutoload: Bool
-    @State private var didStart = false
+    
     @State private var couldBeImposter: Int16 // TODO: this is here but also in NRPostHeaderContainer, need to clean up
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -108,7 +108,7 @@ struct Kind1063: View {
                     
             }
             if is1063Video(nrPost) {
-                EmbeddedVideoView(url: URL(string: fileMetadata.url)!, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? +20 : 0), autoload: shouldAutoload, theme: theme, didStart: $didStart)
+                EmbeddedVideoView(url: URL(string: fileMetadata.url)!, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? +20 : 0), autoload: shouldAutoload, theme: theme)
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)

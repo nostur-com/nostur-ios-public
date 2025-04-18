@@ -14,18 +14,17 @@ struct ChatRenderer: View { // VIEW things
     private let availableWidth: CGFloat
     private let contentElements: [ContentElement]
     private let forceAutoload: Bool
-    @Binding var didStart: Bool
+
     private var zoomableId: String
     @StateObject private var childDIM: DIMENSIONS
     
-    init(nrChat: NRChatMessage, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, didStart: Binding<Bool> = .constant(false), zoomableId: String = "Default") {
+    init(nrChat: NRChatMessage, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, zoomableId: String = "Default") {
         self.nrChat = nrChat
         self.availableWidth = availableWidth
         self.contentElements = nrChat.contentElementsDetail
         self.forceAutoload = forceAutoload
         self.theme = theme
         self.zoomableId = zoomableId
-        _didStart = didStart
         _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
     }
     
@@ -125,7 +124,7 @@ struct ChatRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                         .id(index)
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrChat.pubkey, availableWidth: availableWidth, autoload: shouldAutoload, theme: theme, didStart: $didStart)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrChat.pubkey, availableWidth: availableWidth, autoload: shouldAutoload, theme: theme)
                 case .image(let galleryItem):
                     MediaContentView(
                         galleryItem: galleryItem,

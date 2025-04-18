@@ -23,7 +23,6 @@ struct Kind1: View {
     private let fullWidth: Bool
     private let grouped: Bool
     private let forceAutoload: Bool
-    @State private var didStart = false
     
     private let THREAD_LINE_OFFSET = 24.0
     
@@ -99,7 +98,7 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView")
                 
-                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
+                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, isPreviewContext: dim.isPreviewContext)
                     .frame(maxWidth: .infinity, alignment:.leading)
             }
             else {
@@ -121,11 +120,11 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView2")
                 
-                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, didStart: $didStart, isPreviewContext: dim.isPreviewContext)
+                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, isPreviewContext: dim.isPreviewContext)
 //                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: !IS_IPHONE && didStart ? 1200 : 900, alignment: .top)
-                    .clipBottom(height: !IS_IPHONE && didStart ? 1200 : 900)
+                    .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: 900, alignment: .top)
+                    .clipBottom(height: 900)
                                             
                 if (nrPost.previewWeights?.moreItems ?? false) {
                     ReadMoreButton(nrPost: nrPost)
@@ -152,7 +151,7 @@ struct Kind1: View {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             
-            ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+            ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload, theme: theme)
         }
     }
     

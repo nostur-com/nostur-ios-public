@@ -86,6 +86,7 @@ struct LiveEventRowView: View {
                     autoload: shouldAutoload,
                     isNSFW: liveEvent.isNSFW
                 )
+                .allowsHitTesting(false)
                 .padding(.horizontal, fullWidth ? -10 : 0)
                 .padding(.vertical, 10)
             }

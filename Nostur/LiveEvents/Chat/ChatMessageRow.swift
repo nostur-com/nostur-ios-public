@@ -14,7 +14,6 @@ struct ChatMessageRow: View {
     @ObservedObject private var nrChat: NRChatMessage
     @ObservedObject private var pfpAttributes: PFPAttributes
     
-    @State private var didStart = false
     private var zoomableId: String
     
     init(nrChat: NRChatMessage, zoomableId: String = "Default") {
@@ -64,7 +63,7 @@ struct ChatMessageRow: View {
                     }
                 Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
             }
-            ChatRenderer(nrChat: nrChat, availableWidth: vc.availableWidth, forceAutoload: false, theme: themes.theme, didStart: $didStart, zoomableId: zoomableId)
+            ChatRenderer(nrChat: nrChat, availableWidth: vc.availableWidth, forceAutoload: false, theme: themes.theme, zoomableId: zoomableId)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(maxHeight: 450, alignment: .top)
         }

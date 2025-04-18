@@ -28,7 +28,6 @@ struct ZapReceipt: View {
     @State private var nrZapFrom: NRPost?
     
     @State var showMiniProfile = false
-    @State private var didStart = false
     
     public var isEmbedded: Bool = false
     
@@ -119,7 +118,7 @@ struct ZapReceipt: View {
 //                .frame(height: 40.0, alignment: .leading)
                 
                 if let nrZapFrom = nrZapFrom {
-                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme, didStart: $didStart)
+                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme)
                         .frame(maxWidth: .infinity, minHeight: 40, alignment:.leading)
                 }
                 else {

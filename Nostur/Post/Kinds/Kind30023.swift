@@ -24,7 +24,7 @@ struct Kind30023: View {
     private let fullWidth: Bool
     private let grouped: Bool
     private let forceAutoload: Bool
-    @State private var didStart = false
+
     @State private var couldBeImposter: Int16 // TODO: this is here but also in NRPostHeaderContainer, need to clean up
     @State private var didLoad = false
     
@@ -192,7 +192,7 @@ struct Kind30023: View {
                         .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme, didStart: $didStart)
+                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {

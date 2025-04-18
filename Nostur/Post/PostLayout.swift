@@ -22,7 +22,6 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     private let fullWidth: Bool
     private let forceAutoload: Bool
     private let isItem: Bool  // true to put more emphasis on the item when it is not a text post
-    @State private var didStart = false
     
     private let THREAD_LINE_OFFSET = 24.0
     

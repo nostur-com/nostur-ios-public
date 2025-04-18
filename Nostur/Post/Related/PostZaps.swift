@@ -154,7 +154,6 @@ struct NxZapReceipt: View {
     @State private var subscriptions = Set<AnyCancellable>()
     
     @State var showMiniProfile = false
-    @State private var didStart = false
     
     var body: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
         HStack(alignment: .top) {
@@ -205,7 +204,7 @@ struct NxZapReceipt: View {
             VStack(alignment: .leading, spacing: 3) { // Post container
                 ZappedFrom(pubkey: fromPubkey, name: name, couldBeImposter: 0, createdAt: nrZapFrom.createdAt)
                 
-                ContentRenderer(nrPost: nrZapFrom, isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowWidth - 80, theme: themes.theme, didStart: $didStart)
+                ContentRenderer(nrPost: nrZapFrom, isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowWidth - 80, theme: themes.theme)
                     .frame(maxWidth: dim.availableNoteRowWidth - 80, minHeight: 40, alignment: .leading)
 //                ReceiptFrom(pubkey: receiptPubkey)
             }

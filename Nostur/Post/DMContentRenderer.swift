@@ -17,7 +17,6 @@ struct DMContentRenderer: View { // VIEW things
     private var theme: Theme
     private let availableWidth: CGFloat
     private let contentElements: [ContentElement]
-    @State private var didStart = false
     @StateObject private var childDIM: DIMENSIONS
     private let isSentByCurrentUser: Bool
     
@@ -105,7 +104,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: availableWidth, autoload: false, theme: theme, didStart: $didStart)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: availableWidth, autoload: false, theme: theme)
                     
                 case .image(let galleryItem):
                     MediaContentView(

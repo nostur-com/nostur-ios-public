@@ -14,7 +14,6 @@ struct ChatConfirmedZapRow: View {
     private var confirmedZap: NRChatConfirmedZap
     @ObservedObject private var pfpAttributes: PFPAttributes
     
-    @State private var didStart = false
     private var zoomableId: String
     
     init(confirmedZap: NRChatConfirmedZap, zoomableId: String = "Default") {
@@ -83,7 +82,7 @@ struct ChatConfirmedZapRow: View {
                 }
                 .foregroundColor(themes.theme.accent)
                 
-            NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, didStart: $didStart, zoomableId: zoomableId)
+            NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, zoomableId: zoomableId)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(maxHeight: 450, alignment: .top)
             }

@@ -23,7 +23,7 @@ struct Kind20: View {
     private let fullWidth: Bool
     private let grouped: Bool
     private let forceAutoload: Bool
-    @State private var didStart = false
+
     @State private var couldBeImposter: Int16 // TODO: this is here but also in NRPostHeaderContainer, need to clean up
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -122,7 +122,7 @@ struct Kind20: View {
                     }
                 
                 
-                ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme, didStart: $didStart)
+                ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
                     .padding(.vertical, 10)
             }
         }
@@ -136,7 +136,7 @@ struct Kind20: View {
     private var detailContent: some View {
         VStack {
             if nrPost.galleryItems.count > 1 {
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme, didStart: $didStart)
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
                     .padding(.top, 10)
             }
             ForEach(nrPost.galleryItems) { galleryItem in
@@ -153,7 +153,7 @@ struct Kind20: View {
             }
             
             if nrPost.galleryItems.count < 2 {
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme, didStart: $didStart)
+                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
                     .padding(.vertical, 10)
             }
         }

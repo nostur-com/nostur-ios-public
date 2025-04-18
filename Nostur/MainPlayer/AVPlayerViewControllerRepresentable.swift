@@ -38,7 +38,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
 //        }
         avpc.allowsPictureInPicturePlayback = true
         avpc.delegate = context.coordinator
-        avpc.showsPlaybackControls = true
+        avpc.showsPlaybackControls = showsPlaybackControls
         avpc.canStartPictureInPictureAutomaticallyFromInline = true
         avpc.updatesNowPlayingInfoCenter = true
         context.coordinator.avpc = avpc
@@ -59,6 +59,10 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         // Update properties of the UIViewController based on the latest SwiftUI state.
         if isPlaying && player.timeControlStatus == .paused {
             player.play()
+        }
+        
+        if let avpc = context.coordinator.avpc, avpc.showsPlaybackControls != showsPlaybackControls {
+            avpc.showsPlaybackControls = showsPlaybackControls
         }
     }
     
