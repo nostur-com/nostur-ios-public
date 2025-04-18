@@ -548,6 +548,21 @@ struct OverlayVideo: View {
                         Bookmark.removeBookmark(nrPost)
                     }
                 }
+                .onChange(of: vm.nrPost) { newNRPost in
+                    guard let newNRPost else {
+                        bookmarkState = false
+                        return
+                    }
+                    if let accountCache = accountCache(), accountCache.getBookmarkColor(newNRPost.id) != nil {
+                        bookmarkState = true
+                    }
+                    else if Bookmark.hasBookmark(eventId: newNRPost.id, context: viewContext()) {
+                        bookmarkState = true
+                    }
+                    else {
+                        bookmarkState = false
+                    }
+                }
             }
         }
     }
