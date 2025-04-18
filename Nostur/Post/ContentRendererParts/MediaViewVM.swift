@@ -11,7 +11,6 @@ import Nuke
 
 class MediaViewVM: ObservableObject {
     @Published var state: MediaViewState = .initial
-    
     private var task: AsyncImageTask?
     
     public func load(_ url: URL, forceLoad: Bool = false, generateIMeta: Bool = false, usePFPpipeline: Bool = false) async {

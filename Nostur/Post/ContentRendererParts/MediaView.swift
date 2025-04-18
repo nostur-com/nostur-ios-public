@@ -106,8 +106,6 @@ struct MediaPlaceholder: View {
     public var zoomableId: String = "Default"
     
     @State private var blurImage: UIImage?
-    @State private var loadTask: Task<Void, Never>?
-    @State private var isVisible = false
     
     private var aspect: CGFloat {
         if let realDimensions { // real aspect
@@ -146,8 +144,6 @@ struct MediaPlaceholder: View {
                     width: availableWidth,
                     height: height
                 )
-                .onAppear { isVisible = true }
-                .onDisappear { isVisible = false }
 //                .debugDimensions()
 //                .overlay(alignment: .center) {
 //                    Text("fit: aW:\(availableWidth), aspect:\(aspect) h:\(height)")
@@ -162,8 +158,6 @@ struct MediaPlaceholder: View {
                     width: availableWidth,
                     height: height
                 )
-                .onAppear { isVisible = true }
-                .onDisappear { isVisible = false }
                 .clipped()
                 .contentShape(Rectangle().inset(by: 10)) // needed or tap outside is buggy
 //                .debugDimensions()
