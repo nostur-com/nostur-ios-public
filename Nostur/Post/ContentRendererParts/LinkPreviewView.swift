@@ -17,60 +17,58 @@ struct LinkPreviewView: View {
     public var linkColor: Color? = nil
     @State var tags: [String: String] = [:]
     
-    static let aspect:CGFloat = 16/9
+    static let aspect: CGFloat = 16/9
     
     var body: some View {
         if autoload {
-            Group {
-                HStack(alignment: .center, spacing: 5) {
-                    if let image = tags["image"], image.prefix(7) != "http://" {
-                        LazyImage(
-                            request: ImageRequest(url: URL(string:image),
-                                                  processors: [.resize(size: CGSize(width:DIMENSIONS.PREVIEW_HEIGHT * Self.aspect, height:DIMENSIONS.PREVIEW_HEIGHT), upscale: true)],
-                            options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .easeIn)) { state in
-                                if let image = state.image {
-                                    image.interpolation(.none)
-                                }
+            HStack(alignment: .center, spacing: 5) {
+                theme.background
+                    .frame(width: DIMENSIONS.PREVIEW_HEIGHT * Self.aspect, height: DIMENSIONS.PREVIEW_HEIGHT)
+                    .overlay {
+                        if let image = tags["image"], image.prefix(7) != "http://" {
+                            LazyImage(
+                                request: ImageRequest(url: URL(string: image),
+                                                      processors: [.resize(size: CGSize(width:DIMENSIONS.PREVIEW_HEIGHT * Self.aspect, height: DIMENSIONS.PREVIEW_HEIGHT), upscale: true)],
+                                options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
+                                userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .easeIn)) { state in
+                                    if let image = state.image {
+                                        image
+                                            .transition(.opacity)
+                                    }
+                            }
+                            .pipeline(ImageProcessing.shared.content)
                         }
-                        .pipeline(ImageProcessing.shared.content)
-                        .frame(width: (DIMENSIONS.PREVIEW_HEIGHT * Self.aspect))
-                        .background(Color.gray)
-                        .clipped()
+                        else {
+                            Image(systemName: "link")
+                                .resizable()
+                                .scaledToFit()
+                                .padding()
+                                .foregroundColor(Color.gray)
+                        }
                     }
-                    else {
-                        Image(systemName: "link")
-                            .resizable()
-                            .scaledToFit()
-                            .padding()
-                            .foregroundColor(Color.gray)
-                            .frame(width: DIMENSIONS.PREVIEW_HEIGHT * Self.aspect)
-                    }
-                    VStack(alignment:.leading, spacing: 0) {
-                        Text((tags["title"] ?? tags["fallback_title"]) ?? "")
-                            .lineLimit(2)
-                            .layoutPriority(1)
-                            .fontWeightBold()
-                        
-                        Text(tags["description"] ?? "")
-                            .lineLimit(2)
-                            .font(.caption)
-                        
-                        Text(url.absoluteString)
-                            .lineLimit(1)
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(5)
-                    .minimumScaleFactor(0.7)
-    //                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
+                
+                VStack(alignment: .leading, spacing: 0) {
+                    Text((tags["title"] ?? tags["fallback_title"]) ?? "")
+                        .lineLimit(2)
+                        .layoutPriority(1)
+                        .fontWeightBold()
+                    
+                    Text(tags["description"] ?? "")
+                        .lineLimit(2)
+                        .font(.caption)
+                    
+                    Text(url.absoluteString)
+                        .lineLimit(1)
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .background(theme.background)
-                .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
-                .cornerRadius(10.0)
-                .clipShape(RoundedRectangle(cornerRadius: 10.0))
+                .padding(5)
             }
+            .background(theme.background)
+            .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
+            .cornerRadius(10.0)
+            .clipShape(RoundedRectangle(cornerRadius: 10.0))
             .onTapGesture {
                 UIApplication.shared.open(url)
             }
@@ -92,9 +90,7 @@ struct LinkPreviewView: View {
                                 }
                                 LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
                             }
-                            catch {
-                                
-                            }
+                            catch { }
                         }
                     }
                 }
