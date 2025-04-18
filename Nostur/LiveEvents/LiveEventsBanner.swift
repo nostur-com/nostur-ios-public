@@ -15,7 +15,7 @@ struct LiveEventsBanner: View {
     @ObservedObject private var liveEventsModel: LiveEventsModel = .shared
     @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
     @State private var didLoad = false
-    @State private var showCreateNestsSheet = false
+    @State private var showCreateNestsSheetWithAccount: CloudAccount? = nil
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -41,23 +41,22 @@ struct LiveEventsBanner: View {
             liveEventsModel.load()
             didLoad = true
         }
-        .onReceive(receiveNotification(.showCreateNestsSheet)) { _ in
-            showCreateNestsSheet = true
+        .onReceive(receiveNotification(.showCreateNestsSheet)) { notification in
+            let acount = notification.object as! CloudAccount
+            showCreateNestsSheetWithAccount = acount
         }
         .onReceive(receiveNotification(.hideCreateNestsSheet)) { _ in
-            showCreateNestsSheet = false
+            showCreateNestsSheetWithAccount = nil
         }
-        .fullScreenCover(isPresented: $showCreateNestsSheet, content: {
-            if let account = AccountsState.shared.loggedInAccount?.account {
-                NBNavigationStack {
-                    CreateNest(account: account)
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("Cancel") { showCreateNestsSheet = false }
-                            }
+        .fullScreenCover(item: $showCreateNestsSheetWithAccount, content: { account in
+            NBNavigationStack {
+                CreateNest(account: account)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") { showCreateNestsSheetWithAccount = nil }
                         }
-                        .padding()
-                }
+                    }
+                    .padding()
             }
         })
         .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in

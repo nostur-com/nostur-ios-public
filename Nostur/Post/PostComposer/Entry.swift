@@ -107,7 +107,7 @@ struct Entry: View {
                 nestsTapped: {
                     onDismiss()
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                        sendNotification(.showCreateNestsSheet)
+                        sendNotification(.showCreateNestsSheet, vm.activeAccount)
                     }
                 }
             )
@@ -174,12 +174,12 @@ struct Entry: View {
                         if kind != .picture && kind != .highlight {
                             Button {
                                 if IS_CATALYST { // MacOS can reuse same weird sheet
-                                    sendNotification(.showCreateNestsSheet)
+                                    sendNotification(.showCreateNestsSheet, vm.activeAccount)
                                 }
                                 else { // IPAD needs to dismiss first
                                     onDismiss()
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                                        sendNotification(.showCreateNestsSheet)
+                                        sendNotification(.showCreateNestsSheet, vm.activeAccount)
                                     }
                                 }
                             } label: {
