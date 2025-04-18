@@ -172,7 +172,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 .onTapGesture {
                     if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
-                        if IS_CATALYST || IS_IPAD {
+                        if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
                             navigateTo(liveEvent)
                         }
                         else {

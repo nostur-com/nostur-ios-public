@@ -102,7 +102,7 @@ struct LiveEventRowView: View {
         .contentShape(Rectangle())
         .onTapGesture {
             UserDefaults.standard.setValue("Main", forKey: "selected_tab")
-            if IS_CATALYST || IS_IPAD {
+            if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
                 navigateTo(liveEvent)
             }
             else {

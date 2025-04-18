@@ -53,7 +53,7 @@ struct LiveEventCapsule: View {
         .simultaneousGesture(
             TapGesture()
                .onEnded {
-                   if IS_CATALYST || IS_IPAD {
+                   if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
                        navigateTo(liveEvent)
                    }
                    else {
