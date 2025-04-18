@@ -20,9 +20,9 @@ struct OverlayVideo: View {
     private var videoHeight: CGFloat {
         if vm.viewMode == .detailstream {
             // 3rd of screen height or video height if smaller
-            return min(UIScreen.main.bounds.height / 3, videoWidth / vm.aspect)
+            return min(ScreenSpace.shared.screenSize.height / 3, videoWidth / vm.aspect)
         }
-        return min(videoWidth / vm.aspect, UIScreen.main.bounds.height - TOOLBAR_HEIGHT)
+        return min(videoWidth / vm.aspect, ScreenSpace.shared.screenSize.height - TOOLBAR_HEIGHT)
     }
     
     private var videoWidth: CGFloat {
@@ -38,7 +38,7 @@ struct OverlayVideo: View {
         }
         if vm.viewMode == .detailstream {
             // 3rd of screen height or video height if smaller
-            return min(UIScreen.main.bounds.height / 3, videoWidth / vm.aspect)
+            return min(ScreenSpace.shared.screenSize.height / 3, videoWidth / vm.aspect)
         }
         return videoHeight
     }
@@ -47,21 +47,21 @@ struct OverlayVideo: View {
         
         // OVERLAY HEIGHT
         if vm.viewMode == .overlay {
-            return (min(videoHeight, UIScreen.main.bounds.height - CONTROLS_HEIGHT) * currentScale) + CONTROLS_HEIGHT
+            return (min(videoHeight, ScreenSpace.shared.screenSize.height - CONTROLS_HEIGHT) * currentScale) + CONTROLS_HEIGHT
         }
         
         // STREAMDETAIL HEIGHT
         if vm.viewMode == .detailstream {
-            return UIScreen.main.bounds.height
+            return ScreenSpace.shared.screenSize.height
         }
         
         // FULLSCREEN 
-        return UIScreen.main.bounds.height - TOOLBAR_HEIGHT
+        return ScreenSpace.shared.screenSize.height - TOOLBAR_HEIGHT
     }
     
     // State variables for dragging
-    @State private var currentOffset = CGSize(width: UIScreen.main.bounds.width * 0.45, height: UIScreen.main.bounds.height - 280.0) // Initial Y offset
-    @State private var dragOffset = CGSize(width: UIScreen.main.bounds.width * 0.45, height: .zero)
+    @State private var currentOffset = CGSize(width: ScreenSpace.shared.screenSize.width * 0.45, height: ScreenSpace.shared.screenSize.height - 280.0) // Initial Y offset
+    @State private var dragOffset = CGSize(width: ScreenSpace.shared.screenSize.width * 0.45, height: .zero)
     
     // State variables for scaling
     @State private var currentScale: CGFloat = 1.0
