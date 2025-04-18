@@ -111,17 +111,16 @@ class AnyPlayerModel: ObservableObject {
     public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil, cachedFirstFrame: CachedFirstFrame? = nil) async {
         guard let url = URL(string: url) else { return }
         
-        try? AVAudioSession.sharedInstance().setActive(true)
+        // View updates
         sendNotification(.stopPlayingVideo)
-        
         self.nrPost = nrPost
         self.didFinishPlaying = false
         self.isShown = true
         self.nrLiveEvent = nil
         self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
-        self.cachedFirstFrame = cachedFirstFrame
-
+        self.isStream = url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" || url.absoluteString.suffix(3) == "mp3"
+        self.currentlyPlayingUrl = url.absoluteString
         
         // Reuse existing viewMode if already playing, unless viewMode is not available
         if !self.isShown || !availableViewModes.contains(viewMode) {
@@ -129,28 +128,35 @@ class AnyPlayerModel: ObservableObject {
         }
         isPlaying = true
         
-        self.isStream = url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" || url.absoluteString.suffix(3) == "mp3"
         
-        if isStream {
-            player.replaceCurrentItem(with: AVPlayerItem(url: url))
-            self.currentlyPlayingUrl = url.absoluteString
-        }
-        else {
-            let asset = AVAsset(url: url)
+        // Avoid hangs, do rest here
+        Task.detached(priority: .medium) {
+            self.cachedFirstFrame = cachedFirstFrame
+            try? AVAudioSession.sharedInstance().setActive(true)
             
-            player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
-            self.currentlyPlayingUrl = url.absoluteString
-            
-            if let cachedFirstFrame {
-                if let dimensions = cachedFirstFrame.dimensions {
-                    self.aspect = dimensions.width / dimensions.height
-                }
+            if self.isStream {
+                self.player.replaceCurrentItem(with: AVPlayerItem(url: url))
             }
             else {
-                guard let track = asset.tracks(withMediaType: .video).first else { return }
-                let size = track.naturalSize.applying(track.preferredTransform)
-                let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
-                self.aspect = dimensions.width / dimensions.height
+                
+                if let cachedFirstFrame {
+                    if let dimensions = cachedFirstFrame.dimensions {
+                        Task { @MainActor in
+                            self.aspect = dimensions.width / dimensions.height
+                        }
+                    }
+                }
+                
+                let asset = AVAsset(url: url)
+                if cachedFirstFrame == nil {
+                    guard let track = asset.tracks(withMediaType: .video).first else { return }
+                    let size = track.naturalSize.applying(track.preferredTransform)
+                    let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
+                    Task { @MainActor in
+                        self.aspect = dimensions.width / dimensions.height
+                    }
+                }
+                await self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
             }
         }
     }
