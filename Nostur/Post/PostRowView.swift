@@ -51,6 +51,7 @@ struct PostRowDeletable: View {
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
             .hCentered()
+            .background(theme.listBackground)
         }
         else if postRowDeletableAttributes.deletedById == nil {
             if (nrPost.isRepost) {
@@ -72,6 +73,7 @@ struct PostRowDeletable: View {
                     .stroke(Color.gray.opacity(0.2), lineWidth: 1)
             )
             .hCentered()
+            .background(theme.listBackground)
         }
     }
 }
