@@ -203,6 +203,18 @@ struct OverlayVideo: View {
                                                                 }
                                                             }
                                                         }))
+                                                    // Need high priority gesture, else cannot go from .overlay to .fullscreen
+                                                    // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
+                                                    // so use custom .highPriorityGestureIf()
+                                                    // put behind like button, else can't tap, see below again same code
+                                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture: TapGesture()
+                                                            .onEnded {
+                                                                withAnimation {
+                                                                    vm.toggleViewMode()
+                                                                }
+                                                        }
+                                                    )
+                                                
                                                 VStack {
                                                     
                                                     if vm.viewMode != .overlay {
@@ -237,16 +249,6 @@ struct OverlayVideo: View {
                                             }
                                         }
                                     }
-                                    // Need high priority gesture, else cannot go from .overlay to .fullscreen
-                                    // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
-                                    // so use custom .highPriorityGestureIf()
-                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture: TapGesture()
-                                            .onEnded {
-                                                withAnimation {
-                                                    vm.toggleViewMode()
-                                                }
-                                        }
-                                    )
                                     .overlay(alignment: .topLeading) { // Close button for .overlay mode
                                         Image(systemName: "multiply")
                                             .font(.title2)
@@ -263,6 +265,17 @@ struct OverlayVideo: View {
                                                 }))
                                             .opacity(vm.viewMode == .overlay ? 1.0 : 0)
                                     }
+                                    // Need high priority gesture, else cannot go from .overlay to .fullscreen
+                                    // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
+                                    // so use custom .highPriorityGestureIf()
+                                    // but with this cannot tap like button, so only do when  !vm.didFinishPlaying
+                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay && !vm.didFinishPlaying, gesture: TapGesture()
+                                            .onEnded {
+                                                withAnimation {
+                                                    vm.toggleViewMode()
+                                                }
+                                        }
+                                    )
                                     .onDisappear {
                                         // Restore normal idle behavior
                                         UIApplication.shared.isIdleTimerDisabled = false
