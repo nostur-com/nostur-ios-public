@@ -42,8 +42,7 @@ struct EmbeddedVideoView: View {
                     }
                 }
                 .overlay(alignment: .topTrailing) {
-                    Text(0, format: .percent)
-                    .padding(5)
+                    ProgressView()
                 }
                 .onAppear {
                     vm.load(url, nrPost: nrPost, autoLoad: autoload)
@@ -65,8 +64,13 @@ struct EmbeddedVideoView: View {
                     }
                 }
                 .overlay(alignment:. topTrailing) {
-                    Text(vm.downloadProgress, format: .percent)
-                    .padding(5)
+                    if percentage == 0 {
+                        ProgressView()
+                    }
+                    else {
+                        Text(vm.downloadProgress, format: .percent)
+                        .padding(5)
+                    }
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
