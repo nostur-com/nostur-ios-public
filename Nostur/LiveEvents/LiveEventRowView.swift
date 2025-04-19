@@ -23,11 +23,7 @@ struct LiveEventRowView: View {
     }
     
     private var availableWidth: CGFloat {
-        if fullWidth {
-            return dim.listWidth - 20
-        }
-        
-        return dim.availableNoteRowImageWidth()
+        dim.listWidth - 40
     }
     
     init(nrPost: NRPost, liveEvent: NRLiveEvent, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false, theme: Theme = Themes.default.theme) {
@@ -78,7 +74,7 @@ struct LiveEventRowView: View {
             if let image = liveEvent.thumbUrl {
                 MediaContentView(
                     galleryItem: GalleryItem(url: image, pubkey: nrPost.pubkey, eventId: nrPost.id),
-                    availableWidth: availableWidth + (fullWidth ? 20 : 0),
+                    availableWidth: availableWidth + (fullWidth ? 40 : 20),
                     placeholderAspect: 16/9,
                     maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                     contentMode: .fit,
