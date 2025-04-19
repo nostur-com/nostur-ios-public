@@ -105,7 +105,12 @@ struct Box<Content: View>: View {
             }
         }
         else {
-            navigateTo(nrPost)
+            if let liveEvent = nrPost.nrLiveEvent {
+                navigateTo(liveEvent)
+            }
+            else {
+                navigateTo(nrPost)
+            }
         }
     }
 }

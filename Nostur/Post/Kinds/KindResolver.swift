@@ -90,20 +90,11 @@ struct KindResolver: View {
                         .onDisappear { self.dequeue() }
                 }
                 else {
-                    // TODO: Needs clean up
-                    HStack {
-                        NRPostHeaderContainer(nrPost: nrPost, singleLine: true)
-                        Spacer()
-                        LazyNoteMenuButton(nrPost: nrPost)
+                    PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, theme: theme) {
+                        LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
+                            .onAppear { self.enqueue() }
+                            .onDisappear { self.dequeue() }
                     }
-                    
-                    LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
-                        .onAppear { self.enqueue() }
-                        .onDisappear { self.dequeue() }
-                    
-                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme)
-                        .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
-                        .drawingGroup(opaque: true)
                 }
             }
         case 30023:
