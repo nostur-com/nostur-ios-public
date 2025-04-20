@@ -21,7 +21,9 @@ class AnyPlayerModel: ObservableObject {
     @Published var isPlaying = false
     @Published var didFinishPlaying = false // to show Like/Zap
     @Published var showsPlaybackControls = false
+    @Published var timeControlStatus: AVPlayer.TimeControlStatus = .paused
     
+    @Published var isLoading = false
     @Published var isShown = false
     
     public var aspect: CGFloat = 16/9
@@ -67,6 +69,14 @@ class AnyPlayerModel: ObservableObject {
             .map { $0 != 0 }
             .assign(to: \.isPlaying, on: self)
             .store(in: &cancellables)
+        
+        player
+            .publisher(for: \.timeControlStatus)
+            .receive(on: DispatchQueue.main)
+            .sink { newStatus in
+                self.timeControlStatus = newStatus
+            }
+            .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .sink { [self] _ in
@@ -83,6 +93,7 @@ class AnyPlayerModel: ObservableObject {
         sendNotification(.stopPlayingVideo)
         self.nrPost = nil
         self.didFinishPlaying = false
+        self.isLoading = true
         self.isShown = true
         self.nrLiveEvent = nrLiveEvent
         self.aspect = 16/9 // reset
@@ -99,7 +110,11 @@ class AnyPlayerModel: ObservableObject {
             
             Task.detached(priority: .userInitiated) {
                 try? AVAudioSession.sharedInstance().setActive(true)
-                self.player.replaceCurrentItem(with: AVPlayerItem(url: url))
+                let playerItem = AVPlayerItem(url: url)
+                Task { @MainActor in
+                    self.player.replaceCurrentItem(with: playerItem)
+                    self.isLoading = false
+                }
             }
             
         }
@@ -108,7 +123,11 @@ class AnyPlayerModel: ObservableObject {
             self.currentlyPlayingUrl = url.absoluteString
             Task.detached(priority: .userInitiated) {
                 try? AVAudioSession.sharedInstance().setActive(true)
-                self.player.replaceCurrentItem(with: AVPlayerItem(url: url))
+                let playerItem = AVPlayerItem(url: url)
+                Task { @MainActor in
+                    self.player.replaceCurrentItem(with: playerItem)
+                    self.isLoading = false
+                }
             }
         }
     }
@@ -122,6 +141,7 @@ class AnyPlayerModel: ObservableObject {
         sendNotification(.stopPlayingVideo)
         self.nrPost = nrPost
         self.didFinishPlaying = false
+        self.isLoading = true
         self.isShown = true
         self.nrLiveEvent = nil
         self.aspect = 16/9 // reset
@@ -133,7 +153,6 @@ class AnyPlayerModel: ObservableObject {
         if !self.isShown || !availableViewModes.contains(viewMode) {
             self.viewMode = availableViewModes.first ?? .fullscreen
         }
-        isPlaying = true
         
         
         // Avoid hangs, do rest here
@@ -142,7 +161,12 @@ class AnyPlayerModel: ObservableObject {
             try? AVAudioSession.sharedInstance().setActive(true)
             
             if self.isStream {
-                self.player.replaceCurrentItem(with: AVPlayerItem(url: url))
+                let playerItem = AVPlayerItem(url: url)
+                Task { @MainActor in
+                    self.player.replaceCurrentItem(with: playerItem)
+                    self.isPlaying = true
+                    self.isLoading = false
+                }
             }
             else {
                 
@@ -163,7 +187,12 @@ class AnyPlayerModel: ObservableObject {
                         self.aspect = dimensions.width / dimensions.height
                     }
                 }
-                await self.player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
+                let playerItem = await AVPlayerItem(asset: asset)
+                Task { @MainActor in
+                    self.player.replaceCurrentItem(with: playerItem)
+                    self.isPlaying = true
+                    self.isLoading = false
+                }
             }
         }
     }
@@ -184,7 +213,6 @@ class AnyPlayerModel: ObservableObject {
     func playVideo() {
         configureAudioSession()
         isPlaying = true
-        player.play()
         try? AVAudioSession.sharedInstance().setActive(true)
         // Prevent auto-lock while playing
         UIApplication.shared.isIdleTimerDisabled = true
@@ -193,7 +221,6 @@ class AnyPlayerModel: ObservableObject {
     @MainActor
     func pauseVideo() {
         isPlaying = false
-        player.pause()
     }
     
     @MainActor
@@ -233,6 +260,7 @@ class AnyPlayerModel: ObservableObject {
         self.didFinishPlaying = false
         isPlaying = false
         isShown = false
+        isLoading = false
         // Restore normal idle behavior
         UIApplication.shared.isIdleTimerDisabled = false
     }

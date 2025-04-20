@@ -51,19 +51,40 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         swipeDown.direction = UISwipeGestureRecognizer.Direction.down
         avpc.view.addGestureRecognizer(swipeDown)
         
+        if isPlaying && player.timeControlStatus != .playing {
+            player.play()
+        }
+        
         return avpc.view
     }
     
-    func updateUIView(_ uiView: UIView, context: Context) {
+    func updateUIView(_ uiView: UIView, context: Context) {        
         // SwiftUI to UIKit
         // Update properties of the UIViewController based on the latest SwiftUI state.
         if isPlaying && player.timeControlStatus == .paused {
             player.play()
         }
+        else if !isPlaying && player.timeControlStatus != .paused {
+            player.pause()
+        }
+        
         
         if let avpc = context.coordinator.avpc, avpc.showsPlaybackControls != showsPlaybackControls {
             avpc.showsPlaybackControls = showsPlaybackControls
         }
+        
+//        if AnyPlayerModel.shared.timeControlStatus == .playing && player.timeControlStatus != .playing {
+//            print("updateUIView 1")
+//            try? AVAudioSession.sharedInstance().setActive(true)
+//            isPlaying = true
+//            AnyPlayerModel.shared.playStateIsChanging = true
+//            player.play()
+//        }
+//        else if AnyPlayerModel.shared.timeControlStatus == .paused && AnyPlayerModel.shared.timeControlStatus != .paused {
+//            print("updateUIView 2")
+//            AnyPlayerModel.shared.playStateIsChanging = true
+//            player.pause()
+//        }
     }
     
     // MARK: - Coordinator Creation

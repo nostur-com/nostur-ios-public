@@ -15,7 +15,6 @@ import Combine
 class EmbeddedVideoVM: ObservableObject {
     @Published var viewState: ViewState = .initial
     @Published var downloadProgress: Int = 0
-    @Published var timeControlStatus: AVPlayer.TimeControlStatus = .paused
     
     @Published var isMuted = false
     
