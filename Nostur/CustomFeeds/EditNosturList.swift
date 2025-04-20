@@ -24,6 +24,9 @@ struct EditNosturList: View {
     @State private var wasShared: Bool = false
     @State private var listNaddr: String? = nil
     
+    // Only full accounts
+    @State var accounts: [CloudAccount] = []
+    
     var body: some View {
         List {
             Section(header: Text("Feed settings", comment: "Header for entering title of a feed")) {
@@ -53,46 +56,48 @@ struct EditNosturList: View {
                 .listRowBackground(themes.theme.listBackground)
             }
             
-            Section(header: Text("Share list", comment: "Header of Feed/List sharing settings")) {
-                Group {
-                    VStack(alignment: .leading) {
-                        Toggle(isOn: $list.sharedList, label: { Text("Make list public", comment: "Toggle to make list public")})
-                            .disabled(!list.sharedList && list.contactPubkeys.isEmpty)
-                        if list.aTag != nil, let listNaddr = listNaddr {
-                            CopyableTextView(text: "Public list address: \(listNaddr)", copyText: "nostr:\(listNaddr)")
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                                .font(.footnote)
-                                .foregroundColor(Color.secondary)
-                                .padding(.trailing, 70)
-                        }
-                        else {
-                            Text("Creates a public list on nostr relays")
-                                .font(.footnote)
-                                .foregroundColor(Color.secondary)
-                        }
-                    }
-
-                    if list.sharedList {
+            if !accounts.isEmpty { // Only show if we have full accounts
+                Section(header: Text("Share list", comment: "Header of Feed/List sharing settings")) {
+                    Group {
                         VStack(alignment: .leading) {
-                            TextField(String(localized: "Title", comment:"Placeholder for input field to enter title of a shared list"), text: $list.sharedTitle_)
-                                .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
-                                .onAppear {
-                                    if list.sharedTitle_.isEmpty {
-                                        list.sharedTitle_ = list.name_
-                                    }
-                                }
-                            Text("Share this list with a different title")
-                                .font(.footnote)
-                                .foregroundColor(Color.secondary)
+                            Toggle(isOn: $list.sharedList, label: { Text("Make list public", comment: "Toggle to make list public")})
+                                .disabled(!list.sharedList && list.contactPubkeys.isEmpty)
+                            if list.aTag != nil, let listNaddr = listNaddr {
+                                CopyableTextView(text: "Public list address: \(listNaddr)", copyText: "nostr:\(listNaddr)")
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .font(.footnote)
+                                    .foregroundColor(Color.secondary)
+                                    .padding(.trailing, 70)
+                            }
+                            else {
+                                Text("Creates a public list on nostr relays")
+                                    .font(.footnote)
+                                    .foregroundColor(Color.secondary)
+                            }
                         }
                         
-                        ListAccountPicker(accountPubkey: $list.accountPubkey)
-                            .disabled(list.aTag != nil)
+                        if list.sharedList {
+                            VStack(alignment: .leading) {
+                                TextField(String(localized: "Title", comment:"Placeholder for input field to enter title of a shared list"), text: $list.sharedTitle_)
+                                    .textInputAutocapitalization(.never)
+                                    .disableAutocorrection(true)
+                                    .onAppear {
+                                        if list.sharedTitle_.isEmpty {
+                                            list.sharedTitle_ = list.name_
+                                        }
+                                    }
+                                Text("Share this list with a different title")
+                                    .font(.footnote)
+                                    .foregroundColor(Color.secondary)
+                            }
+                            
+                            ListAccountPicker(accountPubkey: $list.accountPubkey, accounts: accounts)
+                                .disabled(list.aTag != nil)
+                        }
                     }
+                    .listRowBackground(themes.theme.listBackground)
                 }
-                .listRowBackground(themes.theme.listBackground)
             }
             
             Section {
@@ -168,6 +173,10 @@ struct EditNosturList: View {
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .onAppear {
+            accounts = AccountsState.shared.accounts
+                .filter { $0.isFullAccount }
+            
+            
             let listContactPubkeys = list.contactPubkeys
             wasShared = list.sharedList
             let aTag = list.aTag
@@ -381,7 +390,8 @@ struct EditList_Previews: PreviewProvider {
 struct ListAccountPicker: View {
     @EnvironmentObject private var themes: Themes
     @Binding var accountPubkey: String?
-    @State var accounts: [CloudAccount] = []
+    var accounts: [CloudAccount]
+    
 
     var body: some View {
         Picker(selection: $accountPubkey) {
@@ -399,8 +409,6 @@ struct ListAccountPicker: View {
         }
         .pickerStyleCompatNavigationLink()
         .task {
-            accounts = AccountsState.shared.accounts
-                .filter { $0.isFullAccount }
             if accountPubkey == nil {
                 accountPubkey = AccountsState.shared.activeAccountPublicKey
             }
