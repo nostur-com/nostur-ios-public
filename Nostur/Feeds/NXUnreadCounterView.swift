@@ -32,8 +32,8 @@ struct NXUnreadCounterView: View {
             }
             .fontWeightBold()
             .foregroundColor(.white)
-            .opacity(vm.unreadCount > 0 ? 0.9 : 0)
             .padding(5)
+            .opacity(0.85)
             .contentShape(Rectangle())
     }
 }

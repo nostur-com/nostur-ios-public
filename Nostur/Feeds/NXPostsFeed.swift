@@ -186,13 +186,15 @@ struct NXPostsFeed: View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                unreadCounterView
-                    .onTapGesture {
-                        scrollToFirstUnread(proxy)
-                    }
-                    .simultaneousGesture(LongPressGesture().onEnded { _ in
-                        scrollToTop(proxy)
-                    })
+                if vmInner.unreadCount != 0 {
+                    unreadCounterView
+                        .onTapGesture {
+                            scrollToFirstUnread(proxy)
+                        }
+                        .simultaneousGesture(LongPressGesture().onEnded { _ in
+                            scrollToTop(proxy)
+                        })
+                }
             }
             .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
                 guard vm.isVisible else { return }
