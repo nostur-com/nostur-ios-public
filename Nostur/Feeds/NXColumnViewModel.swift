@@ -1908,7 +1908,9 @@ extension NXColumnViewModel {
                             vmInner.pendingScrollToIndex = restoreToIndex
                             
                             // Update the view state without animation
-                            viewState = .posts(addedAndExistingPostsTruncated)
+                            withTransaction(Transaction(animation: nil)) {
+                                viewState = .posts(addedAndExistingPostsTruncated)
+                            }
                             
                             // Set isAtTop to false since we'll be scrolling to a non-top position
                             vmInner.isAtTop = false

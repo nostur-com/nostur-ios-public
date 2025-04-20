@@ -56,7 +56,7 @@ class NRReplyingToBuilder {
 
 }
 
-func contactUsername(fromPubkey pubkey: String, event: Event? = nil) -> String {
+func contactUsername(fromPubkey pubkey: String, event: Event? = nil, relays: [String] = []) -> String {
     if let anyName = PubkeyUsernameCache.shared.retrieveObject(at: pubkey) {
         return anyName
     }

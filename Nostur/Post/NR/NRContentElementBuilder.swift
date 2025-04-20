@@ -360,6 +360,7 @@ struct AttributedStringWithPs: Hashable {
     var input: String
     var output: NSAttributedString // For selectable text
     var pTags: [Ptag]
+    var missingPs: Set<String> = [] 
     weak var event: Event?
 }
 
