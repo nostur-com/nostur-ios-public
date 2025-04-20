@@ -85,7 +85,8 @@ struct OverlayVideo: View {
         GeometryReader { geometry in
             if vm.isShown {
                 ZStack(alignment: videoAlignment) {
-                    // -- MARK: Fullscreen toolbar
+                    // -- MARK: .fullscreen toolbar (ONLY the toolbar)
+                    // .detailstream has different toolbar
                     if vm.viewMode == .fullscreen {
                         NRNavigationStack {
                             Color.black
@@ -185,7 +186,17 @@ struct OverlayVideo: View {
                         NRNavigationStack {
                             VStack(spacing: 0) {
                                 // -- MARK: Actual video/stream ( .overlay + full + stream)
-                                AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
+                                Color.black
+                                    .overlay {
+                                        if vm.isLoading {
+                                            ProgressView()
+                                        }
+                                    }
+                                    .overlay {
+                                        if !vm.isLoading {
+                                            AVPlayerViewControllerRepresentable(player: $vm.player, isPlaying: $vm.isPlaying, showsPlaybackControls: $vm.showsPlaybackControls, viewMode: $vm.viewMode)
+                                        }
+                                    }
                                     .frame(maxHeight: avPlayerHeight)
                                     .animation(.smooth, value: vm.viewMode)
                                     .overlay { // MARK: Overlay after finished playing
@@ -253,8 +264,7 @@ struct OverlayVideo: View {
                                         Image(systemName: "multiply")
                                             .font(.title2)
                                             .foregroundColor(Color.white)
-                                            .padding(.top, 10)
-                                            .padding(.leading, 10)
+                                            .padding(10)
                                             .contentShape(Rectangle())
                                             .highPriorityGesture(
                                                 TapGesture()
@@ -269,13 +279,18 @@ struct OverlayVideo: View {
                                     // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
                                     // so use custom .highPriorityGestureIf()
                                     // but with this cannot tap like button, so only do when  !vm.didFinishPlaying
-                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay && !vm.didFinishPlaying, gesture: TapGesture()
-                                            .onEnded {
-                                                withAnimation {
-                                                    vm.toggleViewMode()
-                                                }
+                                    .onTapGesture {
+                                        withAnimation {
+                                            vm.toggleViewMode()
                                         }
-                                    )
+                                    }
+//                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay && !vm.didFinishPlaying, gesture: TapGesture()
+//                                            .onEnded {
+//                                                withAnimation {
+//                                                    vm.toggleViewMode()
+//                                                }
+//                                        }
+//                                    )
                                     .onDisappear {
                                         // Restore normal idle behavior
                                         UIApplication.shared.isIdleTimerDisabled = false
@@ -377,7 +392,8 @@ struct OverlayVideo: View {
                             }
                         }
                         
-                        if vm.viewMode == .overlay { // MARK: Video controls for .overlay mode
+                        // MARK: Video controls for .overlay mode
+                        if vm.viewMode == .overlay {
                             HStack(spacing: 30) {
                                 Button(action: vm.seekBackward) {
                                     Image(systemName: "gobackward.15")
