@@ -28,45 +28,66 @@ struct AddRemoveToListsheet: View {
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudFeed.createdAt, ascending: false)],
         predicate: NSPredicate(format: "type == %@ OR type == nil", ListType.pubkeys.rawValue),
         animation: .none)
-    var lists:FetchedResults<CloudFeed>
+    var lists: FetchedResults<CloudFeed>
     
     var body: some View {
         ScrollView {
-            if !lists.isEmpty {
-                LazyVStack {
-                    ForEach(lists) { list in
-                        HStack(spacing: 10) {
-                            if list.contactPubkeys.contains(nrContact.pubkey) {
-                                Button {
-                                    list.contactPubkeys.remove(nrContact.pubkey)
-                                } label: {
-                                    Image(systemName:  "checkmark.circle.fill")
-                                        .padding(.vertical, 10)
+            LazyVStack {
+                ForEach(lists) { list in
+                    HStack(spacing: 10) {
+                        if list.contactPubkeys.contains(nrContact.pubkey) {
+                            Button {
+                                list.contactPubkeys.remove(nrContact.pubkey)
+                                if list.sharedList {
+                                    updatedSharedLists.insert(list)
                                 }
+                            } label: {
+                                Image(systemName:  "checkmark.circle.fill")
+                                    .padding(.vertical, 10)
                             }
-                            else {
-                                Button {
-                                    list.contactPubkeys.insert(nrContact.pubkey)
-                                } label: {
-                                    Image(systemName:  "circle")
-                                        .foregroundColor(Color.secondary)
-                                        .padding(.vertical, 10)
-                                }
-                            }
-                            ListRow(list: list, showPin: false)
-                                .padding(.vertical, 10)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    if list.contactPubkeys.contains(nrContact.pubkey) {
-                                        list.contactPubkeys.remove(nrContact.pubkey)
-                                    }
-                                    else {
-                                        list.contactPubkeys.insert(nrContact.pubkey)
-                                    }
-                                }
                         }
+                        else {
+                            Button {
+                                list.contactPubkeys.insert(nrContact.pubkey)
+                                if list.sharedList {
+                                    updatedSharedLists.insert(list)
+                                }
+                            } label: {
+                                Image(systemName:  "circle")
+                                    .foregroundColor(Color.secondary)
+                                    .padding(.vertical, 10)
+                            }
+                        }
+                        ListRow(list: list, showPin: false)
+                            .padding(.vertical, 10)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if list.contactPubkeys.contains(nrContact.pubkey) {
+                                    list.contactPubkeys.remove(nrContact.pubkey)
+                                }
+                                else {
+                                    list.contactPubkeys.insert(nrContact.pubkey)
+                                }
+                                if list.sharedList {
+                                    updatedSharedLists.insert(list)
+                                }
+                            }
                     }
-                    Divider()
+                }
+                Divider()
+                
+                // Add to new list
+                HStack(spacing: 10) {
+                    Text("New list...")
+                    Spacer()
+                }
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    dismiss()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { // Short delay freezes????
+                        AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: [nrContact.pubkey])
+                    }
                 }
             }
         }
@@ -82,11 +103,24 @@ struct AddRemoveToListsheet: View {
                     for list in lists {
                         sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                     }
+                    broadcastUpdatedSharedLists()
                 }
             }
         }
         .navigationTitle(String(localized:"Add/Remove from feed", comment: "Navigation title for screen to add or remove contacts to a feed"))
         .navigationBarTitleDisplayMode(.inline)
+    }
+    
+    
+    @State var updatedSharedLists: Set<CloudFeed> = []
+    
+    private func broadcastUpdatedSharedLists() {
+        for sharedList in updatedSharedLists {
+            if let accountPubkey = sharedList.accountPubkey,
+               let fullAccount = AccountsState.shared.accounts.first(where: { $0.publicKey ==  accountPubkey }) {
+                publishList(sharedList, account: fullAccount)
+            }
+        }
     }
 }
 struct AddRemoveToListsheet_Previews: PreviewProvider {
