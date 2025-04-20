@@ -103,7 +103,6 @@ func createPreviewEvent(_ event: NEvent) -> Event {
     previewEvent.kind = Int64(event.kind.id)
     previewEvent.created_at = Int64(event.createdAt.timestamp)
     previewEvent.content = event.content
-//    previewEvent.sig = event.signature
     previewEvent.pubkey = event.publicKey
     previewEvent.likesCount = 0
     previewEvent.isRepost = event.kind == .repost
@@ -139,12 +138,12 @@ func createPreviewEvent(_ event: NEvent) -> Event {
         }
         
 
-        var contactsInThisEvent = [Contact]()
-        for pTag in event.pTags() {
-            if let contact = Contact.fetchByPubkey(pTag, context: context) {
-                contactsInThisEvent.append(contact)
-            }
-        }
+//        var contactsInThisEvent = [Contact]()
+//        for pTag in event.pTags() {
+//            if let contact = Contact.fetchByPubkey(pTag, context: context) {
+//                contactsInThisEvent.append(contact)
+//            }
+//        }
     }
 
     // handle REPOST with normal mentions in .kind 1
