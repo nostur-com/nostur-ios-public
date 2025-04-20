@@ -334,7 +334,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
     }
     else {
         if let signedDeleteEvent = try? account.signEvent(deleteReq) {
-            let deleteEventId = signedDeleteEvent.id
+            let deletedById = signedDeleteEvent.id
             let bgContext = bg()
             bgContext.perform {
                 _ = Event.saveEvent(event: signedDeleteEvent, flags: "awaiting_send", context: bgContext)
@@ -346,10 +346,11 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
                 let bgContext = bg()
                 bgContext.perform {
                     let wipedEvent = Event.saveEvent(event: signedWipedEvent, flags: "awaiting_send", context: bgContext)
-                    wipedEvent.deletedById = deleteEventId
+                    wipedEvent.deletedById = deletedById
+                    let wipedEventId = wipedEvent.id
                     DataProvider.shared().bgSave()
                     Task { @MainActor in
-                        ViewUpdates.shared.postDeleted.send((wipedEvent.id, deleteEventId))
+                        ViewUpdates.shared.postDeleted.send((wipedEventId, deletedById))
                     }
                 }
                 Unpublisher.shared.publishNow(signedWipedEvent) // is published before delete req (Now)
