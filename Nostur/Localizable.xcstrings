@@ -64,10 +64,26 @@
       }
     },
     "_Deleted by %@_" : {
-      "comment" : "Message shown when a post is deleted by (name)"
+      "comment" : "Message shown when a post is deleted by (name)",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "_Verwijderd door %@_"
+          }
+        }
+      }
     },
     "_Deleted by author_" : {
-      "comment" : "Message shown when a post is deleted"
+      "comment" : "Message shown when a post is deleted",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "_Verwijderd door auteur_"
+          }
+        }
+      }
     },
     "_Post deleted by %@_" : {
       "comment" : "Message shown when a post is deleted by (name)",
@@ -324,7 +340,14 @@
       }
     },
     "**%@** by " : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** door"
+          }
+        }
+      }
     },
     "**%@** is now following you" : {
       "comment" : "Message when (name) is now following you",
@@ -532,6 +555,12 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@ by %2$@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ door %@"
           }
         }
       }
@@ -1318,7 +1347,15 @@
       }
     },
     "Add %lld contacts to custom feed" : {
-      "comment" : "Post context menu button"
+      "comment" : "Post context menu button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg %lld contacten toe aan lijst"
+          }
+        }
+      }
     },
     "Add +7" : {
       "extractionState" : "stale",
@@ -1344,7 +1381,14 @@
       }
     },
     "Add all to custom list" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voeg allemaal toe aan lijst"
+          }
+        }
+      }
     },
     "Add back" : {
       "comment" : "Button to add back 'possible imposter' label from a contact (only visible right after removing)",
@@ -1369,7 +1413,14 @@
       }
     },
     "Add contact" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toevoegen"
+          }
+        }
+      }
     },
     "Add contacts" : {
       "comment" : "Navigation title of sheet to add contacts to feed",
@@ -1447,10 +1498,24 @@
       }
     },
     "Add to existing list" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aan bestaande lijst toevoegen"
+          }
+        }
+      }
     },
     "Add to new list" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aan nieuwe lijst toevoegen"
+          }
+        }
+      }
     },
     "Add to stage" : {
       "localizations" : {
@@ -1528,7 +1593,14 @@
       }
     },
     "and %lld more" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "en %lld anderen"
+          }
+        }
+      }
     },
     "and %lld others you follow" : {
       "localizations" : {
@@ -1866,7 +1938,14 @@
       }
     },
     "Black & White" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zwart & Wit"
+          }
+        }
+      }
     },
     "Block %@" : {
       "comment" : "Menu action\nPost context menu action to Block (name)",
@@ -2025,7 +2104,14 @@
       }
     },
     "by" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "door"
+          }
+        }
+      }
     },
     "By continuing you agree to the" : {
       "localizations" : {
@@ -2135,7 +2221,14 @@
       }
     },
     "Choose existing list" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies bestaande lijst"
+          }
+        }
+      }
     },
     "Choose feed" : {
       "localizations" : {
@@ -2532,7 +2625,14 @@
       }
     },
     "Contacts in list" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contacten in lijst"
+          }
+        }
+      }
     },
     "Contacts:" : {
       "localizations" : {
@@ -2545,13 +2645,37 @@
       }
     },
     "Content blocked" : {
-      "comment" : "Displayed when media in a post is blocked"
+      "comment" : "Displayed when media in a post is blocked",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geblokkeerd"
+          }
+        }
+      }
     },
     "Content blocked (No HTTPS)" : {
-      "comment" : "Displayed when media in a post is blocked"
+      "comment" : "Displayed when media in a post is blocked",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geblokkeerd (geen HTTPS)"
+          }
+        }
+      }
     },
     "Content blocked (NSFW)" : {
-      "comment" : "Displayed when media in a post is blocked"
+      "comment" : "Displayed when media in a post is blocked",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geblokkeerd (NSFW)"
+          }
+        }
+      }
     },
     "Content from these accounts you follow was received from this relay" : {
       "localizations" : {
@@ -2605,7 +2729,14 @@
       }
     },
     "Copy list address" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer lijst adres "
+          }
+        }
+      }
     },
     "Copy npub" : {
       "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
@@ -2845,7 +2976,14 @@
       }
     },
     "Creates a public list on nostr relays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak een openbare lijst op nostr relays"
+          }
+        }
+      }
     },
     "Currently allowed by the filter: %lld contacts" : {
       "localizations" : {
@@ -3218,7 +3356,15 @@
       }
     },
     "Discover Lists" : {
-      "comment" : "Tab title for the Discover Lists feed"
+      "comment" : "Tab title for the Discover Lists feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ontdek Lijsten"
+          }
+        }
+      }
     },
     "Discover Nostr" : {
       "localizations" : {
@@ -3726,7 +3872,14 @@
       }
     },
     "Feed preview" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed voorbeeld"
+          }
+        }
+      }
     },
     "Feed settings" : {
       "comment" : "Header for a feed setting\nHeader for entering title of a feed",
@@ -4699,13 +4852,36 @@
       }
     },
     "Lists" : {
-      "comment" : "Tab title"
+      "comment" : "Tab title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijsten"
+          }
+        }
+      }
     },
     "Lists & Feeds" : {
-      "comment" : "Side bar navigation button"
+      "comment" : "Side bar navigation button",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijsten & Feeds"
+          }
+        }
+      }
     },
     "Lists from people you follow" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijsten van mensen die jij volgt"
+          }
+        }
+      }
     },
     "Live Nests or streams from follows" : {
       "localizations" : {
@@ -4790,10 +4966,25 @@
       }
     },
     "Loading paused (Low data mode)" : {
-      "comment" : "Displayed when media in a post is blocked"
+      "comment" : "Displayed when media in a post is blocked",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepauzeerd (Low data mode)"
+          }
+        }
+      }
     },
     "Lock post to %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alleen op %@"
+          }
+        }
+      }
     },
     "Log out" : {
       "comment" : "Button to log out\nLog out button\nSide bar navigation button",
@@ -4872,10 +5063,25 @@
       "shouldTranslate" : false
     },
     "Maintained by " : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beheerd door"
+          }
+        }
+      }
     },
     "Make list public" : {
-      "comment" : "Toggle to make list public"
+      "comment" : "Toggle to make list public",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak lijst openbaar"
+          }
+        }
+      }
     },
     "Make moderator" : {
       "localizations" : {
@@ -5289,7 +5495,24 @@
       }
     },
     "New list name" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naam van nieuwe lijst"
+          }
+        }
+      }
+    },
+    "New list..." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe lijst..."
+          }
+        }
+      }
     },
     "New message" : {
       "comment" : "Navigation title for a new Direct Message",
@@ -5715,7 +5938,14 @@
       }
     },
     "NSFW" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NSFW"
+          }
+        }
+      }
     },
     "Nudity" : {
       "comment" : "Menu item in choice list",
@@ -5831,7 +6061,15 @@
       }
     },
     "Or, skip and try as guest first" : {
-      "comment" : "Button to skip creating account and login as guest"
+      "comment" : "Button to skip creating account and login as guest",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Of overslaan en het gastaccount proberen"
+          }
+        }
+      }
     },
     "Orange" : {
       "localizations" : {
@@ -6181,7 +6419,14 @@
       }
     },
     "Posts from anyone which are most zapped by people you follow" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van iedereen meest gezapt door mensen die je volgt"
+          }
+        }
+      }
     },
     "Posts from anyone which are reacted to with several specific emojis by people you follow" : {
       "localizations" : {
@@ -7332,7 +7577,14 @@
       }
     },
     "Resume" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hervatten"
+          }
+        }
+      }
     },
     "Retake" : {
       "localizations" : {
@@ -7719,10 +7971,25 @@
       }
     },
     "Share list" : {
-      "comment" : "Header of Feed/List sharing settings"
+      "comment" : "Header of Feed/List sharing settings",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel lijst"
+          }
+        }
+      }
     },
     "Share this list with a different title" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deel lijst met andere titel"
+          }
+        }
+      }
     },
     "Shared from **Nostur**" : {
       "localizations" : {
@@ -7852,7 +8119,14 @@
       }
     },
     "Show preview" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon voorbeeld"
+          }
+        }
+      }
     },
     "Show replies" : {
       "localizations" : {
@@ -7886,7 +8160,14 @@
       }
     },
     "Shown in the tab bar (not public)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zichtbaar in tab (niet openbaar)"
+          }
+        }
+      }
     },
     "Shows 'Shared from Nostur' caption when sharing post screenshots" : {
       "comment" : "Setting on settings screen",
@@ -8140,13 +8421,34 @@
       "shouldTranslate" : false
     },
     "Subscribe" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak feed tab"
+          }
+        }
+      }
     },
     "Subscribe to list updates" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanmelden op lijst updates"
+          }
+        }
+      }
     },
     "Support people who curate high quality lists by zapping them" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steun mensen die lijsten beheren door ze te zappen"
+          }
+        }
+      }
     },
     "Swipe to unblock/unmute" : {
       "comment" : "Informational text",
@@ -8179,7 +8481,15 @@
       "shouldTranslate" : false
     },
     "Tab title" : {
-      "comment" : "Placeholder for input field to enter title of a feed"
+      "comment" : "Placeholder for input field to enter title of a feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tab titel"
+          }
+        }
+      }
     },
     "Take a photo" : {
       "localizations" : {
@@ -8404,7 +8714,14 @@
       }
     },
     "The Zapped feed shows posts from anyone which are most zapped by people you follow in the last %lld hours" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Zapped feed toon berichten die het meest gezapped zijn in de laatste %lld uur door mensen die je volgt"
+          }
+        }
+      }
     },
     "There are %lld new communities" : {
       "localizations" : {
@@ -8511,7 +8828,14 @@
       }
     },
     "This list is public" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deze lijst is openbaar"
+          }
+        }
+      }
     },
     "This NWC connection does not support payments" : {
       "comment" : "Error message during NWC setup",
@@ -9060,7 +9384,14 @@
       }
     },
     "Updates refer to people added or removed from this list, not posts or content." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijst updates van mensen toegevoegd of verwijderd van de lijst. Niet updates van berichten."
+          }
+        }
+      }
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",
@@ -9581,7 +9912,15 @@
       }
     },
     "Zapped" : {
-      "comment" : "Tab title for feed of most zapped posts\nTab title for the Zapped feed"
+      "comment" : "Tab title for feed of most zapped posts\nTab title for the Zapped feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapped"
+          }
+        }
+      }
     },
     "Zapped %@" : {
       "comment" : "Text in zap button after zapping",
@@ -9607,7 +9946,14 @@
       }
     },
     "Zapped feed time frame" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapped feed tijdsvak"
+          }
+        }
+      }
     },
     "Zapping" : {
       "comment" : "Setting heading on settings screen",
