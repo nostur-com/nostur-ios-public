@@ -189,6 +189,7 @@ struct ImposterLabelToggle: View {
                 Text("Remove imposter label", comment: "Button to remove 'possible imposter' label from a contact")
                     .font(.caption)
             }
+            .padding(.trailing, 10)
         }
         else {
             Button {
@@ -201,6 +202,7 @@ struct ImposterLabelToggle: View {
                 Text("Add back", comment: "Button to add back 'possible imposter' label from a contact (only visible right after removing)")
                     .font(.caption)
             }
+            .padding(.trailing, 10)
         }
     }
 }

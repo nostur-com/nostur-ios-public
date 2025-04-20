@@ -108,6 +108,7 @@ struct ProfileRow: View {
                             PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
                             Text(contact.npub)
                                 .lineLimit(1)
+                                .truncationMode(.middle)
                                 .textSelection(.enabled)
                                 .font(.caption)
                                 .foregroundColor(.gray)
@@ -120,6 +121,7 @@ struct ProfileRow: View {
                         if !couldBeImposter && showNpub {
                             Text(contact.npub)
                                 .lineLimit(1)
+                                .truncationMode(.middle)
                                 .textSelection(.enabled)
                                 .font(.caption)
                                 .foregroundColor(.gray)
