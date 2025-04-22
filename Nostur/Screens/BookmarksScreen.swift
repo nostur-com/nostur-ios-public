@@ -160,15 +160,15 @@ struct PrivateNotesCountPreferenceKey: PreferenceKey {
 struct LazyBookmark: View {
     
     @EnvironmentObject private var themes: Themes
-    @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject public var nrLazyBookmark: NRLazyBookmark
+    public var fullWidth: Bool
 
     var body: some View {
         Box(nrPost: nrLazyBookmark.nrPost) {
             if let nrPost = nrLazyBookmark.nrPost {
                 if nrPost.kind == 443 {
                     VStack {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth, theme: themes.theme)
                         HStack(spacing: 0) {
                             self.replyButton
                                 .foregroundColor(themes.theme.footerButtons)
@@ -183,7 +183,7 @@ struct LazyBookmark: View {
                     }
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth, theme: themes.theme)
                 }
             }
             else {
