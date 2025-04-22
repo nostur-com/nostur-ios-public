@@ -99,7 +99,7 @@ struct BookmarksTab: View {
                         .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(themes.theme.background)
                 .presentationDetents200()
             })
         }
