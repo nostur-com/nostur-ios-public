@@ -43,9 +43,7 @@ struct BookmarksScreen: View {
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     
                     ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
-                        ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯{
-                            LazyBookmark(nrLazyBookmark: nrLazyBookmark)
-                        }
+                        LazyBookmark(nrLazyBookmark: nrLazyBookmark, fullWidth: settings.fullWidthImages)
                         .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
                         .listRowSeparator(.hidden)
                         .listRowBackground(themes.theme.listBackground)
@@ -193,15 +191,15 @@ struct LazyBookmark: View {
                     .frame(height: 175)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-            }
-        }
-        .onAppear {
-            guard nrLazyBookmark.nrPost == nil else { return }
-            bg().perform {
-                let nrPost = NRPost(event: nrLazyBookmark.bgEvent)
-                Task { @MainActor in
-                    nrLazyBookmark.nrPost = nrPost
-                }
+                    .onAppear {
+                        bg().perform {
+                            let nrPost = NRPost(event: nrLazyBookmark.bgEvent)
+                            Task { @MainActor in
+                                nrLazyBookmark.objectWillChange.send()
+                                nrLazyBookmark.nrPost = nrPost
+                            }
+                        }
+                    }
             }
         }
     }
