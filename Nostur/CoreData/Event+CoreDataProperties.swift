@@ -1390,6 +1390,7 @@ extension Event {
 
             var existingArticleIds = Set<String>() // need to repoint all replies to older articles to the newest id
             
+            // Set pointer on older events to the latest event id
             if let olderEvents = try? context.fetch(r) {
                 for olderEvent in olderEvents {
                     olderEvent.mostRecentId = savedEvent.id
@@ -1402,25 +1403,28 @@ extension Event {
             }
             
             // Find existing events referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
-            // or same but for replyToId
-            existingArticleIds.insert(savedEvent.aTag)
-            let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "replyToRootId IN %@", existingArticleIds)
-            if let existingReplies = try? context.fetch(fr) {
-                for existingReply in existingReplies {
-                    existingReply.replyToRootId = savedEvent.id
-                    existingReply.replyToRoot = savedEvent
+            // also do for replyToId
+            if savedEvent.kind == 30023 { // Only do this for articles
+                existingArticleIds.insert(savedEvent.aTag)
+                let fr = Event.fetchRequest()
+                fr.predicate = NSPredicate(format: "kind = 1 AND replyToRootId IN %@", existingArticleIds)
+                if let existingReplies = try? context.fetch(fr) {
+                    for existingReply in existingReplies {
+                        existingReply.replyToRootId = savedEvent.id
+                        existingReply.replyToRoot = savedEvent
+                    }
+                }
+                
+                let fr2 = Event.fetchRequest()
+                fr2.predicate = NSPredicate(format: "kind = 1 AND replyToId IN %@", existingArticleIds)
+                if let existingReplies = try? context.fetch(fr) {
+                    for existingReply in existingReplies {
+                        existingReply.replyToId = savedEvent.id
+                        existingReply.replyTo = savedEvent
+                    }
                 }
             }
             
-            let fr2 = Event.fetchRequest()
-            fr2.predicate = NSPredicate(format: "replyToId IN %@", existingArticleIds)
-            if let existingReplies = try? context.fetch(fr) {
-                for existingReply in existingReplies {
-                    existingReply.replyToId = savedEvent.id
-                    existingReply.replyTo = savedEvent
-                }
-            }
             
             if Set([30311]).contains(savedEvent.kind) { // Only update views for kinds that need it (so far: 30311)
                 ViewUpdates.shared.replacableEventUpdate.send(savedEvent)
