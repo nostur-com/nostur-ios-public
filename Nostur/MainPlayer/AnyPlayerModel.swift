@@ -178,20 +178,81 @@ class AnyPlayerModel: ObservableObject {
                     }
                 }
                 
-                let asset = AVAsset(url: url)
-                if cachedFirstFrame == nil {
-                    guard let track = asset.tracks(withMediaType: .video).first else { return }
-                    let size = track.naturalSize.applying(track.preferredTransform)
-                    let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
-                    Task { @MainActor in
-                        self.aspect = dimensions.width / dimensions.height
+                if url.host?.contains("twimg.com") == true { // Add playback hack for twitter videos. Download first instead of stream
+                    // Create a URLRequest with proper headers
+                    var request = URLRequest(url: url)
+                    request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15", forHTTPHeaderField: "User-Agent")
+                    request.setValue("*/*", forHTTPHeaderField: "Accept")
+                    request.setValue("en-US,en;q=0.9", forHTTPHeaderField: "Accept-Language")
+                    request.setValue("https://twitter.com", forHTTPHeaderField: "Origin")
+                    request.setValue("https://twitter.com/", forHTTPHeaderField: "Referer")
+                    
+                    do {
+                        let (data, response) = try await URLSession.shared.data(for: request)
+                        
+                        guard let httpResponse = response as? HTTPURLResponse,
+                              httpResponse.statusCode == 200 else {
+#if DEBUG
+                                L.og.debug("Failed to fetch video: \(response)")
+#endif
+                            return
+                        }
+                        
+                        // Create a temporary file to store the video data
+                        let tempDir = FileManager.default.temporaryDirectory
+                        let tempFile = tempDir.appendingPathComponent(UUID().uuidString + ".mp4")
+                        try data.write(to: tempFile)
+                        
+                        // Create AVPlayerItem from the local file
+                        let playerItem = AVPlayerItem(url: tempFile)
+                        
+                        // Clean up the temporary file when the player item is done
+                        NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: playerItem, queue: .main) { _ in
+                            try? FileManager.default.removeItem(at: tempFile)
+                        }
+                        
+                        // TODO: maybe clean up all .mp4 if observer didn't catch it or others
+                        
+                        if cachedFirstFrame == nil {
+                            let asset = AVAsset(url: tempFile)
+                            guard let track = asset.tracks(withMediaType: .video).first else { return }
+                            let size = track.naturalSize.applying(track.preferredTransform)
+                            let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
+                            Task { @MainActor in
+                                self.aspect = dimensions.width / dimensions.height
+                            }
+                        }
+                        
+                        Task { @MainActor in
+                            self.player.replaceCurrentItem(with: playerItem)
+                            self.isPlaying = true
+                            self.isLoading = false
+                        }
+                    } catch {
+#if DEBUG
+                        L.og.debug("Error loading video: \(error)")
+#endif
+                        Task { @MainActor in
+                            self.isLoading = false
+                        }
                     }
                 }
-                let playerItem = await AVPlayerItem(asset: asset)
-                Task { @MainActor in
-                    self.player.replaceCurrentItem(with: playerItem)
-                    self.isPlaying = true
-                    self.isLoading = false
+                else { // Normal video stream
+                    let asset = AVAsset(url: url)
+                    if cachedFirstFrame == nil {
+                        guard let track = asset.tracks(withMediaType: .video).first else { return }
+                        let size = track.naturalSize.applying(track.preferredTransform)
+                        let dimensions = CGSize(width: abs(size.width), height: abs(size.height))
+                        Task { @MainActor in
+                            self.aspect = dimensions.width / dimensions.height
+                        }
+                    }
+                    let playerItem = await AVPlayerItem(asset: asset)
+                    Task { @MainActor in
+                        self.player.replaceCurrentItem(with: playerItem)
+                        self.isPlaying = true
+                        self.isLoading = false
+                    }
                 }
             }
         }
