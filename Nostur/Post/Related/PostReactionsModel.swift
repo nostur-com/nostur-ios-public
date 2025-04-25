@@ -26,10 +26,8 @@ class PostReactionsModel: ObservableObject {
     
     public init() {
         ViewUpdates.shared.relatedUpdates
-            .subscribe(on: DispatchQueue.global())
-            .receive(on: DispatchQueue.global())
             .filter { $0.type == .Reactions && $0.eventId == self.eventId }
-            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
+            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
                 Task { @MainActor [weak self] in

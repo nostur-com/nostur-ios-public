@@ -127,9 +127,7 @@ class QueuedFetcher {
     
     private func setupDebouncedFetcher() {
         fetchSubscription = fetchSubject
-            .subscribe(on: DispatchQueue.global())
-            .receive(on: DispatchQueue.global())
-            .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
+            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.ctx.perform { [weak self] in
                     guard let self else { return }

@@ -41,8 +41,6 @@ class OwnPostAttributes: ObservableObject {
     func setupListeners() {
         let id = self.id
         ViewUpdates.shared.eventStatChanged
-            .subscribe(on: DispatchQueue.global())
-            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
             .sink { [weak self] change in
                 guard let self, let detectedRelay = change.detectedRelay else { return }
