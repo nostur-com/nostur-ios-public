@@ -369,12 +369,6 @@ public struct RequestMessage {
 """
     }
     
-    static func getDMConversation(pubkey:String, theirPubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
-        return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "#p": ["\(theirPubkey)"], "kinds": [4], "limit": \(limit)}, {"authors": ["\(theirPubkey)"], "#p": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}]
-"""
-    }
-    
     static func getRelays(pubkeys:[String], subscriptionId:String? = nil) -> String {
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [3,10002] }]

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import NostrEssentials
 
 struct ProfileOverlayCardContainer: View {
     let pubkey: String
@@ -39,9 +40,10 @@ struct ProfileOverlayCardContainer: View {
                             }
                             else {
                                 let reqTask = ReqTask(
+                                    prio: true,
                                     prefix: "CONTACT-",
                                     reqCommand: { taskId in
-                                        req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId))
+                                        nxReq(Filters(authors: [pubkey], kinds: [0], limit: 1), subscriptionId: taskId)
                                     },
                                     processResponseCommand: { taskId, _, _ in
                                         bg().perform {

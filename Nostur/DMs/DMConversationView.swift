@@ -355,7 +355,26 @@ struct DMConversationView: View {
                     L.og.error("🔴🔴 Could not find contact pubkey (theirPubkey)")
                     return
                 }
-                req(RM.getDMConversation(pubkey: pubkey, theirPubkey: theirPubkey))
+                
+                nxReq(
+                    Filters(
+                        authors: [pubkey],
+                        kinds: [4],
+                        tagFilter: TagFilter(tag: "p", values: [theirPubkey]),
+                        limit: 1000
+                    ),
+                    subscriptionId: "DM-S"
+                )
+                
+                nxReq(
+                    Filters(
+                        authors: [theirPubkey],
+                        kinds: [4],
+                        tagFilter: TagFilter(tag: "p", values: [pubkey]),
+                        limit: 1000
+                    ),
+                    subscriptionId: "DM-R"
+                )
             }
             .withNavigationDestinations()
         }
