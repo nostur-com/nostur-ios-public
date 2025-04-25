@@ -26,7 +26,11 @@ struct DMContentRenderer: View { // VIEW things
         self.contentElements = contentElements
         self.theme = theme
         self.isSentByCurrentUser = isSentByCurrentUser
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 98, isScreenshot: false))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 130, isScreenshot: false))
+    }
+    
+    private var dmAvailableWidth: CGFloat {
+        availableWidth - 130
     }
     
     var body: some View {
@@ -90,7 +94,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: dmAvailableWidth)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .lnbc(let text):
@@ -104,12 +108,12 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: availableWidth, autoload: false, theme: theme)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: dmAvailableWidth, autoload: false, theme: theme)
                     
                 case .image(let galleryItem):
                     MediaContentView(
                         galleryItem: galleryItem,
-                        availableWidth: availableWidth,
+                        availableWidth: dmAvailableWidth,
                         maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                         contentMode: .fit,
                         autoload: false
