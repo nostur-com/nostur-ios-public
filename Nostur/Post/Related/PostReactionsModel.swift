@@ -26,12 +26,17 @@ class PostReactionsModel: ObservableObject {
     
     public init() {
         ViewUpdates.shared.relatedUpdates
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.type == .Reactions && $0.eventId == self.eventId }
-            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.global())
             .sink { [weak self] _ in
                 guard let self else { return }
-                withAnimation {
-                    self.load(limit: 500, includeSpam: self.includeSpam)
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    withAnimation {
+                        self.load(limit: 500, includeSpam: self.includeSpam)
+                    }
                 }
             }
             .store(in: &subscriptions)

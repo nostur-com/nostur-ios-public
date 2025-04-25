@@ -632,7 +632,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         unpublishListener()
         
         groupRepliesToRootSubscription = groupRepliesToRoot
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .sink { [weak self] nrPosts in
                 guard let self = self else { return }
                 self._groupRepliesToRoot(nrPosts)
@@ -645,8 +647,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         guard updateNRPostSubscription == nil else { return }
         let id = id
         updateNRPostSubscription = ViewUpdates.shared.updateNRPost
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
-//            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] event in
                 guard let self else { return }
                 
@@ -673,6 +676,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 
         // the undo can be in the replies, so don't check for own account keys yet
         unpublishSubscription = receiveNotification(.unpublishedNRPost)
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 guard self.withGroupedReplies else { return }
@@ -687,6 +692,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         guard AccountsState.shared.bgFullAccountPubkeys.contains(self.pubkey) else { return }
         
         publishSubscription = receiveNotification(.publishingEvent)
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let eventId = notification.object as! String
@@ -707,6 +714,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         // Rerender content elements also for mentions in text
         contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
             .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter({ [weak self] (pubkey, contact) in
                 guard let self = self else { return false }
                 return self.missingPs.contains(pubkey)
@@ -799,8 +807,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         guard postDeletedSubscription == nil else { return }
         let id = id
         postDeletedSubscription = ViewUpdates.shared.postDeleted
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.toDelete == id }
-            .receive(on: RunLoop.main)
             .sink { [weak self] deletion in
                 guard let self = self else { return }
                 self.deletedById = deletion.deletedBy
@@ -812,30 +821,32 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         let id = id
         relationSubscription = ViewUpdates.shared.eventRelationUpdate
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
             .sink { [weak self] relationUpdate in
-                bg().perform {
+                bg().perform { [weak self] in
                     guard let self else { return }
                     switch relationUpdate.relationType {
                     case .replyTo:
                         let nrReplyTo = NRPost(event: relationUpdate.event, withReplyTo: true)
-                        DispatchQueue.main.async {
-                            self.objectWillChange.send()
-                            self.replyTo = nrReplyTo
+                        DispatchQueue.main.async { [weak self] in
+                            self?.objectWillChange.send()
+                            self?.replyTo = nrReplyTo
                             // self.loadReplyTo() // need this??
                         }
                     case .replyToRoot:
                         let nrReplyToRoot = NRPost(event: relationUpdate.event, withReplyTo: true)
-                        DispatchQueue.main.async {
-                            self.objectWillChange.send()
-                            self.replyToRoot = nrReplyToRoot
+                        DispatchQueue.main.async { [weak self] in
+                            self?.objectWillChange.send()
+                            self?.replyToRoot = nrReplyToRoot
                             // self.loadReplyTo() // need this??
                         }
                     case .firstQuote:
                         let nrFirstQuote = NRPost(event: relationUpdate.event, withReplyTo: true, withReplies: self.withReplies)
-                        DispatchQueue.main.async {
-                            self.objectWillChange.send()
-                            self.noteRowAttributes.firstQuote = nrFirstQuote
+                        DispatchQueue.main.async { [weak self] in
+                            self?.objectWillChange.send()
+                            self?.noteRowAttributes.firstQuote = nrFirstQuote
                         }
                     case .replyToRootInverse:
                         let nrReply = NRPost(event: relationUpdate.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
@@ -851,11 +862,13 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 
         let id = self.id
         repliesSubscription = ViewUpdates.shared.repliesUpdated
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .sink { [weak self] change in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
-                bg().perform {
+                bg().perform { [weak self] in
                     guard let self else { return }
                     let nrReplies = change.replies
                             .filter { !blocks().contains($0.pubkey) }
@@ -898,11 +911,15 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 
         let id = self.id
         repliesCountSubscription = ViewUpdates.shared.repliesUpdated
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
-            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
             .sink { [weak self] change in
-                self?.footerAttributes.objectWillChange.send()
-                self?.footerAttributes.repliesCount = Int64(change.replies.count)
+                DispatchQueue.main.async { [weak self] in
+                    self?.footerAttributes.objectWillChange.send()
+                    self?.footerAttributes.repliesCount = Int64(change.replies.count)
+                }
             }
     }
     
@@ -1179,13 +1196,14 @@ extension NRPost { // Helpers for grouped replies
 
         let id = self.id
         repliesToRootSubscription = ViewUpdates.shared.eventRelationUpdate
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id && $0.relationType == .replyToRootInverse }
-//            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] relation in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
                 
-                bg().perform {
-                    guard let self = self else { return }
+                bg().perform { [weak self] in
+                    guard let self else { return }
                     
                     let nrReply = NRPost(event: relation.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[relation.event.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
                     self.repliesToRoot.append(nrReply)

@@ -1411,6 +1411,7 @@ class NXColumnViewModel: ObservableObject {
                let mergedPublisher = Importer.shared.importedMessagesFromSubscriptionIds
                    .merge(with: resumeSubject)
                    .subscribe(on: DispatchQueue.global())
+                   .receive(on: DispatchQueue.global())
             
             newEventsInDatabaseSub = mergedPublisher
             

@@ -24,7 +24,7 @@ class CoreDataRelationFixer {
     
     private init() {
         saveRelationsSubject
-            .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+            .debounce(for: .seconds(0.2), scheduler: DispatchQueue.global())
             .sink { [unowned self] in
                 self._saveRelations()
             }
@@ -41,7 +41,7 @@ class CoreDataRelationFixer {
     }
     
     private func _saveRelations() {
-        bgContext.perform {
+        bgContext.perform { [unowned self] in
             guard !self.taskQueue.isEmpty else { return }
 #if DEBUG
             L.og.debug("💾💾 Saving \(self.taskQueue.count) relations -[LOG]-")

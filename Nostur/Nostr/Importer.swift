@@ -65,7 +65,7 @@ class Importer {
     
     private func setupDelayProcessing() {
         delayProcessingSub
-            .debounce(for: .seconds(5.0), scheduler: RunLoop.main)
+            .debounce(for: .seconds(5.0), scheduler: DispatchQueue.global())
             .sink { [weak self] in
                 self?.shouldBeDelaying = false
                 self?.addedRelayMessage.send()
@@ -73,7 +73,7 @@ class Importer {
             .store(in: &subscriptions)
         
         saveToDiskSubject
-            .debounce(for: .seconds(8.0), scheduler: RunLoop.main)
+            .debounce(for: .seconds(8.0), scheduler: DispatchQueue.global())
             .sink { [unowned self] in
                 self.bgContext.perform { [unowned self] in
                     if (bgContext.hasChanges) {

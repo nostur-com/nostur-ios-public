@@ -22,7 +22,7 @@ class OwnPostAttributes: ObservableObject {
     @Published var cancellationId: UUID? = nil
     @Published var flags = ""
     
-    private var subscriptions =  Set<AnyCancellable>()
+    private var subscriptions = Set<AnyCancellable>()
     
     init(id: String, isOwnPost: Bool = false, relays: String = "", cancellationId: UUID? = nil, flags: String = "") {
         self.id = id
@@ -41,12 +41,14 @@ class OwnPostAttributes: ObservableObject {
     func setupListeners() {
         let id = self.id
         ViewUpdates.shared.eventStatChanged
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
             .sink { [weak self] change in
                 guard let self, let detectedRelay = change.detectedRelay else { return }
                 if !self.relays.contains(detectedRelay) {
-                    DispatchQueue.main.async {
-                        self.relays.insert(detectedRelay)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.relays.insert(detectedRelay)
                     }
                 }
             }

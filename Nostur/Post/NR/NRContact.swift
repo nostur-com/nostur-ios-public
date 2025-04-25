@@ -101,9 +101,10 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         let pubkey = self.pubkey
         ViewUpdates.shared.nip05updated
             .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.pubkey == pubkey }
             .sink { [weak self] nip05update in
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
                     guard nip05update.isVerified != self.nip05verified else { return }
                     self.objectWillChange.send()
@@ -119,9 +120,10 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         let pubkey = self.pubkey
         ViewUpdates.shared.contactUpdated
             .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.0 == pubkey }
             .sink { [weak self] (_, contact) in
-                bg().perform {
+                bg().perform { [weak self] in
                     guard let self = self else { return }
                     let anyName = contact.anyName
                     let fixedName = contact.fixedName
@@ -233,6 +235,8 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         self.presenceATag = aTag
         guard presenceSubscription == nil else { return }
         presenceSubscription = receiveNotification(.receivedMessage)
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let message = notification.object as! RelayMessage

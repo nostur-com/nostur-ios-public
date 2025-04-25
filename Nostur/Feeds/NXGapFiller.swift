@@ -76,21 +76,23 @@ class NXGapFiller {
                     cmd()
                 },
                 processResponseCommand: { [weak self] _, _, _ in
-                    guard let self else { return }
-                    self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
 
-                    self.columnVM?.speedTest?.relayFinished()
-                    
-                    self.columnVM?.loadLocal(config)
-                    
-                    self.currentGap += 1
-                    
-                    if self.windowStart < Int(Date().timeIntervalSince1970) {
-                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
-                        self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
-                    }
-                    else {
-                        self.currentGap = 0
+                        self.columnVM?.speedTest?.relayFinished()
+                        
+                        self.columnVM?.loadLocal(config)
+                        
+                        self.currentGap += 1
+                        
+                        if self.windowStart < Int(Date().timeIntervalSince1970) {
+                            L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
+                            self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
+                        }
+                        else {
+                            self.currentGap = 0
+                        }
                     }
                 },
                 timeoutCommand: { [weak self] subId in

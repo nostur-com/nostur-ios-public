@@ -137,17 +137,21 @@ class FooterAttributes: ObservableObject {
         let id = self.id
         
         relayChangeSubscription = ViewUpdates.shared.eventStatChanged
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
             .sink { [weak self] change in
                 guard let self, let detectedRelay = change.detectedRelay else { return }
                 if !self.relays.contains(detectedRelay) {
-                    DispatchQueue.main.async {
-                        self.relays.insert(detectedRelay)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.relays.insert(detectedRelay)
                     }
                 }
             }
         
         eventStatChangeSubscription = ViewUpdates.shared.eventStatChanged
+            .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .filter { $0.id == id }
             .scan(nil) { (accumulated: EventStatChange?, change: EventStatChange) -> EventStatChange? in
                 if let acc = accumulated {
@@ -200,6 +204,7 @@ class FooterAttributes: ObservableObject {
         guard postActionSubscription == nil else { return }
         postActionSubscription = receiveNotification(.postAction)
             .subscribe(on: DispatchQueue.global())
+            .receive(on: DispatchQueue.global())
             .sink { [weak self] notification in
                 guard let self = self else { return }
                 let action = notification.object as! PostActionNotification
