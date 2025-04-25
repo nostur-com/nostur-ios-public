@@ -30,11 +30,8 @@ class PostReactionsModel: ObservableObject {
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    withAnimation {
-                        self.load(limit: 500, includeSpam: self.includeSpam)
-                    }
+                withAnimation {
+                    self.load(limit: 500, includeSpam: self.includeSpam)
                 }
             }
             .store(in: &subscriptions)
