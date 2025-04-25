@@ -53,8 +53,11 @@ class MediaViewVM: ObservableObject {
         for await progress in task.progress {            
             Task { @MainActor in
                 // Don't update loading if not loading, (could already be finished) (because async out of order)
-                if case .loading(_) = state {
-                    state = .loading(Int(ceil(progress.fraction * 100)))
+                if case .loading(let currentProgress) = state {
+                    let newProgress = Int(ceil(progress.fraction * 100))
+                    if currentProgress != newProgress { // Only rerender if progress actually changed
+                        state = .loading(newProgress)
+                    }
                 }
             }
         }
