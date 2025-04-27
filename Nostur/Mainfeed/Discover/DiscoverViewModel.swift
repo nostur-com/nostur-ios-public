@@ -47,7 +47,9 @@ class DiscoverViewModel: ObservableObject {
     @Published var discoverPosts: [NRPost] = [] {
         didSet {
             guard !discoverPosts.isEmpty else { return }
-            L.og.info("Discover feed: loaded \(self.discoverPosts.count) posts")
+#if DEBUG
+            L.og.debug("Discover feed: loaded \(self.discoverPosts.count) posts")
+#endif
         }
     }
     
@@ -61,6 +63,9 @@ class DiscoverViewModel: ObservableObject {
                 self.fetchPostsFromDB {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+#if DEBUG
+                        L.og.debug("Discover feed: timeout ")
+#endif
                     }
                 }
             }
@@ -71,6 +76,9 @@ class DiscoverViewModel: ObservableObject {
                 self.fetchLikesAndRepostsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+#if DEBUG
+                        L.og.debug("Discover feed: timeout ")
+#endif
                     }
                 }
             }
@@ -152,14 +160,17 @@ class DiscoverViewModel: ObservableObject {
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
-
-                L.og.info("Discover feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("Discover feed: ready to process relay response")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
-                L.og.info("Discover feed: timeout ")
+#if DEBUG
+                L.og.debug("Discover feed: timeout ")
+#endif
             })
 
         backlog.add(reqTask)
@@ -275,7 +286,6 @@ class DiscoverViewModel: ObservableObject {
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Discover feed: timeout ")
                 })
 
             self?.backlog.add(reqTask)

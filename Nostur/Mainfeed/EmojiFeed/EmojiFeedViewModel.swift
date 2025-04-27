@@ -43,7 +43,9 @@ class EmojiFeedViewModel: ObservableObject {
     @Published var feedPosts: [NRPost] = [] {
         didSet {
             guard !feedPosts.isEmpty else { return }
-            L.og.info("Feed: loaded \(self.feedPosts.count) posts")
+#if DEBUG
+            L.og.debug("Feed: loaded \(self.feedPosts.count) posts")
+#endif
         }
     }
     
@@ -158,21 +160,26 @@ class EmojiFeedViewModel: ObservableObject {
                     self.lastFetch = Date.now
                 }
                 else {
+#if DEBUG
                     L.og.error("Feed: Problem generating request")
+#endif
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchReactionsFromDB(onComplete)
-
-                L.og.info("Feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("Feed: ready to process relay response")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchReactionsFromDB(onComplete)
-                L.og.info("Feed: timeout ")
+#if DEBUG
+                L.og.debug("Feed: timeout ")
+#endif
             })
 
         backlog.add(reqTask)
@@ -238,9 +245,13 @@ class EmojiFeedViewModel: ObservableObject {
             let ids = Set(sortedByReactions.map { (postId, likedOrRepostedBy) in postId })
 
             guard !ids.isEmpty else {
+#if DEBUG
                 L.og.debug("Feed: fetchPostsFromRelays: empty ids")
+#endif
                 if (posts.count > 0) {
+#if DEBUG
                     L.og.debug("Feed: but we can render the duplicates")
+#endif
                     DispatchQueue.main.async { [weak self] in
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
@@ -251,9 +262,9 @@ class EmojiFeedViewModel: ObservableObject {
                 }
                 return
             }
-            
+#if DEBUG
             L.og.debug("Feed: fetching \(ids.count) posts, skipped \(posts.count - ids.count) duplicates")
-            
+#endif
             let reqTask = ReqTask(
                 debounceTime: 0.5,
                 subscriptionId: "EMOJI-POSTS",
@@ -271,18 +282,24 @@ class EmojiFeedViewModel: ObservableObject {
                         req(cm)
                     }
                     else {
+#if DEBUG
                         L.og.error("Feed: Problem generating posts request")
+#endif
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Feed: ready to process relay response")
+#if DEBUG
+                    L.og.debug("Feed: ready to process relay response")
+#endif
                 },
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Feed: timeout ")
+#if DEBUG
+                    L.og.debug("Feed: timeout ")
+#endif
                 })
 
             self?.backlog.add(reqTask)

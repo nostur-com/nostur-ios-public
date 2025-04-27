@@ -47,7 +47,9 @@ class HotViewModel: ObservableObject {
     @Published var hotPosts:[NRPost] = [] {
         didSet {
             guard !hotPosts.isEmpty else { return }
-            L.og.info("Hot feed: loaded \(self.hotPosts.count) posts")
+#if DEBUG
+            L.og.debug("Hot feed: loaded \(self.hotPosts.count) posts")
+#endif
         }
     }
     
@@ -61,6 +63,9 @@ class HotViewModel: ObservableObject {
                 self.fetchPostsFromDB {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+#if DEBUG
+                        L.og.debug("Hot feed: timeout")
+#endif
                     }
                 }
             }
@@ -71,6 +76,9 @@ class HotViewModel: ObservableObject {
                 self.fetchLikesAndRepostsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+#if DEBUG
+                    L.og.debug("Hot feed: timeout")
+#endif
                     }
                 }
             }
@@ -145,21 +153,26 @@ class HotViewModel: ObservableObject {
                     self.lastFetch = Date.now
                 }
                 else {
+#if DEBUG
                     L.og.error("Hot feed: Problem generating request")
+#endif
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
-
-                L.og.info("Hot feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("Hot feed: ready to process relay response")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
-                L.og.info("Hot feed: timeout ")
+#if DEBUG
+                L.og.debug("Hot feed: timeout ")
+#endif
             })
 
         backlog.add(reqTask)
@@ -233,9 +246,13 @@ class HotViewModel: ObservableObject {
             let ids = Set(sortedByLikesAndReposts.map { (postId, likedOrRepostedBy) in postId })
 
             guard !ids.isEmpty else {
+#if DEBUG
                 L.og.debug("Hot feed: fetchPostsFromRelays: empty ids")
+#endif
                 if (posts.count > 0) {
+#if DEBUG
                     L.og.debug("Hot feed: but we can render the duplicates")
+#endif
                     DispatchQueue.main.async { [weak self] in
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
@@ -246,9 +263,9 @@ class HotViewModel: ObservableObject {
                 }
                 return
             }
-            
+#if DEBUG
             L.og.debug("Hot feed: fetching \(ids.count) posts, skipped \(posts.count - ids.count) duplicates")
-            
+#endif
             let reqTask = ReqTask(
                 debounceTime: 0.5,
                 subscriptionId: "HOT-POSTS",
@@ -266,18 +283,21 @@ class HotViewModel: ObservableObject {
                         req(cm)
                     }
                     else {
+#if DEBUG
                         L.og.error("Hot feed: Problem generating posts request")
+#endif
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Hot feed: ready to process relay response")
+#if DEBUG
+                    L.og.debug("Hot feed: ready to process relay response")
+#endif
                 },
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Hot feed: timeout ")
                 })
 
             self?.backlog.add(reqTask)
@@ -290,7 +310,9 @@ class HotViewModel: ObservableObject {
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
+#if DEBUG
             L.og.debug("fetchPostsFromDB: empty ids")
+#endif
             onComplete?()
             return
         }
@@ -303,11 +325,11 @@ class HotViewModel: ObservableObject {
             
             var nrPosts:[NRPost] = []
             for (postId, likesAndReposts) in sortedByLikesAndReposts {
-                #if DEBUG
+#if DEBUG
                 if (likesAndReposts.count > 3) {
                     L.og.debug("🔝🔝 id:\(postId): \(likesAndReposts.count) -[LOG]-")
                 }
-                #endif
+#endif
                 if let event = Event.fetchEvent(id: postId, context: bg()) {
                     guard Self.HOT_KINDS.contains(event.kind) else { continue } // not DMs or other weird stuff
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
@@ -331,7 +353,9 @@ class HotViewModel: ObservableObject {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
             }
             let eventIds = nrPosts.prefix(5).map { $0.id }
-            L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+#if DEBUG
+            L.fetching.debug("🔢 Fetching counts for \(eventIds.count) posts")
+#endif
             fetchStuffForLastAddedNotes(ids: eventIds)
             self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
         }
@@ -346,7 +370,9 @@ class HotViewModel: ObservableObject {
         
         let nextIds = self.hotPosts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
         guard !nextIds.isEmpty else { return }
-        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
+#if DEBUG
+        L.fetching.debug("🔢 Fetching counts for \(nextIds.count) posts")
+#endif
         fetchStuffForLastAddedNotes(ids: nextIds)
         self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
     }
@@ -354,8 +380,9 @@ class HotViewModel: ObservableObject {
     public func load(speedTest: NXSpeedTest) {
         self.speedTest = speedTest
         guard shouldReload else { return }
-
-        L.og.info("Hot feed: load()")
+#if DEBUG
+        L.og.debug("Hot feed: load()")
+#endif
         self.follows = Nostur.follows()
         self.state = .loading
         self.hotPosts = []

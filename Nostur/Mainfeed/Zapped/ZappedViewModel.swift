@@ -143,21 +143,26 @@ class ZappedViewModel: ObservableObject {
                     self.lastFetch = Date.now
                 }
                 else {
+#if DEBUG
                     L.og.error("Zapped feed: Problem generating request")
+#endif
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchZapsFromDB(onComplete)
-
-                L.og.info("Zapped feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("Zapped feed: ready to process relay response")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchZapsFromDB(onComplete)
-                L.og.info("Zapped feed: timeout ")
+#if DEBUG
+                L.og.debug("Zapped feed: timeout ")
+#endif
             })
 
         backlog.add(reqTask)
@@ -247,18 +252,24 @@ class ZappedViewModel: ObservableObject {
                         req(cm)
                     }
                     else {
+#if DEBUG
                         L.og.error("Zapped feed: Problem generating posts request")
+#endif
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Zapped feed: ready to process relay response")
+#if DEBUG
+                    L.og.debug("Zapped feed: ready to process relay response")
+#endif
                 },
                 timeoutCommand: { [weak self] taskId in
                     self?.fetchPostsFromDB(onComplete)
                     self?.backlog.clear()
-                    L.og.info("Zapped feed: timeout ")
+#if DEBUG
+                    L.og.debug("Zapped feed: timeout ")
+#endif
                 })
 
             self?.backlog.add(reqTask)
@@ -271,7 +282,9 @@ class ZappedViewModel: ObservableObject {
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
+#if DEBUG
             L.og.debug("fetchPostsFromDB: empty ids")
+#endif
             onComplete?()
             return
         }
@@ -326,7 +339,9 @@ class ZappedViewModel: ObservableObject {
         
         let nextIds = self.zappedPosts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
         guard !nextIds.isEmpty else { return }
-        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
+#if DEBUG
+        L.fetching.debug("🔢 Fetching counts for \(nextIds.count) posts")
+#endif
         fetchStuffForLastAddedNotes(ids: nextIds)
         self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
     }
@@ -335,7 +350,9 @@ class ZappedViewModel: ObservableObject {
         self.speedTest = speedTest
         guard shouldReload else { return }
 
-        L.og.info("Zapped feed: load()")
+#if DEBUG
+        L.og.debug("Zapped feed: load()")
+#endif
         self.follows = Nostur.follows()
         self.state = .loading
         self.zappedPosts = []

@@ -37,7 +37,9 @@ class ArticlesFeedViewModel: ObservableObject {
     @Published var articles:[NRPost] = [] {
         didSet {
             guard !articles.isEmpty else { return }
-            L.og.info("Article feed loaded \(self.articles.count) articles")
+#if DEBUG
+            L.og.debug("Article feed loaded \(self.articles.count) articles")
+#endif
         }
     }
     

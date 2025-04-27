@@ -37,7 +37,9 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     @Published var items: [GalleryItem] = [] {
         didSet {
             guard !items.isEmpty else { return }
-            L.og.info("Gallery feed loaded \(self.items.count) items")
+#if DEBUG
+            L.og.debug("Gallery feed loaded \(self.items.count) items")
+#endif
         }
     }
     
@@ -139,7 +141,9 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                     self.lastFetch = Date.now
                 }
                 else {
+#if DEBUG
                     L.og.error("Gallery feed: Problem generating request")
+#endif
                     onComplete?()
                 }
             },
@@ -147,14 +151,17 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
-
-                L.og.info("Gallery feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("Gallery feed: ready to process relay response")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchLikesAndRepostsFromDB(onComplete)
-                L.og.info("Gallery feed: timeout ")
+#if DEBUG
+                L.og.debug("Gallery feed: timeout ")
+#endif
             })
 
         backlog.add(reqTask)
@@ -224,9 +231,13 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
             let ids = Set(sortedByLikesAndReposts.map { (postId, likedOrRepostedBy) in postId })
 
             guard !ids.isEmpty else {
+#if DEBUG
                 L.og.debug("Gallery feed: fetchPostsFromRelays: empty ids")
+#endif
                 if (posts.count > 0) {
+#if DEBUG
                     L.og.debug("Gallery feed: but we can render the duplicates")
+#endif
                     DispatchQueue.main.async {
                         self?.fetchPostsFromDB(onComplete)
                         self?.backlog.clear()
@@ -238,7 +249,9 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                 return
             }
             
+#if DEBUG
             L.og.debug("Gallery feed: fetching \(ids.count) posts, skipped \(posts.count - ids.count) duplicates")
+#endif
             
             let reqTask = ReqTask(
                 debounceTime: 0.5,
@@ -257,20 +270,26 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                         req(cm)
                     }
                     else {
+#if DEBUG
                         L.og.error("Gallery feed: Problem generating posts request")
+#endif
                     }
                 },
                 processResponseCommand: { [weak self] taskId, relayMessage, _ in
                     guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
-                    L.og.info("Gallery feed: ready to process relay response")
+#if DEBUG
+                    L.og.debug("Gallery feed: ready to process relay response")
+#endif
                 },
                 timeoutCommand: { [weak self] taskId in
                     guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
-                    L.og.info("Gallery feed: timeout ")
+#if DEBUG
+                    L.og.debug("Gallery feed: timeout ")
+#endif
                 })
 
             self?.backlog.add(reqTask)
@@ -282,7 +301,9 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
+#if DEBUG
             L.og.debug("fetchPostsFromDB: empty ids")
+#endif
             onComplete?()
             return
         }
@@ -295,9 +316,11 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
             
             var items:[GalleryItem] = []
             for (postId, likesOrReposts) in sortedByLikesAndReposts {
+#if DEBUG
                 if (likesOrReposts.count > 3) {
                     L.og.debug("🔝🔝 id:\(postId): \(likesOrReposts.count)")
                 }
+#endif
                 if let event = Event.fetchEvent(id: postId, context: bg()) {
                     guard !blockedPubkeys.contains(event.pubkey) else { continue } // no blocked accounts
                     guard event.replyToId == nil && event.replyToRootId == nil else { continue } // no replies
@@ -336,7 +359,9 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     public func load(speedTest: NXSpeedTest) {
         self.speedTest = speedTest
         guard shouldReload else { return }
-        L.og.info("Gallery feed: load()")
+#if DEBUG
+        L.og.debug("Gallery feed: load()")
+#endif
         self.follows = Nostur.follows()
         self.state = .loading
         self.items = []

@@ -27,7 +27,9 @@ class DiscoverListsViewModel: ObservableObject {
     @Published var discoverLists: [NRPost] = [] {
         didSet {
             guard !discoverLists.isEmpty else { return }
-            L.og.info("Discover lists feed: loaded \(self.discoverLists.count) posts")
+#if DEBUG
+            L.og.debug("Discover lists feed: loaded \(self.discoverLists.count) posts")
+#endif
         }
     }
 
@@ -84,21 +86,26 @@ class DiscoverListsViewModel: ObservableObject {
                     req(cm) // TODO: Make outbox req
                 }
                 else {
+#if DEBUG
                     L.og.error("Discover lists feed: Problem generating request")
+#endif
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchListsFromDB(onComplete)
-
-                L.og.info("Discover lists feed: ready to process relay response")
+#if DEBUG
+                L.og.debug("Discover lists feed: ready to process relay response")
+#endif
             },
             timeoutCommand: { [weak self] taskId in
                 guard let self else { return }
                 self.backlog.clear()
                 self.fetchListsFromDB(onComplete)
-                L.og.info("Discover lists feed: timeout ")
+#if DEBUG
+                L.og.debug("Discover lists feed: timeout ")
+#endif
             })
 
         backlog.add(reqTask)

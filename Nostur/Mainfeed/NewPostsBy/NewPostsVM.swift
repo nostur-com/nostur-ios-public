@@ -57,20 +57,26 @@ class NewPostsVM: ObservableObject {
                         req(cm)
                     }
                     else {
-                        L.og.info("New Posts feed: unable to create REQ")
+#if DEBUG
+                        L.og.debug("New Posts feed: unable to create REQ")
+#endif
                     }
                 },
                 processResponseCommand: { taskId, relayMessage, _ in
                     guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
-                    L.og.info("New Posts feed: ready to process relay response")
+#if DEBUG
+                    L.og.debug("New Posts feed: ready to process relay response")
+#endif
                 },
                 timeoutCommand: { taskId in
                     guard let self else { return }
                     self.fetchPostsFromDB(onComplete)
                     self.backlog.clear()
-                    L.og.info("New Posts feed: timeout ")
+#if DEBUG
+                    L.og.debug("New Posts feed: timeout ")
+#endif
                 })
             
             self?.backlog.add(reqTask)
@@ -110,7 +116,9 @@ class NewPostsVM: ObservableObject {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
             }
             let eventIds = nrPosts.prefix(5).map { $0.id }
-            L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+#if DEBUG
+            L.fetching.debug("🔢 Fetching counts for \(eventIds.count) posts")
+#endif
             fetchStuffForLastAddedNotes(ids: eventIds)
             self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
         }
@@ -124,7 +132,9 @@ class NewPostsVM: ObservableObject {
         
         let nextIds = self.posts.dropFirst(max(0,index - 1)).prefix(5).map { $0.id }
         guard !nextIds.isEmpty else { return }
-        L.fetching.info("🔢 Fetching counts for \(nextIds.count) posts")
+#if DEBUG
+        L.fetching.debug("🔢 Fetching counts for \(nextIds.count) posts")
+#endif
         fetchStuffForLastAddedNotes(ids: nextIds)
         self.prefetchedIds = self.prefetchedIds.union(Set(nextIds))
     }
