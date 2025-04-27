@@ -65,10 +65,39 @@ struct Entry: View {
         VStack(alignment: .leading, spacing: 3) {
 
             if kind == .picture {
-                ImagePreviews(pastedImages: $typingTextModel.pastedImages, showButtons: false)
-                    .frame(maxWidth: .infinity)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, -10)
+                if typingTextModel.pastedImages.isEmpty {
+                    HStack(alignment: .top) {
+                        Spacer()
+                        
+                        Button {
+                            cameraSheetShown = true
+                        } label: {
+                            Image(systemName: "camera")
+                        }
+                        .accessibilityHint(Text("Take a photo"))
+                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+
+                        .padding()
+                        
+                        Button {
+                            photoPickerShown = true
+                        } label: {
+                            Image(systemName: "photo")
+                        }
+                        .accessibilityHint(Text("Choose a photo"))
+                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                        .padding()
+        
+                        Spacer()
+                    }
+                    .font(.largeTitle)
+                }
+                else {
+                    ImagePreviews(pastedImages: $typingTextModel.pastedImages, showButtons: false)
+                        .frame(maxWidth: .infinity)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, -10)
+                }
             }
             
             if replyTo != nil {
@@ -220,7 +249,7 @@ struct Entry: View {
                         }
                     }
                     
-                    if kind != .picture && kind != .highlight {
+                    if kind != .highlight {
                         Button(String(localized: "Preview", comment:"Preview button when creating a new post")) {
                             vm.showPreview(quotePost: quotePost, replyTo: replyTo)
                         }
