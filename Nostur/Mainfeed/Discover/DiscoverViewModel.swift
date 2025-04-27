@@ -63,9 +63,12 @@ class DiscoverViewModel: ObservableObject {
                 self.fetchPostsFromDB {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.discoverPosts.isEmpty == true {
 #if DEBUG
-                        L.og.debug("Discover feed: timeout ")
+                            L.og.debug("Discover feed: timeout ")
 #endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -76,9 +79,12 @@ class DiscoverViewModel: ObservableObject {
                 self.fetchLikesAndRepostsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.discoverPosts.isEmpty == true {
 #if DEBUG
-                        L.og.debug("Discover feed: timeout ")
+                            L.og.debug("Discover feed: timeout ")
 #endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -380,6 +386,12 @@ class DiscoverViewModel: ObservableObject {
         self.fetchLikesAndRepostsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.discoverPosts.isEmpty == true {
+#if DEBUG
+                    L.og.debug("Discover feed: timeout ")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -397,6 +409,12 @@ class DiscoverViewModel: ObservableObject {
         self.fetchLikesAndRepostsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.discoverPosts.isEmpty == true {
+#if DEBUG
+                    L.og.debug("Discover feed: timeout ")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -413,6 +431,12 @@ class DiscoverViewModel: ObservableObject {
             self.fetchLikesAndRepostsFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
+                    if self.discoverPosts.isEmpty == true {
+#if DEBUG
+                        L.og.debug("Discover feed: timeout ")
+#endif
+                        self.timeout()
+                    }
                 }
                 continuation.resume()
             }

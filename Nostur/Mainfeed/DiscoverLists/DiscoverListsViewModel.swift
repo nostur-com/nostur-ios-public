@@ -166,7 +166,9 @@ class DiscoverListsViewModel: ObservableObject {
     
     public func load(speedTest: NXSpeedTest) {
         self.speedTest = speedTest
-        L.og.info("Discover lists feed: load()")
+#if DEBUG
+        L.og.debug("Discover lists feed: load()")
+#endif
         self.follows = Nostur.follows()
         self.state = .loading
         self.discoverLists = []
@@ -175,6 +177,12 @@ class DiscoverListsViewModel: ObservableObject {
         self.fetchListsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.discoverLists.isEmpty {
+#if DEBUG
+                    L.og.debug("Discover lists feed: timeout()")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -191,6 +199,12 @@ class DiscoverListsViewModel: ObservableObject {
         self.fetchListsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.discoverLists.isEmpty {
+#if DEBUG
+                    L.og.debug("Discover lists feed: timeout()")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -206,6 +220,12 @@ class DiscoverListsViewModel: ObservableObject {
             self.fetchListsFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
+                    if self.discoverLists.isEmpty {
+#if DEBUG
+                        L.og.debug("Discover lists feed: timeout()")
+#endif
+                        self.timeout()
+                    }
                 }
                 continuation.resume()
             }

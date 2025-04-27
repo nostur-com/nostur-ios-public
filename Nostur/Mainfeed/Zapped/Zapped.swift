@@ -33,17 +33,6 @@ struct Zapped: View {
             switch zappedVM.state {
             case .initializing, .loading:
                 CenteredProgressView()
-                    .task(id: "zapped") {
-                        do {
-                            try await Task.sleep(nanoseconds: UInt64(zappedVM.timeoutSeconds) * NSEC_PER_SEC)
-                            
-                            Task { @MainActor in
-                                if zappedVM.zappedPosts.isEmpty {
-                                    zappedVM.timeout()
-                                }
-                            }
-                        } catch { }
-                    }
             case .ready:
                 List(zappedVM.zappedPosts) { nrPost in
                     ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)

@@ -63,9 +63,12 @@ class HotViewModel: ObservableObject {
                 self.fetchPostsFromDB {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.hotPosts.isEmpty == true {
 #if DEBUG
-                        L.og.debug("Hot feed: timeout")
+                            L.og.debug("Hot feed: timeout")
 #endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -76,9 +79,12 @@ class HotViewModel: ObservableObject {
                 self.fetchLikesAndRepostsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.hotPosts.isEmpty == true {
 #if DEBUG
-                    L.og.debug("Hot feed: timeout")
+                            L.og.debug("Hot feed: timeout")
 #endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -390,6 +396,12 @@ class HotViewModel: ObservableObject {
         self.fetchLikesAndRepostsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.hotPosts.isEmpty == true {
+#if DEBUG
+                    L.og.debug("Hot feed: timeout")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -406,6 +418,12 @@ class HotViewModel: ObservableObject {
         self.fetchLikesAndRepostsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.hotPosts.isEmpty == true {
+#if DEBUG
+                    L.og.debug("Hot feed: timeout")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -422,6 +440,12 @@ class HotViewModel: ObservableObject {
             self.fetchLikesAndRepostsFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
+                    if self.hotPosts.isEmpty == true {
+#if DEBUG
+                        L.og.debug("Hot feed: timeout")
+#endif
+                        self.timeout()
+                    }
                 }
                 continuation.resume()
             }

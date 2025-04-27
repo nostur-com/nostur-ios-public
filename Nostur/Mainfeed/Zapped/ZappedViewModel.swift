@@ -59,6 +59,12 @@ class ZappedViewModel: ObservableObject {
                 self.fetchPostsFromDB {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.zappedPosts.isEmpty == true {
+#if DEBUG
+                            L.og.debug("Zapped feed: timeout")
+#endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -69,6 +75,12 @@ class ZappedViewModel: ObservableObject {
                 self.fetchZapsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.zappedPosts.isEmpty == true {
+#if DEBUG
+                            L.og.debug("Zapped feed: timeout")
+#endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -360,6 +372,12 @@ class ZappedViewModel: ObservableObject {
         self.fetchZapsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.zappedPosts.isEmpty == true {
+#if DEBUG
+                    L.og.debug("Zapped feed: timeout")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -376,6 +394,12 @@ class ZappedViewModel: ObservableObject {
         self.fetchZapsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.zappedPosts.isEmpty == true {
+#if DEBUG
+                    L.og.debug("Zapped feed: timeout")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -392,6 +416,12 @@ class ZappedViewModel: ObservableObject {
             self.fetchZapsFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
+                    if self.zappedPosts.isEmpty == true {
+#if DEBUG
+                        L.og.debug("Zapped feed: timeout")
+#endif
+                        self.timeout()
+                    }
                 }
                 continuation.resume()
             }

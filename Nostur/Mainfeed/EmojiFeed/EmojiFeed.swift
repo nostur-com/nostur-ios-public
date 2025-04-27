@@ -33,17 +33,6 @@ struct EmojiFeed: View {
             switch vm.state {
             case .initializing, .loading:
                 CenteredProgressView()
-                    .task(id: "emoji") {
-                        do {
-                            try await Task.sleep(nanoseconds: UInt64(vm.timeoutSeconds) * NSEC_PER_SEC)
-
-                            Task { @MainActor in
-                                if vm.feedPosts.isEmpty {
-                                    vm.timeout()
-                                }
-                            }
-                        } catch { }
-                    }
             case .ready:
                 List(vm.feedPosts) { nrPost in
                     ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)

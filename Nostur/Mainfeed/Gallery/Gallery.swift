@@ -38,17 +38,6 @@ struct Gallery: View {
             switch vm.state {
             case .initializing, .loading:
                 CenteredProgressView()
-                    .task(id: "gallery") {
-                        do {
-                            try await Task.sleep(nanoseconds: UInt64(vm.timeoutSeconds) * NSEC_PER_SEC)
-                            
-                            Task { @MainActor in
-                                if vm.items.isEmpty {
-                                    vm.timeout()
-                                }
-                            }
-                        } catch { }
-                    }
             case .ready:
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)

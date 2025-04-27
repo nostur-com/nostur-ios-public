@@ -33,17 +33,6 @@ struct DiscoverLists: View {
             switch discoverListsVM.state {
             case .initializing, .loading:
                 CenteredProgressView()
-                    .task(id: "discoverLists") {
-                        do {
-                            try await Task.sleep(nanoseconds: UInt64(8) * NSEC_PER_SEC)
-                            
-                            Task { @MainActor in
-                                if discoverListsVM.discoverLists.isEmpty {
-                                    discoverListsVM.timeout()
-                                }
-                            }
-                        } catch { }
-                    }
             case .ready:
                 List(discoverListsVM.discoverLists) { nrPost in
                     ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)

@@ -59,6 +59,12 @@ class EmojiFeedViewModel: ObservableObject {
                 self.fetchPostsFromDB {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.feedPosts.isEmpty {
+#if DEBUG
+                            L.og.debug("Emoji feed: timeout()")
+#endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -69,6 +75,12 @@ class EmojiFeedViewModel: ObservableObject {
                 self.fetchReactionsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.feedPosts.isEmpty {
+#if DEBUG
+                            L.og.debug("Emoji feed: timeout()")
+#endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -376,7 +388,9 @@ class EmojiFeedViewModel: ObservableObject {
     public func load(speedTest: NXSpeedTest) {
         self.speedTest = speedTest
         guard shouldReload else { return }
-        L.og.info("Feed: load()")
+#if DEBUG
+            L.og.debug("Feed: load()")
+#endif
         self.follows = Nostur.follows()
         self.state = .loading
         self.feedPosts = []
@@ -385,6 +399,12 @@ class EmojiFeedViewModel: ObservableObject {
         self.fetchReactionsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.feedPosts.isEmpty {
+#if DEBUG
+                    L.og.debug("Emoji feed: timeout()")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -402,6 +422,12 @@ class EmojiFeedViewModel: ObservableObject {
         self.fetchReactionsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.feedPosts.isEmpty {
+#if DEBUG
+                    L.og.debug("Emoji feed: timeout()")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -418,6 +444,12 @@ class EmojiFeedViewModel: ObservableObject {
             self.fetchReactionsFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
+                    if self.feedPosts.isEmpty {
+#if DEBUG
+                        L.og.debug("Emoji feed: timeout()")
+#endif
+                        self.timeout()
+                    }
                 }
                 continuation.resume()
             }

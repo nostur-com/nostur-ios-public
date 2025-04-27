@@ -67,6 +67,12 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                 self.fetchPostsFromDB {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.items.isEmpty {
+#if DEBUG
+                            L.og.debug("Gallery feed: timeout()")
+#endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -77,6 +83,12 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
                 self.fetchLikesAndRepostsFromRelays {
                     Task { @MainActor in
                         self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.items.isEmpty {
+#if DEBUG
+                            L.og.debug("Gallery feed: timeout()")
+#endif
+                            self.timeout()
+                        }
                     }
                 }
             }
@@ -370,6 +382,12 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
         self.fetchLikesAndRepostsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.items.isEmpty {
+#if DEBUG
+                    L.og.debug("Gallery feed: timeout()")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -387,6 +405,12 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
         self.fetchLikesAndRepostsFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.items.isEmpty {
+#if DEBUG
+                    L.og.debug("Gallery feed: timeout()")
+#endif
+                    self.timeout()
+                }
             }
         }
     }
@@ -404,6 +428,12 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
             self.fetchLikesAndRepostsFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
+                    if self.items.isEmpty {
+#if DEBUG
+                        L.og.debug("Gallery feed: timeout()")
+#endif
+                        self.timeout()
+                    }
                 }
                 continuation.resume()
             }

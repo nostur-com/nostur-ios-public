@@ -225,6 +225,9 @@ class ArticlesFeedViewModel: ObservableObject {
         self.fetchFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.articles.isEmpty {
+                    self.nothingFound = true
+                }
             }
         }
     }
@@ -241,6 +244,9 @@ class ArticlesFeedViewModel: ObservableObject {
         self.fetchFromRelays {
             Task { @MainActor in
                 self.speedTest?.loadingBarViewState = .finalLoad
+                if self.articles.isEmpty {
+                    self.nothingFound = true
+                }
             }
         }
     }
@@ -257,6 +263,9 @@ class ArticlesFeedViewModel: ObservableObject {
             self.fetchFromRelays {
                 Task { @MainActor in
                     self.speedTest?.loadingBarViewState = .finalLoad
+                    if self.articles.isEmpty {
+                        self.nothingFound = true
+                    }
                 }
                 continuation.resume()
             }
