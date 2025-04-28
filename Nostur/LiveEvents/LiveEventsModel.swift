@@ -74,6 +74,14 @@ class LiveEventsModel: ObservableObject {
             let nrLiveEvents: [NRLiveEvent] = events
                 .filter { !self.dismissedLiveEvents.contains($0.aTag) } // don't show dismissed events
                 .filter { $0.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" }) } // only LIVE
+                .filter {
+                  // remove old events that appear live but where we maybe missed receiving the "ended" state
+                  // so only keep if $0.created_at is newer than 8 hours ago AND we have a "streaming" tag, should be enough sanity check
+                  // (AND also "live" from previous filter)
+                  let createdAt = Date(timeIntervalSince1970: Double($0.created_at))
+                  let eightHoursAgo = Date().addingTimeInterval(-8 * 60 * 60)
+                  return createdAt > eightHoursAgo && $0.fastTags.contains(where: { $0.0 == "streaming" })
+                }
                 .filter { self.hasSpeakerOrHostInFollows($0) || (accountPubkey == $0.pubkey) }
                 .sorted(by: { $0.created_at > $1.created_at })
                 .uniqued(on: { $0.aTag })
