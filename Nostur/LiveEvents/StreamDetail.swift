@@ -373,7 +373,7 @@ struct StreamDetail: View {
             Text("Tab")
         }
         .overlay(alignment: .center) {
-            OverlayVideo()
+            OverlayPlayer()
                 .edgesIgnoringSafeArea(.bottom)
         }
     }

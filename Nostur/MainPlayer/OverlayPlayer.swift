@@ -12,7 +12,7 @@ import NavigationBackport
 let CONTROLS_HEIGHT: CGFloat = 60.0
 let TOOLBAR_HEIGHT: CGFloat = 160.0 // TODO: Fix magic number 160 or make sure its correct. This fixes "close" button and toolbar missing because video height is too high
 
-struct OverlayVideo: View {
+struct OverlayPlayer: View {
     
     @EnvironmentObject private var themes: Themes
     @ObservedObject var vm: AnyPlayerModel = .shared

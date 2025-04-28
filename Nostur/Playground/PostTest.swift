@@ -78,7 +78,7 @@ struct PreviewFeed<Content: View>: View {
                 .scrollContentBackgroundHidden()
             }
             .overlay(alignment: .center) {
-                OverlayVideo()
+                OverlayPlayer()
             }
         }
     }

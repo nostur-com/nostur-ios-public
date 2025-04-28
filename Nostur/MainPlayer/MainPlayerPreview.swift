@@ -119,7 +119,7 @@ import NavigationBackport
                 .badge(1)
         }
         .overlay(alignment: .center) {
-            OverlayVideo()
+            OverlayPlayer()
                 .edgesIgnoringSafeArea(.bottom)
         }
         .onPreferenceChange(TabBarHeightKey.self) { tabBarHeight in

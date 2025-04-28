@@ -131,7 +131,7 @@ struct NosturTabsView: View {
                 }
             }
             .overlay(alignment: .center) {
-                OverlayVideo()
+                OverlayPlayer()
                     .edgesIgnoringSafeArea(.bottom)
             }
         }
