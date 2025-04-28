@@ -131,7 +131,7 @@ class LiveEventsModel: ObservableObject {
                                    subscriptionId: taskId,
                                    filters: [
                                     Filters(
-                                        authors: self.follows,
+                                        authors: follows,
                                         kinds: Set([30311]),
                                         since: agoTimestamp
                                     )
@@ -174,7 +174,7 @@ class LiveEventsModel: ObservableObject {
                                    filters: [
                                     Filters(
                                         kinds: Set([30311]),
-                                        tagFilter: TagFilter(tag: "p", values: self.follows),
+                                        tagFilter: TagFilter(tag: "p", values: follows),
                                         since: agoTimestamp
                                     ),
                                    ]
