@@ -249,7 +249,7 @@ class Zap {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
                     
-                    let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags).0
+                    let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0
                     
                     Task { @MainActor in
                         NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { [weak self] signedEvent in
@@ -302,7 +302,7 @@ class Zap {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
                     
-                    let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags).0
+                    let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0
                     
                     Task { @MainActor in
                         if let signedZapRequestNote = try? account.signEvent(zapRequestNote) {

@@ -127,7 +127,7 @@ struct NRContentTextRendererInner: View {
                     ) { pubkey in
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
-                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
+                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
                             let output = isDetail ? reparsed.output : reparsed.output.prefix(NRTEXT_LIMIT)
                             if self.text != output {
 //                                L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
@@ -171,7 +171,7 @@ struct NRContentTextRendererInner: View {
                     ) { pubkey in
                         bg().perform {
                             guard let event = attributedStringWithPs.event else { return }
-                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
+                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
                             if self.text != reparsed.output {
                                 L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
                                 DispatchQueue.main.async {

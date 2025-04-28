@@ -525,6 +525,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     input: input,
                     fastTags: event.fastTags,
                     event: event,
+                    primaryColor: Themes.default.theme.primary,
                     previewImages: event.previewImages,
                     previewVideos: event.previewVideos,
                     isPreviewContext: isPreview
@@ -769,7 +770,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         bg().perform { [weak self] in
             guard let self = self, let event = event else { return }
             
-            let (contentElementsDetail, _, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(input: event.noteTextPrepared, fastTags: event.fastTags, event: event, previewImages: event.previewImages, previewVideos: event.previewVideos)
+            let (contentElementsDetail, _, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(input: event.noteTextPrepared, fastTags: event.fastTags, event: event, primaryColor: Themes.default.theme.primary, previewImages: event.previewImages, previewVideos: event.previewVideos)
             let (contentElements, _) = filteredForPreview(contentElementsDetail)
             
             DispatchQueue.main.async { [weak self] in

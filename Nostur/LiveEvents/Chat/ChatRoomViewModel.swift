@@ -139,7 +139,7 @@ class ChatRoomViewModel: ObservableObject {
                             ),
                             amount: Int64(event.naiveSats),
                             nxEvent: NXEvent(pubkey: event.pubkey, kind: Int(event.kind)),
-                            content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0
+                            content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags, primaryColor: Themes.default.theme.primary).0
                         )
                     )
                 }
@@ -244,7 +244,7 @@ class ChatRoomViewModel: ObservableObject {
                                 ),
                                 amount: Int64(event.naiveSats),
                                 nxEvent: NXEvent(pubkey: event.publicKey, kind: event.kind.id),
-                                content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags).0
+                                content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags, primaryColor: Themes.default.theme.primary).0
                             )
                         )
                     }

@@ -77,7 +77,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         let fastTags: [FastTag] = nEvent.tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4], $0.tag[safe: 5], $0.tag[safe: 6], $0.tag[safe: 7], $0.tag[safe: 8], $0.tag[safe: 9]) }
         let fastPs: [FastTag] = fastTags.filter { $0.0 == "p" }
         
-        let (contentElementsDetail, linkPreviewURLs, galleryItems) = NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags)
+        let (contentElementsDetail, linkPreviewURLs, galleryItems) = NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags, primaryColor: Themes.default.theme.primary)
         self.linkPreviewURLs = linkPreviewURLs
         self.galleryItems = galleryItems
         
@@ -162,7 +162,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         bg().perform { [weak self] in
             guard let self = self else { return }
             
-            let (contentElementsDetail, _, _) =  NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags)
+            let (contentElementsDetail, _, _) =  NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags, primaryColor: Themes.default.theme.primary)
             
             DispatchQueue.main.async { [weak self] in
                 // self.objectWillChange.send() // Not needed? because this is only for things not on screen yet

@@ -61,7 +61,7 @@ struct PaymentAmountSelector: View {
                                                         aTag: aTag,
                                                         amount: Int64(amount),
                                                         nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734),
-                                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags).0
+                                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0
                                                      )
                                     )
                                 }
