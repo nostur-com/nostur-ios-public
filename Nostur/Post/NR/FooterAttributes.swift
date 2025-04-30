@@ -121,6 +121,9 @@ class FooterAttributes: ObservableObject {
     }
     
     @MainActor public func cancelZap(_ cancellationId: UUID) {
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
+        
         _ = Unpublisher.shared.cancel(cancellationId)
         NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
         NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
