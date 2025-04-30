@@ -228,8 +228,6 @@ class Backlog {
                 .store(in: &subscriptions)
             
             receiveNotification(.receivedMessage)
-                .subscribe(on: DispatchQueue.global())
-                .receive(on: DispatchQueue.global())
                 .sink { [weak self] notification in
                     let receivedMessage = notification.object as! RelayMessage
                     guard let subscriptionId = receivedMessage.subscriptionId else { return }

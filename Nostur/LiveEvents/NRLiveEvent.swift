@@ -227,9 +227,13 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                                 completion?(authToken)
                             }
                         }
+#if DEBUG
                         print("JSON Response: \(jsonResponse)")
+#endif
                     } catch {
+#if DEBUG
                         print("Failed to fetch data: \(error.localizedDescription)")
+#endif
                     }
                 }
             })
@@ -316,8 +320,10 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
+#if DEBUG
         print(urlString)
         print(authHeader)
+#endif
         
         // Perform the data task using async/await
         let (data, response) = try await URLSession.shared.data(for: request)
