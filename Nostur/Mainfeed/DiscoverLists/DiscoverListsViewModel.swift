@@ -130,7 +130,8 @@ class DiscoverListsViewModel: ObservableObject {
             guard let self else { return }
             
             let followSets = (try? bg().fetch(fr)) ?? []
-            let followPacks = (try? bg().fetch(fr2)) ?? []
+            let followPacks = ((try? bg().fetch(fr2)) ?? [])
+                .filter { !$0.fastPs.isEmpty }
             
             guard !followSets.isEmpty || !followPacks.isEmpty  else {
                 DispatchQueue.main.async { [weak self] in

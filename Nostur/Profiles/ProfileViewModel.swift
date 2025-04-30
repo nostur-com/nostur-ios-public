@@ -200,53 +200,50 @@ class ProfileViewModel: ObservableObject {
             let filters = [Filters(authors: [nrContact.pubkey], kinds: [30000,39089], limit: 25)]
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
         }, processResponseCommand: { taskId, _, _ in
-            bg().perform {
-                let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
-                let request = NSFetchRequest<Event>(entityName: "Event")
-                request.predicate = NSPredicate(format: "kind IN {30000,39089} AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", nrContact.pubkey, garbage)
-                request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                request.fetchLimit = 30
-                let lists = (try? bg().fetch(request)) ?? []
-                
-                // Only lists with between 2 and 500 pubkeys
-                let listsWithLessGarbage = lists.filter { list in
-                    list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
-                }
-                
-                if listsWithLessGarbage.count > 0 {
-                    Task { @MainActor [weak self] in
-                        withAnimation {
-                            self?.showListsTab = true
-                        }
-                    }
-                }
+            bg().perform { [weak self] in
+                self?.fetchFromDb(pubkey: nrContact.pubkey)
             }
         }, timeoutCommand: { taskId in
-            bg().perform {
-                let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
-                let request = NSFetchRequest<Event>(entityName: "Event")
-                request.predicate = NSPredicate(format: "kind IN {30000,39089} AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", nrContact.pubkey, garbage)
-                request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                request.fetchLimit = 30
-                let lists = (try? bg().fetch(request)) ?? []
-                
-                // Only lists with between 2 and 500 pubkeys
-                let listsWithLessGarbage = lists.filter { list in
-                    list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
-                }
-                
-                if listsWithLessGarbage.count > 0 {
-                    Task { @MainActor [weak self] in
-                        withAnimation {
-                            self?.showListsTab = true
-                        }
-                    }
-                }
+            bg().perform { [weak self] in
+                self?.fetchFromDb(pubkey: nrContact.pubkey)
             }
         })
         
         backlog.add(reqTask)
         reqTask.fetch()
+    }
+    
+    
+    private func fetchFromDb(pubkey: String) {
+        // Follow sets with some garbage filtering
+        let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.predicate = NSPredicate(format: "kind = 30000 AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@",
+        pubkey, garbage)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        request.fetchLimit = 30
+        let followSets = (try? bg().fetch(request)) ?? []
+        
+        // Only lists with between 2 and 500 pubkeys
+        let followSetsWithLessGarbage = followSets.filter { list in
+            list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
+        }
+        
+        // Follow packs, no garbage filtering needed
+        let request2 = NSFetchRequest<Event>(entityName: "Event")
+        request2.predicate = NSPredicate(format: "kind = 39089 AND pubkey == %@ AND mostRecentId == nil", pubkey)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        request.fetchLimit = 30
+        let followPacks = ((try? bg().fetch(request2)) ?? [])
+            .filter { !$0.fastPs.isEmpty }
+
+        if followSetsWithLessGarbage.count > 0 || !followPacks.isEmpty {
+            Task { @MainActor [weak self] in
+                withAnimation {
+                    self?.showListsTab = true
+                }
+            }
+        }
     }
     
 }

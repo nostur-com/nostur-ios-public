@@ -223,7 +223,10 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
     var nEvent = NEvent(content: "")
     // Share as .followPack if unknown
     // else share as whatever it was before (.followPack or .followSet)
-    nEvent.kind = (feed.aTag?.kind ?? 39089) == 39089 ? .followPack : .followSet
+    
+    let listKind: (nEventKind: NEventKind, kind: Int64) = (feed.aTag?.kind ?? 39089) == 39089 ? (.followPack, 39089) : (.followSet, 30000)
+    
+    nEvent.kind = listKind.nEventKind
     nEvent.publicKey = account.publicKey
     nEvent.createdAt = NTimestamp.init(date: Date())
     nEvent.tags.append(NostrTag(["title", feed.sharedTitle_]))
@@ -285,7 +288,10 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
 
 func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
     var nEvent = NEvent(content: "")
-    nEvent.kind = .followSet
+    
+    let listKind: (nEventKind: NEventKind, kind: Int64) = (feed.aTag?.kind ?? 39089) == 39089 ? (.followPack, 39089) : (.followSet, 30000)
+    
+    nEvent.kind = listKind.nEventKind
     nEvent.publicKey = account.publicKey
     nEvent.createdAt = NTimestamp.init(date: Date.now.addingTimeInterval(-3)) // needs to be earlier than delete request
     nEvent.tags.append(NostrTag(["title", ""]))
@@ -307,7 +313,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
     deleteReq.publicKey = account.publicKey
     deleteReq.createdAt = NTimestamp.init(date: Date())
     deleteReq.tags.append(NostrTag(["a", aTag.aTag]))
-    deleteReq.tags.append(NostrTag(["k", "30000"]))
+    deleteReq.tags.append(NostrTag(["k", "\(listKind.kind.description)"]))
     
     
     if account.isNC {
