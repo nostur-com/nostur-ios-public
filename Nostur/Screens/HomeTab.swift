@@ -214,7 +214,7 @@ struct HomeTab: View {
             let accountPubkey = la.account.publicKey
             let event = notification.object as! Event
             bg().perform {
-                guard event.pubkey == accountPubkey else { return }
+                guard event.pubkey == accountPubkey && event.kind != 6 else { return }
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "MainView.newPostSaved")
                 
                 let newPost = NRPost(event: event, withParents: true, withReplies: true, withRepliesCount: true, cancellationId: event.cancellationId)
