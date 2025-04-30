@@ -36,6 +36,10 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
 //        else {
 //            avpc.videoGravity = .resizeAspect
 //        }
+        
+        // Apply audio-only settings
+        applyAudioOnlySettings(to: avpc)
+        
         avpc.allowsPictureInPicturePlayback = true
         avpc.delegate = context.coordinator
         avpc.showsPlaybackControls = showsPlaybackControls
@@ -85,6 +89,27 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
 //            AnyPlayerModel.shared.playStateIsChanging = true
 //            player.pause()
 //        }
+        
+        // Update audio-only mode
+        if let avpc = context.coordinator.avpc {
+            applyAudioOnlySettings(to: avpc)
+        }
+    }
+    
+    // Helper to apply audio-only settings
+    private func applyAudioOnlySettings(to avpc: AVPlayerViewController) {
+        let isHidden = viewMode == .audioOnlyBar
+        avpc.view.isHidden = isHidden
+        if isHidden {
+            // If presenting video with AVPlayerViewController
+            avpc.player = nil
+
+            // If presenting video with AVPlayerLayer
+            //playerLayer.player = nil
+        }
+        else {
+            avpc.player = player
+        }
     }
     
     // MARK: - Coordinator Creation
