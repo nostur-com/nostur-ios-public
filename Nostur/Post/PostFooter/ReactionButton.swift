@@ -63,6 +63,8 @@ struct ReactionButtonInner: View {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         if unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+            impactMed.impactOccurred()
             nrPost.unlike(self.reactionContent)
             unpublishLikeId = nil
             isActivated = false

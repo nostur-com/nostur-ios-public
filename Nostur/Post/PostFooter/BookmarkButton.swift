@@ -153,6 +153,8 @@ struct BookmarkButton: View {
     }
     
     private func removeBookmark() {
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
         Bookmark.removeBookmark(nrPost)
         bg().perform {
             accountCache()?.removeBookmark(nrPost.id)

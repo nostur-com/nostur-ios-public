@@ -61,6 +61,8 @@ struct LikeButton: View {
     
     private func tap() {
         if footerAttributes.liked && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+            let impactMed = UIImpactFeedbackGenerator(style: .medium)
+            impactMed.impactOccurred()
             nrPost.unlike()
             unpublishLikeId = nil
             bg().perform {
