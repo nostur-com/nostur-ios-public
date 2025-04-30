@@ -221,7 +221,9 @@ struct EditNosturList: View {
 
 func publishList(_ feed: CloudFeed, account: CloudAccount) {
     var nEvent = NEvent(content: "")
-    nEvent.kind = .followSet
+    // Share as .followPack if unknown
+    // else share as whatever it was before (.followPack or .followSet)
+    nEvent.kind = (feed.aTag?.kind ?? 39089) == 39089 ? .followPack : .followSet
     nEvent.publicKey = account.publicKey
     nEvent.createdAt = NTimestamp.init(date: Date())
     nEvent.tags.append(NostrTag(["title", feed.sharedTitle_]))
@@ -230,8 +232,9 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
     if let aTag = feed.aTag, aTag.pubkey == account.publicKey {
         nEvent.tags.append(NostrTag(["d", aTag.definition]))
     }
-    else { // First time, create new aTag and store in listId to keep CloudFeed linked to kind:30000 nostr list
-        let aTag = ATag(kind: 30000, pubkey: account.publicKey, definition: feed.id?.uuidString ?? UUID().uuidString)
+    else { // First time, create new aTag and store in listId to keep CloudFeed linked to kind:39089 nostr list
+        // Brand new onces should be kind 39089, no longer kind 30000
+        let aTag = ATag(kind: 39089, pubkey: account.publicKey, definition: feed.id?.uuidString ?? UUID().uuidString)
         feed.listId = aTag.aTag
         viewContextSave()
         nEvent.tags.append(NostrTag(["d", aTag.definition]))
