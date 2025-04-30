@@ -52,7 +52,7 @@ struct BookmarksScreen: View {
                         
                     }
                     .onDelete { indexSet in
-                        deleteBookmark(section: vm.nrLazyBookmarks, offsets: indexSet)
+                        deleteBookmark(section: vm.filteredNrLazyBookmarks, offsets: indexSet)
                     }
                 }
                 .environment(\.defaultMinListRowHeight, 50)
@@ -114,17 +114,22 @@ struct BookmarksScreen: View {
     }
     
     private func deleteBookmark(section: [NRLazyBookmark], offsets: IndexSet) {
+        
+        let bookmarkIdsToDelete = section.indices
+            .filter { offsets.contains($0) }
+            .map { section[$0] }.map { $0.id }
+        
         withAnimation {
-            vm.nrLazyBookmarks.remove(atOffsets: offsets)
+            vm.nrLazyBookmarks.removeAll(where: { bookmarkIdsToDelete.contains($0.id) })
         }
+        
         // Delete from db
-        for index in offsets {
-            let bookmark = section[index]
-            let bgContext = bg()
-            bgContext.perform {
-                Bookmark.removeBookmark(eventId: bookmark.id, context: bgContext)
-                try? bgContext.save()
+        let bgContext = bg()
+        bgContext.perform {
+            for bookmarkId in bookmarkIdsToDelete {
+                Bookmark.removeBookmark(eventId: bookmarkId, context: bgContext)
             }
+            try? bgContext.save()
         }
     }
 }
