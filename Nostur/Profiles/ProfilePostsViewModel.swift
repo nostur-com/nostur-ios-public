@@ -269,6 +269,7 @@ class ProfilePostsViewModel: ObservableObject {
     }
     
     private func fetchPostStats(_ index:Int, postId:String) {
+        guard self.type != .lists else { return }
         guard SettingsStore.shared.fetchCounts && SettingsStore.shared.rowFooterEnabled else { return }
         guard !self.prefetchedIds.contains(postId) else { return }
         
