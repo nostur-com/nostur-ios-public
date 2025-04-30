@@ -38,6 +38,11 @@ struct AppView: View {
                     .onReceive(AppState.shared.minuteTimer) { _ in
                         NewPostNotifier.shared.runCheck()
                     }
+                    .overlay {
+                        if #available(iOS 16.0, *) {
+                            AppReviewView()
+                        }
+                    }
             case .databaseError:
                 DatabaseProblemView()
             }
