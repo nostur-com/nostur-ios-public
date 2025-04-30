@@ -197,13 +197,13 @@ class ProfileViewModel: ObservableObject {
     
     public func loadLists(_ nrContact: NRContact) {
         let reqTask = ReqTask(prefix: "HASLIST-", reqCommand: { taskId in
-            let filters = [Filters(authors: [nrContact.pubkey], kinds: [30000], limit: 25)]
+            let filters = [Filters(authors: [nrContact.pubkey], kinds: [30000,39089], limit: 25)]
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
         }, processResponseCommand: { taskId, _, _ in
             bg().perform {
                 let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
                 let request = NSFetchRequest<Event>(entityName: "Event")
-                request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", 30000, nrContact.pubkey, garbage)
+                request.predicate = NSPredicate(format: "kind IN {30000,39089} AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", nrContact.pubkey, garbage)
                 request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                 request.fetchLimit = 30
                 let lists = (try? bg().fetch(request)) ?? []
@@ -225,7 +225,7 @@ class ProfileViewModel: ObservableObject {
             bg().perform {
                 let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
                 let request = NSFetchRequest<Event>(entityName: "Event")
-                request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", 30000, nrContact.pubkey, garbage)
+                request.predicate = NSPredicate(format: "kind IN {30000,39089} AND pubkey == %@ AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", nrContact.pubkey, garbage)
                 request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                 request.fetchLimit = 30
                 let lists = (try? bg().fetch(request)) ?? []

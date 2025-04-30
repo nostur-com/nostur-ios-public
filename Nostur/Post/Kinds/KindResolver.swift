@@ -131,7 +131,7 @@ struct KindResolver: View {
                     .onDisappear { self.dequeue() }
             }
             
-        case 30000:
+        case 30000,39089:
             Kind30000(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }

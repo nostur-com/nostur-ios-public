@@ -46,6 +46,8 @@ struct NXColumnConfig: Identifiable, Equatable {
             return feed
         case .followSet(let feed):
             return feed
+        case .followPack(let feed):
+            return feed
         case .relays(let feed):
             return feed
         case .hashtags(let feed):
@@ -73,7 +75,7 @@ struct NXColumnConfig: Identifiable, Equatable {
             switch columnType {
             case .pubkeysPreview(let pubkeys): // pubkeys are in the .columnType enum
                 return pubkeys
-            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed): // pubkeys are in the CloudFeed
+            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed), .followPack(let feed): // pubkeys are in the CloudFeed
                 return feed.contactPubkeys
             default: // pubkeys are in the NXColumnConfig
                 return _pubkeys
@@ -83,7 +85,7 @@ struct NXColumnConfig: Identifiable, Equatable {
             switch columnType {
             case .pubkeysPreview(_): // pubkeys are in the .columnType enum
                 self.setPubkeys(newValue)
-            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed): // pubkeys are in the CloudFeed
+            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed), .followPack(let feed): // pubkeys are in the CloudFeed
                 feed.contactPubkeys = newValue
             default: // pubkeys are in the NXColumnConfig
                 _pubkeys = newValue
@@ -107,6 +109,7 @@ enum NXColumnType {
     
     case pubkeysPreview(Set<String>) // Preview of shared lists
     case followSet(CloudFeed) // Shared list subscribed to
+    case followPack(CloudFeed) // Shared follow pack subscribed to
     
     
     case pubkey // input=single pubkey - stalker

@@ -52,8 +52,8 @@ struct FeedSettings: View {
                     .listRowBackground(themes.theme.background)
                 }
             
-            case "pubkeys", nil, "30000":
-                // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000")
+            case "pubkeys", nil, "30000", "39089":
+                // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000"/"39089")
                 if !isOwnManagedList, let aTagString = feed.listId, let aTag = try? ATag(aTagString) {
                     Form {
                         feedSettingsSection
@@ -72,10 +72,10 @@ struct FeedSettings: View {
                         Section {
                             // Copy to own feed. No longer managed
                             Toggle(isOn: Binding(get: {
-                                feed.type == "30000"
+                                feed.type == "30000" || feed.type == "39089"
                             }, set: { newValue in
                                 if newValue {
-                                    feed.type = "30000"
+                                    feed.type = aTag.kind == 30000 ? "30000" : "39089"
                                 }
                                 else {
                                     feed.type = "pubkeys"

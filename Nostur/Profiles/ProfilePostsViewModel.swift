@@ -12,7 +12,7 @@ import Combine
 
 let PROFILE_KINDS = Set([1,5,6,20,9802,34235])
 let ARTICLE_KINDS = Set([30023])
-let LIST_KINDS = Set([30000])
+let LIST_KINDS = Set([30000,39089])
 
 // For profile view, try to load first 10 posts as fast as possible
 // Then reload remaining later
@@ -165,7 +165,10 @@ class ProfilePostsViewModel: ObservableObject {
             else {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToId != nil OR replyToRootId != nil)", self.pubkey, PROFILE_KINDS.subtracting([5]))
             }
-            fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
+            fr.sortDescriptors = [
+                NSSortDescriptor(keyPath:\Event.kind, ascending: false), // .followPack before .followSet
+                NSSortDescriptor(keyPath:\Event.created_at, ascending: false)
+            ]
             fr.fetchOffset = 0
             fr.fetchLimit = 10
             

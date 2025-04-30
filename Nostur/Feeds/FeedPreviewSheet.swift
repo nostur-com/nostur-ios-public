@@ -33,9 +33,14 @@ struct FeedPreviewSheet: View {
             ToolbarItem(placement: .principal) {
                 HStack {
                     Text("**\((nrPost.eventTitle ?? nrPost.dTag) ?? "List")** by ")
+                        .lineLimit(1)
+                        .layoutPriority(1)
                     ObservedPFP(pfp: nrPost.pfpAttributes, size: 20.0)
                         .onTapGesture(perform: navigateToContact)
+                        .layoutPriority(2)
                     Text(pfpAttributes.anyName)
+                        .lineLimit(1)
+                        .layoutPriority(3)
                 }
             }
             
@@ -81,7 +86,7 @@ struct FeedPreviewSheet: View {
         newFeed.name = (nrPost.eventTitle ?? nrPost.dTag) ?? "List"
         newFeed.showAsTab = true
         newFeed.createdAt = .now
-        newFeed.type = CloudFeedType.followSet.rawValue
+        newFeed.type = nrPost.kind == 39089 ? CloudFeedType.followPack.rawValue : CloudFeedType.followSet.rawValue
         newFeed.wotEnabled = false
         newFeed.contactPubkeys = config.pubkeys // TODO: Need to keep updated from kind:30000 updates
         newFeed.listId = nrPost.aTag

@@ -119,6 +119,7 @@ public enum NEventKind: Codable, Equatable {
     case article
     case video
     case community
+    case followPack
     case auth
     case custom(Int)
 
@@ -150,6 +151,7 @@ public enum NEventKind: Codable, Equatable {
         case 30023: self = .article
         case 34235: self = .video
         case 34550: self = .community
+        case 39089: self = .followPack
         case 22242: self = .auth
         default   : self = .custom(id)
         }
@@ -178,12 +180,13 @@ public enum NEventKind: Codable, Equatable {
         case .ncMessage:            return 24133
         case .badgeDefinition:      return 30009
         case .badgeAward:           return 8
-        case .followSet:        return 30000
+        case .followSet:            return 30000
         case .profileBadges:        return 30008
         case .article:              return 30023
         case .video:                return 34235
         case .community:            return 34550
-        case .auth:                 return 22242 
+        case .followPack:           return 39089
+        case .auth:                 return 22242
         case .custom(let customId): return customId
         }
     }

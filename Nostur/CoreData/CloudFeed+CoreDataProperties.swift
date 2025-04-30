@@ -165,6 +165,10 @@ extension CloudFeed : Identifiable {
         case "30000":
             .followSet(self)
             
+        // Nostr native lists
+        case "39089":
+            .followPack(self)
+            
             
         default:
             .pubkeys(self)
@@ -203,4 +207,5 @@ enum CloudFeedType: String {
     
     // nostr native lists
     case followSet = "30000" // a "subscribed" follow set
+    case followPack = "39089" // a "subscribed" follow pack
 }

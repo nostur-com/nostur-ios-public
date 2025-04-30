@@ -439,7 +439,7 @@ struct MainFeedsScreen: View {
                         return true
                     case .relays(_):
                         return true
-                    case .followSet(_):
+                    case .followSet(_), .followPack(_):
                         return true
                     default:
                         return false
@@ -455,6 +455,9 @@ struct MainFeedsScreen: View {
     private func checkForListUpdates() {
         let followSetConfigs: [NXColumnConfig] = columnConfigs.filter {
             if case .followSet(_) = $0.columnType {
+                return true
+            }
+            if case .followPack(_) = $0.columnType {
                 return true
             }
             return false
@@ -476,7 +479,7 @@ struct MainFeedsScreen: View {
                     nxReq(
                         Filters(
                             authors: [aTag.pubkey],
-                            kinds: [30000],
+                            kinds: [30000,39089],
                             tagFilter: TagFilter(tag: "d", values: [aTag.definition]),
                             since: since,
                             limit: 5

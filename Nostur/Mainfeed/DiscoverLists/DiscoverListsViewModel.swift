@@ -78,7 +78,7 @@ class DiscoverListsViewModel: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: follows,
-                                                kinds: [30000],
+                                                kinds: [30000,39089],
                                                 limit: 9999
                                             )
                                            ]
@@ -116,11 +116,23 @@ class DiscoverListsViewModel: ObservableObject {
     private func fetchListsFromDB(_ onComplete: (() -> ())? = nil) {
         let yearAgo = Int(Date().timeIntervalSince1970 - 31536000)
         let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
+        
+        // Old kind 30000, needs some cleaning and filtering
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", yearAgo, follows, garbage)
+        
+        // New 39089 follow pack
+        let fr2 = Event.fetchRequest()
+        fr2.predicate = NSPredicate(format: "kind = 39089 AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND content == \"\"", follows)
+        
+        
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let lists = try? bg().fetch(fr) else {
+            
+            let followSets = (try? bg().fetch(fr)) ?? []
+            let followPacks = (try? bg().fetch(fr2)) ?? []
+            
+            guard !followSets.isEmpty || !followPacks.isEmpty  else {
                 DispatchQueue.main.async { [weak self] in
                     onComplete?()
                     self?.state = .ready
@@ -128,22 +140,22 @@ class DiscoverListsViewModel: ObservableObject {
                 return
             }
             
-            // Only lists with between 2 and 500 pubkeys
-            let listsWithLessGarbage = lists.filter { list in
+            // Only followSets with between 2 and 500 pubkeys
+            let followSetsWithLessGarbage = followSets.filter { list in
                 list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
             }
             
             // If there are too many lists, hide lists that have 5 or more pubkeys that we already follow
-            let listsWithoutAlreadyKnown = if listsWithLessGarbage.count > 75 {
-                listsWithLessGarbage.filter { list in
+            let followSetssWithoutAlreadyKnown = if followSetsWithLessGarbage.count > 75 {
+                followSetsWithLessGarbage.filter { list in
                     Set(list.fastPs.map { $0.1 }).intersection(self.follows).count < 5
                 }
             }
             else {
-                listsWithLessGarbage
+                followSetsWithLessGarbage
             }
             
-            guard listsWithoutAlreadyKnown.count > 0 else {
+            guard followSetssWithoutAlreadyKnown.count > 0 || !followPacks.isEmpty else {
                 DispatchQueue.main.async { [weak self] in
                     onComplete?()
                     self?.state = .ready
@@ -151,8 +163,9 @@ class DiscoverListsViewModel: ObservableObject {
                 return
             }
             
-            let nrLists: [NRPost] = listsWithoutAlreadyKnown
+            let nrLists: [NRPost] = (followPacks + followSetssWithoutAlreadyKnown)
                 .sorted { $0.fastPs.count > $1.fastPs.count }
+                .sorted { $0.kind == 39089 && $1.kind != 39089 }
                 .prefix(Self.POSTS_LIMIT)
                 .map { NRPost(event: $0) }
             

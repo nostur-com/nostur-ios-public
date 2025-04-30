@@ -723,10 +723,10 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
-        case .pubkeys(let feed), .followSet(let feed): // The pubkeys are in the CloudFeed
+        case .pubkeys(let feed), .followSet(let feed), .followPack(let feed): // The pubkeys are in the CloudFeed
             let pubkeys = feed.contactPubkeys
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeys/.followSet)\(older ? "older" : "") \(pubkeys.count) pubkeys")
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeys/.followSet/Pack)\(older ? "older" : "") \(pubkeys.count) pubkeys")
 #endif
 
             bg().perform { [weak self] in
@@ -899,7 +899,7 @@ class NXColumnViewModel: ObservableObject {
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [20,5])
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
-        case .pubkeys(let feed), .followSet(let feed):
+        case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
             let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
             
@@ -1066,7 +1066,7 @@ class NXColumnViewModel: ObservableObject {
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
             }, subId: "RESUME-" + config.id + "-" + since.description)
             
-        case .pubkeys(let feed), .followSet(let feed):
+        case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
             let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
             
@@ -1242,7 +1242,7 @@ class NXColumnViewModel: ObservableObject {
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
-        case .pubkeys(let feed), .followSet(let feed):
+        case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
             let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
             
