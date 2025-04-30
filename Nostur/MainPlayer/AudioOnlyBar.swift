@@ -103,7 +103,6 @@ struct AudioOnlyBar: View {
             .onTapGesture {
                 vm.toggleViewMode()
             }
-            .frame(maxWidth: 600)
     }
 }
 

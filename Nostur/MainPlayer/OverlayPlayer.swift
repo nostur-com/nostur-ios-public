@@ -31,6 +31,9 @@ struct OverlayPlayer: View {
     }
     
     private var videoWidth: CGFloat {
+        if vm.viewMode == .audioOnlyBar {
+            return ScreenSpace.shared.mainTabSize.width
+        }
         if vm.viewMode != .overlay {
             return ScreenSpace.shared.screenSize.width
         }

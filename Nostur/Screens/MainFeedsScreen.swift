@@ -330,6 +330,7 @@ struct MainFeedsScreen: View {
             }
         }
         .onAppear {
+            ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
             if selectedSubTab == "List" {
                 if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
                     selectedList = list

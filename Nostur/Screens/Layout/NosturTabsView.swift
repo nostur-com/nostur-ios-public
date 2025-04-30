@@ -176,6 +176,7 @@ extension View {
                 Color.clear
                     .frame(height: AUDIOONLYPILL_HEIGHT)
             }
+            .frame(maxWidth: 600)
         }
         else {
             self

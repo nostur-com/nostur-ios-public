@@ -247,6 +247,7 @@ struct ZoomRequested {
 // Only update from Zoomable.id == "Default" (.sheet on on Desktop can have separate Zoomable with smaller size)
 class ScreenSpace {
     public var screenSize: CGSize = UIScreen.main.bounds.size
+    public var mainTabSize: CGSize = UIScreen.main.bounds.size
     
     static let shared = ScreenSpace()
     private init() { }
