@@ -162,7 +162,7 @@ class ProfilePostsViewModel: ObservableObject {
                 
                 // New 39089 follow pack
                 let fr2 = Event.fetchRequest()
-                fr2.predicate = NSPredicate(format: "kind = 39089 AND pubkey == %@ AND dTag != nil AND mostRecentId == nil AND content == \"\"", self.posts)
+                fr2.predicate = NSPredicate(format: "kind = 39089 AND pubkey == %@ AND dTag != nil AND mostRecentId == nil", self.pubkey)
                 
                 let followSets = (try? bg().fetch(fr)) ?? []
                 let followPacks = ((try? bg().fetch(fr2)) ?? [])
