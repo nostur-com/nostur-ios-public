@@ -33,7 +33,7 @@ struct RepostButton: View {
                     .frame(width: 28)
                     .offset(x: 20)
             }
-            .padding(.trailing, 30)
+            .padding(.trailing, 27)
             .padding(.vertical, 5)
             .contentShape(Rectangle())
             .onTapGesture {
