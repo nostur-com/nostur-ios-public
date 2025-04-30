@@ -12,7 +12,9 @@ import NavigationBackport
 @available(iOS 18.0, *)
 #Preview("Integrated media player bar") {
     @Previewable @State var offset: CGFloat = 69.0
+    @Previewable @State var enableLiveEvents: Bool = true
     @Previewable @ObservedObject var apm: AnyPlayerModel = .shared
+//    @Previewable @ObservedObject var ss: SettingsStore = .shared
     PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadContactLists()
@@ -42,6 +44,16 @@ import NavigationBackport
                 ZStack(alignment: .top) {
                     Color.blue.opacity(0.2)
                     VStack {
+                        
+                        if apm.viewMode == .audioOnlyBar {
+                            // Spacer for OverlayVideo here
+                        }
+                        else if enableLiveEvents {
+                            LiveEventsBanner()
+                                .animation(.easeIn, value: enableLiveEvents)
+                                .opacity(apm.viewMode == .audioOnlyBar ? 0 : 1.0)
+                        }
+                        
                         HStack {
                             Button("Landscape") {
                                 Task {
@@ -61,7 +73,8 @@ import NavigationBackport
                                         .loadVideo(
                                             url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
             //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                            availableViewModes: [.detailstream, .overlay])
+                                            availableViewModes: [.audioOnlyBar])
+//                                            availableViewModes: [.detailstream, .overlay, .audioOnlyPill])
                                 }
                             }
                             

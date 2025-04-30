@@ -1,5 +1,5 @@
 //
-//  OverlayVideo.swift
+//  OverlayPlayer.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 21/01/2025.
@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
 
+let AUDIOONLYPILL_HEIGHT: CGFloat = 48.0
 let CONTROLS_HEIGHT: CGFloat = 60.0
 let TOOLBAR_HEIGHT: CGFloat = 160.0 // TODO: Fix magic number 160 or make sure its correct. This fixes "close" button and toolbar missing because video height is too high
 
@@ -22,6 +23,10 @@ struct OverlayPlayer: View {
             // 3rd of screen height or video height if smaller
             return min(ScreenSpace.shared.screenSize.height / 3, videoWidth / vm.aspect)
         }
+        if vm.viewMode == .audioOnlyBar {
+            return AUDIOONLYPILL_HEIGHT
+        }
+        
         return min(videoWidth / vm.aspect, ScreenSpace.shared.screenSize.height - TOOLBAR_HEIGHT)
     }
     
@@ -36,6 +41,9 @@ struct OverlayPlayer: View {
         if vm.viewMode == .overlay {
             return videoHeight
         }
+        if vm.viewMode == .audioOnlyBar {
+            return AUDIOONLYPILL_HEIGHT
+        }
         if vm.viewMode == .detailstream {
             // 3rd of screen height or video height if smaller
             return min(ScreenSpace.shared.screenSize.height / 3, videoWidth / vm.aspect)
@@ -44,6 +52,11 @@ struct OverlayPlayer: View {
     }
     
     private var frameHeight: CGFloat {
+        
+        // AUDIO ONLY PILL HEIGHT
+        if vm.viewMode == .audioOnlyBar {
+            return AUDIOONLYPILL_HEIGHT
+        }
         
         // OVERLAY HEIGHT
         if vm.viewMode == .overlay {
@@ -185,7 +198,7 @@ struct OverlayPlayer: View {
                     VStack(spacing: 0) {
                         NRNavigationStack {
                             VStack(spacing: 0) {
-                                // -- MARK: Actual video/stream ( .overlay + full + stream)
+                                // -- MARK: Actual video/stream ( .overlay + .full + .stream + .audioOnlyPill)
                                 Color.black
                                     .overlay {
                                         if vm.isLoading {
@@ -260,20 +273,37 @@ struct OverlayPlayer: View {
                                             }
                                         }
                                     }
-                                    .overlay(alignment: .topLeading) { // Close button for .overlay mode
-                                        Image(systemName: "multiply")
-                                            .font(.title2)
-                                            .foregroundColor(Color.white)
-                                            .padding(10)
-                                            .contentShape(Rectangle())
-                                            .highPriorityGesture(
-                                                TapGesture()
-                                                .onEnded({ _ in
-                                                    withAnimation {
-                                                        vm.close()
-                                                    }
-                                                }))
-                                            .opacity(vm.viewMode == .overlay ? 1.0 : 0)
+                                    .overlay(alignment: .topLeading) {
+                                        if vm.viewMode == .overlay {
+                                            Image(systemName: "rectangle.bottomthird.inset.filled")
+                                                .opacity(0.5)
+                                                .frame(height: 28)
+                                                .foregroundColor(Color.white)
+                                                .padding(5)
+                                                .contentShape(Rectangle())
+                                                .highPriorityGesture(
+                                                    TapGesture()
+                                                    .onEnded({ _ in
+                                                        withAnimation {
+                                                            vm.viewMode = .audioOnlyBar
+                                                        }
+                                                    }))
+                                        }
+//                                        else {
+//                                            // Close button for .overlay mode
+//                                            Image(systemName: "multiply")
+//                                                .font(.title2)
+//                                                .foregroundColor(Color.white)
+//                                                .padding(10)
+//                                                .contentShape(Rectangle())
+//                                                .highPriorityGesture(
+//                                                    TapGesture()
+//                                                    .onEnded({ _ in
+//                                                        withAnimation {
+//                                                            vm.close()
+//                                                        }
+//                                                    }))
+//                                        }
                                     }
                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
                                     // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
@@ -434,6 +464,10 @@ struct OverlayPlayer: View {
                                     .opacity(vm.didFinishPlaying ? 0.0 : 1.0)
                             }
                             .frame(height: CONTROLS_HEIGHT)
+                        }
+                        // MARK: Video controls for .audioOnlyPill mode
+                        else if vm.viewMode == .audioOnlyBar {
+                            AudioOnlyBar()
                         }
                         else {
                             Spacer()
@@ -605,6 +639,7 @@ struct OverlayPlayer: View {
     private func clampedOffsetX(geometry: GeometryProxy) -> CGFloat {
         if vm.viewMode == .detailstream { return 0 }
         if vm.viewMode == .fullscreen { return 0 }
+        if vm.viewMode == .audioOnlyBar { return 0 }
         
         let totalWidth = videoWidth * currentScale + 2
         let maxOffsetX = geometry.size.width - totalWidth
@@ -615,6 +650,7 @@ struct OverlayPlayer: View {
     private func clampedOffsetY(geometry: GeometryProxy) -> CGFloat {
         if vm.viewMode == .detailstream { return 0 }
         if vm.viewMode == .fullscreen { return 0 }
+        if vm.viewMode == .audioOnlyBar { return ScreenSpace.shared.screenSize.height - 98.0}
         
         let maxOffsetY = geometry.size.height - (videoHeight * currentScale)
         return clamp(value: currentOffset.height + dragOffset.height, min: 0, max: maxOffsetY)

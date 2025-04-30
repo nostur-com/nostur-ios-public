@@ -12,6 +12,7 @@ import NavigationBackport
 struct NosturTabsView: View {
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dm: DirectMessageViewModel
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     
     @AppStorage("selected_tab") private var selectedTab = "Main"
     
@@ -36,6 +37,7 @@ struct NosturTabsView: View {
                             tabTapped(newTab, oldTab: oldTab)
                         }) {
                             HomeTab()
+                                .withAudioPillSpaceIf(apm.viewMode == .audioOnlyBar)
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
 //                                .environmentObject(la)
                                 .tabItem { Label("", systemImage: "house") }
@@ -48,6 +50,7 @@ struct NosturTabsView: View {
 //                                .nosturTabsCompat(themes: themes)
 
                             BookmarksTab()
+                                .withAudioPillSpaceIf(apm.viewMode == .audioOnlyBar)
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "bookmark") }
                                 .tag("Bookmarks")
@@ -55,12 +58,14 @@ struct NosturTabsView: View {
                             
                             
                             Search()
+                                .withAudioPillSpaceIf(apm.viewMode == .audioOnlyBar)
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "magnifyingglass") }
                                 .tag("Search")
                                 .nosturTabsCompat(themes: themes)
                             
                             NotificationsContainer()
+                                .withAudioPillSpaceIf(apm.viewMode == .audioOnlyBar)
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "bell.fill") }
                                 .tag("Notifications")
@@ -68,6 +73,7 @@ struct NosturTabsView: View {
                                 .nosturTabsCompat(themes: themes)
 
                             DMContainer()
+                                .withAudioPillSpaceIf(apm.viewMode == .audioOnlyBar)
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "envelope.fill") }
                                 .tag("Messages")
@@ -154,5 +160,25 @@ struct NosturTabsView: View {
 #Preview {
     PreviewContainer {
         NosturTabsView()
+    }
+}
+
+
+extension View {
+    
+    @ViewBuilder
+    func withAudioPillSpaceIf(_ condition: Bool = false) -> some View {
+        if condition {
+            VStack {
+                self
+                
+                // Spacer for OverlayVideo here
+                Color.clear
+                    .frame(height: AUDIOONLYPILL_HEIGHT)
+            }
+        }
+        else {
+            self
+        }
     }
 }

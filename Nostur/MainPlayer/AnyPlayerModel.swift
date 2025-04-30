@@ -87,7 +87,7 @@ class AnyPlayerModel: ObservableObject {
     
     // LIVE EVENT STREAM
     @MainActor
-    public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen], nrPost: NRPost? = nil) async {
+    public func loadLiveEvent(nrLiveEvent: NRLiveEvent, availableViewModes: [AnyPlayerViewMode] = [.detailstream, .overlay, .fullscreen, .audioOnlyBar], nrPost: NRPost? = nil) async {
         
         // View updates
         sendNotification(.stopPlayingVideo)
@@ -134,7 +134,7 @@ class AnyPlayerModel: ObservableObject {
     
     // VIDEO URL
     @MainActor
-    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay], nrPost: NRPost? = nil, cachedFirstFrame: CachedFirstFrame? = nil) async {
+    public func loadVideo(url: String, availableViewModes: [AnyPlayerViewMode] = [.fullscreen, .overlay, .audioOnlyBar], nrPost: NRPost? = nil, cachedFirstFrame: CachedFirstFrame? = nil) async {
         guard let url = URL(string: url) else { return }
         
         // View updates
@@ -368,6 +368,7 @@ enum AnyPlayerViewMode {
     case overlay
     case detailstream
     case fullscreen
+    case audioOnlyBar
 }
 
 func configureAudioSession() {

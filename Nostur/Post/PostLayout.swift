@@ -187,7 +187,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                             // LOAD NEW .DETAILSTREAM
                             else {
                                 Task {
-                                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay])
+                                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay, .audioOnlyBar])
                                 }
                             }
                         }

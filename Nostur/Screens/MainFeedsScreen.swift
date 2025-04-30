@@ -10,6 +10,8 @@ import Combine
 import NavigationBackport
 import NostrEssentials
 
+let MAINFEEDS_TABS_HEIGHT = 42.0
+
 struct MainFeedsScreen: View {
     
     @EnvironmentObject private var la: LoggedInAccount
@@ -17,6 +19,7 @@ struct MainFeedsScreen: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @Binding var showingOtherContact: NRContact?
     @ObservedObject private var ss: SettingsStore = .shared
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
     
@@ -221,10 +224,10 @@ struct MainFeedsScreen: View {
                     }
                     .frame(minWidth: dim.listWidth)
                 }
-                .frame(width: dim.listWidth, height: 42.0)
+                .frame(width: dim.listWidth, height: MAINFEEDS_TABS_HEIGHT)
             }
             
-            if enableLiveEvents {
+            if enableLiveEvents && apm.viewMode != .audioOnlyBar {
                 LiveEventsBanner()
                     .animation(.easeIn, value: enableLiveEvents)
             }
