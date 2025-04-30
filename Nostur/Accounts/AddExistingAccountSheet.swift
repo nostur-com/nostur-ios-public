@@ -62,19 +62,6 @@ struct AddExistingAccountSheet: View {
                             .cornerRadius(5.0)
                             .padding(.bottom, 20)
                             .disabled(bunkerManager.state == .connecting)
-                            .onChange(of: key) { newKey in
-                                if isNsecbunkerKey {
-                                    if let bunkerURL = parseBunkerUrl(key)?.relay {
-                                        bunkerManager.ncRelay = bunkerURL
-                                    }
-                                    else {
-                                        bunkerManager.ncRelay = ""
-                                    }
-                                }
-                                else {
-                                    bunkerManager.ncRelay = ""
-                                }
-                            }
                     }
                     
                     if isNsecbunkerKey {
@@ -203,6 +190,19 @@ struct AddExistingAccountSheet: View {
             }
                         .navigationTitle(String(localized:"Add existing account", comment: "Navigation title for Add Existing Account screen"))
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: key) { newKey in
+                if isNsecbunkerKey {
+                    if let bunkerURL = parseBunkerUrl(newKey)?.relay {
+                        bunkerManager.ncRelay = bunkerURL
+                    }
+                    else {
+                        bunkerManager.ncRelay = ""
+                    }
+                }
+                else {
+                    bunkerManager.ncRelay = ""
+                }
+            }
             .onChange(of: bunkerManager.state) { bunkerState in
                 if bunkerState == .connected {
                     guard let account = bunkerManager.account else { return }
