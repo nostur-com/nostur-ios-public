@@ -137,6 +137,10 @@ struct BookmarkButton: View {
         // If already bookmarked, just change color
         if footerAttributes.bookmarked {
             Bookmark.updateColor(nrPost.id, color: color)
+            
+            bg().perform { // Update cache
+                accountCache()?.addBookmark(nrPost.id, color: color)
+            }
             return
         }
         
