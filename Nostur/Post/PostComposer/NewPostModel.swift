@@ -463,12 +463,32 @@ public final class NewPostModel: ObservableObject {
         
         // Handle preview images
         if isPreviewContext {
-            for index in typingTextModel.pastedImages.indices {
-                content = content + "\n--@!^@\(index)@^!@--"
-            }
+            // Preview doesn't have image urls yet (is before upload), so we still render from local
             
-            for index in typingTextModel.pastedVideos.indices {
-                content = content + "\n-V-@!^@\(index)@^!@-V-"
+            // kind:20 (images on top)
+            if nEvent.kind == .picture {
+                var images = ""
+                for index in typingTextModel.pastedImages.indices {
+                    images = images + "\n--@!^@\(index)@^!@--"
+                }
+                
+                // More than 1 image? Put text first
+                if typingTextModel.pastedImages.count > 1 {
+                    content = content + images
+                }
+                else { // Else picture first, text caption below
+                    content = images + content
+                }
+            }
+            else { // other kinds (images below content)
+                for index in typingTextModel.pastedImages.indices {
+                    content = content + "\n--@!^@\(index)@^!@--"
+                }
+                
+                for index in typingTextModel.pastedVideos.indices {
+                    content = content + "\n-V-@!^@\(index)@^!@-V-"
+                }
+                
             }
         }
         
