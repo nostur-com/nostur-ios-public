@@ -314,7 +314,7 @@ struct OverlayPlayer: View {
                                     // but with this cannot tap like button, so only do when  !vm.didFinishPlaying
                                     .onTapGesture {
                                         withAnimation {
-                                            vm.toggleViewMode()
+                                            vm.toggleViewMode(vm.availableViewModes.filter { $0 != AnyPlayerViewMode.audioOnlyBar })
                                         }
                                     }
 //                                    .highPriorityGestureIf(condition: vm.viewMode == .overlay && !vm.didFinishPlaying, gesture: TapGesture()

@@ -259,10 +259,11 @@ class AnyPlayerModel: ObservableObject {
     }
     
     @MainActor
-    public func toggleViewMode() {
-        if let index = availableViewModes.firstIndex(of: viewMode) {
-            let nextIndex = (index + 1) % availableViewModes.count
-            viewMode = availableViewModes[nextIndex]
+    public func toggleViewMode(_ viewModes: [AnyPlayerViewMode]? = nil) {
+        let viewModes = (viewModes ?? availableViewModes) // allow override to for example skip a view mode (pass in list viewmodes)
+        if let index = viewModes.firstIndex(of: viewMode) {
+            let nextIndex = (index + 1) % viewModes.count
+            viewMode = viewModes[nextIndex]
             
             if viewMode == .detailstream {
                 LiveKitVoiceSession.shared.objectWillChange.send() // Force update
