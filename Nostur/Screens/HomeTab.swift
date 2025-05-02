@@ -29,7 +29,6 @@ struct HomeTab: View {
     
     @State private var navPath = NBNavigationPath()
     @State private var lastPathPostId: String? = nil // Need to track .id of last added to navigation stack so we can remove on undo send if needed
-    @State private var showingNewNote = false
     @ObservedObject private var settings: SettingsStore = .shared
     @State private var showingOtherContact: NRContact? = nil
     
@@ -44,11 +43,6 @@ struct HomeTab: View {
                 .background(themes.theme.listBackground)
                 .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
-                .overlay(alignment: .bottomTrailing) {
-                    NewNoteButton(showingNewNote: $showingNewNote)
-                        .padding([.top, .leading, .bottom], 10)
-                        .padding([.trailing], 25)
-                }
                 .overlay(alignment: .bottom) {
                     VStack {
                         AnyStatus(filter: "APP_NOTICE")
@@ -61,23 +55,6 @@ struct HomeTab: View {
                                 .padding(.bottom, 10)
                         }
                     }
-                }
-                .sheet(isPresented: $showingNewNote) {
-                    NRNavigationStack {
-                        if la.account.isNC {
-                            WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                                ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
-                                    .environmentObject(dim)
-                            }
-                            .environmentObject(themes)
-                        }
-                        else {
-                            ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
-                                .environmentObject(dim)
-                                .environmentObject(themes)
-                        }
-                    }
-                    .presentationBackgroundCompat(themes.theme.listBackground)
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
@@ -159,10 +136,6 @@ struct HomeTab: View {
             if selectedSubTab != "Following" {
                 UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
             }
-        }
-        .onReceive(receiveNotification(.newTemplatePost)) { _ in
-            // Note: use  Drafts.shared.draft = ...
-            showingNewNote = true
         }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination

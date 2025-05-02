@@ -20,6 +20,10 @@ struct MainFeedsScreen: View {
     @Binding var showingOtherContact: NRContact?
     @ObservedObject private var ss: SettingsStore = .shared
     @ObservedObject private var apm: AnyPlayerModel = .shared
+    private var selectedTab: String {
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+    }
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
     
@@ -35,7 +39,6 @@ struct MainFeedsScreen: View {
     
     @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
     
-    @State private var showingNewNote = false
     @State private var noteCancellationId: UUID?
     @State private var didCreate = false
     
@@ -52,12 +55,13 @@ struct MainFeedsScreen: View {
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
 
-    @State var didSend = false
+    @State private var showingNewNote = false
+    @State private var didSend = false
     
-    @State var columnConfigs: [NXColumnConfig] = []
-    @State var followingConfig: NXColumnConfig?
-    @State var pictureConfig: NXColumnConfig?
-    @State var exploreConfig: NXColumnConfig?
+    @State private var columnConfigs: [NXColumnConfig] = []
+    @State private var followingConfig: NXColumnConfig?
+    @State private var pictureConfig: NXColumnConfig?
+    @State private var exploreConfig: NXColumnConfig?
     
     @State private var backlog = Backlog()
     
@@ -328,6 +332,11 @@ struct MainFeedsScreen: View {
                     }
                 }
             }
+                .overlay(alignment: .bottomTrailing) {
+                    NewNoteButton(showingNewNote: $showingNewNote)
+                        .padding([.top, .leading, .bottom], 10)
+                        .padding([.trailing], 25)
+                }
             
             if apm.viewMode == .audioOnlyBar {
                 // Spacer for OverlayVideo here
@@ -412,6 +421,29 @@ struct MainFeedsScreen: View {
                     task.process()
                 }
             }
+        }
+        
+        .sheet(isPresented: $showingNewNote) {
+            NRNavigationStack {
+                if la.account.isNC {
+                    WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                        ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
+                            .environmentObject(dim)
+                    }
+                    .environmentObject(themes)
+                }
+                else {
+                    ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
+                        .environmentObject(dim)
+                        .environmentObject(themes)
+                }
+            }
+            .presentationBackgroundCompat(themes.theme.listBackground)
+        }
+        
+        .onReceive(receiveNotification(.newTemplatePost)) { _ in
+            // Note: use  Drafts.shared.draft = ...
+            showingNewNote = true
         }
     }
     
