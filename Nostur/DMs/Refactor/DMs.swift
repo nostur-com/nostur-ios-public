@@ -249,14 +249,23 @@ struct DirectMessagesX_Previews: PreviewProvider {
 
 struct DMContainer: View {
     @EnvironmentObject var la: LoggedInAccount
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     
     var body: some View {
-        if la.account.isNC {
-            Text("Direct Messages using a nsecBunker login are not available yet")
-                .centered()
-        }
-        else {
-            DMs(pubkey: la.account.publicKey)
+        VStack(spacing: 0) {
+            if la.account.isNC {
+                Text("Direct Messages using a nsecBunker login are not available yet")
+                    .centered()
+            }
+            else {
+                DMs(pubkey: la.account.publicKey)
+            }
+            
+            if apm.viewMode == .audioOnlyBar {
+                // Spacer for OverlayVideo here
+                Color.clear
+                    .frame(height: AUDIOONLYPILL_HEIGHT)
+            }
         }
     }
 }

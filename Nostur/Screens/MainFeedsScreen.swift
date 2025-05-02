@@ -328,6 +328,12 @@ struct MainFeedsScreen: View {
                     }
                 }
             }
+            
+            if apm.viewMode == .audioOnlyBar {
+                // Spacer for OverlayVideo here
+                Color.clear
+                    .frame(height: AUDIOONLYPILL_HEIGHT)
+            }
         }
         .onAppear {
             ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)

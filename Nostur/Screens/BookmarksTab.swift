@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct BookmarksTab: View {
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     @StateObject private var bookmarksVM = BookmarksFeedModel()
     @EnvironmentObject private var fa: LoggedInAccount
     @EnvironmentObject private var themes: Themes
@@ -68,6 +69,12 @@ struct BookmarksTab: View {
                         }
                     }
                     .padding(.top, GUTTER)
+                }
+                
+                if apm.viewMode == .audioOnlyBar {
+                    // Spacer for OverlayVideo here
+                    Color.clear
+                        .frame(height: AUDIOONLYPILL_HEIGHT)
                 }
             }
             .background(themes.theme.listBackground) // screen / toolbar background

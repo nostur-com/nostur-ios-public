@@ -47,6 +47,7 @@ struct NotificationsContainer: View {
 }
 
 struct NotificationsScreen: View {
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     @ObservedObject public var account: CloudAccount
     
     @AppStorage("selected_notifications_tab") private var tab = "Mentions"
@@ -138,6 +139,12 @@ struct NotificationsScreen: View {
             .padding(.top, GUTTER)
             .background(themes.theme.listBackground)
             Spacer()
+            
+            if apm.viewMode == .audioOnlyBar {
+                // Spacer for OverlayVideo here
+                Color.clear
+                    .frame(height: AUDIOONLYPILL_HEIGHT)
+            }
         }
         .onReceive(receiveNotification(.notificationsTabAppeared)) { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
