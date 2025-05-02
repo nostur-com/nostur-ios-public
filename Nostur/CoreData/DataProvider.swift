@@ -136,25 +136,34 @@ class DataProvider: ObservableObject {
     }
     
     func save(_ completion: (() -> Void)? = nil) { // TODO: replace all viewContext.save() with this save
+#if DEBUG
         L.og.debug("💾💾 DataProvider.shared().save()")
+#endif
         
         let bg = self.bgStored ?? self.bg
      
         
         bg.perform { [weak self] in
             guard let self = self else { return }
-            
+#if DEBUG
             L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count) -[LOG]-")
+#endif
             
             if bg.hasChanges {
                 try? bg.save()
+#if DEBUG
                 L.og.debug("💾💾 🟢🟢 bg saved")
+#endif
             }
             self.container.viewContext.perform {
+#if DEBUG
                 L.og.debug("💾💾 VIEWCONTEXT: Registered objects: \(self.container.viewContext.registeredObjects.count)")
+#endif
                 if self.container.viewContext.hasChanges {
                     try? self.container.viewContext.save()
+#if DEBUG
                     L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+#endif
                 }
                 completion?()
             }
@@ -188,7 +197,9 @@ class DataProvider: ObservableObject {
                     try bg.save()
                 }
                 catch {
+#if DEBUG
                     L.og.error("🔴🔴 Could not save bgContext \(error)")
+#endif
                 }
             }
         }
@@ -220,10 +231,14 @@ func viewContextSave() { // TODO make this always debounce + throttle latest
     if DataProvider.shared().viewContext.hasChanges {
         do {
             try DataProvider.shared().viewContext.save()
+#if DEBUG
             L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+#endif
         }
         catch {
+#if DEBUG
             L.og.error("🔴🔴 Could not save() context \(error)")
+#endif
         }
     }
 }
@@ -237,11 +252,15 @@ func save(context: NSManagedObjectContext = context()) {
         do {
             try context.save()
             if Thread.isMainThread {
+#if DEBUG
                 L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+#endif
             }
         }
         catch {
+#if DEBUG
             L.og.error("🔴🔴 Could not save() context \(error)")
+#endif
         }
     }
 }
