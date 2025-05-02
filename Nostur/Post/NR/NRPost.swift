@@ -360,7 +360,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005a"); isAwaiting = true
             }
             else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount, isScreenshot: isScreenshot))
             }
         } // why event.firstQuote_ doesn't work??
         else if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bg()) {
@@ -542,14 +542,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 case .nevent1(let identifier):
                     guard let id = identifier.eventId else { continue }
                     guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event, isScreenshot: isScreenshot))
                 case .note1(let noteId):
                     guard let id = hex(noteId) else { continue }
                     guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event, isScreenshot: isScreenshot))
                 case .noteHex(let id):
                     guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event, isScreenshot: isScreenshot))
                 default:
                     continue
                 }
@@ -567,7 +567,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.replyToId = event.replyToId
         if withReplyTo, let replyTo = event.replyTo {
-            self.replyTo = NRPost(event: replyTo)
+            self.replyTo = NRPost(event: replyTo, isScreenshot: isScreenshot)
         }
         else if !isAwaiting && withReplyTo && event.replyToId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.003"); isAwaiting = true
@@ -575,7 +575,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.replyToRootId = event.replyToRootId
         if withReplyTo, let replyToRoot = event.replyToRoot {
-            self.replyToRoot = NRPost(event: replyToRoot)
+            self.replyToRoot = NRPost(event: replyToRoot, isScreenshot: isScreenshot)
         }
         else if !isAwaiting && withReplyTo && event.replyToRootId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
