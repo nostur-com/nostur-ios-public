@@ -85,6 +85,9 @@ extension Bookmark {
             
             if let bookmark = try? bg().fetch(fr).first {
                 bookmark.color = color
+                bg().transactionAuthor = "updateColor"
+                DataProvider.shared().save()
+                bg().transactionAuthor = nil
             }
         }
     }
