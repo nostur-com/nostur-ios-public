@@ -259,8 +259,8 @@ class AnyPlayerModel: ObservableObject {
     }
     
     @MainActor
-    public func toggleViewMode(_ viewModes: [AnyPlayerViewMode]? = nil) {
-        let viewModes = (viewModes ?? availableViewModes) // allow override to for example skip a view mode (pass in list viewmodes)
+    public func toggleViewMode() {
+        let viewModes = availableViewModes.filter({ $0 != .audioOnlyBar }) // never include audio bar in rotation
         if let index = viewModes.firstIndex(of: viewMode) {
             let nextIndex = (index + 1) % viewModes.count
             viewMode = viewModes[nextIndex]
