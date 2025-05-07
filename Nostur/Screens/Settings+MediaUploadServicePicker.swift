@@ -8,12 +8,17 @@
 import SwiftUI
 import NavigationBackport
 
+// Some labels used as value condition checks, so...
+let BLOSSOM_LABEL = "Use Blossom server(s)"
+let NIP96_LABEL = "Custom File Storage (NIP-96)"
+
 struct MediaUploadServicePicker: View {  
     @EnvironmentObject private var themes: Themes
     @State private var nip96apiUrl:String // Should just use @AppStorage("nip96_api_url") here, but this freezes on desktop. so workaround via init() and .onChange(of: nip96apiUrl).
     
     @ObservedObject private var settings: SettingsStore = .shared
     @State private var nip96configuratorShown = false
+    @State private var blossomConfiguratorShown = false
     
     init() {
         let nip96apiUrl = UserDefaults.standard.string(forKey: "nip96_api_url") ?? ""
@@ -27,12 +32,15 @@ struct MediaUploadServicePicker: View {
                     .foregroundColor(themes.theme.primary)
             }
         } label: {
-            Text("Media upload service", comment:"Setting on settings screen")
+            Text("Upload method", comment:"Setting on settings screen")
         }
         .listRowBackground(themes.theme.background)
         .pickerStyleCompatNavigationLink()
         .onChange(of: settings.defaultMediaUploadService) { newValue in
-            if newValue.name == "Custom File Storage (NIP-96)" {
+            if newValue.name == BLOSSOM_LABEL {
+                blossomConfiguratorShown = true
+            }
+            else if newValue.name == NIP96_LABEL {
                 nip96configuratorShown = true
             }
             else if newValue.name == "nostrcheck.me" {
@@ -51,6 +59,14 @@ struct MediaUploadServicePicker: View {
         .sheet(isPresented: $nip96configuratorShown) {
             NBNavigationStack {
                 Nip96Configurator()
+                    .environmentObject(themes)
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(themes.theme.listBackground)
+        }
+        .sheet(isPresented: $blossomConfiguratorShown) {
+            NBNavigationStack {
+                BlossomConfigurator()
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)

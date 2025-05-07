@@ -1401,6 +1401,9 @@
         }
       }
     },
+    "Add blossom server" : {
+      "comment" : "Navigation title for screen to create a new feed"
+    },
     "Add comment" : {
       "comment" : "Placeholder text for adding a comment",
       "localizations" : {
@@ -1454,6 +1457,9 @@
           }
         }
       }
+    },
+    "Add media server" : {
+      "comment" : "Button to add a new media server"
     },
     "Add new relay..." : {
       "localizations" : {
@@ -2050,6 +2056,9 @@
         }
       }
     },
+    "Blossom server" : {
+      "comment" : "Header for entering blossom server address"
+    },
     "Blue" : {
       "localizations" : {
         "nl" : {
@@ -2125,6 +2134,7 @@
     },
     "Caches" : {
       "comment" : "Settings heading",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2418,6 +2428,9 @@
           }
         }
       }
+    },
+    "Configure blossom server(s)" : {
+
     },
     "Configure column" : {
       "localizations" : {
@@ -4445,6 +4458,7 @@
     },
     "Image uploading" : {
       "comment" : "Setting heading on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5136,6 +5150,9 @@
         }
       }
     },
+    "Media cache" : {
+      "comment" : "Settings heading"
+    },
     "Media from posts from anyone which are most liked or reposted by people you follow" : {
       "localizations" : {
         "nl" : {
@@ -5159,6 +5176,7 @@
     },
     "Media upload service" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5167,6 +5185,9 @@
           }
         }
       }
+    },
+    "Media uploading" : {
+      "comment" : "Setting heading on settings screen"
     },
     "mentions" : {
       "localizations" : {
@@ -7897,6 +7918,12 @@
         }
       }
     },
+    "Server address" : {
+      "comment" : "Placeholder for input field to enter blossom server address"
+    },
+    "Servers higher on the list will be used first" : {
+
+    },
     "Session has ended" : {
       "localizations" : {
         "nl" : {
@@ -9392,6 +9419,9 @@
           }
         }
       }
+    },
+    "Upload method" : {
+      "comment" : "Setting on settings screen"
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",

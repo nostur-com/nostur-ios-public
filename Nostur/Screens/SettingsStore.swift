@@ -60,6 +60,8 @@ final class SettingsStore: ObservableObject {
         static let enableOutboxPreview:String = "outbox_preview_enabled"
         
         static let proMode:String = "nostur_pro_mode"
+        
+        static let blossomServerList:String = "blossom_server_list"
     }
 
 //    private let cancellable: Cancellable
@@ -122,7 +124,19 @@ final class SettingsStore: ObservableObject {
         // needs registered Client ID
         getImgurService(),
         
-        MediaUploadService(name: "Custom File Storage (NIP-96)", request: { imageData, usePNG in
+        MediaUploadService(name: NIP96_LABEL, request: { imageData, usePNG in
+            // Dummy function body just to be compatible with MediaUploadService
+            // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
+            let url = URL(string: "https://localhost")!
+            var request = URLRequest(url: url)
+            return request
+        }, urlFromResponse: { (data, response, _) in
+            // Dummy function body just to be compatible with MediaUploadService
+            // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
+            return "https://localhost"
+        }),
+        
+        MediaUploadService(name: BLOSSOM_LABEL, request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
             let url = URL(string: "https://localhost")!
@@ -133,6 +147,7 @@ final class SettingsStore: ObservableObject {
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
             return "https://localhost"
         })
+        
     ]
     
     init(defaults: UserDefaults = .standard) {
@@ -176,7 +191,8 @@ final class SettingsStore: ObservableObject {
             Keys.enableOutboxRelays: false,
             Keys.enableOutboxPreview: false,
             Keys.enableVPNdetection: true,
-            Keys.proMode: false
+            Keys.proMode: false,
+            Keys.blossomServerList: []
         ])
 
         // Don't use this anymore because re-renders too much, like when moving window on macOS
@@ -536,6 +552,11 @@ final class SettingsStore: ObservableObject {
     
     private var _appWideSeenTrackeriCloud:Bool = false
     
+    
+    var blossomServerList: [String] {
+        set { defaults.set(newValue, forKey: Keys.blossomServerList) }
+        get { defaults.array(forKey: Keys.blossomServerList) as? [String] ?? [] }
+    }
     
     // optimize
     

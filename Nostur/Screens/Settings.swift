@@ -18,6 +18,7 @@ struct Settings: View {
     @AppStorage("devToggle") private var devToggle: Bool = false
     @AppStorage("main_wot_account_pubkey") private var mainAccountWoTpubkey = ""
     @AppStorage("nip96_api_url") private var nip96ApiUrl = ""
+    @AppStorage("media_upload_service") private var mediaUploadService = ""
     @Environment(\.managedObjectContext) var viewContext
 
     @State private var contactsCount:Int? = nil
@@ -28,6 +29,7 @@ struct Settings: View {
     @State private var albyNWCsheetShown = false
     @State private var customNWCsheetShown = false
     @State private var showDefaultZapAmountSheet = false
+    @State private var blossomConfiguratorShown = false
     
 //    @State var showDocPicker = false
     @State private var showExporter = false
@@ -294,8 +296,10 @@ struct Settings: View {
                 }
                 .listRowBackground(themes.theme.background)
                 
-                Section(header: Text("Image uploading", comment:"Setting heading on settings screen")) {
+                Section(header: Text("Media uploading", comment:"Setting heading on settings screen")) {
+                    
                     MediaUploadServicePicker()
+                    
                     if !nip96ApiUrl.isEmpty {
                         VStack(alignment: .leading) {
                             Text("Now using:")
@@ -303,6 +307,21 @@ struct Settings: View {
                                 .font(.caption)
                         }
                         .foregroundColor(themes.theme.secondary)
+                    }
+                    
+                    if mediaUploadService == BLOSSOM_LABEL {
+                        Button("Configure blossom server(s)") {
+                            blossomConfiguratorShown = true
+                        }
+                        .sheet(isPresented: $blossomConfiguratorShown) {
+                            NBNavigationStack {
+                                BlossomServerList()
+                                    .environmentObject(themes)
+                                    .presentationBackgroundCompat(themes.theme.listBackground)
+                            }
+                            .nbUseNavigationStack(.never)
+                            .presentationBackgroundCompat(themes.theme.listBackground)
+                        }
                     }
                 }
                 .listRowBackground(themes.theme.background)
