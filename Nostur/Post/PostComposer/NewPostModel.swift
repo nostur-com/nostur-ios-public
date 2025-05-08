@@ -256,7 +256,10 @@ public final class NewPostModel: ObservableObject {
                             guard let url = $0.0.downloadUrl else { return nil }
                             return Imeta(url: url, dim: $0.0.dim, hash: $0.0.sha256processed, blurhash: $0.1)
                         }
-                    self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                    
+                    Task { @MainActor in
+                        self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                    }
                     
                     if SettingsStore.shared.blossomServerList.count > 1 { // Mirror uploads to other blossom servers
                         
@@ -378,7 +381,9 @@ public final class NewPostModel: ObservableObject {
                             guard let url = $0.0.downloadUrl else { return nil }
                             return Imeta(url: url, dim: $0.0.dim, hash: $0.0.sha256, blurhash: $0.1)
                         }
-                    self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                    Task { @MainActor in
+                        self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                    }
                     
                     // clean up video tmp files (compressed videos)
                     for videoURL in self.typingTextModel.compressedVideoFiles {
@@ -429,17 +434,22 @@ public final class NewPostModel: ObservableObject {
                     }, receiveValue: { urls in
                         if (self.typingTextModel.pastedImages.count == urls.count) {
                             let imetas = urls.map { Imeta(url: $0) }
-                            self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                            Task { @MainActor in
+                                self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                            }
                         }
                     })
                     .store(in: &subscriptions)
             }
         }
         else {
-            self._sendNow(imetas: [], replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+            Task { @MainActor in
+                self._sendNow(imetas: [], replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+            }
         }
     }
     
+    @MainActor
     private func _sendNow(imetas: [Imeta], replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
         Importer.shared.delayProcessing()
         guard let account = activeAccount else { return }

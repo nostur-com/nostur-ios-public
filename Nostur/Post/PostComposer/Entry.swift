@@ -272,8 +272,10 @@ struct Entry: View {
                             sendNotification(.anyStatus, ("Problem with account", "NewPost"))
                             return
                         }
-                        Task {
-                            await self.vm.sendNow(keys: keys, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
+                            Task {
+                                await self.vm.sendNow(keys: keys, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
+                            }
                         }
                     } label: {
                         if (typingTextModel.uploading || typingTextModel.sending) {
