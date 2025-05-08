@@ -9,7 +9,7 @@ import SwiftUI
 import NostrEssentials
 
 struct MediaUploadProgress: View {
-    @ObservedObject public var uploader:Nip96Uploader
+    @ObservedObject public var uploader: Nip96Uploader
     
     var body: some View {
         VStack {

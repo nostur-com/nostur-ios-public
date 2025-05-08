@@ -77,7 +77,7 @@ public final class NewPostModel: ObservableObject {
     var remoteIMetas: [String: iMetaInfo] = [:]
     
     @AppStorage("nip96_api_url") private var nip96apiUrl = ""
-    @ObservedObject public var uploader = Nip96Uploader()
+    public var uploader = Nip96Uploader()
     
     public var typingTextModel = TypingTextModel()
     private var mentioning = false
@@ -150,10 +150,12 @@ public final class NewPostModel: ObservableObject {
     static let typingRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\x{2063}\\x{2064}[^\\x{2063}\\x{2064}]+\\x{2064}\\x{2063}|(?<![/\\?])#)", options: [])
     static let mentionRegex = try! NSRegularExpression(pattern: "((?:^|\\s)@\\w+|(?<![/\\?])#\\S+)", options: [])
     
-    func sendNow(replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) {
+    func sendNow(keys: Keys, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) async {
         Importer.shared.delayProcessing()
         if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty) {
-            typingTextModel.uploading = true
+            Task { @MainActor in
+                typingTextModel.uploading = true
+            }
             
             if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostrcheck.me") { // upgrade nostrcheck.me v1 to v2
                 nip96apiUrl = "https://nostrcheck.me/api/v2/media"
@@ -163,7 +165,146 @@ public final class NewPostModel: ObservableObject {
                 nip96apiUrl = "https://nostr.build/api/v2/nip96/upload"
             }
             
-            if !nip96apiUrl.isEmpty { // new nip96 media services
+            if SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
+                guard let blossomServer = SettingsStore.shared.blossomServerList.first, let blossomServerURL = URL(string: blossomServer) else {
+                    sendNotification(.anyStatus, ("Blossom server list is empty", "NewPost"))
+                    return
+                }
+                // TODO: remove hashing same data over and over, clean up a bit
+                
+                let maxWidth: CGFloat = 2800.0
+                // [(BlossomUploadItem, String?)] <-- String? is blurhash
+                let uploadItems: [(BlossomUploadItem, String?)] = typingTextModel.pastedImages
+                    .compactMap { imageMeta in // Resize images
+
+                        // .GIF
+                        if imageMeta.type == .gif {
+                            // Resize first for faster blurhash
+                            if let scaledImage = UIImage(data: imageMeta.data) {
+                                let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                                let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                                
+                                guard let authHeader = try? getBlossomAuthorizationHeader(keys, sha256hex: imageMeta.data.sha256().hexEncodedString()) else {
+                                    return nil
+                                }
+                                
+                                return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, authHeader)
+                            }
+                            
+                            guard let authHeader = try? getBlossomAuthorizationHeader(keys, sha256hex: imageMeta.data.sha256().hexEncodedString()) else {
+                                return nil
+                            }
+                            
+                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, authHeader)
+                        }
+                        
+                        // NOT .GIF
+                        guard let imageData = imageMeta.uiImage else { return nil }
+                        let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
+                        let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
+                        
+                        let format = UIGraphicsImageRendererFormat()
+                        format.scale = 1 // 1x scale, for 2x use 2, and so on
+                        let renderer = UIGraphicsImageRenderer(size: size, format: format)
+                        let scaledImage = renderer.image { _ in
+                            imageData.draw(in: CGRect(origin: .zero, size: size))
+                        }
+                        
+                        if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
+                            // Resize first for faster blurhash
+                            let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                            let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                            
+                            guard let authHeader = try? getBlossomAuthorizationHeader(keys, sha256hex: scaledData.sha256().hexEncodedString()) else {
+                                return nil
+                            }
+                            
+                            return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, authHeader)
+                        }
+                        return nil
+                    }
+                    .map { (resizedImage, type, blurhash, index, authHeader) in
+                        (BlossomUploadItem(data: resizedImage, index: index, contentType: type, authorizationHeader: authHeader), blurhash)
+                    } + typingTextModel.pastedVideos
+                    .compactMap { videoMeta in // compress
+                        let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                        typingTextModel.compressedVideoFiles.append(compressedURL)
+                        if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                            
+                            guard let authHeader = try? getBlossomAuthorizationHeader(keys, sha256hex: compressedVideoData.sha256().hexEncodedString()) else {
+                                return nil
+                            }
+                            
+                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index, authHeader)
+                        }
+                        
+                        // Version without compression: TODO: Add toggle for compression ON/OFF
+//                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
+//                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
+//                        }
+                        return nil
+                    }
+                    .map { (compressedVideoData, index, authHeader) in
+                        (BlossomUploadItem(data: compressedVideoData, index: index, contentType: "video/mp4", authorizationHeader: authHeader), nil)
+                    }
+                    
+                let blossomUploader = BlossomUploader(blossomServerURL)
+                blossomUploader.queued = uploadItems.map { $0.0 }
+                blossomUploader.onFinish = {
+                    let imetas: [Nostur.Imeta] = uploadItems
+                        .compactMap {
+                            guard let url = $0.0.downloadUrl else { return nil }
+                            return Imeta(url: url, dim: $0.0.dim, hash: $0.0.sha256processed, blurhash: $0.1)
+                        }
+                    self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                    
+                    if SettingsStore.shared.blossomServerList.count > 1 { // Mirror uploads to other blossom servers
+                        
+                        for server in SettingsStore.shared.blossomServerList.dropFirst(1) {
+                            guard let blossomServer = URL(string: server) else { continue }
+                            let mirrorUploader = BlossomUploader(blossomServer)
+                            for (uploadItem, _) in uploadItems {
+                                // Need new auth header because the file we mirror has a different hash after processing
+                                guard let sha256processed = uploadItem.sha256processed else { continue }
+                                guard let authHeader = try? getBlossomAuthorizationHeader(keys, sha256hex: sha256processed, action: .upload) else {
+                                    continue
+                                }
+                                
+                                Task {
+                                    try await mirrorUploader.mirrorUpload(uploadItem: uploadItem, authorizationHeader: authHeader)
+                                }
+                            }
+                        }
+                    }
+                    
+                    // clean up video tmp files (compressed videos)
+                    for videoURL in self.typingTextModel.compressedVideoFiles {
+                        try? FileManager.default.removeItem(at: videoURL)
+                    }
+                }
+                blossomUploader.uploadingPublishers(for: uploadItems.map { $0.0 }, keys: keys)
+                    .receive(on: RunLoop.main)
+                    .sink(receiveCompletion: { result in
+                        switch result {
+                        case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
+                            L.og.error("Error uploading images (401): \(error.localizedDescription)")
+                            self.uploadError = "Media upload authorization error"
+                            sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+                        case .failure(let error):
+                            L.og.error("Error uploading images: \(error.localizedDescription)")
+                            self.uploadError = "Image upload error"
+                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                        case .finished:
+                            L.og.debug("All images uploaded successfully")
+                        }
+                    }, receiveValue: { uploadItems in
+                        for uploadItem in uploadItems {
+                            blossomUploader.processResponse(uploadItem: uploadItem)
+                        }
+                    })
+                    .store(in: &subscriptions)
+            }
+            else if !nip96apiUrl.isEmpty { // new nip96 media services
                 guard let nip96apiURL = URL(string: nip96apiUrl) else {
                     sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
                     return

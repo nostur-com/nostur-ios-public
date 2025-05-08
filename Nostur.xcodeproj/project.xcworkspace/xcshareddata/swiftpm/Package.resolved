@@ -59,7 +59,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nostur-com/nostr-essentials",
       "state" : {
-        "revision" : "76f2c9d5b0ee1ef2e0a52eb7d58e32b0383ee774"
+        "revision" : "dc182623965bd5d99289ab4f62db96cbd36cdac5"
       }
     },
     {

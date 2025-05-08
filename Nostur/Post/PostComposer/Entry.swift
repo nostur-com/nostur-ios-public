@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import NostrEssentials
 
 struct Entry: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -267,8 +268,12 @@ struct Entry: View {
                     
                     Button {
                         typingTextModel.sending = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                            self.vm.sendNow(replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
+                        guard let pk = vm.activeAccount?.privateKey, let keys = try? NostrEssentials.Keys(privateKeyHex: pk) else {
+                            sendNotification(.anyStatus, ("Problem with account", "NewPost"))
+                            return
+                        }
+                        Task {
+                            await self.vm.sendNow(keys: keys, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
                         }
                     } label: {
                         if (typingTextModel.uploading || typingTextModel.sending) {

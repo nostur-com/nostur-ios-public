@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct PostPreview: View {
     @EnvironmentObject private var themes: Themes
@@ -67,8 +68,14 @@ struct PostPreview: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button {
                     typingTextModel.sending = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        self.vm.sendNow(replyTo: replyTo, quotePost: quotePost, onDismiss: {
+                    
+                    guard let pk = vm.activeAccount?.privateKey, let keys = try? NostrEssentials.Keys(privateKeyHex: pk) else {
+                        sendNotification(.anyStatus, ("Problem with account", "NewPost"))
+                        return
+                    }
+                    
+                    Task {
+                        await self.vm.sendNow(keys: keys, replyTo: replyTo, quotePost: quotePost, onDismiss: {
                             dismissPostPreview()
                             onDismiss()
                         })

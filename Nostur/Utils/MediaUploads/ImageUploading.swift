@@ -50,10 +50,11 @@ public struct PostedImageMeta: Hashable, Identifiable, Equatable {
         return uiImage.size.width / uiImage.size.height
     }
     
-    public enum ImageType {
-        case jpeg // from pasting
-        case png // from PhotosUI
-        case gif // animated GIFs
+    public enum ImageType: String {
+        case jpeg = "image/jpeg" // from pasting
+        case png = "image/png" // from PhotosUI
+        case gif = "image/gif" // animated GIFs
+        case mp4 = "video/mp4" // video uploads
     }
 }
 
