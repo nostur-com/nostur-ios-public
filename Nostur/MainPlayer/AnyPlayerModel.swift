@@ -260,7 +260,7 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     public func toggleViewMode() {
-        let viewModes = availableViewModes.filter({ $0 != .audioOnlyBar }) // never include audio bar in rotation
+        let viewModes = viewMode == .audioOnlyBar ? availableViewModes : availableViewModes.filter({ $0 != .audioOnlyBar }) // never include audio bar in rotation
         if let index = viewModes.firstIndex(of: viewMode) {
             let nextIndex = (index + 1) % viewModes.count
             viewMode = viewModes[nextIndex]

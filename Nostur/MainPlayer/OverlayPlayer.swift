@@ -470,7 +470,7 @@ struct OverlayPlayer: View {
                         }
                         // MARK: Video controls for .audioOnlyPill mode
                         else if vm.viewMode == .audioOnlyBar {
-                            AudioOnlyBar()
+                            AudioOnlyBar()                                
                         }
                         else {
                             Spacer()

@@ -99,7 +99,6 @@ struct AudioOnlyBar: View {
                 .padding(.horizontal, 5)
                 .frame(height: AUDIOONLYPILL_HEIGHT)
             }
-            .contentShape(Rectangle())
             .onTapGesture {
                 withAnimation {
                     vm.toggleViewMode()
