@@ -35,8 +35,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     func userNotificationCenter(_ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void) {
-
+#if DEBUG
         L.og.debug("userNotificationCenter.didReceive")
+#endif
         let userInfo = response.notification.request.content.userInfo
         
         if let tapDestination = userInfo["tapDestination"] as? String {
@@ -61,7 +62,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     
     // Delete feed entries older than one day.
     func handleDatabaseCleaning(task: BGProcessingTask) {
+#if DEBUG
         L.maintenance.debug("handleDatabaseCleaning()")
+#endif
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
 
@@ -79,7 +82,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                 // Update the last clean date to the current time.
                 SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
             }
+#if DEBUG
             L.maintenance.debug("cleanDatabaseOperation.completionBlock: success: \(success)")
+#endif
             task.setTaskCompleted(success: success)
         }
         
@@ -87,13 +92,17 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
     
     func handleAppRefresh(task: BGAppRefreshTask) {
+#if DEBUG
         L.og.debug(".appRefresh()")
+#endif
         if !IS_CATALYST {
             AppState.shared.appIsInBackground = true
         }
         
         guard SettingsStore.shared.receiveLocalNotifications else {
+#if DEBUG
             L.og.debug(".appRefresh() - receiveLocalNotifications: false - skipping")
+#endif
             task.setTaskCompleted(success: true)
             return
         }
@@ -110,7 +119,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
 // Schedule a background fetch task
 func scheduleAppRefresh(seconds: TimeInterval = 60.0) {
+#if DEBUG
     L.og.debug("scheduleAppRefresh()")
+#endif
     let request = BGAppRefreshTaskRequest(identifier: "com.nostur.app-refresh")
     request.earliestBeginDate = .now.addingTimeInterval(seconds) // 60 seconds. Should maybe be longer for battery life, 5-30 minutes? Need to test
     try? BGTaskScheduler.shared.submit(request)
@@ -136,8 +147,10 @@ func requestNotificationPermission(redirectToSettings:Bool = false) {
 }
 
 // Schedule a local notification for 1 or more mentions
-func scheduleMentionNotification(_ mentions:[Mention]) {
+func scheduleMentionNotification(_ mentions: [Mention]) {
+#if DEBUG
     L.og.debug("scheduleMentionNotification()")
+#endif
     
     // Remember timestamp so we only show newer notifications next time
     UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
@@ -161,7 +174,9 @@ struct Mention {
 
 // Schedule a local notification for 1 direct message
 func scheduleDMNotification(name: String) {
+#if DEBUG
     L.og.debug("scheduleDMNotification()")
+#endif
     
     // Remember timestamp so we only show newer notifications next time
     UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_dm_local_notification_timestamp")
@@ -208,7 +223,9 @@ func checkForNotifications() async {
                     timeout: 10.0,
                     subscriptionId: "BG",
                     reqCommand: { taskId in
+#if DEBUG
                         L.og.debug("checkForNotifications.reqCommand")
+#endif
                         let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
                         bg().perform {
                             NotificationsViewModel.shared.needsUpdate = true
@@ -220,7 +237,9 @@ func checkForNotifications() async {
                         }
                     },
                     processResponseCommand: { taskId, relayMessage, event in
+#if DEBUG
                         L.og.debug("checkForNotifications.processResponseCommand")
+#endif
                         bg().perform {
                             if let thisTask = Backlog.shared.task(with: taskId) {
                                 Backlog.shared.remove(thisTask)
@@ -235,7 +254,9 @@ func checkForNotifications() async {
                         }
                     },
                     timeoutCommand: { taskId in
+#if DEBUG
                         L.og.debug("checkForNotifications.timeoutCommand")
+#endif
                         bg().perform {
                             if let thisTask = Backlog.shared.task(with: taskId) {
                                 Backlog.shared.remove(thisTask)
