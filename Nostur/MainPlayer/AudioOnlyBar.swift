@@ -101,7 +101,9 @@ struct AudioOnlyBar: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                vm.toggleViewMode()
+                withAnimation {
+                    vm.toggleViewMode()
+                }
             }
     }
 }
