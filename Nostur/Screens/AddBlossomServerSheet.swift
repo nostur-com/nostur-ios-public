@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import NostrEssentials
+import NavigationBackport
 
 struct AddBlossomServerSheet: View {
     @EnvironmentObject private var themes: Themes

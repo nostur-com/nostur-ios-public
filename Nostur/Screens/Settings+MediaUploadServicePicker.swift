@@ -66,7 +66,7 @@ struct MediaUploadServicePicker: View {
         }
         .sheet(isPresented: $blossomConfiguratorShown) {
             NBNavigationStack {
-                BlossomConfigurator()
+                BlossomServerList()
                     .environmentObject(themes)
             }
             .nbUseNavigationStack(.never)

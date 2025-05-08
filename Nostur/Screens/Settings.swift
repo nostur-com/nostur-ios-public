@@ -31,7 +31,6 @@ struct Settings: View {
     @State private var showDefaultZapAmountSheet = false
     @State private var blossomConfiguratorShown = false
     
-//    @State var showDocPicker = false
     @State private var showExporter = false
     @State private var exportAccount:CloudAccount? = nil
     @State private var createRelayPresented = false
@@ -160,14 +159,7 @@ struct Settings: View {
                         }
                     }
                 }
-//                Toggle(isOn: $settings.autoHideBars) {
-//                    VStack(alignment: .leading) {
-//                        Text("Hide tab bars when scrolling", comment:"Setting on settings screen")
-//                        Text("This gives more screen space when scrolling")
-//                            .font(.footnote)
-//                            .foregroundColor(.secondary)
-//                    }
-//                }
+
                 Toggle(isOn: $settings.statusBubble) {
                     VStack(alignment: .leading) {
                         Text("Loading indicator", comment:"Setting on settings screen")
@@ -184,9 +176,7 @@ struct Settings: View {
                             .foregroundColor(.secondary)
                     }
                 }
-//                Toggle(isOn: $settings.hideEmojisInNames) {
-//                    Text("Hide emojis in names", comment:"Setting on settings screen")
-//                }
+
                 Toggle(isOn: $settings.includeSharedFrom) {
                     VStack(alignment: .leading) {
                         Text("Include Nostur caption when sharing posts", comment:"Setting on settings screen")
@@ -468,7 +458,7 @@ struct Settings: View {
                 }
                 .listRowBackground(themes.theme.background)
                 
-                Section(header: Text("Caches", comment: "Settings heading")) {
+                Section(header: Text("Media cache", comment: "Settings heading")) {
                     HStack {
                         Text("Profile pictures: \(pfpSize)", comment: "Message showing size of Profile pictures cache")
                             .task(priority: .medium) {
