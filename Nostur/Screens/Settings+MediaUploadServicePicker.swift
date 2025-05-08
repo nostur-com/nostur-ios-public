@@ -39,6 +39,8 @@ struct MediaUploadServicePicker: View {
         .onChange(of: settings.defaultMediaUploadService) { newValue in
             if newValue.name == BLOSSOM_LABEL {
                 blossomConfiguratorShown = true
+                nip96apiUrl = ""
+                UserDefaults.standard.set("", forKey: "nip96_api_url")
             }
             else if newValue.name == NIP96_LABEL {
                 nip96configuratorShown = true
