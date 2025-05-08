@@ -53,12 +53,12 @@ struct BlossomServerList: View {
                 }
             }
             
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
                     SettingsStore.shared.blossomServerList = serverList
                     dismiss()
                 }) {
-                    Text("Done")
+                    Text("Close")
                 }
                 .accessibilityLabel(String(localized:"Add media server", comment: "Button to add a new media server"))
             }
