@@ -25,6 +25,13 @@ struct NXPostsFeed: View {
     
     @State private var updateIsAtTopSubscription: AnyCancellable?
     
+    // State variables for unread counter position
+    @State private var unreadCounterOffset = CGSize(
+        width: UserDefaults.standard.double(forKey: "nx_unread_counter_x"),
+        height: UserDefaults.standard.double(forKey: "nx_unread_counter_y")
+    )
+    @State private var dragOffset = CGSize.zero
+    
     init(vm: NXColumnViewModel, posts: [NRPost]) {
         self.vm = vm
         self.posts = posts
@@ -188,6 +195,34 @@ struct NXPostsFeed: View {
             .overlay(alignment: .topTrailing) {
                 if vmInner.unreadCount != 0 {
                     unreadCounterView
+                        .offset(x: unreadCounterOffset.width + dragOffset.width, 
+                               y: unreadCounterOffset.height + dragOffset.height)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    dragOffset = value.translation
+                                }
+                                .onEnded { value in
+                                    let newX = unreadCounterOffset.width + value.translation.width
+                                    let newY = unreadCounterOffset.height + value.translation.height
+                                    
+                                    // Constrain position within screen bounds with padding
+                                    let minX: CGFloat = -(ScreenSpace.shared.mainTabSize.width - 91) // not offscreen to the left
+                                    let minY: CGFloat = 0 // already top-right, don't move more
+                                    let maxX: CGFloat = 0 // already top-right, don't move more
+                                    let maxY: CGFloat = ScreenSpace.shared.mainTabSize.height - 296 // not too low
+                                    
+                                    let clampedX = min(max(newX, minX), maxX)
+                                    let clampedY = min(max(newY, minY), maxY)
+                                    
+                                    // Save position to UserDefaults
+                                    UserDefaults.standard.set(clampedX, forKey: "nx_unread_counter_x")
+                                    UserDefaults.standard.set(clampedY, forKey: "nx_unread_counter_y")
+                                    
+                                    unreadCounterOffset = CGSize(width: clampedX, height: clampedY)
+                                    dragOffset = .zero
+                                }
+                        )
                         .onTapGesture {
                             scrollToFirstUnread(proxy)
                         }
