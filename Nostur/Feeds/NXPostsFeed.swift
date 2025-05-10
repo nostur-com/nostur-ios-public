@@ -26,10 +26,9 @@ struct NXPostsFeed: View {
     @State private var updateIsAtTopSubscription: AnyCancellable?
     
     // State variables for unread counter position
-    @State private var unreadCounterOffset = CGSize(
-        width: UserDefaults.standard.double(forKey: "nx_unread_counter_x"),
-        height: UserDefaults.standard.double(forKey: "nx_unread_counter_y")
-    )
+    @AppStorage("nx_unread_counter_offset_x") private var nxUnreadCounterOffsetX: Double = 0
+    @AppStorage("nx_unread_counter_offset_y") private var nxUnreadCounterOffsetY: Double = 0
+    
     @State private var dragOffset = CGSize.zero
     
     init(vm: NXColumnViewModel, posts: [NRPost]) {
@@ -195,16 +194,16 @@ struct NXPostsFeed: View {
             .overlay(alignment: .topTrailing) {
                 if vmInner.unreadCount != 0 {
                     unreadCounterView
-                        .offset(x: unreadCounterOffset.width + dragOffset.width, 
-                               y: unreadCounterOffset.height + dragOffset.height)
+                        .offset(x: nxUnreadCounterOffsetX + dragOffset.width,
+                               y: nxUnreadCounterOffsetY + dragOffset.height)
                         .gesture(
                             DragGesture()
                                 .onChanged { value in
                                     dragOffset = value.translation
                                 }
                                 .onEnded { value in
-                                    let newX = unreadCounterOffset.width + value.translation.width
-                                    let newY = unreadCounterOffset.height + value.translation.height
+                                    let newX = nxUnreadCounterOffsetX + value.translation.width
+                                    let newY = nxUnreadCounterOffsetY + value.translation.height
                                     
                                     // Constrain position within screen bounds with padding
                                     let minX: CGFloat = -(ScreenSpace.shared.mainTabSize.width - 91) // not offscreen to the left
@@ -216,10 +215,8 @@ struct NXPostsFeed: View {
                                     let clampedY = min(max(newY, minY), maxY)
                                     
                                     // Save position to UserDefaults
-                                    UserDefaults.standard.set(clampedX, forKey: "nx_unread_counter_x")
-                                    UserDefaults.standard.set(clampedY, forKey: "nx_unread_counter_y")
-                                    
-                                    unreadCounterOffset = CGSize(width: clampedX, height: clampedY)
+                                    nxUnreadCounterOffsetX = clampedX
+                                    nxUnreadCounterOffsetY = clampedY
                                     dragOffset = .zero
                                 }
                         )
