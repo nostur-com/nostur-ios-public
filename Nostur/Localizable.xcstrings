@@ -2059,6 +2059,9 @@
     "Blossom server" : {
       "comment" : "Header for entering blossom server address"
     },
+    "Blossom servers" : {
+
+    },
     "Blue" : {
       "localizations" : {
         "nl" : {
@@ -2189,6 +2192,9 @@
     },
     "Checked" : {
       "shouldTranslate" : false
+    },
+    "Checking relays for your blossom server list..." : {
+
     },
     "Choose a photo" : {
       "localizations" : {
@@ -4768,6 +4774,9 @@
         }
       }
     },
+    "Let others know on which servers your media can be found" : {
+
+    },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
       "localizations" : {
@@ -6727,6 +6736,9 @@
         }
       }
     },
+    "Publish list now" : {
+
+    },
     "Publish selected badges on profile" : {
       "localizations" : {
         "nl" : {
@@ -6736,6 +6748,9 @@
           }
         }
       }
+    },
+    "Publish to relays" : {
+
     },
     "Publish to this relay" : {
       "comment" : "Label for toggle to publish to this relay",
@@ -6769,6 +6784,9 @@
           }
         }
       }
+    },
+    "Published to:" : {
+
     },
     "Purple" : {
       "localizations" : {

@@ -8,6 +8,7 @@
 import Foundation
 import Collections
 import NostrEssentials
+import Combine
 
 func updateEventCache(_ id: String, status: ProcessStatus, relays: String? = nil) {
     if let existing = Importer.shared.existingIds[id], let relays {
@@ -41,6 +42,8 @@ class MessageParser {
     
     public let tagSerializer: TagSerializer
     
+    // (id, relay)
+    public let okSub = PassthroughSubject<(String, String), Never>()
     
     
     init() {
@@ -62,9 +65,12 @@ class MessageParser {
 #endif
                     client.handleAuth(message.message)
                 case .OK:
+#if DEBUG
                     L.sockets.debug("\(relayUrl): \(message.message)")
+#endif
                     if message.success ?? false {
                         if let id = message.id {
+                            okSub.send((id, relayUrl))
                             Event.updateRelays(id, relays: message.relays, context: bgQueue)
                         }
                     }
