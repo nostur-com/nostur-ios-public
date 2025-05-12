@@ -105,7 +105,7 @@ struct FollowLink: View {
                         la.unfollow(pubkey)
                     })
             }
-            else if followState == .following || followState == .privateFollowing || !fg.didReceiveContactListThisSession {
+            else if pubkey == AccountsState.shared.activeAccountPublicKey ||  followState == .following || followState == .privateFollowing || !fg.didReceiveContactListThisSession {
                 EmptyView()
             }
             else {
