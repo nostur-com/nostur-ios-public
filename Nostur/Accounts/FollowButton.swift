@@ -77,6 +77,88 @@ struct FollowButton: View {
     }
 }
 
+
+
+struct FollowLink: View {
+    
+    public let pubkey: String
+    @EnvironmentObject private var themes: Themes
+    @ObservedObject private var fg: FollowingGuardian = .shared
+    
+    @State private var followState: FollowState = .unfollowed
+    @State private var disabled: Bool = false
+    @State private var didFollow: Bool = false
+    
+    
+    var body: some View {
+        ZStack {
+            if didFollow {
+                Text("Unfollow")
+                    .foregroundColor(themes.theme.accent)
+                    .fontWeightBold()
+                    .highPriorityGesture(TapGesture().onEnded {
+                        guard let la = AccountsState.shared.loggedInAccount else { return }
+                        
+                        withAnimation {
+                            followState = .unfollowed
+                        }
+                        la.unfollow(pubkey)
+                    })
+            }
+            else if followState == .following || followState == .privateFollowing || !fg.didReceiveContactListThisSession {
+                EmptyView()
+            }
+            else {
+                Text("Follow")
+                    .foregroundColor(themes.theme.accent)
+                    .fontWeightBold()
+                    .highPriorityGesture(TapGesture().onEnded {
+                        guard isFullAccount() else { showReadOnlyMessage(); return }
+                        guard let la = AccountsState.shared.loggedInAccount else { return }
+                        
+                        withAnimation {
+                            followState = .following
+                            didFollow = true
+                        }
+                        la.follow(pubkey, privateFollow: false)
+                    })
+            }
+        }
+        
+        
+        .onAppear {
+            guard let la = AccountsState.shared.loggedInAccount else { return }
+            followState = getFollowState(la.account, pubkey: pubkey)
+        }
+        
+        .onReceive(receiveNotification(.activeAccountChanged)) { notification in
+            let account = notification.object as! CloudAccount
+            didFollow = false
+            followState = getFollowState(account, pubkey: pubkey)
+        }
+        
+        // TODO: Should also pass and check account on .followsChanged
+        .onReceive(receiveNotification(.followsChanged)) { notification in
+            guard notification.object is Set<String> else { return }
+            
+            guard let la = AccountsState.shared.loggedInAccount else { return }
+            followState = getFollowState(la.account, pubkey: pubkey)
+        }
+    }
+    
+    private func getFollowState(_ account: CloudAccount, pubkey: String) -> FollowState {
+        if account.privateFollowingPubkeys.contains(pubkey) {
+            return .privateFollowing
+        }
+        else if (account.followingPubkeys.contains(pubkey)) {
+            return .following
+        }
+        else {
+            return .unfollowed
+        }
+    }
+}
+
 enum FollowState {
     case following
     case privateFollowing

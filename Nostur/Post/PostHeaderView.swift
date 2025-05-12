@@ -149,6 +149,11 @@ struct PostHeaderView: View {
                         .layoutPriority(3)
                         .foregroundColor(.secondary)
                 }
+                
+                if couldBeImposter != 1 {
+                    FollowLink(pubkey: pubkey)
+                        .layoutPriority(2)
+                }
             }
         }
         if (!singleLine) {
@@ -166,6 +171,11 @@ struct PostHeaderView: View {
                         .lineLimit(1)
                         .layoutPriority(3)
                         .foregroundColor(.secondary)
+                }
+                
+                if couldBeImposter != 1 {
+                    FollowLink(pubkey: pubkey)
+                        .layoutPriority(2)
                 }
             }
         }
