@@ -100,6 +100,8 @@ struct NRPostHeaderContainer: View {
 }
 
 struct PostHeaderView: View {
+    @EnvironmentObject private var la: LoggedInAccount
+    
     public let pubkey: String
     public let name: String
     public var onTap: (() -> Void)? = nil
@@ -150,7 +152,7 @@ struct PostHeaderView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                if couldBeImposter != 1 {
+                if couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
                     FollowLink(pubkey: pubkey)
                         .layoutPriority(2)
                 }
@@ -173,7 +175,7 @@ struct PostHeaderView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                if couldBeImposter != 1 {
+                if couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
                     FollowLink(pubkey: pubkey)
                         .layoutPriority(2)
                 }
