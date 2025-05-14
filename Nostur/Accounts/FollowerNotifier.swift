@@ -57,7 +57,9 @@ class FollowerNotifier {
     
     public func checkForUpdatedContactList(pubkey: String) {
         guard !SettingsStore.shared.lowDataMode else { return }
-        L.og.info("Checking for new followers")
+#if DEBUG
+        L.og.debug("Checking for new followers")
+#endif
         
         bg().perform { [weak self] in
             guard let self = self else { return }
@@ -192,8 +194,10 @@ class FollowerNotifier {
 //                account.lastFollowerCreatedAt = Int64(Date.now.timeIntervalSince1970) // HM not needed since we use mostRecent (PNotification)
 //            }
             
+#if DEBUG
             L.og.info("New followers (\(self.newFollowerPubkeys.count)) notification, for \(pubkey)")
             L.og.debug("Prefetching kind 0 for first 10 new followers")
+#endif
             req(RM.getUserMetadata(pubkeys: Array(self.newFollowerPubkeys.prefix(10))))
             self.newFollowerPubkeys.removeAll()
             DataProvider.shared().bgSave()

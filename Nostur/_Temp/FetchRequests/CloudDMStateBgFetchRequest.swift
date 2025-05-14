@@ -21,7 +21,9 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
         do {
             try self.frc.performFetch()
             guard let items = self.frc.fetchedObjects else { return }
+#if DEBUG
             L.og.debug("CloudDMStateFetchRequest CloudDMState: \(items.count) -[LOG]-")
+#endif
             onChange(items)
         }
         catch {
@@ -50,8 +52,9 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
                 guard dmState.accountPubkey_ != nil else { return false }
                 return !uniqueDMStates.insert(dmState.conversionId).inserted
             }
-
+#if DEBUG
         L.cloud.debug("CloudDMStateFetchRequest: \(duplicates.count) duplicate DM conversation states")
+#endif
         duplicates.forEach({ duplicateDMState in
             viewContext().delete(duplicateDMState)
         })

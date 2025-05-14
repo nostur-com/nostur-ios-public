@@ -55,7 +55,9 @@ public class OutboxLoader {
                 self?.cp.setPreferredRelays(using: kind10002s)
             }
             
+#if DEBUG
             L.sockets.debug("📤📤 Outbox: loaded \(kind10002s.count) from db")
+#endif
             self.fetchMoreKind10002sFromRelays()
         }
     }
@@ -103,11 +105,15 @@ public class OutboxLoader {
                         self?.cp.setPreferredRelays(using: kind10002s)
                     }
                     
+#if DEBUG
                     L.sockets.debug("📤📤 Outbox: loaded \(kind10002s.count) from db")
+#endif
                 }
             },
             timeoutCommand: { taskId in
+#if DEBUG
                 L.sockets.debug("📤📤 Outbox: timeout or no new kind 10002s")
+#endif
             })
 
         backlog.add(task)
@@ -125,8 +131,10 @@ public class OutboxLoader {
                                    filters: [Filters(authors: [pubkey], kinds: [10002])]
                     ).json()
                 else { return }
-                
+
+#if DEBUG
                 L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(pubkey)")
+#endif
                 req(cm)
             },
             processResponseCommand: { [weak self] taskId, _, _ in
@@ -138,11 +146,15 @@ public class OutboxLoader {
                         self?.cp.reloadPreferredRelays(kind10002s: kind10002s)
                     }
                     
+#if DEBUG
                     L.sockets.debug("📤📤 Outbox: reloading for \(pubkey)")
+#endif
                 }
             },
             timeoutCommand: { taskId in
+#if DEBUG
                 L.sockets.debug("📤📤 Outbox: timeout or no kind 10002 for \(pubkey)")
+#endif
             })
 
         backlog.add(task)

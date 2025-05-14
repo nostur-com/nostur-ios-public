@@ -87,7 +87,9 @@ struct Maintenance {
     // Version based migrations
     // Runs on viewContext. Must finish before app can continue launch
     static func upgradeDatabase(context: NSManagedObjectContext) async {
+#if DEBUG
         L.maintenance.info("Starting version based maintenance")
+#endif
         await context.perform {
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)

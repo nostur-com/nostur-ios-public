@@ -45,7 +45,9 @@ class NXGapFiller {
         
 //        // Check connection? This actually makes the first fetch never work, need to fix the timing or enable somewhere else, disabled for now
         guard ConnectionPool.shared.anyConnected else {
+#if DEBUG
             L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true")
+#endif
             if let speedTest = columnVM.speedTest, speedTest.timestampStart != nil {
 #if DEBUG
                 print("🏁🏁 NXGapFiller.fetchGap loadingBarViewState = .connecting")

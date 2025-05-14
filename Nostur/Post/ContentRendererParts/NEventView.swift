@@ -58,7 +58,9 @@ struct NEventView: View {
                             }
                             else if let event = Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
                                 if vm.state == .altLoading, let relay = identifier.relays.first {
+#if DEBUG
                                     L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
+#endif
                                 }
                                 vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
                             }
@@ -77,7 +79,9 @@ struct NEventView: View {
                             req(RM.getEvent(id: eventId, subscriptionId: taskId), relayType: .SEARCH)
                             guard let relay = identifier.relays.first else { return }
                             
+#if DEBUG
                             L.og.debug("FetchVM.3 HINT \(eventId)")
+#endif
                             ConnectionPool.shared.sendEphemeralMessage(
                                 RM.getEvent(id: eventId, subscriptionId: taskId),
                                 relay: relay

@@ -55,7 +55,9 @@ class DataProvider: ObservableObject {
             cloudStoreDescription.url = URL(fileURLWithPath: "/dev/null")
         }
         else {
+#if DEBUG
             L.og.info("🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀🚀 \(localStoreDescription.url?.absoluteString ?? "") -[LOG]-")
+#endif
             localStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
             cloudStoreDescription.setOption(FileProtectionType.completeUntilFirstUserAuthentication as NSObject, forKey: NSPersistentStoreFileProtectionKey)
         }

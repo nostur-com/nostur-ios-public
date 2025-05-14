@@ -23,7 +23,9 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
             do {
                 try self?.frc.performFetch()
                 guard let items = self?.frc.fetchedObjects else { return }
+#if DEBUG
                 L.og.debug("BGAccountFetchRequest CloudAccounts: \(items.count) -[LOG]-")
+#endif
                 self?.onChange(items)
             }
             catch {
@@ -60,7 +62,9 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
             }
 
         if duplicates.count > 0 {
+#if DEBUG
             L.cloud.debug("BGAccountFetchRequest Deleting: \(duplicates.count) duplicate accounts")
+#endif
         }
         duplicates.forEach({ duplicateAccount in
             // Before deleting, .union the follows to the existing account

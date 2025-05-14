@@ -51,7 +51,9 @@ class ChatRoomViewModel: ObservableObject {
     public func start(aTag: String) throws {
         guard !didStart else { return }
         self.didStart = true
+#if DEBUG
         L.og.debug("vm.start()")
+#endif
         self.aTag = aTag
        
         let elements = aTag.split(separator: ":")
@@ -98,7 +100,9 @@ class ChatRoomViewModel: ObservableObject {
                 if let messages = self?.bgMessages {
                     let allMissingPs: Set<String> = messages.map { $0.missingPs }.count > 0 ? Set(messages.flatMap(\.missingPs)) : []
                     let missingPsToFetch: Set<String> = allMissingPs.subtracting(self?.alreadyFetchedMissingPs ?? [])
+#if DEBUG
                     L.og.debug("Fetching missingPs: \(missingPsToFetch)")
+#endif
                     QueuedFetcher.shared.enqueue(pTags: missingPsToFetch)
                     self?.alreadyFetchedMissingPs.formUnion(missingPsToFetch)
                 }

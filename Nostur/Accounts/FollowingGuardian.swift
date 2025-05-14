@@ -17,7 +17,9 @@ class FollowingGuardian: ObservableObject {
     @Published var didReceiveContactListThisSession = false {
         didSet {
             if didReceiveContactListThisSession {
+#if DEBUG
                 L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession: \(self.didReceiveContactListThisSession)")
+#endif
             }
         }
     }

@@ -67,7 +67,9 @@ struct NXColumnView: View {
 //        }
 //#endif
         .onAppear {
+#if DEBUG
             L.og.debug("☘️☘️ \(config.name) .onAppear -[LOG]-")
+#endif
             viewModel.isVisible = isVisible
             
             if isVisible {

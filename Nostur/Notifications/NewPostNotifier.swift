@@ -38,7 +38,9 @@ class NewPostNotifier: ObservableObject {
     }
     
     private func load() {
+#if DEBUG
         L.og.debug("NewPostNotifier.load() -[LOG]-")
+#endif
         let tasks = CloudTask.fetchAll(byType: .notifyOnPosts, andAccountPubkey: account()?.publicKey ?? activeAccountPublicKey)
         enabledPubkeys = Set(tasks.compactMap { $0.value_ })
     }

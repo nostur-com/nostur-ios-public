@@ -23,7 +23,9 @@ class BookmarkBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             do {
                 try self?.frc.performFetch()
                 guard let items = self?.frc.fetchedObjects else { return }
+#if DEBUG
                 L.og.debug("BookmarkBgFetchRequest items \(items.count) -[LOG]-")
+#endif
                 self?.onChange(items)
             }
             catch {

@@ -221,7 +221,9 @@ class EmbeddedVideoVM: ObservableObject {
 #endif
                     // Only throw if it’s the last range
                     if index == frontRanges.count - 1 {
+#if DEBUG
                         L.og.debug("🎞️ All front ranges failed, trying end of file -[LOG]-")
+#endif
                         break
                     }
                     // Otherwise, continue to next range
@@ -305,7 +307,9 @@ class EmbeddedVideoVM: ObservableObject {
             let (_, getResponse) = try await Self.noRedirectSession.data(for: getRequest)
             
             guard let httpResponse = getResponse as? HTTPURLResponse else {
+#if DEBUG
                 L.og.debug("🎞️ GET failed, no HTTP response on \(currentURL)")
+#endif
                 return nil
             }
             
@@ -320,7 +324,9 @@ class EmbeddedVideoVM: ObservableObject {
             if (300...399).contains(httpResponse.statusCode),
                let location = httpResponse.value(forHTTPHeaderField: "Location"),
                let newURL = URL(string: location, relativeTo: currentURL) {
+#if DEBUG
                 L.og.debug("🎞️ GET redirected from \(currentURL) to \(newURL)")
+#endif
                 currentURL = newURL
                 
                 // Step 3: Do HEAD on the redirected URL
@@ -331,17 +337,23 @@ class EmbeddedVideoVM: ObservableObject {
                 if let redirectedHttpResponse = redirectedHeadResponse as? HTTPURLResponse,
                    let contentLength = redirectedHttpResponse.value(forHTTPHeaderField: "Content-Length"),
                    let size = Int(contentLength) {
+#if DEBUG
                     L.og.debug("🎞️ HEAD on redirected URL succeeded with Content-Length: \(size) on \(currentURL)")
+#endif
                     return (currentURL, size)
                 }
-                
+         
+#if DEBUG
                 L.og.debug("🎞️ HEAD on redirected URL returned no Content-Length: \(String(describing: redirectedHeadResponse)) on \(currentURL)")
+#endif
                 redirects += 1
                 continue
             }
             
             // If GET succeeds but no redirect or Content-Length, give up
+#if DEBUG
             L.og.debug("🎞️ GET returned no redirect or Content-Length: \(String(describing: getResponse)) on \(currentURL)")
+#endif
             return nil
         }
         
