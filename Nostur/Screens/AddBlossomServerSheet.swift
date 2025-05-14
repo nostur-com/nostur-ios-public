@@ -107,7 +107,7 @@ struct AddBlossomServerSheet: View {
             error = nil
         }
         else {
-            error = "Server not supported."
+            error = "Server not supported or npub not authorized."
         }
         
         checking = false
