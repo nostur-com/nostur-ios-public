@@ -130,7 +130,7 @@ struct ChatRenderer: View { // VIEW things
                         galleryItem: galleryItem,
                         availableWidth: availableWidth,
                         placeholderAspect: 4/3,
-                        maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT / 2,
+                        maxHeight: 450.0,
                         contentMode: .fit,
                         autoload: shouldAutoload,
                         isNSFW: nrChat.isNSFW,
