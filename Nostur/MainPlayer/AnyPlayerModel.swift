@@ -11,6 +11,7 @@ import AVKit
 import NukeUI
 import Nuke
 import NukeVideo
+import MediaPlayer
 
 class AnyPlayerModel: ObservableObject {
     
@@ -61,6 +62,7 @@ class AnyPlayerModel: ObservableObject {
     public var cachedFirstFrame: CachedFirstFrame? = nil // to restore .playingInPIP view back to first frame
     
     private init() {
+        setupRemoteControl()
         player.preventsDisplaySleepDuringVideoPlayback = true
         player.actionAtItemEnd = .pause
         
@@ -102,14 +104,13 @@ class AnyPlayerModel: ObservableObject {
         self.thumbnailUrl = nrLiveEvent.thumbUrl
         // Don't reuse existing viewMode
         self.viewMode = availableViewModes.first ?? .detailstream
-        isPlaying = true
+        playVideo()
         
         if nrLiveEvent.streamHasEnded, let recordingUrl = nrLiveEvent.recordingUrl, let url = URL(string: recordingUrl) {
             isStream = false
             self.currentlyPlayingUrl = url.absoluteString
             
             Task.detached(priority: .userInitiated) {
-                try? AVAudioSession.sharedInstance().setActive(true)
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
                     self.player.replaceCurrentItem(with: playerItem)
@@ -122,13 +123,16 @@ class AnyPlayerModel: ObservableObject {
             isStream = true
             self.currentlyPlayingUrl = url.absoluteString
             Task.detached(priority: .userInitiated) {
-                try? AVAudioSession.sharedInstance().setActive(true)
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
                     self.player.replaceCurrentItem(with: playerItem)
                     self.isLoading = false
                 }
             }
+        }
+        
+        Task {
+            await setupNowPlayingInfo(artist: nrPost?.anyName, title: nrLiveEvent.title, mediaType: .anyVideo, thumbUrl: nrLiveEvent.thumbUrl, pfpUrl: nrPost?.contact?.pictureUrl, isLive: !nrLiveEvent.streamHasEnded)
         }
     }
     
@@ -158,13 +162,13 @@ class AnyPlayerModel: ObservableObject {
         // Avoid hangs, do rest here
         Task.detached(priority: .medium) {
             self.cachedFirstFrame = cachedFirstFrame
-            try? AVAudioSession.sharedInstance().setActive(true)
             
             if self.isStream {
                 let playerItem = AVPlayerItem(url: url)
                 Task { @MainActor in
                     self.player.replaceCurrentItem(with: playerItem)
-                    self.isPlaying = true
+                    self.playVideo()
+                    self.setupRemoteControl()
                     self.isLoading = false
                 }
             }
@@ -225,7 +229,8 @@ class AnyPlayerModel: ObservableObject {
                         
                         Task { @MainActor in
                             self.player.replaceCurrentItem(with: playerItem)
-                            self.isPlaying = true
+                            self.playVideo()
+                            self.setupRemoteControl()
                             self.isLoading = false
                         }
                     } catch {
@@ -250,10 +255,104 @@ class AnyPlayerModel: ObservableObject {
                     let playerItem = await AVPlayerItem(asset: asset)
                     Task { @MainActor in
                         self.player.replaceCurrentItem(with: playerItem)
-                        self.isPlaying = true
+                        self.playVideo()
+                        self.setupRemoteControl()
                         self.isLoading = false
                     }
                 }
+            }
+        }
+        
+        Task {
+            await setupNowPlayingInfo(artist: nrPost?.anyName, mediaType: .anyVideo, duration: cachedFirstFrame?.duration?.seconds, pfpUrl: nrPost?.contact?.pictureUrl, thumb: cachedFirstFrame?.uiImage )
+        }
+    }
+    
+    func setupRemoteControl() {
+        let commandCenter = MPRemoteCommandCenter.shared()
+        
+       
+        commandCenter.togglePlayPauseCommand.isEnabled = true
+        commandCenter.playCommand.isEnabled = true
+        commandCenter.pauseCommand.isEnabled = true
+        commandCenter.nextTrackCommand.isEnabled = false
+        commandCenter.previousTrackCommand.isEnabled = false
+        commandCenter.changePlaybackRateCommand.isEnabled = false
+        commandCenter.skipForwardCommand.isEnabled = false
+        commandCenter.skipBackwardCommand.isEnabled = false
+        commandCenter.ratingCommand.isEnabled = false
+        commandCenter.likeCommand.isEnabled = false
+        commandCenter.dislikeCommand.isEnabled = false
+        commandCenter.bookmarkCommand.isEnabled = false
+        commandCenter.changeRepeatModeCommand.isEnabled = false
+        commandCenter.changeShuffleModeCommand.isEnabled = false
+        
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.togglePlayPauseCommand.removeTarget(nil)
+
+
+        commandCenter.playCommand.addTarget { (_) -> MPRemoteCommandHandlerStatus in
+            self.isPlaying = true
+            return .success
+        }
+        
+
+        commandCenter.pauseCommand.addTarget { (_) -> MPRemoteCommandHandlerStatus in
+            self.isPlaying = false
+            return .success
+        }
+        
+        commandCenter.togglePlayPauseCommand.addTarget { (_) -> MPRemoteCommandHandlerStatus in
+            self.isPlaying = !self.isPlaying
+            return .success
+        }
+      }
+    
+    func setupNowPlayingInfo(artist: String? = nil, title: String? = nil, mediaType: MPMediaType = .anyVideo, duration: TimeInterval? = nil, thumbUrl: URL? = nil, pfpUrl: URL? = nil, thumb: UIImage? = nil, isLive: Bool = false) async {
+            
+  
+            
+        var nowPlayingInfo: [String: Any] = [
+            MPMediaItemPropertyMediaType: NSNumber(value: mediaType.rawValue),
+            MPNowPlayingInfoPropertyIsLiveStream: NSNumber(value: isLive),
+        ]
+        
+        if let artist {
+            nowPlayingInfo[MPMediaItemPropertyArtist] = artist
+        }
+        
+        if let title {
+            nowPlayingInfo[MPMediaItemPropertyTitle] = title
+        }
+        
+        if let duration {
+            nowPlayingInfo[MPMediaItemPropertyPlaybackDuration] = duration
+        }
+        
+        if let thumb {
+            let mediaArtwork = MPMediaItemArtwork(boundsSize: thumb.size) { (size: CGSize) -> UIImage in
+                return thumb
+            }
+            nowPlayingInfo[MPMediaItemPropertyArtwork] = mediaArtwork
+        }
+        
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+            
+        if thumb == nil {
+            if let thumbUrl, let thumbUIImage: UIImage = await getNowPlayingThumb(thumbUrl, usePFPpipeline: false) {
+                let mediaArtwork = MPMediaItemArtwork(boundsSize: thumbUIImage.size) { (size: CGSize) -> UIImage in
+                    return thumbUIImage
+                }
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = mediaArtwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+            }
+            else if let pfpUrl, let thumbUIImage: UIImage = await getNowPlayingThumb(pfpUrl, usePFPpipeline: true) {
+                let mediaArtwork = MPMediaItemArtwork(boundsSize: thumbUIImage.size) { (size: CGSize) -> UIImage in
+                    return thumbUIImage
+                }
+                nowPlayingInfo[MPMediaItemPropertyArtwork] = mediaArtwork
+                MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
             }
         }
     }
@@ -273,16 +372,29 @@ class AnyPlayerModel: ObservableObject {
     
     @MainActor
     func playVideo() {
-        configureAudioSession()
         isPlaying = true
+        // Must be .playAndRecord. Now Playing control center doesn't work with just .playback https://developer.apple.com/forums/thread/674696
+        // Also .mixWithOthers doesn't work with Now Player control center
+        try? AVAudioSession.sharedInstance().setActive(false)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
         try? AVAudioSession.sharedInstance().setActive(true)
+        
+        // Only works when called after setting up audio session??
+        UIApplication.shared.beginReceivingRemoteControlEvents()
+        
         // Prevent auto-lock while playing
         UIApplication.shared.isIdleTimerDisabled = true
+#if os(macOS)
+        MPNowPlayingInfoCenter.default().playbackState = .playing
+#endif
     }
     
     @MainActor
     func pauseVideo() {
         isPlaying = false
+#if os(macOS)
+        MPNowPlayingInfoCenter.default().playbackState = .paused
+#endif
     }
     
     @MainActor
@@ -305,7 +417,8 @@ class AnyPlayerModel: ObservableObject {
     func replay() {
         didFinishPlaying = false
         player.seek(to: .zero)
-        isPlaying = true
+        self.playVideo()
+        self.setupRemoteControl()
     }
     
     @MainActor
@@ -323,11 +436,42 @@ class AnyPlayerModel: ObservableObject {
         isPlaying = false
         isShown = false
         isLoading = false
+#if os(macOS)
+        MPNowPlayingInfoCenter.default().playbackState = .stopped
+#endif
         // Restore normal idle behavior
         UIApplication.shared.isIdleTimerDisabled = false
     }
     
-    public var downloadTask: AsyncImageTask?
+    public var downloadTask: ImageTask? // "Save to library" task
+    public var nowPlayingThumbTask: ImageTask?
+    
+//    private var task: AsyncImageTask?
+    
+    public func getNowPlayingThumb(_ url: URL, usePFPpipeline: Bool = false) async -> UIImage? {
+        if SettingsStore.shared.lowDataMode || url.absoluteString.prefix(7) == "http://" { return nil }
+  
+        self.nowPlayingThumbTask = usePFPpipeline
+            ? ImageProcessing.shared.pfp.imageTask(with: pfpImageRequestFor(url))
+            : ImageProcessing.shared.content.imageTask(with: makeImageRequest(url, label: "getNowPlayingThumb"))
+        
+        guard let task = self.nowPlayingThumbTask else {
+            return nil
+        }
+        
+        do {
+            let response = try await task.response
+            if response.container.type == .gif {
+                return nil
+            }
+            else {
+                return response.image
+            }
+        }
+        catch {
+           return nil
+        }
+    }
     
     @Published var downloadProgress: Int = 0
     
@@ -370,12 +514,4 @@ enum AnyPlayerViewMode {
     case detailstream
     case fullscreen
     case audioOnlyBar
-}
-
-func configureAudioSession() {
-    do {
-        try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-    } catch {
-        L.og.error("Failed to configure audio session: \(error.localizedDescription)")
-    }
 }

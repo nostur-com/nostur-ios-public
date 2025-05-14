@@ -27,7 +27,6 @@ struct AppView: View {
                     .environmentObject(loggedInAccount)
                     .onAppear {
                         ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
-                        configureAudioSession()
                     }
                     .onChange(of: scenePhase) { newScenePhase in
                         handleNewScenePhase(newScenePhase)

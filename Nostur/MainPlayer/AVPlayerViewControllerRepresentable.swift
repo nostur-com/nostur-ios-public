@@ -44,12 +44,10 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         avpc.delegate = context.coordinator
         avpc.showsPlaybackControls = showsPlaybackControls
         avpc.canStartPictureInPictureAutomaticallyFromInline = true
-        avpc.updatesNowPlayingInfoCenter = true
+        avpc.updatesNowPlayingInfoCenter = false // Otherwise Now Playing is broken when switching to audio only bar. Also breaks title/artist.
         context.coordinator.avpc = avpc
 
         avpc.view.isUserInteractionEnabled = true
-        
-        try? AVAudioSession.sharedInstance().setActive(true)
         
         let swipeDown = UISwipeGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.respondToSwipeGesture))
         swipeDown.direction = UISwipeGestureRecognizer.Direction.down
