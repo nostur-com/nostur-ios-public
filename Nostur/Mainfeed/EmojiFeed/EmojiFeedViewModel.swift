@@ -365,7 +365,9 @@ class EmojiFeedViewModel: ObservableObject {
                 EventRelationsQueue.shared.addAwaitingEvent(nrPost.event)
             }
             let eventIds = nrPosts.prefix(5).map { $0.id }
+#if DEBUG
             L.fetching.info("🔢 Fetching counts for \(eventIds.count) posts")
+#endif
             fetchStuffForLastAddedNotes(ids: eventIds)
             self.prefetchedIds = self.prefetchedIds.union(Set(eventIds))
         }

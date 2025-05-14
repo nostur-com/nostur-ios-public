@@ -58,7 +58,9 @@ class NXGapFiller {
         
         // Check if paused
         guard !columnVM.isPaused else {
+#if DEBUG
             L.og.debug("☘️☘️ \(config.name) 🔴🔴 paused, skipping fetchGap")
+#endif
             return
         }
                 
@@ -86,7 +88,9 @@ class NXGapFiller {
                     self.currentGap += 1
                     
                     if self.windowStart < Int(Date().timeIntervalSince1970) {
+#if DEBUG
                         L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
+#endif
                         self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
                     }
                     else {
@@ -94,7 +98,9 @@ class NXGapFiller {
                     }
                 },
                 timeoutCommand: { [weak self] subId in
+#if DEBUG
                     L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") timeout in fetchGap \(subId)")
+#endif
                     Task { @MainActor in
 
                         self?.columnVM?.speedTest?.relayTimedout()

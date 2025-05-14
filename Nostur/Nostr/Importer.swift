@@ -192,8 +192,12 @@ class Importer {
             self.isImporting = true
             let forImportsCount = MessageParser.shared.messageBucket.count
             guard forImportsCount != 0 else {
+#if DEBUG
                 L.importing.debug("🏎️🏎️ importEvents() nothing to import.")
-                self.isImporting = false; return }
+#endif
+                self.isImporting = false
+                return
+            }
             
             self.listStatus.send("Processing \(forImportsCount) items...")
             

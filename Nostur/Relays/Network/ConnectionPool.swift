@@ -117,14 +117,18 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     public func addEphemeralConnection(_ relayData: RelayData) -> RelayConnection {
         if let existingConnection = ephemeralConnections[relayData.id] {
+#if DEBUG
             L.og.debug("addEphemeralConnection: reusing existing \(relayData.id)")
+#endif
             return existingConnection
         }
         else {
             let newConnection = RelayConnection(relayData, queue: queue)
             ephemeralConnections[relayData.id] = newConnection
             removeAfterDelay(relayData.id)
+#if DEBUG
             L.og.debug("addEphemeralConnection: adding new connection \(relayData.id)")
+#endif
             return newConnection
         }
     }
@@ -187,9 +191,9 @@ public class ConnectionPool: ObservableObject {
     }
     
     public func connectAll(resetExpBackOff: Bool = false) {
-        #if DEBUG
+#if DEBUG
         L.og.debug("ConnectionPool.shared.connectAll()")
-        #endif
+#endif
         
         queue.async { [unowned self] in
             for (_, connection) in self.connections {
@@ -296,7 +300,9 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func disconnectAll() {
+#if DEBUG
         L.og.debug("ConnectionPool.disconnectAll")
+#endif
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = nil
      
@@ -309,7 +315,9 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func disconnectAllAdditional() {
+#if DEBUG
         L.og.debug("ConnectionPool.disconnectAllAdditional")
+#endif
         
         queue.async {
             for (_, connection) in self.outboxConnections {
@@ -376,7 +384,9 @@ public class ConnectionPool: ObservableObject {
         queue.async(flags: .barrier) { [unowned self] in
             for (_, connection) in self.connections {
                 if connection.nreqSubscriptions.contains(subscriptionId) {
-                    L.lvm.info("Closing subscriptionId: \(subscriptionId) on \(connection.url)");
+#if DEBUG
+                    L.lvm.debug("Closing subscriptionId: \(subscriptionId) on \(connection.url)");
+#endif
                     let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
                     connection.sendMessage(closeSubscription.message)
                     connection.nreqSubscriptions.remove(subscriptionId)
@@ -385,7 +395,9 @@ public class ConnectionPool: ObservableObject {
             
             for (_, connection) in self.outboxConnections {
                 if connection.nreqSubscriptions.contains(subscriptionId) {
-                    L.lvm.info("Closing subscriptionId: \(subscriptionId) on outbox relay \(connection.url)");
+#if DEBUG
+                    L.lvm.debug("Closing subscriptionId: \(subscriptionId) on outbox relay \(connection.url)");
+#endif
                     let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
                     connection.sendMessage(closeSubscription.message)
                     connection.nreqSubscriptions.remove(subscriptionId)
@@ -400,7 +412,9 @@ public class ConnectionPool: ObservableObject {
             if let (_ ,connection) = self?.ephemeralConnections.first(where: { (key: String, value: RelayConnection) in
                 key == url
             }) {
-                L.sockets.info("Removing ephemeral relay \(url)")
+#if DEBUG
+                L.sockets.debug("Removing ephemeral relay \(url)")
+#endif
                 connection.disconnect()
                 if (self?.ephemeralConnections.keys.contains(url) ?? false) {
                     self?.ephemeralConnections.removeValue(forKey: url)
@@ -441,7 +455,9 @@ public class ConnectionPool: ObservableObject {
                 if message.type == .REQ {
                     if (!connection.isSocketConnected) {
                         if (!connection.isSocketConnecting) {
+#if DEBUG
                             L.og.debug("⚡️ sendMessage \(subscriptionId ?? ""): not connected yet, connecting to N(W)C relay \(connection.url)")
+#endif
                             connection.connect()
                         }
                     }
@@ -452,7 +468,9 @@ public class ConnectionPool: ObservableObject {
                     if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
                         continue
                     }
+#if DEBUG
                     L.sockets.debug("🔚🔚 CLOSE: \(message.message)")
+#endif
                     connection.sendMessage(message.message)
                 }
                 else if message.type == .EVENT {
@@ -461,13 +479,17 @@ public class ConnectionPool: ObservableObject {
 //                        if message.relayType == .DM && !connection.relayData.shouldDM(for: message.accountPubkey) { continue } // TODO: THIS ONE NEEDS TO BE AT AUTH
                     
                     if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
+#if DEBUG
                         L.sockets.debug("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description)")
+#endif
                         continue
                     }
                     if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
                         connection.connect()
                     }
+#if DEBUG
                     L.sockets.debug("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
+#endif
                     connection.sendMessage(message.message)
                 }
             }
@@ -511,7 +533,9 @@ public class ConnectionPool: ObservableObject {
                         continue
                         //                        managedClient.connect()
                     }
+#if DEBUG
                     L.sockets.info("🔚🔚 CLOSE: \(message.message)")
+#endif
                     if let cmSubId = message.clientMessage.subscriptionId {
                         self.queue.async(flags: .barrier) { [weak connection] in
                             connection?.nreqSubscriptions.remove(cmSubId)
@@ -524,7 +548,9 @@ public class ConnectionPool: ObservableObject {
                     if (message.relayType == .WRITE && !connection.relayData.write) && !isRestrictedForThisRelay { continue }
                     
                     if let accountPubkey = accountPubkey, connection.relayData.excludedPubkeys.contains(accountPubkey) {
+#if DEBUG
                         L.sockets.info("sendMessage: \(accountPubkey) excluded from \(connection.url) - not publishing here isNC:\(connection.isNC.description) - isNWC: \(connection.isNWC.description) ")
+#endif
                         continue
                     }
                     if (!connection.isSocketConnected) && (!connection.isSocketConnecting) {
@@ -538,7 +564,9 @@ public class ConnectionPool: ObservableObject {
                         connection.eventsThatMayNeedAuth[nEvent.id] = message.message
                     }
                     
+#if DEBUG
                     L.sockets.info("🚀🚀🚀 PUBLISHING TO \(connection.url): \(message.message)")
+#endif
                     connection.sendMessage(message.message)
                 }
             }
@@ -574,7 +602,12 @@ public class ConnectionPool: ObservableObject {
     
     @MainActor
     func sendEphemeralMessage(_ message: String, relay: String) {
-        guard vpnGuardOK() else { L.sockets.debug("📡📡 No VPN: Connection cancelled (\(relay)"); return }
+        guard vpnGuardOK() else {
+#if DEBUG
+            L.sockets.debug("📡📡 No VPN: Connection cancelled (\(relay)")
+#endif
+            return
+        }
         let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: false, search: true, auth: false, excludedPubkeys: []))
         if !connection.isConnected {
             connection.connect()
@@ -715,7 +748,9 @@ public class ConnectionPool: ObservableObject {
                 $0.value.count > $1.value.count
             }) {
             
+#if DEBUG
             L.sockets.debug("📤📤 Outbox 🟩 SENDING EVENT -- \(relay): \(pubkeys.joined(separator: ","))")
+#endif
             if let conn = self.outboxConnections[relay] {
                 if !conn.relayData.write {
                     conn.relayData.setWrite(true)
