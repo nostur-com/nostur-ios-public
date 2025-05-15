@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 
 @available(iOS 16.0, *)
 struct AppReviewView: View {
@@ -8,12 +9,8 @@ struct AppReviewView: View {
     var body: some View {
         Color.clear
             .onAppear {
+                reviewManager.requestReview = requestReview
                 reviewManager.trackAppUsage()
-                
-                if reviewManager.shouldRequestReview() {
-                    requestReview()
-                    reviewManager.setLastReviewRequest()
-                }
             }
     }
 }

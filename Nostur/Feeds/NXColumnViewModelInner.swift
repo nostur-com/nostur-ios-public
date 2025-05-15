@@ -12,7 +12,15 @@ import Combine
 // So moved to separate NXColumnViewModelInner
 class NXColumnViewModelInner: ObservableObject {
     
-    @Published public var unreadIds: [String: Int] = [:]
+    @Published public var unreadIds: [String: Int] = [:] {
+        didSet {
+            if #available(iOS 16.0, *) {
+                if oldValue.reduce(0, { $0 + $1.value }) > 0 && unreadCount == 0 {
+                    AppReviewManager.shared.didJustReachEndOfFeed = true
+                }
+            }
+        }
+    }
     
     public var unreadCount: Int {
         unreadIds.reduce(0, { $0 + $1.value })

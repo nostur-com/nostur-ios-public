@@ -1,8 +1,11 @@
 import SwiftUI
 import StoreKit
 
+@available(iOS 16.0, *)
 class AppReviewManager: ObservableObject {
     static let shared = AppReviewManager()
+    
+    public var requestReview: RequestReviewAction? = nil
     
     private let userDefaults = UserDefaults.standard
     private let firstLaunchKey = "first_launch_date"
@@ -13,6 +16,19 @@ class AppReviewManager: ObservableObject {
     private let hasZappedKey = "has_zapped"
     private let hasUsedPostPreviewKey = "has_used_post_preview"
     private let hasUsedPostKey = "has_used_post"
+    
+    @Published var didJustReachEndOfFeed = false {
+        didSet {
+            if oldValue == false && didJustReachEndOfFeed {
+                if shouldRequestReview() {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        self.requestReview?()
+                        self.setLastReviewRequest()
+                    }
+                }
+            }
+        }
+    }
     
     private init() {
         // Set first launch date if not set
@@ -62,6 +78,9 @@ class AppReviewManager: ObservableObject {
     }
     
     public func shouldRequestReview() -> Bool {
+        // Don't interupt user, only ask when feed unread goes from N to 0.
+        guard didJustReachEndOfFeed else { return false }
+        
         // Check if user has been using the app for at least 2 weeks
         guard let firstLaunchDate = userDefaults.object(forKey: firstLaunchKey) as? Date else {
             return false
