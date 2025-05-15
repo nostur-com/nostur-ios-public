@@ -1402,7 +1402,15 @@
       }
     },
     "Add blossom server" : {
-      "comment" : "Navigation title for screen to create a new feed"
+      "comment" : "Navigation title for screen to create a new feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blossom server toevoegen"
+          }
+        }
+      }
     },
     "Add comment" : {
       "comment" : "Placeholder text for adding a comment",
@@ -1459,7 +1467,15 @@
       }
     },
     "Add media server" : {
-      "comment" : "Button to add a new media server"
+      "comment" : "Button to add a new media server",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mediaserver toevoegen"
+          }
+        }
+      }
     },
     "Add new relay..." : {
       "localizations" : {
@@ -2057,10 +2073,25 @@
       }
     },
     "Blossom server" : {
-      "comment" : "Header for entering blossom server address"
+      "comment" : "Header for entering blossom server address",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blossom server"
+          }
+        }
+      }
     },
     "Blossom servers" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blossom servers"
+          }
+        }
+      }
     },
     "Blue" : {
       "localizations" : {
@@ -2194,7 +2225,14 @@
       "shouldTranslate" : false
     },
     "Checking relays for your blossom server list..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bezig met zoeken naar je blossom serverlijst…"
+          }
+        }
+      }
     },
     "Choose a photo" : {
       "localizations" : {
@@ -2436,7 +2474,14 @@
       }
     },
     "Configure blossom server(s)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blossom server(s) instellen"
+          }
+        }
+      }
     },
     "Configure column" : {
       "localizations" : {
@@ -3416,6 +3461,9 @@
           }
         }
       }
+    },
+    "Does?" : {
+      "shouldTranslate" : false
     },
     "Done" : {
       "localizations" : {
@@ -4775,7 +4823,14 @@
       }
     },
     "Let others know on which servers your media can be found" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laat anderen weten op welke servers je uploads gevonden kunnen worden"
+          }
+        }
+      }
     },
     "Let's go!" : {
       "comment" : "Button to start using Nostur, during onboarding",
@@ -5160,7 +5215,15 @@
       }
     },
     "Media cache" : {
-      "comment" : "Settings heading"
+      "comment" : "Settings heading",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media cache"
+          }
+        }
+      }
     },
     "Media from posts from anyone which are most liked or reposted by people you follow" : {
       "localizations" : {
@@ -5196,7 +5259,15 @@
       }
     },
     "Media uploading" : {
-      "comment" : "Setting heading on settings screen"
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media uploads"
+          }
+        }
+      }
     },
     "mentions" : {
       "localizations" : {
@@ -6737,7 +6808,14 @@
       }
     },
     "Publish list now" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijst nu publiceren"
+          }
+        }
+      }
     },
     "Publish selected badges on profile" : {
       "localizations" : {
@@ -6750,7 +6828,14 @@
       }
     },
     "Publish to relays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publiceer naar relays"
+          }
+        }
+      }
     },
     "Publish to this relay" : {
       "comment" : "Label for toggle to publish to this relay",
@@ -6786,7 +6871,14 @@
       }
     },
     "Published to:" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gepubliceerd naar:"
+          }
+        }
+      }
     },
     "Purple" : {
       "localizations" : {
@@ -7937,10 +8029,25 @@
       }
     },
     "Server address" : {
-      "comment" : "Placeholder for input field to enter blossom server address"
+      "comment" : "Placeholder for input field to enter blossom server address",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serveradres"
+          }
+        }
+      }
     },
     "Servers higher on the list will be used first" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Servers hoger op de lijst worden eerst gebruikt"
+          }
+        }
+      }
     },
     "Session has ended" : {
       "localizations" : {
@@ -8653,6 +8760,9 @@
           }
         }
       }
+    },
+    "Testing" : {
+      "shouldTranslate" : false
     },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
@@ -9439,7 +9549,15 @@
       }
     },
     "Upload method" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploadmethode"
+          }
+        }
+      }
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",
