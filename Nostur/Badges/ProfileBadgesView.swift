@@ -102,6 +102,7 @@ struct ProfileBadgesContainer: View {
 }
 
 struct ProfileBadgesView: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     var verifiedBadges: [ProfileBadge]
     @State var selectedBadge: Event? = nil
@@ -141,6 +142,7 @@ struct ProfileBadgesView: View {
                     }
                 }
                 .environmentObject(themes)
+                .environmentObject(la)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)

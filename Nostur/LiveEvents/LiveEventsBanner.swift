@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct LiveEventsBanner: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var npn: NewPostNotifier
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
@@ -87,6 +88,8 @@ struct LiveEventsBanner: View {
                         }
                     }
                     .presentationBackgroundCompat(themes.theme.listBackground)
+                    .environmentObject(la)
+                
             }
         }
 

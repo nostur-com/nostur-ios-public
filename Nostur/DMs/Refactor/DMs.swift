@@ -10,6 +10,7 @@ import Combine
 import NavigationBackport
 
 struct DMs: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var themes: Themes
     @State private var navPath = NBNavigationPath()
@@ -180,6 +181,7 @@ struct DMs: View {
                             }
                         }
                         .environmentObject(themes)
+                        .environmentObject(la)
                 }
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(themes.theme.listBackground)

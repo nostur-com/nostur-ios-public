@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct CustomFeedsListScreen: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     
@@ -125,6 +126,7 @@ struct CustomFeedsListScreen: View {
             NBNavigationStack {
                 NewListSheet()
                     .environmentObject(themes)
+                    .environmentObject(la)
             }
             .presentationBackgroundCompat(themes.theme.listBackground)
         }

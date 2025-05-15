@@ -10,6 +10,7 @@ import NavigationBackport
 import NostrEssentials
 
 struct EditNosturList: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject public var list: CloudFeed
     
     @EnvironmentObject private var themes: Themes
@@ -168,6 +169,7 @@ struct EditNosturList: View {
                     }
                 }
                 .environmentObject(themes)
+                .environmentObject(la)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)

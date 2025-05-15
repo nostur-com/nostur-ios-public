@@ -124,6 +124,7 @@ struct ComposePost: View {
                                                 })
                                                 .equatable()
                                                 .environmentObject(themes)
+                                                .environmentObject(la)
                                                 .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
                                                 .navigationBarTitleDisplayMode(.inline)
                                                 .toolbar {

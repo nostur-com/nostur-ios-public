@@ -11,6 +11,8 @@ import SwiftUI
 // wrap in AppEnvironment { } to always have our EnvironmentObjects
 struct AppEnvironment<Content: View>: View {
     
+    @EnvironmentObject private var la: LoggedInAccount
+    
     // Need here to use for .tint
     @ObservedObject private var themes: Themes = .default
     
@@ -28,6 +30,7 @@ struct AppEnvironment<Content: View>: View {
             .environmentObject(DirectMessageViewModel.default)
             .environmentObject(NetworkMonitor.shared)
             .environmentObject(SettingsStore.shared)
+            .environmentObject(la)
     }
 }
 

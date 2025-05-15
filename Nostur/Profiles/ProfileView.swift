@@ -20,7 +20,7 @@ struct ProfileView: View {
     
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
-//    @EnvironmentObject private var screenSpace: ScreenSpace
+    @EnvironmentObject private var la: LoggedInAccount
     
     @ObservedObject private var settings: SettingsStore = .shared
 
@@ -391,12 +391,14 @@ struct ProfileView: View {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
                                 .environmentObject(themes)
+                                .environmentObject(la)
 //                                .environmentObject(screenSpace)
                         }
                     }
                     else {
                         ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
                             .environmentObject(themes)
+                            .environmentObject(la)
 //                            .environmentObject(screenSpace)
                     }
                 }

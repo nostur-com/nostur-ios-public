@@ -300,6 +300,7 @@ struct SideBar: View {
                 })
                     .presentationDetents45ml()
                     .environmentObject(themes)
+                    .environmentObject(loggedInAccount)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)
@@ -308,6 +309,7 @@ struct SideBar: View {
             NBNavigationStack {
                 AnySigner()
                     .environmentObject(themes)
+                    .environmentObject(loggedInAccount)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(themes.theme.listBackground)

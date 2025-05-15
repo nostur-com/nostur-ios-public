@@ -11,10 +11,10 @@ import NukeUI
 import NavigationBackport
 
 struct BadgeDetailView: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var la: LoggedInAccount
     
     @State var awardToPeopleIsShown = false
     
@@ -135,6 +135,7 @@ struct BadgeDetailView: View {
                 .navigationTitle(String(localized:"Award to", comment: "Navigation title of screen where you choose who to award badge to"))
                 .navigationBarTitleDisplayMode(.inline)
                 .environmentObject(themes)
+                .environmentObject(la)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") {
