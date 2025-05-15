@@ -19,6 +19,7 @@ extension View {
 }
 
 struct WithSheets: ViewModifier {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
@@ -80,6 +81,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $privateNote) { note in
                 NBNavigationStack {
                     EditPrivateNoteSheet(privateNote: note)
+                        .environmentObject(la)
                         .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
@@ -93,6 +95,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $post) { post in
                 NBNavigationStack {
                     NewPrivateNoteSheet(post: post)
+                        .environmentObject(la)
                         .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
@@ -106,6 +109,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $contact) { contact in
                 NBNavigationStack {
                     NewPrivateNoteSheet(contact: contact)
+                        .environmentObject(la)
                         .environmentObject(themes)
                 }
                 .nbUseNavigationStack(.never)
@@ -119,6 +123,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $reportPost, content: { reportPost in
                 NBNavigationStack {
                     ReportPostSheet(nrPost: reportPost.nrPost)
+                        .environmentObject(la)
                         .environmentObject(dim)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
@@ -133,6 +138,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $imposterDetails, content: { imposterDetails in
                 NBNavigationStack {
                     PossibleImposterDetail(possibleImposterPubkey: imposterDetails.pubkey, followingPubkey: imposterDetails.similarToPubkey)
+                        .environmentObject(la)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
@@ -145,6 +151,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $reportContact, content: { reportContact in
                 NBNavigationStack {
                     ReportContactSheet(reportContact: reportContact)
+                        .environmentObject(la)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
@@ -213,6 +220,7 @@ struct WithSheets: ViewModifier {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
+                                .environmentObject(la)
                                 .environmentObject(dim)
                                 .environmentObject(themes)
                                 .presentationBackgroundCompat(themes.theme.listBackground)
@@ -220,6 +228,7 @@ struct WithSheets: ViewModifier {
                     }
                     else {
                         ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
+                            .environmentObject(la)
                             .environmentObject(dim)
                             .environmentObject(themes)
                             .presentationBackgroundCompat(themes.theme.listBackground)
@@ -232,6 +241,7 @@ struct WithSheets: ViewModifier {
                 if let account = account(), account.isNC {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                         QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
+                            .environmentObject(la)
                             .environmentObject(dim)
                             .presentationDetents200()
                             .presentationDragIndicatorVisible()
@@ -241,6 +251,7 @@ struct WithSheets: ViewModifier {
                 }
                 else {
                     QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
+                        .environmentObject(la)
                         .environmentObject(dim)
                         .presentationDetents200()
                         .presentationDragIndicatorVisible()
@@ -254,6 +265,7 @@ struct WithSheets: ViewModifier {
                     if let account = account(), account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
+                                .environmentObject(la)
                                 .environmentObject(dim)
                                 .presentationBackgroundCompat(themes.theme.listBackground)
                         }
@@ -261,6 +273,7 @@ struct WithSheets: ViewModifier {
                     }
                     else {
                         ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
+                            .environmentObject(la)
                             .environmentObject(dim)
                             .environmentObject(themes)
                             .presentationBackgroundCompat(themes.theme.listBackground)
@@ -280,6 +293,7 @@ struct WithSheets: ViewModifier {
             }
             .sheet(item: $paymentInfo) { paymentInfo in
                 PaymentAmountSelector(paymentInfo: paymentInfo)
+                    .environmentObject(la)
                     .environmentObject(themes)
                     .presentationBackgroundCompat(themes.theme.listBackground)
             }
@@ -291,6 +305,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $addRemoveContactFromList) { nrContact in
                 NBNavigationStack {
                     AddRemoveToListsheet(nrContact: nrContact)
+                        .environmentObject(la)
                         .environmentObject(themes)
                         .environment(\.managedObjectContext, viewContext())
                         .presentationBackgroundCompat(themes.theme.listBackground)
@@ -308,6 +323,7 @@ struct WithSheets: ViewModifier {
                     ComposePost(onDismiss: {
                         self.newHighlight = nil
                     }, kind: .highlight, highlight: newHighlight)
+                        .environmentObject(la)
                         .environmentObject(dim)
                         .environmentObject(themes)
                         .environment(\.managedObjectContext, viewContext())
@@ -325,6 +341,7 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     LazyNoteMenuSheet(nrPost: nrPost)
                         .presentationDetentsMedium()
+                        .environmentObject(la)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
                 }
@@ -340,6 +357,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $zapCustomizerSheetInfo) { zapCustomizerSheetInfo in
                     ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
                         .presentationDetentsLarge()
+                        .environmentObject(la)
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
             }
@@ -390,6 +408,7 @@ struct WithSheets: ViewModifier {
                         .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         .padding(.vertical, 10)
                         .environmentObject(screenshotDIM)
+                        .environmentObject(la)
                         .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                         .environment(\.colorScheme, colorScheme)
                         .environmentObject(themes)

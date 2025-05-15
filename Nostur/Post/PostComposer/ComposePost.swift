@@ -23,6 +23,7 @@ struct ComposePost: View {
     @State private var isAuthorSelectionShown = false
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     
@@ -254,6 +255,7 @@ struct ComposePost: View {
                                 VStack(alignment: .leading) {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
+                                        .environmentObject(la)
                                         .environmentObject(previewDIM)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {
@@ -268,6 +270,7 @@ struct ComposePost: View {
                                 VStack(alignment: .leading) {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                         .environmentObject(themes)
+                                        .environmentObject(la)
                                         .environmentObject(previewDIM)
                                     
                                     if let nEvent = vm.previewNEvent, showAutoPilotPreview {

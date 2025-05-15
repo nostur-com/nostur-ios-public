@@ -15,6 +15,7 @@ import NostrEssentials
 struct StreamDetail: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @ObservedObject public var liveEvent: NRLiveEvent
@@ -196,6 +197,7 @@ struct StreamDetail: View {
                 NBNavigationStack {
                     SelectedParticipantView(nrContact: nrContact, showZapButton: true, aTag: liveEvent.id, showModeratorControls: false, selectedContact: $selectedContact)
                     .environmentObject(themes)
+                    .environmentObject(la)
                     .padding(10)
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
