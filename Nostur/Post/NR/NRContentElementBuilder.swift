@@ -279,16 +279,16 @@ class NRContentElementBuilder {
     static let previewNaddrPattern = ###"(nostr:|@)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     
     // Try to render everything, including wrong
-    static let notePattern = ###"(nostr:|@?)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
-    static let neventPattern = ###"(nostr:|@?)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
-    static let naddrPattern = ###"(nostr:|@?)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let notePattern = ###"(nostr:|@?)(?<!/)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
+    static let neventPattern = ###"(nostr:|@?)(?<!/)(nevent1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let naddrPattern = ###"(nostr:|@?)(?<!/)(naddr1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
     static let codePattern = ###"```([\s\S]*?)```"###
     
     // These become cards so
     // no nostr: here, because we do that in TextParser (inline)
     // only if there is a newline before, else we also do that in TextParser (inline)
-    static let nprofilePattern = ###"(?:\n@?)(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
-    static let npubPattern = ###"(?:\n@?)(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})"### // no nostr: here, because we do that in TextParser
+    static let nprofilePattern = ###"(?:\n@?)(?<!/)(nprofile1[023456789acdefghjklmnpqrstuvwxyz]+)\b"###
+    static let npubPattern = ###"(?:\n@?)(?<!/)(npub1[023456789acdefghjklmnpqrstuvwxyz]{58})"### // no nostr: here, because we do that in TextParser
     
     static let otherUrlsPattern = ###"(?i)(https\:\/\/)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?[^\s\)\.]"###
     
