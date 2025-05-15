@@ -802,6 +802,7 @@ public final class NewPostModel: ObservableObject {
             availableContacts.insert(nrContact)
             typingTextModel.selectedMentions.insert(nrContact)
             mentioning = false
+            contactSearchResults = []
             lastHit = mentionName
 
             
