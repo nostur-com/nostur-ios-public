@@ -12,7 +12,16 @@ struct AudioOnlyBar: View {
     @ObservedObject var vm: AnyPlayerModel = .shared
     
     private var title: String {
-        vm.nrLiveEvent?.title ?? (vm.nrPost?.anyName ?? "")
+        if let title = vm.nrLiveEvent?.title, title != "" {
+            return title
+        }
+        else if let anyName = vm.nrPost?.anyName {
+            return anyName
+        }
+        else if let names = vm.nrLiveEvent?.participantsOrSpeakers.map({ $0.anyName }).joined(separator: ", ") {
+            return names
+        }
+        return "Untitled"
     }
     
     private var subtitle: String {
