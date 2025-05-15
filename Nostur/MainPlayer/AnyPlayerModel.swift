@@ -146,17 +146,22 @@ class AnyPlayerModel: ObservableObject {
         self.nrPost = nrPost
         self.didFinishPlaying = false
         self.isLoading = true
-        self.isShown = true
         self.nrLiveEvent = nil
         self.aspect = 16/9 // reset
         self.availableViewModes = availableViewModes
         self.isStream = url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" || url.absoluteString.suffix(3) == "mp3"
         self.currentlyPlayingUrl = url.absoluteString
         
-        // Reuse existing viewMode if already playing, unless viewMode is not available. Don't use audio only bar
-        if (viewMode != .audioOnlyBar) && (!self.isShown || !availableViewModes.contains(viewMode)) {
+    
+        if availableViewModes.contains(viewMode) && viewMode != .audioOnlyBar { // Reuse view mode, only if its not .audioOnlyBar
+            self.viewMode = viewMode
+        }
+        else {
             self.viewMode = availableViewModes.first ?? .fullscreen
         }
+        
+        
+        self.isShown = true
         
         
         // Avoid hangs, do rest here

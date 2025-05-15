@@ -278,10 +278,27 @@ struct OverlayPlayer: View {
                                     }
                                     .overlay(alignment: .topLeading) {
                                         if vm.viewMode == .overlay {
+                                            Image(systemName: "multiply")
+                                                .font(.title2)
+                                                .foregroundColor(Color.white)
+                                                .opacity(0.8)
+                                                .padding(5)
+                                                .contentShape(Rectangle())
+                                                .highPriorityGesture(
+                                                    TapGesture()
+                                                    .onEnded({ _ in
+                                                        withAnimation {
+                                                            vm.close()
+                                                        }
+                                                    }))
+                                        }
+                                    }
+                                    .overlay(alignment: .bottomLeading) {
+                                        if vm.viewMode == .overlay {
                                             Image(systemName: "rectangle.bottomthird.inset.filled")
-                                                .opacity(0.5)
                                                 .frame(height: 28)
                                                 .foregroundColor(Color.white)
+                                                .opacity(0.8)
                                                 .padding(5)
                                                 .contentShape(Rectangle())
                                                 .highPriorityGesture(
@@ -292,21 +309,6 @@ struct OverlayPlayer: View {
                                                         }
                                                     }))
                                         }
-//                                        else {
-//                                            // Close button for .overlay mode
-//                                            Image(systemName: "multiply")
-//                                                .font(.title2)
-//                                                .foregroundColor(Color.white)
-//                                                .padding(10)
-//                                                .contentShape(Rectangle())
-//                                                .highPriorityGesture(
-//                                                    TapGesture()
-//                                                    .onEnded({ _ in
-//                                                        withAnimation {
-//                                                            vm.close()
-//                                                        }
-//                                                    }))
-//                                        }
                                     }
                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
                                     // but in .fullscreen we don't need high priority gesture because it interferes with playback controls
