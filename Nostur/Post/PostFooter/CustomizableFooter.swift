@@ -55,7 +55,7 @@ struct CustomizableFooterFragmentView: View {
                 case "🔄":
                     RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme, isItem: true)
                 case "+":
-                    LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
                         ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
@@ -98,7 +98,7 @@ struct CustomizableFooterFragmentView: View {
                 case "🔄":
                     RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "+":
-                    LikeButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
                         ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
