@@ -78,7 +78,7 @@ final class MCEmojiCollectionViewCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupLayout()
-        setupGestureRecognizers()
+//        setupGestureRecognizers() //skintone crashes so disable.
     }
     
     required init?(coder: NSCoder) {
@@ -95,8 +95,8 @@ final class MCEmojiCollectionViewCell: UICollectionViewCell {
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         super.touchesEnded(touches, with: event)
-        guard let emoji = emoji,
-              !(emoji.isSkinToneSupport && !emoji.isSkinBeenSelectedBefore) else { return }
+//        guard let emoji = emoji, !(emoji.isSkinToneSupport && !emoji.isSkinBeenSelectedBefore) else { return } // skintone crash so disable
+        guard let emoji = emoji else { return }
         delegate?.didSelect(emoji, in: self)
         UIView.animate(withDuration: Constants.selectCellBackgroundAnimationDuration, delay: 0) {
             self.containerView.backgroundColor = .clear
@@ -154,16 +154,17 @@ final class MCEmojiCollectionViewCell: UICollectionViewCell {
     // MARK: - Private Methods
     
     private func isFirstChoiceSkinTone() -> Bool {
-        guard let emoji = emoji else { return true }
-        isSkinTonePickerShown = false
-        switch emoji.isSkinToneSupport && !emoji.isSkinBeenSelectedBefore && !isSkinTonePickerShown {
-        case true:
-            isSkinTonePickerShown = true
-            delegate?.choiceSkinTone(emoji, in: self)
-            return true
-        case false:
-            return false
-        }
+        return false
+//        guard let emoji = emoji else { return true }
+//        isSkinTonePickerShown = false
+//        switch emoji.isSkinToneSupport && !emoji.isSkinBeenSelectedBefore && !isSkinTonePickerShown {
+//        case true:
+//            isSkinTonePickerShown = true
+//            delegate?.choiceSkinTone(emoji, in: self)
+//            return true
+//        case false:
+//            return false
+//        }
     }
     
     private func setupLayout() {
@@ -214,6 +215,10 @@ extension MCEmojiCollectionViewCell: UIGestureRecognizerDelegate {
         _ gestureRecognizer: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
     ) -> Bool {
+        if otherGestureRecognizer is UIPanGestureRecognizer {
+            // cancel out scrolling and sheet dismissal
+            return false
+        }
         return true
     }
 }
