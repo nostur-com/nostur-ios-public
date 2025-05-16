@@ -163,13 +163,13 @@ public struct MCEmojiPickerRepresentableController: UIViewControllerRepresentabl
             context.coordinator.isNewEmojiSet.toggle()
             return
         }
-        if representableController is MCEmojiPickerViewController { return }
+        if representableController is MCEmojiPickerSheetViewController { return }
         switch presentationMode {
         case .sheet, .view:
             guard representableController.presentedViewController == nil else { return }
             let emojiPicker = emojiPicker(context, representableController: representableController)
-            if let arrowDirection { emojiPicker.arrowDirection = arrowDirection }
-            if let customHeight { emojiPicker.customHeight = customHeight }
+//            if let arrowDirection { emojiPicker.arrowDirection = arrowDirection }
+//            if let customHeight { emojiPicker.customHeight = customHeight }
             if let horizontalInset { emojiPicker.horizontalInset = horizontalInset }
             if let isDismissAfterChoosing { emojiPicker.isDismissAfterChoosing = isDismissAfterChoosing }
             if let selectedEmojiCategoryTintColor {
@@ -179,24 +179,18 @@ public struct MCEmojiPickerRepresentableController: UIViewControllerRepresentabl
             context.coordinator.addPickerDismissingObserver()
             representableController.present(emojiPicker, animated: true)
         case .none:
-            if representableController.presentedViewController is MCEmojiPickerViewController && context.coordinator.presentationMode != .none {
+            if representableController.presentedViewController is MCEmojiPickerSheetViewController && context.coordinator.presentationMode != .none {
                 representableController.presentedViewController?.dismiss(animated: true)
             }
         }
         context.coordinator.presentationMode = presentationMode
     }
 
-    private func emojiPicker(_ context: Context, representableController: UIViewController? = nil) -> MCEmojiPickerViewController {
-        let emojiPicker = MCEmojiPickerViewController(
-            maxCurrentAvailableOsVersion,
-            onlyShowNewEmojisForVersion: onlyShowNewEmojisForVersion,
-            displayCategories: displayCategories,
-            nextKeyboard: nextKeyboard,
-            deleteBackward: deleteBackward
-        )
+    private func emojiPicker(_ context: Context, representableController: UIViewController? = nil) -> MCEmojiPickerSheetViewController {
+        let emojiPicker = MCEmojiPickerSheetViewController()
         emojiPicker.delegate = context.coordinator
-        emojiPicker.sourceView = representableController?.view
-        emojiPicker.displayCountOfEmojisInHeader = displayCountOfEmojisInHeader
+//        emojiPicker.sourceView = representableController?.view
+//        emojiPicker.displayCountOfEmojisInHeader = displayCountOfEmojisInHeader
         return emojiPicker
     }
 }
