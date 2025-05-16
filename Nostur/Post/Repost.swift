@@ -174,6 +174,9 @@ struct RepostHeader: View {
             Image(systemName: "arrow.2.squarepath")
                 .fontWeightBold()
                 .scaleEffect(0.6)
+            
+            ObservedPFP(pfp: PFPAttributes(pubkey: pubkey), size: 20.0)
+            
             Text(repostedHeader)
                 .font(.subheadline)
                 .fontWeight(.bold)
