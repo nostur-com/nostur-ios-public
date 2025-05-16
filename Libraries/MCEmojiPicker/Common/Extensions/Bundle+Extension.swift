@@ -30,11 +30,20 @@ import Foundation
 extension Bundle {
     /// Resources bundle.
     static var module: Bundle {
-        let path = Bundle(for: MCUnicodeManager.self).path(
-            forResource: "MCEmojiPicker",
-            ofType: "bundle"
-        ) ?? ""
-        return Bundle(path: path) ?? Bundle.main
+        // First try to find the bundle in the main bundle
+        if let path = Bundle.main.path(forResource: "MCEmojiPicker", ofType: "bundle"),
+           let bundle = Bundle(path: path) {
+            return bundle
+        }
+        
+        // If not found, try to find it in the framework bundle
+        if let path = Bundle(for: MCUnicodeManager.self).path(forResource: "MCEmojiPicker", ofType: "bundle"),
+           let bundle = Bundle(path: path) {
+            return bundle
+        }
+        
+        // If still not found, return the main bundle
+        return Bundle.main
     }
 }
 #endif
