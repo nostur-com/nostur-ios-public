@@ -137,6 +137,12 @@ extension MCEmojiCategoryIconView {
             CategoryIconsDrawKit.drawSymbolsCategory(frame: rect, tintColor: currentIconTintColor)
         case .flags:
             CategoryIconsDrawKit.drawFlagsCategory(frame: rect, tintColor: currentIconTintColor)
+        case .search:
+            // Use SF Symbol for search icon
+            if #available(iOS 13.0, *), let searchImage = UIImage(systemName: "magnifyingglass") {
+                searchImage.withTintColor(currentIconTintColor, renderingMode: .alwaysTemplate)
+                    .draw(in: rect)
+            }
         }
     }
     

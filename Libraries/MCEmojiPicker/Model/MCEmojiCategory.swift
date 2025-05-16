@@ -40,6 +40,7 @@ enum MCEmojiCategoryType: Int, CaseIterable {
     case objects
     case symbols
     case flags
+    case search
     
     /// A constant key for accessing name localization resources for each category.
     var localizeKey: String {
@@ -62,6 +63,8 @@ enum MCEmojiCategoryType: Int, CaseIterable {
             return "symbols"
         case .flags:
             return "flags"
+        case .search:
+            return "search"
         }
     }
 }

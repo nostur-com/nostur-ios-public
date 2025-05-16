@@ -67,14 +67,14 @@ final class MCEmojiPickerView: UIView {
     
     // MARK: - Private Properties
     
-    private let emojiCategoryTypes: [MCEmojiCategoryType]
+    private var emojiCategoryTypes: [MCEmojiCategoryType]
     
     private let displayCountOfEmojisInHeader: Bool
     private let displayCategories: Bool
     private let deleteBackward: (() -> Void)?
     private let nextKeyboard: (() -> Void)?
 
-    private let collectionView: UICollectionView = {
+    public let collectionView: UICollectionView = {
         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
         layout.sectionHeadersPinToVisibleBounds = true
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -140,8 +140,8 @@ final class MCEmojiPickerView: UIView {
     
     // MARK: - Life Cycle
     
-    override func draw(_ rect: CGRect) {
-        super.draw(rect)
+    override func layoutSubviews() {
+        super.layoutSubviews()
         if displayCategories {
             setupCategoryViews()
         }
@@ -150,6 +150,10 @@ final class MCEmojiPickerView: UIView {
             setupCollectionViewBottomInsets()
             setupCategoriesControlLayout()
         }
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
     }
     
     // MARK: - Public Methods
@@ -161,6 +165,26 @@ final class MCEmojiPickerView: UIView {
         categoryViews.forEach({
             $0.updateCategoryViewState(selectedCategoryIndex: categoryIndex)
         })
+    }
+    
+    /// Updates the categories shown in the picker.
+    ///
+    /// - Parameter categories: New categories to display
+    public func updateCategories(_ categories: [MCEmojiCategoryType]) {
+        // Clear existing views
+        categoryViews.removeAll()
+        categoriesStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        // Update category types
+        emojiCategoryTypes = categories
+        
+        // Rebuild category views
+        if displayCategories {
+            setupCategoryViews()
+        }
+        
+        // Reload collection view
+        collectionView.reloadData()
     }
     
     // MARK: - Private Methods
@@ -227,6 +251,11 @@ final class MCEmojiPickerView: UIView {
 
     private func setupCategoryViews() {
         guard !emojiCategoryTypes.isEmpty else { return }
+        
+        // Clear existing category views
+        categoryViews.removeAll()
+        categoriesStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
         if #available(iOS 13.0, *), let abc = UIImage(systemName: "characters.uppercase"), nextKeyboard != nil {
             categoriesStackView.addArrangedSubview(
                 UIButton.systemButton(
@@ -236,6 +265,7 @@ final class MCEmojiPickerView: UIView {
                 )
             )
         }
+        
         for categoryIndex in 0...emojiCategoryTypes.count - 1 {
             let categoryView = MCTouchableEmojiCategoryView(
                 delegate: self,
@@ -248,6 +278,7 @@ final class MCEmojiPickerView: UIView {
             categoryViews.append(categoryView)
             categoriesStackView.addArrangedSubview(categoryView)
         }
+        
         guard !emojiCategoryTypes.isEmpty else { return }
         if #available(iOS 13.0, *), let back = UIImage(systemName: "delete.backward"), deleteBackward != nil {
             categoriesStackView.addArrangedSubview(

@@ -24,6 +24,7 @@ import Foundation
 
 /// Protocol for the `MCEmojiPickerViewModel`.
 protocol MCEmojiPickerViewModelProtocol {
+    var searchText: Observable<String> { get set }
     /// Whether the picker shows empty categories. Default false.
     var showEmptyEmojiCategories: Bool { get set }
     /// The emoji categories being used
@@ -57,15 +58,21 @@ final class MCEmojiPickerViewModel: MCEmojiPickerViewModelProtocol {
     public var selectedEmojiCategoryIndex = Observable<Int>(value: 0)
     public var showEmptyEmojiCategories = false
     public var onlyShowNewEmojisForVersion = false
+    public var searchText = Observable<String>(value: "") 
 
     public var emojiCategories: [MCEmojiCategory] {
-        allEmojiCategories.filter { showEmptyEmojiCategories || !$0.emojis.isEmpty || onlyShowNewEmojisForVersion }
+        if searchText.value.isEmpty {
+            return allEmojiCategories.filter { showEmptyEmojiCategories || !$0.emojis.isEmpty || onlyShowNewEmojisForVersion }
+        } else {
+            return filteredCategories
+        }
     }
     
     // MARK: - Private Properties
     
     /// All emoji categories.
     private var allEmojiCategories = [MCEmojiCategory]()
+    private var filteredCategories = [MCEmojiCategory]()
     
     // MARK: - Initializers
     
@@ -76,6 +83,45 @@ final class MCEmojiPickerViewModel: MCEmojiPickerViewModelProtocol {
         selectedEmoji.bind { emoji in
             emoji?.incrementUsageCount()
         }
+        // Bind to searchText changes
+        searchText.bind { [weak self] _ in
+            self?.updateFilteredCategories()
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func updateFilteredCategories() {
+      
+        let searchString = searchText.value.lowercased()
+        
+        if searchString.isEmpty {
+            filteredCategories = []
+            return
+        }
+        
+      
+        let allEmojis = allEmojiCategories.flatMap { $0.emojis }
+        
+        let potentialMatches = allEmojiCategories.flatMap { category in
+            category.emojis.filter { emoji in
+                let searchKeyMatch = emoji.searchKey.lowercased().contains(searchString)
+                let stringMatch = emoji.string.lowercased().contains(searchString)
+                return searchKeyMatch || stringMatch
+            }
+        }
+        
+        // Create a single category for search results
+        let searchResults = potentialMatches
+        
+        // Create a search results category with a unique type
+        let searchCategory = MCEmojiCategory(
+            type: .search,
+            categoryName: "Search Results",
+            emojis: searchResults
+        )
+        
+        filteredCategories = [searchCategory]
     }
     
     // MARK: - Public Methods
