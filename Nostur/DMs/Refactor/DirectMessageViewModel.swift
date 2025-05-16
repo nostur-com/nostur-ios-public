@@ -61,7 +61,7 @@ class DirectMessageViewModel: ObservableObject {
     }
     
     public var hiddenDMs: Int {
-        dmStates.filter { $0.accountPubkey_ == self.pubkey && $0.isHidden }.count
+        dmStates.count { $0.accountPubkey_ == self.pubkey && $0.isHidden }
     }
     
     private var subscriptions = Set<AnyCancellable>()
@@ -230,7 +230,7 @@ class DirectMessageViewModel: ObservableObject {
                 
                 let unread = lastMessageByOwnAccount
                 ? 0
-                : allReceived.filter { $0.date > unreadSince }.count
+                : allReceived.count { $0.date > unreadSince }
                 
                 let nrContact: NRContact? = NRContact.fetch(contactPubkey)
                 
@@ -304,7 +304,7 @@ class DirectMessageViewModel: ObservableObject {
                 // - Manual markedReadAt date
                 // - Since beginning of time (all)
                 
-                let unread = allReceived.filter { $0.date > unreadSince }.count
+                let unread = allReceived.count { $0.date > unreadSince }
                 
                 let nrContact: NRContact? = NRContact.fetch(contactPubkey)
 
@@ -370,7 +370,7 @@ class DirectMessageViewModel: ObservableObject {
                 // - Manual markedReadAt date
                 // - Since beginning of time (all)
                 
-                let unread = allReceived.filter { $0.date > unreadSince }.count
+                let unread = allReceived.count { $0.date > unreadSince }
                 
                 let nrContact: NRContact? = NRContact.fetch(contactPubkey)
                 

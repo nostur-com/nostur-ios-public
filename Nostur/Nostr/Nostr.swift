@@ -592,17 +592,17 @@ struct TagsHelpers {
 
     func oneEtag() -> Bool {
         // don't count "mention", "reply", "root" tags
-        return eTags().filter { $0.tag.count < 4 }.count == 1
+        return eTags().count { $0.tag.count < 4 } == 1
     }
 
     func twoEtags() -> Bool {
         // don't count "mention", "reply", "root" tags
-        return eTags().filter { $0.tag.count < 4 }.count == 2
+        return eTags().count { $0.tag.count < 4 } == 2
     }
 
     func manyEtags() -> Bool {
         // don't count "mention", "reply", "root" tags
-        return eTags().filter { $0.tag.count < 4 }.count > 2
+        return eTags().count { $0.tag.count < 4 } > 2
     }
     
     

@@ -49,7 +49,7 @@ class Conversation: Identifiable, Hashable, ObservableObject {
                 bg().perform { [weak self] in
                     guard let self = self else { return }
                     let allReceived = Event.fetchEventsBy(pubkey: self.contactPubkey, andKind: 4, context: bg())
-                    let unread = allReceived.filter { $0.date > unreadSince }.count
+                    let unread = allReceived.count { $0.date > unreadSince }
                     Task { @MainActor in
                         self.unread = unread
                         self.accepted = accepted

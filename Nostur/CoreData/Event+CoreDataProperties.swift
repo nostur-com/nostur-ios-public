@@ -1517,7 +1517,7 @@ extension Event {
 func contextWontCrash(_ objects: [NSManagedObject], debugInfo: String? = nil) -> Bool {
     var theContext: NSManagedObjectContext? // <-- All events should have this context
     
-    if objects.filter({ $0.managedObjectContext == nil }).count == objects.count {
+    if objects.count(where: { $0.managedObjectContext == nil }) == objects.count {
         // if no objects have context, that should be fine too, none are saved yet
 #if DEBUG
         L.og.debug("🟠🟠 all contexts nil, should be fine? - \(debugInfo ?? "")")

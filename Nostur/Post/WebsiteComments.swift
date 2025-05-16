@@ -61,7 +61,7 @@ class WebsiteCommentsViewModel: ObservableObject {
             
             guard let events = try? bg().fetch(fr) else { return }
             
-            let urlEvents = events.filter {  $0.fastTags.filter { $0.0 == "r" && $0.1 == url }.count > 0 }
+            let urlEvents = events.filter {  $0.fastTags.count { $0.0 == "r" && $0.1 == url } > 0 }
             
             let roots: [NRPost] = urlEvents
                 .map { NRPost(event: $0) }

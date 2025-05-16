@@ -111,7 +111,7 @@ extension String {
     public func distanceHamming(between target: String) -> Int {
         assert(self.count == target.count)
 
-        return zip(self, target).filter { $0 != $1 }.count
+        return zip(self, target).count { $0 != $1 }
     }
 
     /// Get Jaro-Winkler distance.

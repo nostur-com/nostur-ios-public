@@ -80,11 +80,11 @@ public class ConnectionPool: ObservableObject {
     }
     
     public var connectedCount: Int {
-        connections.filter({ $0.value.isConnected }).count
+        connections.count({ $0.value.isConnected })
     }
     
     public var ephemeralConnectedCount: Int {
-        ephemeralConnections.filter({ $0.value.isConnected }).count
+        ephemeralConnections.count({ $0.value.isConnected })
     }
     
     private var stayConnectedTimer: Timer?

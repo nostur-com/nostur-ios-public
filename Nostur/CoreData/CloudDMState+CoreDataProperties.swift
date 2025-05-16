@@ -42,12 +42,12 @@ extension CloudDMState : Identifiable {
         return try? context.fetch(fr).first
     }
     
-    var unread:Int {
+    var unread: Int {
         guard let contactPubkey_ else { return 0 }
         guard let managedObjectContext else { return 0 }
         let allReceived = Event.fetchEventsBy(pubkey: contactPubkey_, andKind: 4, context: managedObjectContext)
         let unreadSince = markedReadAt_ ?? Date.distantPast
         
-        return allReceived.filter { $0.date > unreadSince }.count
+        return allReceived.count { $0.date > unreadSince }
     }
 }
