@@ -83,6 +83,7 @@ struct MediaPlaceholder: View {
     
     @StateObject private var vm = MediaViewVM()
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var dim: DIMENSIONS
     
     public let galleryItem: GalleryItem
     public var blurHash: String?
@@ -426,7 +427,15 @@ struct MediaPlaceholder: View {
             }
             else if contentMode == .fit {
                 ZoomableItem(id: zoomableId) {
-                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                    if dim.isScreenshot, let flatGif = UIImage(data: gifInfo.gifData) {
+                        Image(uiImage: flatGif)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: availableWidth, height: height)
+                            .contentShape(Rectangle())
+                    }
+                    else {
+                        GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
                         .animation(.smooth(duration: 0.5), value: vm.state)
                         .aspectRatio(contentMode: .fit)
                         .contentShape(Rectangle())
@@ -437,6 +446,7 @@ struct MediaPlaceholder: View {
                         .onDisappear {
                             gifIsPlaying = false
                         }
+                    }
                 } detailContent: {
                     GalleryFullScreenSwiper(
                         initialIndex: galleryItems?.firstIndex(where: { $0.url == galleryItem.url }) ?? 0,
@@ -465,18 +475,27 @@ struct MediaPlaceholder: View {
             }
             else {
                 ZoomableItem(id: zoomableId) {
-                    GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
-                        .animation(.smooth(duration: 0.5), value: vm.state)
-                        .scaledToFill()
-                        .frame(width: availableWidth, height: height, alignment: .center)
-                        .contentShape(Rectangle())
-                        .task(id: galleryItem.url.absoluteString) {
-                            try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
-                            gifIsPlaying = true
-                        }
-                        .onDisappear {
-                            gifIsPlaying = false
-                        }
+                    if dim.isScreenshot, let flatGif = UIImage(data: gifInfo.gifData) {
+                        Image(uiImage: flatGif)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: availableWidth, height: height)
+                            .contentShape(Rectangle())
+                    }
+                    else {
+                        GIFImage(data: gifInfo.gifData, isPlaying: $gifIsPlaying)
+                            .animation(.smooth(duration: 0.5), value: vm.state)
+                            .scaledToFill()
+                            .frame(width: availableWidth, height: height, alignment: .center)
+                            .contentShape(Rectangle())
+                            .task(id: galleryItem.url.absoluteString) {
+                                try? await Task.sleep(nanoseconds: UInt64(0.75) * NSEC_PER_SEC)
+                                gifIsPlaying = true
+                            }
+                            .onDisappear {
+                                gifIsPlaying = false
+                            }
+                    }
                 } detailContent: {
                     GalleryFullScreenSwiper(
                         initialIndex: galleryItems?.firstIndex(where: { $0.url == galleryItem.url }) ?? 0,
