@@ -11,6 +11,7 @@ import Combine
 
 class FooterAttributes: ObservableObject {
     
+    @Published var selectedEmoji = ""
     @Published var replyPFPs: [URL] = []
     
     @Published var replied: Bool

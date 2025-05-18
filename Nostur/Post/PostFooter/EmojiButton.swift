@@ -15,9 +15,6 @@ struct EmojiButton: View {
     private var isLast: Bool
     private var theme: Theme
     
-    @State private var isPresented = false
-    @State private var selectedEmoji = ""
-    
     init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
@@ -26,65 +23,65 @@ struct EmojiButton: View {
         self.theme = theme
     }
     
+    @ViewBuilder
+    var emojiOrLikeButton: some View {
+        if footerAttributes.selectedEmoji != "" {
+            Text(footerAttributes.selectedEmoji)
+        }
+        else {
+            Image(systemName: footerAttributes.liked ? "heart.fill" : "heart")
+        }
+    }
+    
     var body: some View {
-            ZStack {
-                if selectedEmoji != "" {
-                    Text(selectedEmoji)
+            emojiOrLikeButton
+                .foregroundColor(footerAttributes.liked ? .red : theme.footerButtons)
+                .overlay(alignment: .leading) {
+                    AnimatedNumber(number: footerAttributes.likesCount)
+                        .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
+                        .frame(width: 26)
+                        .offset(x: 18)
                 }
-                else {
-                    Image(systemName: footerAttributes.liked ? "heart.fill" : "heart")
+                .padding(.trailing, 30)
+                .padding(.vertical, 5)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    tap()
                 }
-            }
-            .foregroundColor(footerAttributes.liked ? .red : theme.footerButtons)
-            .overlay(alignment: .leading) {
-                AnimatedNumber(number: footerAttributes.likesCount)
-                    .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
-                    .frame(width: 26)
-                    .offset(x: 18)
-            }
-            .padding(.trailing, 30)
-            .padding(.vertical, 5)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                tap()
-            }
-            .onLongPressGesture(minimumDuration: 0.1) {
-                guard selectedEmoji == "" else { return }
-                isPresented = true
-            }
-            .onReceive(receiveNotification(.postAction), perform: { notification in
-                // For updating the like button in multiple views. Example: like in detail, should also update if the event is visible somewhere else in feed.
-                let postAction = notification.object as! PostActionNotification
-                guard postAction.eventId == nrPost.id else { return }
-                
-                switch postAction.type {
-                case .liked(let uuid):
-                    footerAttributes.liked = true
-                    unpublishLikeId = uuid
-                case .unliked:
-                    footerAttributes.liked = false
-                    unpublishLikeId = nil
-                default:
-                    break
+                .onLongPressGesture(minimumDuration: 0.1) {
+                    guard footerAttributes.selectedEmoji == "" else { return }
+                    AppSheetsModel.shared.emojiRR = EmojiPickerFor(footerAttributes: footerAttributes)
                 }
-            })
-            .emojiPicker(
-                isPresented: $isPresented,
-                selectedEmoji: $selectedEmoji
-            )
-            .onChange(of: selectedEmoji) { newValue in
-                guard newValue != "" else { return }
-                tap(reactionContent: newValue)
-            }
+                .onReceive(receiveNotification(.postAction), perform: { notification in
+                    // For updating the like button in multiple views. Example: like in detail, should also update if the event is visible somewhere else in feed.
+                    let postAction = notification.object as! PostActionNotification
+                    guard postAction.eventId == nrPost.id else { return }
+                    
+                    switch postAction.type {
+                    case .liked(let uuid):
+                        footerAttributes.liked = true
+                        unpublishLikeId = uuid
+                    case .unliked:
+                        footerAttributes.liked = false
+                        unpublishLikeId = nil
+                    default:
+                        break
+                    }
+                })
+                .onChange(of: footerAttributes.selectedEmoji) { newValue in
+                    guard newValue != "" else { return }
+                    AppSheetsModel.shared.emojiRR = nil
+                    tap(reactionContent: newValue)
+                }
     }
     
     private func tap(reactionContent: String = "+") {
-        if (footerAttributes.liked || selectedEmoji != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if (footerAttributes.liked || footerAttributes.selectedEmoji != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
-            nrPost.unlike(selectedEmoji != "" ? selectedEmoji : "+")
+            nrPost.unlike(footerAttributes.selectedEmoji != "" ? footerAttributes.selectedEmoji : "+")
             unpublishLikeId = nil
-            selectedEmoji = ""
+            footerAttributes.selectedEmoji = ""
             bg().perform {
                 accountCache()?.removeLike(nrPost.id)
             }
@@ -120,4 +117,9 @@ struct EmojiButton: View {
             }
         }
     }
+}
+
+struct EmojiPickerFor {
+    var id = UUID()
+    var footerAttributes: FooterAttributes
 }

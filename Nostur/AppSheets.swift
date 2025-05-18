@@ -18,6 +18,7 @@ class AppSheetsModel: ObservableObject {
     @Published var askLoginInfo: AskLoginInfo? = nil
     @Published var feedPreviewSheetInfo: FeedPreviewInfo? = nil
     @Published var addContactsToListInfo: AddContactsToListInfo? = nil
+    @Published var emojiRR: EmojiPickerFor? = nil
     
     // Workaround because .sheet / .fullScreenCover has some issues with NavigationBackPort where dismiss() doesn't work
     @MainActor func dismiss() {
@@ -25,6 +26,7 @@ class AppSheetsModel: ObservableObject {
         askLoginInfo = nil
         feedPreviewSheetInfo = nil
         addContactsToListInfo = nil
+        emojiRR = nil
     }
 }
 
@@ -70,6 +72,26 @@ struct WithAppSheets: ViewModifier {
                         .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
                     }
                 }
+            }
+        
+            .background {
+                MCEmojiPickerRepresentableController(
+                    presentationMode: Binding(
+                        get: { asm.emojiRR != nil ? .sheet : .none },
+                        set: { if $0 != .sheet { asm.emojiRR = nil  } }
+                    ),
+                    selectedEmoji: Binding(get: {
+                        if let emojiRR = asm.emojiRR {
+                            return emojiRR.footerAttributes.selectedEmoji
+                        }
+                        return ""
+                    }, set: { newValue in
+                        if let emojiRR = asm.emojiRR {
+                            emojiRR.footerAttributes.selectedEmoji = newValue
+                        }
+                    }),
+                )
+                .allowsHitTesting(false)
             }
     }
 }
