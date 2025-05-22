@@ -11,6 +11,7 @@ struct EmojiButton: View {
     private let nrPost: NRPost
     @ObservedObject private var footerAttributes: FooterAttributes
     @State private var selectedEmoji = ""
+    @State private var alreadySelectedEmoji: String? = nil
     @State private var unpublishLikeId: UUID? = nil
     private var isFirst: Bool
     private var isLast: Bool
@@ -26,7 +27,10 @@ struct EmojiButton: View {
     
     @ViewBuilder
     var emojiOrLikeButton: some View {
-        if selectedEmoji != "" {
+        if let alreadySelectedEmoji {
+            Text(alreadySelectedEmoji)
+        }
+        else if selectedEmoji != "" {
             Text(selectedEmoji)
         }
         else {
@@ -47,7 +51,12 @@ struct EmojiButton: View {
                 .padding(.vertical, 5)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    tap()
+                    if selectedEmoji != "" {
+                        tap(reactionContent: selectedEmoji) // unreact
+                    }
+                    else {
+                        tap() // unlike
+                    }
                 }
                 .onLongPressGesture(minimumDuration: 0.1) {
                     guard selectedEmoji == "" else { return }
@@ -75,16 +84,18 @@ struct EmojiButton: View {
                 })
                 .onChange(of: selectedEmoji) { newValue in
                     guard newValue != "" else { return }
+                    guard alreadySelectedEmoji == nil else { return }
                     AppSheetsModel.shared.emojiRR = nil
                     tap(reactionContent: newValue)
                 }
                 .onAppear {
-                    checkForCustomEmojiReaction()
+                    checkForAlreadyCustomEmojiReaction()
                 }
     }
     
     private func tap(reactionContent: String = "+") {
-        if (reactionContent != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        // UNREACT
+        if (footerAttributes.ourReactions.contains("+") || selectedEmoji != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             nrPost.unlike(reactionContent)
@@ -126,11 +137,11 @@ struct EmojiButton: View {
         }
     }
     
-    private func checkForCustomEmojiReaction() {
+    private func checkForAlreadyCustomEmojiReaction() {
         if let accountCache = accountCache() {
             let ourReactions = accountCache.getOurReactions(nrPost.id)
             if let customEmojiNotInOtherButtons = ourReactions.subtracting(ViewModelCache.shared.buttonIds).first {
-                selectedEmoji = customEmojiNotInOtherButtons
+                alreadySelectedEmoji = customEmojiNotInOtherButtons
             }
         }
     }
