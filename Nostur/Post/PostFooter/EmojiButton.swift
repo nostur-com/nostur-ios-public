@@ -29,13 +29,13 @@ struct EmojiButton: View {
             Text(footerAttributes.selectedEmoji)
         }
         else {
-            Image(systemName: footerAttributes.liked ? "heart.fill" : "heart")
+            Image(systemName: footerAttributes.ourReactions.contains("+") ? "heart.fill" : "heart")
+                .foregroundColor(footerAttributes.ourReactions.contains("+")  ? .red : theme.footerButtons)
         }
     }
     
     var body: some View {
             emojiOrLikeButton
-                .foregroundColor(footerAttributes.liked ? .red : theme.footerButtons)
                 .overlay(alignment: .leading) {
                     AnimatedNumber(number: footerAttributes.likesCount)
                         .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
@@ -83,7 +83,7 @@ struct EmojiButton: View {
             unpublishLikeId = nil
             footerAttributes.selectedEmoji = ""
             bg().perform {
-                accountCache()?.removeLike(nrPost.id)
+                accountCache()?.removeReaction(nrPost.id, reactionType: reactionContent)
             }
         }
         else {

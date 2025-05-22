@@ -12,6 +12,7 @@ import Combine
 class FooterAttributes: ObservableObject {
     
     @Published var selectedEmoji = ""
+    @Published var ourReactions = Set<String>()
     @Published var replyPFPs: [URL] = []
     
     @Published var replied: Bool
@@ -20,7 +21,6 @@ class FooterAttributes: ObservableObject {
     @Published var reposted: Bool
     @Published var repostsCount: Int64 // was mentionsCount
     
-    @Published var liked: Bool
     @Published var likesCount: Int64
     
     @Published var zapsCount: Int64
@@ -51,7 +51,7 @@ class FooterAttributes: ObservableObject {
         self.reposted = withFooter && Self.isReposted(event)
         self.repostsCount = event.repostsCount
         
-        self.liked = withFooter && Self.isLiked(event)
+        self.ourReactions = Self.getOurReactions(event)
         self.likesCount = event.likesCount
         
         self.zapState = withFooter && Self.hasZapReceipt(event) ? .zapReceiptConfirmed : event.zapState
@@ -87,7 +87,8 @@ class FooterAttributes: ObservableObject {
             
             let isReplied = Self.isReplied(self.event)
             let isReposted = Self.isReposted(self.event)
-            let isLikes = Self.isLiked(self.event)
+            
+            let ourReactions = Self.getOurReactions(self.event)
             let hasPrivateNote = Self.hasPrivateNote(self.event)
             
             var isBookmarked = false
@@ -108,7 +109,7 @@ class FooterAttributes: ObservableObject {
                 self?.objectWillChange.send()
                 self?.replied = isReplied
                 self?.reposted = isReposted
-                self?.liked = isLikes
+                self?.ourReactions = ourReactions
                 self?.bookmarked = isBookmarked
                 self?.bookmarkColor = bookmarkColor
                 self?.hasPrivateNote = hasPrivateNote
@@ -218,10 +219,10 @@ class FooterAttributes: ObservableObject {
                     case .bookmark(let color):
                         self?.bookmarked = action.bookmarked
                         self?.bookmarkColor = color
-                    case .liked(_):
-                        self?.liked = true
-                    case .unliked:
-                        self?.liked = false
+                    case .reacted(_, let reactionContent):
+                        self?.ourReactions.insert(reactionContent)
+                    case .unreacted( let reactionContent):
+                        self?.ourReactions.remove(reactionContent)
                     case .replied:
                         self?.replied = true
                     case .reposted:
@@ -249,19 +250,18 @@ class FooterAttributes: ObservableObject {
         return nil
     }
     
-    static private func isLiked(_ event:Event) -> Bool {
+    static private func getOurReactions(_ event: Event) -> Set<String> {
         if let accountCache = accountCache() {
-            return accountCache.isLiked(event.id)
+            return accountCache.getOurReactions(event.id)
         }
         if let account = account() {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7 AND content == \"+\"", event.created_at, event.id, account.publicKey)
-            fr.fetchLimit = 1
-            fr.resultType = .countResultType
-            let count = (try? bg().count(for: fr)) ?? 0
-            return count > 0
+            fr.predicate = NSPredicate(format: "created_at >= %i AND reactionToId == %@ AND pubkey == %@ AND kind == 7", event.created_at, event.id, account.publicKey)
+            fr.fetchLimit = 200
+            let reactions = (try? bg().fetch(fr)) ?? []
+            return Set(reactions.map { $0.content ?? "+" })
         }
-        return false
+        return []
     }
     
     static private func isReplied(_ event:Event) -> Bool {

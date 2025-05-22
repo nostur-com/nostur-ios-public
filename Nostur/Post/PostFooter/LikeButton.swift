@@ -24,8 +24,8 @@ struct LikeButton: View {
     }
     
     var body: some View {
-        Image(systemName: footerAttributes.liked ? "heart.fill" : "heart")
-            .foregroundColor(footerAttributes.liked ? .red : theme.footerButtons)
+        Image(systemName: footerAttributes.ourReactions.contains("+") ? "heart.fill" : "heart")
+            .foregroundColor(footerAttributes.ourReactions.contains("+") ? .red : theme.footerButtons)
             .overlay(alignment: .leading) {
                 AnimatedNumber(number: footerAttributes.likesCount)
                     .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
@@ -47,12 +47,16 @@ struct LikeButton: View {
                 guard postAction.eventId == nrPost.id else { return }
                 
                 switch postAction.type {
-                case .liked(let uuid):
-                    footerAttributes.liked = true
+                case .reacted(let uuid, let reactionContent):
+                    if reactionContent == "+" {
+                        footerAttributes.ourReactions.insert("+")
+                    }
                     unpublishLikeId = uuid
-                case .unliked:
-                    footerAttributes.liked = false
-                    unpublishLikeId = nil
+                case .unreacted(let reactionContent):
+                    if reactionContent == "+" {
+                        footerAttributes.ourReactions.remove("+")
+                        unpublishLikeId = nil
+                    }
                 default:
                     break
                 }
@@ -60,13 +64,13 @@ struct LikeButton: View {
     }
     
     private func tap() {
-        if footerAttributes.liked && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if footerAttributes.ourReactions.contains("+") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
             nrPost.unlike()
             unpublishLikeId = nil
             bg().perform {
-                accountCache()?.removeLike(nrPost.id)
+                accountCache()?.removeReaction(nrPost.id, reactionType: "+")
             }
         }
         else {
@@ -78,7 +82,7 @@ struct LikeButton: View {
             
             guard var likeNEvent = nrPost.like(uuid: unpublishLikeId!) else { return }
             bg().perform {
-                accountCache()?.addLike(nrPost.id)
+                accountCache()?.addReaction(nrPost.id, reactionType: "+")
             }
             
             likeNEvent.publicKey = account.publicKey

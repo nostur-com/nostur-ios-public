@@ -992,21 +992,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     @MainActor public func like(_ reactionContent: String = "+", uuid: UUID) -> NEvent? {
         self.footerAttributes.objectWillChange.send()
-        if (reactionContent == "+") {
-            self.footerAttributes.liked = true
-            sendNotification(.postAction, PostActionNotification(type: .liked(uuid), eventId: self.id))
-        }
+        self.footerAttributes.ourReactions.insert(reactionContent)
+        sendNotification(.postAction, PostActionNotification(type: .reacted(uuid, reactionContent), eventId: self.id))
         bg().perform { [weak self] in
             guard let event = self?.event else { return }
             event.likesCount += 1
 
             if let accountCache = accountCache() {
-                if (reactionContent == "+") {
-                    accountCache.addLike(event.id)
-                }
-                else {
-                    accountCache.addReaction(event.id, reactionType: reactionContent)
-                }
+                accountCache.addReaction(event.id, reactionType: reactionContent)
             }
         }
         return EventMessageBuilder.makeReactionEvent(reactingToId: id, reactingToPubkey: pubkey, reactionContent: reactionContent)
@@ -1014,21 +1007,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     @MainActor public func unlike(_ reactionContent: String = "+") {
         self.footerAttributes.objectWillChange.send()
-        if (reactionContent == "+") {
-            self.footerAttributes.liked = false
-            sendNotification(.postAction, PostActionNotification(type: .unliked, eventId: self.id))
-        }
+        self.footerAttributes.ourReactions.remove(reactionContent)
+        sendNotification(.postAction, PostActionNotification(type: .unreacted(reactionContent), eventId: self.id))
         bg().perform { [weak self] in
             guard let event = self?.event else { return }
             event.likesCount -= 1
             
             if let accountCache = accountCache() {
-                if (reactionContent == "+") {
-                    return accountCache.removeLike(event.id)
-                }
-                else {
-                    return accountCache.removeReaction(event.id, reactionType: reactionContent)
-                }
+                accountCache.removeReaction(event.id, reactionType: reactionContent)
             }
         }
     }

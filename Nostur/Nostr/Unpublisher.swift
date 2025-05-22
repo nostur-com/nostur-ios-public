@@ -191,12 +191,7 @@ class Unpublisher {
                     Event.updateReactionTo(savedEvent, context: bgContext)
                     
                     if let accountCache = accountCache(), accountCache.pubkey == nEvent.publicKey {
-                        if nEvent.content == "+" {
-                            accountCache.addLike(nEvent.id)
-                        }
-                        else {
-                            accountCache.addReaction(nEvent.id, reactionType: nEvent.content)
-                        }
+                        accountCache.addReaction(nEvent.id, reactionType: nEvent.content)
                     }
                 }
                 
