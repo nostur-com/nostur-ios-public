@@ -35,12 +35,7 @@ struct Hot: View {
                 CenteredProgressView()
             case .ready:
                 List {
-                    Color.clear
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
-                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .frame(height: 0)
-                        .id("top")
+                    self.topAnchor
                     
                     ForEach(hotVM.hotPosts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
@@ -114,8 +109,18 @@ struct Hot: View {
         }
     }
     
+    @ViewBuilder
+    var topAnchor: some View {
+        Color.clear
+            .listRowSeparator(.hidden)
+            .listRowBackground(themes.theme.listBackground)
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+            .frame(height: 0)
+            .id("top")
+    }
+    
     private func scrollToTop(_ proxy: ScrollViewProxy) {
-        guard let topPost = hotVM.hotPosts.first else { return }
+        guard hotVM.hotPosts.first != nil else { return }
         withAnimation {
             proxy.scrollTo("top", anchor: .top)
         }

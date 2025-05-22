@@ -26,28 +26,31 @@ struct EmojiFeed: View {
     }
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         ScrollViewReader { proxy in
             switch vm.state {
             case .initializing, .loading:
                 CenteredProgressView()
             case .ready:
-                List(vm.feedPosts) { nrPost in
-                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                        PostOrThread(nrPost: nrPost)
-                            .onBecomingVisible {
-                                // SettingsStore.shared.fetchCounts should be true for below to work
-                                vm.prefetch(nrPost)
-                            }
+                List {
+                    topAnchor
+                    
+                    ForEach(vm.feedPosts) { nrPost in
+                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                            PostOrThread(nrPost: nrPost)
+                                .onBecomingVisible {
+                                    // SettingsStore.shared.fetchCounts should be true for below to work
+                                    vm.prefetch(nrPost)
+                                }
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
-                    .id(nrPost.id) // <-- must use .id or can't .scrollTo
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(themes.theme.listBackground)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
-                .environment(\.defaultMinListRowHeight, 50)
+                .environment(\.defaultMinListRowHeight, 0)
                 .listStyle(.plain)
                 .refreshable {
                     await vm.refresh()
@@ -106,10 +109,20 @@ struct EmojiFeed: View {
         }
     }
     
+    @ViewBuilder
+    var topAnchor: some View {
+        Color.clear
+            .listRowSeparator(.hidden)
+            .listRowBackground(themes.theme.listBackground)
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+            .frame(height: 0)
+            .id("top")
+    }
+    
     private func scrollToTop(_ proxy: ScrollViewProxy) {
-        guard let topPost = vm.feedPosts.first else { return }
+        guard vm.feedPosts.first != nil else { return }
         withAnimation {
-            proxy.scrollTo(topPost.id, anchor: .top)
+            proxy.scrollTo("top", anchor: .top)
         }
     }
 }

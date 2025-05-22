@@ -34,18 +34,21 @@ struct DiscoverLists: View {
             case .initializing, .loading:
                 CenteredProgressView()
             case .ready:
-                List(discoverListsVM.discoverLists) { nrPost in
-                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                        Box(nrPost: nrPost, theme: themes.theme) {
-                            PostRowDeletable(nrPost: nrPost, isDetail: false, theme: themes.theme)
+                List {
+                    self.topAnchor
+                    
+                    ForEach(discoverListsVM.discoverLists) { nrPost in
+                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                            Box(nrPost: nrPost, theme: themes.theme) {
+                                PostRowDeletable(nrPost: nrPost, isDetail: false, theme: themes.theme)
+                            }
                         }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
-                    .id(nrPost.id) // <-- must use .id or can't .scrollTo
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(themes.theme.listBackground)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
-                .environment(\.defaultMinListRowHeight, 50)
+                .environment(\.defaultMinListRowHeight, 0)
                 .listStyle(.plain)
                 .refreshable {
                     await discoverListsVM.refresh()
@@ -95,10 +98,20 @@ struct DiscoverLists: View {
         }
     }
     
+    @ViewBuilder
+    var topAnchor: some View {
+        Color.clear
+            .listRowSeparator(.hidden)
+            .listRowBackground(themes.theme.listBackground)
+            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+            .frame(height: 0)
+            .id("top")
+    }
+    
     private func scrollToTop(_ proxy: ScrollViewProxy) {
-        guard let topPost = discoverListsVM.discoverLists.first else { return }
+        guard discoverListsVM.discoverLists.first != nil else { return }
         withAnimation {
-            proxy.scrollTo(topPost.id, anchor: .top)
+            proxy.scrollTo("top", anchor: .top)
         }
     }
 }
