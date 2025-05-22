@@ -63,7 +63,7 @@ struct NXPostsFeed: View {
                             onPostDisappear(nrPost)
                         }
                 }
-                .id(nrPost.id) // <-- must use .id or can't .scrollTo
+//                .id(nrPost.id) // <-- must use .id or can't .scrollTo
                 .listRowSeparator(.hidden)
                 .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
@@ -125,6 +125,7 @@ struct NXPostsFeed: View {
             .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
                 guard let scrollToIndex else { return }
                 guard !vmInner.isPerformingScroll else { return } // Prevent re-entrancy
+                guard !vmInner.isPerformingScrollToFirstUnread else { return } // Prevent re-entrancy
                 
 #if DEBUG
                 L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
@@ -275,11 +276,13 @@ struct NXPostsFeed: View {
         }
         for post in posts.reversed() {
             if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
-                if let firstUnreadPost = posts.first(where: { $0.id == post.id }) {
-                    withAnimation {
-                        // NOTE: This can crash, but so far only only iOS 16.1?
-                        proxy.scrollTo(firstUnreadPost.id, anchor: .top)
-                    }
+                if let firstUnreadPostIndex = posts.firstIndex(where: { $0.id == post.id }) {
+                    scrollToIndex(firstUnreadPostIndex)
+                    
+//                    withAnimation {
+//                        // NOTE: This can crash, but so far only only iOS 16.1?
+//                        proxy.scrollTo(firstUnreadPost.id, anchor: .top)
+//                    }
 
                     // Regular updateIsAtTop() in onPostAppear { } doesn't catch the first row appearing to set isAtTop to 0, probably because
                     // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
@@ -297,10 +300,8 @@ struct NXPostsFeed: View {
     }
     
     private func scrollToTop(_ proxy: ScrollViewProxy) {
-        guard let topPost = posts.first else { return }
-        withAnimation {
-            proxy.scrollTo(topPost.id, anchor: .top)
-        }
+//        guard let topPost = posts.first else { return }
+        scrollToIndex(0)
         vmInner.isAtTop = true
         
         // Regular updateIsAtTop() in onPostAppear { } doesn't catch the first row appearing to set isAtTop to 0, probably because
@@ -311,6 +312,41 @@ struct NXPostsFeed: View {
             L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
             #endif
             updateIsAtTop()
+        }
+    }
+    
+    private func scrollToIndex(_ scrollToIndex: Int) {
+        vmInner.isPerformingScrollToFirstUnread = true
+
+        if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+            if let collectionView,
+               let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
+               rows > scrollToIndex
+            {
+                collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0), at: .top, animated: true)
+                vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
+                
+                // Reset flags after animations are re-enabled
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    vmInner.isPerformingScrollToFirstUnread = false
+                    updateIsAtTop()
+                }
+            }
+        }
+        else { // iOS 15 UITableView
+            if let tableView,
+               let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
+               rows > scrollToIndex
+            {
+                tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: true)
+                vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
+            }
+            
+            // Reset flags after animations are re-enabled
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                vmInner.isPerformingScrollToFirstUnread = false
+                updateIsAtTop()
+            }
         }
     }
     

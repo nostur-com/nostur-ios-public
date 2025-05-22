@@ -34,20 +34,28 @@ struct Hot: View {
             case .initializing, .loading:
                 CenteredProgressView()
             case .ready:
-                List(hotVM.hotPosts) { nrPost in
-                    ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                        PostOrThread(nrPost: nrPost)
-                            .onBecomingVisible {
-                                // SettingsStore.shared.fetchCounts should be true for below to work
-                                hotVM.prefetch(nrPost)
-                            }
+                List {
+                    Color.clear
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .frame(height: 0)
+                        .id("top")
+                    
+                    ForEach(hotVM.hotPosts) { nrPost in
+                        ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+                            PostOrThread(nrPost: nrPost)
+                                .onBecomingVisible {
+                                    // SettingsStore.shared.fetchCounts should be true for below to work
+                                    hotVM.prefetch(nrPost)
+                                }
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(themes.theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
-                    .id(nrPost.id) // <-- must use .id or can't .scrollTo
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(themes.theme.listBackground)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
-                .environment(\.defaultMinListRowHeight, 50)
+                .environment(\.defaultMinListRowHeight, 0)
                 .listStyle(.plain)
                 .refreshable {
                     await hotVM.refresh()
@@ -109,7 +117,7 @@ struct Hot: View {
     private func scrollToTop(_ proxy: ScrollViewProxy) {
         guard let topPost = hotVM.hotPosts.first else { return }
         withAnimation {
-            proxy.scrollTo(topPost.id, anchor: .top)
+            proxy.scrollTo("top", anchor: .top)
         }
     }
 }
