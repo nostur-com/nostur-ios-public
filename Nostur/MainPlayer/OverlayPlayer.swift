@@ -256,7 +256,7 @@ struct OverlayPlayer: View {
                                                     
                                                     if let nrPost = vm.nrPost {
                                                         HStack {
-                                                            LikeButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
+                                                            EmojiButton(nrPost: nrPost, isFirst: true, isLast: false, theme: themes.theme)
                                                                 .foregroundColor(themes.theme.footerButtons)
                                                             if IS_NOT_APPSTORE { // Only available in non app store version
                                                                 ZapButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
