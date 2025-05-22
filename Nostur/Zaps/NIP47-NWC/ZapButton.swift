@@ -67,18 +67,15 @@ struct ZapButtonInner: View {
     
     
     var body: some View {
-//        #if DEBUG
+//#if DEBUG
 //        let _ = Self._printChanges()
-//        #endif
+//#endif
         Image(systemName: icon)
             .overlay(alignment: .leading) {
                 AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)
                     .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
                     .frame(width: 34)
                     .offset(x: 14)
-//                AnimatedNumberString(number: "3.6M")
-//                    .frame(width: 34)
-//                    .offset(x: 14)
             }
             .padding(.trailing, 34)
             .foregroundColor(isZapped ? .yellow : theme.footerButtons)
