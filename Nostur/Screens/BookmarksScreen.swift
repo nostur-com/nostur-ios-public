@@ -38,13 +38,13 @@ struct BookmarksScreen: View {
             else if !vm.nrLazyBookmarks.isEmpty {
                 List {
                     SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
+                        .id("top")
                         .listRowSeparator(.hidden)
                         .listRowBackground(themes.theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     
                     ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
                         LazyBookmark(nrLazyBookmark: nrLazyBookmark, fullWidth: settings.fullWidthImages)
-                        .id(nrLazyBookmark.id) // <-- must use .id or can't .scrollTo
                         .listRowSeparator(.hidden)
                         .listRowBackground(themes.theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
@@ -68,7 +68,7 @@ struct BookmarksScreen: View {
                     if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
-                                proxy.scrollTo(first.id)
+                                proxy.scrollTo("top")
                             }
                         }
                     }
@@ -78,7 +78,7 @@ struct BookmarksScreen: View {
                     if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
-                                proxy.scrollTo(first.id)
+                                proxy.scrollTo("top")
                             }
                         }
                     }
@@ -88,7 +88,7 @@ struct BookmarksScreen: View {
                     if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
-                                proxy.scrollTo(first.id)
+                                proxy.scrollTo("top")
                             }
                         }
                     }
