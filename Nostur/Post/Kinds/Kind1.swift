@@ -81,7 +81,7 @@ struct Kind1: View {
 //        #endif
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload, theme: theme) { 
             if (isDetail) {
-                if missingReplyTo {
+                if missingReplyTo || nrPost.isScreenshot {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let subject = nrPost.subject {
@@ -103,7 +103,7 @@ struct Kind1: View {
             }
             else {
                 
-                if missingReplyTo {
+                if missingReplyTo || nrPost.isScreenshot {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let subject = nrPost.subject {
