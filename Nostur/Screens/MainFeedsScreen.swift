@@ -19,7 +19,6 @@ struct MainFeedsScreen: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @Binding var showingOtherContact: NRContact?
     @ObservedObject private var ss: SettingsStore = .shared
-    @ObservedObject private var apm: AnyPlayerModel = .shared
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
@@ -35,9 +34,7 @@ struct MainFeedsScreen: View {
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
-    @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
-    
-    @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
+    @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true    
     
     @State private var noteCancellationId: UUID?
     @State private var didCreate = false
@@ -231,10 +228,7 @@ struct MainFeedsScreen: View {
                 .frame(width: dim.listWidth, height: MAINFEEDS_TABS_HEIGHT)
             }
             
-            if enableLiveEvents && apm.viewMode != .audioOnlyBar {
-                LiveEventsBanner()
-                    .animation(.easeIn, value: enableLiveEvents)
-            }
+            LiveEventsBanner()
             
             ZStack {
                 themes.theme.listBackground // needed to give this ZStack and parents size, else everything becomes weird small
@@ -338,11 +332,7 @@ struct MainFeedsScreen: View {
                         .padding([.trailing], 25)
                 }
             
-            if apm.viewMode == .audioOnlyBar {
-                // Spacer for OverlayVideo here
-                Color.clear
-                    .frame(height: AUDIOONLYPILL_HEIGHT)
-            }
+            AudioOnlyBarSpace()
         }
         .onAppear {
             ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)

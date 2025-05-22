@@ -27,9 +27,9 @@ struct BookmarksScreen: View {
     @State private var didLoad = false
 
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         ScrollViewReader { proxy in
             if vm.isLoading {
                 CenteredProgressView()

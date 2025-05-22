@@ -9,7 +9,6 @@ import SwiftUI
 import NavigationBackport
 
 struct BookmarksTab: View {
-    @ObservedObject private var apm: AnyPlayerModel = .shared
     @StateObject private var bookmarksVM = BookmarksFeedModel()
     @EnvironmentObject private var fa: LoggedInAccount
     @EnvironmentObject private var themes: Themes
@@ -30,9 +29,9 @@ struct BookmarksTab: View {
     @State private var showBookmarkFilterOptions = false
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         NBNavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 HStack {
@@ -70,12 +69,7 @@ struct BookmarksTab: View {
                     }
                     .padding(.top, GUTTER)
                 }
-                
-                if apm.viewMode == .audioOnlyBar {
-                    // Spacer for OverlayVideo here
-                    Color.clear
-                        .frame(height: AUDIOONLYPILL_HEIGHT)
-                }
+                AudioOnlyBarSpace()
             }
             .background(themes.theme.listBackground) // screen / toolbar background
             .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack

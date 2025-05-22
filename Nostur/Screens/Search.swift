@@ -12,7 +12,6 @@ import NavigationBackport
 
 @MainActor
 struct Search: View {
-    @ObservedObject private var apm: AnyPlayerModel = .shared
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
@@ -130,11 +129,7 @@ struct Search: View {
                     }
                 }
                 
-                if apm.viewMode == .audioOnlyBar {
-                    // Spacer for OverlayVideo here
-                    Color.clear
-                        .frame(height: AUDIOONLYPILL_HEIGHT)
-                }    
+                AudioOnlyBarSpace()
             }
             .overlay(alignment: .bottom) {
                 if settings.statusBubble {

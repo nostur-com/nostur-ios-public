@@ -9,90 +9,95 @@ import SwiftUI
 import NavigationBackport
 
 struct LiveEventsBanner: View {
+    @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var npn: NewPostNotifier
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var apm: AnyPlayerModel = .shared
     @ObservedObject private var liveEventsModel: LiveEventsModel = .shared
     @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
     @State private var didLoad = false
     @State private var showCreateNestsSheetWithAccount: CloudAccount? = nil
     
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            if !liveEventsModel.nrLiveEvents.isEmpty {
-                HStack {
-                    ForEach(liveEventsModel.nrLiveEvents) { nrLiveEvent in
-                        LiveEventCapsule(liveEvent: nrLiveEvent, onRemove: remove)
-                            .frame(maxWidth: dim.availableNoteRowImageWidth())
-                            .fixedSize(horizontal: true, vertical: false)
+        if enableLiveEvents && apm.viewMode != .audioOnlyBar  {
+            ScrollView(.horizontal, showsIndicators: false) {
+                if !liveEventsModel.nrLiveEvents.isEmpty {
+                    HStack {
+                        ForEach(liveEventsModel.nrLiveEvents) { nrLiveEvent in
+                            LiveEventCapsule(liveEvent: nrLiveEvent, onRemove: remove)
+                                .frame(maxWidth: dim.availableNoteRowImageWidth())
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
                     }
                 }
+                else {
+                    EmptyView()
+                }
             }
-            else {
-                EmptyView()
+            .scrollTargetBehaviorViewAligned()
+            .safeAreaPadding()
+            .frame(height: liveEventsModel.nrLiveEvents.isEmpty ? 0 : 50)
+            .animation(.interactiveSpring, value: liveEventsModel.nrLiveEvents)
+            .animation(.easeIn, value: enableLiveEvents)
+            .onAppear {
+                guard !didLoad else { return }
+                liveEventsModel.load()
+                didLoad = true
             }
-        }
-        .scrollTargetBehaviorViewAligned()
-        .safeAreaPadding()
-        .frame(height: liveEventsModel.nrLiveEvents.isEmpty ? 0 : 50)
-        .animation(.interactiveSpring, value: liveEventsModel.nrLiveEvents)
-        .onAppear {
-            guard !didLoad else { return }
-            liveEventsModel.load()
-            didLoad = true
-        }
-        .onReceive(receiveNotification(.showCreateNestsSheet)) { notification in
-            let acount = notification.object as! CloudAccount
-            showCreateNestsSheetWithAccount = acount
-        }
-        .onReceive(receiveNotification(.hideCreateNestsSheet)) { _ in
-            showCreateNestsSheetWithAccount = nil
-        }
-        .fullScreenCover(item: $showCreateNestsSheetWithAccount, content: { account in
-            NBNavigationStack {
-                CreateNest(account: account)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") { showCreateNestsSheetWithAccount = nil }
-                        }
-                    }
-                    .padding()
+            .onReceive(receiveNotification(.showCreateNestsSheet)) { notification in
+                let acount = notification.object as! CloudAccount
+                showCreateNestsSheetWithAccount = acount
             }
-        })
-        .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in
-            NRNavigationStack {
-                LiveEventDetail(liveEvent: visibleNest)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
-                                Button("Leave") {
-                                    LiveKitVoiceSession.shared.activeNest = nil
-                                    LiveKitVoiceSession.shared.visibleNest = nil
-                                }
-                            }
-                            else {
-                                Button("Close") {
-                                    LiveKitVoiceSession.shared.activeNest = nil
-                                    LiveKitVoiceSession.shared.visibleNest = nil
-                                }
+            .onReceive(receiveNotification(.hideCreateNestsSheet)) { _ in
+                showCreateNestsSheetWithAccount = nil
+            }
+            .fullScreenCover(item: $showCreateNestsSheetWithAccount, content: { account in
+                NBNavigationStack {
+                    CreateNest(account: account)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel") { showCreateNestsSheetWithAccount = nil }
                             }
                         }
-
-                        ToolbarItem(placement: .primaryAction) {
-                            if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
-                                Button("Minimize") {
-                                    LiveKitVoiceSession.shared.visibleNest = nil
+                        .padding()
+                }
+            })
+            .fullScreenCover(item: $liveKitVoiceSession.visibleNest) { visibleNest in
+                NRNavigationStack {
+                    LiveEventDetail(liveEvent: visibleNest)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
+                                    Button("Leave") {
+                                        LiveKitVoiceSession.shared.activeNest = nil
+                                        LiveKitVoiceSession.shared.visibleNest = nil
+                                    }
+                                }
+                                else {
+                                    Button("Close") {
+                                        LiveKitVoiceSession.shared.activeNest = nil
+                                        LiveKitVoiceSession.shared.visibleNest = nil
+                                    }
+                                }
+                            }
+                            
+                            ToolbarItem(placement: .primaryAction) {
+                                if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
+                                    Button("Minimize") {
+                                        LiveKitVoiceSession.shared.visibleNest = nil
+                                    }
                                 }
                             }
                         }
-                    }
-                    .presentationBackgroundCompat(themes.theme.listBackground)
-                    .environmentObject(la)
-                
+                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environmentObject(la)
+                    
+                }
             }
+            
         }
-
     }
     
     private func remove(_ aTag: String) {

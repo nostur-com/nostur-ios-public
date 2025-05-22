@@ -25,7 +25,9 @@ struct MacListsView: View {
     @State private var columnWidth: CGFloat = 200.0
     
     var body: some View {
-//        let _ = Self._printChanges()
+#if DEBUG
+        let _ = Self._printChanges()
+#endif
         GeometryReader { geo in
             HStack(spacing: COLUMN_SPACING) {
                 // Tabs on the side

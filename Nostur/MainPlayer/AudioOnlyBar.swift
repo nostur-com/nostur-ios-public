@@ -131,3 +131,16 @@ struct AudioOnlyBar: View {
         }
     }
 }
+
+
+struct AudioOnlyBarSpace: View {
+    @ObservedObject private var apm: AnyPlayerModel = .shared
+    
+    var body: some View {
+        if apm.viewMode == .audioOnlyBar {
+            // Spacer for OverlayVideo here
+            Color.clear
+                .frame(height: AUDIOONLYPILL_HEIGHT)
+        }
+    }
+}

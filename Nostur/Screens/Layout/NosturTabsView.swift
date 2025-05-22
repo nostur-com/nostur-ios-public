@@ -24,9 +24,9 @@ struct NosturTabsView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         Zoomable {
             HStack(spacing: GUTTER) {
                 AvailableWidthContainer {

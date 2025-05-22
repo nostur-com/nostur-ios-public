@@ -251,7 +251,6 @@ struct DirectMessagesX_Previews: PreviewProvider {
 
 struct DMContainer: View {
     @EnvironmentObject var la: LoggedInAccount
-    @ObservedObject private var apm: AnyPlayerModel = .shared
     
     var body: some View {
         VStack(spacing: 0) {
@@ -263,11 +262,7 @@ struct DMContainer: View {
                 DMs(pubkey: la.account.publicKey)
             }
             
-            if apm.viewMode == .audioOnlyBar {
-                // Spacer for OverlayVideo here
-                Color.clear
-                    .frame(height: AUDIOONLYPILL_HEIGHT)
-            }
+            AudioOnlyBarSpace()
         }
     }
 }
