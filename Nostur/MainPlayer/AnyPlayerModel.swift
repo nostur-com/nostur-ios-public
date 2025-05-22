@@ -152,15 +152,7 @@ class AnyPlayerModel: ObservableObject {
         self.isStream = url.absoluteString.suffix(4) == "m3u8" || url.absoluteString.suffix(3) == "m4a" || url.absoluteString.suffix(3) == "mp3"
         self.currentlyPlayingUrl = url.absoluteString
         
-    
-        if availableViewModes.contains(viewMode) && viewMode != .audioOnlyBar { // Reuse view mode, only if its not .audioOnlyBar
-            self.viewMode = viewMode
-        }
-        else {
-            self.viewMode = availableViewModes.first ?? .fullscreen
-        }
-        
-        
+        self.viewMode = availableViewModes.first ?? .fullscreen
         self.isShown = true
         
         

@@ -221,13 +221,9 @@ struct OverlayPlayer: View {
                                                 Color.black.opacity(0.75)
                                                     .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
                                                         .onEnded({ value in
+                                                            // close on swipe down
                                                             if value.translation.height > 0 {
-                                                                if vm.availableViewModes.contains(.overlay) {
-                                                                    vm.viewMode = .overlay
-                                                                }
-                                                                else {
-                                                                    vm.close()
-                                                                }
+                                                                vm.close()
                                                             }
                                                         }))
                                                     // Need high priority gesture, else cannot go from .overlay to .fullscreen
@@ -235,10 +231,10 @@ struct OverlayPlayer: View {
                                                     // so use custom .highPriorityGestureIf()
                                                     // put behind like button, else can't tap, see below again same code
                                                     .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture: TapGesture()
-                                                            .onEnded {
-                                                                withAnimation {
-                                                                    vm.toggleViewMode()
-                                                                }
+                                                        .onEnded {
+                                                            withAnimation {
+                                                                vm.toggleViewMode()
+                                                            }
                                                         }
                                                     )
                                                 
@@ -489,13 +485,9 @@ struct OverlayPlayer: View {
                     )
                     .gestureIf(condition: vm.viewMode == .fullscreen, gesture: DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
                         .onEnded({ value in
-                            if value.translation.height > 0 { // swipe down
-                                if vm.availableViewModes.contains(.overlay) {
-                                    vm.viewMode = .overlay
-                                }
-                                else {
-                                    vm.close()
-                                }
+                            // close on swipe down
+                            if value.translation.height > 0 {
+                                vm.close()
                             }
                         }))
                     .highPriorityGestureIf(condition: vm.viewMode == .overlay, gesture:

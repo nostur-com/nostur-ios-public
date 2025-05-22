@@ -129,13 +129,9 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         }
         
         @objc func respondToSwipeGesture(_ swipe: UISwipeGestureRecognizer) {
-            if AnyPlayerModel.shared.availableViewModes.contains(.overlay) {
-                AnyPlayerModel.shared.viewMode = .overlay
-            }
-            else {
-                Task { @MainActor in
-                    AnyPlayerModel.shared.close()
-                }
+            // close on swipe down gesture
+            Task { @MainActor in
+                AnyPlayerModel.shared.close()
             }
         }
     }
