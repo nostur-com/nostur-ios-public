@@ -599,12 +599,16 @@ struct OverlayPlayer: View {
                         bookmarkState = false
                     }
                 }
-                .onChange(of: bookmarkState) { newState in
+                .onChange(of: bookmarkState) { [bookmarkState] newState in
                     guard let nrPost = vm.nrPost else { return }
-                    if newState {
+                    guard bookmarkState != newState else { return } // don't add or remove if already done
+                    
+                    let didHaveBookMark = Bookmark.hasBookmark(eventId: nrPost.id, context: viewContext())
+                    
+                    if newState && !didHaveBookMark {
                         Bookmark.addBookmark(nrPost)
                     }
-                    else {
+                    else if !newState && didHaveBookMark {
                         Bookmark.removeBookmark(nrPost)
                     }
                 }
