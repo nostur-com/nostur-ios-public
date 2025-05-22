@@ -82,12 +82,12 @@ struct WithAppSheets: ViewModifier {
                     ),
                     selectedEmoji: Binding(get: {
                         if let emojiRR = asm.emojiRR {
-                            return emojiRR.footerAttributes.selectedEmoji
+                            return emojiRR.selectedEmoji.wrappedValue
                         }
                         return ""
                     }, set: { newValue in
                         if let emojiRR = asm.emojiRR {
-                            emojiRR.footerAttributes.selectedEmoji = newValue
+                            emojiRR.selectedEmoji.wrappedValue = newValue
                         }
                     }),
                 )

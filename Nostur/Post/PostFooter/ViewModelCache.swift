@@ -41,5 +41,17 @@ class ViewModelCache: ObservableObject {
             })
     }
     
-    @Published var buttonRow: [FooterButton] = []
+    @Published var buttonRow: [FooterButton] = [] {
+        didSet {
+            // track custom reactions from button configurator
+            // so when we do a custom emoji reaction it can be shown in EmojiButton if its not already a ReactionButton
+            self.buttonIds = Set(buttonRow.map { $0.id })
+                .subtracting(Set(["💬","🔄","⚡️","🔖"])) // but don't treat our own "special" ids as emoji
+        }
+    }
+    
+    // track custom reactions from button configurator
+    // so when we do a custom emoji reaction it can be shown in EmojiButton if its not already a ReactionButton
+    // but don't treat our own "special" ids as emoji
+    public var buttonIds: Set<String> = []
 }

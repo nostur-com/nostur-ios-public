@@ -10,6 +10,7 @@ import SwiftUI
 struct EmojiButton: View {
     private let nrPost: NRPost
     @ObservedObject private var footerAttributes: FooterAttributes
+    @State private var selectedEmoji = ""
     @State private var unpublishLikeId: UUID? = nil
     private var isFirst: Bool
     private var isLast: Bool
@@ -25,8 +26,8 @@ struct EmojiButton: View {
     
     @ViewBuilder
     var emojiOrLikeButton: some View {
-        if footerAttributes.selectedEmoji != "" {
-            Text(footerAttributes.selectedEmoji)
+        if selectedEmoji != "" {
+            Text(selectedEmoji)
         }
         else {
             Image(systemName: footerAttributes.ourReactions.contains("+") ? "heart.fill" : "heart")
@@ -49,8 +50,12 @@ struct EmojiButton: View {
                     tap()
                 }
                 .onLongPressGesture(minimumDuration: 0.1) {
-                    guard footerAttributes.selectedEmoji == "" else { return }
-                    AppSheetsModel.shared.emojiRR = EmojiPickerFor(footerAttributes: footerAttributes)
+                    guard selectedEmoji == "" else { return }
+                    AppSheetsModel.shared.emojiRR = EmojiPickerFor(footerAttributes: footerAttributes, selectedEmoji: Binding(get: {
+                        return selectedEmoji
+                    }, set: { newValue in
+                        self.selectedEmoji = newValue
+                    }))
                 }
                 .onReceive(receiveNotification(.postAction), perform: { notification in
                     // For updating the like button in multiple views. Example: like in detail, should also update if the event is visible somewhere else in feed.
@@ -58,35 +63,38 @@ struct EmojiButton: View {
                     guard postAction.eventId == nrPost.id else { return }
                     
                     switch postAction.type {
-                    case .liked(let uuid):
-                        footerAttributes.liked = true
-                        unpublishLikeId = uuid
-                    case .unliked:
-                        footerAttributes.liked = false
+                    case .reacted(_, _):
+                        break
+                    case .unreacted(let reactionContent):
+                        guard selectedEmoji != "" && reactionContent == selectedEmoji else { return }
+                        footerAttributes.ourReactions.remove(selectedEmoji)
                         unpublishLikeId = nil
                     default:
                         break
                     }
                 })
-                .onChange(of: footerAttributes.selectedEmoji) { newValue in
+                .onChange(of: selectedEmoji) { newValue in
                     guard newValue != "" else { return }
                     AppSheetsModel.shared.emojiRR = nil
                     tap(reactionContent: newValue)
                 }
+                .onAppear {
+                    checkForCustomEmojiReaction()
+                }
     }
     
     private func tap(reactionContent: String = "+") {
-        if (footerAttributes.liked || footerAttributes.selectedEmoji != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
+        if (reactionContent != "") && unpublishLikeId != nil && Unpublisher.shared.cancel(unpublishLikeId!) {
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
             impactMed.impactOccurred()
-            nrPost.unlike(footerAttributes.selectedEmoji != "" ? footerAttributes.selectedEmoji : "+")
+            nrPost.unlike(reactionContent)
             unpublishLikeId = nil
-            footerAttributes.selectedEmoji = ""
             bg().perform {
                 accountCache()?.removeReaction(nrPost.id, reactionType: reactionContent)
             }
+            selectedEmoji = ""
         }
-        else {
+        else { // REACT
             guard isFullAccount() else { showReadOnlyMessage(); return }
             guard let account = account() else { return }
             let impactMed = UIImpactFeedbackGenerator(style: .medium)
@@ -117,9 +125,19 @@ struct EmojiButton: View {
             }
         }
     }
+    
+    private func checkForCustomEmojiReaction() {
+        if let accountCache = accountCache() {
+            let ourReactions = accountCache.getOurReactions(nrPost.id)
+            if let customEmojiNotInOtherButtons = ourReactions.subtracting(ViewModelCache.shared.buttonIds).first {
+                selectedEmoji = customEmojiNotInOtherButtons
+            }
+        }
+    }
 }
 
 struct EmojiPickerFor {
     var id = UUID()
     var footerAttributes: FooterAttributes
+    var selectedEmoji: Binding<String>
 }
