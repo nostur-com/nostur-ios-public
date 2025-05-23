@@ -123,8 +123,6 @@ let _ = Self._printChanges()
         }
         .onDisappear {
             stopTimer()
-            chatVM.closeLiveSubscription()
-            chatVM.removeChatsFromExistingIdsCache()
         }
         
         

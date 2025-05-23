@@ -365,6 +365,20 @@ class ChatRoomViewModel: ObservableObject {
             }
         }
     }
+    
+    deinit {
+        
+        // cant use removeChatsFromExistingIdsCache() and closeLiveSubscription() so copy paste and fix later
+        guard pubkey != nil, dTag != nil else { return }
+        req(NostrEssentials.ClientMessage(type: .CLOSE, subscriptionId: subId).json()!)
+
+        let ids = self.messages.map { $0.id }
+        bg().perform {
+            for id in ids {
+                Importer.shared.existingIds[id] = nil
+            }
+        }
+    }
 }
 
 enum NRChatRow: Identifiable {
