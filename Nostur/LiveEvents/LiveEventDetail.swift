@@ -125,6 +125,12 @@ struct LiveEventDetail: View {
                         roomAddress = bech32
                     }
                 }
+                else {
+                    let relaysForHint: [String] = Array(resolveRelayHint(forPubkey: liveEvent.pubkey))
+                    if let bech32 = try? ShareableIdentifier(prefix: "naddr", kind: 30311, pubkey: liveEvent.pubkey, dTag: liveEvent.dTag, relays: relaysForHint).bech32string {
+                        roomAddress = bech32
+                    }
+                }
                 
                 vc = ViewingContext(availableWidth: dim.listWidth - 20, fullWidthImages: false, theme: themes.theme, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
