@@ -110,8 +110,10 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
             return 14.0
         case 16.4...17.3:
             return 15.0
-        case 17.4...:
+        case 17.4...18.3:
             return 15.1
+        case 18.4...:
+            return 16.0
         default:
             return 4.0
         }
@@ -443,6 +445,18 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 version: 15.0
             ),
             MCEmoji(
+                emojiKeys: [0x1F642,0x200D,0x2194,0xFE0F],
+                isSkinToneSupport: false,
+                searchKey: "shakingFaceHorizontally",
+                version: 15.1
+            ),
+            MCEmoji(
+                emojiKeys: [0x1F642,0x200D,0x2195,0xFE0F],
+                isSkinToneSupport: false,
+                searchKey: "shakingFaceVertically",
+                version: 15.1
+            ),
+            MCEmoji(
                 emojiKeys: [0x1F60C],
                 isSkinToneSupport: false,
                 searchKey: "relievedFace",
@@ -471,6 +485,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 isSkinToneSupport: false,
                 searchKey: "sleepingFace",
                 version: 1.0
+            ),
+            MCEmoji(
+                emojiKeys: [0x1FAE9],
+                isSkinToneSupport: false,
+                searchKey: "faceWithBagsUnderEyes",
+                version: 16.0
             ),
             MCEmoji(
                 emojiKeys: [0x1F637],
@@ -2699,6 +2719,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 version: 4.0
             ),
             MCEmoji(
+                emojiKeys: [0x1F3C3,0x200D,0x27A1,0xFE0F],
+                isSkinToneSupport: true,
+                searchKey: "personRunning",
+                version: 16.0
+            ),
+            MCEmoji(
                 emojiKeys: [0x1F483],
                 isSkinToneSupport: true,
                 searchKey: "womanDancing",
@@ -3315,6 +3341,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 isSkinToneSupport: false,
                 searchKey: "footprints",
                 version: 0.6
+            ),
+            MCEmoji(
+                emojiKeys: [0x1FAC6],
+                isSkinToneSupport: false,
+                searchKey: "fingerprint",
+                version: 16.0
             )
         ].filter { version(of: $0) }
     ) }
@@ -3846,6 +3878,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 version: 15.0
             ),
             MCEmoji(
+                emojiKeys: [0x1F426,0x200D,0x1F525],
+                isSkinToneSupport: false,
+                searchKey: "phoenix",
+                version: 15.1
+            ),
+            MCEmoji(
                 emojiKeys: [0x1F438],
                 isSkinToneSupport: false,
                 searchKey: "frog",
@@ -4234,6 +4272,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 isSkinToneSupport: false,
                 searchKey: "mushroom",
                 version: 0.6
+            ),
+            MCEmoji(
+                emojiKeys: [0x1FABE],
+                isSkinToneSupport: false,
+                searchKey: "leaflessTree",
+                version: 0.6
             )
         ].filter { version(of: $0) }
     ) }
@@ -4271,6 +4315,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 isSkinToneSupport: false,
                 searchKey: "lemon",
                 version: 1.0
+            ),
+            MCEmoji(
+                emojiKeys: [0x1F34B,0x200D,0x1F7E9],
+                isSkinToneSupport: false,
+                searchKey: "lime",
+                version: 15.1
             ),
             MCEmoji(
                 emojiKeys: [0x1F34C],
@@ -4457,6 +4507,18 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 isSkinToneSupport: false,
                 searchKey: "peaPod",
                 version: 15.0
+            ),
+            MCEmoji(
+                emojiKeys: [0x1F344,0x200D,0x1F7EB],
+                isSkinToneSupport: false,
+                searchKey: "brownMushroom",
+                version: 15.1
+            ),
+            MCEmoji(
+                emojiKeys: [0x1FADC],
+                isSkinToneSupport: false,
+                searchKey: "rootVegetable",
+                version: 16.0
             ),
             MCEmoji(
                 emojiKeys: [0x1F35E],
@@ -7336,6 +7398,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 version: 15.0
             ),
             MCEmoji(
+                emojiKeys: [0x1FA89],
+                isSkinToneSupport: false,
+                searchKey: "harp",
+                version: 16.0
+            ),
+            MCEmoji(
                 emojiKeys: [0x1F4F1],
                 isSkinToneSupport: false,
                 searchKey: "mobilePhone",
@@ -8128,6 +8196,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 version: 0.6
             ),
             MCEmoji(
+                emojiKeys: [0x26D3,0xFE0F,0x200D,0x1F4A5],
+                isSkinToneSupport: false,
+                searchKey: "brokenChain",
+                version: 15.1
+            ),
+            MCEmoji(
                 emojiKeys: [0x26D3, 0xFE0F],
                 isSkinToneSupport: false,
                 searchKey: "chains",
@@ -8156,6 +8230,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 isSkinToneSupport: false,
                 searchKey: "ladder",
                 version: 13.0
+            ),
+            MCEmoji(
+                emojiKeys: [0x1FA8F],
+                isSkinToneSupport: false,
+                searchKey: "shovel",
+                version: 16.0
             ),
             MCEmoji(
                 emojiKeys: [0x2697, 0xFE0F],
@@ -9275,6 +9355,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 version: 0.6
             ),
             MCEmoji(
+                emojiKeys: [0x1FADF],
+                isSkinToneSupport: false,
+                searchKey: "splatter",
+                version: 16.0
+            ),
+            MCEmoji(
                 emojiKeys: [0x0023, 0xFE0F, 0x20E3],
                 isSkinToneSupport: false,
                 searchKey: "keycap",
@@ -10150,6 +10236,12 @@ final class MCUnicodeManager: MCUnicodeManagerProtocol {
                 isSkinToneSupport: false,
                 searchKey: "flagClippertonIsland",
                 version: 2.0
+            ),
+            MCEmoji(
+                emojiKeys: [0x1F1E8, 0x1F1F6],
+                isSkinToneSupport: false,
+                searchKey: "flagSark",
+                version: 16.0
             ),
             MCEmoji(
                 emojiKeys: [0x1F1E8, 0x1F1F7],
