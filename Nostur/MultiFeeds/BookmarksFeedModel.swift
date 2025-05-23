@@ -14,7 +14,7 @@ class NRLazyBookmark: ObservableObject, Identifiable {
     public let bgEvent: Event
     @Published var nrPost: NRPost? = nil
     
-    private var colorString: String? = nil
+    public var colorString: String? = nil
     
     public let searchableText: String
     
@@ -113,6 +113,12 @@ class BookmarksFeedModel: ObservableObject {
             let decoder = JSONDecoder()
             
             let nrLazyBookmarks = sortedBookmarks.compactMap { bookmark in
+                if let existingNrLazyBookmark = self.nrLazyBookmarks.first(where: { $0.id == bookmark.eventId }) {
+                    if bookmark.color_ != existingNrLazyBookmark.colorString {
+                        existingNrLazyBookmark.colorString = bookmark.color_
+                    }
+                    return existingNrLazyBookmark
+                }
                 if let event = events.first(where: { $0.id == bookmark.eventId }) {
                     return NRLazyBookmark(id: event.id, bgEvent: event, colorString: bookmark.color_)
                 }

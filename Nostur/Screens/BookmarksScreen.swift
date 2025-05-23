@@ -25,6 +25,7 @@ struct BookmarksScreen: View {
 
     @State private var bookmarkSnapshot: Int = 0
     @State private var didLoad = false
+    @State private var lastDeleted: String? = nil
 
     var body: some View {
 #if DEBUG
@@ -64,7 +65,7 @@ struct BookmarksScreen: View {
                 
                 .preference(key: BookmarksCountPreferenceKey.self, value: vm.nrLazyBookmarks.count.description)
                 .onReceive(receiveNotification(.didTapTab)) { notification in
-                    guard selectedSubTab == "Bookmarks", let first = vm.nrLazyBookmarks.first else { return }
+                    guard selectedSubTab == "Bookmarks"  && vm.nrLazyBookmarks.first != nil else { return }
                     if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
@@ -74,7 +75,7 @@ struct BookmarksScreen: View {
                     }
                 }
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
-                    guard selectedSubTab == "Bookmarks", let first = vm.nrLazyBookmarks.first else { return }
+                    guard selectedSubTab == "Bookmarks" && vm.nrLazyBookmarks.first != nil else { return }
                     if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
@@ -84,7 +85,7 @@ struct BookmarksScreen: View {
                     }
                 }
                 .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
-                    guard selectedSubTab == "Bookmarks", let first = vm.nrLazyBookmarks.first else { return }
+                    guard selectedSubTab == "Bookmarks" && vm.nrLazyBookmarks.first != nil else { return }
                     if !vm.nrLazyBookmarks.isEmpty {
                         if navPath.count == 0 {
                             withAnimation {
@@ -109,8 +110,27 @@ struct BookmarksScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarHidden(true)
         .onReceive(ViewUpdates.shared.bookmarkUpdates, perform: { update in
+            if let lastDeleted, lastDeleted == update.id { // don't reload if we already removed with deleteBookmark() (swipe) or bookmark button toggle (tap)
+                return
+            }
+            // should only reload when delete from external or different screen
             vm.load()
         })
+        
+        .onReceive(receiveNotification(.postAction)) { notification in
+            // Used when tapping on bookmark icon to remove
+            // Removes from screen directly and doesn't do flicker reload again at db update from ViewUpdates.shared.bookmarkUpdates because
+            // we set lastDeleted
+            let postAction = notification.object as! PostActionNotification
+            if case .bookmark(_) = postAction.type, postAction.bookmarked == false {
+                // Set lastDeleted so screen doesn't flicker/reload
+                lastDeleted = postAction.eventId
+                withAnimation { // just update with nice animation
+                    vm.nrLazyBookmarks.removeAll(where: { $0.id == postAction.eventId })
+                }
+            }
+            
+        }
     }
     
     private func deleteBookmark(section: [NRLazyBookmark], offsets: IndexSet) {
@@ -119,8 +139,13 @@ struct BookmarksScreen: View {
             .filter { offsets.contains($0) }
             .map { section[$0] }.map { $0.id }
         
-        withAnimation {
+        withAnimation { // just update with nice animation
             vm.nrLazyBookmarks.removeAll(where: { bookmarkIdsToDelete.contains($0.id) })
+        }
+        
+        // Set lastDeleted so screen doesn't flicker/reload
+        for bookmarkId in bookmarkIdsToDelete {
+            lastDeleted = bookmarkId
         }
         
         // Delete from db
