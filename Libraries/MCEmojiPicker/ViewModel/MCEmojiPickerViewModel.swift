@@ -58,7 +58,7 @@ final class MCEmojiPickerViewModel: MCEmojiPickerViewModelProtocol {
     public var selectedEmojiCategoryIndex = Observable<Int>(value: 0)
     public var showEmptyEmojiCategories = false
     public var onlyShowNewEmojisForVersion = false
-    public var searchText = Observable<String>(value: "") 
+    public var searchText = Observable<String>(value: "")
 
     public var emojiCategories: [MCEmojiCategory] {
         if searchText.value.isEmpty {
@@ -100,21 +100,25 @@ final class MCEmojiPickerViewModel: MCEmojiPickerViewModelProtocol {
             return
         }
         
-      
-        let allEmojis = allEmojiCategories.flatMap { $0.emojis }
+        // Get matching emoji strings from metadata service
+        let matchingEmojiStrings = MCEmojiMetadataService.shared.search(query: searchString)
         
-        let potentialMatches = allEmojiCategories.flatMap { category in
+        // Find the corresponding MCEmoji objects
+        let allEmojis = allEmojiCategories.flatMap { $0.emojis }
+        let potentialMatches = allEmojis.filter { emoji in
+            matchingEmojiStrings.contains(emoji.string)
+        }
+        
+        // If no matches found through metadata, fall back to basic search
+        let searchResults = potentialMatches.isEmpty ? allEmojiCategories.flatMap { category in
             category.emojis.filter { emoji in
                 let searchKeyMatch = emoji.searchKey.lowercased().contains(searchString)
                 let stringMatch = emoji.string.lowercased().contains(searchString)
                 return searchKeyMatch || stringMatch
             }
-        }
+        } : potentialMatches
         
-        // Create a single category for search results
-        let searchResults = potentialMatches
-        
-        // Create a search results category with a unique type
+        // Create a search results category
         let searchCategory = MCEmojiCategory(
             type: .search,
             categoryName: "Search Results",
