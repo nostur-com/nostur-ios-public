@@ -392,7 +392,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
 //        self.mentionsCount = event.mentionsCount
         
         self.fastTags = event.fastTags
-        self.plainText = NRTextParser.shared.copyPasteText(fastTags: fastTags, event: event, text: event.content ?? "").text
+        self.plainText = NRTextParser.shared.copyPasteText(fastTags: fastTags, event: event, text: event.content ?? "").text // TODO: prepend "comment" if highlight
         self.withParents = withParents
         self.withReplies = withReplies
         self.withReplyTo = withReplyTo
@@ -744,6 +744,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     if self.replyToId != nil {
                         self.rerenderReplyingToFragment()
                     }
+                    // TODO: no need to rebuild if p is not in text/content/comment
                     self.rebuildContentElements()
                     
                     if self.kind == 9802 && self.highlightAttributes.authorPubkey == pubkey {
@@ -770,7 +771,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         bg().perform { [weak self] in
             guard let self = self, let event = event else { return }
             
-            let (contentElementsDetail, _, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event) : NRContentElementBuilder.shared.buildElements(input: event.noteTextPrepared, fastTags: event.fastTags, event: event, primaryColor: Themes.default.theme.primary, previewImages: event.previewImages, previewVideos: event.previewVideos)
+            let input = if kind == 9802 {
+                self.comment ?? ""
+            }
+            else {
+                event.noteTextPrepared
+            }
+            
+            let (contentElementsDetail, _, _) = (kind == 30023) ? NRContentElementBuilder.shared.buildArticleElements(event)
+                : NRContentElementBuilder.shared.buildElements(
+                    input: input,
+                    fastTags: event.fastTags,
+                    event: event,
+                    primaryColor: Themes.default.theme.primary,
+                    previewImages: event.previewImages,
+                    previewVideos: event.previewVideos,
+                    isPreviewContext: isPreview
+            )
             let (contentElements, _) = filteredForPreview(contentElementsDetail)
             
             DispatchQueue.main.async { [weak self] in

@@ -42,7 +42,7 @@ class NRTextParser { // TEXT things
             self.attributes[.foregroundColor] = UIColor(primaryColor)
         }
         
-        if text == "\n" {
+        if text == "\n" || text == "" {
             return AttributedStringWithPs(input: text, output: emptyString, pTags: [], event: event)
         }
 
