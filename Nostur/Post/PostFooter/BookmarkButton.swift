@@ -25,13 +25,11 @@ struct BookmarkButton: View {
     
     var body: some View {
         Image(systemName: footerAttributes.bookmarked ? "bookmark.fill" : "bookmark")
-            .padding(.trailing, isLast ? 0 : 10)
+            .padding(.trailing, isLast && !IS_CATALYST ? 0 : 10) // On mac need space for scrollbar
             .padding(.leading, isFirst ? 0 : 10)
             .padding(.vertical, 5)
-            .padding(.trailing, isLast ? 10: 0)
             .foregroundColor(footerAttributes.bookmarked ? footerAttributes.bookmarkColor : theme.footerButtons)
             .contentShape(Rectangle())
-            .padding(.trailing, isLast ? -10 : 0)
             .simultaneousGesture(
                 LongPressGesture()
                     .onEnded { _ in
