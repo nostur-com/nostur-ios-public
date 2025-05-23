@@ -558,6 +558,15 @@ extension Event {
     }
     
     func isLive() -> Bool {
+        // remove old events that appear live but where we maybe missed receiving the "ended" state
+        // so only keep if $0.created_at is newer than 8 hours ago AND we have a "streaming" tag, should be enough sanity check
+        // (AND also "live" from previous filter)
+        let createdAt = Date(timeIntervalSince1970: Double(self.created_at))
+        let eightHoursAgo = Date().addingTimeInterval(-8 * 60 * 60)
+        if createdAt < eightHoursAgo && self.fastTags.contains(where: { $0.0 == "streaming" }) {
+            return false
+        }
+        
         return self.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" })
     }
     
