@@ -64,7 +64,9 @@ struct NWCWalletBalance: View {
     
 func nwcSendBalanceRequest() {
     DispatchQueue.main.async {
+#if DEBUG
         L.og.debug("⚡️ nwcSendBalanceRequest")
+#endif
         let nrq = NWCRequestQueue.shared
         nrq.balanceState = .loading
         var pk:String?
@@ -94,10 +96,14 @@ func nwcSendBalanceRequest() {
                             nwcReq.kind = .nwcRequest
                             nwcReq.tags.append(NostrTag(["p",walletPubkey]))
                             
+#if DEBUG
                             L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
+#endif
                             
                             guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: walletPubkey, content: nwcReq.content) else {
+#if DEBUG
                                 L.og.error("⚡️ Problem encrypting request")
+#endif
                                 return
                             }
                             
@@ -108,13 +114,17 @@ func nwcSendBalanceRequest() {
                                 return
                             }
                             else {
+#if DEBUG
                                 L.og.error("⚡️ Problem signing: \(nwcReq.eventJson())")
+#endif
                                 return
                             }
                         }
                     }
-                    
+                   
+#if DEBUG
                     L.og.error("⚡️ Problem encoding request")
+#endif
                     return
                 }
             }

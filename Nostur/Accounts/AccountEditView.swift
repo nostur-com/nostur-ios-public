@@ -301,7 +301,9 @@ extension AccountEditView {
                 DispatchQueue.main.async {
                     contact.zapperPubkeys.insert(zapperPubkey)
                 }
+#if DEBUG
                 L.og.info("contact.zapperPubkey updated: \(response.nostrPubkey!)")
+#endif
             }
         }
     }

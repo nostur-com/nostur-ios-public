@@ -259,7 +259,9 @@ struct SelectedParticipantView: View {
                                 await bg().perform {
                                     guard let contact, let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
                                     contact.zapperPubkeys.insert(zapperPubkey)
+#if DEBUG
                                     L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
                                 }
                             }
                         }
@@ -269,13 +271,17 @@ struct SelectedParticipantView: View {
                                 await bg().perform {
                                     guard let contact, let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
                                     contact.zapperPubkeys.insert(zapperPubkey)
+#if DEBUG
                                     L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
                                 }
                             }
                         }
                     }
                     catch {
+#if DEBUG
                         L.og.error("problem in lnurlp \(error)")
+#endif
                     }
                 }
             }

@@ -45,7 +45,9 @@ class NWCZapQueue {
                 if !failedZaps.isEmpty, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
+#if DEBUG
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
+#endif
                         let notification = PersistentNotification.createFailedNWCZaps(pubkey: AccountsState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
                         NotificationsViewModel.shared.checkNeedsUpdate(notification)
                     }
@@ -56,30 +58,32 @@ class NWCZapQueue {
     }
     
     public func sendZap(_ zap:Zap, debugInfo:String? = "") {
-        #if DEBUG
+#if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
-        #endif
+#endif
         self.waitingZaps[zap.id] = zap
+#if DEBUG
         L.og.info("⚡️ NWC: sendZap. now in queue: \(self.waitingZaps.count) -- \(debugInfo ?? "")")
+#endif
     }
     
     public func getAwaitingZap(byId id:UUID) -> Zap? {
-        #if DEBUG
+#if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
-        #endif
+#endif
         return self.waitingZaps[id]
     }
     
     public func removeZap(byId id:UUID) {
-        #if DEBUG
+#if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
             }
-        #endif
+#endif
         self.waitingZaps.removeValue(forKey: id)
     }
     
@@ -148,7 +152,9 @@ class Zap {
     }
     
     private func next() {
+#if DEBUG
         L.og.debug("⚡️ Zap.next() \(self.state.rawValue) - \(self.id.uuidString) - \(self.callbackUrl ?? "") - supportsZap: \(self.supportsZap) - lud \(self.lud16 ?? self.lud06 ?? "") - eventId: \(self.eventId ?? "") - aTag: \(self.aTag ?? "") - \(self.pr ?? "")")
+#endif
         switch state {
         case .INIT: //1. fetch callback from ln pay end point
             fetchCallbackUrl()
@@ -159,9 +165,15 @@ class Zap {
         case .INVOICE_FETCHED:
             payInvoice()
         case .NWC_PAY_REQUEST_SENT:
+#if DEBUG
             L.og.debug("NWC_PAY_REQUEST_SENT")
+#endif
+            break
         case .NWC_INVOICE_PAID:
+#if DEBUG
             L.og.debug("NWC_INVOICE_PAID")
+#endif
+            break
         case .ERROR:
             bg().perform { [weak self] in
                 guard let self = self else { return }
@@ -169,15 +181,21 @@ class Zap {
                     let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: bg())
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
+#if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
+#endif
                     
                     // Revert zap state
                     if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: eventId) {
+#if DEBUG
                         L.og.info("Revert from queue")
+#endif
                         event.zapState = nil
                     }
                     else if let event = Event.fetchEvent(id: eventId, context: bg()) {
+#if DEBUG
                         L.og.info("Revert from DB")
+#endif
                         event.zapState = nil
                     }
                 }
@@ -185,7 +203,9 @@ class Zap {
                     let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: bg())
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
+#if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
+#endif
                 }
                 DataProvider.shared().bgSave()
             }
@@ -217,7 +237,9 @@ class Zap {
                 }
             }
             catch {
+#if DEBUG
                 L.og.error("🔴🔴🔴🔴 problem in lnurlp \(error)")
+#endif
                 self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                 self.state = .ERROR
             }
@@ -279,13 +301,17 @@ class Zap {
                                         self.state = .INVOICE_FETCHED
                                     }
                                     else {
+#if DEBUG
                                         L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+#endif
                                         self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                         self.state = .ERROR
                                     }
                                 }
                                 else {
+#if DEBUG
                                     L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+#endif
                                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                     self.state = .ERROR
                                 }
@@ -326,19 +352,25 @@ class Zap {
                                     self.state = .INVOICE_FETCHED
                                 }
                                 else {
+#if DEBUG
                                     L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+#endif
                                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                     self.state = .ERROR
                                 }
                             }
                             else {
+#if DEBUG
                                 L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+#endif
                                 self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                                 self.state = .ERROR
                             }
                         }
                         else {
+#if DEBUG
                             L.fetching.notice("problem fetching ln invoice / or signing zap request note. callback: \(self.callbackUrl ?? "")")
+#endif
                             self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                             self.state = .ERROR
                         }
@@ -359,7 +391,9 @@ class Zap {
                     }
                 }
                 catch {
+#if DEBUG
                     L.fetching.notice("problem fetching ln invoice. callback:\(self.callbackUrl ?? "") \(error)")
+#endif
                     self.error = String(localized:"Could not fetch invoice", comment: "Error message")
                     self.state = .ERROR
                 }
@@ -390,21 +424,43 @@ class Zap {
 //4. handle NWC response or time out
 
 func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? = nil) -> Bool {
+#if DEBUG
     L.og.debug("⚡️ nwcSendPayInvoiceRequest called \(pr)")
+#endif
     var pk:String?
     var walletPubkey:String?
     
     if Thread.isMainThread {
-        guard !SettingsStore.shared.activeNWCconnectionId.isEmpty else { L.og.error("⚡️ No activeNWCConnectionId"); return false }
+        guard !SettingsStore.shared.activeNWCconnectionId.isEmpty else {
+#if DEBUG
+            L.og.error("⚡️ No activeNWCConnectionId")
+#endif
+            return false
+        }
         guard let nwc = NWCConnection.fetchConnection(SettingsStore.shared.activeNWCconnectionId, context: DataProvider.shared().viewContext) else { L.og.error("⚡️ Problem fetching nwcConnection \(SettingsStore.shared.activeNWCconnectionId)"); return false }
         
-        guard let mainPK = nwc.privateKey else { L.og.error("⚡️ Problem with private key or nwcConnection"); return false }
+        guard let mainPK = nwc.privateKey else {
+#if DEBUG
+            L.og.error("⚡️ Problem with private key or nwcConnection")
+#endif
+            return false
+        }
         pk = mainPK
         walletPubkey = nwc.walletPubkey
     }
     else {
-        guard let bgPK = NWCRequestQueue.shared.nwcConnection?.privateKey else { L.og.error("⚡️ Problem with private key or nwcConnection"); return false }
-        guard let bgWalletPubkey = NWCRequestQueue.shared.nwcConnection?.walletPubkey else { L.og.error("⚡️ Problem with walletPubkey or nwcConnection"); return false }
+        guard let bgPK = NWCRequestQueue.shared.nwcConnection?.privateKey else {
+#if DEBUG
+            L.og.error("⚡️ Problem with private key or nwcConnection")
+#endif
+            return false
+        }
+        guard let bgWalletPubkey = NWCRequestQueue.shared.nwcConnection?.walletPubkey else {
+#if DEBUG
+            L.og.error("⚡️ Problem with private key or nwcConnection")
+#endif
+            return false
+        }
         pk = bgPK
         walletPubkey = bgWalletPubkey
     }
@@ -422,10 +478,14 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
                 nwcReq.kind = .nwcRequest
                 nwcReq.tags.append(NostrTag(["p",walletPubkey]))
                 
+#if DEBUG
                 L.og.debug("⚡️ Going to encrypt and send: \(nwcReq.eventJson())")
+#endif
                 
                 guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: keys.privateKeyHex, pubkey: walletPubkey, content: nwcReq.content) else {
+#if DEBUG
                     L.og.error("⚡️ Problem encrypting request")
+#endif
                     return false
                 }
                 
@@ -451,15 +511,21 @@ func nwcSendPayInvoiceRequest(_ pr:String, zap:Zap? = nil, cancellationId:UUID? 
 //                            ]
                 }
                 else {
+#if DEBUG
                     L.og.error("⚡️ Problem signing: \(nwcReq.eventJson())")
+#endif
                     return false
                 }
             }
         }
         
+#if DEBUG
         L.og.error("⚡️ Problem encoding request")
+#endif
         return false
     }
+#if DEBUG
     L.og.error("⚡️ Problem with NWC private key")
+#endif
     return false
 }

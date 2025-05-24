@@ -397,7 +397,9 @@ struct ProfileOverlayCard: View {
                                 await bg().perform {
                                     guard let contact else { return }
                                     contact.zapperPubkeys.insert(zapperPubkey)
+#if DEBUG
                                     L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
                                 }
                             }
                         }
@@ -407,13 +409,17 @@ struct ProfileOverlayCard: View {
                                 await bg().perform {
                                     guard let contact else { return }
                                     contact.zapperPubkeys.insert(zapperPubkey)
+#if DEBUG
                                     L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
                                 }
                             }
                         }
                     }
                     catch {
+#if DEBUG
                         L.og.error("⚡️ problem in lnurlp \(error)")
+#endif
                     }
                 }
             }

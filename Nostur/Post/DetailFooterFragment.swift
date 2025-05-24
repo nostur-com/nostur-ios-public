@@ -102,7 +102,9 @@ struct DetailFooterFragment: View {
                 }
             }
             catch {
+#if DEBUG
                 L.og.error("problem in lnurlp \(error)")
+#endif
             }
         }
         Divider()

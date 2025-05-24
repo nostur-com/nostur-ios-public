@@ -118,23 +118,31 @@ struct AlbyNWCConnectSheet: View {
             let albyCallback = notification.object as! AlbyCallback
             
             guard let queryItems = URLComponents(url: albyCallback.url, resolvingAgainstBaseURL: false)?.queryItems else {
+#if DEBUG
                 L.og.error("Could not connect Alby wallet, problem parsing queryItems");
+#endif
                 nwcErrorMessage = "Could not connect Alby wallet"
                 return
             }
             guard let nwcRelay = queryItems.first(where: { $0.name == "relay" })?.value else {
+#if DEBUG
                 L.og.error("Could not connect Alby wallet, relay missing in queryItems");
+#endif
                 nwcErrorMessage = "Could not connect Alby wallet"
                 return
             }
             guard let nwcPubkey = queryItems.first(where: { $0.name == "pubkey" })?.value else {
+#if DEBUG
                 L.og.error("Could not connect Alby wallet, pubkey missing in queryItems");
+#endif
                 nwcErrorMessage = "Could not connect Alby wallet"
                 return
             }
             
             guard let nwcConnection = nwcConnection else {
+#if DEBUG
                 L.og.error("Could not connect Alby wallet, nwcConnction = nil");
+#endif
                 nwcErrorMessage = "Could not connect Alby wallet"
                 return
             }
@@ -144,8 +152,9 @@ struct AlbyNWCConnectSheet: View {
                 nwcConnection.methods = "pay_invoice"
                 let connectionId = nwcConnection.connectionId
                 let relay = nwcConnection.relay
-                
+#if DEBUG
                 L.og.info("⚡️ Adding NWC connection")
+#endif
                 
                 ConnectionPool.shared.addNWCConnection(connectionId: connectionId, url: relay) { conn in
                     if !conn.isConnected {
@@ -172,7 +181,9 @@ struct AlbyNWCConnectSheet: View {
                         updateZapperPubkey(account)
                     }
                     catch {
+#if DEBUG
                         L.og.error("Error publishing new account kind 0")
+#endif
                     }
                 }
             }
@@ -190,7 +201,9 @@ struct AlbyNWCConnectSheet: View {
                 DispatchQueue.main.async {
                     contact.zapperPubkeys.insert(zapperPubkey)
                 }
+#if DEBUG
                 L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
             }
         }
     }

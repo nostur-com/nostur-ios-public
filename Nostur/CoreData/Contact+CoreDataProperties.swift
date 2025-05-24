@@ -194,9 +194,9 @@ extension Contact : Identifiable {
     }
 
     static func saveOrUpdateContact(event: NEvent, context: NSManagedObjectContext) {
-        #if DEBUG
+#if DEBUG
         shouldBeBg()
-        #endif
+#endif
         let decoder = JSONDecoder()
         guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
             return
@@ -322,18 +322,20 @@ extension Contact : Identifiable {
                     zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
 //                    zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
                     ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
+#if DEBUG
                     L.og.debug("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")
+#endif
                 }
             }
         }
     }
     
     static func updateRelatedAccounts(_ contact:Contact) {
-        #if DEBUG
-            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                fatalError("Should only be called from bg()")
-            }
-        #endif
+#if DEBUG
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            fatalError("Should only be called from bg()")
+        }
+#endif
 
         guard AccountsState.shared.bgAccountPubkeys.contains(contact.pubkey) else { return }
         guard let account = try? CloudAccount.fetchAccount(publicKey: contact.pubkey, context: bg()) else { return }
@@ -347,7 +349,9 @@ extension Contact : Identifiable {
         account.lud06 = contact.lud06 ?? ""
         
         bgSave()
+#if DEBUG
         L.og.debug("Updated account from new kind 0 from relay. pubkey: \(contact.pubkey)")
+#endif
     }
 
     // Create dummy Contact if not already exists.
