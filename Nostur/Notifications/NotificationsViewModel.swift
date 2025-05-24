@@ -295,7 +295,7 @@ class NotificationsViewModel: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard AccountsState.shared.activeAccountPublicKey != "" else { return }
             bg().perform { [weak self] in
-                if AppState.shared.appIsInBackground {
+                if (AppState.shared.appIsInBackground && !IS_CATALYST) {
                     self?.checkForUnreadMentions()
                 }
                 else {
@@ -311,7 +311,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     private func checkForEverything() {
-        guard !AppState.shared.appIsInBackground else {
+        guard (!AppState.shared.appIsInBackground || IS_CATALYST) else {
 #if DEBUG
             L.og.debug("NotificationViewModel.checkForEverything(): skipping, app in background.");
 #endif
@@ -436,9 +436,6 @@ class NotificationsViewModel: ObservableObject {
                     // On iOS: Only if app is in background
                     if (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
                         scheduleMentionNotification(mentionsForNotification)
-                    }
-                    if AppState.shared.appIsInBackground { // If app is in background then we were called during a app refresh so we need to disconnect again
-//                        ConnectionPool.shared.disconnectAll()
                     }
                 }
                 

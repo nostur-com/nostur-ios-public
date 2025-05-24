@@ -102,15 +102,16 @@ extension AppView {
             
             if !IS_CATALYST {
                 if (AppState.shared.appIsInBackground) { // if we were actually in background (from .background, not just a few seconds .inactive)
+                    AppState.shared.appIsInBackground = false // needs to set before we call other actions
                     ConnectionPool.shared.connectAll()
                     sendNotification(.scenePhaseActive)
                     FeedsCoordinator.shared.resumeFeeds()
                     NotificationsViewModel.shared.restoreSubscriptions()
                     AppState.shared.startTaskTimers()
                 }
-                AppState.shared.appIsInBackground = false
             }
             else {
+                AppState.shared.appIsInBackground = false
                 ConnectionPool.shared.connectAll()
                 sendNotification(.scenePhaseActive)
                 FeedsCoordinator.shared.resumeFeeds()
@@ -118,9 +119,10 @@ extension AppView {
                 AppState.shared.startTaskTimers()
             }
             
+            
         case .background:
+            AppState.shared.appIsInBackground = true
             if !IS_CATALYST {
-                AppState.shared.appIsInBackground = true
                 FeedsCoordinator.shared.pauseFeeds()
                 scheduleDatabaseCleaningIfNeeded()
             }
@@ -133,6 +135,7 @@ extension AppView {
                 UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
                 scheduleAppRefresh()
             }
+            
             sendNotification(.scenePhaseBackground)
             
             let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))

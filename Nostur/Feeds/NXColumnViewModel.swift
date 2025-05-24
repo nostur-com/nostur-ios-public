@@ -609,7 +609,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private func fetchFeedTimerNextTick() {
-        guard let config, !AppState.shared.appIsInBackground && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
+        guard let config, (!AppState.shared.appIsInBackground || IS_CATALYST) && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
         bg().perform { [weak self] in
             guard !Importer.shared.isImporting else { return }
             setFirstTimeCompleted()
@@ -621,7 +621,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     public func loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
-        if !isVisible || isPaused || isViewPaused || AppState.shared.appIsInBackground {
+        if !isVisible || isPaused || isViewPaused || (AppState.shared.appIsInBackground && !IS_CATALYST) {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) loadLocal - 👹👹 halted. isVisible: \(self.isVisible) isPaused: \(self.isPaused) isViewPaused: \(self.isViewPaused)")
 #endif
@@ -1387,7 +1387,7 @@ class NXColumnViewModel: ObservableObject {
             .debounce(for: .seconds(0.15), scheduler: RunLoop.main)
 //            .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
-                guard let self, !AppState.shared.appIsInBackground && isVisible else { return }
+                guard let self, (!AppState.shared.appIsInBackground || IS_CATALYST) && isVisible else { return }
                 self.resume()
             }
     }
@@ -1426,7 +1426,7 @@ class NXColumnViewModel: ObservableObject {
                 .receive(on: RunLoop.main) // main because .haltedProcessing must access .isDelaying on main
                 .sink { [weak self] subscriptionIds in
                     guard let self else { return }
-                    guard isVisible && !isPaused && !AppState.shared.appIsInBackground else {
+                    guard isVisible && !isPaused && (!AppState.shared.appIsInBackground || IS_CATALYST) else {
                         queuedSubscriptionIds.add(subscriptionIds)
                         return
                     }

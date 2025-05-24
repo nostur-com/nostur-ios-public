@@ -95,9 +95,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 #if DEBUG
         L.og.debug(".appRefresh()")
 #endif
-        if !IS_CATALYST {
-            AppState.shared.appIsInBackground = true
-        }
         
         guard SettingsStore.shared.receiveLocalNotifications else {
 #if DEBUG
