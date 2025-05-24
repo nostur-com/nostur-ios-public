@@ -58,9 +58,9 @@ struct BookmarksScreen: View {
                 }
                 .environment(\.defaultMinListRowHeight, 50)
                 .listStyle(.plain)
-                .toolbar {
-                    EditButton()
-                }
+//                .toolbar {
+//                    EditButton()
+//                }
                 .padding(0)
                 
                 .preference(key: BookmarksCountPreferenceKey.self, value: vm.nrLazyBookmarks.count.description)

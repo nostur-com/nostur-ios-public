@@ -424,6 +424,7 @@ public class ConnectionPool: ObservableObject {
     }
     
     // Can use from any context (will switch to connection queue)
+    // will skip send if subscriptionId lready in connection?.nreqSubscriptions
     func sendMessage(_ message: NosturClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil) {
         #if DEBUG
             if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {

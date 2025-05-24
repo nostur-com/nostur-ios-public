@@ -544,6 +544,7 @@ func outboxReq(_ cm: NostrEssentials.ClientMessage, activeSubscriptionId: String
 
 
 // old req, just string so cant do outbox with this
+// will skip send eventually in ConnectionPool.shared.sendMessage() if activeSubscriptionId already in connection?.nreqSubscriptions
 func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
     #if DEBUG
     if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
