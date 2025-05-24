@@ -487,6 +487,11 @@ extension NEvent {
             return replyEtags.first
         }
         
+        let replyToRootEtags = threadETags.filter { $0.tag.count >= 4 && $0.tag[safe: 3] == "root" }
+        if (!replyToRootEtags.isEmpty) { // no "reply" but there is a "root" so the reply is to the root
+            return replyToRootEtags.first
+        }
+        
         // OLD METHOD NIP-10:
         // One "e" tag = REPLY
         if threadETags.count == 1 && (threadETags.first?.tag[safe: 3] == nil) {
