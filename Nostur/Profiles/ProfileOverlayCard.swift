@@ -139,38 +139,24 @@ struct ProfileOverlayCard: View {
                             }
                         }
                         HStack {
-                            if npn.isEnabled(for: contact.pubkey) {
+                            Button {
+                                npn.toggle(contact.pubkey)
+                            } label: {
                                 Image(systemName: "bell")
                                     .resizable()
                                     .frame(width: 20, height: 20)
+                                    .foregroundColor(themes.theme.primary)
                                     .overlay(alignment: .topTrailing) {
-                                        Image(systemName: "checkmark.circle.fill")
+                                        Image(systemName: npn.isEnabled(for: contact.pubkey) ? "checkmark.circle.fill" : "plus")
                                             .resizable()
-                                            .frame(width: 10, height: 10)
-                                            .foregroundColor(.green)
+                                            .frame(width: 8, height: 8)
+                                            .foregroundColor(npn.isEnabled(for: contact.pubkey) ? .green : themes.theme.primary)
+                                            .padding(1)
                                             .background(themes.theme.listBackground)
-                                            .offset(y: -3)
+                                            .offset(y: -4)
                                     }
-                                    .offset(y: 3)
-                                    .onTapGesture { npn.toggle(contact.pubkey) }
-                                    .padding(.trailing, 10)
                             }
-                            else {
-                                Image(systemName: "bell")
-                                    .resizable()
-                                    .frame(width: 20, height: 20)
-                                    .overlay(alignment: .topTrailing) {
-                                        Image(systemName: "plus")
-                                            .resizable()
-                                            .frame(width: 10, height: 10)
-                                            .background(themes.theme.listBackground)
-                                            .border(themes.theme.listBackground, width: 2.0)
-                                            .offset(y: -3)
-                                    }
-                                    .offset(y: 3)
-                                    .onTapGesture { npn.toggle(contact.pubkey) }
-                                    .padding(.trailing, 10)
-                            }
+                            .padding(.trailing, 10)
                             
                             if account()?.isFullAccount ?? false {
                                 Button {
