@@ -133,6 +133,7 @@ extension AppView {
                 }
                 UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_dm_local_notification_timestamp")
                 UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_local_notification_timestamp")
+                UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_new_posts_local_notification_timestamp")
                 scheduleAppRefresh()
             }
             

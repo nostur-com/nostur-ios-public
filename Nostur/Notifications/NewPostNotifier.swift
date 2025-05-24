@@ -20,6 +20,11 @@ class NewPostNotifier: ObservableObject {
     
     static let shared = NewPostNotifier()
     
+    private var lastLocalNotificationAt: Int {
+        get { UserDefaults.standard.integer(forKey: "last_new_posts_local_notification_timestamp") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "last_new_posts_local_notification_timestamp") }
+    }
+    
     @Published var enabledPubkeys: Set<String> = []
     
     // Needed as fallback if account() doesn't resolve yet
@@ -47,12 +52,12 @@ class NewPostNotifier: ObservableObject {
     
     
     @MainActor
-    public func runCheck() {
-        guard !AppState.shared.appIsInBackground else { return }
+    public func runCheck(force: Bool = false) {
+        guard force || (!AppState.shared.appIsInBackground || IS_CATALYST) else { return }
 #if DEBUG
         L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
 #endif
-        if let lastCheck = lastCheck {
+        if let lastCheck = lastCheck, !force {
             guard (Date.now.timeIntervalSince1970 - lastCheck.timeIntervalSince1970) > 60
             else { return }
         }
@@ -151,24 +156,39 @@ class NewPostNotifier: ObservableObject {
         }
     }
     
-    private func createNewPostsNotification(_ newPosts:[Event], accountPubkey: String) {
+    private func createNewPostsNotification(_ newPosts: [Event], accountPubkey: String) {
 #if DEBUG
         L.og.debug("NewPostNotifier.createNewPostsNotification: newPosts: \(newPosts.count)")
 #endif
         let contacts = Contact.fetchByPubkeys(newPosts.map { $0.pubkey }).map { ContactInfo(name: $0.anyName, pubkey: $0.pubkey, pfp: $0.picture) }
         // Checking existing unread new posts notification(s), merge them into a new one, delete older.
         let existing = PersistentNotification.fetchUnreadNewPostNotifications(accountPubkey: accountPubkey)
-        let allContacts:[ContactInfo] = existing.reduce(contacts) { partialResult, notification in
+        let allContacts: [ContactInfo] = existing.reduce(contacts) { partialResult, notification in
             return (partialResult + notification.contactsInfo)
         }
         let existingSince = existing.last?.since ?? Int64(existing.last?.createdAt.timeIntervalSince1970 ?? 0)
         let newPostsSince = newPosts.sorted(by: { $0.created_at > $1.created_at }).last?.created_at ?? 0
         let since = existingSince < newPostsSince && existingSince != 0 ? existingSince : newPostsSince
+        
+        // Remove old unread notification by deleting old and create a new one with all contacts of the unread
         for notification in existing {
             context().delete(notification)
         }
+        
+        // Create the new notification with all unread contacts merged
         let newPostNotification = PersistentNotification.createNewPostsNotification(pubkey: accountPubkey, contacts: Array(Set(allContacts)), since: since)
         NotificationsViewModel.shared.checkNeedsUpdate(newPostNotification)
+        viewContextSave() // <-- need this or @FetchRequest in NotificationsNewPosts doesn't update realtime
+        
+        if SettingsStore.shared.receiveLocalNotifications && AppState.shared.appIsInBackground { // only when app is in background
+            // if there is only 1 new post we can use it as body text of notification
+            let singlePostText: String? = if newPosts.count == 1, let singlePostText = newPosts.first?.plainText {
+                singlePostText
+            } else {
+                nil
+            }
+            scheduleNewPostNotification(Array(Set(contacts)), singlePostText: singlePostText) // for lock home screen we kee separate notifications, so don't merge contacts
+        }
     }
 }
 

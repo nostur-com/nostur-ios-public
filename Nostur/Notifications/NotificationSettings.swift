@@ -51,7 +51,7 @@ struct NotificationSettings: View {
            
             Section {
                 Toggle(isOn: $ss.receiveLocalNotifications) {
-                    Text("Mentions, replies, or DMs")
+                    Text("Mentions, replies, DMs and New posts")
                     Text("Receive notifications when Nostur is in background")
                 }
                 .onChange(of: ss.receiveLocalNotifications) { receiveLocalNotifications in

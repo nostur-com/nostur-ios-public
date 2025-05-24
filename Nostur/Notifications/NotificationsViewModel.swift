@@ -31,9 +31,9 @@ class NotificationsViewModel: ObservableObject {
     public var needsUpdate: Bool = true // Importer or other parts will set this flag to true if anything incoming is part of a notification. Only then the notification queries will run. (instead of before, every 15 sec, even for no reason)
     // is true at start, then false after each notification check
     
-    public func checkNeedsUpdate(_ failedZapNotification: PersistentNotification) {
+    public func checkNeedsUpdate(_ notification: PersistentNotification) {
         guard let account = account() else { return }
-        if failedZapNotification.pubkey == account.publicKey {
+        if notification.pubkey == account.publicKey {
             bg().perform { [weak self] in
                 self?.needsUpdate = true
             }

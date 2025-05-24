@@ -45,6 +45,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             case "Mentions":
                 UserDefaults.standard.setValue("Notifications", forKey: "selected_tab")
                 UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
+            case "New Posts":
+                UserDefaults.standard.setValue("Notifications", forKey: "selected_tab")
+                UserDefaults.standard.setValue("New Posts", forKey: "selected_notifications_tab")
             case "Messages":
                 UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
             default:
@@ -106,7 +109,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Always schedule the next refresh
         scheduleAppRefresh(seconds: 180.0)
         
-        // Check for any new notifications (relays), if there are unread mentions it will trigger a (iOS) notification
+        // Check for any new notifications (relays), if there are unread mentions or new posts (notification bell) it will trigger a (iOS) notification
         Task {
             await checkForNotifications()
             task.setTaskCompleted(success: true)
@@ -189,6 +192,34 @@ func scheduleDMNotification(name: String) {
     UNUserNotificationCenter.current().add(request)
 }
 
+// Schedule a local notification New posts (notification bell)
+// singlePostText: if there is only 1 new post we can use it as body text of notification
+func scheduleNewPostNotification(_ contactsInfo: [ContactInfo], singlePostText: String? = nil) {
+#if DEBUG
+    L.og.debug("scheduleNewPostNotification()")
+#endif
+    
+    // Remember timestamp so we only show newer notifications next time
+    UserDefaults.standard.setValue(Date.now.timeIntervalSince1970, forKey: "last_new_posts_local_notification_timestamp")
+    
+    // Create the notificatgion
+    let content = UNMutableNotificationContent()
+    if contactsInfo.count == 1 {
+        content.title =  "New post by \(contactsInfo.map { $0.name }.formatted(.list(type: .and)))" // "New post by Jim"
+        content.body = singlePostText ?? "Tap to see"
+    }
+    else {
+        content.title =  "New posts"
+        content.body = "\(contactsInfo.map { $0.name }.formatted(.list(type: .and)))" // "John and Jim"
+    }
+    content.sound = .default
+    content.userInfo = ["tapDestination": "New Posts"] // For navigating to the Notifications->Mentions tab
+    
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+    let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+    UNUserNotificationCenter.current().add(request)
+}
+
 // The background fetch task will run this to check for new notifications
 func checkForNotifications() async {
     await withCheckedContinuation { continuation in
@@ -214,6 +245,8 @@ func checkForNotifications() async {
                 ConnectionPool.shared.addConnection(relay)
             }
             ConnectionPool.shared.connectAll()
+            
+            // Check mentions, dms
             bg().perform {
                 let reqTask = ReqTask(
                     debounceTime: 0.05,
@@ -268,6 +301,9 @@ func checkForNotifications() async {
                 Backlog.shared.add(reqTask)
                 reqTask.fetch()
             }
+            
+            // Check new posts
+            NewPostNotifier.shared.runCheck(force: true)
         }
     }
 }

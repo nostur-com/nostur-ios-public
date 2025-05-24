@@ -5271,7 +5271,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : ""
+            "value" : "meldingen"
           }
         }
       }
@@ -5281,12 +5281,23 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mentions"
+            "value" : "Vermeldingen"
+          }
+        }
+      }
+    },
+    "Mentions, replies, DMs and New posts" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vermeldingen, reacties, DM's en Nieuwe berichten"
           }
         }
       }
     },
     "Mentions, replies, or DMs" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
