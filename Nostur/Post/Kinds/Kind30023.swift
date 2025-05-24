@@ -197,6 +197,8 @@ struct Kind30023: View {
                     
                     if !hideFooter {
                         CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
+                            .background(theme.secondaryBackground)
+                            .drawingGroup(opaque: true)
                             .padding(.vertical, 10)
                     }
                 }
@@ -512,6 +514,8 @@ struct Kind30023: View {
             
             if !hideFooter {
                 CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
+                    .background(theme.secondaryBackground)
+                    .drawingGroup(opaque: true)
             }
         }
 //            .padding(20)

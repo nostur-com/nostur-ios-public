@@ -173,6 +173,8 @@ struct ArticleView: View {
                     
                     if !hideFooter {
                         CustomizableFooterFragmentView(nrPost: article, theme: theme)
+                            .background(theme.secondaryBackground)
+                            .drawingGroup(opaque: true)
                             .padding(.vertical, 10)
                     }
                 }
@@ -463,6 +465,8 @@ struct ArticleView: View {
                 
                 if !hideFooter {
                     CustomizableFooterFragmentView(nrPost: article, theme: theme)
+                        .background(theme.secondaryBackground)
+                        .drawingGroup(opaque: true)
                 }
             }
 //            .padding(20)

@@ -143,6 +143,7 @@ struct CustomizablePreviewFooterFragmentView: View {
         VStack(alignment: .leading, spacing: 5) {
             if let nrPost {
                 CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false, theme: themes.theme)
+                    .drawingGroup(opaque: true)
             }
         }
         .foregroundColor(themes.theme.footerButtons)
@@ -190,6 +191,7 @@ struct CustomizablePreviewFooterFragmentView: View {
                 if let p = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81", withReplies: true) {
                     
                     CustomizableFooterFragmentView(nrPost: p, theme: Themes.default.theme)
+                        .drawingGroup(opaque: true)
                     
                     ForEach(p.replies) {
                         Text($0.pubkey)

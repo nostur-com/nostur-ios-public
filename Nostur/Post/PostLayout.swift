@@ -103,6 +103,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 if (!hideFooter && settings.rowFooterEnabled) && !isItem { // also no footer for items (only in Detail)
                     CustomizableFooterFragmentView(nrPost: nrPost, theme: theme, isItem: isItem)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
+                        .drawingGroup(opaque: true)
                 }
             }
         }
@@ -150,6 +151,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 if isDetail || ((!hideFooter && settings.rowFooterEnabled) && !isItem) {
                     CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme, isItem: isItem)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
+                        .drawingGroup(opaque: true)
                 }
             }
         }
