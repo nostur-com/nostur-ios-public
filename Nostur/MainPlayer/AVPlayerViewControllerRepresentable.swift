@@ -129,9 +129,15 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         }
         
         @objc func respondToSwipeGesture(_ swipe: UISwipeGestureRecognizer) {
-            // close on swipe down gesture
+            // on swipe down go to mini player if detailstream, else close 
             Task { @MainActor in
-                AnyPlayerModel.shared.close()
+                if AnyPlayerModel.shared.viewMode == .detailstream  && AnyPlayerModel.shared.availableViewModes.contains(.overlay) {
+                    AnyPlayerModel.shared.viewMode = .overlay
+                }
+                else {
+                    AnyPlayerModel.shared.close()
+                }
+               
             }
         }
     }
