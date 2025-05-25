@@ -12,6 +12,7 @@ class AppState: ObservableObject {
     
     static let shared = AppState()
     private init() {
+        localFeedStates = LocalFeedStates.load() ?? LocalFeedStates(localFeedStates: [])
         if UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
             finishedTasks.insert(.firstTimeCopleted)
         }
@@ -34,7 +35,8 @@ class AppState: ObservableObject {
     // bg stuff
     public var bgAppState = BgAppState()
     
-    
+    // local feed states
+    public var localFeedStates: LocalFeedStates
     
     // Timers
     public let minuteTimer = Timer.publish(every: 60, tolerance: 15.0, on: .main, in: .default).autoconnect()
