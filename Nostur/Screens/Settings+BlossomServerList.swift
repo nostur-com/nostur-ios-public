@@ -176,8 +176,7 @@ struct BlossomServerList: View {
             timeout: 7.0,
             subscriptionId: "-DB-10063",
             reqCommand: { taskId in
-                nxReq(Filters(authors: [account.publicKey], kinds: [10063]), subscriptionId: taskId)
-                
+                nxReq(Filters(authors: [account.publicKey], kinds: [10063]), subscriptionId: taskId)    
             }, processResponseCommand: { taskId, relayMessage, event in
                 if let nEvent = relayMessage?.event {
                     checkingRelays = false
@@ -185,6 +184,9 @@ struct BlossomServerList: View {
                         $0.type == "server" && $0.value != ""
                     }
                     .map { $0.value }
+                    if serverList.isEmpty {
+                        newServerSheet = true
+                    }
                 }
                 else {
                     bg().perform {

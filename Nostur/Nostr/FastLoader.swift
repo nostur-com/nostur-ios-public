@@ -233,6 +233,11 @@ class Backlog {
                     guard let subscriptionId = receivedMessage.subscriptionId else { return }
                     bg().perform { [weak self] in
                         guard let self = self else { return }
+                        if let messageType = receivedMessage.type, subscriptionId.prefix(4) == "-DB-", messageType != .EVENT {
+                            // for noDb (-DB-) we only need to handle .EVENT, not EOSE, AUTH or other
+                            // so cancel if -DB- but not .EVENT
+                            return
+                        }
                         let reqTasks = self.tasks(with: [subscriptionId])
                         for task in reqTasks {
                             task.process(receivedMessage)
