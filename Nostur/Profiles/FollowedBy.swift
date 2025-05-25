@@ -13,6 +13,7 @@ struct FollowedBy: View {
     public var alignment: HorizontalAlignment = .leading
     public var minimal: Bool = false
     public var showZero: Bool = false
+    public var showHeaderText: Bool = true
     
     @State private var commonFollowerPFPs: [(Pubkey, URL)] = []
     
@@ -29,8 +30,8 @@ struct FollowedBy: View {
             Color.clear
                 .frame(height: 1)
                 .frame(maxWidth: .infinity)
-            if !commonFollowerPFPs.isEmpty || showZero {
-                if !minimal {
+            if (!commonFollowerPFPs.isEmpty || showZero) {
+                if !minimal && showHeaderText {
                     if commonFollowerPFPs.isEmpty {
                         Text("Followed by 0 others you follow").font(.caption)
                     }
@@ -80,7 +81,7 @@ struct FollowedBy: View {
             guard let pubkey, let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
             
             bg().perform {
-                let commonFollowerPubkeys = commonFollowers(for: pubkey)
+                let commonFollowerPubkeys = Set(commonFollowers(for: pubkey))
                 let commonFollowerPFPs = commonFollowerPubkeys.compactMap({ pubkey in
                     if let url = followingCache[pubkey]?.pfpURL {
                         return (pubkey, url)
