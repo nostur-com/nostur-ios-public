@@ -36,7 +36,9 @@ struct FeedPreviewSheet: View {
                         .lineLimit(1)
                         .layoutPriority(1)
                     ObservedPFP(pfp: nrPost.pfpAttributes, size: 20.0)
-                        .onTapGesture(perform: navigateToContact)
+                        .onTapGesture {
+                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                        }
                         .layoutPriority(2)
                     Text(pfpAttributes.anyName)
                         .lineLimit(1)
@@ -49,15 +51,6 @@ struct FeedPreviewSheet: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-    }
-    
-    private func navigateToContact() {
-        if let nrContact = nrPost.contact {
-            navigateTo(nrContact)
-        }
-        else {
-            navigateTo(ContactPath(key: nrPost.pubkey))
-        }
     }
     
     private var previewFeedActionsMenu: some View {
