@@ -124,7 +124,13 @@ struct BlossomServerList: View {
             }
         }
         .onDisappear {
-            SettingsStore.shared.blossomServerList = serverList 
+            SettingsStore.shared.blossomServerList = serverList
+            if let removeNoDbEventId {
+                bg().perform {
+                    // Remove so we can process it again next time (its not saved in DB)
+                    Importer.shared.existingIds[removeNoDbEventId] = nil
+                }
+            }
         }
         
         
@@ -167,6 +173,8 @@ struct BlossomServerList: View {
         }
     }
     
+    @State private var removeNoDbEventId: String? = nil
+    
     private func checkForUserServerListOnRelays() {
         guard let account = account else { return }
         let pubkey = account.publicKey
@@ -186,6 +194,10 @@ struct BlossomServerList: View {
                     .map { $0.value }
                     if serverList.isEmpty {
                         newServerSheet = true
+                    }
+                    bg().perform {
+                        // Remove so we can process it again next time (its not saved in DB)
+                        Importer.shared.existingIds[nEvent.id] = nil
                     }
                 }
                 else {
