@@ -39,12 +39,7 @@ struct OtherKnownKinds: View {
                 Spacer()
                 ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
                     .onTapGesture {
-                        if let nrContact = nrPost.contact {
-                            navigateTo(nrContact)
-                        }
-                        else {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
-                        }
+                        navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
                     }
                 
                 Text(pfpAttributes.anyName)

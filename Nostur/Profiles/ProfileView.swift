@@ -237,7 +237,6 @@ struct ProfileView: View {
                         .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
                     
                     NRTextDynamic("\(String(nrContact.about ?? ""))\n")
-                        .border(Color.red, width: 0.5)
                     
                     HStack(alignment: .center, spacing: 10) {
                         ProfileFollowingCount(pubkey: nrContact.pubkey)
@@ -248,10 +247,8 @@ struct ProfileView: View {
                             }
                     }
                     .frame(height: 30)
-                    .border(Color.red, width: 0.5)
                     
                     FollowedBy(pubkey: nrContact.pubkey, showHeaderText: false)
-                        .border(Color.red, width: 0.5)
                 }
                 .padding([.top, .leading, .trailing], 10.0)
                 .onTapGesture { }

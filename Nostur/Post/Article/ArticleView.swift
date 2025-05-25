@@ -72,43 +72,7 @@ struct ArticleView: View {
                     HStack {
                         ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: dim.isScreenshot)
                             .onTapGesture {
-                                if !IS_APPLE_TYRANNY {
-                                    if let nrContact = article.pfpAttributes.contact {
-                                        navigateTo(nrContact)
-                                    }
-                                    else {
-                                        navigateTo(ContactPath(key: article.pubkey))
-                                    }
-                                }
-                                else {
-                                    withAnimation {
-                                        showMiniProfile = true
-                                    }
-                                }
-                            }
-                            .overlay(alignment: .topLeading) {
-                                if (showMiniProfile) {
-                                    GeometryReader { geo in
-                                        Color.clear
-                                            .onAppear {
-                                                sendNotification(.showMiniProfile,
-                                                                 MiniProfileSheetInfo(
-                                                                    pubkey: article.pubkey,
-                                                                    contact: article.contact,
-                                                                    zapEtag: article.id,
-                                                                    location: geo.frame(in: .global).origin
-                                                                 )
-                                                )
-                                                showMiniProfile = false
-                                            }
-                                    }
-                                    .frame(width: 10)
-                                    .zIndex(100)
-                                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                        showMiniProfile = false
-                                    }
-                                }
+                                navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes)
                             }
                         VStack(alignment: .leading) {
                             if let contact = article.contact {
@@ -292,43 +256,7 @@ struct ArticleView: View {
                             Spacer()
                             ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: 25.0, zapEtag: article.id, forceFlat: dim.isScreenshot)
                                 .onTapGesture {
-                                    if !IS_APPLE_TYRANNY {
-                                        if let nrContact = article.contact {
-                                            navigateTo(nrContact)
-                                        }
-                                        else {
-                                            navigateTo(ContactPath(key: article.pubkey))
-                                        }
-                                    }
-                                    else {
-                                        withAnimation {
-                                            showMiniProfile = true
-                                        }
-                                    }
-                                }
-                                .overlay(alignment: .topLeading) {
-                                    if (showMiniProfile) {
-                                        GeometryReader { geo in
-                                            Color.clear
-                                                .onAppear {
-                                                    sendNotification(.showMiniProfile,
-                                                                     MiniProfileSheetInfo(
-                                                                        pubkey: article.pubkey,
-                                                                        contact: article.contact,
-                                                                        zapEtag: article.id,
-                                                                        location: geo.frame(in: .global).origin
-                                                                     )
-                                                    )
-                                                    showMiniProfile = false
-                                                }
-                                        }
-                                        .frame(width: 10)
-                                        .zIndex(100)
-                                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                            showMiniProfile = false
-                                        }
-                                    }
+                                    navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes)
                                 }
                             if let contact = article.contact {
                                 Text(contact.anyName)

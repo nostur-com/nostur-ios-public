@@ -248,7 +248,9 @@ struct PFPandName: View {
     var body: some View {
         HStack {
             ObservedPFP(pfp: pfpAttributes, size: 20.0)
-                .onTapGesture(perform: navigateToContact)
+                .onTapGesture {
+                    navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes)
+                }
             Text(pfpAttributes.anyName)
         }
 //        .navigationTitle("List by \(pfpAttributes.anyName)")
@@ -265,19 +267,6 @@ struct PFPandName: View {
                     QueuedFetcher.shared.dequeue(pTag: pfpAttributes.pubkey)
                 }
             }
-        }
-    }
-    
-    private func navigateToContact() {
-        if dismissOnNavigate {
-            dismiss()
-            AppSheetsModel.shared.dismiss()
-        }
-        if let nrContact = pfpAttributes.contact {
-            navigateTo(nrContact)
-        }
-        else {
-            navigateTo(ContactPath(key: pfpAttributes.pubkey))
         }
     }
 }

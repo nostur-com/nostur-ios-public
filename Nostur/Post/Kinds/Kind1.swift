@@ -154,17 +154,4 @@ struct Kind1: View {
             ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload, theme: theme)
         }
     }
-    
-    private func navigateToContact() {
-        if let nrContact = nrPost.contact {
-            navigateTo(nrContact)
-        }
-        else {
-            navigateTo(ContactPath(key: nrPost.pubkey))
-        }
-    }
-    
-    private func navigateToPost() {
-        navigateTo(nrPost)
-    }
 }

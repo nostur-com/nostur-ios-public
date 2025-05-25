@@ -96,43 +96,7 @@ struct Kind30023: View {
                     HStack {
                         ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
                             .onTapGesture {
-                                if !IS_APPLE_TYRANNY {
-                                    if let nrContact = nrPost.pfpAttributes.contact {
-                                        navigateTo(nrContact)
-                                    }
-                                    else {
-                                        navigateTo(ContactPath(key: nrPost.pubkey))
-                                    }
-                                }
-                                else {
-                                    withAnimation {
-                                        showMiniProfile = true
-                                    }
-                                }
-                            }
-                            .overlay(alignment: .topLeading) {
-                                if (showMiniProfile) {
-                                    GeometryReader { geo in
-                                        Color.clear
-                                            .onAppear {
-                                                sendNotification(.showMiniProfile,
-                                                                 MiniProfileSheetInfo(
-                                                                    pubkey: nrPost.pubkey,
-                                                                    contact: nrPost.contact,
-                                                                    zapEtag: nrPost.id,
-                                                                    location: geo.frame(in: .global).origin
-                                                                 )
-                                                )
-                                                showMiniProfile = false
-                                            }
-                                    }
-                                    .frame(width: 10)
-                                    .zIndex(100)
-                                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                        showMiniProfile = false
-                                    }
-                                }
+                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
                             }
                         VStack(alignment: .leading) {
                             if let contact = nrPost.contact {
@@ -341,44 +305,9 @@ struct Kind30023: View {
                         Spacer()
                         ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
                             .onTapGesture {
-                                if !IS_APPLE_TYRANNY {
-                                    if let nrContact = nrPost.contact {
-                                        navigateTo(nrContact)
-                                    }
-                                    else {
-                                        navigateTo(ContactPath(key: nrPost.pubkey))
-                                    }
-                                }
-                                else {
-                                    withAnimation {
-                                        showMiniProfile = true
-                                    }
-                                }
+                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
                             }
-                            .overlay(alignment: .topLeading) {
-                                if (showMiniProfile) {
-                                    GeometryReader { geo in
-                                        Color.clear
-                                            .onAppear {
-                                                sendNotification(.showMiniProfile,
-                                                                 MiniProfileSheetInfo(
-                                                                    pubkey: nrPost.pubkey,
-                                                                    contact: nrPost.contact,
-                                                                    zapEtag: nrPost.id,
-                                                                    location: geo.frame(in: .global).origin
-                                                                 )
-                                                )
-                                                showMiniProfile = false
-                                            }
-                                    }
-                                    .frame(width: 10)
-                                    .zIndex(100)
-                                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                        showMiniProfile = false
-                                    }
-                                }
-                            }
+
                         if let contact = nrPost.contact {
                             Text(contact.anyName)
                                 .foregroundColor(.primary)
@@ -524,20 +453,7 @@ struct Kind30023: View {
             navigateTo(nrPost)
         }
     }
-    
-    private func navigateToContact() {
-        if let nrContact = nrPost.contact {
-            navigateTo(nrContact)
-        }
-        else {
-            navigateTo(ContactPath(key: nrPost.pubkey))
-        }
-    }
-    
-    private func navigateToPost() {
-        navigateTo(nrPost)
-    }
-    
+
     private var minutesToRead: Int {
         let wordCount = (nrPost.content ?? "").split(separator: " ").count
         return Int(ceil(Double(wordCount) / WORDS_PER_MINUTE))

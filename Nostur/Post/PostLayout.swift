@@ -208,33 +208,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     }
                 }
                 .onTapGesture {
-                    withAnimation {
-                        showMiniProfile = true
-                    }
-                }
-                .overlay(alignment: .topLeading) {
-                    if (showMiniProfile) {
-                        GeometryReader { geo in
-                            Color.clear
-                                .onAppear {
-                                    sendNotification(.showMiniProfile,
-                                                     MiniProfileSheetInfo(
-                                                        pubkey: nrPost.pubkey,
-                                                        contact: nrPost.contact,
-                                                        zapEtag: nrPost.id,
-                                                        location: geo.frame(in: .global).origin
-                                                     )
-                                    )
-                                    showMiniProfile = false
-                                }
-                        }
-                        .frame(width: 10)
-                        .zIndex(100)
-                        .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                        .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                            showMiniProfile = false
-                        }
-                    }
+                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
                 }
         }
     }
@@ -244,33 +218,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
             .frame(width: 20.0, height: 20.0)
             .onTapGesture {
-                withAnimation {
-                    showMiniProfile = true
-                }
-            }
-            .overlay(alignment: .topLeading) {
-                if (showMiniProfile) {
-                    GeometryReader { geo in
-                        Color.clear
-                            .onAppear {
-                                sendNotification(.showMiniProfile,
-                                                 MiniProfileSheetInfo(
-                                                    pubkey: nrPost.pubkey,
-                                                    contact: nrPost.contact,
-                                                    zapEtag: nrPost.id,
-                                                    location: geo.frame(in: .global).origin
-                                                 )
-                                )
-                                showMiniProfile = false
-                            }
-                    }
-                    .frame(width: 10)
-                    .zIndex(100)
-                    .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                        showMiniProfile = false
-                    }
-                }
+                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
             }
     }
     

@@ -219,3 +219,19 @@ func navigateToOnMain(_ path: any IdentifiableDestination) {
 func navigateOnDetail(_ path: any IdentifiableDestination) {
     sendNotification(.navigateToOnDetail, NavigationDestination(destination: path))
 }
+
+// Navigate to contact helper
+func navigateToContact(pubkey: String, nrContact: NRContact? = nil, nrPost: NRPost? = nil, pfpAttributes: PFPAttributes? = nil) {
+    if let nrContact {
+        navigateTo(nrContact)
+    }
+    else if let nrPost, let nrContact = nrPost.contact {
+        navigateTo(nrContact)
+    }
+    else if let pfpAttributes, let nrContact = pfpAttributes.contact {
+        navigateTo(nrContact)
+    }
+    else {
+        navigateTo(ContactPath(key: pubkey))
+    }
+}

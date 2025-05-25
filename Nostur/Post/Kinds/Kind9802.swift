@@ -158,10 +158,6 @@ struct Kind9802: View {
                 .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
         )
     }
-    
-    private func navigateToPost() {
-        navigateTo(nrPost)
-    }
 }
 
 

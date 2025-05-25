@@ -41,7 +41,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                         HStack(spacing: 5) {
                             // profile image
                             PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
-                                .onTapGesture(perform: navigateToContact)
+                                .onTapGesture {
+                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                                }
                             
                             Text(pfpAttributes.anyName) // Name
                                 .animation(.easeIn, value: pfpAttributes.anyName)
@@ -49,7 +51,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                                 .foregroundColor(.primary)
                                 .fontWeightBold()
                                 .lineLimit(1)
-                                .onTapGesture(perform: navigateToContact)
+                                .onTapGesture {
+                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                                }
                                 
                             if couldBeImposter == 1 {
                                 PossibleImposterLabel(possibleImposterPubkey: nrPost.pubkey, followingPubkey: nrPost.contact?.similarToPubkey)
@@ -83,7 +87,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                     Spacer()
                     // profile image
                     PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
-                        .onTapGesture(perform: navigateToContact)
+                        .onTapGesture {
+                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                        }
                     
                     Text(pfpAttributes.anyName) // Name
                         .animation(.easeIn, value: pfpAttributes.anyName)
@@ -91,7 +97,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                         .foregroundColor(.primary)
                         .fontWeightBold()
                         .lineLimit(1)
-                        .onTapGesture(perform: navigateToContact)
+                        .onTapGesture {
+                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                        }
                         
                     if couldBeImposter == 1 {
                         PossibleImposterLabel(possibleImposterPubkey: nrPost.pubkey, followingPubkey: nrPost.contact?.similarToPubkey)
@@ -170,14 +178,6 @@ struct PostEmbeddedLayout<Content: View>: View {
         )
     }
     
-    private func navigateToContact() {
-        if let nrContact = nrPost.contact {
-            navigateTo(nrContact)
-        }
-        else {
-            navigateTo(ContactPath(key: nrPost.pubkey))
-        }
-    }
     private func navigateToPost() {
         navigateTo(nrPost)
     }
