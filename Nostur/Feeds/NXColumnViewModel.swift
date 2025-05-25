@@ -19,6 +19,8 @@ class NXColumnViewModel: ObservableObject {
     
     public let vmInner = NXColumnViewModelInner()
     
+    private var didLoadFirstLocalState = false
+    
     @MainActor
     private func didFinish() {
         if !ConnectionPool.shared.anyConnected { // After finish we were never connected, watch for first connection to .load() again
@@ -251,6 +253,7 @@ class NXColumnViewModel: ObservableObject {
 
     @MainActor
     public func initialize(_ config: NXColumnConfig, speedTest: NXSpeedTest) {
+        // get initial feed state from
         self.subscriptions = Set<AnyCancellable>()
         self.config = config
         self.speedTest = speedTest
@@ -641,10 +644,51 @@ class NXColumnViewModel: ObservableObject {
             self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
         }
         
+        let repliesEnabled = config.repliesEnabled
+        
+        if !didLoadFirstLocalState && currentNRPostsOnScreen.isEmpty, let feedId = config.feed?.id?.uuidString { // very first load from local saved state
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) - First load from local state")
+#endif
+            if let localFeedState = AppState.shared.localFeedStates.feedState(for: feedId) {
+                let idsToPutInScreen: [String] = localFeedState.onScreenIds
+                
+                if !idsToPutInScreen.isEmpty {
+                    
+                    // Fetch events
+                    bg().perform {
+                        let fr = Event.fetchRequest()
+                        fr.predicate = NSPredicate(format: "id IN %@", idsToPutInScreen)
+                        let events = (try? bg().fetch(fr)) ?? []
+                        
+                        // transform Event to NRPost
+                        var eventsMap: [String: NRPost] = [:]
+                        for event in events {
+                            eventsMap[event.id] = NRPost(event: event, withParents: repliesEnabled, withReplies: !repliesEnabled, withRepliesCount: true, cancellationId: event.cancellationId)
+                        }
+                        
+                        // put on screen
+                        let nrPosts = idsToPutInScreen.compactMap { eventsMap[$0] }
+                        Task { @MainActor in
+                            // withAnimation { } or not?
+                            self.viewState = .posts(nrPosts)
+                            self.allIdsSeen = self.allIdsSeen.union(Set(idsToPutInScreen))
+#if DEBUG
+                            L.og.debug("☘️☘️ \(config.name) - Loaded \(nrPosts.count) from local state")
+#endif
+                        }
+                    }
+                }
+                return
+            }
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) - No local state found")
+#endif
+        }
+        
         let allIdsSeen = self.allIdsSeen
         let currentIdsOnScreen = self.currentIdsOnScreen
         let wotEnabled = config.wotEnabled
-        let repliesEnabled = config.repliesEnabled
   
         // Fetch since 5 minutes before most recent item on screen (since)
         // Or until oldest (bottom) item on screen (until)
