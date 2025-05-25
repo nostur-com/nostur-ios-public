@@ -314,7 +314,7 @@ struct MiniPFP: View {
                             .frame(width: size, height: size)
                     }
                 }
-                else { fallBackColor ?? Color.systemBackground }
+                else { fallBackColor ?? Color.defaultSecondaryBackground }
             }
             .pipeline(ImageProcessing.shared.pfp)
             .drawingGroup()
@@ -323,13 +323,13 @@ struct MiniPFP: View {
             .background(
                 Circle()
                     .strokeBorder(.regularMaterial, lineWidth: 3)
-                    .background(Circle().fill(fallBackColor ?? Color.systemBackground))
+                    .background(Circle().fill(fallBackColor ?? Color.defaultSecondaryBackground))
             )
         }
         else {
             Circle()
                 .strokeBorder(.regularMaterial, lineWidth: 3)
-                .background(Circle().fill(fallBackColor ?? Color.systemBackground))
+                .background(Circle().fill(fallBackColor ?? Color.defaultSecondaryBackground))
                 .frame(width: size, height: size)
         }
     }
