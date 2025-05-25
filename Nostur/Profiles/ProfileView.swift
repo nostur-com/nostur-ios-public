@@ -83,7 +83,7 @@ struct ProfileView: View {
                                     }
                                 }
                             }
-                            .offset(x: 10, y: DIMENSIONS.PFP_BIG/2)
+                            .offset(y: DIMENSIONS.PFP_BIG/2)
                         })
                     
                     HStack(alignment: .top) {
@@ -155,7 +155,6 @@ struct ProfileView: View {
                         else {
                             FollowButton(pubkey: nrContact.pubkey)
                             .buttonStyle(.borderless)
-                            .padding(.trailing, 10)
                         }
                     }
                     
@@ -179,16 +178,11 @@ struct ProfileView: View {
                         }
                     }
                     
-                    CopyableTextView(text: vm.npub)
-                        .lineLimit(1)
-                        .frame(width: 140, alignment: .leading)
-                    
-                    Text(verbatim: lastSeenVM.lastSeen ?? "Last seen:")
-                        .font(.caption).foregroundColor(.primary)
-                        .lineLimit(1)
-                        .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
-                    
                     HStack {
+                        CopyableTextView(text: vm.npub)
+                            .lineLimit(1)
+                            .frame(width: 140, alignment: .leading)
+                        
                         if let mainContact = Contact.fetchByPubkey(nrContact.pubkey, context: viewContext())  {
                             ContactPrivateNoteToggle(contact: mainContact)
                         }
@@ -237,7 +231,13 @@ struct ProfileView: View {
                         }
                     }
                     
+                    Text(verbatim: lastSeenVM.lastSeen ?? "Last seen:")
+                        .font(.caption).foregroundColor(.primary)
+                        .lineLimit(1)
+                        .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
+                    
                     NRTextDynamic("\(String(nrContact.about ?? ""))\n")
+                        .border(Color.red, width: 0.5)
                     
                     HStack(alignment: .center, spacing: 10) {
                         ProfileFollowingCount(pubkey: nrContact.pubkey)
@@ -248,15 +248,18 @@ struct ProfileView: View {
                             }
                     }
                     .frame(height: 30)
+                    .border(Color.red, width: 0.5)
+                    
+                    FollowedBy(pubkey: nrContact.pubkey, showHeaderText: false)
+                        .border(Color.red, width: 0.5)
                 }
-                .padding(10)
+                .padding([.top, .leading, .trailing], 10.0)
                 .onTapGesture { }
             }
             .listRowInsets(EdgeInsets())
             .lineSpacing(0)
             .listSectionSeparator(.hidden)
             .listRowSeparator(.hidden)
-            .listRowSpacing(10.0)
             .background(themes.theme.listBackground)
             
             Section(content: {
@@ -359,14 +362,16 @@ struct ProfileView: View {
                     .frame(minWidth: dim.listWidth)
                 }
                 .frame(width: dim.listWidth)
+                .listRowInsets(.init())
+                .listSectionSeparator(.hidden)
+                .listRowSeparator(.hidden)
             })
-//            .listRowSpacing(10.0)
             .listRowInsets(EdgeInsets())
             .listSectionSeparator(.hidden)
             .listRowSeparator(.hidden)
         }
         .background(themes.theme.listBackground)
-//        .listRowSpacing(10.0)
+        .listRowInsets(EdgeInsets())
         .listStyle(.plain)
         .toolbar {
             ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount, themes: themes)
@@ -420,10 +425,6 @@ struct ProfileView: View {
                 NIP05Verifier.shared.verify(contact)
             }
         }
-//        .fullScreenCover(isPresented: $profilePicViewerIsShown) {
-//            ProfilePicFullScreenSheet(profilePicViewerIsShown: $profilePicViewerIsShown, pictureUrl: nrContact.pictureUrl!)
-//                .environmentObject(themes)
-//        }
     }
 }
 
