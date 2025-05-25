@@ -177,7 +177,7 @@ class RelayMessage {
                 }
                 throw error.DUPLICATE_UNKNOWN
             }
-            else if mMessage.subscriptionId.prefix(4) != "-DB-" {
+            else {
                 updateEventCache(mMessage.id, status: .RECEIVED, relays: relay)
             }
         }
