@@ -1052,9 +1052,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     accountCache.removeRepliedTo(replyToId)
                     sendNotification(.postAction, PostActionNotification(type: .unreplied, eventId: replyToId))
                 }
-                else if self.kind == 6, let firstQuoteId = self.firstQuoteId {
-                    accountCache.removeReposted(firstQuoteId)
-                }
             }
         }
     }
