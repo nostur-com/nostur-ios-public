@@ -190,6 +190,7 @@ struct ZapButtonInner: View {
         bg().perform {
             accountCache()?.removeZapped(nrPost.id)
         }
+        sendNotification(.postAction, PostActionNotification(type: .unzapped, eventId: nrPost.id))
     }
     
     private func nonNWCtap() {

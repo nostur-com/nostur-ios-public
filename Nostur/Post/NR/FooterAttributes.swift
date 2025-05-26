@@ -224,6 +224,12 @@ class FooterAttributes: ObservableObject {
                         self?.ourReactions.remove(reactionContent)
                     case .replied:
                         self?.replied = true
+                    case .unreplied:
+                        self?.replied = false
+                    case .zapped:
+                        self?.zapState = .zapReceiptConfirmed
+                    case .unzapped:
+                        self?.zapState = nil
                     case .reposted:
                         self?.reposted = true
                     case .privateNote:

@@ -16,10 +16,18 @@ struct PostActionNotification {
     
     enum ActionType {
         case bookmark(Color) // "orange", "red", "blue", "purple", "green"
-        case reacted(UUID, String) // uuid, reaction.content (like "+" or "😂")
+        
+        case reacted(UUID?, String) // cancellation uuid, reaction.content (like "+" or "😂")
         case unreacted(String) // reaction.content (like "+" or "😂")
+        
         case reposted
+        
         case replied
+        case unreplied // (after Undo send)
+        
+        case zapped
+        case unzapped
+        
         case privateNote
     }
 }

@@ -56,6 +56,26 @@ struct ReactionButtonInner: View {
             .onAppear {
                 isActivated = reactionContent != "+" && (accountCache()?.hasReaction(nrPost.id, reactionType: reactionContent) ?? false)
             }
+            .onReceive(receiveNotification(.postAction), perform: { notification in
+                // For updating the like button in multiple views. Example: like in detail, should also update if the event is visible somewhere else in feed.
+                let postAction = notification.object as! PostActionNotification
+                guard postAction.eventId == nrPost.id else { return }
+                
+                switch postAction.type {
+                case .reacted(let uuid, let reactionContent):
+                    if !isActivated && reactionContent == self.reactionContent {
+                        isActivated = true
+                    }
+                    unpublishLikeId = uuid
+                case .unreacted(let reactionContent):
+                    if isActivated && reactionContent == self.reactionContent {
+                        isActivated = false
+                        unpublishLikeId = nil
+                    }
+                default:
+                    break
+                }
+            })
     }
     
     @MainActor

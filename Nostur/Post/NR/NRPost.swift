@@ -389,7 +389,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         else {
             self.replyingToAttributes = ReplyingToAttributes()
         }
-//        self.mentionsCount = event.mentionsCount
         
         self.fastTags = event.fastTags
         self.plainText = NRTextParser.shared.copyPasteText(fastTags: fastTags, event: event, text: event.content ?? "").text // TODO: prepend "comment" if highlight
@@ -1051,6 +1050,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             if let accountCache = accountCache(), accountCache.pubkey == self.pubkey {
                 if self.kind == 1, let replyToId = self.replyToId {
                     accountCache.removeRepliedTo(replyToId)
+                    sendNotification(.postAction, PostActionNotification(type: .unreplied, eventId: replyToId))
                 }
                 else if self.kind == 6, let firstQuoteId = self.firstQuoteId {
                     accountCache.removeReposted(firstQuoteId)

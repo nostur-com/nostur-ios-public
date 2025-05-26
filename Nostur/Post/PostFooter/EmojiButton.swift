@@ -72,8 +72,11 @@ struct EmojiButton: View {
                     guard postAction.eventId == nrPost.id else { return }
                     
                     switch postAction.type {
-                    case .reacted(_, _):
-                        break
+                    case .reacted(let uuid, let reactionContent):
+                        if selectedEmoji == "" {
+                            checkForAlreadyCustomEmojiReaction()
+                        }
+                        unpublishLikeId = uuid
                     case .unreacted(let reactionContent):
                         guard selectedEmoji != "" && reactionContent == selectedEmoji else { return }
                         footerAttributes.ourReactions.remove(selectedEmoji)

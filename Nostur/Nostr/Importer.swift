@@ -338,6 +338,15 @@ class Importer {
                         }
                         if let reactionToId = savedEvent.reactionToId {
                             ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reactions, eventId: reactionToId))
+                            
+                            // Update own reactions cache
+                            if event.publicKey == AccountsState.shared.activeAccountPublicKey {
+                                let reactionContent = event.content
+                                Task { @MainActor in
+                                    accountCache()?.addReaction(reactionToId, reactionType: reactionContent)
+                                    sendNotification(.postAction, PostActionNotification(type: .reacted(nil, reactionContent), eventId: reactionToId))
+                                }
+                            }
                         }
                     }
                     
@@ -374,6 +383,14 @@ class Importer {
                         }
                         if let repostedId = savedEvent.firstQuoteId {
                             ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reposts, eventId: repostedId))
+                            
+                            // Update own reposted cache
+                            if event.publicKey == AccountsState.shared.activeAccountPublicKey {
+                                Task { @MainActor in
+                                    accountCache()?.addReposted(repostedId)
+                                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: repostedId))
+                                }
+                            }
                         }
                     }
                     

@@ -40,7 +40,7 @@ extension Event {
     @NSManaged public var likesCount: Int64 // Cache
     @NSManaged public var repostsCount: Int64 // Cache
     @NSManaged public var repliesCount: Int64 // Cache
-    @NSManaged public var mentionsCount: Int64 // Cache
+    @NSManaged public var mentionsCount: Int64 // Cache (No longer used? is now repostsCount)
     @NSManaged public var zapsCount: Int64 // Cache
     
     @NSManaged public var personZapping: Contact?
@@ -942,6 +942,12 @@ extension Event {
                     if let zapRequest, zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, eTag: savedEvent.zappedEventId, zapState: .zapReceiptConfirmed))
+                        
+                        // Update own zapped cache
+                        Task { @MainActor in
+                            accountCache()?.addZapped(firstE)
+                            sendNotification(.postAction, PostActionNotification(type: .zapped, eventId: firstE))
+                        }
                     }
                 }
                 if let firstA = event.firstA() {
@@ -968,6 +974,12 @@ extension Event {
                     if let zapRequest, zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, aTag: firstA, zapState: .zapReceiptConfirmed))
+                        // TODO: How to handle a tag here?? need to update cache and reading from cache if its aTag instead of id
+                        // Update own zapped cache
+//                        Task { @MainActor in
+//                            accountCache()?.addZapped(firstA)
+//                        sendNotification(.postAction, PostActionNotification(type: .zapped, eventId: firstA))
+//                        }
                     }
                 }
                 if let firstP = event.firstP() {
@@ -1167,6 +1179,13 @@ extension Event {
                 })
             }
             
+            if let replyToId = savedEvent.replyToId, event.publicKey == AccountsState.shared.activeAccountPublicKey {
+                // Update own replied to cache
+                Task { @MainActor in
+                    accountCache()?.addRepliedTo(replyToId)
+                    sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
+                }
+            }
         }
         
         if (event.kind == .directMessage) { // needed to fetch contact in DMS: so event.firstP is in event.contacts
@@ -1292,6 +1311,15 @@ extension Event {
         // kind6 - repost, the reposted post is put in as .firstQuote
         if event.kind == .repost {
             savedEvent.firstQuoteId = kind6firstQuote?.id ?? event.firstE()
+            
+            if let firstQuoteId = savedEvent.firstQuoteId, event.publicKey == AccountsState.shared.activeAccountPublicKey {
+                // Update own reposted cache
+                Task { @MainActor in
+                    accountCache()?.addReposted(firstQuoteId)
+                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: firstQuoteId))
+                }
+            }
+            
             if let kind6firstQuote = kind6firstQuote {
                 CoreDataRelationFixer.shared.addTask({
                     guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: ".repost savedEvent.firstQuote = kind6firstQuote") else { return }
