@@ -119,114 +119,159 @@ struct MainFeedsScreen: View {
         let _ = Self._printChanges()
         #endif
         VStack(spacing: 0) {
-            if !shouldHideTabBar {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing:0) {
-                        TabButton(
-                            action: { selectedSubTab = "Following" },
-                            title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
-                            selected: selectedSubTab == "Following")
-                        Spacer()
-                        
-                        if la.viewFollowingPublicKeys.count > 10 && enablePictureFeed {
-                            TabButton(
-                                action: { selectedSubTab = "Picture" },
-                                systemIcon: "photo",
-                                selected: selectedSubTab == "Picture")
-                            Spacer()
+            ScrollViewReader { proxy in
+                ZStack {
+                    if !shouldHideTabBar {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing:0) {
+                                TabButton(
+                                    action: { selectedSubTab = "Following" },
+                                    title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
+                                    selected: selectedSubTab == "Following")
+                                .id("Following")
+                                Spacer()
+                                
+                                if la.viewFollowingPublicKeys.count > 10 && enablePictureFeed {
+                                    TabButton(
+                                        action: { selectedSubTab = "Picture" },
+                                        systemIcon: "photo",
+                                        selected: selectedSubTab == "Picture")
+                                    .id("Picture")
+                                    Spacer()
+                                }
+                                
+                                ForEach(lists) { list in
+                                    TabButton(
+                                        action: {
+                                            selectedSubTab = "List"
+                                            selectedList = list
+                                            selectedListId = list.subscriptionId
+                                        },
+                                        title: list.name_,
+                                        selected: selectedSubTab == "List" && selectedList == list )
+                                    .id(list.id)
+                                    Spacer()
+                                }
+                                
+                                if la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed {
+                                    TabButton(
+                                        action: { selectedSubTab = "Emoji" },
+                                        imageName: emojiType == "😂" ? "LaughterIcon" : "RageIcon",
+                                        secondaryText: String(format: "%ih", emojiVM.ago),
+                                        selected: selectedSubTab == "Emoji")
+                                    .id("Emoji")
+                                    Spacer()
+                                }
+                                
+                                if la.viewFollowingPublicKeys.count > 10 && enableZappedFeed {
+                                    TabButton(
+                                        action: { selectedSubTab = "Zapped" },
+                                        title: String(localized:"Zapped", comment:"Tab title for feed of most zapped posts"),
+                                        secondaryText: String(format: "%ih", zappedVM.ago),
+                                        selected: selectedSubTab == "Zapped")
+                                    .id("Zapped")
+                                    Spacer()
+                                }
+                                
+                                if la.viewFollowingPublicKeys.count > 10 && enableHotFeed {
+                                    TabButton(
+                                        action: { selectedSubTab = "Hot" },
+                                        title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
+                                        secondaryText: String(format: "%ih", hotVM.ago),
+                                        selected: selectedSubTab == "Hot")
+                                    .id("Hot")
+                                    Spacer()
+                                }
+                                
+                                if la.viewFollowingPublicKeys.count > 10 && enableDiscoverListsFeed {
+                                    TabButton(
+                                        action: { selectedSubTab = "DiscoverLists" },
+                                        title: String(localized: "Discover", comment:"Tab title for Discover Lists feed"),
+                                        selected: selectedSubTab == "DiscoverLists")
+                                    .id("DiscoverLists")
+                                    Spacer()
+                                }
+        //                        else if la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed {
+        //                            TabButton(
+        //                                action: { selectedSubTab = "Discover" },
+        //                                title: String(localized: "Discover", comment:"Tab title for Discover feed"),
+        //                                secondaryText: String(format: "%ih", discoverVM.ago),
+        //                                selected: selectedSubTab == "Discover")
+    //                                .id("Discover")
+        //                            Spacer()
+        //                        }
+                                
+                                if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {
+                                    TabButton(
+                                        action: {
+                                            if IS_CATALYST { // On macOS we open the Gallery in the detail pane
+                                                navigateOnDetail(ViewPath.Gallery(vm: galleryVM))
+                                            }
+                                            else {
+                                                selectedSubTab = "Gallery"
+                                            }
+                                        },
+                                        title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
+                                        secondaryText: String(format: "%ih", galleryVM.ago),
+                                        selected: selectedSubTab == "Gallery")
+                                    .id(IS_CATALYST ? "GalleryMac" : "Gallery")
+                                    Spacer()
+                                }
+                                
+                                if enableExploreFeed {
+                                    TabButton(
+                                        action: { selectedSubTab = "Explore" },
+                                        title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
+                                        selected: selectedSubTab == "Explore")
+                                    .id("Explore")
+                                }
+                                
+                                if la.viewFollowingPublicKeys.count > 10 && enableArticleFeed {
+                                    Spacer()
+                                    TabButton(
+                                        action: { selectedSubTab = "Articles" },
+                                        title: String(localized:"Articles", comment:"Tab title for feed of articles"),
+            //                            secondaryText: articlesVM.agoText,
+                                        selected: selectedSubTab == "Articles"
+                                    )
+                                    .id("Articles")
+                                }
+                            }
+                            .frame(minWidth: dim.listWidth)
                         }
-                        
-                        ForEach(lists) { list in
-                            TabButton(
-                                action: {
-                                    selectedSubTab = "List"
-                                    selectedList = list
-                                    selectedListId = list.subscriptionId
-                                },
-                                title: list.name_,
-                                selected: selectedSubTab == "List" && selectedList == list )
-                            Spacer()
+                        .frame(width: dim.listWidth, height: MAINFEEDS_TABS_HEIGHT)
+                    }
+                }
+                .onAppear {
+                    ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
+                    if selectedSubTab == "List" {
+                        if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
+                            selectedList = list
                         }
-                        
-                        if la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed {
-                            TabButton(
-                                action: { selectedSubTab = "Emoji" },
-                                imageName: emojiType == "😂" ? "LaughterIcon" : "RageIcon",
-                                secondaryText: String(format: "%ih", emojiVM.ago),
-                                selected: selectedSubTab == "Emoji")
-                            Spacer()
-                        }
-                        
-                        if la.viewFollowingPublicKeys.count > 10 && enableZappedFeed {
-                            TabButton(
-                                action: { selectedSubTab = "Zapped" },
-                                title: String(localized:"Zapped", comment:"Tab title for feed of most zapped posts"),
-                                secondaryText: String(format: "%ih", zappedVM.ago),
-                                selected: selectedSubTab == "Zapped")
-                            Spacer()
-                        }
-                        
-                        if la.viewFollowingPublicKeys.count > 10 && enableHotFeed {
-                            TabButton(
-                                action: { selectedSubTab = "Hot" },
-                                title: String(localized:"Hot", comment:"Tab title for feed of hot/popular posts"),
-                                secondaryText: String(format: "%ih", hotVM.ago),
-                                selected: selectedSubTab == "Hot")
-                            Spacer()
-                        }
-                        
-                        if la.viewFollowingPublicKeys.count > 10 && enableDiscoverListsFeed {
-                            TabButton(
-                                action: { selectedSubTab = "DiscoverLists" },
-                                title: String(localized: "Discover", comment:"Tab title for Discover Lists feed"),
-                                selected: selectedSubTab == "DiscoverLists")
-                            Spacer()
-                        }
-//                        else if la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed {
-//                            TabButton(
-//                                action: { selectedSubTab = "Discover" },
-//                                title: String(localized: "Discover", comment:"Tab title for Discover feed"),
-//                                secondaryText: String(format: "%ih", discoverVM.ago),
-//                                selected: selectedSubTab == "Discover")
-//                            Spacer()
-//                        }
-                        
-                        if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {
-                            TabButton(
-                                action: {
-                                    if IS_CATALYST { // On macOS we open the Gallery in the detail pane
-                                        navigateOnDetail(ViewPath.Gallery(vm: galleryVM))
-                                    }
-                                    else {
-                                        selectedSubTab = "Gallery"
-                                    }
-                                },
-                                title: String(localized:"Gallery", comment:"Tab title for gallery feed"),
-                                secondaryText: String(format: "%ih", galleryVM.ago),
-                                selected: selectedSubTab == "Gallery")
-                            Spacer()
-                        }
-                        
-                        if enableExploreFeed {
-                            TabButton(
-                                action: { selectedSubTab = "Explore" },
-                                title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
-                                selected: selectedSubTab == "Explore")
-                        }
-                        
-                        if la.viewFollowingPublicKeys.count > 10 && enableArticleFeed {
-                            Spacer()
-                            TabButton(
-                                action: { selectedSubTab = "Articles" },
-                                title: String(localized:"Articles", comment:"Tab title for feed of articles"),
-    //                            secondaryText: articlesVM.agoText,
-                                selected: selectedSubTab == "Articles")
+                        else {
+                            selectedList = lists.first
                         }
                     }
-                    .frame(minWidth: dim.listWidth)
+                    
+                    guard !didCreate else { return }
+                    didCreate = true
+                    loadColumnConfigs()
+                    createFollowingFeed(la.account)
+                    createPictureFeed(la.account)
+                    createExploreFeed() // Also create Explore Feed
+                    
+                    // Make sure selected tab is visible at launch
+                    if selectedSubTab == "List" {
+                        if let selectedList {
+                            proxy.scrollTo(selectedList.id, anchor: .trailing)
+                        }
+                    }
+                    else {
+                        proxy.scrollTo(selectedSubTab, anchor: .trailing)
+                    }
                 }
-                .frame(width: dim.listWidth, height: MAINFEEDS_TABS_HEIGHT)
             }
+          
             
             LiveEventsBanner()
             
@@ -333,24 +378,6 @@ struct MainFeedsScreen: View {
                 }
             
             AudioOnlyBarSpace()
-        }
-        .onAppear {
-            ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
-            if selectedSubTab == "List" {
-                if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
-                    selectedList = list
-                }
-                else {
-                    selectedList = lists.first
-                }
-            }
-            
-            guard !didCreate else { return }
-            didCreate = true
-            loadColumnConfigs()
-            createFollowingFeed(la.account)
-            createPictureFeed(la.account)
-            createExploreFeed() // Also create Explore Feed
         }
         .onChange(of: selectedListId) { newListId in
             if !columnConfigs.contains(where: { $0.id == newListId }) {
