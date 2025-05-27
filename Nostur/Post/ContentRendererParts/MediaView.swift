@@ -621,7 +621,6 @@ struct MediaPlaceholder: View {
 
 
 struct MediaPostPreview: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     private let nrPost: NRPost
     @ObservedObject private var pfpAttributes: PFPAttributes
@@ -648,10 +647,10 @@ struct MediaPostPreview: View {
                     .onTapGesture {
                         dismiss()
                         if let nrContact = nrPost.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: dim.id)
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                         }
                         else {
-                            navigateTo(ContactPath(key: nrPost.pubkey), context: dim.id)
+                            navigateTo(ContactPath(key: nrPost.pubkey), context: "Default")
                         }
                     }
                     .onAppear {
@@ -675,7 +674,7 @@ struct MediaPostPreview: View {
                 Text("Posted on \(nrPost.createdAt.formatted(date: .abbreviated, time: .omitted))")
                     .onTapGesture {
                         dismiss()
-                        navigateTo(nrPost, context: dim.id)
+                        navigateTo(nrPost, context: "Default")
                     }
             }
             
@@ -684,7 +683,7 @@ struct MediaPostPreview: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     dismiss()
-                    navigateTo(nrPost, context: dim.id)
+                    navigateTo(nrPost, context: "Default")
                 }
         }
         .font(.custom("Charter", size: 18))
