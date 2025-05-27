@@ -7282,6 +7282,7 @@
       }
     },
     "Relays Nostur uses to find content" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7290,6 +7291,9 @@
           }
         }
       }
+    },
+    "Relays Nostur uses to find or publish content" : {
+
     },
     "Relays others will use to find your content" : {
       "localizations" : {

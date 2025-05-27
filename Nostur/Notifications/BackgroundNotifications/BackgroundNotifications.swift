@@ -206,7 +206,7 @@ func scheduleNewPostNotification(_ contactsInfo: [ContactInfo], singlePostText: 
     let content = UNMutableNotificationContent()
     if contactsInfo.count == 1 {
         content.title =  "New post by \(contactsInfo.map { $0.name }.formatted(.list(type: .and)))" // "New post by Jim"
-        content.body = singlePostText ?? "Tap to see"
+        content.body = singlePostText ?? "Open in app"
     }
     else {
         content.title =  "New posts"

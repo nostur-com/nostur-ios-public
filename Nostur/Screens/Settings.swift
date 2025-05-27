@@ -752,7 +752,7 @@ struct RelaysLink: View {
         }, label: {
             VStack(alignment: .leading) {
                 Text("Configure your relays...")
-                Text("Relays Nostur uses to find content")
+                Text("Relays Nostur uses to find or publish content")
                     .font(.footnote)
                     .foregroundColor(.secondary)
             }
