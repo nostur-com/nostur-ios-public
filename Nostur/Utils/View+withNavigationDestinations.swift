@@ -191,47 +191,48 @@ extension View {
 
 struct NavigationDestination {
     let destination: any IdentifiableDestination
+    let context: String
 }
 
 protocol IdentifiableDestination: Hashable, Identifiable {
     
 }
 
-func navigateTo(_ path: any IdentifiableDestination) {    
+func navigateTo(_ path: any IdentifiableDestination, context: String) {
     if (type(of: path) == NRPost.self) {
         let nrPost = path as! NRPost
         if nrPost.kind == 30023 {
-            sendNotification(.navigateTo, NavigationDestination(destination: ArticlePath(id: nrPost.id, navigationTitle: nrPost.eventTitle ?? "Article")))
+            sendNotification(.navigateTo, NavigationDestination(destination: ArticlePath(id: nrPost.id, navigationTitle: nrPost.eventTitle ?? "Article"), context: context))
         }
         else {
-            sendNotification(.navigateTo, NavigationDestination(destination: path))
+            sendNotification(.navigateTo, NavigationDestination(destination: path, context: context))
         }
     }
     else {
-        sendNotification(.navigateTo, NavigationDestination(destination: path))
+        sendNotification(.navigateTo, NavigationDestination(destination: path, context: context))
     }
 }
 
 func navigateToOnMain(_ path: any IdentifiableDestination) {
-    sendNotification(.navigateToOnMain, NavigationDestination(destination: path))
+    sendNotification(.navigateToOnMain, NavigationDestination(destination: path, context: "Default"))
 }
 
 func navigateOnDetail(_ path: any IdentifiableDestination) {
-    sendNotification(.navigateToOnDetail, NavigationDestination(destination: path))
+    sendNotification(.navigateToOnDetail, NavigationDestination(destination: path, context: "DetailPane"))
 }
 
 // Navigate to contact helper
-func navigateToContact(pubkey: String, nrContact: NRContact? = nil, nrPost: NRPost? = nil, pfpAttributes: PFPAttributes? = nil) {
+func navigateToContact(pubkey: String, nrContact: NRContact? = nil, nrPost: NRPost? = nil, pfpAttributes: PFPAttributes? = nil, context: String) {
     if let nrContact {
-        navigateTo(nrContact)
+        navigateTo(nrContact, context: context)
     }
     else if let nrPost, let nrContact = nrPost.contact {
-        navigateTo(nrContact)
+        navigateTo(nrContact, context: context)
     }
     else if let pfpAttributes, let nrContact = pfpAttributes.contact {
-        navigateTo(nrContact)
+        navigateTo(nrContact, context: context)
     }
     else {
-        navigateTo(ContactPath(key: pubkey))
+        navigateTo(ContactPath(key: pubkey), context: context)
     }
 }

@@ -249,7 +249,7 @@ struct PFPandName: View {
         HStack {
             ObservedPFP(pfp: pfpAttributes, size: 20.0)
                 .onTapGesture {
-                    navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes)
+                    navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes, context: "Default")
                 }
             Text(pfpAttributes.anyName)
         }

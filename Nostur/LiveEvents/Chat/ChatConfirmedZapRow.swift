@@ -52,10 +52,10 @@ struct ChatConfirmedZapRow: View {
                                 }
                             }
                             if let nrContact = confirmedZap.contact {
-                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                             }
                             else {
-                                navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
+                                navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey), context: "Default")
                             }
                         }
                     
@@ -70,10 +70,10 @@ struct ChatConfirmedZapRow: View {
                                 }
                             }
                             if let nrContact = confirmedZap.contact {
-                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                             }
                             else {
-                                navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey))
+                                navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey), context: "Default")
                             }
                         }
                             

@@ -54,10 +54,10 @@ struct LiveEventCapsule: View {
             TapGesture()
                .onEnded {
                    if let status = liveEvent.status, status == "planned" {
-                       navigateTo(liveEvent)
+                       navigateTo(liveEvent, context: "Default")
                    }
                    else if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
-                       navigateTo(liveEvent)
+                       navigateTo(liveEvent, context: "Default")
                    }
                    else {
                        // LOAD NEST

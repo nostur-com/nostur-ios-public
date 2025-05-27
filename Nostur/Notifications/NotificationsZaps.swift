@@ -220,7 +220,7 @@ struct PostZapsView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            navigateTo(postZaps.nrPost)
+            navigateTo(postZaps.nrPost, context: "Default")
         }
     }
 }
@@ -263,7 +263,7 @@ struct ProfileZap: View {
                 }
             }
             .onTapGesture {
-                navigateTo(ContactPath(key: zap.pubkey))
+                navigateTo(ContactPath(key: zap.pubkey), context: "Default")
             }
         }
     }

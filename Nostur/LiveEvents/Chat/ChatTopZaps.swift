@@ -58,10 +58,10 @@ struct ChatZapPill: View {
                 }
             }
             if let nrContact = zap.contact {
-                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
             }
             else {
-                navigateTo(ContactPath(key: zap.zapRequestPubkey))
+                navigateTo(ContactPath(key: zap.zapRequestPubkey), context: "Default")
             }
         }
     }

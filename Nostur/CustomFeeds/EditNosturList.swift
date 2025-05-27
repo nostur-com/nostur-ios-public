@@ -105,7 +105,7 @@ struct EditNosturList: View {
                 ForEach(listNRContacts) { nrContact in
                     NRContactSearchResultRow(nrContact: nrContact)
                         .padding()
-                        .onTapGesture { navigateTo(NRContactPath(nrContact: nrContact)) }
+                        .onTapGesture { navigateTo(NRContactPath(nrContact: nrContact), context: "Default") }
                         .listRowInsets(EdgeInsets())
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {

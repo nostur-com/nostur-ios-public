@@ -81,7 +81,7 @@ struct ChatRenderer: View { // VIEW things
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                             .onTapGesture {
-                                navigateTo(NotePath(id: noteHex))
+                                navigateTo(NotePath(id: noteHex), context: "Default")
                             }
                             .id(index)
                     }
@@ -98,7 +98,7 @@ struct ChatRenderer: View { // VIEW things
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                         .onTapGesture {
-                            navigateTo(NotePath(id: hex))
+                            navigateTo(NotePath(id: hex), context: "Default")
                         }
                         .id(index)
                 case .code(let code): // For text notes

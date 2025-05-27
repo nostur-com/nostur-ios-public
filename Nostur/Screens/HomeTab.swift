@@ -214,7 +214,7 @@ struct HomeTab: View {
     
     func goToNewPost() {
         guard let newPost else { return }
-        navigateTo(newPost)
+        navigateTo(newPost, context: "Default")
     }
 }
 

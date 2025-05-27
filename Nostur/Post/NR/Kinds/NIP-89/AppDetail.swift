@@ -9,6 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct AppDetail: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.openURL) private var openURL
     public var app: SuggestedApp
     private var appName: String { app.name }
@@ -75,7 +76,7 @@ struct AppDetail: View {
                     ForEach(recommendedByPFPs.prefix(4).indices, id:\.self) { index in
                         MiniPFP(pictureUrl: recommendedByPFPs[index].1, size: 30.0)
                             .onTapGesture {
-                                navigateTo(ContactPath(key: recommendedByPFPs[index].0))
+                                navigateTo(ContactPath(key: recommendedByPFPs[index].0), context: dim.id)
                             }
                             .id(index)
                             .offset(x: CGFloat(index) * -10 + (recommendedByPFPs.count > 4 ? 20 : 10))
@@ -232,4 +233,5 @@ struct AppDetail: View {
     }
     .padding()
     .background(Color.red)
+    .environmentObject(DIMENSIONS.shared)
 }

@@ -83,7 +83,7 @@ struct Kind30023: View {
                     
                     if let mostRecentId = nrPost.mostRecentId {
                         OpenLatestUpdateMessage {
-                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: nrPost.eventTitle ?? "Article"))
+                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: nrPost.eventTitle ?? "Article"), context: dim.id)
                         }
                         .padding(.vertical, 10)
                     }
@@ -96,7 +96,7 @@ struct Kind30023: View {
                     HStack {
                         ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
                             .onTapGesture {
-                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
+                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
                             }
                         VStack(alignment: .leading) {
                             if let contact = nrPost.contact {
@@ -107,7 +107,7 @@ struct Kind30023: View {
                                         .lineLimit(1)
                                         .layoutPriority(2)
                                         .onTapGesture {
-                                            navigateTo(contact)
+                                            navigateTo(contact, context: dim.id)
                                         }
                                     
                                     if contact.nip05verified, let nip05 = contact.nip05 {
@@ -305,7 +305,7 @@ struct Kind30023: View {
                         Spacer()
                         ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
                             .onTapGesture {
-                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
+                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
                             }
 
                         if let contact = nrPost.contact {
@@ -315,7 +315,7 @@ struct Kind30023: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
-                                    navigateTo(contact)
+                                    navigateTo(contact, context: dim.id)
                                 }
                             
                             if contact.nip05verified, let nip05 = contact.nip05 {
@@ -357,7 +357,7 @@ struct Kind30023: View {
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
-                                        navigateTo(contact)
+                                        navigateTo(contact, context: dim.id)
                                     }
                                 
                                 if contact.nip05verified, let nip05 = contact.nip05 {
@@ -405,7 +405,7 @@ struct Kind30023: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
-                                    navigateTo(contact)
+                                    navigateTo(contact, context: dim.id)
                                 }
                             
                             if contact.nip05verified, let nip05 = contact.nip05 {
@@ -450,7 +450,7 @@ struct Kind30023: View {
 //            .padding(20)
         .contentShape(Rectangle())
         .onTapGesture {
-            navigateTo(nrPost)
+            navigateTo(nrPost, context: dim.id)
         }
     }
 

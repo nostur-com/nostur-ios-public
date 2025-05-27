@@ -8,7 +8,8 @@
 import SwiftUI
 
 struct ReadMoreButton: View {
-    @EnvironmentObject private var themes:Themes
+    @EnvironmentObject private var dim: DIMENSIONS
+    @EnvironmentObject private var themes: Themes
     var nrPost:NRPost
     
     var moreItems:Int { nrPost.previewWeights?.moreItemsCount ?? 0 }
@@ -21,7 +22,7 @@ struct ReadMoreButton: View {
             else if moreItems == 1 {
                 Text("This post has 1 more item", comment: "Message shown when a post has 1 more item")
             }
-            Button(String(localized: "Show", comment: "Button to show more items in a post")) { navigateTo(nrPost) }
+            Button(String(localized: "Show", comment: "Button to show more items in a post")) { navigateTo(nrPost, context: dim.id) }
                 .buttonStyle(.bordered)
         }
         .padding(.leading, 8)
@@ -30,7 +31,7 @@ struct ReadMoreButton: View {
                 .stroke(themes.theme.lineColor.opacity(0.5), lineWidth: 1)
         )
         .onTapGesture {
-            navigateTo(nrPost)
+            navigateTo(nrPost, context: dim.id)
         }
     }
 }

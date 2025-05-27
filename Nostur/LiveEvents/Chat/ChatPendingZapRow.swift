@@ -51,10 +51,10 @@ struct ChatPendingZapRow: View {
                             }
                         }
                         if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                         }
                         else {
-                            navigateTo(ContactPath(key: pendingZap.pubkey))
+                            navigateTo(ContactPath(key: pendingZap.pubkey), context: "Default")
                         }
                     }
                 Text(pfpAttributes.anyName)
@@ -68,10 +68,10 @@ struct ChatPendingZapRow: View {
                             }
                         }
                         if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                         }
                         else {
-                            navigateTo(ContactPath(key: pendingZap.pubkey))
+                            navigateTo(ContactPath(key: pendingZap.pubkey), context: "Default")
                         }
                     }
                 Ago(pendingZap.createdAt)

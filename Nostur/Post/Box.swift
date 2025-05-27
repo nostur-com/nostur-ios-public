@@ -7,7 +7,8 @@
 
 import SwiftUI
 
-struct Box<Content: View>: View {    
+struct Box<Content: View>: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     private let content: Content
     private let kind: Int64
     private let navMode: NavigationMode
@@ -98,18 +99,18 @@ struct Box<Content: View>: View {
         guard let nrPost = nrPost else { return }
         if nrPost.isRepost {
             if let firstQuote = nrPost.firstQuote {
-                navigateTo(firstQuote)
+                navigateTo(firstQuote, context: dim.id)
             }
             else if let firstQuoteId = nrPost.firstQuoteId {
-                navigateTo(NotePath(id: firstQuoteId))
+                navigateTo(NotePath(id: firstQuoteId), context: dim.id)
             }
         }
         else {
             if let liveEvent = nrPost.nrLiveEvent {
-                navigateTo(liveEvent)
+                navigateTo(liveEvent, context: dim.id)
             }
             else {
-                navigateTo(nrPost)
+                navigateTo(nrPost, context: dim.id)
             }
         }
     }

@@ -36,10 +36,10 @@ struct ChatMessageRow: View {
                             }
                         }
                         if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                         }
                         else {
-                            navigateTo(ContactPath(key: nrChat.pubkey))
+                            navigateTo(ContactPath(key: nrChat.pubkey), context: "Default")
                         }
                     }
                 Text(pfpAttributes.anyName)
@@ -55,10 +55,10 @@ struct ChatMessageRow: View {
                         }
                         
                         if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                         }
                         else {
-                            navigateTo(ContactPath(key: nrChat.pubkey))
+                            navigateTo(ContactPath(key: nrChat.pubkey), context: "Default")
                         }
                     }
                 Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)

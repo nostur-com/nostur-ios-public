@@ -81,7 +81,7 @@ struct Kind9802: View {
             content
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    navigateTo(nrPost)
+                    navigateTo(nrPost, context: dim.id)
                 }
         }
         else {
@@ -90,7 +90,7 @@ struct Kind9802: View {
                 content
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        navigateTo(nrPost)
+                        navigateTo(nrPost, context: dim.id)
                     }
                 
             }
@@ -114,11 +114,11 @@ struct Kind9802: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if let firstE = nrPost.firstE {
-                        navigateTo(NotePath(id: firstE))
+                        navigateTo(NotePath(id: firstE), context: dim.id)
                     }
                     else if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
                             let naddr = try? ShareableIdentifier(aTag: aTag.1) {
-                            navigateTo(Naddr1Path(naddr1: naddr.bech32string))
+                            navigateTo(Naddr1Path(naddr1: naddr.bech32string), context: dim.id)
                     }
                 }
                 .overlay(alignment:.topLeading) {
@@ -138,7 +138,7 @@ struct Kind9802: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    navigateTo(ContactPath(key: hlAuthorPubkey))
+                    navigateTo(ContactPath(key: hlAuthorPubkey), context: dim.id)
                 }
                 .padding(.trailing, 40)
             }

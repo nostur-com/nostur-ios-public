@@ -10,8 +10,8 @@ import MarkdownUI
 import NavigationBackport
 
 struct ArticleView: View {
-    @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject private var article:NRPost
+    @EnvironmentObject private var dim: DIMENSIONS
+    @ObservedObject private var article: NRPost
     private var isParent = false
     private var isDetail: Bool = false
     private var fullWidth: Bool = false
@@ -59,7 +59,7 @@ struct ArticleView: View {
                     
                     if let mostRecentId = article.mostRecentId {
                         OpenLatestUpdateMessage {
-                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: article.eventTitle ?? "Article"))
+                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: article.eventTitle ?? "Article"), context: dim.id)
                         }
                         .padding(.vertical, 10)
                     }
@@ -72,7 +72,7 @@ struct ArticleView: View {
                     HStack {
                         ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: dim.isScreenshot)
                             .onTapGesture {
-                                navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes)
+                                navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes, context: dim.id)
                             }
                         VStack(alignment: .leading) {
                             if let contact = article.contact {
@@ -83,7 +83,7 @@ struct ArticleView: View {
                                         .lineLimit(1)
                                         .layoutPriority(2)
                                         .onTapGesture {
-                                            navigateTo(contact)
+                                            navigateTo(contact, context: dim.id)
                                         }
                                     
                                     if contact.nip05verified, let nip05 = contact.nip05 {
@@ -256,7 +256,7 @@ struct ArticleView: View {
                             Spacer()
                             ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: 25.0, zapEtag: article.id, forceFlat: dim.isScreenshot)
                                 .onTapGesture {
-                                    navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes)
+                                    navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes, context: dim.id)
                                 }
                             if let contact = article.contact {
                                 Text(contact.anyName)
@@ -265,7 +265,7 @@ struct ArticleView: View {
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
-                                        navigateTo(contact)
+                                        navigateTo(contact, context: dim.id)
                                     }
                                 
                                 if contact.nip05verified, let nip05 = contact.nip05 {
@@ -307,7 +307,7 @@ struct ArticleView: View {
                                         .lineLimit(1)
                                         .layoutPriority(2)
                                         .onTapGesture {
-                                            navigateTo(contact)
+                                            navigateTo(contact, context: dim.id)
                                         }
                                     
                                     if contact.nip05verified, let nip05 = contact.nip05 {
@@ -355,7 +355,7 @@ struct ArticleView: View {
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
-                                        navigateTo(contact)
+                                        navigateTo(contact, context: dim.id)
                                     }
                                 
                                 if contact.nip05verified, let nip05 = contact.nip05 {
@@ -400,19 +400,9 @@ struct ArticleView: View {
 //            .padding(20)
             .contentShape(Rectangle())
             .onTapGesture {
-                navigateTo(article)
+                navigateTo(article, context: dim.id)
             }
         }
-    }
-}
-
-struct ArticleCommentsPreview: View {
-    let article:NRPost
-    var body: some View {
-        Text("PFP's here (max 10)")
-            .onTapGesture {
-                navigateTo(ArticleCommentsPath(article: article))
-            }
     }
 }
 

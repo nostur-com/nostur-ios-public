@@ -233,11 +233,11 @@ extension AppView {
         L.og.info("nostr: link::  \(key.hexString)")
 #endif
         if nostr[0][2] == "npub1" {
-            navigateTo(ContactPath(key: key.hexString))
+            navigateTo(ContactPath(key: key.hexString), context: "Default")
             return
         }
         if nostr[0][2] == "note1" {
-            navigateTo(NotePath(id: key.hexString))
+            navigateTo(NotePath(id: key.hexString), context: "Default")
             return
         }
     }
@@ -247,8 +247,8 @@ extension AppView {
     if nostrAddr.count == 1 && nostrAddr[0].count == 4 {
 #if DEBUG
         L.og.info("nostr: naddr: \(nostrAddr[0][2])\(nostrAddr[0][3])")
-        navigateTo(Naddr1Path(naddr1: "\(nostrAddr[0][2])\(nostrAddr[0][3])"))
 #endif
+        navigateTo(Naddr1Path(naddr1: "\(nostrAddr[0][2])\(nostrAddr[0][3])"), context: "Default")
         return
     }
     
@@ -262,14 +262,14 @@ extension AppView {
         if nostrSharable[0][2] == "nevent1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
-                navigateTo(Nevent1Path(nevent1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"))
+                navigateTo(Nevent1Path(nevent1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Default")
             }
             return
         }
         if nostrSharable[0][2] == "nprofile1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
-                navigateTo(Nprofile1Path(nprofile1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"))
+                navigateTo(Nprofile1Path(nprofile1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Default")
             }
             return
         }
@@ -282,11 +282,11 @@ extension AppView {
         L.og.info("nostur: link: \(nostur[0][2])\(nostur[0][3])")
 #endif
         if nostur[0][2] == "p:" {
-            navigateTo(ContactPath(key: nostur[0][3]))
+            navigateTo(ContactPath(key: nostur[0][3]), context: "Default")
             return
         }
         if nostur[0][2] == "e:" {
-            navigateTo(NotePath(id: nostur[0][3]))
+            navigateTo(NotePath(id: nostur[0][3]), context: "Default")
             return
         }
     }
@@ -298,11 +298,11 @@ extension AppView {
         L.og.info("nostur: link: \(nostrHex[0][2])\(nostrHex[0][3])")
 #endif
         if nostrHex[0][2] == "p:" {
-            navigateTo(ContactPath(key: nostrHex[0][3]))
+            navigateTo(ContactPath(key: nostrHex[0][3]), context: "Default")
             return
         }
         if nostrHex[0][2] == "e:" {
-            navigateTo(NotePath(id: nostrHex[0][3]))
+            navigateTo(NotePath(id: nostrHex[0][3]), context: "Default")
             return
         }
     }
@@ -315,7 +315,7 @@ extension AppView {
 #endif
         UserDefaults.standard.setValue("Search", forKey: "selected_tab")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]))
+            navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]), context: "Default")
         }
         return
     }

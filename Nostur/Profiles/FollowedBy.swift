@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FollowedBy: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     
     public var pubkey: Pubkey? = nil
     public var alignment: HorizontalAlignment = .leading
@@ -45,7 +46,7 @@ struct FollowedBy: View {
                             .highPriorityGesture( // Unsure why first/left mini pfps are sometimes untappable with normal onTap
                                 TapGesture()
                                     .onEnded { _ in
-                                        navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
+                                        navigateTo(ContactPath(key: commonFollowerPFPs[index].0), context: dim.id)
                                     }
                             )
                             .id(index)
@@ -59,7 +60,7 @@ struct FollowedBy: View {
                                 .highPriorityGesture( // Unsure why first/left mini pfps are sometimes untappable with normal onTap
                                     TapGesture()
                                         .onEnded { _ in
-                                            navigateTo(ContactPath(key: commonFollowerPFPs[index].0))
+                                            navigateTo(ContactPath(key: commonFollowerPFPs[index].0), context: dim.id)
                                         }
                                 )
                                 .id(index)

@@ -233,6 +233,7 @@ struct Kind30000: View {
 
 
 struct PubkeyRow: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject var pfp: PFPAttributes
     
     var body: some View {
@@ -242,10 +243,10 @@ struct PubkeyRow: View {
         }
         .onTapGesture {
             if let nrContact = pfp.contact {
-                navigateTo(nrContact)
+                navigateTo(nrContact, context: dim.id)
             }
             else {
-                navigateTo(ContactPath(key: pfp.pubkey))
+                navigateTo(ContactPath(key: pfp.pubkey), context: dim.id)
             }
         }
     }

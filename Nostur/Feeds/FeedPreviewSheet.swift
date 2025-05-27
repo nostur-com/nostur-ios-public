@@ -37,7 +37,7 @@ struct FeedPreviewSheet: View {
                         .layoutPriority(1)
                     ObservedPFP(pfp: nrPost.pfpAttributes, size: 20.0)
                         .onTapGesture {
-                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: "Default")
                         }
                         .layoutPriority(2)
                     Text(pfpAttributes.anyName)

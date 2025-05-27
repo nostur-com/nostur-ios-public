@@ -14,9 +14,11 @@ struct AvailableWidthContainer<Content: View>: View {
     // Need this or .listWidth won't be set until next resize
     @State private var ready = false
     
+    private let id: String // id is passed to DIMENSIONS so we can do different things based in which id ("context") we are (if dim.id == ....)
     private let content: Content
     
-    init(@ViewBuilder content: () -> Content) {
+    init(id: String = "Default", @ViewBuilder content: () -> Content) {
+        self.id = id
         self.content = content()
     }
     
@@ -39,6 +41,7 @@ struct AvailableWidthContainer<Content: View>: View {
                     .frame(height: 1)
                     .onAppear(perform: {
                         ready = true
+                        dim.id = self.id
                         dim.listWidth = geo.size.width
                     })
             }

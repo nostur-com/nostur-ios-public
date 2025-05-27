@@ -275,6 +275,11 @@ struct DetailPane: View {
         .onReceive(receiveNotification(.navigateTo)) { notification in
             // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up
             let destination = notification.object as! NavigationDestination
+            
+            // Navigating from the main feed ("Default") open a new tab in the DetailPane
+            // Navigating from inside the DetailPanel will have context "DetailPane", should not create new tab, but navigate inside existing tab
+            guard destination.context == "Default" else { return }
+            
             let navId = destination.destination.id as! String
             
             if let existingTab = tm.tabs.first(where: { $0.navId == navId }) {
@@ -444,15 +449,15 @@ struct DetailPane_Previews: PreviewProvider {
                 .onAppear {
 
                     if let event0 = PreviewFetcher.fetchNRPost() {
-                        navigateTo(event0)
+                        navigateTo(event0, context: "DetailPane")
                     }
 
                     if let event1 = PreviewFetcher.fetchNRPost() {
-                        navigateTo(event1)
+                        navigateTo(event1, context: "DetailPane")
                     }
 
                     if let event1 = PreviewFetcher.fetchNRPost() {
-                        navigateTo(event1)
+                        navigateTo(event1, context: "DetailPane")
                     }
                     
                 }

@@ -64,7 +64,7 @@ struct ZapReceipt: View {
     var content: some View {
         HStack(alignment: .top) {
             VStack {
-                InnerPFP(pubkey: fromPubkey, pictureUrl:pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: color)
+                InnerPFP(pubkey: fromPubkey, pictureUrl: pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: color)
                     .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                     .overlay(alignment: .bottomTrailing) {
                         Image(systemName:"bolt.fill")
@@ -100,6 +100,7 @@ struct ZapReceipt: View {
                                   showMiniProfile = false
                               }
                         }
+                        navigateTo(ContactPath(key: fromPubkey), context: dim.id)
                     }
                 
                 Text(sats.satsFormatted)
@@ -114,8 +115,7 @@ struct ZapReceipt: View {
             }
          
             VStack(alignment: .leading, spacing: 3) { // Post container
-                ZappedFrom(pubkey: fromPubkey, name: name, couldBeImposter: 0, createdAt: from.date)
-//                .frame(height: 40.0, alignment: .leading)
+                ZappedFrom(pubkey: fromPubkey, name: name, couldBeImposter: 0, createdAt: from.date, context: dim.id)
                 
                 if let nrZapFrom = nrZapFrom {
                     ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme)
@@ -157,6 +157,7 @@ struct ZappedFrom: View {
     var name: String?
     var couldBeImposter: Int = 0
     var createdAt: Date
+    var context: String = "Default"
     
     var body: some View {
         HStack {
@@ -166,7 +167,7 @@ struct ZappedFrom: View {
                 .lineLimit(2)
                 .layoutPriority(2)
                 .onTapGesture {
-                    navigateTo(ContactPath(key: pubkey))
+                    navigateTo(ContactPath(key: pubkey, navigationTitle: name ?? String(pubkey.prefix(11))), context: context)
                 }
             
             if couldBeImposter == 1 {

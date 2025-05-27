@@ -113,6 +113,10 @@ struct DetailTab: View {
             guard tm.selected == tab else { return }
             let destination = notification.object as! NavigationDestination
             let navId = (destination.destination.id as! String)
+            
+            
+            guard destination.context == "DetailPane" else { return }
+            
             // don't navigate to self again
             guard navId != tm.selected?.navId else { return }
             
@@ -130,7 +134,7 @@ struct DetailTab: View {
             
             // Else just navigate to new destination in this tab
             navPath.append(destination.destination)
-        }        
+        }
     }
 }
 

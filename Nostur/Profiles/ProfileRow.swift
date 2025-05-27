@@ -70,6 +70,7 @@ struct ProfileCardByPubkey: View {
 }
 
 struct ProfileRow: View {
+    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject private var fg: FollowingGuardian = .shared
@@ -153,7 +154,7 @@ struct ProfileRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             guard tapEnabled else { return }
-            navigateTo(ContactPath(key: contact.pubkey))
+            navigateTo(ContactPath(key: contact.pubkey), context: dim.id)
         }
         .task { [weak contact] in
             guard let contact else { return }

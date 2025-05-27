@@ -173,10 +173,10 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 .onTapGesture {
                     if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
                         if let status = liveEvent.status, status == "planned" {
-                            navigateTo(liveEvent)
+                            navigateTo(liveEvent, context: dim.id)
                         }
                         else if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
-                            navigateTo(liveEvent)
+                            navigateTo(liveEvent, context: dim.id)
                         }
                         else {
                             // LOAD NEST
@@ -208,7 +208,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     }
                 }
                 .onTapGesture {
-                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: dim.id)
                 }
         }
     }
@@ -218,7 +218,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
             .frame(width: 20.0, height: 20.0)
             .onTapGesture {
-                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
+                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
             }
     }
     
@@ -241,7 +241,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     .lineLimit(1)
                     .layoutPriority(2)
                     .onTapGesture {
-                        navigateTo(contact)
+                        navigateTo(contact, context: dim.id)
                     }
                 
                 if contact.nip05verified, let nip05 = contact.nip05 {

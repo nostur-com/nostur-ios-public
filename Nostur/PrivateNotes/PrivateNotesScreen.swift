@@ -248,17 +248,17 @@ struct LazyPrivateNote: View {
                         PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
                             .onTapGesture {
                                 if let nrContact = nrPost.contact {
-                                    navigateTo(nrContact)
+                                    navigateTo(nrContact, context: "Default")
                                 }
                                 else {
-                                    navigateTo(ContactPath(key: nrPost.pubkey))
+                                    navigateTo(ContactPath(key: nrPost.pubkey), context: "Default")
                                 }
                             }
                         
                         MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
-                            .onTapGesture { navigateTo(nrPost) }
+                            .onTapGesture { navigateTo(nrPost, context: "Default") }
                     }
                     
                 case .readyContact(let contactInfo):
@@ -276,7 +276,7 @@ struct LazyPrivateNote: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        navigateTo(ContactPath(key: contactInfo.pubkey))
+                        navigateTo(ContactPath(key: contactInfo.pubkey), context: "Default")
                     }
                 case .error(let message):
                     HStack {

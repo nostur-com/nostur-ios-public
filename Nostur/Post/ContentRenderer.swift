@@ -12,6 +12,7 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
+    @EnvironmentObject private var dim: DIMENSIONS
     private var theme: Theme
     private let nrPost: NRPost
     private let isDetail: Bool
@@ -91,7 +92,7 @@ struct ContentRenderer: View { // VIEW things
 //                            .transaction { t in t.animation = nil }
                             .onTapGesture {
                                 guard !isDetail else { return }
-                                navigateTo(nrPost)
+                                navigateTo(nrPost, context: childDIM.id)
                             }
                     }
                     else {
@@ -108,7 +109,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .transaction { t in t.animation = nil }
                         .onTapGesture {
                             guard !isDetail else { return }
-                            navigateTo(nrPost)
+                            navigateTo(nrPost, context: childDIM.id)
                         }
                     
                 case .code(let code): // For text notes
@@ -116,7 +117,7 @@ struct ContentRenderer: View { // VIEW things
                         .font(.system(.body, design: .monospaced))
                         .onTapGesture {
                             guard !isDetail else { return }
-                            navigateTo(nrPost)
+                            navigateTo(nrPost, context: childDIM.id)
                         }
                     
                 case .text(let attributedStringWithPs): // For text notes
@@ -127,11 +128,11 @@ struct ContentRenderer: View { // VIEW things
 //                        .font(.system(.body, design: .monospaced))
 //                        .onTapGesture {
 //                            guard !isDetail else { return }
-//                            navigateTo(nrPost)
+//                            navigateTo(nrPost, context: childDIM.id)
 //                        }
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isDetail: isDetail, isPreview: nrPost.isPreview, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
                             guard !isDetail else { return }
-                            navigateTo(nrPost)
+                            navigateTo(nrPost, context: childDIM.id)
                     })
                     .equatable()
                     
@@ -139,7 +140,7 @@ struct ContentRenderer: View { // VIEW things
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
                         .onTapGesture {
                             guard !isDetail else { return }
-                            navigateTo(nrPost)
+                            navigateTo(nrPost, context: childDIM.id)
                         }
                     
                 case .lnbc(let text):
@@ -231,14 +232,14 @@ struct ContentRenderer: View { // VIEW things
                     EmptyView()
                         .onTapGesture {
                             guard !isDetail else { return }
-                            navigateTo(nrPost)
+                            navigateTo(nrPost, context: childDIM.id)
                         }
                 }
             }
         }
-//        .transaction { t in
-//            t.animation = nil
-//        }
+        .onAppear {
+            childDIM.id = dim.id
+        }
     }
 }
 

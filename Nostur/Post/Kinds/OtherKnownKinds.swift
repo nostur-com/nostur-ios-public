@@ -39,7 +39,7 @@ struct OtherKnownKinds: View {
                 Spacer()
                 ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
                     .onTapGesture {
-                        navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes)
+                        navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
                     }
                 
                 Text(pfpAttributes.anyName)
@@ -49,10 +49,10 @@ struct OtherKnownKinds: View {
                     .layoutPriority(2)
                     .onTapGesture {
                         if let nrContact = nrPost.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName))
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: dim.id)
                         }
                         else {
-                            navigateTo(ContactPath(key: nrPost.pubkey))
+                            navigateTo(ContactPath(key: nrPost.pubkey), context: dim.id)
                         }
                     }
                     .onAppear {

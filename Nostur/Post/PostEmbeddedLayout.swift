@@ -42,7 +42,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                             // profile image
                             PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
                                 .onTapGesture {
-                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                                 }
                             
                             Text(pfpAttributes.anyName) // Name
@@ -52,7 +52,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                                 .fontWeightBold()
                                 .lineLimit(1)
                                 .onTapGesture {
-                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                                 }
                                 
                             if couldBeImposter == 1 {
@@ -88,7 +88,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                     // profile image
                     PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
                         .onTapGesture {
-                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                         }
                     
                     Text(pfpAttributes.anyName) // Name
@@ -98,7 +98,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                         .fontWeightBold()
                         .lineLimit(1)
                         .onTapGesture {
-                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes)
+                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                         }
                         
                     if couldBeImposter == 1 {
@@ -179,6 +179,6 @@ struct PostEmbeddedLayout<Content: View>: View {
     }
     
     private func navigateToPost() {
-        navigateTo(nrPost)
+        navigateTo(nrPost, context: parentDIM.id)
     }
 }

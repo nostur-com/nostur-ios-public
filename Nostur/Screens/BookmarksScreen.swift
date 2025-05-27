@@ -206,7 +206,7 @@ struct LazyBookmark: View {
                                 .padding(.vertical, 5)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    navigateTo(nrPost)
+                                    navigateTo(nrPost, context: "Default")
                                 }
                             Spacer()
                         }

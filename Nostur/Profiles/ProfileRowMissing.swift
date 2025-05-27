@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ProfileRowMissing: View {
+    @EnvironmentObject private var dim: DIMENSIONS // TODO: need to do with enviroment key instead?
     
     var pubkey:String
     
@@ -38,7 +39,7 @@ struct ProfileRowMissing: View {
             .padding()
             .contentShape(Rectangle())
             .onTapGesture {
-                navigateTo(ContactPath(key: pubkey))
+                navigateTo(ContactPath(key: pubkey), context: dim.id)
             }
         }
     }

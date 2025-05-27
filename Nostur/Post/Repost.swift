@@ -166,6 +166,8 @@ struct Repost: View {
 }
 
 struct RepostHeader: View {
+    @EnvironmentObject private var dim: DIMENSIONS
+    
     let repostedHeader: String
     let pubkey: String
     
@@ -181,12 +183,12 @@ struct RepostHeader: View {
                 .font(.subheadline)
                 .fontWeight(.bold)
                 .onTapGesture {
-                    navigateTo(ContactPath(key: pubkey))
+                    navigateTo(ContactPath(key: pubkey), context: dim.id)
                 }
         }
         .foregroundColor(.gray)
         .onTapGesture {
-            navigateTo(ContactPath(key: pubkey))
+            navigateTo(ContactPath(key: pubkey), context: dim.id)
         }
         .padding(.leading, 30)
     }

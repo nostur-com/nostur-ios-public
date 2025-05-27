@@ -62,7 +62,7 @@ struct Search: View {
                             ForEach(contacts) { nrContact in
                                 VStack {
                                     NRContactSearchResultRow(nrContact: nrContact, onSelect: {
-                                        navigateTo(NRContactPath(nrContact: nrContact))
+                                        navigateTo(NRContactPath(nrContact: nrContact), context: "Default")
                                     })
                                         
                                     HStack {
@@ -77,7 +77,7 @@ struct Search: View {
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    navigateTo(NRContactPath(nrContact: nrContact))
+                                    navigateTo(NRContactPath(nrContact: nrContact), context: "Default")
                                 }
                             }
                             ForEach(nrPosts) { nrPost in
@@ -92,7 +92,7 @@ struct Search: View {
                                                     .padding(.vertical, 5)
                                                     .contentShape(Rectangle())
                                                     .onTapGesture {
-                                                        navigateTo(nrPost)
+                                                        navigateTo(nrPost, context: "Default")
                                                     }
                                                 Spacer()
                                             }

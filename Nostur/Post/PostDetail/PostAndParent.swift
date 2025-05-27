@@ -97,7 +97,7 @@ struct PostAndParent: View {
                         .background(
                             themes.theme.listBackground
                                 .onTapGesture {
-                                    navigateTo(nrPost)
+                                    navigateTo(nrPost, context: dim.id)
                                 }
                         )
                 }

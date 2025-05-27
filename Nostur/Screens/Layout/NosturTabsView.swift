@@ -81,7 +81,7 @@ struct NosturTabsView: View {
                 }
                 .frame(maxWidth: 600)
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
-                    AvailableWidthContainer {
+                    AvailableWidthContainer(id: "DetailPane") {
                         DetailPane()
                             .background(themes.theme.listBackground)
                     }

@@ -46,7 +46,7 @@ struct NotificationsReposts: View {
                                 if let firstQuote = nrPost.firstQuote {
                                     MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5)
                                         .onTapGesture {
-                                            navigateTo(firstQuote)
+                                            navigateTo(firstQuote, context: "Default")
                                         }
                                 }
                             }

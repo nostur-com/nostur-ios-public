@@ -50,11 +50,11 @@ struct SideBar: View {
                             if IS_IPAD {
                                 showSidebar = false
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                    navigateTo(ContactPath(key: account.publicKey, navigationTitle: account.anyName))
+                                    navigateTo(ContactPath(key: account.publicKey, navigationTitle: account.anyName), context: "Default")
                                 }
                             }
                             else {
-                                navigateTo(ContactPath(key: account.publicKey))
+                                navigateTo(ContactPath(key: account.publicKey), context: "Default")
                                 showSidebar = false
                             }
                         }
@@ -97,11 +97,11 @@ struct SideBar: View {
                         if IS_IPAD {
                             showSidebar = false
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                navigateTo(ContactPath(key: account.publicKey))
+                                navigateTo(ContactPath(key: account.publicKey), context: "Default")
                             }
                         }
                         else {
-                            navigateTo(ContactPath(key: account.publicKey))
+                            navigateTo(ContactPath(key: account.publicKey), context: "Default")
                             showSidebar = false
                         }
                     } label: {

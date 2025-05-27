@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NRPostHeaderContainer: View {
     private let nrPost: NRPost
+    @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject var settings: SettingsStore = .shared
     @ObservedObject var pfpAttributes: PFPAttributes
     private var singleLine: Bool = true
@@ -81,7 +82,7 @@ struct NRPostHeaderContainer: View {
     
     private func nameTapped() {
         guard let contact = nrPost.contact else { return }
-        navigateTo(contact)
+        navigateTo(contact, context: dim.id)
     }
 }
 

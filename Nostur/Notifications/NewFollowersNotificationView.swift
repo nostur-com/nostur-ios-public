@@ -28,7 +28,7 @@ struct NewFollowersNotificationView: View {
                     ObservedPFP(pfp: pfps[index])
                         .id(pfps[index].pubkey)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: pfps[index].pubkey, navigationTitle: pfps[index].anyName))
+                            navigateTo(ContactPath(key: pfps[index].pubkey, navigationTitle: pfps[index].anyName), context: "Default")
                         }
                         .zIndex(-Double(index))
                         .offset(x:Double(0 + (30*index)))
