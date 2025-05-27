@@ -218,6 +218,114 @@ struct DetailPane: View {
                     }
                 }
                 .background(themes.theme.background)
+                .onReceive(receiveNotification(.navigateTo)) { notification in
+                    // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up
+                    let destination = notification.object as! NavigationDestination
+                    
+                    // Navigating from the main feed ("Default") open a new tab in the DetailPane
+                    // Navigating from inside the DetailPanel will have context "DetailPane", should not create new tab, but navigate inside existing tab
+                    guard destination.context == "Default" else { return }
+                    
+                    let navId = destination.destination.id as! String
+                    
+                    if let existingTab = tm.tabs.first(where: { $0.navId == navId }) {
+                        tm.selected = existingTab
+                        tm.selected?.suspended = false
+                        proxy.scrollTo(existingTab.id)
+                        return
+                    }
+                    
+                    if type(of: destination.destination) == NRPost.self {
+                        let p = destination.destination as! NRPost
+                        if p.kind == 30023 {
+                            let tab = TabModel(articlePath: ArticlePath(id: p.id), navId: p.id)
+                            tm.tabs.append(tab)
+                            tm.selected = tab
+                            proxy.scrollTo(tab.id)
+                            return
+                        }
+                        else {
+                            let tab = TabModel(nrPost: p, navId: p.id)
+                            tm.tabs.append(tab)
+                            tm.selected = tab
+                            proxy.scrollTo(tab.id)
+                            return
+                        }
+                    }
+                    else if type(of: destination.destination) == NRLiveEvent.self {
+                        let p = destination.destination as! NRLiveEvent
+                        let tab = TabModel(nrLiveEvent: p, navId: p.id)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    else if type(of: destination.destination) == Event.self {
+                        let p = destination.destination as! Event
+                        let tab = TabModel(event: p, navId: p.id)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    else if type(of: destination.destination) == Naddr1Path.self {
+                        let p = destination.destination as! Naddr1Path
+                        
+                        if let existingTab = tm.tabs.first(where: { $0.navId == p.navId }) {
+                            tm.selected = existingTab
+                            tm.selected?.suspended = false
+                            proxy.scrollTo(existingTab.id)
+                            return
+                        }
+                        
+                        let tab = TabModel(naddr1: p, navId: p.navId)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    else if type(of: destination.destination) == ArticlePath.self {
+                        let p = destination.destination as! ArticlePath
+                        let tab = TabModel(articlePath: p, navId: p.id)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    else if type(of: destination.destination) == NotePath.self {
+                        let p = destination.destination as! NotePath
+                        let tab = TabModel(notePath: p, navId: p.id)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    else if type(of: destination.destination) == ContactPath.self {
+                        let c = destination.destination as! ContactPath
+                        let tab = TabModel(contactPath: c, profileTab:c.tab, navId: c.id)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    else if type(of: destination.destination) == NRContactPath.self {
+                        let c = destination.destination as! NRContactPath
+                        let tab = TabModel(nrContactPath: c, profileTab:c.tab, navId: c.id)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    else if type(of: destination.destination) == NRContact.self {
+                        let c = destination.destination as! NRContact
+                        let tab = TabModel(nrContact: c, navId: c.pubkey)
+                        tm.tabs.append(tab)
+                        tm.selected = tab
+                        proxy.scrollTo(tab.id)
+                        return
+                    }
+                    
+                }
             }
 
             ZStack {
@@ -264,102 +372,6 @@ struct DetailPane: View {
         .navigationBarTitleDisplayMode(.inline)
 
         .background(themes.theme.listBackground)
-        .onReceive(receiveNotification(.navigateTo)) { notification in
-            // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up
-            let destination = notification.object as! NavigationDestination
-            
-            // Navigating from the main feed ("Default") open a new tab in the DetailPane
-            // Navigating from inside the DetailPanel will have context "DetailPane", should not create new tab, but navigate inside existing tab
-            guard destination.context == "Default" else { return }
-            
-            let navId = destination.destination.id as! String
-            
-            if let existingTab = tm.tabs.first(where: { $0.navId == navId }) {
-                tm.selected = existingTab
-                tm.selected?.suspended = false
-                return
-            }
-            
-            if type(of: destination.destination) == NRPost.self {
-                let p = destination.destination as! NRPost
-                if p.kind == 30023 {
-                    let tab = TabModel(articlePath: ArticlePath(id: p.id), navId: p.id)
-                    tm.tabs.append(tab)
-                    tm.selected = tab
-                    return
-                }
-                else {
-                    let tab = TabModel(nrPost: p, navId: p.id)
-                    tm.tabs.append(tab)
-                    tm.selected = tab
-                    return
-                }
-            }
-            else if type(of: destination.destination) == NRLiveEvent.self {
-                let p = destination.destination as! NRLiveEvent
-                let tab = TabModel(nrLiveEvent: p, navId: p.id)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }
-            else if type(of: destination.destination) == Event.self {
-                let p = destination.destination as! Event
-                let tab = TabModel(event: p, navId: p.id)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }
-            else if type(of: destination.destination) == Naddr1Path.self {
-                let p = destination.destination as! Naddr1Path
-                
-                if let existingTab = tm.tabs.first(where: { $0.navId == p.navId }) {
-                    tm.selected = existingTab
-                    tm.selected?.suspended = false
-                    return
-                }
-                
-                let tab = TabModel(naddr1: p, navId: p.navId)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }
-            else if type(of: destination.destination) == ArticlePath.self {
-                let p = destination.destination as! ArticlePath
-                let tab = TabModel(articlePath: p, navId: p.id)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }
-            else if type(of: destination.destination) == NotePath.self {
-                let p = destination.destination as! NotePath
-                let tab = TabModel(notePath: p, navId: p.id)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }
-            else if type(of: destination.destination) == ContactPath.self {
-                let c = destination.destination as! ContactPath
-                let tab = TabModel(contactPath: c, profileTab:c.tab, navId: c.id)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }     
-            else if type(of: destination.destination) == NRContactPath.self {
-                let c = destination.destination as! NRContactPath
-                let tab = TabModel(nrContactPath: c, profileTab:c.tab, navId: c.id)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }
-            else if type(of: destination.destination) == NRContact.self {
-                let c = destination.destination as! NRContact 
-                let tab = TabModel(nrContact: c, navId: c.pubkey)
-                tm.tabs.append(tab)
-                tm.selected = tab
-                return
-            }
-            
-        }
         .onReceive(receiveNotification(.navigateToOnDetail)) { notification in
             // For now, for opening the Gallery on Detail Pane. Could use for other things too
             let destination = notification.object as! NavigationDestination
