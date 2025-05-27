@@ -211,14 +211,36 @@ func navigateTo(_ path: any IdentifiableDestination, context: String) {
     else {
         sendNotification(.navigateTo, NavigationDestination(destination: path, context: context))
     }
+    
+    // minimize stream
+    if AnyPlayerModel.shared.isShown && AnyPlayerModel.shared.viewMode == .detailstream {
+        AnyPlayerModel.shared.viewMode = .overlay
+    }
+    else if LiveKitVoiceSession.shared.visibleNest != nil {
+        LiveKitVoiceSession.shared.visibleNest = nil
+    }
 }
 
 func navigateToOnMain(_ path: any IdentifiableDestination) {
     sendNotification(.navigateToOnMain, NavigationDestination(destination: path, context: "Default"))
+    // minimize stream
+    if AnyPlayerModel.shared.isShown && AnyPlayerModel.shared.viewMode == .detailstream {
+        AnyPlayerModel.shared.viewMode = .overlay
+    }
+    else if LiveKitVoiceSession.shared.visibleNest != nil {
+        LiveKitVoiceSession.shared.visibleNest = nil
+    }
 }
 
 func navigateOnDetail(_ path: any IdentifiableDestination) {
     sendNotification(.navigateToOnDetail, NavigationDestination(destination: path, context: "DetailPane"))
+    // minimize stream
+    if AnyPlayerModel.shared.isShown && AnyPlayerModel.shared.viewMode == .detailstream {
+        AnyPlayerModel.shared.viewMode = .overlay
+    }
+    else if LiveKitVoiceSession.shared.visibleNest != nil {
+        LiveKitVoiceSession.shared.visibleNest = nil
+    }
 }
 
 // Navigate to contact helper
@@ -234,5 +256,13 @@ func navigateToContact(pubkey: String, nrContact: NRContact? = nil, nrPost: NRPo
     }
     else {
         navigateTo(ContactPath(key: pubkey), context: context)
+    }
+    
+    // minimize stream
+    if AnyPlayerModel.shared.isShown && AnyPlayerModel.shared.viewMode == .detailstream {
+        AnyPlayerModel.shared.viewMode = .overlay
+    }
+    else if LiveKitVoiceSession.shared.visibleNest != nil {
+        LiveKitVoiceSession.shared.visibleNest = nil
     }
 }
