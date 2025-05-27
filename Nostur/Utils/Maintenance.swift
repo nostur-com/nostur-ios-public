@@ -91,6 +91,7 @@ struct Maintenance {
         L.maintenance.info("Starting version based maintenance")
 #endif
         await context.perform {
+            Self.runRestoreFooterButtons(context: context)
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)
 //            Self.runSetAtagForReplacableEvents(context: context) // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
@@ -967,6 +968,31 @@ struct Maintenance {
         migration.migrationCode = migrationCode.updateKeychainInfo.rawValue
     }
     
+    // Run once to restore footer buttons
+    static func runRestoreFooterButtons(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.restoreFooterButtons, context: context) else { return }
+        defer {
+            let migration = Migration(context: context)
+            migration.migrationCode = migrationCode.restoreFooterButtons.rawValue
+        }
+        
+        var footerButtons = SettingsStore.shared.footerButtons
+        
+        if footerButtons.contains("⚡️") { return }
+        if footerButtons.contains("⚡") { return }
+        if footerButtons.count >= 7 { return }
+        
+        if let likeIndex = footerButtons.firstIndex(of: "+") {
+            footerButtons.insert("⚡️", at: footerButtons.index(after: likeIndex))
+        }
+        else {
+            let lastIndex = footerButtons.index(before: footerButtons.endIndex)
+            footerButtons.insert("⚡️", at: lastIndex)
+        }
+        
+        SettingsStore.shared.footerButtons = footerButtons
+    }
+    
     // Run once to fill aTag
     // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now
 //    static func runSetAtagForReplacableEvents(context: NSManagedObjectContext) {
@@ -1072,6 +1098,9 @@ struct Maintenance {
         
         // Set cloud feed manual order
         case setCloudFeedOrder = "setCloudFeedOrder"
+        
+        // Restore broken footer buttons
+        case restoreFooterButtons = "restoreFooterButtons"
         
         // make aTag field for easy lookups
         // Removed, can't query relays for multiple aTags so nevermind. Maybe useful in the future but not now

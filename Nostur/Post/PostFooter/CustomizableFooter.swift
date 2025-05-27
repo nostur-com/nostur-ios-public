@@ -143,7 +143,6 @@ struct CustomizablePreviewFooterFragmentView: View {
         VStack(alignment: .leading, spacing: 5) {
             if let nrPost {
                 CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false, theme: themes.theme)
-                    .drawingGroup(opaque: true)
             }
         }
         .foregroundColor(themes.theme.footerButtons)

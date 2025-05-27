@@ -58,7 +58,7 @@ struct FooterConfigurator: View {
             
             Group {
                 Button("Load default", action: {
-                    footerButtons = IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
+                    footerButtons = "💬🔄+⚡️🔖"
                 })
                 
                 Button("Load preset 1", action: {

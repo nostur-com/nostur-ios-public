@@ -178,7 +178,7 @@ final class SettingsStore: ObservableObject {
             Keys.isSignatureVerificationEnabled: true,
             Keys.lowDataMode: false,
             Keys.nwcShowBalance: false,
-            Keys.footerButtons: IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖",
+            Keys.footerButtons: "💬🔄+⚡️🔖",
             Keys.appWideSeenTracker: true,
             Keys.appWideSeenTrackeriCloud: true,
             Keys.mainWoTaccountPubkey: "",
@@ -517,7 +517,7 @@ final class SettingsStore: ObservableObject {
         get { _footerButtons }
     }
     
-    private var _footerButtons:String = IS_APPLE_TYRANNY ? "💬🔄+🔖" : "💬🔄+⚡️🔖"
+    private var _footerButtons: String = "💬🔄+⚡️🔖"
     
     public var fetchCounts: Bool {
         set {
