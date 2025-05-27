@@ -15,51 +15,50 @@ struct ChatMessageRow: View {
     @ObservedObject private var pfpAttributes: PFPAttributes
     
     private var zoomableId: String
+    @Binding private var selectedContact: NRContact?
     
-    init(nrChat: NRChatMessage, zoomableId: String = "Default") {
+    init(nrChat: NRChatMessage, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
         self.nrChat = nrChat
         self.pfpAttributes = nrChat.pfpAttributes
         self.zoomableId = zoomableId
+        _selectedContact = selectedContact
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack {
                 MiniPFP(pictureUrl: pfpAttributes.pfpURL)
-                    .onTapGesture {
-                        if AnyPlayerModel.shared.viewMode == .detailstream {
-                            AnyPlayerModel.shared.viewMode = .overlay
-                        }
-                        else if LiveKitVoiceSession.shared.visibleNest != nil {
-                            LiveKitVoiceSession.shared.visibleNest = nil
-                        }
-                        if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                        }
-                        else {
-                            navigateTo(ContactPath(key: nrChat.pubkey), context: "Default")
-                        }
-                    }
+                
                 Text(pfpAttributes.anyName)
                     .foregroundColor(themes.theme.accent)
-                    .onTapGesture {
-                        if AnyPlayerModel.shared.viewMode == .detailstream {
-                            AnyPlayerModel.shared.viewMode = .overlay
-                        }
-                        else if LiveKitVoiceSession.shared.visibleNest != nil {
-                            LiveKitVoiceSession.shared.visibleNest = nil
-                        }
-                        
-                        if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                        }
-                        else {
-                            navigateTo(ContactPath(key: nrChat.pubkey), context: "Default")
-                        }
-                    }
+
                 Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
             }
-            ChatRenderer(nrChat: nrChat, availableWidth: vc.availableWidth, forceAutoload: false, theme: themes.theme, zoomableId: zoomableId)
+            .contentShape(Rectangle())
+            .highPriorityGesture(TapGesture().onEnded({ _ in
+                if let nrContact = pfpAttributes.contact {
+                    selectedContact = nrContact
+                }
+                else if let nrContact = nrChat.contact {
+                    selectedContact = nrContact
+                }
+                else {
+                    if AnyPlayerModel.shared.viewMode == .detailstream {
+                        AnyPlayerModel.shared.viewMode = .overlay
+                    }
+                    else if LiveKitVoiceSession.shared.visibleNest != nil {
+                        LiveKitVoiceSession.shared.visibleNest = nil
+                    }
+                    
+                    if let nrContact = pfpAttributes.contact {
+                        navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
+                    }
+                    else {
+                        navigateTo(ContactPath(key: nrChat.pubkey), context: "Default")
+                    }
+                }
+            }))
+            
             ChatRenderer(nrChat: nrChat, availableWidth: min(600, vc.availableWidth) - 10, forceAutoload: false, theme: themes.theme, zoomableId: zoomableId)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(maxHeight: 1800, alignment: .top)

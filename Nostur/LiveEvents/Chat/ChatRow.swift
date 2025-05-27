@@ -11,6 +11,7 @@ struct ChatRow: View {
     public let content: ChatRowContent
     public let theme: Theme
     public var zoomableId: String = "Default"
+    @Binding var selectedContact: NRContact?
     
     var body: some View {
         switch content {
@@ -19,7 +20,7 @@ struct ChatRow: View {
             case .chatPendingZap(let pendingZap):
                 ChatPendingZapRow(pendingZap: pendingZap, zoomableId: zoomableId)
             case .chatMessage(let nrChat):
-                ChatMessageRow(nrChat: nrChat, zoomableId: zoomableId)
+                ChatMessageRow(nrChat: nrChat, zoomableId: zoomableId, selectedContact: $selectedContact)
         }
     }
 }

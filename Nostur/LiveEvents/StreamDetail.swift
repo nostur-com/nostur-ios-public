@@ -67,7 +67,7 @@ struct StreamDetail: View {
                                                             to: nil, from: nil, for: nil)
                         }
                         
-                        ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false, chatVM: liveEvent.chatVM)
+                        ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false, chatVM: liveEvent.chatVM, selectedContact: $selectedContact)
                             .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
                             .padding(.horizontal, 5)
                             .padding(.bottom, 15)

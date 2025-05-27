@@ -58,20 +58,21 @@ struct SelectedParticipantView: View {
         VStack(alignment: .leading) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading) {
-                    PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            // TODO: Need to fix navigation issues
-    //                        dismiss()
-    //                        navigateTo(nrContact)
-    //                        selectedContact = nil
-    //                        LiveKitVoiceSession.shared.visibleNest = nil
-                        }
-                    
-                    Text(nrContact.anyName)
-                        .fontWeightBold()
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
+                    Group {
+                        PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
+                            .contentShape(Rectangle())
+                            
+                        
+                        Text(nrContact.anyName)
+                            .fontWeightBold()
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                    }
+                    .onTapGesture {
+                        dismiss()
+                        navigateTo(nrContact, context: "Default")
+                        selectedContact = nil
+                    }
                         
                      
                     if hasFixedName {
