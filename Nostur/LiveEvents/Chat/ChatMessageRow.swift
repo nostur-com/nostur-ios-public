@@ -27,13 +27,11 @@ struct ChatMessageRow: View {
             HStack {
                 MiniPFP(pictureUrl: pfpAttributes.pfpURL)
                     .onTapGesture {
-                        if IS_IPHONE {
-                            if AnyPlayerModel.shared.viewMode == .detailstream {
-                                AnyPlayerModel.shared.viewMode = .overlay
-                            }
-                            else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                LiveKitVoiceSession.shared.visibleNest = nil
-                            }
+                        if AnyPlayerModel.shared.viewMode == .detailstream {
+                            AnyPlayerModel.shared.viewMode = .overlay
+                        }
+                        else if LiveKitVoiceSession.shared.visibleNest != nil {
+                            LiveKitVoiceSession.shared.visibleNest = nil
                         }
                         if let nrContact = pfpAttributes.contact {
                             navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
@@ -45,13 +43,11 @@ struct ChatMessageRow: View {
                 Text(pfpAttributes.anyName)
                     .foregroundColor(themes.theme.accent)
                     .onTapGesture {
-                        if IS_IPHONE {
-                            if AnyPlayerModel.shared.viewMode == .detailstream {
-                                AnyPlayerModel.shared.viewMode = .overlay
-                            }
-                            else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                LiveKitVoiceSession.shared.visibleNest = nil
-                            }
+                        if AnyPlayerModel.shared.viewMode == .detailstream {
+                            AnyPlayerModel.shared.viewMode = .overlay
+                        }
+                        else if LiveKitVoiceSession.shared.visibleNest != nil {
+                            LiveKitVoiceSession.shared.visibleNest = nil
                         }
                         
                         if let nrContact = pfpAttributes.contact {

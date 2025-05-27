@@ -49,13 +49,11 @@ struct ChatZapPill: View {
         .font(.footnote)
         .clipShape(Capsule())
         .onTapGesture {
-            if IS_IPHONE {
-                if AnyPlayerModel.shared.viewMode == .detailstream {
-                    AnyPlayerModel.shared.viewMode = .overlay
-                }
-                else if LiveKitVoiceSession.shared.visibleNest != nil {
-                    LiveKitVoiceSession.shared.visibleNest = nil
-                }
+            if AnyPlayerModel.shared.viewMode == .detailstream {
+                AnyPlayerModel.shared.viewMode = .overlay
+            }
+            else if LiveKitVoiceSession.shared.visibleNest != nil {
+                LiveKitVoiceSession.shared.visibleNest = nil
             }
             if let nrContact = zap.contact {
                 navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")

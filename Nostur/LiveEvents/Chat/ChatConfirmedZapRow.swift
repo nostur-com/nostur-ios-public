@@ -43,13 +43,11 @@ struct ChatConfirmedZapRow: View {
                     
                     MiniPFP(pictureUrl: pfpAttributes.pfpURL)
                         .onTapGesture {
-                            if IS_IPHONE {
-                                if AnyPlayerModel.shared.viewMode == .detailstream {
-                                    AnyPlayerModel.shared.viewMode = .overlay
-                                }
-                                else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                    LiveKitVoiceSession.shared.visibleNest = nil
-                                }
+                            if AnyPlayerModel.shared.viewMode == .detailstream {
+                                AnyPlayerModel.shared.viewMode = .overlay
+                            }
+                            else if LiveKitVoiceSession.shared.visibleNest != nil {
+                                LiveKitVoiceSession.shared.visibleNest = nil
                             }
                             if let nrContact = confirmedZap.contact {
                                 navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
@@ -61,13 +59,11 @@ struct ChatConfirmedZapRow: View {
                     
                     Text(pfpAttributes.anyName)
                         .onTapGesture {
-                            if IS_IPHONE {
-                                if AnyPlayerModel.shared.viewMode == .detailstream {
-                                    AnyPlayerModel.shared.viewMode = .overlay
-                                }
-                                else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                    LiveKitVoiceSession.shared.visibleNest = nil
-                                }
+                            if AnyPlayerModel.shared.viewMode == .detailstream {
+                                AnyPlayerModel.shared.viewMode = .overlay
+                            }
+                            else if LiveKitVoiceSession.shared.visibleNest != nil {
+                                LiveKitVoiceSession.shared.visibleNest = nil
                             }
                             if let nrContact = confirmedZap.contact {
                                 navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
