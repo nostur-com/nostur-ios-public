@@ -8,7 +8,7 @@
 import SwiftUI
 import NukeUI
 
-var TTToptions = {
+let TTToptions = {
     var TTToptions = ImageRequest.ThumbnailOptions(size: CGSize(width: 50, height: 50), unit: .points, contentMode: .aspectFill)
     TTToptions.createThumbnailFromImageAlways = true
     TTToptions.createThumbnailFromImageIfAbsent = true

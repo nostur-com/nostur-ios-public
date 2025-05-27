@@ -249,7 +249,7 @@ class ZapperPubkeyVerifier: ObservableObject {
             }
             
             
-            guard let zapperPubkey = await getZapperPubkey(anyLud: anyLud) else {
+            guard (await getZapperPubkey(anyLud: anyLud)) != nil else {
                 self.state = .noZapperPubkey
                 return
             }

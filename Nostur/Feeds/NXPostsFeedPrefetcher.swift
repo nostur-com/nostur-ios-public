@@ -22,7 +22,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel else { return }
+            guard columnViewModel != nil else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []
@@ -102,7 +102,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel else { return }
+            guard columnViewModel != nil else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []
@@ -170,7 +170,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel else { return }
+            guard columnViewModel != nil else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []
@@ -246,7 +246,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
         guard !postsForIndexPaths.isEmpty else { return }
         
         bg().perform { [weak columnViewModel] in
-            guard let columnViewModel else { return }
+            guard columnViewModel != nil else { return }
             
             var imageRequests: [ImageRequest] = []
             var imageRequestsPFP: [ImageRequest] = []

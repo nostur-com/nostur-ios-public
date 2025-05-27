@@ -155,7 +155,7 @@ class Unpublisher {
         // Always save event first
         // Save or update event
         
-        bgContext.perform { [unowned self] in
+        bgContext.perform { 
             if let dbEvent = Event.fetchEvent(id: nEvent.id, context: bgContext) {
                 // We already have it in db
                 

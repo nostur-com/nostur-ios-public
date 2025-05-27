@@ -14,7 +14,7 @@ class ImageProcessing {
     static let CONTENT_SIZE_MB = IS_CATALYST ? 1000 : 500
     static let BANNER_SIZE_MB = IS_CATALYST ? 500 : 250
     
-    static public var shared = ImageProcessing()
+    static public let shared = ImageProcessing()
     
     var pfp: ImagePipeline
     var banner: ImagePipeline

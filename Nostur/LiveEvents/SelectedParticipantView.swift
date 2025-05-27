@@ -390,7 +390,7 @@ struct SelectedParticipantView: View {
         ])
     }) {
         if let contact = PreviewFetcher.fetchNRContact(), let liveEvent = PreviewFetcher.fetchEvent("1460f66179e5c33e0d15b580b73773e2965f0548448efe7e22ecc98355e13bb2") {
-            let nrLiveEvent = NRLiveEvent(event: liveEvent)
+//            let nrLiveEvent = NRLiveEvent(event: liveEvent)
             VStack {
                 SelectedParticipantView(nrContact: contact, showZapButton: false, aTag: "1", showModeratorControls: true, selectedContact: .constant(contact))
                     .padding(10)

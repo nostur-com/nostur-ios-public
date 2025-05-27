@@ -553,7 +553,7 @@ extension NEvent {
 
 class TagSerializer {
     
-    static public var shared = TagSerializer()
+    static public let shared = TagSerializer()
     let encoder = JSONEncoder()
     
     init() {

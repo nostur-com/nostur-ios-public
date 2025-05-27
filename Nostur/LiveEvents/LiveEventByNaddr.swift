@@ -31,7 +31,7 @@ struct LiveEventByNaddr: View {
                 }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .onAppear { [weak vm, weak dim] in
+                    .onAppear { [weak vm] in
                         guard let naddr = try? ShareableIdentifier(naddr1),
                               let kind = naddr.kind,
                               let pubkey = naddr.pubkey,
@@ -43,9 +43,9 @@ struct LiveEventByNaddr: View {
                         
                         let fetchParams: FetchVM.FetchParams = (
                             prio: true,
-                            req: { [weak vm, weak dim] taskId in
-                                bg().perform { [weak vm, weak dim] in // 1. CHECK LOCAL DB
-                                    guard let vm, let dim else { return }
+                            req: { [weak vm] taskId in
+                                bg().perform { [weak vm] in // 1. CHECK LOCAL DB
+                                    guard let vm else { return }
                                     if let event = Event.fetchReplacableEvent(kind,
                                                                               pubkey: pubkey,
                                                                               definition: definition,
@@ -58,8 +58,8 @@ struct LiveEventByNaddr: View {
                                     }
                                 }
                             },
-                            onComplete: { [weak vm, weak dim] relayMessage, event in
-                                guard let vm, let dim else { return }
+                            onComplete: { [weak vm] relayMessage, event in
+                                guard let vm else { return }
                                 if let event = event {
                                     vm.ready(NRLiveEvent(event: event))
                                 }

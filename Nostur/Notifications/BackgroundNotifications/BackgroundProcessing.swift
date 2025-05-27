@@ -44,7 +44,7 @@ func scheduleDatabaseCleaningIfNeeded() {
 
 import CoreData
 
-class DatabaseCleanUpOperation: Operation {
+class DatabaseCleanUpOperation: Operation, @unchecked Sendable {
     private let context: NSManagedObjectContext
     
     init(context: NSManagedObjectContext) {
