@@ -60,8 +60,10 @@ struct ChatMessageRow: View {
                 Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
             }
             ChatRenderer(nrChat: nrChat, availableWidth: vc.availableWidth, forceAutoload: false, theme: themes.theme, zoomableId: zoomableId)
+            ChatRenderer(nrChat: nrChat, availableWidth: min(600, vc.availableWidth) - 10, forceAutoload: false, theme: themes.theme, zoomableId: zoomableId)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(maxHeight: 450, alignment: .top)
+                .frame(maxHeight: 1800, alignment: .top)
+                .clipped()
         }
     }
 }

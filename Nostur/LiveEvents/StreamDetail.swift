@@ -111,7 +111,7 @@ struct StreamDetail: View {
                 }
                 .frame(minHeight: geo.size.height)
                 .onAppear {
-                    vc = ViewingContext(availableWidth: dim.listWidth - 10, fullWidthImages: false, theme: themes.theme, viewType: .row)
+                    vc = ViewingContext(availableWidth: min(600, dim.listWidth - 10), fullWidthImages: false, theme: themes.theme, viewType: .row)
                 }
             }
             .toolbar {

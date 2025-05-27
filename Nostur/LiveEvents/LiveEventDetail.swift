@@ -132,7 +132,7 @@ struct LiveEventDetail: View {
                     }
                 }
                 
-                vc = ViewingContext(availableWidth: dim.listWidth - 20, fullWidthImages: false, theme: themes.theme, viewType: .row)
+                vc = ViewingContext(availableWidth: min(600, dim.listWidth - 20), fullWidthImages: false, theme: themes.theme, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
                 if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
                     account = Nostur.account()

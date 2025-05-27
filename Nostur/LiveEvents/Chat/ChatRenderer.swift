@@ -38,6 +38,7 @@ struct ChatRenderer: View { // VIEW things
                 switch contentElements[index] {
                 case .nrPost(let nrPost):
                     KindResolver(nrPost: nrPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload, theme: theme)
+                        .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
                     //                        .fixedSize(horizontal: false, vertical: true)
@@ -48,6 +49,7 @@ struct ChatRenderer: View { // VIEW things
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
+                        .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
@@ -58,6 +60,7 @@ struct ChatRenderer: View { // VIEW things
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
                         ProfileCardByPubkey(pubkey: pubkey, theme: theme)
+                            .frame(maxWidth: max(600, availableWidth))
                             .padding(.vertical, 10)
                             .id(index)
 //                            .withoutAnimation()
@@ -69,11 +72,13 @@ struct ChatRenderer: View { // VIEW things
                     }
                 case .nprofile1(let identifier):
                     NProfileView(identifier: identifier)
+                        .frame(maxWidth: max(600, availableWidth))
                         .id(index)
 //                        .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
+                            .frame(maxWidth: max(600, availableWidth))
 //                            .frame(minHeight: 75)
                             .environmentObject(childDIM)
 //                            .debugDimensions("QuoteById.note1")
@@ -91,6 +96,7 @@ struct ChatRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
+                        .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
 //                        .debugDimensions("QuoteById.noteHex")
@@ -117,10 +123,12 @@ struct ChatRenderer: View { // VIEW things
                         .id(index)
                 case .lnbc(let text):
                     LightningInvoice(invoice: text, theme: theme)
+                        .frame(maxWidth: max(600, availableWidth))
                         .padding(.vertical, 10)
                         .id(index)
                 case .cashu(let text):
                     CashuTokenView(token: text, theme: theme)
+                        .frame(maxWidth: max(600, availableWidth))
                         .padding(.vertical, 10)
                         .id(index)
                 case .video(let mediaContent):
@@ -139,6 +147,7 @@ struct ChatRenderer: View { // VIEW things
                     .padding(.vertical, 10)
                 case .linkPreview(let url):
                     LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
+                        .frame(maxWidth: max(600, availableWidth))
                         .padding(.vertical, 10)
                         .id(index)
 //                        .withoutAnimation()
