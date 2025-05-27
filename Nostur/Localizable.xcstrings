@@ -6242,6 +6242,7 @@
       }
     },
     "PFP's here (max 10)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8216,6 +8217,7 @@
       }
     },
     "Show feed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

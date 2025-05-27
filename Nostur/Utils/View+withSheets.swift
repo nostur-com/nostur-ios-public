@@ -470,40 +470,6 @@ struct WithSheets: ViewModifier {
             .sheet(item: $shareableWeblink) { shareableWeblink in
                 ActivityView(activityItems: [NSURL(string: shareableWeblink.url)!])
             }
-        
-            .onReceive(receiveNotification(.showMiniProfile)) { notification in
-                let miniProfileSheetInfo = notification.object as! MiniProfileSheetInfo
-                self.miniProfileSheetInfo = miniProfileSheetInfo
-            }
-        
-            .overlay(alignment:.topLeading) {
-                if let m = miniProfileSheetInfo {
-                    ZStack(alignment:.topLeading) {
-                        Rectangle()
-                            .fill(.thinMaterial)
-                            .opacity(0.8)
-                            .zIndex(50)
-                            .onTapGesture {
-                                miniProfileSheetInfo = nil
-                            }
-                            .onAppear {
-                                miniProfileAnimateIn = true
-                            }
-                        ProfileOverlayCardContainer(pubkey: m.pubkey, contact: m.contact, zapEtag: m.zapEtag)
-                            .scaleEffect(miniProfileAnimateIn ? 1.0 : 0.25, anchor: .leading)
-                            .opacity(miniProfileAnimateIn ? 1.0 : 0.15)
-                            .animation(.easeInOut(duration: 0.15), value: miniProfileAnimateIn)
-                            .offset(x: 0.0, y: min(max(m.location.y - 60,50), UIScreen.main.bounds.height - 350))
-                            .zIndex(50)
-                    }
-                    .onDisappear {
-                        miniProfileAnimateIn = false
-                    }
-                    .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                        miniProfileSheetInfo = nil
-                    }
-                }
-            }
     }
 }
 

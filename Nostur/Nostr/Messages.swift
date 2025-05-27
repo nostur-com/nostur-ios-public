@@ -602,7 +602,7 @@ func nxReq(_ filter: NostrEssentials.Filters, subscriptionId: String, isActiveSu
                        subscriptionId: subscriptionId,
                        filters: [filter]
         ).json() {
-        req(cm, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays, accountPubkey: accountPubkey, relayType: relayType)
+        req(cm, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays, accountPubkey: pubkey, relayType: relayType)
     }
     else {
 #if DEBUG
