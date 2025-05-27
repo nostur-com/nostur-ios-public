@@ -47,12 +47,16 @@ class FetchVM<T: Equatable>: ObservableObject {
                 _altReq(taskId)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
-                L.og.info("FetchVM: ready to process relay response")
+#if DEBUG
+                L.og.info("FetchVM: ready to process relay response - \(taskId)")
+#endif
                 _fetchParams.onComplete(relayMessage, event)
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
-                L.og.info("FetchVM: timeout (altFetch)")
+#if DEBUG
+                L.og.info("FetchVM: timeout (altFetch)- \(taskId)")
+#endif
                 _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
             })
@@ -82,12 +86,16 @@ class FetchVM<T: Equatable>: ObservableObject {
                 _fetchParams.req(taskId)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
-                L.og.info("FetchVM: ready to process relay response")
+#if DEBUG
+                L.og.info("FetchVM: ready to process relay response - \(taskId)")
+#endif
                 _fetchParams.onComplete(relayMessage, event)
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
-                L.og.info("FetchVM: timeout (fetch)")
+#if DEBUG
+                L.og.info("FetchVM: timeout (fetch) - \(taskId)")
+#endif
                 self?.backlog.clear()
                 _fetchParams.onComplete(nil, nil)
             })

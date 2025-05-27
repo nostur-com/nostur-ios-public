@@ -137,12 +137,6 @@ struct NXContentRenderer: View { // VIEW things
                                 .environmentObject(childDIM)
     //                            .debugDimensions("QuoteById.note1")
                                 .padding(.vertical, 10)
-    //                            .withoutAnimation()
-    //                            .transaction { t in t.animation = nil }
-                                .onTapGesture {
-                                    guard !vc.isDetail else { return }
-    //                                navigateTo(nrPost) // TODO
-                                }
                                 .id(index)
                         }
                         else {
@@ -155,35 +149,17 @@ struct NXContentRenderer: View { // VIEW things
                             .environmentObject(childDIM)
     //                        .debugDimensions("QuoteById.noteHex")
                             .padding(.vertical, 10)
-    //                        .withoutAnimation()
-    //                        .transaction { t in t.animation = nil }
-                            .onTapGesture {
-                                guard !vc.isDetail else { return }
-    //                            navigateTo(nrPost) // TODO
-                            }
                             .id(index)
                     case .code(let code): // For text notes
                         Text(verbatim: code)
                             .font(.system(.body, design: .monospaced))
-                            .onTapGesture {
-                                guard !vc.isDetail else { return }
-    //                            navigateTo(nrPost) // TODO
-                            }
                             .id(index)
                     case .text(let attributedStringWithPs): // For text notes
                         NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: vc.availableWidth, isScreenshot: vc.isScreenshot, isDetail: vc.isDetail, isPreview: vc.isPreview, primaryColor: vc.theme.primary, accentColor: vc.theme.accent)
                             .equatable()
-                            .onTapGesture {
-                                guard !vc.isDetail else { return }
-                                //                            navigateTo(nrPost) // TODO
-                            }
                             .id(index)
                     case .md(let markdownContentWithPs): // For long form articles
                         NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: vc.theme, maxWidth: vc.availableWidth)
-                            .onTapGesture {
-                                guard !vc.isDetail else { return }
-    //                            navigateTo(nrPost) // TODO
-                            }
                             .id(index)
                     case .lnbc(let text):
                         LightningInvoice(invoice: text, theme: vc.theme)
@@ -258,10 +234,6 @@ struct NXContentRenderer: View { // VIEW things
                         }
                     default:
                         EmptyView()
-                            .onTapGesture {
-                                guard !vc.isDetail else { return }
-                                //                            navigateTo(nrPost) // TODO
-                            }
                             .id(index)
                     }
                 }

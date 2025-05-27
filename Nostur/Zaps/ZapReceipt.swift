@@ -74,32 +74,7 @@ struct ZapReceipt: View {
                             .foregroundColor(themes.theme.accent)
                             .offset(x: 6, y: 6)
                     }
-//                    .withoutAnimation() // seems to fix flying PFPs
                     .onTapGesture {
-                        withAnimation { showMiniProfile = true }
-                    }
-                    .overlay(alignment: .topLeading) {
-                        if (showMiniProfile) {
-                            GeometryReader { geo in
-                                Color.clear
-                                    .onAppear {
-                                        sendNotification(.showMiniProfile,
-                                                         MiniProfileSheetInfo(
-                                                            pubkey: fromPubkey,
-                                                            contact: nrZapFrom?.contact,
-                                                            location: geo.frame(in: .global).origin
-                                                         )
-                                        )
-                                        showMiniProfile = false
-                                    }
-                            }
-                              .frame(width: 10)
-                              .zIndex(100)
-                              .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                              .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                                  showMiniProfile = false
-                              }
-                        }
                         navigateTo(ContactPath(key: fromPubkey), context: dim.id)
                     }
                 

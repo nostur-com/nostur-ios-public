@@ -28,7 +28,6 @@ struct DetailPane: View {
                 .onPreferenceChange(SizePreferenceKey.self) { size in
                     guard size.width > 0 else { return }
                     dim.listWidth = size.width
-//                    dim.listWidth = (size.width - (DIMENSIONS.BOX_PADDING*2))
                 }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -214,11 +213,9 @@ struct DetailPane: View {
                     }
                 }
                 .onChange(of: tm.tabs) { newTabs in
-//                    if (newTabs.count > oldTabs.count) {
-                        if let lastTab = newTabs.last {
-                            proxy.scrollTo(lastTab.id)
-                        }
-//                    } 
+                    if let lastTab = newTabs.last {
+                        proxy.scrollTo(lastTab.id)
+                    }
                 }
                 .background(themes.theme.background)
             }
@@ -229,13 +226,8 @@ struct DetailPane: View {
                         DetailTab(tab: tab)
                             .environmentObject(dim)
                             .environmentObject(tm)
-    //                        .padding(.vertical, 10)
-    //                        .background(Color.systemBackground)
-    //                        .roundedCorner(10, corners: [.topLeft, .topRight])
-    //                        .padding(.horizontal, 0)
                             .opacity(tm.selected == tab ? 1 : 0)
                             .id(tab.id)
-//                            .padding(.horizontal, DIMENSIONS.BOX_PADDING)
                             .onPreferenceChange(TabTitlePreferenceKey.self) { title in
                                 guard !title.isEmpty else { return }
                                 tm.selected?.navigationTitle = title
