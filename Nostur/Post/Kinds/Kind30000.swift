@@ -38,7 +38,10 @@ struct Kind30000: View {
     
     private let title: String
     private var followPs: OrderedSet<String>
+    
     @State private var followNRContacts: [String: NRContact] = [:]
+    @State private var pfpAttributesForContactsToRender: [PFPAttributes] = []
+    @State private var didLoadFollowNRContacts = false
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -70,12 +73,14 @@ struct Kind30000: View {
         }
         .onAppear {
             bg().perform {
-                let followNRContacts = followPs.map { NRContact.instance(of: $0) }
+                let followPsToUse = !isDetail && !isEmbedded ? followPs.prefix(20) : followPs.prefix(2000) // For detail and embedded all (sanity limit at 2000), else just first 10 (row)
+                let followNRContacts = followPsToUse.map { NRContact.instance(of: $0) }
                 // create key value dictionary of followNRContacts in from of [String: NRContact] where key is NRContact.pubkey
                 let followNRContactsDict = Dictionary(uniqueKeysWithValues: followNRContacts.map { ($0.pubkey, $0) })
                 
                 Task { @MainActor in
                     self.followNRContacts = followNRContactsDict
+                    self.didLoadFollowNRContacts = true
                 }
             }
         }
@@ -93,28 +98,38 @@ struct Kind30000: View {
 //        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, theme: theme) {
             
-            if isDetail { // Show full list
+            if didLoadFollowNRContacts && isDetail { // Show full list
                 // if more that 20 do 2 columns
                 if followPs.count > 20 {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
                         contactRows
                     }
+                    .background(theme.listBackground)
+                    .drawingGroup(opaque: true)
                 }
                 // If more than 20, do LazyVStack
                 else if followPs.count > 10 {
                     LazyVStack(alignment: .leading) {
                         contactRows
                     }
+                    .background(theme.listBackground)
+                    .drawingGroup(opaque: true)
                 }
                 else {
                     contactRows
+                        .background(theme.listBackground)
+                        .drawingGroup(opaque: true)
                 }
             }
-            else { // Row view, show 5 big PFPS (prio follows)
+            else if didLoadFollowNRContacts { // Row view, show 10 big PFPS (prio follows)
                 overlappingPFPs
                     .frame(width: dim.articleRowImageWidth(), alignment: .leading)
                     .background(theme.listBackground)
                     .drawingGroup(opaque: true)
+            }
+            else {
+                ProgressView()
+                    .frame(height: 100)
             }
         } title: {
             HStack {
@@ -137,17 +152,26 @@ struct Kind30000: View {
         
     @State private var showMiniProfile = false
     
+    private func load10pfps() {
+        pfpAttributesForContactsToRender = followPs.prefix(10).indices.map { index in
+            PFPAttributes(contact: followNRContacts[followPs[index]], pubkey: followPs[index])
+        }
+    }
+    
     @ViewBuilder
     private var overlappingPFPs: some View {
         ZStack(alignment: .leading) {
-            ForEach(followPs.prefix(10).indices, id: \.self) { index in
+            ForEach(pfpAttributesForContactsToRender.indices, id: \.self) { index in
                 ZStack(alignment: .leading) {
-                    ObservedPFP(pfp: PFPAttributes(contact: followNRContacts[followPs[index]], pubkey: followPs[index]), forceFlat: true)
-                        .id(followPs[index])
+                    ObservedPFP(pfp: pfpAttributesForContactsToRender[index], forceFlat: true)
+                        .id(pfpAttributesForContactsToRender[index].pubkey)
                         .zIndex(-Double(index))
                 }
                 .offset(x:Double(0 + (30*index)))
             }
+        }
+        .onAppear {
+            load10pfps()
         }
         
         if !followNRContacts.isEmpty {
@@ -187,45 +211,70 @@ struct Kind30000: View {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             
-            // if more that 20 do 2 columns
-            if followPs.count > 20 {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
-                    contactRows
+            if didLoadFollowNRContacts {
+                // if more that 20 do 2 columns
+                if followPs.count > 20 {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
+                        contactRows
+                    }
+                    .drawingGroup(opaque: true)
                 }
-            }
-            // If more than 20, do LazyVStack
-            else if followPs.count > 10 {
-                LazyVStack(alignment: .leading) {
+                // If more than 20, do LazyVStack
+                else if followPs.count > 10 {
+                    LazyVStack(alignment: .leading) {
+                        contactRows
+                    }
+                    .drawingGroup(opaque: true)
+                }
+                else {
                     contactRows
+                        .drawingGroup(opaque: true)
                 }
             }
             else {
-                contactRows
+                ProgressView()
+                    .frame(height: 100)
             }
     
         }
     }
     
+    private func loadContactRows() {
+        pfpAttributesForContactsToRender = followNRContacts.map({ pubkey, nrContact in
+            PFPAttributes(contact: nrContact, pubkey: pubkey)
+        })
+        didLoad = true
+    }
+    
+    @State private var didLoad = false
     
     // TODO: Should show people you follow first, at least in non-detail truncated view
     @ViewBuilder
     private var contactRows: some View {
-        ForEach(followPs, id: \.self) { followP in
-            PubkeyRow(pfp: PFPAttributes(contact: followNRContacts[followP], pubkey: followP))
-                .id(followP)
+        if didLoad {
+            ForEach(pfpAttributesForContactsToRender) { pfpAttributes in
+                PubkeyRow(pfp: pfpAttributes)
+                    .id(pfpAttributes.pubkey)
+                    .onAppear {
+                        bg().perform {
+                            if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
+                                QueuedFetcher.shared.enqueue(pTag: pfpAttributes.pubkey)
+                            }
+                        }
+                    }
+                    .onDisappear {
+                        bg().perform {
+                            if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
+                                QueuedFetcher.shared.dequeue(pTag: pfpAttributes.pubkey)
+                            }
+                        }
+                    }
+            }
+        }
+        else {
+            ProgressView()
                 .onAppear {
-                    bg().perform {
-                        if followNRContacts[followP] == nil || followNRContacts[followP]?.contact == nil || followNRContacts[followP]?.contact?.metadata_created_at == 0 {
-                            QueuedFetcher.shared.enqueue(pTag: followP)
-                        }
-                    }
-                }
-                .onDisappear {
-                    bg().perform {
-                        if followNRContacts[followP] == nil || followNRContacts[followP]?.contact == nil || followNRContacts[followP]?.contact?.metadata_created_at == 0 {
-                            QueuedFetcher.shared.dequeue(pTag: followP)
-                        }
-                    }
+                    loadContactRows()
                 }
         }
     }

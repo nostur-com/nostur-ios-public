@@ -8,7 +8,7 @@
 import SwiftUI
 import Combine
 
-class PFPAttributes: ObservableObject, Equatable {
+class PFPAttributes: ObservableObject, Equatable, Identifiable {
     
     static func == (lhs: PFPAttributes, rhs: PFPAttributes) -> Bool {
         return lhs.pubkey == rhs.pubkey
@@ -17,6 +17,7 @@ class PFPAttributes: ObservableObject, Equatable {
     @Published var contact: NRContact? = nil
     private var contactUpdatedSubscription: AnyCancellable?
     public let pubkey: String
+    public var id: String { pubkey }
     
     public var anyName: String {
         contact?.anyName ?? String(pubkey.suffix(11))
