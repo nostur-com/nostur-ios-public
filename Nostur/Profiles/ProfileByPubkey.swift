@@ -25,10 +25,7 @@ struct ProfileByPubkey: View {
                 .onAppear { [weak vm] in
                     
                     if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
-                        bg().perform {
-                            guard let vm else { return }
-                            vm.ready(cachedNRContact)
-                        }
+                        vm?.ready(cachedNRContact)
                         return
                     }
                     
