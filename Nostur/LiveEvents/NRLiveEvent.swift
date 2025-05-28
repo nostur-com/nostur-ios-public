@@ -416,12 +416,11 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                     }
                     
                     bg().perform {
-                        if let nrContact = NRContact.fetch(event.publicKey, context: bg()) {
-                            DispatchQueue.main.async {
-                                guard self.participantsOrSpeakers.first(where: { $0.pubkey == event.publicKey }) == nil else { return }
-                                self.objectWillChange.send()
-                                self.participantsOrSpeakers.append(nrContact)
-                            }
+                        let nrContact = NRContact.instance(of: event.publicKey, context: bg())
+                        DispatchQueue.main.async {
+                            guard self.participantsOrSpeakers.first(where: { $0.pubkey == event.publicKey }) == nil else { return }
+                            self.objectWillChange.send()
+                            self.participantsOrSpeakers.append(nrContact)
                         }
                     }
                 }

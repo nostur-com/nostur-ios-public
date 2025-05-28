@@ -150,7 +150,7 @@ struct EditNosturList: View {
                     let listContactPubkeys = list.contactPubkeys
                     bg().perform {
                         let listNRContacts: [NRContact] = Contact.fetchByPubkeys(listContactPubkeys)
-                            .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                            .map { NRContact.instance(of: $0.pubkey, contact: $0) }
                         Task { @MainActor in
                             self.listNRContacts = listNRContacts
                         }
@@ -184,7 +184,7 @@ struct EditNosturList: View {
             let aTag = list.aTag
             bg().perform {
                 let listNRContacts: [NRContact] = Contact.fetchByPubkeys(listContactPubkeys)
-                    .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                    .map { NRContact.instance(of: $0.pubkey, contact: $0) }
                 
                 Task { @MainActor in
                     self.listNRContacts = listNRContacts

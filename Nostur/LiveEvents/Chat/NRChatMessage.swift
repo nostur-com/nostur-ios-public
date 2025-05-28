@@ -102,7 +102,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         let uncachedPtags = pTags.filter { !cachedContactPubkeys.contains($0)  }
         
         let contactsFromDb: [NRContact] = Contact.fetchByPubkeys(uncachedPtags)
-            .compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+            .map { NRContact.instance(of: $0.pubkey, contact: $0) }
         
         let referencedContacts = cachedContacts + contactsFromDb
         
@@ -115,7 +115,7 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
             }
         }
         else if let contact = Contact.fetchByPubkey(nEvent.publicKey, context: bg()) {
-            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(nEvent.publicKey, contact: contact), pubkey: nEvent.publicKey)
+            self.pfpAttributes = PFPAttributes(contact: NRContact.instance(of: nEvent.publicKey, contact: contact), pubkey: nEvent.publicKey)
             if contact.metadata_created_at == 0 {
                 missingPs.insert(nEvent.publicKey)
             }

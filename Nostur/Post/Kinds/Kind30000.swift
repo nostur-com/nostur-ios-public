@@ -70,7 +70,7 @@ struct Kind30000: View {
         }
         .onAppear {
             bg().perform {
-                let followNRContacts = followPs.compactMap { NRContact.fetch($0) }
+                let followNRContacts = followPs.map { NRContact.instance(of: $0) }
                 // create key value dictionary of followNRContacts in from of [String: NRContact] where key is NRContact.pubkey
                 let followNRContactsDict = Dictionary(uniqueKeysWithValues: followNRContacts.map { ($0.pubkey, $0) })
                 

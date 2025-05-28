@@ -232,7 +232,7 @@ class DirectMessageViewModel: ObservableObject {
                 ? 0
                 : allReceived.count { $0.date > unreadSince }
                 
-                let nrContact: NRContact? = NRContact.fetch(contactPubkey)
+                let nrContact: NRContact = NRContact.instance(of: contactPubkey)
                 
                 guard let mostRecent = mostRecent else { return }
                 
@@ -306,7 +306,7 @@ class DirectMessageViewModel: ObservableObject {
                 
                 let unread = allReceived.count { $0.date > unreadSince }
                 
-                let nrContact: NRContact? = NRContact.fetch(contactPubkey)
+                let nrContact: NRContact = NRContact.instance(of: contactPubkey)
 
                 guard let mostRecent = mostRecent else { return }
                 
@@ -372,7 +372,7 @@ class DirectMessageViewModel: ObservableObject {
                 
                 let unread = allReceived.count { $0.date > unreadSince }
                 
-                let nrContact: NRContact? = NRContact.fetch(contactPubkey)
+                let nrContact: NRContact = NRContact.instance(of: contactPubkey)
                 
                 guard let mostRecent = mostRecent else { return }
                 

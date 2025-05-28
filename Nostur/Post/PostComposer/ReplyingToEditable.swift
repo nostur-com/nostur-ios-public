@@ -60,7 +60,7 @@ struct ReplyingToEditableTester: View {
     var body: some View {
         ReplyingToEditable(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
             .onAppear {
-                let nrContacts = PreviewFetcher.allContacts().map { NRContact(pubkey: $0.pubkey, contact: $0) }
+                let nrContacts = PreviewFetcher.allContacts().map { NRContact.instance(of: $0.pubkey, contact: $0) }
                 available = Set(nrContacts.prefix(6))
                 selected = Set(nrContacts.prefix(6))
             }

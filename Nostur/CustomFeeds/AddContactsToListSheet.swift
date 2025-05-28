@@ -227,7 +227,7 @@ struct AddContactsToListSheet: View {
             },
             onComplete: { relayMessage, _ in
                 bg().perform {
-                    let nrContacts: [NRContact] = preSelectedContactPubkeys.compactMap { NRContact.fetch($0) }
+                    let nrContacts: [NRContact] = preSelectedContactPubkeys.map { NRContact.instance(of: $0) }
                     if !nrContacts.isEmpty {
                         vm.ready(nrContacts)
                     }

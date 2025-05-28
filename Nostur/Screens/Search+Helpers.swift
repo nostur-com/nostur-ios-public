@@ -318,7 +318,7 @@ extension Search {
             fr.predicate = NSPredicate(format: "(name BEGINSWITH[cd] %@ OR fixedName BEGINSWITH[cd] %@ OR nip05 BEGINSWITH[cd] %@) AND NOT pubkey IN %@", term, term, term, blockedPubkeys)
             
             if let contacts = try? bg().fetch(fr) {
-                let nrContacts: [NRContact] = contacts.compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                let nrContacts: [NRContact] = contacts.map { NRContact.instance(of: $0.pubkey, contact: $0) }
                 Task { @MainActor in
                     self.contacts = nrContacts
                     searching = false

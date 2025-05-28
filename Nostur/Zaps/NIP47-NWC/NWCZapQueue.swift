@@ -261,7 +261,7 @@ class Zap {
                 guard let self = self else { return }
                 
                 
-                let accountNrContact = NRContact.fetch(acountPubkey)
+                let accountNrContact = NRContact.instance(of: acountPubkey)
                 
                 if isNC {
                     let zapRequestNote = if let aTag = self.aTag {

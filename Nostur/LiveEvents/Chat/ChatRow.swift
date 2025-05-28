@@ -133,7 +133,7 @@ class NRChatPendingZap {
             self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
         }
         else if let contact = Contact.fetchByPubkey(pubkey, context: bg()) { // from db
-            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(pubkey, contact: contact), pubkey: pubkey)
+            self.pfpAttributes = PFPAttributes(contact: NRContact.instance(of: pubkey, contact: contact), pubkey: pubkey)
         }
         else { // we dont have it
             self.pfpAttributes = PFPAttributes(pubkey: pubkey)
@@ -177,7 +177,7 @@ class NRChatConfirmedZap {
             self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: zapRequestPubkey)
         }
         else if let contact = Contact.fetchByPubkey(zapRequestPubkey, context: bg()) { // from db
-            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(zapRequestPubkey, contact: contact), pubkey: zapRequestPubkey)
+            self.pfpAttributes = PFPAttributes(contact: NRContact.instance(of: zapRequestPubkey, contact: contact), pubkey: zapRequestPubkey)
         }
         else { // we dont have it
             self.pfpAttributes = PFPAttributes(pubkey: zapRequestPubkey)

@@ -414,10 +414,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         let uncachedPtags = pTags.filter { !cachedContactPubkeys.contains($0)  }
         
         let contactsFromDb = Contact.fetchByPubkeys(uncachedPtags).map { contact in
-            let nrContact = NRContact(pubkey: contact.pubkey, contact: contact)
-            NRContactCache.shared.setObject(for: contact.pubkey, value: nrContact)
-//            L.og.debug("🧮🧮 NRContact cache: \(NRContactCache.shared.count)")
-            return nrContact
+            return NRContact.instance(of: contact.pubkey, contact: contact)
         }
         
         let referencedContacts = cachedContacts + contactsFromDb
@@ -429,7 +426,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             anyName = cachedNRContact.anyName
         }
         else if let contact = event.contact {
-            self.pfpAttributes = PFPAttributes(contact: NRContact.fetch(contact.pubkey, contact: contact), pubkey: pubkey)
+            self.pfpAttributes = PFPAttributes(contact: NRContact.instance(of: contact.pubkey, contact: contact), pubkey: pubkey)
             anyName = contact.anyName
         }
         else {
@@ -724,15 +721,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     }
                     else {
                         bg().perform { [weak self] in
-                            if let nrContact = NRContact.fetch(pubkey, contact: contact) {
-                                DispatchQueue.main.async {
+                            let nrContact = NRContact.instance(of: pubkey, contact: contact)
+                            DispatchQueue.main.async {
+                                self?.objectWillChange.send()
+                                self?.contact = nrContact
+                                
+                                if self?.kind == 6 {
                                     self?.objectWillChange.send()
-                                    self?.contact = nrContact
-                                    
-                                    if self?.kind == 6 {
-                                        self?.objectWillChange.send()
-                                        self?.repostedHeader = String(localized:"\(nrContact.anyName) reposted", comment: "Heading for reposted post: '(Name) reposted'")
-                                    }
+                                    self?.repostedHeader = String(localized:"\(nrContact.anyName) reposted", comment: "Heading for reposted post: '(Name) reposted'")
                                 }
                             }
                         }
@@ -748,11 +744,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     
                     if self.kind == 9802 && self.highlightAttributes.authorPubkey == pubkey {
                         bg().perform {
-                            if let nrContact = NRContact.fetch(pubkey, contact: contact) {
-                                DispatchQueue.main.async { [weak self] in
-                                    self?.highlightAttributes.objectWillChange.send()
-                                    self?.highlightAttributes.contact = nrContact
-                                }
+                            let nrContact = NRContact.instance(of: pubkey, contact: contact)
+                            DispatchQueue.main.async { [weak self] in
+                                self?.highlightAttributes.objectWillChange.send()
+                                self?.highlightAttributes.contact = nrContact
                             }
                         }
                     }

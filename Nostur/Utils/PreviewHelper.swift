@@ -938,7 +938,7 @@ struct PreviewFetcher {
             request.predicate = NSPredicate(format: "pubkey == %@", pubkey)
         }
         if let contact = (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement() {
-            return NRContact(pubkey: contact.pubkey, contact: contact)
+            return NRContact.instance(of: contact.pubkey, contact: contact)
         }
         return nil
     }

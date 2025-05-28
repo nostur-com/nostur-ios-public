@@ -62,7 +62,7 @@ class Conversation: Identifiable, Hashable, ObservableObject {
             .filter { contactPubkey == $0.0 }
             .sink { [weak self] tuple in
                 bg().perform {
-                    let nrContact = NRContact.fetch(tuple.0, contact: tuple.1)
+                    let nrContact = NRContact.instance(of: tuple.0, contact: tuple.1)
                     Task { @MainActor [weak self] in
                         self?.objectWillChange.send()
                         self?.nrContact = nrContact

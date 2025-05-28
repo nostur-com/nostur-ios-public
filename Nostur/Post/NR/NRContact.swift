@@ -57,7 +57,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         try! NIP19(prefix: "npub", hexString: pubkey).displayString
     }
 
-    init(pubkey: String, contact: Contact? = nil) {
+    private init(pubkey: String, contact: Contact? = nil) {
         shouldBeBg()
 
         self.contact = contact
@@ -266,7 +266,22 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
 
 extension NRContact {
     
-    // Fetch from cache, or create from passed contact, or create by fetching from DB first
+    // Fetch EXISTING NRContact from cache, or create from passed contact, or create by fetching from DB first, or create new
+    static func instance(of pubkey: String, contact: Contact? = nil, context: NSManagedObjectContext? = nil) -> NRContact {
+        
+        // From cache
+        if let cachedNRContact = Self.fetch(pubkey, contact: contact, context: context) {
+            return cachedNRContact
+        }
+        
+        // Create new instance and store in cache
+        let nrContact = NRContact(pubkey: pubkey, contact: contact)
+        NRContactCache.shared.setObject(for: pubkey, value: nrContact)
+        return nrContact
+    }
+    
+    
+    // Fetch EXISTING NRContact from cache, or create from passed contact, or create by fetching from DB first (never create new)
     static func fetch(_ pubkey: String, contact: Contact? = nil, context: NSManagedObjectContext? = nil) -> NRContact? {
         
         // From cache

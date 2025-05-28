@@ -96,14 +96,14 @@ class SearchModel {
                 
                 let wot = WebOfTrust.shared
                 let nrContactsResult: [NRContact] = if WOT_FILTER_ENABLED() {
-                    contactsResult.compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                    contactsResult.map { NRContact.instance(of: $0.pubkey, contact: $0) }
                         // WoT enabled, so put in-WoT before non-WoT
                         .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
                         // Put following before non-following
                         .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
                 }
                 else {
-                    contactsResult.compactMap { NRContact.fetch($0.pubkey, contact: $0) }
+                    contactsResult.map { NRContact.instance(of: $0.pubkey, contact: $0) }
                         // Put following before non-following
                         .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
                 }

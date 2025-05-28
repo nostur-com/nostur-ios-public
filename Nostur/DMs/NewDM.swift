@@ -27,7 +27,7 @@ struct NewDM: View {
                     
                     let selectedContactPubkey = selectedContact.pubkey
                     bg().perform {
-                        guard let nrSelectedContact: NRContact = NRContact.fetch(selectedContactPubkey) else { return }
+                        let nrSelectedContact: NRContact = NRContact.instance(of: selectedContactPubkey)
                         Task { @MainActor in
                             toContact = nrSelectedContact
                             toPubkey = nrSelectedContact.pubkey

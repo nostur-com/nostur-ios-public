@@ -264,31 +264,30 @@ class LiveKitVoiceSession: ObservableObject {
                     EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "syncParticipants.001")
                     QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                     
-                    if let nrContact = NRContact.fetch(contact.pubkey, contact: contact, context: ctx) {
-                        
-                        let isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
-                            true
-                        }
-                        else {
-                            false
-                        }
-                        
-                        if nrContact.pubkey == self.anonymousPubkeyCached {
-                            DispatchQueue.main.async {
-                                nrContact.name = "You"
-                                nrContact.anyName = "You"
-                                nrContact.isMuted = isMuted
-                            }
-                        }
-                        DispatchQueue.main.async {
-                            guard let nrLiveEvent = self.nrLiveEvent else { return }
-                            nrLiveEvent.objectWillChange.send()
-                            if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
-                                nrLiveEvent.participantsOrSpeakers.append(nrContact)
-                            }
-                        }
-                        bgSave()
+                    let nrContact = NRContact.instance(of: contact.pubkey, contact: contact, context: ctx) 
+                    
+                    let isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
+                        true
                     }
+                    else {
+                        false
+                    }
+                    
+                    if nrContact.pubkey == self.anonymousPubkeyCached {
+                        DispatchQueue.main.async {
+                            nrContact.name = "You"
+                            nrContact.anyName = "You"
+                            nrContact.isMuted = isMuted
+                        }
+                    }
+                    DispatchQueue.main.async {
+                        guard let nrLiveEvent = self.nrLiveEvent else { return }
+                        nrLiveEvent.objectWillChange.send()
+                        if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
+                            nrLiveEvent.participantsOrSpeakers.append(nrContact)
+                        }
+                    }
+                    bgSave()
                 }
             }
         }
