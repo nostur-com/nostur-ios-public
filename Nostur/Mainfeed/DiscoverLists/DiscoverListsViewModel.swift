@@ -179,6 +179,8 @@ class DiscoverListsViewModel: ObservableObject {
     }
     
     public func load(speedTest: NXSpeedTest) {
+        guard !didLoad else { return }
+        self.didLoad = true
         self.speedTest = speedTest
 #if DEBUG
         L.og.debug("Discover lists feed: load()")
