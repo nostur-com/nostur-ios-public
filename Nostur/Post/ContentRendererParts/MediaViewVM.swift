@@ -112,6 +112,11 @@ class MediaViewVM: ObservableObject {
             }
         }
     }
+    
+    deinit {
+        task?.cancel()
+        task = nil
+    }
 }
 
 enum MediaViewState: Equatable {

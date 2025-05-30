@@ -1080,6 +1080,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     }
     
     private var renderedReplyIds: Set<NRPostID> = []
+    
+    deinit {
+        contactUpdatedSubscription?.cancel()
+        postDeletedSubscription?.cancel()
+        repliesSubscription?.cancel()
+        repliesCountSubscription?.cancel()
+        relationSubscription?.cancel()
+        updateNRPostSubscription?.cancel()
+        unpublishSubscription?.cancel()
+        publishSubscription?.cancel()
+        repliesToRootSubscription?.cancel()
+        groupRepliesToRootSubscription?.cancel()
+    }
 }
 
 extension NRPost { // Helpers for grouped replies
