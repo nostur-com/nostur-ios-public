@@ -189,7 +189,7 @@ class Backlog {
     static let shared = Backlog(auto: true)
     
     private var tasks = Set<ReqTask>()
-    private var timer:Timer?
+    private var timer: Timer?
     public var timeout = 60.0
     private var subscriptions = Set<AnyCancellable>()
     
@@ -298,6 +298,20 @@ class Backlog {
 #endif
         return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
+    
+    deinit {
+        timer?.invalidate()
+        timer = nil
+        subscriptions.removeAll()
+        tasks.removeAll()
+    }
+    
+    public func cleanup() {
+        timer?.invalidate()
+        timer = nil
+        subscriptions.removeAll()
+        tasks.removeAll()
+    }
 }
 
 class ReqTask: Identifiable, Hashable {
@@ -380,5 +394,13 @@ class ReqTask: Identifiable, Hashable {
             return
         }
         self.timeoutCommand?(subscriptionId)
+    }
+    
+    deinit {
+        subscriptions.removeAll()
+    }
+    
+    public func cleanup() {
+        subscriptions.removeAll()
     }
 }

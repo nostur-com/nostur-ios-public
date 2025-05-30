@@ -1661,6 +1661,29 @@ class NXColumnViewModel: ObservableObject {
             self.prefetchedIds = self.prefetchedIds.union(Set(unfetchedIds)) // TODO: need to LRU self.prefetchedIds
         }
     }
+    
+    deinit {
+        // Cancel all subscriptions
+        newEventsInDatabaseSub?.cancel()
+        newPostSavedSub?.cancel()
+        newSingleRelayPostSavedSub?.cancel()
+        newPostUndoSub?.cancel()
+        firstConnectionSub?.cancel()
+        reloadWhenNeededSub?.cancel()
+        lastDisconnectionSub?.cancel()
+        onAppearSubjectSub?.cancel()
+        resumeFeedSub?.cancel()
+        pauseFeedSub?.cancel()
+        followsChangedSub?.cancel()
+        blockListUpdatedSub?.cancel()
+        muteListUpdatedSub?.cancel()
+        
+        // Invalidate timer
+        fetchFeedTimer?.invalidate()
+        
+        // Cancel task
+        realTimeReqTask?.cancel()
+    }
 }
 
 // -- MARK: POST RENDERING
