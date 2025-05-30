@@ -227,7 +227,9 @@ class DiscoverListsViewModel: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
-        self.discoverLists = []
+        Task { @MainActor in
+            self.discoverLists = []
+        }
         self.backlog.clear()
         self.follows = Nostur.follows()
         
