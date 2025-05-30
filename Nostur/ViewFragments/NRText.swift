@@ -300,10 +300,15 @@ struct NRTextFixed: UIViewRepresentable {
             self.parent = parent
         }
 
+        
+        // UITextView seems to give .onTapGesture problems, sometimes need 2 taps instead of 1.
+        // Fix by not using .onTapGesture in SwiftUI. Use UITapGestureRecognizer and detect if tap on link or not.
+        // if link go to link, if not run onTap?()
         @objc func tapResponse(tapGesture: UITapGestureRecognizer) {
-            
-            let textView = tapGesture.view as! UITextView
+            guard let textView = tapGesture.view as? UITextView else { return }
             let tapLocation = tapGesture.location(in: textView)
+            
+            // .closestPosition seems to recognize the whole remainder part of textview as link, a non-link extra space (" ") at the end fixes it.
             guard let textPosition = textView.closestPosition(to: tapLocation) else {
                 self.parent.onTap?()
                 return

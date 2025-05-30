@@ -66,6 +66,10 @@ class NRTextParser { // TEXT things
         if newerTextWithPs.text.suffix(1) == "\n" {
             newerTextWithPs.text = String(newerTextWithPs.text.dropLast(1))
         }
+        
+        // Hashtag (or other url) at the end makes the whole empty space at end of view recognized as hashtag url, so tap to navigate to detail becomes tap to hashtag instead
+        // Workaround by adding a space on the end. Also see NRNTextFixed.Coordinator.tapResponse(tapGesture: UITapGestureRecognizer).
+        newerTextWithPs.text = newerTextWithPs.text + " "
 
         do {
             let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
