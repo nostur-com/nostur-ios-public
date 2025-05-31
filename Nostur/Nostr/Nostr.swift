@@ -122,6 +122,7 @@ public enum NEventKind: Codable, Equatable {
     case community
     case followPack
     case auth
+    case blossomAuth
     case custom(Int)
 
     init(id: Int) {
@@ -155,6 +156,7 @@ public enum NEventKind: Codable, Equatable {
         case 34550: self = .community
         case 39089: self = .followPack
         case 22242: self = .auth
+        case 24242: self = .blossomAuth
         default   : self = .custom(id)
         }
     }
@@ -190,6 +192,7 @@ public enum NEventKind: Codable, Equatable {
         case .community:            return 34550
         case .followPack:           return 39089
         case .auth:                 return 22242
+        case .blossomAuth:          return 24242
         case .custom(let customId): return customId
         }
     }
