@@ -112,14 +112,14 @@ struct AddContactsToListSheet: View {
                                 .padding(.vertical, 10)
                                 .layoutPriority(1)
                             
-                            ObservedPFP(pfp: PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey), size: 20)
+                            ObservedPFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 20)
                                 .layoutPriority(2)
                             
                             Text(nrContact.anyName)
                                 .lineLimit(1)
                                 .layoutPriority(3)
                             
-                            NewPossibleImposterLabel(pfp: PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey))
+                            NewPossibleImposterLabel(nrContact: nrContact)
                                 .layoutPriority(1)
                             
                             Spacer()

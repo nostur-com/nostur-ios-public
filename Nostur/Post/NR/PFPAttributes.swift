@@ -36,12 +36,13 @@ class PFPAttributes: ObservableObject, Equatable, Identifiable {
             if contact == nil {
                 bg().perform {
 #if DEBUG
-                    L.og.debug("🏓🏓 PFPAttributes.init NRContact.fetch()")
+                    L.og.debug("🏓🏓 PFPAttributes.init NRContact.fetch(): \(pubkey)")
 #endif
                     if let nrContact = NRContact.fetch(pubkey, context: bg()) {
                         Task { @MainActor in
                             if self.contact == nil {
                                 self.contact = nrContact
+                                self.similarToPubkey = nrContact.similarToPubkey
                             }
                         }
                     }

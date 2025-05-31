@@ -9,12 +9,12 @@ import SwiftUI
 
 struct ConversationRowView: View {
     @ObservedObject private var conv: Conversation
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @StateObject private var pfpAttributes: PFPAttributes
     private var unread: Int { conv.unread }
     
     init(_ conv: Conversation) {
         self.conv = conv
-        self.pfpAttributes = PFPAttributes(contact: conv.nrContact, pubkey: conv.contactPubkey)
+        _pfpAttributes = StateObject(wrappedValue: PFPAttributes(contact: conv.nrContact, pubkey: conv.contactPubkey))
     }
 
     var body: some View {

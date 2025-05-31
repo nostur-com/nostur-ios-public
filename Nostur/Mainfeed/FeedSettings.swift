@@ -196,16 +196,25 @@ struct ListManagedByView: View {
     public let aTag: ATag
     
     var body: some View {
-        SendSatsToSupportView(pfpAttributes: PFPAttributes(pubkey: aTag.pubkey), listName: feed.name)
+        SendSatsToSupportView(pubkey: aTag.pubkey, listName: feed.name)
     }
 }
 
 
 struct SendSatsToSupportView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject public var pfpAttributes: PFPAttributes
-    @ObservedObject public var ss: SettingsStore = .shared
-    public var listName: String?
+    private var pubkey: String
+    @StateObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var ss: SettingsStore = .shared
+    private var listName: String?
+    
+    init(pubkey: String, listName: String? = nil) {
+        self.pubkey = pubkey
+        _pfpAttributes = StateObject(wrappedValue: PFPAttributes(pubkey: pubkey))
+        self.ss = ss
+        self.listName = listName
+    }
+    
     
     var body: some View {
         VStack(alignment: .leading) {

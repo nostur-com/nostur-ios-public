@@ -10,19 +10,19 @@ import Combine
 
 // PFP with animation when zapped
 struct ZappablePFP: View {
-    let pubkey: String
-    @ObservedObject public var pfpAttributes: PFPAttributes
-    var size: CGFloat
-    var zapEtag: String?
-    var zapAtag: String?
-    var forceFlat: Bool?
+    private let pubkey: String
+    @StateObject private  var pfpAttributes: PFPAttributes
+    private var size: CGFloat
+    private var zapEtag: String?
+    private var zapAtag: String?
+    private var forceFlat: Bool?
     @State private var isZapped: Bool = false
     @State private var animate = false
     @State private var opacity: Double = 0.0
     
     init(pubkey: String, pfpAttributes: PFPAttributes, size: CGFloat = 50.0, zapEtag: String? = nil, zapAtag: String? = nil, forceFlat: Bool? = nil) {
         self.pubkey = pubkey
-        self.pfpAttributes = pfpAttributes
+        _pfpAttributes = StateObject(wrappedValue: pfpAttributes)
         self.size = size
         self.zapEtag = zapEtag
         self.zapAtag = zapAtag
@@ -31,7 +31,7 @@ struct ZappablePFP: View {
     
     init(pubkey: String, contact: NRContact, size: CGFloat = 50.0, zapEtag: String? = nil, zapAtag: String? = nil, forceFlat: Bool? = nil) {
         self.pubkey = pubkey
-        self.pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
+        _pfpAttributes = StateObject(wrappedValue: PFPAttributes(contact: contact, pubkey: contact.pubkey))
         self.size = size
         self.zapEtag = zapEtag
         self.zapAtag = zapAtag

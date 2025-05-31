@@ -16,8 +16,8 @@ struct PFP: View, Equatable {
         lhs.pictureUrl == rhs.pictureUrl &&
         lhs.contact == rhs.contact &&
         lhs.nrContact == rhs.nrContact &&
-        lhs.account == rhs.account &&
-        lhs.pfp == rhs.pfp
+        lhs.account == rhs.account
+//        lhs.pfp == rhs.pfp
     }
     
     public var pubkey: String
@@ -25,15 +25,15 @@ struct PFP: View, Equatable {
     public var contact: Contact?
     public var nrContact: NRContact?
     public var account: CloudAccount?
-    public var pfp: PFPAttributes?
+//    public var pfp: PFPAttributes?
     public var size: CGFloat = 50.0
     public var forceFlat = false
 
     var body: some View {
-        if let pfp {
-            ObservedPFP(pfp: pfp, size: size, forceFlat: forceFlat)
-        }
-        else if let contact {
+//        if let pfp {
+//            ObservedPFP(pfp: pfp, size: size, forceFlat: forceFlat)
+//        }
+        if let contact {
             ContactPFP(contact: contact, size: size, forceFlat: forceFlat)
         }
         else if let nrContact {
@@ -50,12 +50,24 @@ struct PFP: View, Equatable {
 
 struct ObservedPFP: View {
     
-    @ObservedObject public var pfp: PFPAttributes
+    @StateObject private var pfp: PFPAttributes
     private var pubkey: String { pfp.pubkey }
     private var pictureUrl: URL? { pfp.pfpURL }
-    public var size: CGFloat = 50.0
-    public var forceFlat = false
+    private var size: CGFloat = 50.0
+    private var forceFlat = false
     private var color: Color { randomColor(seed: pfp.pubkey) }
+    
+    init(pfp: PFPAttributes, size: CGFloat = 50.0, forceFlat: Bool = false) {
+        _pfp = StateObject(wrappedValue: pfp)
+        self.size = size
+        self.forceFlat = forceFlat
+    }
+    
+    init(pubkey: String, nrContact: NRContact? = nil, size: CGFloat = 50.0, forceFlat: Bool = false) {
+        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: pubkey))
+        self.size = size
+        self.forceFlat = forceFlat
+    }
     
     var body: some View {
         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size, color: color, forceFlat: forceFlat)

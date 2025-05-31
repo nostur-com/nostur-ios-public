@@ -31,15 +31,19 @@ struct PossibleImposterLabel: View {
 
 struct NewPossibleImposterLabel: View {
     @EnvironmentObject private var themes: Themes
-    @ObservedObject private var pfp: PFPAttributes
+    @StateObject private var pfp: PFPAttributes
     @State private var showDetails: Bool = false
-    
+
+    init(pubkey: String, nrContact: NRContact? = nil) {
+        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: pubkey))
+    }
+
     init(pfp: PFPAttributes) {
-        self.pfp = pfp
+        _pfp = StateObject(wrappedValue: pfp)
     }
     
     init(nrContact: NRContact) {
-        self.pfp = PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey)
+        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey))
     }
     
     var body: some View {

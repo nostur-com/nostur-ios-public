@@ -9,10 +9,19 @@ import SwiftUI
 
 // Copy paste and altered from ZappablePFP
 struct LiveEventPFP: View {
-    public let pubkey: String
-    @ObservedObject public var pfpAttributes: PFPAttributes
-    public var size: CGFloat = 50.0
-    public var forceFlat = false
+    private let pubkey: String
+    @StateObject private var pfpAttributes: PFPAttributes
+    private var size: CGFloat = 50.0
+    private var forceFlat = false
+    
+    init(pubkey: String, pfpAttributes: PFPAttributes, size: CGFloat, forceFlat: Bool = false) {
+        self.pubkey = pubkey
+        _pfpAttributes = StateObject(wrappedValue: pfpAttributes)
+        self.size = size
+        self.forceFlat = forceFlat
+        self.animate = animate
+        self.opacity = opacity
+    }
     
     @State private var animate = false
     @State private var opacity: Double = 0.0
