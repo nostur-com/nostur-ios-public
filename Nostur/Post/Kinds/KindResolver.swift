@@ -29,8 +29,11 @@ struct KindResolver: View {
 //        let _ = Self._printChanges()
 //        #endif
         switch nrPost.kind {
+            
+        case 0: // .kind 0 happens somehow when events are deleted (Core Data) but still on screen, so not actually kind:0 but missing event, refetch event as workaround:
+            EmbedById(id: nrPost.id, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
         
-        case 0,3,4,5,7,1984,9734,30009,8,30008:
+        case 3,4,5,7,1984,9734,30009,8,30008:
             // We don't expect to show these, but anyone can quote or reply to any event so we still need to show something
             OtherKnownKinds(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
                 .onAppear { self.enqueue() }
