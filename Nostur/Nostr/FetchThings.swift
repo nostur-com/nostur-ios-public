@@ -44,9 +44,11 @@ func fetchEvents(pubkeys: Set<String>, amount: Int? = 5000, since: Int64? = nil,
         )
 }
 
-func fetchStuffForLastAddedNotes(ids:[String]) {
+func fetchStuffForLastAddedNotes(ids: [String]) {
     guard !ids.isEmpty else {
+#if DEBUG
         L.og.error("🔴🔴 fetchStuffForLastAddedNotes, ids is empty, fix it.")
+#endif
         return
     }
     
@@ -61,8 +63,7 @@ func fetchStuffForLastAddedNotes(ids:[String]) {
                     filters: [Filters(kinds: [1,6,7,9735], tagFilter: TagFilter(tag: "e", values: Set(ids)), limit: 5000)]
                 ),
                 relayType: .READ
-            ),
-            subscriptionId: sub
+            )
         )
 }
 
