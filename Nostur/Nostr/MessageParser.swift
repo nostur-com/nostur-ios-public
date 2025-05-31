@@ -205,6 +205,7 @@ class MessageParser {
 #if DEBUG
                 L.sockets.debug("🟠 \(relayUrl) Not in WoT, skipped: \(text)")
 #endif
+                ConnectionPool.shared.notInWoTcount += 1
             }
             catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
 #if DEBUG

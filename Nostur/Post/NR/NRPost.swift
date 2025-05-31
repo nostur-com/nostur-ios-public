@@ -399,6 +399,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.plainTextOnly = plainText
         self.inWoT = event.inWoT
         self.isSpam = event.isSpam
+        if event.isSpam {
+            ConnectionPool.shared.notInWoTcount += 1
+        }
         self.aTag = event.aTag
         self.hashtags = Set(fastTags.filter { $0.0 == "t" }.compactMap({ fastTag in
             if (fastTag.1 == "") { return nil }

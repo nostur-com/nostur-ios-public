@@ -30,6 +30,10 @@ let POPULAR_RELAYS: Set<String> = [
 public typealias CanonicalRelayUrl = String // lowercased, without trailing slash on root domain
 
 public class ConnectionPool: ObservableObject {
+    // not in wot stats
+    public var notInWoTsince = Date()
+    public var notInWoTcount = 0 // only touch in bgQueue / bg
+    
     static public let shared = ConnectionPool()
     public var queue = DispatchQueue(label: "connection-pool", qos: .utility, attributes: .concurrent)
     

@@ -52,6 +52,8 @@ struct Settings: View {
     @State private var dbNumberOfEvents = "-"
     @State private var dbNumberOfContacts = "-"
     
+    @State private var notInWoTcount = 0
+    @State private var notInWoTLastHours = 0
     
     @AppStorage("wotDunbarNumber") private var wotDunbarNumber: Int = 1000
 
@@ -281,6 +283,29 @@ struct Settings: View {
                         }
                         else {
                             Text("Currently allowed by the filter: \(wot.allowedKeysCount) contacts")
+                                .onAppear {
+                                    bg().perform {
+                                        if ConnectionPool.shared.notInWoTcount > 0 {
+                                            let notInWoTsince = ConnectionPool.shared.notInWoTsince
+                                            let notInWoTcount = ConnectionPool.shared.notInWoTcount
+                                            
+                                            let lastHours: Int = {
+                                                let calendar = Calendar.current
+                                                let components = calendar.dateComponents([.hour], from: notInWoTsince, to: Date())
+                                                return components.hour ?? 0
+                                            }()
+                                            
+                                            Task { @MainActor in
+                                                self.notInWoTcount = notInWoTcount
+                                                self.notInWoTLastHours = lastHours
+                                            }
+                                        }
+                                    }
+                                }
+                            
+                            if notInWoTcount != 0 {
+                                Text("Spam filtered in the last \(notInWoTLastHours > 1 ? "\(notInWoTLastHours) hours" : "hour"): \(notInWoTcount) items")
+                            }
                         }
                     }.font(.caption).foregroundColor(.secondary)
                 }
