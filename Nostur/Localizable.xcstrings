@@ -8496,6 +8496,16 @@
         }
       }
     },
+    "Spam filtered in the last %@: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Spam filtered in the last %1$@: %2$lld"
+          }
+        }
+      }
+    },
     "Spam filtering" : {
       "comment" : "Setting heading on settings screen",
       "localizations" : {
