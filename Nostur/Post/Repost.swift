@@ -177,7 +177,7 @@ struct RepostHeader: View {
                 .fontWeightBold()
                 .scaleEffect(0.6)
             
-            ObservedPFP(pfp: PFPAttributes(pubkey: pubkey), size: 20.0)
+            ObservedPFP(pubkey: pubkey, size: 20.0)
             
             Text(repostedHeader)
                 .font(.subheadline)
