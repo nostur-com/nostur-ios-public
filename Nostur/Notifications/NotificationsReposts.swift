@@ -39,7 +39,7 @@ struct NotificationsReposts: View {
                     ForEach(model.reposts) { nrPost in
                         Box(nrPost: nrPost) {
                             VStack(alignment: .leading, spacing: 0) {
-                                RepostHeader(repostedHeader: nrPost.repostedHeader, pubkey: nrPost.pubkey)
+                                RepostHeader(pubkey: nrPost.pubkey, anyName: nrPost.anyName)
                                     .offset(x: -35)
                                     .onAppear { self.enqueue(nrPost) }
                                     .onDisappear { self.dequeue(nrPost) }

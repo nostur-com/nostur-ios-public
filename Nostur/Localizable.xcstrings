@@ -634,6 +634,7 @@
     },
     "%@ reposted" : {
       "comment" : "Heading for reposted post: '(Name) reposted'",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7595,6 +7596,9 @@
           }
         }
       }
+    },
+    "reposted" : {
+
     },
     "reposts" : {
       "comment" : "Label for reposts count, example: (7) reposts",

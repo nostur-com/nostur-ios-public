@@ -120,7 +120,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var groupedReplies = [NRPost]()
     
     let isRepost: Bool
-    var repostedHeader = ""
+
     var threadPostsCount: Int
     var isTruncated: Bool = false
     
@@ -584,9 +584,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             self.content = content
         }
         
-        // Moved from .body to here because String interpolation is expensive (https://developer.apple.com/wwdc23/10160)
-        self.repostedHeader = String(localized:"\(anyName ?? "...") reposted", comment: "Heading for reposted post: '(Name) reposted'")
-        
         setupSubscriptions()
     }
     
@@ -716,24 +713,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 self.missingPs.remove(pubkey)
                 
                 if self.pubkey == pubkey {
-                    if let nrContact = self.contact, kind == 6 {
+                    bg().perform { [weak self] in
+                        let nrContact = NRContact.instance(of: pubkey, contact: contact)
                         DispatchQueue.main.async {
-                            self.objectWillChange.send()
-                            self.repostedHeader = String(localized:"\(nrContact.anyName) reposted", comment: "Heading for reposted post: '(Name) reposted'")
-                        }
-                    }
-                    else {
-                        bg().perform { [weak self] in
-                            let nrContact = NRContact.instance(of: pubkey, contact: contact)
-                            DispatchQueue.main.async {
-                                self?.objectWillChange.send()
-                                self?.contact = nrContact
-                                
-                                if self?.kind == 6 {
-                                    self?.objectWillChange.send()
-                                    self?.repostedHeader = String(localized:"\(nrContact.anyName) reposted", comment: "Heading for reposted post: '(Name) reposted'")
-                                }
-                            }
+                            self?.objectWillChange.send()
+                            self?.contact = nrContact
                         }
                     }
                 }
