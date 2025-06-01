@@ -206,6 +206,9 @@ class MessageParser {
                 L.sockets.debug("🟠 \(relayUrl) Not in WoT, skipped: \(text)")
 #endif
                 ConnectionPool.shared.notInWoTcount += 1
+//                poolQueue.async(flags: .barrier) { // TODO: Track spam per relay?
+//                    // client.stats.addNotInWoT...
+//                }
             }
             catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
 #if DEBUG
