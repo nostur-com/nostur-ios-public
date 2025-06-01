@@ -7294,7 +7294,14 @@
       }
     },
     "Relays Nostur uses to find or publish content" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur gebruikt deze relays om berichten te vinden of publiceren"
+          }
+        }
+      }
     },
     "Relays others will use to find your content" : {
       "localizations" : {
@@ -7598,7 +7605,14 @@
       }
     },
     "reposted" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "opnieuw gestuurd"
+          }
+        }
+      }
     },
     "reposts" : {
       "comment" : "Label for reposts count, example: (7) reposts",
@@ -8500,12 +8514,18 @@
         }
       }
     },
-    "Spam filtered in the last %@: %lld" : {
+    "Spam filtered in the last %@: %lld items" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Spam filtered in the last %1$@: %2$lld"
+            "value" : "Spam filtered in the last %1$@: %2$lld items"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spam gefilterd afgelopen %1$@: %2$lld berichten"
           }
         }
       }
