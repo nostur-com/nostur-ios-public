@@ -16,9 +16,9 @@ struct ChatRow: View {
     var body: some View {
         switch content {
             case .chatConfirmedZap(let confirmedZap):
-                ChatConfirmedZapRow(confirmedZap: confirmedZap, zoomableId: zoomableId)
+                ChatConfirmedZapRow(confirmedZap: confirmedZap, zoomableId: zoomableId, selectedContact: $selectedContact)
             case .chatPendingZap(let pendingZap):
-                ChatPendingZapRow(pendingZap: pendingZap, zoomableId: zoomableId)
+                ChatPendingZapRow(pendingZap: pendingZap, zoomableId: zoomableId, selectedContact: $selectedContact)
             case .chatMessage(let nrChat):
                 ChatMessageRow(nrChat: nrChat, zoomableId: zoomableId, selectedContact: $selectedContact)
         }

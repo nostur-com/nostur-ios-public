@@ -15,11 +15,13 @@ struct ChatPendingZapRow: View {
     @ObservedObject private var pfpAttributes: PFPAttributes
     
     private var zoomableId: String
+    @Binding private var selectedContact: NRContact?
     
-    init(pendingZap: NRChatPendingZap, zoomableId: String = "Default") {
+    init(pendingZap: NRChatPendingZap, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
         self.pendingZap = pendingZap
         self.pfpAttributes = pendingZap.pfpAttributes
         self.zoomableId = zoomableId
+        _selectedContact = selectedContact
     }
     
     var body: some View {
@@ -41,43 +43,42 @@ struct ChatPendingZapRow: View {
                 }
                 
                 MiniPFP(pictureUrl: pfpAttributes.pfpURL)
-                    .onTapGesture {
-                        if AnyPlayerModel.shared.viewMode == .detailstream {
-                            AnyPlayerModel.shared.viewMode = .overlay
-                        }
-                        else if LiveKitVoiceSession.shared.visibleNest != nil {
-                            LiveKitVoiceSession.shared.visibleNest = nil
-                        }
-                        if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                        }
-                        else {
-                            navigateTo(ContactPath(key: pendingZap.pubkey), context: "Default")
-                        }
-                    }
+                    
                 Text(pfpAttributes.anyName)
-                    .onTapGesture {
-                        if AnyPlayerModel.shared.viewMode == .detailstream {
-                            AnyPlayerModel.shared.viewMode = .overlay
-                        }
-                        else if LiveKitVoiceSession.shared.visibleNest != nil {
-                            LiveKitVoiceSession.shared.visibleNest = nil
-                        }
-                        if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                        }
-                        else {
-                            navigateTo(ContactPath(key: pendingZap.pubkey), context: "Default")
-                        }
-                    }
+                    
                 Ago(pendingZap.createdAt)
                     .foregroundColor(themes.theme.secondary)
             }
+            .contentShape(Rectangle())
+            .highPriorityGesture(TapGesture().onEnded({ _ in
+                if let nrContact = pfpAttributes.contact {
+                    selectedContact = nrContact
+                }
+                else if let nrContact = pfpAttributes.contact {
+                    selectedContact = nrContact
+                }
+                else {
+                    if AnyPlayerModel.shared.viewMode == .detailstream {
+                        AnyPlayerModel.shared.viewMode = .overlay
+                    }
+                    else if LiveKitVoiceSession.shared.visibleNest != nil {
+                        LiveKitVoiceSession.shared.visibleNest = nil
+                    }
+                    
+                    if let nrContact = pfpAttributes.contact {
+                        navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
+                    }
+                    else {
+                        navigateTo(ContactPath(key: pendingZap.pubkey), context: "Default")
+                    }
+                }
+            }))
             .foregroundColor(themes.theme.accent)
             
             NXContentRenderer(nxEvent: pendingZap.nxEvent, contentElements: pendingZap.content, zoomableId: zoomableId)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(maxHeight: 450, alignment: .top)
+                .frame(maxHeight: 1800, alignment: .top)
+                .clipped()
         }
     }
 }

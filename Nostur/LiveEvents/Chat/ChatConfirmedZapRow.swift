@@ -15,11 +15,14 @@ struct ChatConfirmedZapRow: View {
     @ObservedObject private var pfpAttributes: PFPAttributes
     
     private var zoomableId: String
+    @Binding private var selectedContact: NRContact?
+
     
-    init(confirmedZap: NRChatConfirmedZap, zoomableId: String = "Default") {
+    init(confirmedZap: NRChatConfirmedZap, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
         self.confirmedZap = confirmedZap
         self.pfpAttributes = confirmedZap.pfpAttributes
         self.zoomableId = zoomableId
+        _selectedContact = selectedContact
     }
     
     var body: some View {
@@ -42,45 +45,43 @@ struct ChatConfirmedZapRow: View {
                     }
                     
                     MiniPFP(pictureUrl: pfpAttributes.pfpURL)
-                        .onTapGesture {
-                            if AnyPlayerModel.shared.viewMode == .detailstream {
-                                AnyPlayerModel.shared.viewMode = .overlay
-                            }
-                            else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                LiveKitVoiceSession.shared.visibleNest = nil
-                            }
-                            if let nrContact = confirmedZap.contact {
-                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                            }
-                            else {
-                                navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey), context: "Default")
-                            }
-                        }
+                        
                     
                     Text(pfpAttributes.anyName)
-                        .onTapGesture {
-                            if AnyPlayerModel.shared.viewMode == .detailstream {
-                                AnyPlayerModel.shared.viewMode = .overlay
-                            }
-                            else if LiveKitVoiceSession.shared.visibleNest != nil {
-                                LiveKitVoiceSession.shared.visibleNest = nil
-                            }
-                            if let nrContact = confirmedZap.contact {
-                                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                            }
-                            else {
-                                navigateTo(ContactPath(key: confirmedZap.zapRequestPubkey), context: "Default")
-                            }
-                        }
                             
                     Ago(confirmedZap.zapRequestCreatedAt)
                         .foregroundColor(themes.theme.secondary)
                 }
+                .contentShape(Rectangle())
+                .highPriorityGesture(TapGesture().onEnded({ _ in
+                    if let nrContact = pfpAttributes.contact {
+                        selectedContact = nrContact
+                    }
+                    else if let nrContact = pfpAttributes.contact {
+                        selectedContact = nrContact
+                    }
+                    else {
+                        if AnyPlayerModel.shared.viewMode == .detailstream {
+                            AnyPlayerModel.shared.viewMode = .overlay
+                        }
+                        else if LiveKitVoiceSession.shared.visibleNest != nil {
+                            LiveKitVoiceSession.shared.visibleNest = nil
+                        }
+                        
+                        if let nrContact = pfpAttributes.contact {
+                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
+                        }
+                        else {
+                            navigateTo(ContactPath(key: pfpAttributes.pubkey), context: "Default")
+                        }
+                    }
+                }))
                 .foregroundColor(themes.theme.accent)
                 
             NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, zoomableId: zoomableId)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(maxHeight: 450, alignment: .top)
+                    .frame(maxHeight: 1800, alignment: .top)
+                    .clipped()
             }
     }
 }
