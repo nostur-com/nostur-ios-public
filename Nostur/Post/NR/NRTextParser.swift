@@ -22,11 +22,12 @@ class NRTextParser { // TEXT things
     private var attributes: [NSAttributedString.Key: NSObject]
     private var lastColor = Themes.default.theme.primary
     private let emptyString = NSAttributedString(string: "")
+    private let nxEmptyString = AttributedString("")
     
     private init() { 
         self.hashtagIcons = Self.prepareHashtagIcons()
         self.paragraphStyle.lineBreakMode = .byWordWrapping
-        self.paragraphStyle.lineHeightMultiple = 0.96
+//        self.paragraphStyle.lineHeightMultiple = 0.96
 
         self.attributes = [
             .font: UIFont.preferredFont(forTextStyle: .body),
@@ -43,7 +44,7 @@ class NRTextParser { // TEXT things
         }
         
         if text == "\n" || text == "" {
-            return AttributedStringWithPs(input: text, output: emptyString, pTags: [], event: event)
+            return AttributedStringWithPs(input: text, nxOutput: nxEmptyString, pTags: [], event: event)
         }
 
         // Remove image links + Handle naddr1...
@@ -72,16 +73,22 @@ class NRTextParser { // TEXT things
         newerTextWithPs.text = newerTextWithPs.text + " "
 
         do {
-            let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-            
-            mutableAttributedString.addHashtagIcons()
-            
-            mutableAttributedString.addAttributes(
-                attributes,
-                range: NSRange(location: 0, length: mutableAttributedString.length)
-            )
-                        
-            return AttributedStringWithPs(input: text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
+            let matches = NRTextParser.htRegex.matches(in: newerTextWithPs.text, options: [], range: NSRange(location: 0, length: newerTextWithPs.text.utf16.count))
+            if matches.count > 0 {
+                let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+                
+                mutableAttributedString.addHashtagIcons()
+                
+                mutableAttributedString.addAttributes(
+                    attributes,
+                    range: NSRange(location: 0, length: mutableAttributedString.length)
+                )
+                            
+                return AttributedStringWithPs(input: text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
+            }
+            else {
+                return AttributedStringWithPs(input: text, nxOutput: try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
+            }
         }
         catch {
             let mutableAttributedString = NSMutableAttributedString(string: newerTextWithPs.text)
@@ -393,5 +400,13 @@ extension String {
             .replacingOccurrences(of: "]", with: "\\]")
             .replacingOccurrences(of: "/", with: "\\/")
             .replacingOccurrences(of: "__", with: "\\_\\_")
+    }
+}
+
+
+extension AttributedString {
+    func prefix(_ maxLength: Int) -> AttributedString {
+        let string = String(self.characters.prefix(maxLength))
+        return AttributedString(string)
     }
 }

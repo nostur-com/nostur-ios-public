@@ -8775,7 +8775,6 @@
       }
     },
     "test" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

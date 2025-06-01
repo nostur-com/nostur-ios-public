@@ -45,7 +45,8 @@ struct NRContentTextRendererInner: View {
     private let accentColor: Color
     private let onTap: (() -> Void)?
     
-    @State private var text: NSAttributedString
+    @State private var text: NSAttributedString?
+    @State private var nxText: AttributedString?
     @State private var textWidth: CGFloat
     @State private var textHeight: CGFloat
     
@@ -61,126 +62,139 @@ struct NRContentTextRendererInner: View {
         self.accentColor = accentColor ?? Themes.default.theme.accent
         self.onTap = onTap
         
-        _text = State(wrappedValue: isDetail ? attributedStringWithPs.output :  attributedStringWithPs.output.prefix(NRTEXT_LIMIT))
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
+        
+        if let nxOutput = attributedStringWithPs.nxOutput {
+            _nxText = State(wrappedValue: nxOutput)
+//            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT))
+        }
+        else if let output = attributedStringWithPs.output {
+            _text = State(wrappedValue: isDetail ? output : output.prefix(NRTEXT_LIMIT))
+        }
+        else {
+            _text = State(wrappedValue: NSAttributedString(string: ""))
+        }
     }
     
     var body: some View {
-        if isPreview {
-            NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
-                .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        else if isScreenshot {
-            let aString = AttributedString(text)
-            Text(aString)
+        if let nxText {
+            Text(nxText)
                 .foregroundColor(primaryColor)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                 .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        else {
-            if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
-//                Color.red.frame(height: 30)
-//                    .debugDimensions(alignment: .topLeading)
-//                Color.clear
-//                    .overlay(alignment: .topLeading) {
-//                        
-//                    }
-                
-                NRTextFixed(text: $text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: onTap)
-//                    .background(Color.red.opacity(0.2))
-  
-//                    .overlay(alignment: .topLeading) {
-//                        Text("\(textWidth.rounded().description)x\(textHeight.rounded().description)")
-//                            .background(Color.black)
-//                            .foregroundColor(.white)
-//                    }
-//                    .onReceive(receiveNotification(.dynamicTextChanged)) { _ in
-//                        bg().perform {
-//                            guard !attributedStringWithPs.input.isEmpty else { return }
-//                            guard let event = attributedStringWithPs.event else { return }
-//                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input)
-//                            let textHeight = reparsed.output.boundingRect(
-//                                with: CGSize(width: availableWidth, height: .greatestFiniteMagnitude),
-//                                options: [.usesLineFragmentOrigin, .usesFontLeading],
-//                                context: nil
-//                            ).height
-//                            if self.textHeight != textHeight {
-////                                L.og.debug("⧢⧢ Reparsed after .dynamicTextChanged: \(self.textHeight) ----> \(textHeight) \(attributedStringWithPs.input.prefix(25))")
-//                                DispatchQueue.main.async {
-//                                    self.textHeight = textHeight
-////                                    self.text = reparsed.output
-//                                }
-//                            }
-//                        }
-//                    }
-                    .onReceive(
-                        ViewUpdates.shared.contactUpdated
-                            .receive(on: RunLoop.main)
-                            .filter { (pubkey, _) in
-                                guard !attributedStringWithPs.input.isEmpty else { return false }
-                                guard !attributedStringWithPs.pTags.isEmpty else { return false }
-                                return self.attributedStringWithPs.pTags.contains(pubkey)
-                            }
-//                            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-                    ) { pubkey in
-                        bg().perform {
-                            guard let event = attributedStringWithPs.event else { return }
-                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
-                            let output = isDetail ? reparsed.output : reparsed.output.prefix(NRTEXT_LIMIT)
-                            if self.text != output {
-//                                L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
-                                DispatchQueue.main.async {
-                                    self.text = output
-                                }
+                .onTapGesture {
+                    onTap?()
+                }
+#if DEBUG
+                .background {
+                    Color.green.opacity(0.15)
+                }
+#endif
+            
+                .onReceive(
+                    ViewUpdates.shared.contactUpdated
+                        .receive(on: RunLoop.main)
+                        .filter { (pubkey, _) in
+                            guard !attributedStringWithPs.input.isEmpty else { return false }
+                            guard !attributedStringWithPs.pTags.isEmpty else { return false }
+                            return self.attributedStringWithPs.pTags.contains(pubkey)
+                        }
+                ) { pubkey in
+                    bg().perform {
+                        guard let event = attributedStringWithPs.event else { return }
+                        let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
+                        guard let reparsedNxOutput = reparsed.nxOutput else { return }
+                        let output = isDetail ? reparsedNxOutput : reparsedNxOutput.prefix(NRTEXT_LIMIT)
+                        if self.nxText != output {
+#if DEBUG
+                            L.og.debug("NRTextFixed.Reparsed: \(reparsed.input) ----> \(output)")
+#endif
+                            DispatchQueue.main.async {
+                                self.nxText = output
                             }
                         }
                     }
-//                    .transaction { t in t.animation = nil } // <-- needed or not?
-                    .frame(height: textHeight, alignment: .topLeading) // <-- Fixes clipped text height, stuck at initial 60, this problem only happens inside LazyVStack
-//                    .fixedSize(horizontal: false, vertical: true) // needed or text height stays at inital textHeight (60) (bug only in happens in LazyVStack)
-                    .onChange(of: availableWidth) { newWidth in
-                        guard newWidth != textWidth else { return }
-                        textWidth = newWidth
-                    }
-//                    .onChange(of: accentColor) { newAccentColor in
-//                        guard newAccentColor != textAccentColor else { return }
-//                        textAccentColor = newAccentColor
-//                    }
-//                    .onChange(of: primaryColor) { newPrimaryColor in
-//                        guard newPrimaryColor != textPrimaryColor else { return }
-//                        textPrimaryColor = newPrimaryColor
-//                    }
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                }
+        }
+        else if let text {
+            if isPreview {
+                NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
+                    .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            else if isScreenshot {
+                let aString = AttributedString(text)
+                Text(aString)
+                    .foregroundColor(primaryColor)
+                    .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
             else {
-                NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
-                    .onTapGesture {
-                        onTap?()
-                    }
-                    .onReceive(
-                        ViewUpdates.shared.contactUpdated
-                            .receive(on: RunLoop.main)
-                            .filter { (pubkey, _) in
-                                guard !attributedStringWithPs.input.isEmpty else { return false }
-                                guard !attributedStringWithPs.pTags.isEmpty else { return false }
-                                return self.attributedStringWithPs.pTags.contains(pubkey)
-                            }
-//                            .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-                    ) { pubkey in
-                        bg().perform {
-                            guard let event = attributedStringWithPs.event else { return }
-                            let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
-                            if self.text != reparsed.output {
-                                L.og.debug("Reparsed: \(reparsed.input) ----> \(reparsed.output)")
-                                DispatchQueue.main.async {
-                                    self.text = reparsed.output
+                if #available(iOS 16.0, *) { // because 15.0 doesn't have sizeThatFits(_ proposal: ProposedViewSize...
+                    
+                    NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: onTap)
+                        .onReceive(
+                            ViewUpdates.shared.contactUpdated
+                                .receive(on: RunLoop.main)
+                                .filter { (pubkey, _) in
+                                    guard !attributedStringWithPs.input.isEmpty else { return false }
+                                    guard !attributedStringWithPs.pTags.isEmpty else { return false }
+                                    return self.attributedStringWithPs.pTags.contains(pubkey)
+                                }
+                        ) { pubkey in
+                            bg().perform {
+                                guard let event = attributedStringWithPs.event else { return }
+                                let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
+                                guard let reparsedOutput = reparsed.output else { return }
+                                let output = isDetail ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
+                                if self.text != output {
+#if DEBUG
+                                    L.og.debug("NRTextFixed.Reparsed: \(reparsed.input) ----> \(output)")
+#endif
+                                    DispatchQueue.main.async {
+                                        self.text = output
+                                    }
                                 }
                             }
                         }
-                    }
-//                    .transaction { t in t.animation = nil }
+                        .frame(height: textHeight, alignment: .topLeading) // <-- Fixes clipped text height, stuck at initial 60, this problem only happens inside LazyVStack
+                        .onChange(of: availableWidth) { newWidth in
+                            guard newWidth != textWidth else { return }
+                            textWidth = newWidth
+                        }
+                        .frame(maxWidth: .infinity, alignment: .topLeading)
+                }
+                else {
+                    NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
+                        .onTapGesture {
+                            onTap?()
+                        }
+                        .onReceive(
+                            ViewUpdates.shared.contactUpdated
+                                .receive(on: RunLoop.main)
+                                .filter { (pubkey, _) in
+                                    guard !attributedStringWithPs.input.isEmpty else { return false }
+                                    guard !attributedStringWithPs.pTags.isEmpty else { return false }
+                                    return self.attributedStringWithPs.pTags.contains(pubkey)
+                                }
+                        ) { pubkey in
+                            bg().perform {
+                                guard let event = attributedStringWithPs.event else { return }
+                                let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
+                                guard let reparsedOutput = reparsed.output else { return }
+                                let output = isDetail ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
+                                if self.text != output {
+#if DEBUG
+                                    L.og.debug("NRTextDynamic.Reparsed: \(reparsed.input) ----> \(output)")
+#endif
+                                    DispatchQueue.main.async {
+                                        self.text = output
+                                    }
+                                }
+                            }
+                        }
+                }
             }
         }
     }

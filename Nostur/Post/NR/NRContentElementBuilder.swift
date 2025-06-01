@@ -358,7 +358,8 @@ struct AttributedStringWithPs: Hashable {
     }
     
     var input: String
-    var output: NSAttributedString // For selectable text
+    var nxOutput: AttributedString? // Render faster with Text() but doesn't support hashtag icons
+    var output: NSAttributedString? // For selectable text, but slow because .makeUITextView only use when needed (hashtags or selectable text)
     var pTags: [Ptag]
     var missingPs: Set<String> = [] 
     weak var event: Event?

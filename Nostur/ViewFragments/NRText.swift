@@ -154,7 +154,7 @@ struct NRTextDynamic: View {
 struct NRTextFixed: UIViewRepresentable {
     typealias UIViewType = UITextView
     
-    @Binding var attributedString: NSAttributedString
+    private var attributedString: NSAttributedString
     private let plain: Bool
     private var fontColor: Color
     private var accentColor: Color
@@ -163,8 +163,8 @@ struct NRTextFixed: UIViewRepresentable {
     private let textCutOffFixerHeight: CGFloat // to fix text cutoff need to add  some height  always as workaround
     public var onTap: (() -> Void)? = nil
     
-    init(text attributedString: Binding<NSAttributedString>, plain: Bool = false, fontColor: Color, accentColor: Color, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, onTap: (() -> Void)? = nil) {
-        _attributedString = attributedString
+    init(text attributedString: NSAttributedString, plain: Bool = false, fontColor: Color, accentColor: Color, textWidth: Binding<CGFloat>, textHeight: Binding<CGFloat>, onTap: (() -> Void)? = nil) {
+        self.attributedString = attributedString
         self.onTap = onTap
         self.plain = plain
         self.fontColor = fontColor
@@ -379,10 +379,10 @@ struct NRTextFixedTester: View {
                 .frame(width: textWidth, height: textHeight)
                 .fixedSize(horizontal: false, vertical: true)
             
-            NRTextFixed(text: $text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight)
+            NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight)
             .onAppear {
                 textWidth = dim.listWidth - 20
-                text = NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output
+                text = NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output ?? NSAttributedString(string: "")
                 primaryColor = themes.theme.primary
                 accentColor = themes.theme.accent
             }

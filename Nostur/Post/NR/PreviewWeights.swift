@@ -126,7 +126,12 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
             }
             return true
         case .text(let attributedStringWithPs):
-            w.characters += attributedStringWithPs.output.length
+            if let output = attributedStringWithPs.output {
+                w.characters += output.length
+            }
+            else if let nxOutput = attributedStringWithPs.nxOutput {
+                w.characters += nxOutput.characters.count
+            }
             w.characters += (attributedStringWithPs.input.utf8.lazy.count { $0 == 10 } * 40) // count newlines 90 characters
             w.text += 1;
             guard w.weight < 2 else {
