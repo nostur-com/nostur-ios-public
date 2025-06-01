@@ -68,9 +68,11 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         //        #endif
         if isDetail || fullWidth {
             fullWidthLayout
+//                .background(theme.listBackground)
         }
         else {
             normalLayout
+//                .background(theme.listBackground)
         }
     }
     

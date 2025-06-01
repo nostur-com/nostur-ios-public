@@ -49,7 +49,7 @@ struct Box<Content: View>: View {
         if navMode == .view {
             content
                 .padding(kind == 30023 ? 20 : 10)
-                .background(kind == 30023 ? theme.secondaryBackground : Color.clear)
+                .background(kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                 .overlay(alignment: .bottom) {
                     if showGutter {
                         theme.background.frame(height: GUTTER)
@@ -63,7 +63,7 @@ struct Box<Content: View>: View {
         else if navMode == .noNavigation {
             content
                 .padding(kind == 30023 ? 20 : 10)
-                .background(kind == 30023 ? theme.secondaryBackground : Color.clear)
+                .background(kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                 .overlay(alignment: .bottom) {
                     if showGutter {
                         theme.background.frame(height: GUTTER)

@@ -9,6 +9,7 @@ import SwiftUI
 import OrderedCollections
 
 // Kind 30000: Follow sets: categorized groups of users a client may choose to check out in different circumstances
+// Also kind: 39089
 struct Kind30000: View {
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
@@ -63,25 +64,30 @@ struct Kind30000: View {
     }
     
     var body: some View {
-        ZStack {
-            if isEmbedded {
-                self.embeddedView
-            }
-            else {
-                self.normalView
-            }
+        if isEmbedded {
+            self.embeddedView
+                .background(theme.listBackground)
+                .drawingGroup(opaque: true)
+                .onAppear(perform: self.onAppear)
         }
-        .onAppear {
-            bg().perform {
-                let followPsToUse = !isDetail && !isEmbedded ? followPs.prefix(20) : followPs.prefix(2000) // For detail and embedded all (sanity limit at 2000), else just first 10 (row)
-                let followNRContacts = followPsToUse.map { NRContact.instance(of: $0) }
-                // create key value dictionary of followNRContacts in from of [String: NRContact] where key is NRContact.pubkey
-                let followNRContactsDict = Dictionary(uniqueKeysWithValues: followNRContacts.map { ($0.pubkey, $0) })
-                
-                Task { @MainActor in
-                    self.followNRContacts = followNRContactsDict
-                    self.didLoadFollowNRContacts = true
-                }
+        else {
+            self.normalView
+                .background(theme.listBackground)
+                .drawingGroup(opaque: true)
+                .onAppear(perform: self.onAppear)
+        }
+    }
+    
+    private func onAppear() {
+        bg().perform {
+            let followPsToUse = !isDetail && !isEmbedded ? followPs.prefix(20) : followPs.prefix(2000) // For detail and embedded all (sanity limit at 2000), else just first 10 (row)
+            let followNRContacts = followPsToUse.map { NRContact.instance(of: $0) }
+            // create key value dictionary of followNRContacts in from of [String: NRContact] where key is NRContact.pubkey
+            let followNRContactsDict = Dictionary(uniqueKeysWithValues: followNRContacts.map { ($0.pubkey, $0) })
+            
+            Task { @MainActor in
+                self.followNRContacts = followNRContactsDict
+                self.didLoadFollowNRContacts = true
             }
         }
     }
@@ -104,28 +110,24 @@ struct Kind30000: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
                         contactRows
                     }
-                    .background(theme.listBackground)
-                    .drawingGroup(opaque: true)
+//                    .background(theme.listBackground)
                 }
                 // If more than 20, do LazyVStack
                 else if followPs.count > 10 {
                     LazyVStack(alignment: .leading) {
                         contactRows
                     }
-                    .background(theme.listBackground)
-                    .drawingGroup(opaque: true)
+//                    .background(theme.listBackground)
                 }
                 else {
                     contactRows
-                        .background(theme.listBackground)
-                        .drawingGroup(opaque: true)
+//                        .background(theme.listBackground)
                 }
             }
             else if didLoadFollowNRContacts { // Row view, show 10 big PFPS (prio follows)
                 overlappingPFPs
                     .frame(width: dim.articleRowImageWidth(), alignment: .leading)
-                    .background(theme.listBackground)
-                    .drawingGroup(opaque: true)
+//                    .background(theme.listBackground)
             }
             else {
                 ProgressView()
@@ -147,6 +149,7 @@ struct Kind30000: View {
                 }
                 .buttonStyle(NosturButton(bgColor: theme.accent))
             }
+//            .background(theme.listBackground)
         }
     }
         
@@ -217,18 +220,15 @@ struct Kind30000: View {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 10) {
                         contactRows
                     }
-                    .drawingGroup(opaque: true)
                 }
                 // If more than 20, do LazyVStack
                 else if followPs.count > 10 {
                     LazyVStack(alignment: .leading) {
                         contactRows
                     }
-                    .drawingGroup(opaque: true)
                 }
                 else {
                     contactRows
-                        .drawingGroup(opaque: true)
                 }
             }
             else {
