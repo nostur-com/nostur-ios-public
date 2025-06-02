@@ -518,3 +518,35 @@ func parsePubkey(_ eventString:String) -> String? {
     }
     return nil
 }
+
+
+public func batchSignEvents(_ eventsToSign: [NEvent], account: CloudAccount, onFinish: @escaping ([String: NEvent]) -> Void) {
+    var signedEvents: [String: NEvent] = [:]
+    
+    Task { @MainActor in
+        if account.isNC {
+            for event in eventsToSign {
+                NSecBunkerManager.shared.requestSignature(forEvent: event, usingAccount: account) { signedEvent in
+                    signedEvents[signedEvent.id] = signedEvent
+                    
+                    if signedEvents.count == eventsToSign.count {
+                        onFinish(signedEvents)
+                    }
+                }
+            }
+        }
+        else {
+            guard let pk = account.privateKey, let keys = try? NostrEssentials.Keys(privateKeyHex: pk) else {
+                sendNotification(.anyStatus, ("Problem with account/key", "APP_NOTICE"))
+                return
+            }
+            for var event in eventsToSign {
+                if let signedEvent = try? event.sign(keys) {
+                    signedEvents[signedEvent.id] = signedEvent
+                }
+            }
+            
+            onFinish(signedEvents)
+        }
+    }
+}

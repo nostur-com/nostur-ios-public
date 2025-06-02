@@ -323,10 +323,7 @@ public final class NewPostModel: ObservableObject {
                     sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
                     return
                 }
-                guard let pk = activeAccount?.privateKey, let keys = try? Keys(privateKeyHex: pk) else {
-                    sendNotification(.anyStatus, ("Problem with account", "NewPost"))
-                    return
-                }
+           
                 
                 let maxWidth: CGFloat = 2800.0
                 // [(MediaRequestBag, String?)] <-- String? is blurhash
