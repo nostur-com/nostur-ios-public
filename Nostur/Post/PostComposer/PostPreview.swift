@@ -69,14 +69,17 @@ struct PostPreview: View {
                 Button {
                     typingTextModel.sending = true
                     
-                    guard let pk = vm.activeAccount?.privateKey, let keys = try? NostrEssentials.Keys(privateKeyHex: pk) else {
+                    // Need to do these here in main thread
+                    guard let account = vm.activeAccount, account.isFullAccount else {
                         sendNotification(.anyStatus, ("Problem with account", "NewPost"))
                         return
                     }
+                    let isNC = account.isNC
+                    let pubkey = account.publicKey
                     
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
                         Task {
-                            await self.vm.sendNow(keys: keys, replyTo: replyTo, quotePost: quotePost, onDismiss: {
+                            await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: {
                                 dismissPostPreview()
                                 onDismiss()
                             })
