@@ -54,13 +54,13 @@ class NewPostNotifier: ObservableObject {
     @MainActor
     public func runCheck(force: Bool = false) {
         guard force || (!AppState.shared.appIsInBackground || IS_CATALYST) else { return }
-#if DEBUG
-        L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
-#endif
         if let lastCheck = lastCheck, !force {
             guard (Date.now.timeIntervalSince1970 - lastCheck.timeIntervalSince1970) > 60
             else { return }
         }
+#if DEBUG
+        L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
+#endif
         let accountPubkey = account()?.publicKey ?? activeAccountPublicKey
         let tasks = CloudTask.fetchAll(byType: .notifyOnPosts, andAccountPubkey: accountPubkey)
         enabledPubkeys = Set(tasks.compactMap { $0.value_ })
