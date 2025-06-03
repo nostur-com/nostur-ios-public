@@ -26,7 +26,6 @@ struct DetailFooterFragment: View {
             NBNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.likesCount)
-//                        .fontWeight(.bold)
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
                         .lineLimit(1)
                 }
@@ -34,7 +33,6 @@ struct DetailFooterFragment: View {
             NBNavigationLink(value: ViewPath.NoteReposts(id: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.repostsCount)
-//                        .fontWeight(.bold)
                     Text("reposts", comment: "Label for reposts count, example: (7) reposts")
                         .lineLimit(1)
                 }
@@ -42,12 +40,10 @@ struct DetailFooterFragment: View {
             NBNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.zapsCount)
-//                        .fontWeight(.bold)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                         .lineLimit(1)
                     
                     AnimatedNumberString(number: tallyString)
-//                        .fontWeight(.bold)
                         .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
                 }
             }
@@ -60,9 +56,11 @@ struct DetailFooterFragment: View {
         .onAppear {
             loadTally(footerAttributes.zapTally)
         }
-        .onChange(of: footerAttributes.zapTally) { newTally in
-            guard newTally != footerAttributes.zapTally else { return }
-            loadTally(newTally)
+        .onChange(of: footerAttributes.zapTally) { [oldTally = footerAttributes.zapTally] newTally in
+            guard newTally != oldTally, newTally > 0 else { return }
+            Task { @MainActor in
+                loadTally(newTally)
+            }
         }
         .buttonStyle(.plain)
         .foregroundColor(.gray)
@@ -111,7 +109,6 @@ struct DetailFooterFragment: View {
     }
     
     private func loadTally(_ tally: Int64) {
-        guard tally > 0 else { return }
         if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
             let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
             guard fiatPrice != tallyString else { return }
