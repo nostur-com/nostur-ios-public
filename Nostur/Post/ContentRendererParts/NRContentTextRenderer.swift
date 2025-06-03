@@ -67,7 +67,7 @@ struct NRContentTextRendererInner: View {
         
         if let nxOutput = attributedStringWithPs.nxOutput {
             _nxText = State(wrappedValue: nxOutput)
-//            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT))
+//            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT)) // Reminder: also add back below reparsedNxOutput
         }
         else if let output = attributedStringWithPs.output {
             _text = State(wrappedValue: isDetail ? output : output.prefix(NRTEXT_LIMIT))
@@ -105,13 +105,13 @@ struct NRContentTextRendererInner: View {
                         guard let event = attributedStringWithPs.event else { return }
                         let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
                         guard let reparsedNxOutput = reparsed.nxOutput else { return }
-                        let output = isDetail ? reparsedNxOutput : reparsedNxOutput.prefix(NRTEXT_LIMIT)
-                        if self.nxText != output {
+//                        let output = isDetail ? reparsedNxOutput : reparsedNxOutput.prefix(NRTEXT_LIMIT)
+                        if self.nxText != reparsedNxOutput {
 #if DEBUG
-                            L.og.debug("NRTextFixed.Reparsed: \(reparsed.input) ----> \(output)")
+                            L.og.debug("NRTextFixed.Reparsed: \(reparsed.input) ----> \(reparsedNxOutput)")
 #endif
                             DispatchQueue.main.async {
-                                self.nxText = output
+                                self.nxText = reparsedNxOutput
                             }
                         }
                     }
