@@ -582,6 +582,40 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     
+    @MainActor
+    public func saveFeedState() {
+        guard let config else { return }
+        guard let feedId = config.feed?.id?.uuidString else { return }
+
+        let onScreenIds: [String] = self.currentNRPostsOnScreen.map { $0.id }
+        let parentIds: Set<String> = Set(currentNRPostsOnScreen.flatMap { $0.parentPosts.map {  $0.id } })
+        var scrollToId: String? = nil
+        
+        for post in self.currentNRPostsOnScreen {
+            if vmInner.unreadIds[post.id] == nil {
+                scrollToId = post.id
+                break
+            }
+            else if let unreadCount = vmInner.unreadIds[post.id], unreadCount == 0 {
+                scrollToId = post.id
+                break
+            }
+        }
+        
+        let feedState = LocalFeedState(
+            cloudFeedId: feedId,
+            onScreenIds: onScreenIds, // restore ids on screen and dont delete during maintenance
+            parentIds: parentIds, // To render on with-replies feed, and so they don't get deleted during maintenance
+            scrollToId: scrollToId
+        )
+        
+        LocalFeedStateManager.shared.updateFeedState(feedState)
+        
+#if DEBUG
+        L.og.debug("☘️☘️ \(config.name) saveFeedState() \(feedId) - onScreenIds: \(onScreenIds.count) - parentIds: \(parentIds.count) - scrollToId: \(scrollToId ?? "")")
+#endif
+    }
+    
     private func startFetchFeedTimer() {
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
@@ -650,16 +684,24 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) - First load from local state")
 #endif
-            if let localFeedState = AppState.shared.localFeedStates.feedState(for: feedId) {
+            if let localFeedState = LocalFeedStateManager.shared.feedState(for: feedId) {
                 let idsToPutInScreen: [String] = localFeedState.onScreenIds
+                let parentIds: Set<String> = localFeedState.parentIds
                 
                 if !idsToPutInScreen.isEmpty {
                     
                     // Fetch events
-                    bg().perform {
+                    bg().perform { [self] in
                         let fr = Event.fetchRequest()
                         fr.predicate = NSPredicate(format: "id IN %@", idsToPutInScreen)
-                        let events = (try? bg().fetch(fr)) ?? []
+                        let events = ((try? bg().fetch(fr)) ?? [])
+                            .map {
+                                $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0, fixRelations: true)
+                                if repliesEnabled {
+                                    _ = $0.replyTo__
+                                }
+                                return $0
+                            }
                         
                         // transform Event to NRPost
                         var eventsMap: [String: NRPost] = [:]
@@ -670,15 +712,65 @@ class NXColumnViewModel: ObservableObject {
                         // put on screen
                         let nrPosts = idsToPutInScreen.compactMap { eventsMap[$0] }
                         Task { @MainActor in
-                            // withAnimation { } or not?
-                            self.viewState = .posts(nrPosts)
-                            self.allIdsSeen = self.allIdsSeen.union(Set(idsToPutInScreen))
+
+                            if let scrollToId = localFeedState.scrollToId, let restoreToIndex = nrPosts.firstIndex(where: { $0.id == scrollToId }) {
+                                
+                                
+                                // Restore unread count
+                                for index in nrPosts.indices {
+                                    if index < restoreToIndex {
+                                        let nrPost = nrPosts[index]
+                                        if vmInner.unreadIds[nrPost.id] == nil {
+                                            vmInner.unreadIds[nrPost.id] = 1 + nrPost.parentPosts.count
+                                        }
+                                    }
+                                }
+                                
+                                // Copy pasta from putOnScreen():
+                                
+                                // Signal that we're about to update with new posts that will need scroll restoration
+                                vmInner.isPreparingForScrollRestore = true
+                                
+                                // Store the target index for later use
+                                vmInner.pendingScrollToIndex = restoreToIndex
+                                
+                                // Update the view state without animation
+                                withTransaction(Transaction(animation: nil)) {
+                                    viewState = .posts(nrPosts)
+                                }
+                                
+                                // Set isAtTop to false since we'll be scrolling to a non-top position
+                                vmInner.isAtTop = false
+                                
+#if DEBUG
+                                L.og.debug("☘️☘️ \(config.name) - First load from local state - restoreToIndex: \(restoreToIndex) - id: \(scrollToId)")
+#endif
+                                
+                                // After a very short delay, trigger the scroll
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                    self.vmInner.scrollToIndex = restoreToIndex
+                                    
+                                    // Reset the preparation flag after a delay
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        self.vmInner.isPreparingForScrollRestore = false
+                                        self.vmInner.pendingScrollToIndex = nil
+                                    }
+                                }
+                            }
+                            else {
+                                self.viewState = .posts(nrPosts)
+                            }
+                            
+//                            self.allIdsSeen = self.allIdsSeen.union(Set(idsToPutInScreen)) // TODO: remove top unread part if scroll restore
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) - Loaded \(nrPosts.count) from local state")
 #endif
                         }
                     }
                 }
+                
+                didLoadFirstLocalState = true
+                completion?()
                 return
             }
 #if DEBUG
@@ -1445,6 +1537,7 @@ class NXColumnViewModel: ObservableObject {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.pause()
+                self?.saveFeedState()
             }
     }
     
