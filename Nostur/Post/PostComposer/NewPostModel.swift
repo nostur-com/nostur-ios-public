@@ -307,7 +307,10 @@ public final class NewPostModel: ObservableObject {
                                 self.uploadError = "Image upload error"
                                 sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                             case .finished:
+#if DEBUG
                                 L.og.debug("All images uploaded successfully")
+#endif
+                                break
                             }
                         }, receiveValue: { uploadItems in
                             for uploadItem in uploadItems {
@@ -322,7 +325,7 @@ public final class NewPostModel: ObservableObject {
                     sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
                     return
                 }
-           
+                let boundary = UUID().uuidString
                 
                 let maxWidth: CGFloat = 2800.0
                 // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
@@ -331,17 +334,21 @@ public final class NewPostModel: ObservableObject {
                         
                         // .GIF
                         if imageMeta.type == .gif {
+                            
+                            let filename = "media.gif"
+                            let contentType = contentType(for: filename)
+                            let httpBody = makeHttpBody(mediaData: imageMeta.data, contentType: contentType, boundary: boundary)
+                            let sha256hex = httpBody.sha256().hexEncodedString()
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
+                            
                             // Resize first for faster blurhash
                             if let scaledImage = UIImage(data: imageMeta.data) {
                                 let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
                                 let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                                
-                                let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
-                                
+ 
                                 return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                             }
                             
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
                             return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
                         }
                         
@@ -362,7 +369,11 @@ public final class NewPostModel: ObservableObject {
                             let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
                             let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
                             
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: scaledData.sha256().hexEncodedString())
+                            let filename = "media.jpg"
+                            let contentType = contentType(for: filename)
+                            let httpBody = makeHttpBody(mediaData: scaledData, contentType: contentType, boundary: boundary)
+                            let sha256hex = httpBody.sha256().hexEncodedString()
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
                             
                             return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                         }
@@ -373,7 +384,11 @@ public final class NewPostModel: ObservableObject {
                         typingTextModel.compressedVideoFiles.append(compressedURL)
                         if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
                             
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
+                            let filename = "media.mp4"
+                            let contentType = contentType(for: filename)
+                            let httpBody = makeHttpBody(mediaData: compressedVideoData, contentType: contentType, boundary: boundary)
+                            let sha256hex = httpBody.sha256().hexEncodedString()
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
                             
                             return (compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent)
                         }
@@ -384,61 +399,72 @@ public final class NewPostModel: ObservableObject {
 //                        }
                         return nil
                     })
-//                    .map { (compressedVideoData, index) in
-//                        (MediaRequestBag(apiUrl: nip96apiURL, uploadtype: "media", filename: "media.mp4", mediaData: compressedVideoData, index: index), nil)
-//                    }
+
+                let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
+                
+                batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
+                    // TODO: Note, self.upload, different from blossom uploader
+                    self.uploader.queued = uploadItems.compactMap { tuple in
+                        if let signedEvent = signedEventsDict[tuple.4.id], let authHeader = toHttpAuthHeader(signedEvent) {
+                            let filename = switch(tuple.1) {
+                            case PostedImageMeta.ImageType.jpeg.rawValue:
+                                "media.jpg"
+                            case PostedImageMeta.ImageType.png.rawValue:
+                                "media.png"
+                            case "video/mp4":
+                                "media.mp4"
+                            default:
+                                "media"
+                            }
+                            return MediaRequestBag(apiUrl: nip96apiURL, method: "POST", uploadtype: "media", filename: filename, mediaData: tuple.0, index: tuple.3, authorizationHeader: authHeader, boundary: boundary, blurhash: tuple.2)
+                        } else {
+                            sendNotification(.anyStatus, ("Problem with remote signer", "NewPost"))
+                            return nil
+                        }
+                    }
                     
-                
-//                    .map { (resizedImage, type, blurhash, index) in
-//                        (MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index), blurhash)
-//                    }
-                
-//                let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
-                
-//                uploader.queued = mediaRequestBags.map { $0.0 }
-//                uploader.onFinish = {
-//                    let imetas: [Nostur.Imeta] = mediaRequestBags
-//                        .compactMap {
-//                            guard let url = $0.0.downloadUrl else { return nil }
-//                            return Imeta(url: url, dim: $0.0.dim, hash: $0.0.sha256, blurhash: $0.1)
-//                        }
-//                    Task { @MainActor in
-//                        self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
-//                    }
-//                    
-//                    // clean up video tmp files (compressed videos)
-//                    for videoURL in self.typingTextModel.compressedVideoFiles {
-//                        try? FileManager.default.removeItem(at: videoURL)
-//                    }
-//                }
-//                uploader.uploadingPublishers(for: mediaRequestBags.map { $0.0 }, keys: keys)
-//                    .receive(on: RunLoop.main)
-//                    .sink(receiveCompletion: { result in
-//                        switch result {
-//                        case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
-//                            L.og.error("Error uploading images (401): \(error.localizedDescription)")
-//                            self.uploadError = "Media upload authorization error"
-//                            sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
-//                        case .failure(let error):
-//                            L.og.error("Error uploading images: \(error.localizedDescription)")
-//                            self.uploadError = "Image upload error"
-//                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
-//                        case .finished:
-//                            L.og.debug("All images uploaded successfully")
-//                        }
-//                    }, receiveValue: { mediaRequestBags in
-//                        for mediaRequestBag in mediaRequestBags {
-//                            self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
-//                        }
-////                        if (self.uploader.finished) {
-////                            let imetas:[Imeta] = mediaRequestBags.compactMap {
-////                                guard let url = $0.downloadUrl else { return nil }
-////                                return Imeta(url: url, dim: $0.dim, hash: $0.sha256hex)
-////                            }
-////                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
-////                        }
-//                    })
-//                    .store(in: &subscriptions)
+                    self.uploader.onFinish = {
+                        let imetas: [Nostur.Imeta] = self.uploader.queued
+                            .compactMap {
+                                guard let url = $0.downloadUrl else { return nil }
+                                return Imeta(url: url, dim: $0.dim, hash: $0.sha256, blurhash: $0.blurhash)
+                            }
+                        
+                        Task { @MainActor in
+                            self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+                        }
+                        
+                        // clean up video tmp files (compressed videos)
+                        for videoURL in self.typingTextModel.compressedVideoFiles {
+                            try? FileManager.default.removeItem(at: videoURL)
+                        }
+                    }
+                    
+                    self.uploader.uploadingPublishers(for: self.uploader.queued)
+                        .receive(on: RunLoop.main)
+                        .sink(receiveCompletion: { result in
+                            switch result {
+                            case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
+                                L.og.error("Error uploading images (401): \(error.localizedDescription)")
+                                self.uploadError = "Media upload authorization error"
+                                sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+                            case .failure(let error):
+                                L.og.error("Error uploading images: \(error.localizedDescription)")
+                                self.uploadError = "Image upload error"
+                                sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                            case .finished:
+#if DEBUG
+                                L.og.debug("All images uploaded successfully")
+#endif
+                                break
+                            }
+                        }, receiveValue: { mediaRequestBags in
+                            for mediaRequestBag in mediaRequestBags {
+                                self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
+                            }
+                        })
+                        .store(in: &self.subscriptions)
+                }
             }
             else { // old media upload services
                 uploadImages(images: typingTextModel.pastedImages)
@@ -450,7 +476,10 @@ public final class NewPostModel: ObservableObject {
                             self.uploadError = "Image upload error"
                             sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
                         case .finished:
+#if DEBUG
                             L.og.debug("All images uploaded successfully")
+#endif
+                            break
                         }
                     }, receiveValue: { urls in
                         if (self.typingTextModel.pastedImages.count == urls.count) {
@@ -972,36 +1001,16 @@ struct Imeta {
 }
 
 
-public func getBlossomAuthorizationHeader(_ account: CloudAccount, sha256hex: String, action: BlossomUploader.Verb = .upload) async throws -> String {
-    return try await withCheckedThrowingContinuation { continuation in
-        Task { @MainActor in
-            let publicKey = account.publicKey
-            
-            // 5 minutes from now timestamp
-            let expirationTimestamp = Int(Date().timeIntervalSince1970) + 300
-            
-            var unsignedEvent = NEvent(content: "Upload", kind: .blossomAuth, tags: [
-                NostrTag(["t", action.rawValue]),
-                NostrTag(["x", sha256hex]),  // hash of file
-                NostrTag(["expiration", expirationTimestamp.description])
-            ])
-            unsignedEvent.publicKey = publicKey
-            unsignedEvent = unsignedEvent.withId()
-            
-            
-            NSecBunkerManager.shared.requestSignature(forEvent: unsignedEvent, usingAccount: account) { signedEvent in
-                let jsonString = signedEvent.eventJson()
-                guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else {
-                    continuation.resume(throwing: NSError(domain: "Unable to create json() or base64", code: 999))
-                    return
-                }
-                let base64 = jsonData.base64EncodedString()
-                continuation.resume(returning: "Nostr \(base64)")
-            }
-        }
+public func toHttpAuthHeader(_ nEvent: NEvent) -> String? {
+    let jsonString = nEvent.eventJson()
+    guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else {
+        return nil
     }
+    let base64 = jsonData.base64EncodedString()
+    return "Nostr \(base64)"
 }
 
+// BLOSSOM
 public func getUnsignedAuthorizationHeaderEvent(pubkey: String, sha256hex: String, action: BlossomUploader.Verb = .upload) -> NEvent {
     // 5 minutes from now timestamp
     let expirationTimestamp = Int(Date().timeIntervalSince1970) + 300
@@ -1016,11 +1025,18 @@ public func getUnsignedAuthorizationHeaderEvent(pubkey: String, sha256hex: Strin
     return unsignedEvent
 }
 
-public func toHttpAuthHeader(_ nEvent: NEvent) -> String? {
-    let jsonString = nEvent.eventJson()
-    guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else {
-        return nil
-    }
-    let base64 = jsonData.base64EncodedString()
-    return "Nostr \(base64)"
+
+// NIP-96
+public func getUnsignedAuthorizationHeaderEvent96(pubkey: String, sha256hex: String, method: String, apiUrl: URL) -> NEvent {
+    // 5 minutes from now timestamp
+    let expirationTimestamp = Int(Date().timeIntervalSince1970) + 300
+    
+    var unsignedEvent = NEvent(content: "", kind: .custom(27235), tags: [
+        NostrTag(["u", apiUrl.absoluteString]),
+        NostrTag(["method", method]),
+        NostrTag(["payload", sha256hex]), // hash of entire request.httpBody
+    ])
+    unsignedEvent.publicKey = pubkey
+    unsignedEvent = unsignedEvent.withId()
+    return unsignedEvent
 }

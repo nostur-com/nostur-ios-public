@@ -54,7 +54,7 @@ struct PostPreview: View {
             Spacer()
         }
         .overlay(alignment: .bottom) {
-            MediaUploadProgress(uploader: vm.uploader)
+            MediaUploadProgress(uploader: vm.uploader) // @TODO: Make progress independent of Uploader type (NIP96 / Blossom)
                 .frame(height: Double(vm.uploader.queued.count * 38))
                 .background(themes.theme.listBackground)
         }

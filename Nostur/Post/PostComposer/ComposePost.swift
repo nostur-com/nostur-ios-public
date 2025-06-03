@@ -241,7 +241,7 @@ struct ComposePost: View {
                     }
                     .offset(y: vm.showMentioning && (replyTo != nil) ? -150 : 0)
                     .overlay(alignment: .bottom) {
-                        MediaUploadProgress(uploader: vm.uploader)
+                        MediaUploadProgress(uploader: vm.uploader) // @TODO: Make progress independent of Uploader type (NIP96 / Blossom)
                             .frame(height: geo.size.height * 0.60)
                             .background(themes.theme.listBackground)
                     }
