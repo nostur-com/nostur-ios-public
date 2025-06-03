@@ -173,7 +173,6 @@ public final class NewPostModel: ObservableObject {
                 // TODO: remove hashing same data over and over, clean up a bit
                 
                 let maxWidth: CGFloat = 2800.0
-                // [(BlossomUploadItem, String?)] <-- String? is blurhash
                 // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
                 let uploadItems: [(Data, String, String?, Int, NEvent)] = typingTextModel.pastedImages
                     .compactMap { imageMeta in // Resize images
@@ -326,9 +325,9 @@ public final class NewPostModel: ObservableObject {
            
                 
                 let maxWidth: CGFloat = 2800.0
-                // [(MediaRequestBag, String?)] <-- String? is blurhash
-                let mediaRequestBags: [(MediaRequestBag, String?)] = typingTextModel.pastedImages
-                    .compactMap { imageMeta in // Resize images
+                // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
+                let uploadItems: [(Data, String, String?, Int, NEvent)] = typingTextModel.pastedImages
+                    .compactMap({ (imageMeta: PostedImageMeta) -> (Data, String, String?, Int, NEvent)? in // Resize images
                         
                         // .GIF
                         if imageMeta.type == .gif {
@@ -336,9 +335,14 @@ public final class NewPostModel: ObservableObject {
                             if let scaledImage = UIImage(data: imageMeta.data) {
                                 let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
                                 let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                                return (imageMeta.data, PostedImageMeta.ImageType.gif, blurhash, imageMeta.index)
+                                
+                                let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
+                                
+                                return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                             }
-                            return (imageMeta.data, PostedImageMeta.ImageType.gif, nil, imageMeta.index)
+                            
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
+                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
                         }
                         
                         // NOT .GIF
@@ -357,18 +361,21 @@ public final class NewPostModel: ObservableObject {
                             // Resize first for faster blurhash
                             let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
                             let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                            return (scaledData, PostedImageMeta.ImageType.jpeg, blurhash, imageMeta.index)
+                            
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: scaledData.sha256().hexEncodedString())
+                            
+                            return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
                         }
                         return nil
-                    }
-                    .map { (resizedImage, type, blurhash, index) in
-                        (MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index), blurhash)
-                    } + typingTextModel.pastedVideos
-                    .compactMap { videoMeta in // compress
+                    }) + typingTextModel.pastedVideos
+                    .compactMap({ (videoMeta: PostedVideoMeta) -> (Data, String, String?, Int, NEvent)? in // compress
                         let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
                         typingTextModel.compressedVideoFiles.append(compressedURL)
                         if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
-                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
+                            
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
+                            
+                            return (compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent)
                         }
                         
                         // Version without compression: TODO: Add toggle for compression ON/OFF
@@ -376,56 +383,62 @@ public final class NewPostModel: ObservableObject {
 //                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
 //                        }
                         return nil
-                    }
-                    .map { (compressedVideoData, index) in
-                        (MediaRequestBag(apiUrl: nip96apiURL, uploadtype: "media", filename: "media.mp4", mediaData: compressedVideoData, index: index), nil)
-                    }
+                    })
+//                    .map { (compressedVideoData, index) in
+//                        (MediaRequestBag(apiUrl: nip96apiURL, uploadtype: "media", filename: "media.mp4", mediaData: compressedVideoData, index: index), nil)
+//                    }
                     
                 
-                uploader.queued = mediaRequestBags.map { $0.0 }
-                uploader.onFinish = {
-                    let imetas: [Nostur.Imeta] = mediaRequestBags
-                        .compactMap {
-                            guard let url = $0.0.downloadUrl else { return nil }
-                            return Imeta(url: url, dim: $0.0.dim, hash: $0.0.sha256, blurhash: $0.1)
-                        }
-                    Task { @MainActor in
-                        self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
-                    }
-                    
-                    // clean up video tmp files (compressed videos)
-                    for videoURL in self.typingTextModel.compressedVideoFiles {
-                        try? FileManager.default.removeItem(at: videoURL)
-                    }
-                }
-                uploader.uploadingPublishers(for: mediaRequestBags.map { $0.0 }, keys: keys)
-                    .receive(on: RunLoop.main)
-                    .sink(receiveCompletion: { result in
-                        switch result {
-                        case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
-                            L.og.error("Error uploading images (401): \(error.localizedDescription)")
-                            self.uploadError = "Media upload authorization error"
-                            sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
-                        case .failure(let error):
-                            L.og.error("Error uploading images: \(error.localizedDescription)")
-                            self.uploadError = "Image upload error"
-                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
-                        case .finished:
-                            L.og.debug("All images uploaded successfully")
-                        }
-                    }, receiveValue: { mediaRequestBags in
-                        for mediaRequestBag in mediaRequestBags {
-                            self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
-                        }
-//                        if (self.uploader.finished) {
-//                            let imetas:[Imeta] = mediaRequestBags.compactMap {
-//                                guard let url = $0.downloadUrl else { return nil }
-//                                return Imeta(url: url, dim: $0.dim, hash: $0.sha256hex)
-//                            }
-//                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+//                    .map { (resizedImage, type, blurhash, index) in
+//                        (MediaRequestBag(apiUrl: nip96apiURL, filename: type == PostedImageMeta.ImageType.png ? "media.png" : "media.jpg", mediaData: resizedImage, index: index), blurhash)
+//                    }
+                
+//                let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
+                
+//                uploader.queued = mediaRequestBags.map { $0.0 }
+//                uploader.onFinish = {
+//                    let imetas: [Nostur.Imeta] = mediaRequestBags
+//                        .compactMap {
+//                            guard let url = $0.0.downloadUrl else { return nil }
+//                            return Imeta(url: url, dim: $0.0.dim, hash: $0.0.sha256, blurhash: $0.1)
 //                        }
-                    })
-                    .store(in: &subscriptions)
+//                    Task { @MainActor in
+//                        self._sendNow(imetas: imetas, replyTo: replyTo, quotePost: quotePost, onDismiss: onDismiss)
+//                    }
+//                    
+//                    // clean up video tmp files (compressed videos)
+//                    for videoURL in self.typingTextModel.compressedVideoFiles {
+//                        try? FileManager.default.removeItem(at: videoURL)
+//                    }
+//                }
+//                uploader.uploadingPublishers(for: mediaRequestBags.map { $0.0 }, keys: keys)
+//                    .receive(on: RunLoop.main)
+//                    .sink(receiveCompletion: { result in
+//                        switch result {
+//                        case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
+//                            L.og.error("Error uploading images (401): \(error.localizedDescription)")
+//                            self.uploadError = "Media upload authorization error"
+//                            sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+//                        case .failure(let error):
+//                            L.og.error("Error uploading images: \(error.localizedDescription)")
+//                            self.uploadError = "Image upload error"
+//                            sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+//                        case .finished:
+//                            L.og.debug("All images uploaded successfully")
+//                        }
+//                    }, receiveValue: { mediaRequestBags in
+//                        for mediaRequestBag in mediaRequestBags {
+//                            self.uploader.processResponse(mediaRequestBag: mediaRequestBag)
+//                        }
+////                        if (self.uploader.finished) {
+////                            let imetas:[Imeta] = mediaRequestBags.compactMap {
+////                                guard let url = $0.downloadUrl else { return nil }
+////                                return Imeta(url: url, dim: $0.dim, hash: $0.sha256hex)
+////                            }
+////                            self._sendNow(imetas: imetas, replyTo: replyTo, quotingEvent: quotingEvent, dismiss: dismiss)
+////                        }
+//                    })
+//                    .store(in: &subscriptions)
             }
             else { // old media upload services
                 uploadImages(images: typingTextModel.pastedImages)
