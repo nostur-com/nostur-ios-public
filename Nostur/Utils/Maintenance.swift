@@ -459,7 +459,7 @@ struct Maintenance {
         // Without metadata (kind 0 missing)
         // not our own accounts + following (followingPubkeys = own + following)
         let frContacts = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
-        frContacts.predicate = NSPredicate(format: "couldBeImposter == -1 AND zapperPubkey != nil AND metadata_created_at == 0 AND pubkey NOT IN %@", followingPubkeys)
+        frContacts.predicate = NSPredicate(format: "couldBeImposter == -1 AND zapperPubkey == nil AND metadata_created_at == 0 AND NOT pubkey IN %@", followingPubkeys)
         
         let frContactsbatchDelete = NSBatchDeleteRequest(fetchRequest: frContacts)
         frContactsbatchDelete.resultType = .resultTypeCount
