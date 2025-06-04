@@ -278,6 +278,7 @@ struct Maintenance {
         // IS NOT OWN EVENT
         // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
         // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
+        // DONT DELETE POSTS THAT SHOULD BE SAVED FOR LOCAL FEED STATE RESTORE (LocalFeedState.onScreenIds/.parentIds) ONLY PINNED TABS (CLOUDFEED)
         // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
         
         let feedStateIdsToKeep: Set<String> = Set(LocalFeedStateManager.shared.getFeedStates()
@@ -456,8 +457,9 @@ struct Maintenance {
         // Keep imposter cache
         // Keep zapper pubkey cache
         // Without metadata (kind 0 missing)
+        // not our own accounts + following (followingPubkeys = own + following)
         let frContacts = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
-        frContacts.predicate = NSPredicate(format: "couldBeImposter == -1 AND zapperPubkey != nil AND metadata_created_at == 0")
+        frContacts.predicate = NSPredicate(format: "couldBeImposter == -1 AND zapperPubkey != nil AND metadata_created_at == 0 AND pubkey NOT IN %@", followingPubkeys)
         
         let frContactsbatchDelete = NSBatchDeleteRequest(fetchRequest: frContacts)
         frContactsbatchDelete.resultType = .resultTypeCount
@@ -476,13 +478,13 @@ struct Maintenance {
         // only if contacts > 15000
         // only if WoT size > 7000
         // only older than 2 months (updated_at)
-        // not our own accounts
+        // not our own accounts + following (followingPubkeys = own + following)
         
         guard WebOfTrust.shared.allowedKeysCount > 7000 else { return }
         
         // Keep imposter cache
         let frContactsWoT = Contact.fetchRequest()
-        frContactsWoT.predicate = NSPredicate(format: "updated_at < %i AND couldBeImposter == -1 AND NOT pubkey IN %@", Int64(monthsAgo.timeIntervalSince1970), ownAccountPubkeys)
+        frContactsWoT.predicate = NSPredicate(format: "updated_at < %i AND couldBeImposter == -1 AND NOT pubkey IN %@", Int64(monthsAgo.timeIntervalSince1970), followingPubkeys)
         
         // to keep that have private note
         let privateNotePubkeys = Set(CloudPrivateNote.fetchAll(context: context).filter { $0.pubkey != nil }.map { $0.pubkey })
