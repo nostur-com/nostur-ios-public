@@ -47,7 +47,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                             
                             Text(pfpAttributes.anyName) // Name
                                 .animation(.easeIn, value: pfpAttributes.anyName)
-                                .font(.system(size: 14))
+                                .font(.body)
                                 .foregroundColor(.primary)
                                 .fontWeightBold()
                                 .lineLimit(1)
@@ -66,11 +66,11 @@ struct PostEmbeddedLayout<Content: View>: View {
                                 if let via = nrPost.via {
                                     Text(" · via \(via)") //
                                         .lineLimit(1)
-                                        .font(.system(size: 14))
+                                        .font(.body)
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            .font(.system(size: 14))
+                            .font(.body)
                             .foregroundColor(.secondary)
                         }
                     }
@@ -93,7 +93,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                     
                     Text(pfpAttributes.anyName) // Name
                         .animation(.easeIn, value: pfpAttributes.anyName)
-                        .font(.system(size: 14))
+                        .font(.body)
                         .foregroundColor(.primary)
                         .fontWeightBold()
                         .lineLimit(1)
@@ -112,11 +112,11 @@ struct PostEmbeddedLayout<Content: View>: View {
                         if let via = nrPost.via {
                             Text(" · via \(via)") //
                                 .lineLimit(1)
-                                .font(.system(size: 14))
+                                .font(.body)
                                 .foregroundColor(.secondary)
                         }
                     }
-                    .font(.system(size: 14))
+                    .font(.body)
                     .foregroundColor(.secondary)
                 }
             }

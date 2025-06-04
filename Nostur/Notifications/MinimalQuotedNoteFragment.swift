@@ -20,17 +20,17 @@ struct MinimalQuotedNoteFragment: View {
                         PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 20)
                         .opacity(0.5)
                         Text(nrPost.anyName) // Name
-                            .font(.system(size: 14))
+                            .font(.body)
                             .foregroundColor(.primary.opacity(0.5))
                             .fontWeight(.bold)
                             .lineLimit(1)
                         Text(" · \(nrPost.ago)") //
-                            .font(.system(size: 14))
+                            .font(.body)
                             .foregroundColor(.secondary)
                         if let via = nrPost.via {
                             Text(" · via \(via)") //
                                 .lineLimit(1)
-                                .font(.system(size: 14))
+                                .font(.body)
                                 .foregroundColor(.secondary)
                         }
                     }

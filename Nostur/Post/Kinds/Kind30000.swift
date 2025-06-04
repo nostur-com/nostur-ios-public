@@ -254,6 +254,7 @@ struct Kind30000: View {
         if didLoad {
             ForEach(pfpAttributesForContactsToRender) { pfpAttributes in
                 PubkeyRow(pfp: pfpAttributes)
+                    .lineLimit(1)
                     .id(pfpAttributes.pubkey)
                     .onAppear {
                         bg().perform {

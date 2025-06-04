@@ -32,7 +32,7 @@ struct ReplyingToEditable: View {
                     .foregroundColor(themes.theme.accent)
                     .lineLimit(3)
             }
-            .font(.system(size: 13))
+            .font(.body)
             .fontWeightLight()
         }
         .contentShape(Rectangle())

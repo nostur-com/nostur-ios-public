@@ -86,7 +86,7 @@ struct NRTextDynamic: View {
         let view = UITextView()
 //        _ = view.layoutManager
         view.isScrollEnabled = false
-        view.adjustsFontForContentSizeCategory = false
+        view.adjustsFontForContentSizeCategory = true
         view.textColor = UIColor(self.fontColor)
         view.tintColor = UIColor(accentColor ?? themes.theme.accent)
         view.isSelectable = true
@@ -184,7 +184,7 @@ struct NRTextFixed: UIViewRepresentable {
         view.textColor = UIColor(fontColor)
         view.tintColor = UIColor(accentColor)
         view.linkTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor(accentColor)]
-        view.adjustsFontForContentSizeCategory = false
+        view.adjustsFontForContentSizeCategory = true
         view.isSelectable = true
         view.isEditable = false
         view.dataDetectorTypes = plain ? [] : [.link]

@@ -156,6 +156,7 @@ struct PostHeaderView: View {
                 if couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
                     FollowLink(pubkey: pubkey)
                         .layoutPriority(2)
+                        .lineLimit(1)
                 }
             }
         }
@@ -179,6 +180,7 @@ struct PostHeaderView: View {
                 if couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
                     FollowLink(pubkey: pubkey)
                         .layoutPriority(2)
+                        .lineLimit(1)
                 }
             }
         }

@@ -157,9 +157,12 @@ struct ProfileView: View {
                             .buttonStyle(.borderless)
                         }
                     }
-                    
+
                     HStack(spacing: 0) {
-                        Text("\(nrContact.anyName) ").font(.system(size: 24, weight:.bold))
+                        Text("\(nrContact.anyName) ")
+                            .font(.title)
+                            .fontWeightBold()
+                            .lineLimit(1)
                         NewPossibleImposterLabel(nrContact: nrContact)
                         if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
                             NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
