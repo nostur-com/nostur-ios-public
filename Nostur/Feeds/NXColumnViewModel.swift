@@ -320,6 +320,10 @@ class NXColumnViewModel: ObservableObject {
         pauseFeedSub = nil
         listenForPauseFeed(config)
         
+        saveFeedStateSub?.cancel()
+        saveFeedStateSub = nil
+        listenForSaveFeedStates(config)
+        
         
         // if config.columnType is .following OR .picture
         switch config.columnType {
@@ -612,7 +616,7 @@ class NXColumnViewModel: ObservableObject {
         LocalFeedStateManager.shared.updateFeedState(feedState)
         
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) saveFeedState() \(feedId) - onScreenIds: \(onScreenIds.count) - parentIds: \(parentIds.count) - scrollToId: \(scrollToId ?? "")")
+        L.og.debug("💾 Feed states: ☘️☘️ \(config.name) saveFeedState() \(feedId) - onScreenIds: \(onScreenIds.count) - parentIds: \(parentIds.count) - scrollToId: \(scrollToId ?? "")")
 #endif
     }
     
@@ -1537,6 +1541,17 @@ class NXColumnViewModel: ObservableObject {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.pause()
+            }
+    }
+    
+    private var saveFeedStateSub: AnyCancellable?
+    
+    @MainActor
+    private func listenForSaveFeedStates(_ config: NXColumnConfig) {
+        guard saveFeedStateSub == nil else { return }
+        saveFeedStateSub = FeedsCoordinator.shared.saveFeedStatesSubject
+            .debounce(for: .seconds(0.5), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
                 self?.saveFeedState()
             }
     }
@@ -1767,6 +1782,7 @@ class NXColumnViewModel: ObservableObject {
         onAppearSubjectSub?.cancel()
         resumeFeedSub?.cancel()
         pauseFeedSub?.cancel()
+        saveFeedStateSub?.cancel()
         followsChangedSub?.cancel()
         blockListUpdatedSub?.cancel()
         muteListUpdatedSub?.cancel()

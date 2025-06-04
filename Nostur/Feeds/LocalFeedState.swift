@@ -37,16 +37,26 @@ public final class LocalFeedStateManager {
     public static let shared = LocalFeedStateManager()
     
     private let userDefaultsKey = "localFeedStates"
-    
-    @MainActor
-    private var _states: LocalFeedStates?
-    
+    private var states: LocalFeedStates?
     private var saveToDiskSub: AnyCancellable?
+    private var wipStatesSub: AnyCancellable?
     
     private init() {
         loadFromDisk()
-        saveToDiskSub = FeedsCoordinator.shared.pauseFeedsSubject
-            .debounce(for: .seconds(2), scheduler: RunLoop.main)
+        
+        wipStatesSub = FeedsCoordinator.shared.saveFeedStatesSubject
+            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.main)
+            .sink { [weak self] in
+                Task { @MainActor in
+                    self?.states = LocalFeedStates(localFeedStates: [])
+#if DEBUG
+                    L.og.debug("💾 Feed states: states wiped")
+#endif
+                }
+            }
+        
+        saveToDiskSub = FeedsCoordinator.shared.saveFeedStatesSubject
+            .debounce(for: .seconds(1.5), scheduler: DispatchQueue.main)
             .sink { [weak self] in
                 Task { @MainActor in
                     self?.saveToDisk()
@@ -55,37 +65,39 @@ public final class LocalFeedStateManager {
     }
     
     // MARK: - Public Interface
-    
-    @MainActor
-    public var states: LocalFeedStates? {
-        _states
+
+    public func getFeedStates() -> [LocalFeedState] {
+        return states?.localFeedStates ?? []
     }
-    
+
     public func loadFromDisk() {
         guard let data = UserDefaults.standard.data(forKey: userDefaultsKey),
               let states = try? JSONDecoder().decode(LocalFeedStates.self, from: data) else {
             Task { @MainActor in
-                _states = nil
+                self.states = nil
             }
             return
         }
         Task { @MainActor in
-            _states = states
+            self.states = states
         }
     }
     
     @MainActor
     public func saveToDisk() {
-        guard let states = _states,
+        guard let states = self.states,
               let encoded = try? JSONEncoder().encode(states) else {
             return
         }
         UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
+#if DEBUG
+        L.og.debug("💾 Feed states: saveToDisk() - feeds: \(states.localFeedStates.count)")
+#endif
     }
     
     @MainActor
     public func updateFeedState(_ feedState: LocalFeedState) {
-        var currentStates = _states?.localFeedStates ?? []
+        var currentStates = states?.localFeedStates ?? []
         
         // Remove existing state for this feed if it exists
         currentStates.removeAll { $0.cloudFeedId == feedState.cloudFeedId }
@@ -94,12 +106,12 @@ public final class LocalFeedStateManager {
         currentStates.append(feedState)
         
         // Update in-memory state
-        _states = LocalFeedStates(localFeedStates: currentStates)
+        states = LocalFeedStates(localFeedStates: currentStates)
     }
     
     @MainActor
     public func feedState(for cloudFeedId: String) -> LocalFeedState? {
-        _states?.feedState(for: cloudFeedId)
+        states?.feedState(for: cloudFeedId)
     }
 }
 
@@ -109,3 +121,12 @@ extension LocalFeedStates {
         localFeedStates.first { $0.cloudFeedId == cloudFeedId }
     }
 }
+
+
+// How are Feed states saved?
+
+
+// 1. App goes to background (scenePhase) -> .saveFeedStates() -> saveFeedStatesSubject
+// 2. After 0.1 sec debounce: Wipe old feed states (to only keep pinned tabs): LocalFeedStateManager.wipStatesSub
+// 3. After 0.5 sec debounce: Save feed state for each NXColumnViewModel: listenForSaveFeedStates -> saveFeedState()
+// 4. After 1.5 sec debounce: Save all feed states to NSUserDefaults (LocalFeedStateManager.saveToDiskSub)

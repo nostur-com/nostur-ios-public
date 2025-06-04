@@ -122,6 +122,7 @@ extension AppView {
             
         case .background:
             AppState.shared.appIsInBackground = true
+            FeedsCoordinator.shared.saveFeedStates()
             if !IS_CATALYST {
                 FeedsCoordinator.shared.pauseFeeds()
                 scheduleDatabaseCleaningIfNeeded()

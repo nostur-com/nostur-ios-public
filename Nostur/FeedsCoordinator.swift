@@ -23,4 +23,9 @@ class FeedsCoordinator {
         pauseFeedsSubject.send()
     }
     
+    public var saveFeedStatesSubject = PassthroughSubject<Void, Never>()
+    public func saveFeedStates() {
+        saveFeedStatesSubject.send()
+    }
+    
 }
