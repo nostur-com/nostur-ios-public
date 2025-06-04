@@ -70,13 +70,9 @@ struct LoadingBar: View {
         }
         .frame(height: height)
         .opacity(opacity)
-        .onChange(of: loadingBarViewState) { newViewState in
-            guard newViewState != self.viewState else { return }
+        .onChange(of: loadingBarViewState) { [oldViewState = self.viewState] newViewState in
+            guard newViewState != oldViewState else { return }
             guard newViewState != .finished else { return } // .finished is only set on didSet with .finalLoad
-            
-            if newViewState != .off && opacity != 1.0 {
-                opacity = 1.0
-            }
             
             let duration = switch newViewState {
             case .off, .starting:
@@ -95,6 +91,27 @@ struct LoadingBar: View {
                 0.1
             }
             
+            let goingBackward = [.connecting,.earlyLoad,.fetching,.secondFetching].contains(newViewState) && newViewState.rawValue < oldViewState.rawValue
+            
+            if goingBackward {
+                self.opacity = 0.0
+                self.viewState = .off
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.015) {
+                    self.opacity = 1.0
+                    withAnimation(.snappy(duration: duration)) {
+#if DEBUG
+                        print("🏁🏁 LoadingBar.onChange(of: viewState = \(newViewState)")
+#endif
+                        self.viewState = newViewState
+                    }
+                }
+                return
+            }
+            
+            if !goingBackward && newViewState != .off && opacity != 1.0 {
+                opacity = 1.0
+            }
+            
             if opacity != 0.0 {
                 withAnimation(.snappy(duration: duration)) {
 #if DEBUG
@@ -111,16 +128,16 @@ struct LoadingBar: View {
 }
 
 extension LoadingBar {
-    enum ViewState {
-        case off
-        case starting
-        case connecting
-        case fetching
-        case earlyLoad
-        case secondFetching
-        case finalLoad
-        case finished
-        case timeout
+    enum ViewState: Int {
+        case off = 0
+        case starting = 1
+        case connecting = 2
+        case fetching = 3
+        case earlyLoad = 4
+        case secondFetching = 5
+        case finalLoad = 6
+        case finished = 7
+        case timeout = 8
     }
 }
 
@@ -149,6 +166,16 @@ extension LoadingBar {
             }
             Button("finalLoad") {
                 loadingBarViewState = .finalLoad
+            }
+            
+            Divider()
+            
+            Button("finished") {
+                loadingBarViewState = .finished
+            }
+            
+            Button("timeout") {
+                loadingBarViewState = .timeout
             }
         }
     }
