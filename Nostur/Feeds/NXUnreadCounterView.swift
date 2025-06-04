@@ -18,6 +18,7 @@ struct NXUnreadCounterView: View {
             .frame(width: 61, height: 36)
             .overlay(alignment: .leading) {
                 Text(vm.unreadCount.description)
+                    .font(.system(size: vm.unreadCount > 999 ? 13 : 16, weight: .bold))
                     .animation(.snappy, value: vm.unreadCount)
                     .rollingNumber()
                     .fixedSize()
