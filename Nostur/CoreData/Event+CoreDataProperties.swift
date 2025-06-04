@@ -1133,10 +1133,13 @@ extension Event {
                 // Need to put it in queue to fix relations for replies to root / grouped replies
                 //                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
                 
+                let replyToRootIsSameAsReplyTo = savedEvent.replyToId == replyToRootEtag.id
+                
                 if (savedEvent.replyToId == nil) {
                     savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
                 }
-                if let root = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
+                
+                if !replyToRootIsSameAsReplyTo, let root = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
                     
                     CoreDataRelationFixer.shared.addTask({
                         guard contextWontCrash([savedEvent, root], debugInfo: "EE savedEvent.replyToRoot = root") else { return }
