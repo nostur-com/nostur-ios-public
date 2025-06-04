@@ -69,12 +69,19 @@ struct Kind30000: View {
                 .background(theme.listBackground)
                 .drawingGroup(opaque: true)
                 .onAppear(perform: self.onAppear)
+                .onTapGesture {
+                    navigateTo(nrPost, context: dim.id)
+                }
         }
         else {
             self.normalView
                 .background(theme.listBackground)
                 .drawingGroup(opaque: true)
                 .onAppear(perform: self.onAppear)
+                .onTapGesture {
+                    guard !isDetail else { return }
+                    navigateTo(nrPost, context: dim.id)
+                }
         }
     }
     
