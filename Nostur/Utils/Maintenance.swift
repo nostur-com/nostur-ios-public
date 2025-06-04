@@ -280,8 +280,11 @@ struct Maintenance {
         // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
         // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
         
+        let feedStateIdsToKeep: Set<String> = Set(LocalFeedStateManager.shared.getFeedStates()
+            .flatMap { $0.onScreenIds + Array($0.parentIds) }) // All on screen ids and parent ids from all feed states in 1 set.
+        
         // Ids to keep: own bookmarks, privatenotes
-        let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds))
+        let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(feedStateIdsToKeep)
         
         let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,20,9802,30023,34235} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
@@ -292,7 +295,7 @@ struct Maintenance {
         do {
             let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
             if let count = result.result as? Int, count > 0 {
-                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,20,9802,30023,34235} events")
+                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,20,9802,30023,34235} events - keeping \(mergedIds.count) ids")
             }
         } catch {
             L.maintenance.info("🔴🔴 Failed to delete {1,4,5,6,20,9802,30023,34235} data")
