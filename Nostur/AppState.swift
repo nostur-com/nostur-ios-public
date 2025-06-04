@@ -210,6 +210,8 @@ func startNosturing() async {
     
 #if DEBUG
     if LESS_CACHE && IS_SIMULATOR {
+        LocalFeedStateManager.shared.wipeMemory()
+        
         // To test if things are properly fetched and not broken if not already cached from before
         await Maintenance.deleteAllEventsAndContacts(context: bg())
     }
@@ -325,7 +327,7 @@ let IS_IPHONE = !ProcessInfo.processInfo.isMacCatalystApp && UIDevice.current.us
 let GUEST_ACCOUNT_PUBKEY = "c118d1b814a64266730e75f6c11c5ffa96d0681bfea594d564b43f3097813844"
 let EXPLORER_PUBKEY = "afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320"
 
-let LESS_CACHE = false // For testing, deletes all events and contacts at start up
+let LESS_CACHE = false // For testing, deletes all events and contacts at start up + wipe feed states
 
 #if targetEnvironment(simulator)
     let IS_SIMULATOR = true

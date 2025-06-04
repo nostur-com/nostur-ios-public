@@ -113,6 +113,12 @@ public final class LocalFeedStateManager {
     public func feedState(for cloudFeedId: String) -> LocalFeedState? {
         states?.feedState(for: cloudFeedId)
     }
+    
+    public func wipeMemory() {
+        Task { @MainActor in
+            states = LocalFeedStates(localFeedStates: [])
+        }
+    }
 }
 
 // MARK: - Convenience Methods
