@@ -4072,6 +4072,9 @@
         }
       }
     },
+    "finished" : {
+
+    },
     "First: %lf Final: %lf" : {
       "localizations" : {
         "en" : {

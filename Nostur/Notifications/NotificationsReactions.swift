@@ -103,7 +103,9 @@ struct NotificationsReactions: View {
     }
     
     func fetchNewer() {
-        L.og.debug("🥎🥎 fetchNewer() (REACTIONS")
+#if DEBUG
+        L.og.debug("🥎🥎 fetchNewer() (REACTIONS)")
+#endif
         let fetchNewerTask = ReqTask(
             reqCommand: { taskId in
                 bg().perform {

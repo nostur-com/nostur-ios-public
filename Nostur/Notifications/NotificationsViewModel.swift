@@ -16,6 +16,7 @@ class NotificationsViewModel: ObservableObject {
         set { UserDefaults.standard.setValue(newValue, forKey: "last_local_notification_timestamp") }
     }
     
+    // TODO: Make separate req for kind:4
     static let UNREAD_KINDS: Set<Int> = Set([1,4,6,7,20,9735,9802,30023,34235]) // posts, dms, reposts, reactions, zaps, highlights, articles, video
     
     static let shared = NotificationsViewModel()
