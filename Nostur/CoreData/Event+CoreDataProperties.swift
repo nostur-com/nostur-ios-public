@@ -1040,6 +1040,9 @@ extension Event {
                     CoreDataRelationFixer.shared.addTask({
                         guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: "#[0] savedEvent.firstQuote = kind6firstQuote") else { return }
                         savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+                        
+                        // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+                        savedEvent.otherPubkey = kind6firstQuote.pubkey
                     })
                 }
                 else {
@@ -1048,20 +1051,17 @@ extension Event {
                         CoreDataRelationFixer.shared.addTask({
                             guard contextWontCrash([savedEvent, repostedEvent], debugInfo: "II savedEvent.firstQuote = repostedEvent") else { return }
                             savedEvent.firstQuote = repostedEvent
+                            
+                            // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+                            savedEvent.otherPubkey = repostedEvent.pubkey
                         })
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
 //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                         ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
                     }
-                }
-  
-                // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
-                // if we already have the firstQuote (reposted post), we use that .pubkey
-                if let otherPubkey = savedEvent.firstQuote?.pubkey {
-                    savedEvent.otherPubkey = otherPubkey
-                } // else we take the pubkey from the tags (should be there)
-                else if let firstP = event.firstP() {
-                    savedEvent.otherPubkey = firstP
+                    else if let firstP = event.firstP() { // or lastP? not sure
+                        savedEvent.otherPubkey = firstP
+                    }
                 }
             }
             
@@ -1323,11 +1323,13 @@ extension Event {
                 }
             }
             
-            if let kind6firstQuote = kind6firstQuote {
+            if let kind6firstQuote {
                 CoreDataRelationFixer.shared.addTask({
                     guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: ".repost savedEvent.firstQuote = kind6firstQuote") else { return }
                     savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
                     
+                    // if we already have the firstQuote (reposted post), we use that .pubkey
+                    savedEvent.otherPubkey = kind6firstQuote.pubkey
                     
                     if let repostedEvent = savedEvent.firstQuote { // we already got firstQuote passed in as param
                         repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
@@ -1353,13 +1355,8 @@ extension Event {
                     }
                 })
             }
-            
-            // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
-            // if we already have the firstQuote (reposted post), we use that .pubkey
-            if let otherPubkey = savedEvent.firstQuote?.pubkey {
-                savedEvent.otherPubkey = otherPubkey
-            } // else we take the pubkey from the tags (should be there)
-            else if let firstP = event.firstP() {
+            else if let firstQuoteId = savedEvent.firstQuoteId,  let firstP = event.firstP() { // or lastP?
+                // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
                 savedEvent.otherPubkey = firstP
             }
         }
