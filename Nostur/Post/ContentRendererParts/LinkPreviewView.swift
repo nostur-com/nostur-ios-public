@@ -46,6 +46,7 @@ struct LinkPreviewView: View {
                                 .foregroundColor(Color.gray)
                         }
                     }
+                    .clipped()
                 
                 VStack(alignment: .leading, spacing: 0) {
                     Text((tags["title"] ?? tags["fallback_title"]) ?? "")
@@ -66,7 +67,7 @@ struct LinkPreviewView: View {
                 .padding(5)
             }
             .background(theme.background)
-            .frame(height: DIMENSIONS.PREVIEW_HEIGHT + 20)
+            .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
             .clipShape(RoundedRectangle(cornerRadius: 10.0))
             .onTapGesture {
                 UIApplication.shared.open(url)
@@ -112,11 +113,12 @@ struct LinkPreviewView_Previews: PreviewProvider {
     static var previews: some View {
         //            let url = "https://open.spotify.com/track/5Tbpp3OLLClPJF8t1DmrFD"
         //            let url = "https://youtu.be/qItugh-fFgg"
-        let url = URL(string:"https://youtu.be/QU9kRF9tHPU")!
+//        let url = URL(string:"https://youtu.be/QU9kRF9tHPU")!
+        let url = URL(string:"https://nostr.land/restore")!
 //        let url = URL(string:"https://nostur.com")!
         NBNavigationStack {
             LinkPreviewView(url: url, autoload: true, theme: Themes.default.theme)
-                .padding(.vertical, 5)
+                .padding(10)
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
         .environmentObject(Themes.default)
