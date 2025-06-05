@@ -92,20 +92,20 @@ class RepostsFeedModel: ObservableObject {
     }
     
     public func showMore() {
-        // TODO: Implement solution for gap reactions 60d ago and 223d ago caused by: We have reactions until 60d, we fetch until 60d with limit 500, we receive from 250d ago and newer but because of limit result is cut off at 223d because relays don't support ASC/DESC.
+        // TODO: Implement solution for gap reposts 60d ago and 223d ago caused by: We have reposts until 60d, we fetch until 60d with limit 500, we receive from 250d ago and newer but because of limit result is cut off at 223d because relays don't support ASC/DESC.
         guard let pubkey else { return }
         bg().perform { [weak self] in
             guard let self else { return }
             if let until = allRepostEvents.last?.created_at {
                 req(RM.getMentions(
                     pubkeys: [pubkey],
-                    kinds: [7],
+                    kinds: [6],
                     limit: 500,
                     until: NTimestamp(timestamp: Int(until))
                 ))
             }
             else {
-                req(RM.getMentions(pubkeys: [pubkey], kinds: [7], limit: 500))
+                req(RM.getMentions(pubkeys: [pubkey], kinds: [6], limit: 500))
             }
             
             self.load(limit: 500)
