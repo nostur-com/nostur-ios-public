@@ -44,7 +44,7 @@ struct Repost: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            RepostHeader(pubkey: nrPost.pubkey, anyName: nrPost.anyName)
+            RepostHeader(pfpAttributes: nrPost.pfpAttributes)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
             
@@ -168,8 +168,7 @@ struct Repost: View {
 struct RepostHeader: View {
     @EnvironmentObject private var dim: DIMENSIONS
 
-    let pubkey: String
-    let anyName: String
+    @ObservedObject public var pfpAttributes: PFPAttributes
     
     var body: some View {
         HStack(spacing: 4) {
@@ -177,21 +176,21 @@ struct RepostHeader: View {
                 .fontWeightBold()
                 .scaleEffect(0.6)
             
-            ObservedPFP(pubkey: pubkey, size: 20.0)
+            PFP(pubkey: pfpAttributes.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20.0)
             
             Group {
-                Text(anyName)
+                Text(pfpAttributes.anyName)
                 Text("reposted")
             }
             .font(.subheadline)
             .fontWeightBold()
             .onTapGesture {
-                navigateTo(ContactPath(key: pubkey), context: dim.id)
+                navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes, context: dim.id)
             }
         }
         .foregroundColor(.gray)
         .onTapGesture {
-            navigateTo(ContactPath(key: pubkey), context: dim.id)
+            navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes, context: dim.id)
         }
         .padding(.leading, 30)
     }
