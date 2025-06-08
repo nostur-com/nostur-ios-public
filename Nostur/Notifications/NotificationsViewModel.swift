@@ -16,9 +16,6 @@ class NotificationsViewModel: ObservableObject {
         set { UserDefaults.standard.setValue(newValue, forKey: "last_local_notification_timestamp") }
     }
     
-    // TODO: Make separate req for kind:4
-    static let UNREAD_KINDS: Set<Int> = Set([1,4,6,7,20,9735,9802,30023,34235]) // posts, dms, reposts, reactions, zaps, highlights, articles, video
-    
     static let shared = NotificationsViewModel()
     
     private init() {
@@ -254,9 +251,16 @@ class NotificationsViewModel: ObservableObject {
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
-        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS),
+        
+        // Public req for notifications
+        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,6,7,20,9735,9802,30023,34235],
                            subscriptionId: "Notifications", since: sinceNTimestamp),
             activeSubscriptionId: "Notifications")
+        
+        // Separate req for kind 4, because possibly needs auth
+        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [4],
+                           subscriptionId: "Notifications-A", since: sinceNTimestamp),
+            activeSubscriptionId: "Notifications-A")
     }
     
     public var requestSince: Int64 { // TODO: If event .created_at, is in the future don't save date
@@ -282,7 +286,10 @@ class NotificationsViewModel: ObservableObject {
             self?.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds:Array(Self.UNREAD_KINDS), subscriptionId: "Notifications-CATCHUP", since: since))
+                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP", since: since))
+                
+                // Separate req for kind 4, because possibly needs auth
+                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [4], subscriptionId: "NotificationsDM-CATCHUP", since: since))
             }
         }
     }

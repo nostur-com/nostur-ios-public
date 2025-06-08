@@ -32,7 +32,8 @@ class MessageParser {
     static let shared = MessageParser()
 
     // Subscriptions that will be kept open after EOSE
-    static let ACTIVE_SUBSCRIPTIONS = Set(["Following","Explore","Notifications","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC", "LIVEEVENTS", "-DB-ROOMPRESENCE", "-DB-CHAT-"])
+    static let ACTIVE_SUBSCRIPTIONS = Set(
+        ["Following","Explore","Notifications","Notifications-A","REALTIME-DETAIL", "REALTIME-DETAIL-A", "NWC", "NC", "LIVEEVENTS", "-DB-ROOMPRESENCE", "-DB-CHAT-"])
     
     private var bgQueue = bg()
     private var poolQueue = ConnectionPool.shared.queue

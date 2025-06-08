@@ -111,7 +111,43 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         
         // Check for any new notifications (relays), if there are unread mentions or new posts (notification bell) it will trigger a (iOS) notification
         Task {
-            await checkForNotifications()
+            // Prepare
+            guard !AccountsState.shared.activeAccountPublicKey.isEmpty else {
+                task.setTaskCompleted(success: true)
+                return
+            }
+            if !Importer.shared.didPreload {
+                await Importer.shared.preloadExistingIdsCache()
+            }
+            
+            guard let account = try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context())
+            else {
+                task.setTaskCompleted(success: true)
+                return
+            }
+            let accountData = account.toStruct()
+            if !WebOfTrust.shared.didWoT {
+                WebOfTrust.shared.loadWoT()
+            }
+            
+            // Setup connections
+            let relays: [RelayData] = CloudRelay.fetchAll(context: DataProvider.shared().viewContext).map { $0.toStruct() }
+            for relay in relays {
+                ConnectionPool.shared.addConnection(relay)
+            }
+            ConnectionPool.shared.connectAll()
+            
+            // Do checks
+            await checkForNotifications(accountData: accountData)
+            await checkForDMNotifications(accountData: accountData)
+            
+            // Check new posts
+            NewPostNotifier.shared.runCheck(force: true)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                ConnectionPool.shared.disconnectAll()
+            }
+            
             task.setTaskCompleted(success: true)
         }
     }
@@ -221,89 +257,98 @@ func scheduleNewPostNotification(_ contactsInfo: [ContactInfo], singlePostText: 
 }
 
 // The background fetch task will run this to check for new notifications
-func checkForNotifications() async {
+func checkForNotifications(accountData: AccountData) async {
     await withCheckedContinuation { continuation in
-        Task { @MainActor in
-            guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { continuation.resume(); return }
-            if !Importer.shared.didPreload {
-                Task {
-                    await Importer.shared.preloadExistingIdsCache()
-                }
-            }
-            guard let account = try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context())
-            else {
-                continuation.resume(); return
-            }
-            let accountData = account.toStruct()
-            if !WebOfTrust.shared.didWoT {
-                WebOfTrust.shared.loadWoT()
-            }
-            
-            // Setup connections
-            let relays: [RelayData] = CloudRelay.fetchAll(context: DataProvider.shared().viewContext).map { $0.toStruct() }
-            for relay in relays {
-                ConnectionPool.shared.addConnection(relay)
-            }
-            ConnectionPool.shared.connectAll()
-            
-            // Check mentions, dms
-            bg().perform {
-                let reqTask = ReqTask(
-                    debounceTime: 0.05,
-                    timeout: 10.0,
-                    subscriptionId: "BG",
-                    reqCommand: { taskId in
+        // Check mentions
+        bg().perform {
+            let reqTask = ReqTask(
+                debounceTime: 0.05,
+                timeout: 10.0,
+                subscriptionId: "BG",
+                reqCommand: { taskId in
 #if DEBUG
-                        L.og.debug("checkForNotifications.reqCommand")
+                    L.og.debug("checkForNotifications.reqCommand")
 #endif
-                        let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
-                        bg().perform {
-                            NotificationsViewModel.shared.needsUpdate = true
-                            
-                            DispatchQueue.main.async {
-                                // Mentions kinds (1,9802,30023) and DM (4)
-                                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,4,20,9802,30023,34235], subscriptionId: taskId, since: since))
-                            }
-                        }
-                    },
-                    processResponseCommand: { taskId, relayMessage, event in
+                    let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
+                    bg().perform {
+                        NotificationsViewModel.shared.needsUpdate = true
+                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,20,9802,30023,34235], subscriptionId: taskId, since: since))
+                    }
+                },
+                processResponseCommand: { taskId, relayMessage, event in
 #if DEBUG
-                        L.og.debug("checkForNotifications.processResponseCommand")
+                    L.og.debug("checkForNotifications.processResponseCommand")
 #endif
-                        bg().perform {
-                            if let thisTask = Backlog.shared.task(with: taskId) {
-                                Backlog.shared.remove(thisTask)
-                            }
+                    bg().perform {
+                        if let thisTask = Backlog.shared.task(with: taskId) {
+                            Backlog.shared.remove(thisTask)
                         }
-                        Task {
-                            await NotificationsViewModel.shared.checkForUnreadMentionsBackground(accountData: accountData)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                                ConnectionPool.shared.disconnectAll()
-                            }
-                            continuation.resume()
-                        }
-                    },
-                    timeoutCommand: { taskId in
-#if DEBUG
-                        L.og.debug("checkForNotifications.timeoutCommand")
-#endif
-                        bg().perform {
-                            if let thisTask = Backlog.shared.task(with: taskId) {
-                                Backlog.shared.remove(thisTask)
-                            }
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                            ConnectionPool.shared.disconnectAll()
-                        }
+                    }
+                    Task {
+                        await NotificationsViewModel.shared.checkForUnreadMentionsBackground(accountData: accountData)
                         continuation.resume()
                     }
-                )
-                Backlog.shared.add(reqTask)
-                reqTask.fetch()
-            }
-            
-            // Check new posts
-            NewPostNotifier.shared.runCheck(force: true)
+                },
+                timeoutCommand: { taskId in
+#if DEBUG
+                    L.og.debug("checkForNotifications.timeoutCommand")
+#endif
+                    bg().perform {
+                        if let thisTask = Backlog.shared.task(with: taskId) {
+                            Backlog.shared.remove(thisTask)
+                        }
+                    }
+                    continuation.resume()
+                }
+            )
+            Backlog.shared.add(reqTask)
+            reqTask.fetch()
+        }
+    }
+}
+
+func checkForDMNotifications(accountData: AccountData) async {
+    await withCheckedContinuation { continuation in
+        // Check dms
+        bg().perform {
+            let reqTask = ReqTask(
+                debounceTime: 0.05,
+                timeout: 10.0,
+                subscriptionId: "BG-4",
+                reqCommand: { taskId in
+#if DEBUG
+                    L.og.debug("checkForDMNotifications.reqCommand")
+#endif
+                    let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
+                    bg().perform {
+                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[4], subscriptionId: taskId, since: since))
+                    }
+                },
+                processResponseCommand: { taskId, relayMessage, event in
+#if DEBUG
+                    L.og.debug("checkForDMNotifications.processResponseCommand")
+#endif
+                    bg().perform {
+                        if let thisTask = Backlog.shared.task(with: taskId) {
+                            Backlog.shared.remove(thisTask)
+                        }
+                    }
+                    continuation.resume()
+                },
+                timeoutCommand: { taskId in
+#if DEBUG
+                    L.og.debug("checkForDMNotifications.timeoutCommand")
+#endif
+                    bg().perform {
+                        if let thisTask = Backlog.shared.task(with: taskId) {
+                            Backlog.shared.remove(thisTask)
+                        }
+                    }
+                    continuation.resume()
+                }
+            )
+            Backlog.shared.add(reqTask)
+            reqTask.fetch()
         }
     }
 }
