@@ -143,7 +143,7 @@ struct LiveEventDetail: View {
             .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
                 if let zapCustomizerSheetInfo {
-                    AppEnvironment {
+                    AppEnvironment(la: la) {
                         ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
                             .presentationDetentsLarge()
                             .presentationBackgroundCompat(themes.theme.listBackground)
@@ -152,7 +152,7 @@ struct LiveEventDetail: View {
             })
             .nbNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
                 if let paymentInfo {
-                    AppEnvironment {
+                    AppEnvironment(la: la) {
                         PaymentAmountSelector(paymentInfo: paymentInfo)
                             .presentationDetentsLarge()
                             .presentationBackgroundCompat(themes.theme.listBackground)

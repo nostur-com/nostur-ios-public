@@ -12,6 +12,7 @@ import Nuke
 import NavigationBackport
 
 struct Settings: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var network: NetworkMonitor = .shared
@@ -678,18 +679,21 @@ struct Settings: View {
             NRNavigationStack {
                 DeleteAccountSheet()
             }
+            .environmentObject(la)
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
             NRNavigationStack {
                 AlbyNWCConnectSheet()
             }
+            .environmentObject(la)
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
         .sheet(isPresented: $customNWCsheetShown) {
             NRNavigationStack {
                 CustomNWCConnectSheet()
             }
+            .environmentObject(la)
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }

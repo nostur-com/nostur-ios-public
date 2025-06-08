@@ -11,19 +11,16 @@ import SwiftUI
 // wrap in AppEnvironment { } to always have our EnvironmentObjects
 struct AppEnvironment<Content: View>: View {
     
-    @EnvironmentObject private var la: LoggedInAccount
-    
-    // Need here to use for .tint
-    @ObservedObject private var themes: Themes = .default
+    public var la: LoggedInAccount
     
     @ViewBuilder
     public let content: Content
         
     var body: some View {
         self.content
-            .tint(themes.theme.accent)
-            .accentColor(themes.theme.accent)
-            .environmentObject(themes)
+            .tint(Themes.default.theme.accent)
+            .accentColor(Themes.default.theme.accent)
+            .environmentObject(Themes.default)
             .environmentObject(AppState.shared)
             .environmentObject(AccountsState.shared)
             .environmentObject(NewPostNotifier.shared)

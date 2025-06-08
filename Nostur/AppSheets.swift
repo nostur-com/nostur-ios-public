@@ -43,16 +43,18 @@ struct WithAppSheets: ViewModifier {
                     AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys, theme: themes.theme)
                         .presentationDetentsLarge()
                 }
+                .environmentObject(loggedInAccount)
             })
             .sheet(isPresented: $asm.readOnlySheetVisible) {
                 NRSheetNavigationStack {
                     ReadOnlyAccountInformationSheet()
                         .presentationDetentsLarge()
                 }
+                .environmentObject(loggedInAccount)
             }
             .sheet(item: $asm.askLoginInfo, content: { askLoginInfo in
                 NBNavigationStack { // Note: Can't use NRSheetNavigationStack here but forgot why
-                    AppEnvironment {
+                    AppEnvironment(la: loggedInAccount) {
                         AskLoginSheet(askLoginInfo: askLoginInfo, account: loggedInAccount.account)
                     }
                 }
@@ -72,6 +74,7 @@ struct WithAppSheets: ViewModifier {
                         .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
                     }
                 }
+                .environmentObject(loggedInAccount)
             }
         
             .background {

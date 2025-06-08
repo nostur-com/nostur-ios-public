@@ -11,6 +11,7 @@ import NavigationBackport
 struct DirectMessageRows: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var themes: Themes
+    @EnvironmentObject private var la: LoggedInAccount
     let pubkey: String
     @Binding var conversationRows: [Conversation]
     
@@ -19,7 +20,7 @@ struct DirectMessageRows: View {
         List {
             ForEach(conversationRows) { conv in
                 NBNavigationLink(value: conv) {
-                    AppEnvironment {
+                    AppEnvironment(la: la) {
                         ConversationRowView(conv)
                             .environmentObject(dim)
                     }

@@ -9,13 +9,15 @@ import SwiftUI
 import NavigationBackport
 
 struct NRNavigationStack<Content: View>: View {
+    
+    @EnvironmentObject private var la: LoggedInAccount
 
     @ViewBuilder
     public let content: Content
     
     var body: some View {
         NBNavigationStack {
-            AppEnvironment {
+            AppEnvironment(la: la) {
                 content
             }       
         }
@@ -26,13 +28,15 @@ struct NRNavigationStack<Content: View>: View {
 // Note: dismiss doesn't work with NRSheetNavigationStack in .sheet. So use NBNavigationStack directly in sheet. .presentationDetents also don't work when using this. wtf!
 struct NRSheetNavigationStack<Content: View>: View {
     
+    @EnvironmentObject private var la: LoggedInAccount
+    
     @ViewBuilder
     public let content: Content
     
     var body: some View {
         NBNavigationStack {
             AvailableWidthContainer {
-                AppEnvironment {
+                AppEnvironment(la: la) {
                     content
                 }
             }

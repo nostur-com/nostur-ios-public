@@ -92,9 +92,8 @@ struct LiveEventsBanner: View {
                             }
                         }
                         .presentationBackgroundCompat(themes.theme.listBackground)
-                        .environmentObject(la)
-                    
                 }
+                .environmentObject(la)
             }
             
         }

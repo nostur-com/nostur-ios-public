@@ -446,18 +446,17 @@ struct MainFeedsScreen: View {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                         ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                             .environmentObject(dim)
-                            .environmentObject(la)
                     }
                     .environmentObject(themes)
                 }
                 else {
                     ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                         .environmentObject(dim)
-                        .environmentObject(la)
                         .environmentObject(themes)
                 }
             }
             .presentationBackgroundCompat(themes.theme.listBackground)
+            .environmentObject(la)
         }
         
         .onReceive(receiveNotification(.newTemplatePost)) { _ in

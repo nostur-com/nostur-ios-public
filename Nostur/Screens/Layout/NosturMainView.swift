@@ -10,9 +10,10 @@ import NavigationBackport
 
 struct NosturMainView: View {
     @ObservedObject private var ss: SettingsStore = .shared
+    @EnvironmentObject private var la: LoggedInAccount
     
     var body: some View {
-        AppEnvironment {
+        AppEnvironment(la: la) {
             if IS_CATALYST && ss.proMode {
                 if #available(iOS 16.0, *) {
                     Zoomable {
