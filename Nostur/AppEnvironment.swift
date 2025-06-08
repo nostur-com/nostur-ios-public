@@ -87,3 +87,13 @@ extension EnvironmentValues {
 }
 
 
+struct WithSelectableTextEnvironmentKey: EnvironmentKey {
+    static let defaultValue: Bool = false
+}
+
+extension EnvironmentValues {
+    var withSelectableText: Bool {
+        get { self[WithSelectableTextEnvironmentKey.self] }
+        set { self[WithSelectableTextEnvironmentKey.self] = newValue }
+    }
+}

@@ -27,7 +27,6 @@ class NRTextParser { // TEXT things
     private init() { 
         self.hashtagIcons = Self.prepareHashtagIcons()
         self.paragraphStyle.lineBreakMode = .byWordWrapping
-//        self.paragraphStyle.lineHeightMultiple = 0.96
 
         self.attributes = [
             .font: UIFont.preferredFont(forTextStyle: .body),
@@ -87,7 +86,19 @@ class NRTextParser { // TEXT things
                 return AttributedStringWithPs(input: text, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
             }
             else {
-                return AttributedStringWithPs(input: text, nxOutput: try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
+                
+                // Still need this for isDetail to get selectable text (UITextView)
+                let mutableAttributedString = try NSMutableAttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+                
+                mutableAttributedString.addAttributes(
+                    attributes,
+                    range: NSRange(location: 0, length: mutableAttributedString.length)
+                )
+                
+                // Only for Text(), should be faster, less .makeUITextView
+                let nxOutput = try AttributedString(markdown: newerTextWithPs.text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
+                
+                return AttributedStringWithPs(input: text, nxOutput: nxOutput, output: NSAttributedString(attributedString: mutableAttributedString), pTags: textWithPs.pTags + newerTextWithPs.pTags, event: event)
             }
         }
         catch {

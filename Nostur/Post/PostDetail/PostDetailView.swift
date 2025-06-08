@@ -91,6 +91,7 @@ struct PostDetailView: View {
         }
             .nosturNavBgCompat(themes: themes)
             .background(themes.theme.listBackground)
+            .environment(\.withSelectableText, true) // Selectable text in detail, parents, replies
     }
 }
 

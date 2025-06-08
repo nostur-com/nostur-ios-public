@@ -28,10 +28,11 @@ struct NRContentTextRenderer: View, Equatable {
     public var accentColor: Color? = nil
     public var onTap: (() -> Void)? = nil
     
+    @Environment(\.withSelectableText) private var withSelectableText
     @EnvironmentObject private var dim: DIMENSIONS
     
     var body: some View {
-        NRContentTextRendererInner(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isScreenshot: isScreenshot, isDetail: isDetail, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
+        NRContentTextRendererInner(withSelectableText: withSelectableText, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isScreenshot: isScreenshot, isDetail: isDetail, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
     }
 }
 
@@ -52,7 +53,7 @@ struct NRContentTextRendererInner: View {
     
     @EnvironmentObject private var dim: DIMENSIONS
     
-    init(attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isScreenshot: Bool = false, isDetail: Bool = false, isPreview: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
+    init(withSelectableText: Bool = false, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isScreenshot: Bool = false, isDetail: Bool = false, isPreview: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
         self.attributedStringWithPs = attributedStringWithPs
         self.availableWidth = availableWidth
         self.isScreenshot = isScreenshot
@@ -65,12 +66,15 @@ struct NRContentTextRendererInner: View {
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
         
-        if let nxOutput = attributedStringWithPs.nxOutput {
+        if !withSelectableText, let nxOutput = attributedStringWithPs.nxOutput { // Not selectable, but faster
             _nxText = State(wrappedValue: nxOutput)
 //            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT)) // Reminder: also add back below reparsedNxOutput
         }
-        else if let output = attributedStringWithPs.output {
+        else if let output = attributedStringWithPs.output { // Use selectable for isDetail
             _text = State(wrappedValue: isDetail ? output : output.prefix(NRTEXT_LIMIT))
+        }
+        else if let nxOutput = attributedStringWithPs.nxOutput { // missing for some reason? fall back
+            _nxText = State(wrappedValue: nxOutput)
         }
         else {
             _text = State(wrappedValue: NSAttributedString(string: ""))
