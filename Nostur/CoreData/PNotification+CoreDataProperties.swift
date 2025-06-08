@@ -43,7 +43,7 @@ extension PersistentNotification : Identifiable {
         let request = NSFetchRequest<PersistentNotification>(entityName: "PersistentNotification")
         
         if let id {
-            request.predicate = NSPredicate(format: "id == %@", id)
+            request.predicate = NSPredicate(format: "id == %@ AND NOT id == nil", id)
         }
         else if let pubkey, let type {
             request.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", pubkey, type.rawValue)
@@ -55,7 +55,7 @@ extension PersistentNotification : Identifiable {
                 request.predicate = NSPredicate(format: "type_ == %@ AND NOT id == nil", type.rawValue)
             }
             else {
-                request.predicate = NSPredicate(value: true)
+                request.predicate = NSPredicate(format: "id != nil")
             }
         }
         request.fetchLimit = 1
