@@ -194,8 +194,8 @@ struct ComposePost: View {
                                     if let replyToNRPost = replyToNRPost {
                                         // Reply, so full-width false and connecting line to bottom
                                         KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom, theme: themes.theme)
+                                            .environment(\.nxViewingContext, [.preview, .selectableText, .postParent])
                                             .onTapGesture { }
-                                            .disabled(true)
                                     }
                                     
                                     HStack(alignment: .top) {
@@ -211,11 +211,11 @@ struct ComposePost: View {
                                     
                                     if let quotingNRPost = quotePost?.nrPost {
                                         KindResolver(nrPost: quotingNRPost, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: true, isEmbedded: true, theme: themes.theme)
+                                            .environment(\.nxViewingContext, [.preview, .selectableText, .postEmbedded])
                                             .fixedSize(horizontal: false, vertical: true)
                                             .onTapGesture { }
-                                            .disabled(true)
                                             .environmentObject(
-                                                DIMENSIONS.embeddedDim(availableWidth: geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20), isScreenshot: false)
+                                                DIMENSIONS.embeddedDim(availableWidth: geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20))
                                             )
                                             .padding(.leading, SettingsStore.shared.fullWidthImages ? 0 : DIMENSIONS.ROW_PFP_SPACE)
                                     }
@@ -295,7 +295,6 @@ struct ComposePost: View {
                     })
                     .onAppear {
                         previewDIM.listWidth = geo.size.width != 0 ? geo.size.width : dim.listWidth
-                        previewDIM.isPreviewContext = true
                     }
                 }
                 .overlay {
