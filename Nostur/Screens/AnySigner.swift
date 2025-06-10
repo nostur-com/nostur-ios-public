@@ -11,6 +11,7 @@ import NostrEssentials
 
 /// Sign any unsigned nostr event with your key
 struct AnySigner: View {
+    @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var themes: Themes
     @Environment(\.dismiss) private var dismiss
     @State private var input = ""
@@ -19,23 +20,28 @@ struct AnySigner: View {
     
     @State private var tab = "Signer"
     
+    @State private var okId: String? = nil
+    @State private var isPublishing = false
+    @State private var publishedToRelays: [String] = []
+    
     private func publish() {
-        if let signedNEvent = signedNEvent {
-            ConnectionPool.shared
-                .sendMessage(
-                    NosturClientMessage(
-                        clientMessage: NostrEssentials.ClientMessage(
-                            type: .EVENT
-                        ),
-                        relayType: .WRITE,
-                        message: signedNEvent.wrappedEventJson()
-                    ),
-                    accountPubkey: signedNEvent.publicKey!
-                )
+        guard let signedNEvent = signedNEvent else { return }
+        isPublishing = true
+        
+        
+        self.okId = signedNEvent.id
             
-            // TODO: Should also save in database, but AnyNEvent is not NEvent so can't call saveEvent()
-            // Need to refactor AnyNEvent to just be NEvent...
-        }
+        ConnectionPool.shared
+            .sendMessage(
+                NosturClientMessage(
+                    clientMessage: NostrEssentials.ClientMessage(
+                        type: .EVENT
+                    ),
+                    relayType: .WRITE,
+                    message: signedNEvent.wrappedEventJson()
+                ),
+                accountPubkey: signedNEvent.publicKey!
+            )
     }
 
     var body: some View {
@@ -83,6 +89,19 @@ struct AnySigner: View {
                     Text(error)
                         .fontWeight(.bold)
                         .foregroundColor(.red)
+                }
+                if isPublishing || !publishedToRelays.isEmpty {
+                    Section {
+                        if !publishedToRelays.isEmpty {
+                            Text("Published to:")
+                            ForEach(publishedToRelays, id: \.self) { relay in
+                                Text(relay)
+                            }
+                        }
+                        else if isPublishing {
+                            ProgressView()
+                        }
+                    }
                 }
             }
             .scrollContentBackgroundHidden()
@@ -134,6 +153,14 @@ struct AnySigner: View {
                         .disabled(AccountsState.shared.loggedInAccount?.account.privateKey == nil)
                     }
                 }
+            }
+        }
+        .onReceive(MessageParser.shared.okSub.receive(on: RunLoop.main)) { okMessage in
+            // okMessage = (id, relay)
+            guard let okId else { return }
+            if okMessage.0 == okId {
+                publishedToRelays.append(okMessage.1)
+                isPublishing = false
             }
         }
     }
@@ -209,7 +236,7 @@ struct AnyNEvent: Codable {
         case signature = "sig"
     }
 
-    init(content:NSetMetadata) {
+    init(content: NSetMetadata) {
         self.createdAt = NTimestamp.init(date: Date())
         self.kind = .setMetadata
         self.content = try! content.encodedString()
@@ -219,7 +246,7 @@ struct AnyNEvent: Codable {
         self.signature = ""
     }
 
-    init(content:String) {
+    init(content: String) {
         self.kind = .textNote
         self.createdAt = NTimestamp.init(date: Date())
         self.content = content
