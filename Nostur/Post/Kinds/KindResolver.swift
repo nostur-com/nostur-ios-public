@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct KindResolver: View {
-    
+    @Environment(\.nxViewingContext) private var nxViewingContext
     public let nrPost: NRPost
     public var fullWidth: Bool = false
     public var hideFooter: Bool = false // For rendering in NewReply
@@ -21,7 +21,7 @@ struct KindResolver: View {
     public var theme: Theme
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {

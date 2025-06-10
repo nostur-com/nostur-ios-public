@@ -202,8 +202,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var dTag: String?
     var alt: String?
     var aTag: String = ""
-    var isScreenshot = false // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
-    var isPreview = false // same but can use NRText (for hashtags)
     
     var anyName: String {
         if kind == 443 {
@@ -244,13 +242,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var isNSFW: Bool = false
     var sizeEstimate: RowSizeEstimate
     
-    init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isScreenshot: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
+    init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
         var isAwaiting = false
         
         self.event = event // Only touch this in BG context!!!
         self.postRowDeletableAttributes = PostRowDeletableAttributes(blocked: Self.isBlocked(pubkey: event.pubkey), deletedById: event.deletedById)
-        self.isScreenshot = isScreenshot
-        self.isPreview = isPreview
         self.id = event.id
         self.shortId = String(event.id.prefix(8))
         self.pubkey = event.pubkey
@@ -360,7 +356,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005a"); isAwaiting = true
             }
             else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount, isScreenshot: isScreenshot))
+                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
             }
         } // why event.firstQuote_ doesn't work??
         else if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bg()) {
@@ -527,7 +523,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     primaryColor: Themes.default.theme.primary,
                     previewImages: event.previewImages,
                     previewVideos: event.previewVideos,
-                    isPreviewContext: isPreview
+                    isPreviewContext: isPreview // render without nostr: or not (in preview no, to discourage)
             )
             self.linkPreviewURLs = linkPreviewURLs
             self.galleryItems = galleryItems
@@ -541,14 +537,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 case .nevent1(let identifier):
                     guard let id = identifier.eventId else { continue }
                     guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event, isScreenshot: isScreenshot))
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
                 case .note1(let noteId):
                     guard let id = hex(noteId) else { continue }
                     guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event, isScreenshot: isScreenshot))
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
                 case .noteHex(let id):
                     guard let event = Event.fetchEvent(id: id, context: bg()) else { continue }
-                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event, isScreenshot: isScreenshot))
+                    self.contentElements[index] = ContentElement.nrPost(NRPost(event: event))
                 default:
                     continue
                 }
@@ -566,7 +562,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.replyToId = event.replyToId
         if withReplyTo, let replyTo = event.replyTo {
-            self.replyTo = NRPost(event: replyTo, isScreenshot: isScreenshot)
+            self.replyTo = NRPost(event: replyTo)
         }
         else if !isAwaiting && withReplyTo && event.replyToId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.003"); isAwaiting = true
@@ -574,7 +570,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         self.replyToRootId = event.replyToRootId
         if withReplyTo, let replyToRoot = event.replyToRoot {
-            self.replyToRoot = NRPost(event: replyToRoot, isScreenshot: isScreenshot)
+            self.replyToRoot = NRPost(event: replyToRoot)
         }
         else if !isAwaiting && withReplyTo && event.replyToRootId != nil {
             EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.004"); isAwaiting = true
@@ -767,7 +763,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     primaryColor: Themes.default.theme.primary,
                     previewImages: event.previewImages,
                     previewVideos: event.previewVideos,
-                    isPreviewContext: isPreview
+                    isPreviewContext: false
             )
             let (contentElements, _) = filteredForPreview(contentElementsDetail)
             

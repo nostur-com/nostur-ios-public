@@ -12,6 +12,7 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
     private var theme: Theme
     private let nrPost: NRPost
@@ -20,11 +21,10 @@ struct ContentRenderer: View { // VIEW things
     private let availableWidth: CGFloat
     private let contentElements: [ContentElement]
     private let forceAutoload: Bool
-    private let isPreviewContext: Bool
     private var zoomableId: String
     @StateObject private var childDIM: DIMENSIONS
     
-    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, isPreviewContext: Bool = false, zoomableId: String = "Default") {
+    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, zoomableId: String = "Default") {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
@@ -32,13 +32,12 @@ struct ContentRenderer: View { // VIEW things
         self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
         self.forceAutoload = forceAutoload
         self.theme = theme
-        self.isPreviewContext = isPreviewContext
         self.zoomableId = zoomableId
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isPreviewContext: isPreviewContext))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {
@@ -91,6 +90,7 @@ struct ContentRenderer: View { // VIEW things
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                             .onTapGesture {
+                                guard !nxViewingContext.contains(.preview) else { return }
                                 guard !isDetail else { return }
                                 navigateTo(nrPost, context: childDIM.id)
                             }
@@ -108,6 +108,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                         .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: childDIM.id)
                         }
@@ -116,6 +117,7 @@ struct ContentRenderer: View { // VIEW things
                     Text(verbatim: code)
                         .font(.system(.body, design: .monospaced))
                         .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: childDIM.id)
                         }
@@ -130,7 +132,8 @@ struct ContentRenderer: View { // VIEW things
 //                            guard !isDetail else { return }
 //                            navigateTo(nrPost, context: childDIM.id)
 //                        }
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isScreenshot: nrPost.isScreenshot, isDetail: isDetail, isPreview: nrPost.isPreview, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
+                            guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: childDIM.id)
                     })
@@ -139,6 +142,7 @@ struct ContentRenderer: View { // VIEW things
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
                         .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: childDIM.id)
                         }
@@ -154,6 +158,7 @@ struct ContentRenderer: View { // VIEW things
                 case .video(let mediaContent):
                     EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme)
                         .padding(.horizontal, fullWidth ? -10 : 0)
+                        .padding(.vertical, 10)
                     
                 case .image(let galleryItem):
 //                    Color.red
@@ -168,7 +173,7 @@ struct ContentRenderer: View { // VIEW things
                         galleryItems: nrPost.galleryItems,
                         autoload: shouldAutoload,
                         isNSFW: nrPost.isNSFW,
-                        generateIMeta: isPreviewContext,
+                        generateIMeta: nxViewingContext.contains(.preview),
                         zoomableId: zoomableId
                     )
                     .padding(.horizontal, fullWidth ? -10 : 0)
@@ -214,7 +219,7 @@ struct ContentRenderer: View { // VIEW things
                             .resizable()
                             .scaledToFit()
                             .frame(maxWidth: 600)
-                            .padding(.top, 10)
+                            .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .overlay(alignment: .center) {
                                 Image(systemName:"play.circle")
@@ -231,6 +236,7 @@ struct ContentRenderer: View { // VIEW things
                 default:
                     EmptyView()
                         .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: childDIM.id)
                         }

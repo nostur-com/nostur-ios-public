@@ -70,6 +70,7 @@ enum NXContentRendererViewState {
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct NXContentRenderer: View { // VIEW things
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var vc: ViewingContext
     public let nxEvent: NXEvent
     public let contentElements: [ContentElement]
@@ -79,7 +80,7 @@ struct NXContentRenderer: View { // VIEW things
     @State private var viewState: NXContentRendererViewState = .loading
     
     private var shouldAutoload: Bool {
-        return !nxEvent.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nxEvent))
+        return !nxEvent.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nxEvent) || nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {
@@ -88,10 +89,7 @@ struct NXContentRenderer: View { // VIEW things
             case .loading:
                 ProgressView()
                     .onAppear {
-                        viewState = .ready(DIMENSIONS.embeddedDim(
-                            availableWidth: vc.availableWidth,
-                            isScreenshot: vc.isScreenshot)
-                        )
+                        viewState = .ready(DIMENSIONS.embeddedDim(availableWidth: vc.availableWidth))
                     }
             case .ready(let childDIM):
                 ForEach(contentElements.indices, id:\.self) { index in
@@ -155,7 +153,7 @@ struct NXContentRenderer: View { // VIEW things
                             .font(.system(.body, design: .monospaced))
                             .id(index)
                     case .text(let attributedStringWithPs): // For text notes
-                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: vc.availableWidth, isScreenshot: vc.isScreenshot, isDetail: vc.isDetail, isPreview: vc.isPreview, primaryColor: vc.theme.primary, accentColor: vc.theme.accent)
+                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: vc.availableWidth, isDetail: vc.isDetail, primaryColor: vc.theme.primary, accentColor: vc.theme.accent)
                             .equatable()
                             .id(index)
                     case .md(let markdownContentWithPs): // For long form articles
@@ -200,7 +198,7 @@ struct NXContentRenderer: View { // VIEW things
                                 .resizable()
                                 .scaledToFit()
                                 .frame(maxWidth: 600)
-                                .padding(.top, 10)
+                                .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .id(index)
                         }
@@ -217,7 +215,7 @@ struct NXContentRenderer: View { // VIEW things
                                 .resizable()
                                 .scaledToFit()
                                 .frame(maxWidth: 600)
-                                .padding(.top, 10)
+                                .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .id(index)
                                 .overlay(alignment: .center) {

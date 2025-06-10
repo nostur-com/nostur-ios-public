@@ -9,6 +9,7 @@ import SwiftUI
 import MarkdownUI
 
 struct Kind30023: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
@@ -62,7 +63,7 @@ struct Kind30023: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -94,7 +95,7 @@ struct Kind30023: View {
                     }
                     
                     HStack {
-                        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
+                        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
                                 navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
                             }
@@ -303,8 +304,9 @@ struct Kind30023: View {
                 ViewThatFits(in: .horizontal) {
                     HStack {
                         Spacer()
-                        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: dim.isScreenshot)
+                        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
+                                guard !nxViewingContext.contains(.preview) else { return }
                                 navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
                             }
 
@@ -315,6 +317,7 @@ struct Kind30023: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateTo(contact, context: dim.id)
                                 }
                             
@@ -349,7 +352,7 @@ struct Kind30023: View {
                     VStack {
                         HStack {
                             Spacer()
-                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: dim.isScreenshot)
+                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
                             if let contact = nrPost.contact {
                                 Text(contact.anyName)
                                     .foregroundColor(.primary)
@@ -357,6 +360,7 @@ struct Kind30023: View {
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
+                                        guard !nxViewingContext.contains(.preview) else { return }
                                         navigateTo(contact, context: dim.id)
                                     }
                                 
@@ -397,7 +401,7 @@ struct Kind30023: View {
                 VStack {
                     HStack {
                         Spacer()
-                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: dim.isScreenshot)
+                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
                         if let contact = nrPost.contact {
                             Text(contact.anyName)
                                 .foregroundColor(.primary)
@@ -405,6 +409,7 @@ struct Kind30023: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateTo(contact, context: dim.id)
                                 }
                             
@@ -450,6 +455,7 @@ struct Kind30023: View {
 //            .padding(20)
         .contentShape(Rectangle())
         .onTapGesture {
+            guard !nxViewingContext.contains(.preview) else { return }
             navigateTo(nrPost, context: dim.id)
         }
     }

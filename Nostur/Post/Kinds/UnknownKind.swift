@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct UnknownKind: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
@@ -53,7 +54,7 @@ struct UnknownKind: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     @StateObject private var model = UnknownKindModel()

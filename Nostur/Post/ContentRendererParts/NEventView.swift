@@ -32,28 +32,28 @@ struct NEventView: View {
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .center)
-            .onBecomingVisible { [weak vm, weak dim] in
+            .onBecomingVisible { [weak vm] in
                 guard let eventId = identifier.eventId else {
                     vm?.error("Problem parsing nostr identifier")
                     return
                 }
                 let fetchParams: FetchVM.FetchParams = (
                     prio: true,
-                    req: { [weak vm, weak dim] taskId in
-                        bg().perform { [weak vm, weak dim] in // 1. CHECK LOCAL DB
-                            guard let vm, let dim else { return }
+                    req: { [weak vm] taskId in
+                        bg().perform { [weak vm] in // 1. CHECK LOCAL DB
+                            guard let vm else { return }
                             if let event = Event.fetchEvent(id: eventId, context: bg()) {
-                                vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                                vm.ready(NRPost(event: event, withFooter: false))
                             }
                             else { // 2. ELSE CHECK RELAY
                                 req(RM.getEvent(id: eventId, subscriptionId: taskId))
                             }
                         }
                     },
-                    onComplete: { [weak vm, weak dim] relayMessage, event in
-                        guard let vm, let dim else { return }
+                    onComplete: { [weak vm] relayMessage, event in
+                        guard let vm else { return }
                         if let event = event {
-                            vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                            vm.ready(NRPost(event: event, withFooter: false))
                         }
                         else if let event = Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
                             if vm.state == .altLoading, let relay = identifier.relays.first {
@@ -61,7 +61,7 @@ struct NEventView: View {
                                 L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
 #endif
                             }
-                            vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                            vm.ready(NRPost(event: event, withFooter: false))
                         }
                         // Still don't have the event? try to fetch from relay hint
                         // TODO: Should try a relay we don't already have in our relay set

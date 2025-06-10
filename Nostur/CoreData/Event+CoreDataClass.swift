@@ -16,7 +16,6 @@ public class Event: NSManagedObject, Identifiable {
     var zapState: ZapState?
     var parentEvents: [Event] = []
     
-    var isScreenshot: Bool = false // Must use Text
     var previewImages: [PostedImageMeta] = []
     var previewVideos: [PostedVideoMeta] = []
     var cancellationId: UUID?

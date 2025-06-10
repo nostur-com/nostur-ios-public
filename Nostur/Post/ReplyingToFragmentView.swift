@@ -9,6 +9,7 @@ import SwiftUI
 import Combine
 
 struct ReplyingToFragmentView: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private let nrPost: NRPost
     @ObservedObject private var replyingToAttributes: ReplyingToAttributes
     private var theme: Theme
@@ -22,10 +23,10 @@ struct ReplyingToFragmentView: View {
     var body: some View {
         if let rendered = replyingToAttributes.replyingToUsernamesMarkDown {
             Text(rendered)
-                    .fontWeight(.light)
-                    .foregroundColor(theme.secondary)
-                    .frame(maxWidth:.infinity, alignment: .leading)
-//                    .background(Color.random)
+                .fontWeight(.light)
+                .foregroundColor(theme.secondary)
+                .frame(maxWidth:.infinity, alignment: .leading)
+                .allowsHitTesting(!nxViewingContext.contains(.preview))
         }
         else {
             EmptyView()

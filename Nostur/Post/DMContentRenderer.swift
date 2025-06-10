@@ -26,7 +26,7 @@ struct DMContentRenderer: View { // VIEW things
         self.contentElements = contentElements
         self.theme = theme
         self.isSentByCurrentUser = isSentByCurrentUser
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 130, isScreenshot: false))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 130))
     }
     
     private var dmAvailableWidth: CGFloat {
@@ -88,7 +88,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth - 130, isScreenshot: false, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth - 130, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
                         .equatable()
                         .environmentObject(childDIM)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts

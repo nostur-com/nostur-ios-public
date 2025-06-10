@@ -70,7 +70,7 @@ struct WithSheets: ViewModifier {
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
     
-    @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: min(402, UIScreen.main.bounds.width), isScreenshot: true)
+    @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: min(402, UIScreen.main.bounds.width))
     
     func body(content: Content) -> some View {
         content
@@ -378,7 +378,6 @@ struct WithSheets: ViewModifier {
                     
                     
                     let nrPost = notification.object as! NRPost
-                    nrPost.isScreenshot = true // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
                     
                     let renderer = ImageRenderer(content:
                         VStack(spacing:0) {
@@ -412,6 +411,7 @@ struct WithSheets: ViewModifier {
                         .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                         .environment(\.colorScheme, colorScheme)
                         .environmentObject(themes)
+                        .environment(\.nxViewingContext, [.screenshot, .postDetail]) // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
                     )
                     
                     

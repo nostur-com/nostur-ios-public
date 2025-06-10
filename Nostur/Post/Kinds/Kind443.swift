@@ -9,6 +9,7 @@ import SwiftUI
 
 // https://github.com/nostur-com/nids/blob/main/02.md
 struct Kind443: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.openURL) private var openURL
     @ObservedObject private var settings:SettingsStore = .shared
     
@@ -22,7 +23,7 @@ struct Kind443: View {
     }
     
     private var shouldAutoload: Bool {
-        SettingsStore.shouldAutodownload(nrPost)
+        SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot)
     }
     
     var body: some View {

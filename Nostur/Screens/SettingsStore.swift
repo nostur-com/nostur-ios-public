@@ -590,8 +590,6 @@ final class SettingsStore: ObservableObject {
         guard let la else { return false }
 
         if AccountsState.shared.bgFullAccountPubkeys.contains(nrPost.pubkey) { return true }
-        
-        if nrPost.isScreenshot { return true }
         if la.isFollowing(pubkey: nrPost.pubkey) { return true }
 
         switch SettingsStore.shared.autoDownloadFrom {

@@ -11,13 +11,13 @@ import SwiftUI
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @ObservedObject private var themes: Themes = .default
     @ObservedObject private var nrPost: NRPost
     @EnvironmentObject private var dim: DIMENSIONS
     
     private var navTitleHidden: Bool = false
     
-    private var isParent = false
     private var connect: ThreadConnectDirection? = nil // For thread connecting line between profile pics in thread
     private let INDENT = DIMENSIONS.POST_ROW_PFP_WIDTH + DIMENSIONS.POST_PFP_SPACE
     
@@ -26,9 +26,8 @@ struct PostAndParent: View {
     @State private var didLoad = false
     @State private var didFetchParent = false
     
-    init(nrPost: NRPost, isParent: Bool = false, navTitleHidden: Bool = false, connect: ThreadConnectDirection? = nil) {
+    init(nrPost: NRPost, navTitleHidden: Bool = false, connect: ThreadConnectDirection? = nil) {
         self.nrPost = nrPost
-        self.isParent = isParent
         self.navTitleHidden = navTitleHidden
         self.connect = connect
     }
@@ -41,8 +40,8 @@ struct PostAndParent: View {
             if let replyTo = nrPost.replyTo {
                 if replyTo.deletedById == nil {
                     let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
-                    PostAndParent(nrPost: replyTo, isParent: true, connect: connect)
-//                            .padding(10)
+                    PostAndParent(nrPost: replyTo, connect: connect)
+                        .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .background(themes.theme.listBackground)
                 }
                 else {
@@ -91,18 +90,21 @@ struct PostAndParent: View {
             // OUR (DETAIL) REPLY:
             // MARK: DETAIL NOTE
             VStack(alignment: .leading, spacing: 0) {
-                if isParent {
+                if nxViewingContext.contains(.postParent) {
                     PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: connect)
+                        .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .background(
                             themes.theme.listBackground
                                 .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateTo(nrPost, context: dim.id)
                                 }
                         )
                 }
                 else {
                     PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: themes.theme)
+                        .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
                         .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
                         .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
@@ -129,7 +131,7 @@ struct PostAndParent: View {
                         QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                     }
                     
-                    if (!isParent) {
+                    if (!nxViewingContext.contains(.postParent)) {
                         
                         // Fetch all related (e and p.kind=0)
                         // (the events and contacts mentioned in this DETAIL NOTE.

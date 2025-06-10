@@ -797,7 +797,7 @@ public final class NewPostModel: ObservableObject {
             if (!self.typingTextModel.pastedVideos.isEmpty) {
                 previewEvent.previewVideos = self.typingTextModel.pastedVideos
             }
-            let nrPost = NRPost(event: previewEvent, withFooter: false, isScreenshot: true, isPreview: true)
+            let nrPost = NRPost(event: previewEvent, withFooter: false)
             DispatchQueue.main.async { [weak self] in
                 self?.previewNEvent = finalNEvent
                 self?.previewNRPost = nrPost

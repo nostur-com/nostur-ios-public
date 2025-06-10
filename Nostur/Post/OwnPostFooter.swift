@@ -12,7 +12,6 @@ import Combine
 // .flags
 // .sendNow()
 // .unpublish()
-// .isScreenshot
 
 class OwnPostAttributes: ObservableObject {
     private let id: String
@@ -55,9 +54,9 @@ class OwnPostAttributes: ObservableObject {
 }
 
 struct OwnPostFooter: View {
-
-    let nrPost: NRPost
-    @ObservedObject var own: OwnPostAttributes
+    @Environment(\.nxViewingContext) private var nxViewingContext
+    private let nrPost: NRPost
+    @ObservedObject private var own: OwnPostAttributes
     @State private var unpublishing = false
     private var theme: Theme
     
@@ -112,7 +111,7 @@ struct OwnPostFooter: View {
                 .padding(.bottom, 5)
                 .foregroundColor(Color.primary)
             }
-            else if !nrPost.isScreenshot && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
+            else if nxViewingContext.isDisjoint(with: [.screenshot, .preview]) && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
                 HStack {
                     if own.flags == "nsecbunker_unsigned" && own.relaysCount != 0 {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)

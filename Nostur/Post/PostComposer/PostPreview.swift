@@ -44,6 +44,7 @@ struct PostPreview: View {
 //                .debugDimensions("PostPreview.ScrollView")
             AnyStatus()
             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
+                .environment(\.nxViewingContext, [.preview, .postDetail])
                 .padding(10)
                 .disabled(true)
                 .environmentObject(dim)
@@ -119,7 +120,6 @@ func createPreviewEvent(_ event: NEvent) -> Event {
     previewEvent.likesCount = 0
     previewEvent.isRepost = event.kind == .repost
     previewEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
-    previewEvent.isScreenshot = true
             
     if (event.kind == .textNote) {
         // THIS EVENT REPLYING TO SOMETHING

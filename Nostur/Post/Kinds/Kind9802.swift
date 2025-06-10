@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct Kind9802: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
@@ -60,7 +61,7 @@ struct Kind9802: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -81,6 +82,7 @@ struct Kind9802: View {
             content
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     navigateTo(nrPost, context: dim.id)
                 }
         }
@@ -90,6 +92,7 @@ struct Kind9802: View {
                 content
                     .contentShape(Rectangle())
                     .onTapGesture {
+                        guard !nxViewingContext.contains(.preview) else { return }
                         navigateTo(nrPost, context: dim.id)
                     }
                 
@@ -101,7 +104,7 @@ struct Kind9802: View {
     var content: some View {
         
         // Comment on quote from "comment" tag
-        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, isPreviewContext: dim.isPreviewContext)
+        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
             .frame(maxWidth: .infinity, alignment:.leading)
         
         // The highlight, from .content
@@ -113,6 +116,7 @@ struct Kind9802: View {
                 .padding(20)
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     if let firstE = nrPost.firstE {
                         navigateTo(NotePath(id: firstE), context: dim.id)
                     }
@@ -138,6 +142,7 @@ struct Kind9802: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     navigateTo(ContactPath(key: hlAuthorPubkey), context: dim.id)
                 }
                 .padding(.trailing, 40)

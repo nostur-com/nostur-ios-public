@@ -61,24 +61,24 @@ struct EmbedById: View {
         let id = id
         let fetchParams: FetchVM.FetchParams = (
             prio: true,
-            req: { [weak vm = self.vm, weak dim = self.dim] taskId in
+            req: { [weak vm = self.vm] taskId in
                 bg().perform {
-                    guard let vm, let dim else { return }
+                    guard let vm else { return }
                     if let event = Event.fetchEvent(id: id, context: bg()) {
-                        vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                        vm.ready(NRPost(event: event, withFooter: false))
                     }
                     else {
                         req(RM.getEvent(id: id, subscriptionId: taskId))
                     }
                 }
             },
-            onComplete: { [weak vm = self.vm, weak dim = self.dim] relayMessage, event in
-                guard let vm, let dim else { return }
+            onComplete: { [weak vm = self.vm] relayMessage, event in
+                guard let vm else { return }
                 if let event = event {
-                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                    vm.ready(NRPost(event: event, withFooter: false))
                 }
                 else if let event = Event.fetchEvent(id: id, context: bg()) {
-                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                    vm.ready(NRPost(event: event, withFooter: false))
                 }
                 else if [.initializing, .loading].contains(vm.state) {
                     // try search relays

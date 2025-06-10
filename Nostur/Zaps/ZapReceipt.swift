@@ -11,6 +11,7 @@ import Combine
 // Experiment with new "Processor" Combine mechanism
 
 struct ZapReceipt: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var themes: Themes
     @EnvironmentObject private var dim: DIMENSIONS
     
@@ -75,6 +76,7 @@ struct ZapReceipt: View {
                             .offset(x: 6, y: 6)
                     }
                     .onTapGesture {
+                        guard !nxViewingContext.contains(.preview) else { return }
                         navigateTo(ContactPath(key: fromPubkey), context: dim.id)
                     }
                 
@@ -128,6 +130,7 @@ struct ZapReceipt: View {
 }
 
 struct ZappedFrom: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     let pubkey: String
     var name: String?
     var couldBeImposter: Int = 0
@@ -142,6 +145,7 @@ struct ZappedFrom: View {
                 .lineLimit(2)
                 .layoutPriority(2)
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     navigateTo(ContactPath(key: pubkey, navigationTitle: name ?? String(pubkey.prefix(11))), context: context)
                 }
             

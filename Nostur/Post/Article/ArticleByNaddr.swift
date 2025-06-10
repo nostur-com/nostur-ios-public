@@ -31,7 +31,7 @@ struct ArticleByNaddr: View {
                 }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .onAppear { [weak vm, weak dim] in
+                    .onAppear { [weak vm] in
                         guard let naddr = try? ShareableIdentifier(naddr1),
                               let kind = naddr.kind,
                               let pubkey = naddr.pubkey,
@@ -43,14 +43,14 @@ struct ArticleByNaddr: View {
                         
                         let fetchParams: FetchVM.FetchParams = (
                             prio: true,
-                            req: { [weak vm, weak dim] taskId in
-                                bg().perform { [weak vm, weak dim] in // 1. CHECK LOCAL DB
-                                    guard let vm, let dim else { return }
+                            req: { [weak vm] taskId in
+                                bg().perform { [weak vm] in // 1. CHECK LOCAL DB
+                                    guard let vm else { return }
                                     if let event = Event.fetchReplacableEvent(kind,
                                                                                    pubkey: pubkey,
                                                                                    definition: definition,
                                                                                    context: bg()) {
-                                        vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                                        vm.ready(NRPost(event: event, withFooter: false))
                                     }
                                     else { // 2. ELSE CHECK RELAY
                                         req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId))
@@ -58,10 +58,10 @@ struct ArticleByNaddr: View {
                                     }
                                 }
                             },
-                            onComplete: { [weak vm, weak dim] relayMessage, event in
-                                guard let vm, let dim else { return }
+                            onComplete: { [weak vm] relayMessage, event in
+                                guard let vm else { return }
                                 if let event = event {
-                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                                    vm.ready(NRPost(event: event, withFooter: false))
                                 }
                                 else if let event = Event.fetchReplacableEvent(kind,
                                                                                     pubkey: pubkey,
@@ -70,7 +70,7 @@ struct ArticleByNaddr: View {
                                     if vm.state == .altLoading, let relay = naddr.relays.first {
                                         L.og.debug("Event found on using relay hint: \(event.id) - \(relay)")
                                     }
-                                    vm.ready(NRPost(event: event, withFooter: false, isScreenshot: dim.isScreenshot))
+                                    vm.ready(NRPost(event: event, withFooter: false))
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set

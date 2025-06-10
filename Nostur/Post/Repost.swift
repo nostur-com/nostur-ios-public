@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct Repost: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var noteRowAttributes: NoteRowAttributes
     private var hideFooter = true // For rendering in NewReply
@@ -39,7 +40,7 @@ struct Repost: View {
     }
     
     private var shouldForceAutoLoad: Bool { // To override auto download of the reposted post
-        SettingsStore.shouldAutodownload(nrPost)
+        SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot)
     }
     
     var body: some View {

@@ -11,6 +11,7 @@ import OrderedCollections
 // Kind 30000: Follow sets: categorized groups of users a client may choose to check out in different circumstances
 // Also kind: 39089
 struct Kind30000: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
@@ -70,6 +71,7 @@ struct Kind30000: View {
                 .drawingGroup(opaque: true)
                 .onAppear(perform: self.onAppear)
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     navigateTo(nrPost, context: dim.id)
                 }
         }
@@ -79,6 +81,7 @@ struct Kind30000: View {
                 .drawingGroup(opaque: true)
                 .onAppear(perform: self.onAppear)
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     guard !isDetail else { return }
                     navigateTo(nrPost, context: dim.id)
                 }
@@ -100,7 +103,7 @@ struct Kind30000: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -290,6 +293,7 @@ struct Kind30000: View {
 
 
 struct PubkeyRow: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject var pfp: PFPAttributes
     
@@ -299,6 +303,7 @@ struct PubkeyRow: View {
             Text(pfp.anyName)
         }
         .onTapGesture {
+            guard !nxViewingContext.contains(.preview) else { return }
             if let nrContact = pfp.contact {
                 navigateTo(nrContact, context: dim.id)
             }

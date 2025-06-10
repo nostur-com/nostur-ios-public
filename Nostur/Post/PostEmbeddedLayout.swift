@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PostEmbeddedLayout<Content: View>: View {
-    
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
@@ -40,8 +40,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                     if !authorAtBottom {
                         HStack(spacing: 5) {
                             // profile image
-                            PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
+                            PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                                 }
                             
@@ -52,6 +53,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                                 .fontWeightBold()
                                 .lineLimit(1)
                                 .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                                 }
                                 
@@ -86,8 +88,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                 HStack(spacing: 5) {
                     Spacer()
                     // profile image
-                    PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nrPost.isScreenshot)
+                    PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                         .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
                             navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                         }
                     
@@ -98,6 +101,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                         .fontWeightBold()
                         .lineLimit(1)
                         .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
                             navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
                         }
                         
@@ -179,6 +183,7 @@ struct PostEmbeddedLayout<Content: View>: View {
     }
     
     private func navigateToPost() {
+        guard !nxViewingContext.contains(.preview) else { return }
         navigateTo(nrPost, context: parentDIM.id)
     }
 }

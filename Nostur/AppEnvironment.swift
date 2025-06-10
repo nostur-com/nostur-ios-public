@@ -86,14 +86,29 @@ extension EnvironmentValues {
     }
 }
 
-
-struct WithSelectableTextEnvironmentKey: EnvironmentKey {
-    static let defaultValue: Bool = false
+struct NXViewingContextEnvironmentKey: EnvironmentKey {
+    static let defaultValue: Set<NXViewingContextOptions> = []
 }
 
 extension EnvironmentValues {
-    var withSelectableText: Bool {
-        get { self[WithSelectableTextEnvironmentKey.self] }
-        set { self[WithSelectableTextEnvironmentKey.self] = newValue }
+    var nxViewingContext: Set<NXViewingContextOptions> {
+        get { self[NXViewingContextEnvironmentKey.self] }
+        set { self[NXViewingContextEnvironmentKey.self] = newValue }
     }
+}
+
+enum NXViewingContextOptions {
+    case selectableText // will use UITextView instead of Text
+    
+    case detailPane // contains postDetail/postParent/postReply in child views
+    
+    case postDetail // Actual detail post being viewed
+    case postParent // a parent of a detail post
+    case postReply // replies of a detail post
+    
+    case postEmbedded // a post embedded/quoted in another post
+    
+    case preview // Preview screen when composing a new post
+    case screenshot // hide 'Sent to 0 relays' in preview footer, disable animated gifs, Text instead of NRText
+    
 }

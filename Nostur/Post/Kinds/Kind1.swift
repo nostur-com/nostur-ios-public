@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct Kind1: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
@@ -34,10 +35,6 @@ struct Kind1: View {
         
         return dim.availableNoteRowImageWidth()
     }
-    
-//    private var imageWidth: CGFloat {
-//        dim.listWidth - 20
-//    }
     
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
     
@@ -71,7 +68,7 @@ struct Kind1: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -81,7 +78,7 @@ struct Kind1: View {
 //        #endif
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload, theme: theme) { 
             if (isDetail) {
-                if missingReplyTo || nrPost.isScreenshot {
+                if missingReplyTo || nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let subject = nrPost.subject {
@@ -98,12 +95,12 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView")
                 
-                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, isPreviewContext: dim.isPreviewContext)
+                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
                     .frame(maxWidth: .infinity, alignment:.leading)
             }
             else {
                 
-                if missingReplyTo || nrPost.isScreenshot {
+                if missingReplyTo || nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost, theme: theme)
                 }
                 if let subject = nrPost.subject {
@@ -120,7 +117,7 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView2")
                 
-                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme, isPreviewContext: dim.isPreviewContext)
+                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
 //                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: 900, alignment: .top)

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NRPostHeaderContainer: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private let nrPost: NRPost
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject var settings: SettingsStore = .shared
@@ -81,6 +82,7 @@ struct NRPostHeaderContainer: View {
     }
     
     private func nameTapped() {
+        guard !nxViewingContext.contains(.preview) else { return }
         guard let contact = nrPost.contact else { return }
         navigateTo(contact, context: dim.id)
     }
@@ -101,6 +103,7 @@ struct NRPostHeaderContainer: View {
 }
 
 struct PostHeaderView: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var la: LoggedInAccount
     
     public let pubkey: String
@@ -126,7 +129,10 @@ struct PostHeaderView: View {
                 .contentTransitionOpacity()
                 .lineLimit(1)
                 .layoutPriority(2)
-                .onTapGesture { onTap?() }
+                .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
+                    onTap?()
+                }
             
             if restricted {
                 RestrictedLabel()
@@ -153,7 +159,7 @@ struct PostHeaderView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                if couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
+                if !nxViewingContext.contains(.preview) && couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
                     FollowLink(pubkey: pubkey)
                         .layoutPriority(2)
                         .lineLimit(1)
@@ -177,7 +183,7 @@ struct PostHeaderView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                if couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
+                if !nxViewingContext.contains(.preview) && couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50 {
                     FollowLink(pubkey: pubkey)
                         .layoutPriority(2)
                         .lineLimit(1)

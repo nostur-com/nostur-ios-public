@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ChatRenderer: View { // VIEW things
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private var theme: Theme
     private let nrChat: NRChatMessage
     
@@ -25,11 +26,11 @@ struct ChatRenderer: View { // VIEW things
         self.forceAutoload = forceAutoload
         self.theme = theme
         self.zoomableId = zoomableId
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth, isScreenshot: false))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
     }
     
     private var shouldAutoload: Bool {
-        return !nrChat.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(nrChat))
+        return !nrChat.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(nrChat) || nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {

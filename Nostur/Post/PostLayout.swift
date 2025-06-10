@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PostLayout<Content: View, TitleContent: View>: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
@@ -163,7 +164,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     @ViewBuilder
     private var regularPFP: some View {
         if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
-            LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nrPost.isScreenshot)
+            LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nxViewingContext.contains(.screenshot))
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
@@ -173,6 +174,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     }
                 }
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
                         if let status = liveEvent.status, status == "planned" {
                             navigateTo(liveEvent, context: dim.id)
@@ -200,7 +202,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
         }
         else {
-            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
+            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
@@ -210,6 +212,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     }
                 }
                 .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
                     navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: dim.id)
                 }
         }
@@ -217,7 +220,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     
     @ViewBuilder
     private var itemPFP: some View { // No live event animation for item PFP
-        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nrPost.isScreenshot)
+        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
             .frame(width: 20.0, height: 20.0)
             .onTapGesture {
                 navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
@@ -243,6 +246,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     .lineLimit(1)
                     .layoutPriority(2)
                     .onTapGesture {
+                        guard !nxViewingContext.contains(.preview) else { return }
                         navigateTo(contact, context: dim.id)
                     }
                 

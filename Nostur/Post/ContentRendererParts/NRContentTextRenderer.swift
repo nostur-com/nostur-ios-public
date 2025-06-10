@@ -21,30 +21,29 @@ struct NRContentTextRenderer: View, Equatable {
     
     public let attributedStringWithPs: AttributedStringWithPs
     public var availableWidth: CGFloat? = nil
-    public var isScreenshot = false
     public var isDetail = false
-    public var isPreview = false
     public var primaryColor: Color? = nil
     public var accentColor: Color? = nil
     public var onTap: (() -> Void)? = nil
     
-    @Environment(\.withSelectableText) private var withSelectableText
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
     
     var body: some View {
-        NRContentTextRendererInner(withSelectableText: withSelectableText, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isScreenshot: isScreenshot, isDetail: isDetail, isPreview: isPreview, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
+        NRContentTextRendererInner(nxViewingContext: nxViewingContext, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
     }
 }
+
+let SELECTABLE_TEXT_CONTEXTS: Set<NXViewingContextOptions> = Set([.detailPane, .selectableText, .preview])
 
 struct NRContentTextRendererInner: View {
     private let attributedStringWithPs: AttributedStringWithPs
     private let availableWidth: CGFloat
-    private let isScreenshot: Bool
     private let isDetail: Bool
-    private let isPreview: Bool
     private let primaryColor: Color
     private let accentColor: Color
     private let onTap: (() -> Void)?
+    private let nxViewingContext: Set<NXViewingContextOptions>
     
     @State private var text: NSAttributedString?
     @State private var nxText: AttributedString?
@@ -53,20 +52,19 @@ struct NRContentTextRendererInner: View {
     
     @EnvironmentObject private var dim: DIMENSIONS
     
-    init(withSelectableText: Bool = false, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isScreenshot: Bool = false, isDetail: Bool = false, isPreview: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
+    init(nxViewingContext: Set<NXViewingContextOptions>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
         self.attributedStringWithPs = attributedStringWithPs
         self.availableWidth = availableWidth
-        self.isScreenshot = isScreenshot
         self.isDetail = isDetail
-        self.isPreview = isPreview
         self.primaryColor = primaryColor ?? Themes.default.theme.primary
         self.accentColor = accentColor ?? Themes.default.theme.accent
         self.onTap = onTap
+        self.nxViewingContext = nxViewingContext
         
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
         
-        if !withSelectableText, let nxOutput = attributedStringWithPs.nxOutput { // Not selectable, but faster
+        if nxViewingContext.isDisjoint(with: SELECTABLE_TEXT_CONTEXTS), let nxOutput = attributedStringWithPs.nxOutput { // Not selectable, but faster
             _nxText = State(wrappedValue: nxOutput)
 //            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT)) // Reminder: also add back below reparsedNxOutput
         }
@@ -122,12 +120,12 @@ struct NRContentTextRendererInner: View {
                 }
         }
         else if let text {
-            if isPreview {
+            if nxViewingContext.contains(.preview) {
                 NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
                     .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            else if isScreenshot {
+            else if nxViewingContext.contains(.screenshot) {
                 let aString = AttributedString(text)
                 Text(aString)
                     .foregroundColor(primaryColor)

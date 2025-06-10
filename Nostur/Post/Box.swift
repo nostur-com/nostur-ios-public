@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct Box<Content: View>: View {
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
     private let content: Content
     private let kind: Int64
@@ -96,6 +97,7 @@ struct Box<Content: View>: View {
     }
     
     private func navigate() {
+        guard !nxViewingContext.contains(.preview) else { return }
         guard let nrPost = nrPost else { return }
         if nrPost.isRepost {
             if let firstQuote = nrPost.firstQuote {
