@@ -179,7 +179,7 @@ struct DMConversationView: View {
                                             .cornerRadius(13)
                                     }
                                     
-                                    FollowedBy(pubkey: contactPubkey, alignment: .center)
+                                    FollowedBy(pubkey: contactPubkey, alignment: .center, showZero: true)
                                         .frame(minHeight: 95.0)
                                         .padding(.vertical, 15)
                                     
