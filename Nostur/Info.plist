@@ -42,6 +42,8 @@
 	</array>
 	<key>CI_BUILD_NUMBER</key>
 	<string>$(CI_BUILD_NUMBER)</string>
+	<key>IMGUR_CLIENT_ID</key>
+	<string>$(IMGUR_CLIENT_ID)</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSMinimumSystemVersion</key>

@@ -120,6 +120,9 @@ final class SettingsStore: ObservableObject {
             // We only need .name for the Picker in Settings, handle actual implementation with NostrEssentials Nip96Uploader
             return "https://localhost"
         }),
+
+        // needs registered Client ID
+        getImgurService(),
         
         MediaUploadService(name: NIP96_LABEL, request: { imageData, usePNG in
             // Dummy function body just to be compatible with MediaUploadService
