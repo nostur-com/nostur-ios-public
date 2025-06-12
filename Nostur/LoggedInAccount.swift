@@ -130,6 +130,47 @@ extension LoggedInAccount {
         }
     }
     
+    public func multiFollow(_ pubkeys: Set<String>) {
+        viewFollowingPublicKeys = viewFollowingPublicKeys.union(pubkeys)
+        account.followingPubkeys = account.followingPubkeys.union(pubkeys)
+        account.publishNewContactList()
+        viewContextSave()
+        
+        let viewFollowingPublicKeys = viewFollowingPublicKeys
+        
+        bg.perform { [weak self] in
+            guard let self else { return }
+            
+            for pubkey in pubkeys {
+                let contact: Contact = Contact.fetchByPubkey(pubkey, context: self.bg) ?? Contact(context: self.bg)
+                contact.pubkey = pubkey
+                contact.couldBeImposter = 0
+                contact.similarToPubkey = nil
+                
+                let pfpURL: URL? = if let picture = contact.picture, picture.prefix(7) != "http://" {
+                    URL(string: picture)
+                }
+                else {
+                    nil
+                }
+                
+                self.followingCache[contact.pubkey] = FollowCache(
+                    anyName: contact.anyName,
+                    pfpURL: pfpURL,
+                    bgContact: contact
+                )
+            }
+            
+            self.followingPublicKeys = viewFollowingPublicKeys
+            
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                sendNotification(.followsChanged, self.viewFollowingPublicKeys)
+                sendNotification(.followingAdded)
+            }
+        }
+    }
+    
     @MainActor
     public func unfollow(_ pubkey: String) {
         viewFollowingPublicKeys.remove(pubkey)

@@ -37,8 +37,9 @@ public class OutboxLoader {
         receiveNotification(.followingAdded)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let pubkey = notification.object as! String
-                self.fetchKind10002(forPubkey: pubkey)
+                if let pubkey = notification.object as? String {
+                    self.fetchKind10002(forPubkey: pubkey)
+                }
             }
             .store(in: &subscriptions)
     }

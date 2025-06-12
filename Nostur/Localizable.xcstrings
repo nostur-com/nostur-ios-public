@@ -4118,6 +4118,9 @@
         }
       }
     },
+    "Follow all %lld people from this list" : {
+
+    },
     "Follow lists with a size higher than this threshold will be considered low quality and not included in your Web of Trust" : {
       "localizations" : {
         "nl" : {

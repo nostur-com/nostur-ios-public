@@ -23,8 +23,8 @@ struct FeedPreviewSheet: View {
     
     var body: some View {
         NXColumnView(config: config, isVisible: true)
-        .toolbar {
             .environment(\.nxViewingContext, [.feedPreview])
+            .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 CloseButton(action: {
                     AppSheetsModel.shared.dismiss() // Normal @Environment(\.dismiss) is broken with NavigationBackport
@@ -68,6 +68,13 @@ struct FeedPreviewSheet: View {
                     sendNotification(.anyStatus, ("Address copied to clipboard", "APP_NOTICE"))
                 }
             }
+            
+            if let la = AccountsState.shared.loggedInAccount, la.account.isFullAccount && config.pubkeys.count > 1 {
+                Button("Follow all \(config.pubkeys.count) people on this list") {
+                    la.multiFollow(config.pubkeys)
+                }
+            }
+            
         }, label: {
             Image(systemName: "pin.circle")
         })
