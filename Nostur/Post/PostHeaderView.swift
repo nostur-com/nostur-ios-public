@@ -114,12 +114,10 @@ struct PostHeaderView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                if let pfp, pfp.similarToPubkey == nil {
-                    if !nxViewingContext.contains(.preview) && la.viewFollowingPublicKeys.count < 50 {
-                        FollowLink(pubkey: pubkey)
-                            .layoutPriority(2)
-                            .lineLimit(1)
-                    }
+                if shouldShowFollowButton {
+                    FollowLink(pubkey: pubkey)
+                        .layoutPriority(2)
+                        .lineLimit(1)
                 }
             }
         }
@@ -140,16 +138,19 @@ struct PostHeaderView: View {
                         .foregroundColor(.secondary)
                 }
                 
-                
-                if let pfp, pfp.similarToPubkey == nil {
-                    if !nxViewingContext.contains(.preview) && la.viewFollowingPublicKeys.count < 50 {
-                        FollowLink(pubkey: pubkey)
-                            .layoutPriority(2)
-                            .lineLimit(1)
-                    }
+                if shouldShowFollowButton {
+                    FollowLink(pubkey: pubkey)
+                        .layoutPriority(2)
+                        .lineLimit(1)
                 }
             }
         }
+    }
+    
+    // Only show Follow button if in Follow pack feed preview, or if we are following less than 50 people.
+    // don't show for imposter or post preview
+    private var shouldShowFollowButton: Bool {
+        nxViewingContext.contains(.feedPreview) || (nxViewingContext.isDisjoint(with: [.preview, .screenshot]) && couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50)
     }
 }
 

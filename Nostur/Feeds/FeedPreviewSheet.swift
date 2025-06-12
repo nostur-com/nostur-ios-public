@@ -24,6 +24,7 @@ struct FeedPreviewSheet: View {
     var body: some View {
         NXColumnView(config: config, isVisible: true)
         .toolbar {
+            .environment(\.nxViewingContext, [.feedPreview])
             ToolbarItem(placement: .cancellationAction) {
                 CloseButton(action: {
                     AppSheetsModel.shared.dismiss() // Normal @Environment(\.dismiss) is broken with NavigationBackport
