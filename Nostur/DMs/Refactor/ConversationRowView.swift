@@ -50,9 +50,7 @@ struct ConversationRowView: View {
                                 .fontWeight(.bold)
                                 .lineLimit(1)
                             
-                            if contact.couldBeImposter == 1 {
-                                PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: contact.similarToPubkey)
-                            }
+                            PossibleImposterLabelView(pfp: pfpAttributes)
                         }
                     }
                     .onAppear {
@@ -60,50 +58,6 @@ struct ConversationRowView: View {
                             guard let bgContact = contact.contact else { return }
                             EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "ConversationRowView.002")
                             QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
-                        }
-                    }
-                    .task {
-                        guard !SettingsStore.shared.lowDataMode else { return }
-                        guard ProcessInfo.processInfo.isLowPowerModeEnabled == false else { return }
-                        guard let la = AccountsState.shared.loggedInAccount else { return }
-                        guard contact.metadata_created_at != 0 else { return }
-                        guard contact.couldBeImposter == -1 else { return }
-                        guard la.isFollowing(pubkey: contact.pubkey) else { return }
-                        guard !NewOnboardingTracker.shared.isOnboarding else { return }
-                        guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
-                        
-                        let contactAnyName = contact.anyName.lowercased()
-                        let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
-                        let cPubkey = contact.pubkey
-                        
-                        bg().perform { [weak conv] in
-                            guard let conv else { return }
-                            guard let account = account() else { return }
-                            guard account.publicKey == currentAccountPubkey else { return }
-                            guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
-                                pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
-                            }) else { return }
-                            
-                            guard let cPic = contact.pictureUrl, similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
-                            Task.detached(priority: .background) {
-                                let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                                DispatchQueue.main.async { [weak contact] in
-                                    guard let contact else { return }
-                                    guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
-                                    if similarPFP && contact.couldBeImposter != 1 {
-                                        conv.objectWillChange.send() // need to rerender
-                                    }
-                                    contact.couldBeImposter = similarPFP ? 1 : 0
-                                    contact.similarToPubkey = similarPFP ? followingPubkey : nil
-                                    bg().perform { [weak contact] in
-                                        guard let contact else { return }
-                                        guard currentAccountPubkey == Nostur.account()?.publicKey else { return }
-                                        contact.contact?.couldBeImposter = similarPFP ? 1 : 0
-                                        contact.contact?.similarToPubkey = similarPFP ? followingPubkey : nil
-            //                            DataProvider.shared().bgSave()
-                                    }
-                                }
-                            }
                         }
                     }
                     .onDisappear {

@@ -15,11 +15,6 @@ struct NewFollowersNotificationView: View {
     }
     
     @State private var pfps: [PFPAttributes] = []
-    @State private var followingNotificationText: String = ""
-    
-    @State private var similarPFP = false
-    @State private var similarToPubkey: String? = nil
-    @State private var didCheck = false
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -34,7 +29,7 @@ struct NewFollowersNotificationView: View {
                         .offset(x:Double(0 + (30*index)))
                         .overlay(alignment: .topLeading) {
                             if index == 0 {
-                                NewPossibleImposterLabel(pfp: pfps[index])
+                                PossibleImposterLabelView(pfp: pfps[index])
                                     .lineLimit(1)
                                     .fixedSize()
                                     .offset(x: -10, y: -10)

@@ -12,18 +12,9 @@ struct ContactSearchResultRow: View {
     @ObservedObject var contact: Contact
     var onSelect: (() -> Void)?
     
-    @State var similarPFP = false
     @State var similarToPubkey: String? = nil
     @State var isFollowing = false
     @State var fixedPfp: URL?
-    
-    var couldBeImposter: Bool {
-        guard let la = AccountsState.shared.loggedInAccount else { return false }
-        guard la.account.publicKey != contact.pubkey else { return false }
-        guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
-        guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
-        return similarPFP
-    }
     
     var body: some View {
         HStack(alignment: .top) {
@@ -41,8 +32,18 @@ struct ContactSearchResultRow: View {
                             .foregroundColor(.primary)
                             .lineLimit(1)
                         
-                        if couldBeImposter {
-                            PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
+                        if let similarToPubkey {
+                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                                .padding(.horizontal, 8)
+                                .background(.red)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                                .padding(.top, 3)
+                                .layoutPriority(2)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: contact.pubkey, similarToPubkey: similarToPubkey))
+                                }
                         }
                         else if contact.nip05veried, let nip05 = contact.nip05 {
                             NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
@@ -84,7 +85,6 @@ struct ContactSearchResultRow: View {
             }
             else {
                 ImposterChecker.shared.runImposterCheck(contact: contact) { imposterYes in
-                    self.similarPFP = true
                     self.similarToPubkey = imposterYes.similarToPubkey
                 }
             }
@@ -106,19 +106,10 @@ struct NRContactSearchResultRow: View {
     @EnvironmentObject private var themes: Themes
     @ObservedObject var nrContact: NRContact
     var onSelect: (() -> Void)?
-    
-    @State var similarPFP = false
-    @State var similarToPubkey: String? = nil
+
     @State var isFollowing = false
     @State var fixedPfp: URL?
-    
-    var couldBeImposter: Bool {
-        guard let la = AccountsState.shared.loggedInAccount else { return false }
-        guard la.account.publicKey != nrContact.pubkey else { return false }
-        guard !la.isFollowing(pubkey: nrContact.pubkey) else { return false }
-        guard nrContact.couldBeImposter == -1 else { return nrContact.couldBeImposter == 1 }
-        return similarPFP
-    }
+
     
     var body: some View {
         HStack(alignment: .top) {
@@ -136,10 +127,8 @@ struct NRContactSearchResultRow: View {
                             .foregroundColor(.primary)
                             .lineLimit(1)
                         
-                        if couldBeImposter {
-                            PossibleImposterLabel(possibleImposterPubkey: nrContact.pubkey, followingPubkey: similarToPubkey ?? nrContact.similarToPubkey)
-                        }
-                        else if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                        PossibleImposterLabelView2(nrContact: nrContact)
+                        if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
                             NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
                                 .layoutPriority(3)
                         }
@@ -179,12 +168,6 @@ struct NRContactSearchResultRow: View {
             guard let nrContact else { return }
             if (Nostur.isFollowing(nrContact.pubkey)) {
                 isFollowing = true
-            }
-            else {
-                ImposterChecker.shared.runImposterCheck(nrContact: nrContact) { imposterYes in
-                    self.similarPFP = true
-                    self.similarToPubkey = imposterYes.similarToPubkey
-                }
             }
             
             if let fixedPfp = nrContact.fixedPfp,

@@ -80,16 +80,9 @@ struct ProfileRow: View {
     public var showNpub: Bool = false
     @ObservedObject public var contact: Contact
     
-    @State private var similarPFP = false
     @State private var similarToPubkey: String? = nil
     @State private var fixedPfp: URL?
-    
-    private var couldBeImposter: Bool {
-        guard la.pubkey != contact.pubkey else { return false }
-        guard !la.isFollowing(pubkey: contact.pubkey) else { return false }
-        guard contact.couldBeImposter == -1 else { return contact.couldBeImposter == 1 }
-        return similarPFP
-    }
+
     
     var body: some View {
         HStack(alignment: .top) {
@@ -105,8 +98,18 @@ struct ProfileRow: View {
                         Text(contact.anyName).font(.headline).foregroundColor(.primary)
                             .lineLimit(1)
                         
-                        if couldBeImposter {
-                            PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: similarToPubkey ?? contact.similarToPubkey)
+                        if let similarToPubkey {
+                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                                .padding(.horizontal, 8)
+                                .background(.red)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                                .padding(.top, 3)
+                                .layoutPriority(2)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: contact.pubkey, similarToPubkey: similarToPubkey))
+                                }
                             Text(contact.npub)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
@@ -119,7 +122,7 @@ struct ProfileRow: View {
                                 .layoutPriority(3)
                         }
                         
-                        if !couldBeImposter && showNpub {
+                        if similarToPubkey == nil && showNpub {
                             Text(contact.npub)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
@@ -170,7 +173,6 @@ struct ProfileRow: View {
             }
             
             ImposterChecker.shared.runImposterCheck(contact: contact) { imposterYes in
-                self.similarPFP = true
                 self.similarToPubkey = imposterYes.similarToPubkey
             }
             

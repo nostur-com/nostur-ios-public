@@ -32,6 +32,10 @@ class PFPAttributes: ObservableObject, Equatable, Identifiable {
         self.pubkey = pubkey
         self.similarToPubkey = contact?.similarToPubkey
         
+        if self.similarToPubkey != nil {
+            self.didRunImposterCheck = true
+        }
+        
         if Thread.isMainThread {
             if contact == nil {
                 bg().perform {
@@ -43,6 +47,10 @@ class PFPAttributes: ObservableObject, Equatable, Identifiable {
                             if self.contact == nil {
                                 self.contact = nrContact
                                 self.similarToPubkey = nrContact.similarToPubkey
+                                
+                                if self.similarToPubkey != nil {
+                                    self.didRunImposterCheck = true
+                                }
                             }
                         }
                     }
@@ -61,6 +69,9 @@ class PFPAttributes: ObservableObject, Equatable, Identifiable {
                                 self?.contact = nrContact
                             }
                             self?.similarToPubkey = nrContact.similarToPubkey
+                            if self?.similarToPubkey != nil {
+                                self?.didRunImposterCheck = true
+                            }
                         }
                     }
                     self?.contactUpdatedSubscription?.cancel()
@@ -74,7 +85,9 @@ class PFPAttributes: ObservableObject, Equatable, Identifiable {
     private var didRunImposterCheck = false
     
     func runImposterCheck(_ nrContact: NRContact? = nil) {
+        guard !didRunImposterCheck else { return }
         bg().perform { [weak self] in
+            guard let didRunImposterCheck = self?.didRunImposterCheck, !didRunImposterCheck else { return }
             guard let self, let nrContact = (contact ?? nrContact) ?? NRContact.fetch(pubkey)
             else { return }
             
@@ -84,12 +97,13 @@ class PFPAttributes: ObservableObject, Equatable, Identifiable {
                 if nrContact.couldBeImposter == 1 {
                     Task { @MainActor in
                         self.similarToPubkey = nrContact.similarToPubkey
+                        self.didRunImposterCheck = true
                     }
                 }
                 return
             }
             
-            didRunImposterCheck = true
+            self.didRunImposterCheck = true
             ImposterChecker.shared.runImposterCheck(nrContact: nrContact) { imposterYes in
                 Task { @MainActor in
                     self.similarToPubkey = imposterYes.similarToPubkey

@@ -163,7 +163,7 @@ struct ProfileView: View {
                             .font(.title)
                             .fontWeightBold()
                             .lineLimit(1)
-                        NewPossibleImposterLabel(nrContact: nrContact)
+                        PossibleImposterLabelView2(nrContact: nrContact)
                         if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
                             NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
                                 .layoutPriority(3)

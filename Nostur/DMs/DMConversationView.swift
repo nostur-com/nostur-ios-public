@@ -158,8 +158,18 @@ struct DMConversationView: View {
                                 if let contact = contact {
                                     HStack(spacing:1) {
                                         Text("\(contact.anyName) ").font(.headline)
-                                        if contact.couldBeImposter == 1 {
-                                            PossibleImposterLabel(possibleImposterPubkey: contact.pubkey, followingPubkey: contact.similarToPubkey)
+                                        if let similarToPubkey = contact.similarToPubkey {
+                                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                                                .padding(.horizontal, 8)
+                                                .background(.red)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                                .padding(.top, 3)
+                                                .layoutPriority(2)
+                                                .contentShape(Rectangle())
+                                                .onTapGesture {
+                                                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: contact.pubkey, similarToPubkey: similarToPubkey))
+                                                }
                                         }
                                         else if let nip05 = contact.nip05, contact.nip05veried {
                                             NostrAddress(nip05: nip05)

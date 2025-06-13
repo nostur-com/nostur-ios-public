@@ -156,7 +156,8 @@ struct SelectedParticipantView: View {
                 .frame(height: 15)
 //                .border(Color.red)
                 .overlay(alignment: .leading) {
-                    NewPossibleImposterLabel(nrContact: nrContact)
+                    PossibleImposterLabelView2(nrContact: nrContact)
+
                     if nrContact.similarToPubkey == nil, let nip05 = nrContact.nip05, nrContact.nip05verified, nrContact.nip05nameOnly.lowercased() != nrContact.anyName.lowercased(), !hasNip05Shortened {
                         NostrAddress(nip05: nip05, shortened: false)
                             .layoutPriority(3)

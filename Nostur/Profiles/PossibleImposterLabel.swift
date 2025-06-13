@@ -8,38 +8,96 @@
 import SwiftUI
 import NavigationBackport
 
-struct PossibleImposterLabel: View {
+//struct PossibleImposterLabel: View {
+//    @EnvironmentObject private var themes: Themes
+//    public var possibleImposterPubkey: String
+//    public var followingPubkey: String? = nil
+//    @State private var showDetails: Bool = false
+//    
+//    var body: some View {
+//        Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+//            .padding(.horizontal, 8)
+//            .background(.red)
+//            .foregroundColor(.white)
+//            .cornerRadius(8)
+//            .padding(.top, 3)
+//            .layoutPriority(2)
+//            .contentShape(Rectangle())
+//            .onTapGesture {
+//                sendNotification(.showImposterDetails, ImposterDetails(pubkey: possibleImposterPubkey, similarToPubkey: followingPubkey))
+//            }
+//    }
+//}
+
+//struct XPossibleImposterLabel: View {
+//    @EnvironmentObject private var themes: Themes
+//    @StateObject private var pfp: PFPAttributes
+//    @State private var showDetails: Bool = false
+//
+//    init(pubkey: String, nrContact: NRContact? = nil) {
+//        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: pubkey))
+//    }
+//
+//    init(pfp: PFPAttributes) {
+//        _pfp = StateObject(wrappedValue: pfp)
+//    }
+//    
+//    init(nrContact: NRContact) {
+//        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey))
+//    }
+//    
+//    var body: some View {
+//        XXPossibleImposterLabel(pfp: pfp)
+//        if let similarToPubkey = pfp.similarToPubkey {
+//            PossibleImposterLabel(possibleImposterPubkey: pfp.pubkey, followingPubkey: similarToPubkey)
+//        }
+//        else {
+//            Rectangle()
+//                .frame(width: 0, height: 0)
+//                .hidden()
+//                .onAppear {
+//                    pfp.runImposterCheck()
+//                }
+//        }
+//    }
+//}
+
+struct PossibleImposterLabelView: View {
     @EnvironmentObject private var themes: Themes
-    public var possibleImposterPubkey: String
-    public var followingPubkey: String? = nil
-    @State private var showDetails: Bool = false
+    @ObservedObject public var pfp: PFPAttributes
     
     var body: some View {
-        Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-            .padding(.horizontal, 8)
-            .background(.red)
-            .foregroundColor(.white)
-            .cornerRadius(8)
-            .padding(.top, 3)
-            .layoutPriority(2)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                sendNotification(.showImposterDetails, ImposterDetails(pubkey: possibleImposterPubkey, similarToPubkey: followingPubkey))
-            }
+        if let similarToPubkey = pfp.similarToPubkey {
+            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                .padding(.horizontal, 8)
+                .background(.red)
+                .foregroundColor(.white)
+                .cornerRadius(8)
+                .padding(.top, 3)
+                .layoutPriority(2)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: pfp.pubkey, similarToPubkey: similarToPubkey))
+                }
+        }
+        else {
+            Rectangle()
+                .frame(width: 0, height: 0)
+                .hidden()
+                .onAppear {
+                    pfp.runImposterCheck()
+                }
+        }
     }
 }
 
-struct NewPossibleImposterLabel: View {
+struct PossibleImposterLabelView2: View {
     @EnvironmentObject private var themes: Themes
+
     @StateObject private var pfp: PFPAttributes
-    @State private var showDetails: Bool = false
 
     init(pubkey: String, nrContact: NRContact? = nil) {
         _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: pubkey))
-    }
-
-    init(pfp: PFPAttributes) {
-        _pfp = StateObject(wrappedValue: pfp)
     }
     
     init(nrContact: NRContact) {
@@ -212,10 +270,12 @@ struct ImposterLabelToggle: View {
 }
 
 
+@available(iOS 18.0, *)
 #Preview {
+    @Previewable @StateObject var pfp = PFPAttributes(pubkey: "")
     PreviewContainer({ pe in pe.loadContacts() }) {
         NBNavigationStack {
-            PossibleImposterLabel(possibleImposterPubkey: "", followingPubkey: "")
+            PossibleImposterLabelView(pfp: pfp)
         }
     }
 }

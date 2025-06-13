@@ -119,7 +119,7 @@ struct AddContactsToListSheet: View {
                                 .lineLimit(1)
                                 .layoutPriority(3)
                             
-                            NewPossibleImposterLabel(nrContact: nrContact)
+                            PossibleImposterLabelView2(nrContact: nrContact)
                                 .layoutPriority(1)
                             
                             Spacer()
