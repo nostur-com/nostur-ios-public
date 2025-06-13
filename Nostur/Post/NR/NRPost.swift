@@ -58,6 +58,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var proxy: String?
     var comment: String? // treat as content for kind 9802
     
+    var nxZap: NxZap?
+    
     var contact: NRContact? {
         get { pfpAttributes.contact }
         set {
@@ -466,6 +468,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         switch kind {
         case 1063:
             self.fileMetadata = getKindFileMetadata(event: event)
+
+        case 9735:
+            guard let zapFrom = event.zapFromRequest else { break }
+            self.nxZap = NxZap(id: event.id,
+                         sats: event.naiveSats,
+                         receiptPubkey: event.pubkey,
+                         fromPubkey: zapFrom.pubkey,
+                         nrZapFrom: NRPost(event: zapFrom,
+                                           withFooter: false,
+                                           withReplyTo: false,
+                                           withParents: false,
+                                           withReplies: false,
+                                           plainText: false,
+                                           withRepliesCount: false
+                                          ),
+                         verified: event.flags != "zpk_mismatch_event"
+                        )
             
         case 9802:
             let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1

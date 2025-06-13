@@ -202,7 +202,7 @@ struct NxZapReceipt: View {
                 }
             
             VStack(alignment: .leading, spacing: 3) { // Post container
-                ZappedFrom(pubkey: fromPubkey, name: name, couldBeImposter: 0, createdAt: nrZapFrom.createdAt)
+                ZappedFrom(nrZapFrom: nrZapFrom)
                 
                 ContentRenderer(nrPost: nrZapFrom, isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowWidth - 80, theme: themes.theme)
                     .frame(maxWidth: dim.availableNoteRowWidth - 80, minHeight: 40, alignment: .leading)
