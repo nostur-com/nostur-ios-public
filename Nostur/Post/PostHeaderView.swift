@@ -150,7 +150,10 @@ struct PostHeaderView: View {
     // Only show Follow button if in Follow pack feed preview, or if we are following less than 50 people.
     // don't show for imposter or post preview
     private var shouldShowFollowButton: Bool {
-        nxViewingContext.contains(.feedPreview) || (nxViewingContext.isDisjoint(with: [.preview, .screenshot]) && couldBeImposter != 1 && la.viewFollowingPublicKeys.count < 50)
+        if let pfp, pfp.similarToPubkey != nil {
+            return false
+        }
+        return nxViewingContext.contains(.feedPreview) || (nxViewingContext.isDisjoint(with: [.preview, .screenshot]) && la.viewFollowingPublicKeys.count < 50)
     }
 }
 
