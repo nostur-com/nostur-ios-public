@@ -22,6 +22,9 @@ class AppState: ObservableObject {
         loadMutedRootIds()
         handleDynamicFontSize()
         initializeAgoUpdater()
+        if IS_CATALYST {
+            handleAwakeFromSleep()
+        }
     }
     
     // Published / Observed stuff
@@ -166,6 +169,40 @@ class AppState: ObservableObject {
                     SettingsStore.shared.objectWillChange.send() // This will reload views to stop playing animated PFP GIFs
                 }
             }
+        }
+    }
+    
+    private func handleAwakeFromSleep() {
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            L.og.debug("immediate: Connections: \(ConnectionPool.shared.connectedCount) - anyConnected: \(ConnectionPool.shared.anyConnected)")
+            guard ConnectionPool.shared.connectedCount == 0 else { return }
+            if (self?.firstWakeSkipped ?? false) { self?.firstWakeSkipped = true; return }
+            self?.handleWake()
+        }
+    }
+    
+    private var firstWakeSkipped = false
+    
+    private func handleWake() {
+        L.og.debug("handleWake()")
+        guard ConnectionPool.shared.connectedCount == 0 else { return }
+        
+        // Should force reconnect (reset exp backoff), wait 5 sec for device wifi / network
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+            L.og.debug("after 5: Connections: \(ConnectionPool.shared.connectedCount) - anyConnected: \(ConnectionPool.shared.anyConnected)")
+            guard ConnectionPool.shared.connectedCount == 0 else { return }
+            ConnectionPool.shared.connectAll(resetExpBackOff: true)
+        }
+        
+        // Retry a bit later also
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
+            L.og.debug("after 15: Connections: \(ConnectionPool.shared.connectedCount) - anyConnected: \(ConnectionPool.shared.anyConnected)")
+            guard ConnectionPool.shared.connectedCount == 0 else { return }
+            ConnectionPool.shared.connectAll(resetExpBackOff: true)
         }
     }
     
