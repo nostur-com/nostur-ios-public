@@ -48,10 +48,7 @@ public final class LocalFeedStateManager {
             .debounce(for: .seconds(0.1), scheduler: DispatchQueue.main)
             .sink { [weak self] in
                 Task { @MainActor in
-                    self?.states = LocalFeedStates(localFeedStates: [])
-#if DEBUG
-                    L.og.debug("💾 Feed states: states wiped")
-#endif
+                    self?.wipeNonPinnedStates()
                 }
             }
         
@@ -119,6 +116,26 @@ public final class LocalFeedStateManager {
             states = LocalFeedStates(localFeedStates: [])
         }
     }
+    
+    @MainActor
+    private func wipeNonPinnedStates() {
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(format: "showAsTab == true OR type == \"following\"")
+        
+        let pinnedFeedIds: Set<String> = Set(((try? viewContext().fetch(fr)) ?? [])
+            .compactMap { $0.id?.uuidString })
+        
+        var currentStates = states?.localFeedStates ?? []
+        
+        // Remove existing state if not in pinnedFeedIds
+        currentStates.removeAll { pinnedFeedIds.contains($0.cloudFeedId) == false }
+        
+        // Update in-memory state
+        states = LocalFeedStates(localFeedStates: currentStates)
+#if DEBUG
+        L.og.debug("💾 Feed states: non-pinned states wiped")
+#endif
+    }
 }
 
 // MARK: - Convenience Methods
@@ -133,6 +150,6 @@ extension LocalFeedStates {
 
 
 // 1. App goes to background (scenePhase) -> .saveFeedStates() -> saveFeedStatesSubject
-// 2. After 0.1 sec debounce: Wipe old feed states (to only keep pinned tabs): LocalFeedStateManager.wipStatesSub
+// 2. After 0.1 sec debounce: Wipe all non-pinned feed states
 // 3. After 0.5 sec debounce: Save feed state for each NXColumnViewModel: listenForSaveFeedStates -> saveFeedState()
 // 4. After 1.5 sec debounce: Save all feed states to NSUserDefaults (LocalFeedStateManager.saveToDiskSub)
