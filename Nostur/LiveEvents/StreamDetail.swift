@@ -280,6 +280,9 @@ struct StreamDetail: View {
                         .presentationDetentsLarge()
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
+                        .onDisappear {
+                            sendSatsToWhoShown = false
+                        }
                 }
             })
             .nbNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
@@ -288,6 +291,9 @@ struct StreamDetail: View {
                         .presentationDetentsLarge()
                         .environmentObject(themes)
                         .presentationBackgroundCompat(themes.theme.listBackground)
+                        .onDisappear {
+                            sendSatsToWhoShown = false
+                        }
                 }
             })
             .sheet(item: $selectedContact) { nrContact in
@@ -356,7 +362,14 @@ struct StreamDetail: View {
         Button {
             guard isFullAccount() else { showReadOnlyMessage(); return }
             if satsReceivers.count == 1, let nrContact = satsReceivers.first {
-                sendSats(nrContact: nrContact)
+                withAnimation {
+                    sendSatsToWhoShown = true
+                    contentExpanded = false
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    sendSats(nrContact: nrContact)
+                }
             }
             else {
                 withAnimation {
