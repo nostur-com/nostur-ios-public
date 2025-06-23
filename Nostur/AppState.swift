@@ -178,7 +178,6 @@ class AppState: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            L.og.debug("immediate: Connections: \(ConnectionPool.shared.connectedCount) - anyConnected: \(ConnectionPool.shared.anyConnected)")
             guard ConnectionPool.shared.connectedCount == 0 else { return }
             if (self?.firstWakeSkipped ?? false) { self?.firstWakeSkipped = true; return }
             self?.handleWake()
@@ -188,19 +187,16 @@ class AppState: ObservableObject {
     private var firstWakeSkipped = false
     
     private func handleWake() {
-        L.og.debug("handleWake()")
         guard ConnectionPool.shared.connectedCount == 0 else { return }
         
         // Should force reconnect (reset exp backoff), wait 5 sec for device wifi / network
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-            L.og.debug("after 5: Connections: \(ConnectionPool.shared.connectedCount) - anyConnected: \(ConnectionPool.shared.anyConnected)")
             guard ConnectionPool.shared.connectedCount == 0 else { return }
             ConnectionPool.shared.connectAll(resetExpBackOff: true)
         }
         
         // Retry a bit later also
         DispatchQueue.main.asyncAfter(deadline: .now() + 15.0) {
-            L.og.debug("after 15: Connections: \(ConnectionPool.shared.connectedCount) - anyConnected: \(ConnectionPool.shared.anyConnected)")
             guard ConnectionPool.shared.connectedCount == 0 else { return }
             ConnectionPool.shared.connectAll(resetExpBackOff: true)
         }

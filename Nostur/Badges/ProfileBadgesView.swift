@@ -54,7 +54,9 @@ struct ProfileBadgesContainer: View {
                             filters.append(filter)
                         }
                     
+#if DEBUG
                     L.og.debug("🚺🚺 \(allEs.count)")
+#endif
                     if (!allEs.isEmpty) {
                         // Get badge awards (kind .8)
                         req(RM.getEvents(ids: allEs))

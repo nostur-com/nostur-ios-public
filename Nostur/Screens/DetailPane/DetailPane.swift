@@ -339,7 +339,9 @@ struct DetailPane: View {
                             .onPreferenceChange(TabTitlePreferenceKey.self) { title in
                                 guard !title.isEmpty else { return }
                                 tm.selected?.navigationTitle = title
+#if DEBUG
                                 L.og.debug("💄💄 onPreferenceChange: \(title)")
+#endif
                             }
                     }
                     else {

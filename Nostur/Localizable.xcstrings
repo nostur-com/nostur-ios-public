@@ -4118,7 +4118,7 @@
         }
       }
     },
-    "Follow all %lld people from this list" : {
+    "Follow all %lld people on this list" : {
 
     },
     "Follow lists with a size higher than this threshold will be considered low quality and not included in your Web of Trust" : {
@@ -8022,6 +8022,9 @@
           }
         }
       }
+    },
+    "Send sats to:" : {
+
     },
     "Send to: %@" : {
       "localizations" : {
