@@ -254,7 +254,8 @@ struct Entry: View {
                         Button(String(localized: "Preview", comment:"Preview button when creating a new post")) {
                             vm.showPreview(quotePost: quotePost, replyTo: replyTo)
                         }
-                        .disabled(typingTextModel.uploading)
+                        .disabled(shouldDisablePostButton)
+                        .opacity(shouldDisablePostButton ? 0.25 : 1.0)
                     }
                     
                     if kind == .highlight {
