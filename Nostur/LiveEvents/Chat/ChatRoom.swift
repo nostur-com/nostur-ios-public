@@ -89,7 +89,7 @@ let _ = Self._printChanges()
                     .overlay(alignment: .topTrailing) {
                         if !chatVM.topZaps.isEmpty {
                             ChatTopZaps(messages: chatVM.topZaps)
-                                .padding(.top, 50)
+                                .padding(.top, 45)
                                 .padding(.trailing, 5)
                         }
                     }

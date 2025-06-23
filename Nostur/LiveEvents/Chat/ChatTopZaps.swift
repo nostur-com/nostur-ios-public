@@ -44,7 +44,7 @@ struct ChatZapPill: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(themes.theme.listBackground.opacity(0.5))
+        .background(themes.theme.listBackground.opacity(0.85))
         .foregroundColor(themes.theme.primary)
         .font(.footnote)
         .clipShape(Capsule())
