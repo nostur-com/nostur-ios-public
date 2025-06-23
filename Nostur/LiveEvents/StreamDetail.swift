@@ -106,6 +106,11 @@ struct StreamDetail: View {
                                     
                                     if sendSatsToWhoShown {
                                         sendSatsToWho
+                                            .onAppear {
+                                                withAnimation {
+                                                    satsReceivers = liveEvent.participantsOrSpeakers.filter { $0.anyLud }
+                                                }
+                                            }
                                             .onReceive(receiveNotification(.sendCustomZap)) { _ in
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                                                     withAnimation {
@@ -179,6 +184,19 @@ struct StreamDetail: View {
                                 if !missingPs.isEmpty {
                                     QueuedFetcher.shared.enqueue(pTags: missingPs)
                                 }
+                                
+                                satsReceivers = liveEvent.participantsOrSpeakers.filter { $0.anyLud }
+                            }
+                            .onAppear {
+                                let missingPs = liveEvent.participantsOrSpeakers
+                                    .filter { $0.metadata_created_at == 0 }
+                                    .map { $0.pubkey }
+
+                                if !missingPs.isEmpty {
+                                    QueuedFetcher.shared.enqueue(pTags: missingPs)
+                                }
+                                
+                                satsReceivers = liveEvent.participantsOrSpeakers.filter { $0.anyLud }
                             }
                     }
                 }
@@ -337,8 +355,7 @@ struct StreamDetail: View {
     private var sendSatButton: some View {
         Button {
             guard isFullAccount() else { showReadOnlyMessage(); return }
-            if (liveEvent.onStage.count + liveEvent.listeners.count) == 1,
-                let nrContact = (liveEvent.onStage.first ?? liveEvent.listeners.first) {
+            if satsReceivers.count == 1, let nrContact = satsReceivers.first {
                 sendSats(nrContact: nrContact)
             }
             else {
@@ -355,22 +372,20 @@ struct StreamDetail: View {
     
     @ViewBuilder
     private var sendSatsToWho: some View {
-        
-        // ON STAGE
-        if !liveEvent.onStage.isEmpty {
+        if !satsReceivers.isEmpty {
             ScrollView(.horizontal) {
                 HFlow(alignment: .top) {
-                    ForEach(liveEvent.onStage.indices, id: \.self) { index in
+                    ForEach(satsReceivers) { nrContact in
                             NestParticipantView(
-                                nrContact: liveEvent.onStage[index],
-                                role: liveEvent.role(forPubkey: liveEvent.onStage[index].pubkey),
+                                nrContact: nrContact,
+                                role: liveEvent.role(forPubkey: nrContact.pubkey),
                                 aTag: liveEvent.id,
                                 showControls: false
                             )
                             .onTapGesture {
-                                sendSats(nrContact: liveEvent.onStage[index])
+                                sendSats(nrContact: nrContact)
                             }
-                        .id(liveEvent.onStage[index].pubkey)
+                        .id(nrContact.pubkey)
                         .frame(width: 95, height: 95)
                         .fixedSize()
                     }
@@ -378,30 +393,12 @@ struct StreamDetail: View {
                 .frame(height: 100)
             }
         }
-        
-        // OTHERS PRESENT (ROOM PRESENCE 10312)
-        if !liveEvent.listeners.isEmpty {
-            ScrollView(.horizontal) {
-                HFlow(alignment: .top) {
-                    ForEach(liveEvent.listeners.indices, id: \.self) { index in
-                            NestParticipantView(
-                                nrContact: liveEvent.listeners[index],
-                                role: liveEvent.role(forPubkey: liveEvent.listeners[index].pubkey),
-                                aTag: liveEvent.id,
-                                showControls: false
-                            )
-                            .onTapGesture {
-                                sendSats(nrContact: liveEvent.listeners[index])
-                            }
-                        .id(liveEvent.listeners[index].pubkey)
-                        .frame(width: 95, height: 95)
-                        .fixedSize()
-                    }
-                }
-                .frame(height: 100)
-            }
+        else {
+            themes.theme.listBackground.frame(height: 100)
         }
     }
+    
+    @State private var satsReceivers: [NRContact] = []
     
     @ViewBuilder
     private var participantsView: some View {
@@ -579,7 +576,7 @@ struct StreamDetail: View {
     }
     
     private var shouldShowSatsButton: Bool {
-        liveEvent.participantsOrSpeakers.first(where: { $0.anyLud }) != nil
+        satsReceivers.count > 0
     }
 }
 
