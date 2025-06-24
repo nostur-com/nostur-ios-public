@@ -4073,7 +4073,7 @@
       }
     },
     "finished" : {
-
+      "shouldTranslate" : false
     },
     "First: %lf Final: %lf" : {
       "localizations" : {
@@ -4119,7 +4119,14 @@
       }
     },
     "Follow all %lld people on this list" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg alle %lld personen van deze lijst"
+          }
+        }
+      }
     },
     "Follow lists with a size higher than this threshold will be considered low quality and not included in your Web of Trust" : {
       "localizations" : {
@@ -8024,7 +8031,14 @@
       }
     },
     "Send sats to:" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verstuur sats naar:"
+          }
+        }
+      }
     },
     "Send to: %@" : {
       "localizations" : {
