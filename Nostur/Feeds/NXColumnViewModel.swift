@@ -690,7 +690,6 @@ class NXColumnViewModel: ObservableObject {
 #endif
             if let localFeedState = LocalFeedStateManager.shared.feedState(for: feedId) {
                 let idsToPutInScreen: [String] = localFeedState.onScreenIds
-                let parentIds: Set<String> = localFeedState.parentIds
                 
                 if !idsToPutInScreen.isEmpty {
                     
@@ -1000,9 +999,9 @@ class NXColumnViewModel: ObservableObject {
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
             let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_KINDS.subtracting([20])
+                FETCH_FOLLOWING_FEED_KINDS.subtracting([20])
             } else {
-                FETCH_FOLLOWING_KINDS
+                FETCH_FOLLOWING_FEED_KINDS
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: kinds)
@@ -1044,7 +1043,7 @@ class NXColumnViewModel: ObservableObject {
             let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id)
@@ -1055,7 +1054,7 @@ class NXColumnViewModel: ObservableObject {
             let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id)
@@ -1064,7 +1063,7 @@ class NXColumnViewModel: ObservableObject {
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
             
             guard pubkeys.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
                 req(message, activeSubscriptionId: config.id) // TODO: Toggle for outboxReq or not?
@@ -1144,9 +1143,9 @@ class NXColumnViewModel: ObservableObject {
             else { [] } // Skip hashtags if filter is too large
             
             let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_KINDS.subtracting([20])
+                FETCH_FOLLOWING_FEED_KINDS.subtracting([20])
             } else {
-                FETCH_FOLLOWING_KINDS
+                FETCH_FOLLOWING_FEED_KINDS
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: kinds)
@@ -1214,7 +1213,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
@@ -1231,7 +1230,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
@@ -1247,7 +1246,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: since, until: until, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
                 return (cmd: {
@@ -1341,9 +1340,9 @@ class NXColumnViewModel: ObservableObject {
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
             let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_KINDS.subtracting([20])
+                FETCH_FOLLOWING_FEED_KINDS.subtracting([20])
             } else {
-                FETCH_FOLLOWING_KINDS
+                FETCH_FOLLOWING_FEED_KINDS
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: kinds)
@@ -1388,7 +1387,7 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
@@ -1400,7 +1399,7 @@ class NXColumnViewModel: ObservableObject {
             let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
@@ -1409,7 +1408,7 @@ class NXColumnViewModel: ObservableObject {
         case .pubkeysPreview(_):
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
             guard pubkeys.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
                 req(message)
@@ -2262,7 +2261,7 @@ extension NXColumnViewModel {
             
             self.gapFiller?.fetchGap(since: max(sinceTimestamp, maxAgo), currentGap: 0)
             
-//            fetchProfiles(config) // No need? we already fetch kind 0 with 1,5,6 etc...
+            fetchProfiles(config)
         }
     }
     
@@ -2275,20 +2274,41 @@ extension NXColumnViewModel {
             nil
         }
         
-        let pubkeys: Set<String> = switch config.columnType {
-        case .following(let feed), .picture(let feed):
-            (feed.account?.followingPubkeys
-                .union(Set([feed.account!.publicKey]))
-                .union(feed.account!.privateFollowingPubkeys)) ?? []
-        case .pubkeys(let feed):
-            feed.contactPubkeys
-        case .someoneElses(_), .pubkeysPreview(_):
-            config.pubkeys
-//        case .pubkeysPreview(_):
-//            config.pubkeys
-        default:
-            []
+        var pubkeys: Set<String>
+        
+        switch config.columnType {
+            case .following(let feed), .picture(let feed):
+                // Make sure max pubkeys is < 2000 (relay limits)
+                let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
+                let ownPubkey: Set<String> = if let account = feed.account {
+                    Set([account.publicKey])
+                }
+                else {
+                    Set<String>()
+                }
+                
+                pubkeys = if feed.accountPubkey == EXPLORER_PUBKEY {
+                    AppState.shared.rawExplorePubkeys.subtracting(AppState.shared.bgAppState.blockedPubkeys)
+                }
+                else if followingPubkeys.count > 1999 { // Take random 1999 + own pubkey if filter is too large
+                    Set(followingPubkeys.shuffled().prefix(1999)).union(ownPubkey)
+                }
+                else {
+                    followingPubkeys.union(ownPubkey)
+                }
+            
+            case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
+                pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
+            
+            case .someoneElses(_), .pubkeysPreview(_):
+                pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
+            
+            default:
+                pubkeys = []
+                break
+            
         }
+
         
         guard !pubkeys.isEmpty else {
 #if DEBUG
@@ -2302,18 +2322,19 @@ extension NXColumnViewModel {
 #endif
         
         let subscriptionId = "Profiles-" + feed.subscriptionId
-        ConnectionPool.shared
-            .sendMessage(
-                NosturClientMessage(
-                    clientMessage: NostrEssentials.ClientMessage(
-                        type: .REQ,
-                        subscriptionId: subscriptionId,
-                        filters: [Filters(authors: pubkeys, kinds: [0], since: since)]
-                    ),
-                    relayType: .READ
-                ),
-                subscriptionId: subscriptionId
-            )
+        let filters = [Filters(authors: pubkeys, kinds: FETCH_FOLLOWING_PROFILE_KINDS, since: since)]
+        
+        if case .following(_) = config.columnType {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters))
+        }
+        else if case .picture(_) = config.columnType {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters))
+        }
+        else {
+            if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
+                req(message)
+            }
+        }
         feed.profilesFetchedAt = .now
     }
 }
@@ -2431,13 +2452,6 @@ enum ColumnViewState {
 let FETCH_FEED_INTERVAL = 9.0
 let FEED_MAX_VISIBLE: Int = 20
 
-func fetchFollowingFeedKinds() -> Set<Int> {
-    if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-        return FETCH_FOLLOWING_KINDS.subtracting([20])
-    }
-    return FETCH_FOLLOWING_KINDS
-}
-
 func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int = 5000, kinds: Set<Int>) -> [Filters] {
     guard !pubkeys.isEmpty || !hashtags.isEmpty else { return [] }
     
@@ -2501,7 +2515,8 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
 typealias CM = NostrEssentials.ClientMessage
 
 let FETCH_GLOBAL_KINDS: Set<Int> = [1,5,6,20,9802,30023,34235]
-let FETCH_FOLLOWING_KINDS: Set<Int> = [0,1,5,6,20,9802,30023,34235,30311,10002]
+let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,5,6,20,9802,30023,34235,30311]
+let FETCH_FOLLOWING_PROFILE_KINDS: Set<Int> = [0,10002,10063]
 let QUERY_FOLLOWING_KINDS: Set<Int> = [1,6,20,9802,30023,34235]
 let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
 
