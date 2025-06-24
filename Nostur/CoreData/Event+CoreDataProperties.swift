@@ -1355,7 +1355,7 @@ extension Event {
                     }
                 })
             }
-            else if let firstQuoteId = savedEvent.firstQuoteId,  let firstP = event.firstP() { // or lastP?
+            else if savedEvent.firstQuoteId != nil, let firstP = event.firstP() { // or lastP?
                 // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
                 savedEvent.otherPubkey = firstP
             }
