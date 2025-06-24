@@ -85,7 +85,7 @@ class ProfileViewModel: ObservableObject {
     public func loadProfileKinds(_ nrContact: NRContact) {
         let task = ReqTask(
             reqCommand: { (taskId) in
-                let filters = [Filters(authors: [nrContact.pubkey], kinds: [0,3,30008,10002], limit: 20)]
+                let filters = [Filters(authors: [nrContact.pubkey], kinds: [0,3,30008,10002,10063], limit: 25)]
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
             },
             processResponseCommand: { (taskId, _, _) in
