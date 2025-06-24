@@ -176,18 +176,23 @@ struct RepostHeader: View {
             Image(systemName: "arrow.2.squarepath")
                 .fontWeightBold()
                 .scaleEffect(0.6)
+                .layoutPriority(1)
             
             PFP(pubkey: pfpAttributes.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20.0)
             
             Group {
                 Text(pfpAttributes.anyName)
                 Text("reposted")
+                    .layoutPriority(1)
             }
             .font(.subheadline)
             .fontWeightBold()
             .onTapGesture {
                 navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes, context: dim.id)
             }
+            
+            PossibleImposterLabelView(pfp: pfpAttributes)
+                .layoutPriority(2)
         }
         .foregroundColor(.gray)
         .onTapGesture {
