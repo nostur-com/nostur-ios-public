@@ -1375,17 +1375,17 @@ extension Event {
             }
         }
         
-        if (event.kind == .relayList) {
+        if (event.kind.id >= 10000 && event.kind.id < 20000) {
             // delete older events
             let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-            r.predicate = NSPredicate(format: "kind == 10002 AND pubkey == %@ AND created_at < %d", event.publicKey, savedEvent.created_at)
+            r.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND created_at < %d", event.kind.id, event.publicKey, savedEvent.created_at)
             let batchDelete = NSBatchDeleteRequest(fetchRequest: r)
             batchDelete.resultType = .resultTypeCount
             
             do {
                 _ = try context.execute(batchDelete) as! NSBatchDeleteResult
             } catch {
-                L.og.error("🔴🔴 Failed to delete older kind 10002 events")
+                L.og.error("🔴🔴 Failed to delete older replaceable events for \(event.id)")
             }
         }
         
