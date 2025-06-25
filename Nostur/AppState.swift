@@ -173,14 +173,20 @@ class AppState: ObservableObject {
     }
     
     private func handleAwakeFromSleep() {
-        NotificationCenter.default.addObserver(
-            forName: UIApplication.didBecomeActiveNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            guard ConnectionPool.shared.connectedCount == 0 else { return }
-            if (self?.firstWakeSkipped ?? false) { self?.firstWakeSkipped = true; return }
-            self?.handleWake()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            NotificationCenter.default.addObserver(
+                forName: UIApplication.didBecomeActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                guard let self, ConnectionPool.shared.connectedCount == 0 else { return }
+                
+                if (!self.firstWakeSkipped) {
+                    self.firstWakeSkipped = true
+                    return
+                }
+                self.handleWake()
+            }
         }
     }
     
@@ -200,6 +206,10 @@ class AppState: ObservableObject {
             guard ConnectionPool.shared.connectedCount == 0 else { return }
             ConnectionPool.shared.connectAll(resetExpBackOff: true)
         }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
     }
     
     public var nrPostQueue = DispatchQueue(label: "com.nostur.nrPostQueue", attributes: .concurrent)
