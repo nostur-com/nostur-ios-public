@@ -2570,10 +2570,10 @@ extension Event {
             let after = until.created_at - 28_800 // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
             
             if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, threeHoursFromNow, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
+                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, threeHoursFromNow, kinds, blockedPubkeys, pubkeys, hashtagRegex)
             }
         }
         else {
@@ -2595,6 +2595,7 @@ extension Event {
         // if we don't have lastAppearedCreatedAt. Take 8 hours ago
         let cutOffPoint = lastAppearedCreatedAt == 0 ? hoursAgo : min(lastAppearedCreatedAt, hoursAgo)
         let cutOffNotInFuture: Int64 = min(cutOffPoint, Int64(Date().timeIntervalSince1970) + 10800) // Never show posts too far into the future (fake timestamp)
+        let threeHoursFromNow: Int64 = Int64(Date().timeIntervalSince1970) + 10800 // Never show posts too far into the future (fake timestamp)
         
         // get 15 events before lastAppearedCreatedAt (or 8 hours ago, if we dont have it)
         let frBefore = Event.fetchRequest()
@@ -2625,10 +2626,10 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = QUERY_FETCH_LIMIT
         if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND created_at < %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND created_at < %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, threeHoursFromNow, pubkeys, kinds, blockedPubkeys)
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND created_at < %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
+            fr.predicate = NSPredicate(format: "created_at >= %i AND created_at < %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, threeHoursFromNow, pubkeys, kinds, blockedPubkeys)
         }
         return fr
     }
