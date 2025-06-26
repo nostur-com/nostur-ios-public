@@ -225,7 +225,7 @@ struct NXPostsFeed: View {
                             scrollToFirstUnread(proxy)
                         }
                         .simultaneousGesture(LongPressGesture().onEnded { _ in
-                            scrollToTop(proxy)
+                            scrollToTop()
                         })
                 }
             }
@@ -236,7 +236,7 @@ struct NXPostsFeed: View {
             .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
                 guard vm.isVisible else { return }
                 
-                scrollToTop(proxy)
+                scrollToTop()
             }
             
             // Handle going to detail and back
@@ -271,7 +271,7 @@ struct NXPostsFeed: View {
     
     private func scrollToFirstUnread(_ proxy: ScrollViewProxy) {
         if vmInner.unreadCount == 0 {
-            scrollToTop(proxy)
+            scrollToTop()
             return
         }
         for post in posts.reversed() {
@@ -299,8 +299,7 @@ struct NXPostsFeed: View {
         }
     }
     
-    private func scrollToTop(_ proxy: ScrollViewProxy) {
-//        guard let topPost = posts.first else { return }
+    private func scrollToTop() {
         scrollToIndex(0)
         vmInner.isAtTop = true
         
