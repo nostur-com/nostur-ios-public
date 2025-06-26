@@ -15,6 +15,9 @@ struct EmojiFeed: View {
     @StateObject private var speedTest = NXSpeedTest()
     @State private var showSettings = false
     
+    @Weak private var collectionView: UICollectionView?    
+    @Weak private var tableView: UITableView?
+    
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
         set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
@@ -29,14 +32,12 @@ struct EmojiFeed: View {
 #if DEBUG
         let _ = Self._printChanges()
 #endif
-        ScrollViewReader { proxy in
+        Container {
             switch vm.state {
             case .initializing, .loading:
                 CenteredProgressView()
             case .ready:
                 List {
-                    topAnchor
-                    
                     ForEach(vm.feedPosts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                             PostOrThread(nrPost: nrPost)
@@ -55,13 +56,23 @@ struct EmojiFeed: View {
                 .refreshable {
                     await vm.refresh()
                 }
+                .introspect(.list, on: .iOS(.v15)) { view in
+                    DispatchQueue.main.async {
+                      self.tableView = view
+                    }
+                }
+                .introspect(.list, on: .iOS(.v16...)) { view in
+                    DispatchQueue.main.async {
+                      self.collectionView = view
+                    }
+                }
                 .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
                     guard selectedTab == "Main" && selectedSubTab == "Emoji" else { return }
-                    self.scrollToTop(proxy)
+                    self.scrollTo(index: 0)
                 }
                 .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
                     guard selectedTab == "Main" && selectedSubTab == "Emoji" else { return }
-                    self.scrollToTop(proxy)
+                    self.scrollTo(index: 0)
                 }
                 .onReceive(receiveNotification(.activeAccountChanged)) { _ in
                     vm.reload()
@@ -108,23 +119,6 @@ struct EmojiFeed: View {
             .presentationBackgroundCompat(themes.theme.listBackground)
         }
     }
-    
-    @ViewBuilder
-    var topAnchor: some View {
-        Color.clear
-            .listRowSeparator(.hidden)
-            .listRowBackground(themes.theme.listBackground)
-            .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-            .frame(height: 0)
-            .id("top")
-    }
-    
-    private func scrollToTop(_ proxy: ScrollViewProxy) {
-        guard vm.feedPosts.first != nil else { return }
-        withAnimation {
-            proxy.scrollTo("top", anchor: .top)
-        }
-    }
 }
 
 struct EmojiFeed_Previews: PreviewProvider {
@@ -132,5 +126,30 @@ struct EmojiFeed_Previews: PreviewProvider {
         EmojiFeed()
             .environmentObject(EmojiFeedViewModel())
             .environmentObject(Themes.default)
+    }
+}
+
+@_spi(Advanced) import SwiftUIIntrospect
+extension EmojiFeed {
+    
+    // Scroll instantly instead of waiting to finish scrolling before it works (when using ScrollViewProxy)
+    private func scrollTo(index: Int) {
+
+        if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+            if let collectionView,
+               let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
+               rows > index
+            {
+                collectionView.scrollToItem(at: .init(row: index, section: 0), at: .top, animated: true)
+            }
+        }
+        else { // iOS 15 UITableView
+            if let tableView,
+               let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
+               rows > index
+            {
+                tableView.scrollToRow(at: .init(row: index, section: 0), at: .top, animated: true)
+            }
+        }
     }
 }
