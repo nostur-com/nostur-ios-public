@@ -36,6 +36,18 @@ struct Hot: View {
             switch hotVM.state {
             case .initializing, .loading:
                 CenteredProgressView()
+            case .fetchingFromFollows:
+                ZStack(alignment: .center) {
+                    themes.theme.listBackground
+                        .overlay(alignment: .bottom) {
+                            Text("Checking what your follows reposted or reacted to...")
+                                .pulseEffect()
+                                .multilineTextAlignment(.center)
+                                .padding(15)
+                                .padding(.bottom, 75)
+                        }
+                    FetchingAnimationView()
+                }
             case .ready:
                 List {
                     ForEach(hotVM.hotPosts) { nrPost in

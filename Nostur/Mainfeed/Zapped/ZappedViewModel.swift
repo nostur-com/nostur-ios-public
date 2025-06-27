@@ -124,12 +124,15 @@ class ZappedViewModel: ObservableObject {
     
     // STEP 1: FETCH ZAPS FROM FOLLOWS FROM RELAYS
     private func fetchZapsFromRelays(_ onComplete: (() -> ())? = nil) {
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            
+            self?.state = .fetchingFromFollows
+            
             if !ConnectionPool.shared.anyConnected {
-                speedTest?.loadingBarViewState = .connecting
+                self?.speedTest?.loadingBarViewState = .connecting
             }
             else {
-                speedTest?.loadingBarViewState = .fetching
+                self?.speedTest?.loadingBarViewState = .fetching
             }
         }
         
@@ -441,6 +444,7 @@ class ZappedViewModel: ObservableObject {
     public enum FeedState {
         case initializing
         case loading
+        case fetchingFromFollows
         case ready
         case timeout
     }

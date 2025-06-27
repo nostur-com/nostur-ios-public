@@ -36,6 +36,18 @@ struct EmojiFeed: View {
             switch vm.state {
             case .initializing, .loading:
                 CenteredProgressView()
+            case .fetchingFromFollows:
+                ZStack(alignment: .center) {
+                    themes.theme.listBackground
+                        .overlay(alignment: .bottom) {
+                            Text("Checking what your follows found funny...")
+                                .pulseEffect()
+                                .multilineTextAlignment(.center)
+                                .padding(15)
+                                .padding(.bottom, 75)
+                        }
+                    FetchingAnimationView()
+                }
             case .ready:
                 List {
                     ForEach(vm.feedPosts) { nrPost in

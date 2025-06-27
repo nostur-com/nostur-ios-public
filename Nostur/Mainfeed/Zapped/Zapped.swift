@@ -36,6 +36,18 @@ struct Zapped: View {
             switch zappedVM.state {
             case .initializing, .loading:
                 CenteredProgressView()
+            case .fetchingFromFollows:
+                ZStack(alignment: .center) {
+                    themes.theme.listBackground
+                        .overlay(alignment: .bottom) {
+                            Text("Checking what your follows zapped...")
+                                .pulseEffect()
+                                .multilineTextAlignment(.center)
+                                .padding(15)
+                                .padding(.bottom, 75)
+                        }
+                    FetchingAnimationView()
+                }
             case .ready:
                 List {
                     ForEach(zappedVM.zappedPosts) { nrPost in

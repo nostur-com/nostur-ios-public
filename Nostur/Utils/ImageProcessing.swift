@@ -145,13 +145,13 @@ class ImageProcessing {
 
 
 // Force processing to 50x50 so we always get the same from cache and not redownload, do scaling down to 20x20 (or other) in SwiftUI if needed (.resizable())
-func pfpImageRequestFor(_ pictureUrl: URL) -> ImageRequest {
+func pfpImageRequestFor(_ pictureUrl: URL, overrideLowDataMode: Bool = false) -> ImageRequest {
 #if DEBUG
     L.og.debug("pfpImageRequestFor: \(pictureUrl.absoluteString) -[LOG]-")
 #endif
     //    thumbOptions.createThumbnailFromImageAlways = true
     //    thumbOptions.shouldCacheImmediately = true
-    let options: ImageRequest.Options = SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : []
+    let options: ImageRequest.Options = (SettingsStore.shared.lowDataMode || overrideLowDataMode) ? [.returnCacheDataDontLoad] : []
 
     if !SettingsStore.shared.animatedPFPenabled || pictureUrl.absoluteString.suffix(4) != ".gif" {
         return ImageRequest(url: pictureUrl,

@@ -141,12 +141,14 @@ class EmojiFeedViewModel: ObservableObject {
     // STEP 1: FETCH REACTIONS FROM FOLLOWS FROM RELAYS
     private func fetchReactionsFromRelays(_ onComplete: (() -> ())? = nil) {
         
-        Task { @MainActor in
+        Task { @MainActor [weak self] in
+            self?.state = .fetchingFromFollows
+            
             if !ConnectionPool.shared.anyConnected {
-                speedTest?.loadingBarViewState = .connecting
+                self?.speedTest?.loadingBarViewState = .connecting
             }
             else {
-                speedTest?.loadingBarViewState = .fetching
+                self?.speedTest?.loadingBarViewState = .fetching
             }
         }
         
@@ -471,6 +473,7 @@ class EmojiFeedViewModel: ObservableObject {
     public enum FeedState {
         case initializing
         case loading
+        case fetchingFromFollows
         case ready
         case timeout
     }
