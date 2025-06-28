@@ -13,17 +13,6 @@ struct FetchingAnimationView: View {
     @State private var yesPFPs = false
     @State private var isAnimating = false
     @State private var pfpUrls: [URL] = []
-    
-    private let circleCount = 10
-    private let animationDuration: Double = 2.0
-    
-    private let colors: [Color] = (0..<10).map { _ in
-        Color(
-            red: Double.random(in: 0...1),
-            green: Double.random(in: 0...1),
-            blue: Double.random(in: 0...1)
-        )
-    }
     @State private var distances: [CGFloat] = (0..<10).map { _ in CGFloat.random(in: 80...120) }
     @State private var speeds: [Double] = (0..<10).map { _ in Double.random(in: 1.0...2.5) }
     
@@ -121,6 +110,7 @@ struct CircleAnimationViews: View {
 }
 
 struct PfpAnimationViews: View {
+    @Environment(\.themes) private var themes
     @EnvironmentObject private var la: LoggedInAccount
     @State private var isAnimating = false
 
@@ -163,7 +153,7 @@ struct PfpAnimationViews: View {
             }
             else {
                 Circle()
-                    .foregroundColor(Color.random)
+                    .foregroundColor(themes.theme.listBackground)
                     .frame(width: 60, height: 60)
                     .scaleEffect(isAnimating ? 1.3 : 0.9)
                     .animation(
@@ -185,7 +175,7 @@ struct FetchingAnimationView_Previews: PreviewProvider {
             pe.loadFollows()
             pe.loadContacts()
             pe.loadContactLists()
-            pe.loadAccount()
+            _ = pe.loadAccount()
         
             
             if let fc = AccountsState.shared.loggedInAccount?.account.loadFollowingCache() {
@@ -208,9 +198,9 @@ import Nuke
 import NukeUI
 
 struct TinyLoadingPFP: View {
+    @Environment(\.themes) private var themes
     
     var url: URL
-    var color: Color = Color.random
     var size: CGFloat = 12
     
     var body: some View {
@@ -230,7 +220,7 @@ struct TinyLoadingPFP: View {
                         .frame(width: size, height: size)
                 }
             }
-            else { color }
+            else { themes.theme.listBackground }
         }
         .pipeline(ImageProcessing.shared.pfp)
         .frame(width: size, height: size)
