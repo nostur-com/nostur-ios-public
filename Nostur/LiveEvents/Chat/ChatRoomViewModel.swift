@@ -143,7 +143,8 @@ class ChatRoomViewModel: ObservableObject {
                             ),
                             amount: Int64(event.naiveSats),
                             nxEvent: NXEvent(pubkey: event.pubkey, kind: Int(event.kind)),
-                            content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags, primaryColor: Themes.default.theme.primary).0
+                            content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags, primaryColor: Themes.default.theme.primary).0,
+                            via: via(nZapRequest)
                         )
                     )
                 }
@@ -248,7 +249,8 @@ class ChatRoomViewModel: ObservableObject {
                                 ),
                                 amount: Int64(event.naiveSats),
                                 nxEvent: NXEvent(pubkey: event.publicKey, kind: event.kind.id),
-                                content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags, primaryColor: Themes.default.theme.primary).0
+                                content: NRContentElementBuilder.shared.buildElements(input: nZapRequest.content, fastTags: nZapRequest.fastTags, primaryColor: Themes.default.theme.primary).0,
+                                via: via(nZapRequest)
                             )
                         )
                     }
@@ -411,4 +413,14 @@ class NRZap: ObservableObject {
     
     var id = "1"
     var createdAt: Date { .now }
+}
+
+func via(_ nEvent: NEvent) -> String? {
+    if let via = nEvent.fastTags.first(where: { $0.0 == "client" && $0.1.prefix(6) != "31990:" })?.1 {
+        return via
+    }
+    else if let proxy = nEvent.fastTags.first(where: { $0.0 == "proxy" && $0.2 != nil })?.2 {
+        return String(format: "%@ (proxy)", proxy)
+    }
+    return nil
 }

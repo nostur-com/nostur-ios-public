@@ -161,7 +161,9 @@ class NRChatConfirmedZap {
     }
     var pfpAttributes: PFPAttributes
     
-    init(id: String, zapRequestId: String, zapRequestPubkey: String, zapRequestCreatedAt: Date, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil) {
+    var via: String?
+    
+    init(id: String, zapRequestId: String, zapRequestPubkey: String, zapRequestCreatedAt: Date, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil, via: String? = nil) {
         self.id = id
         self.zapRequestId = zapRequestId
         self.zapRequestPubkey = zapRequestPubkey
@@ -169,6 +171,7 @@ class NRChatConfirmedZap {
         self.amount = amount
         self.nxEvent = nxEvent
         self.content = content
+        self.via = via
         
         if let contact { // From param
             self.pfpAttributes = PFPAttributes(contact: contact, pubkey: zapRequestPubkey)

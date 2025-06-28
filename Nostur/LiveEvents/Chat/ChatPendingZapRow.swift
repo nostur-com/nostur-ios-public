@@ -14,6 +14,8 @@ struct ChatPendingZapRow: View {
     private var pendingZap: NRChatPendingZap
     @ObservedObject private var pfpAttributes: PFPAttributes
     
+    @ObservedObject var settings: SettingsStore = .shared
+    
     private var zoomableId: String
     @Binding private var selectedContact: NRContact?
     

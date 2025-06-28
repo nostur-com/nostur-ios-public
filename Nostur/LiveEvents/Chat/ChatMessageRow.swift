@@ -14,6 +14,8 @@ struct ChatMessageRow: View {
     @ObservedObject private var nrChat: NRChatMessage
     @ObservedObject private var pfpAttributes: PFPAttributes
     
+    @ObservedObject var settings: SettingsStore = .shared
+    
     private var zoomableId: String
     @Binding private var selectedContact: NRContact?
     
@@ -33,6 +35,14 @@ struct ChatMessageRow: View {
                     .foregroundColor(themes.theme.accent)
 
                 Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
+                
+                if settings.displayUserAgentEnabled, let via = nrChat.via {
+                    Text(String(format: "via %@", via))
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .layoutPriority(3)
+                        .foregroundColor(.secondary)
+                }
             }
             .contentShape(Rectangle())
             .highPriorityGesture(TapGesture().onEnded({ _ in
