@@ -287,7 +287,7 @@ class Zap {
                                                 timeIntervalSince1970: Double(signedEvent.createdAt.timestamp)
                                             ),
                                             aTag: aTag,
-                                            amount: 21000,
+                                            amount: self.amount,
                                             nxEvent: NXEvent(pubkey: signedEvent.publicKey, kind: signedEvent.kind.id),
                                             content: content,
                                             contact: accountNrContact,
