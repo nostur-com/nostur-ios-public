@@ -61,7 +61,8 @@ struct PaymentAmountSelector: View {
                                                         aTag: aTag,
                                                         amount: Int64(amount),
                                                         nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734),
-                                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0
+                                                        content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0,
+                                                        via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? "Nostur" : nil
                                                      )
                                     )
                                 }
@@ -101,7 +102,8 @@ struct PaymentAmountSelector: View {
                                                 pubkey: signedZapRequestNote.publicKey,
                                                 createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)), aTag: aTag,
                                                 amount: Int64(amount),
-                                                nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734), content: []
+                                                nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734), content: [],
+                                                via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? "Nostur" : nil
                                              ))
                         }
                     }

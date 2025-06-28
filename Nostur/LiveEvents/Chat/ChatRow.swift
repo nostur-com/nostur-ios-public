@@ -117,7 +117,9 @@ class NRChatPendingZap {
     }
     var pfpAttributes: PFPAttributes
     
-    init(id: String, pubkey: String, createdAt: Date, aTag: String, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil) {
+    var via: String?
+    
+    init(id: String, pubkey: String, createdAt: Date, aTag: String, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil, via: String? = nil) {
         self.id = id
         self.pubkey = pubkey
         self.createdAt = createdAt
@@ -125,6 +127,7 @@ class NRChatPendingZap {
         self.amount = amount
         self.nxEvent = nxEvent
         self.content = content
+        self.via = via
         
         if let contact { // From param
             self.pfpAttributes = PFPAttributes(contact: contact, pubkey: pubkey)

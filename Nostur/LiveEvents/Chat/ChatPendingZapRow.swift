@@ -50,6 +50,14 @@ struct ChatPendingZapRow: View {
                     
                 Ago(pendingZap.createdAt)
                     .foregroundColor(themes.theme.secondary)
+
+                if settings.displayUserAgentEnabled, let via = pendingZap.via {
+                    Text(String(format: "via %@", via))
+                        .font(.subheadline)
+                        .lineLimit(1)
+                        .layoutPriority(3)
+                        .foregroundColor(.secondary)
+                }
             }
             .contentShape(Rectangle())
             .highPriorityGesture(TapGesture().onEnded({ _ in
