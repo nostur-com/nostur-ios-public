@@ -90,6 +90,11 @@ struct LiveEventRowView: View {
         }
         .onAppear {
             liveEvent.fetchPresenceFromRelays()
+            
+            // better just fetch all Ps for now
+            if !liveEvent.missingPs.isEmpty {
+                QueuedFetcher.shared.enqueue(pTags: liveEvent.missingPs)
+            }
         }
         .padding(10)
         .overlay(

@@ -116,8 +116,10 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.recordingUrl = event.recordingUrl()
         self.liveKitConnectUrl = event.liveKitConnectUrl()
         
-        self.pubkeysOnStage.formUnion(Set(event.participantsOrSpeakers().map { $0.pubkey }))
-        self.pubkeysOnStage.insert(event.pubkey)
+        self.missingPs = Set(event.fastPs.map{ $0.1 }).union(Set([event.pubkey]))
+        contactUpdatedListener()
+        
+        self.pubkeysOnStage = event.pubkeysOnStage()
         
         self.scheduledAt = if event.isPlanned(),
                                         let startsTag = event.fastTags.first(where: { $0.0 == "starts" }),
@@ -130,6 +132,8 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.isNSFW = self.hasNSFWContent()
     }
     
+    public var missingPs: Set<String>
+    
     private func hasNSFWContent() -> Bool {
         return nEvent.fastTags.contains(where: { tag in
             // contains nsfw hashtag?
@@ -141,6 +145,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     }
     
     public func loadReplacableData(_ params: (nEvent: NEvent,
+                                              pubkeysOnStage: Set<String>,
                                               participantsOrSpeakers: [NRContact],
                                               title: String?,
                                               summary: String?,
@@ -162,7 +167,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.objectWillChange.send()
         self.nEvent = params.nEvent
         self.participantsOrSpeakers = params.participantsOrSpeakers
-        self.pubkeysOnStage.formUnion(Set(params.participantsOrSpeakers.map { $0.pubkey }))
+        self.pubkeysOnStage = params.pubkeysOnStage
         self.fastPs = params.fastPs
         self.totalParticipants = params.totalParticipants
         self.title = params.title
@@ -390,6 +395,41 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
             othersPresent.contains(nrContact.pubkey)
         }
     }
+    private var contactUpdatedSubscription: AnyCancellable?
+    deinit {
+        contactUpdatedSubscription?.cancel()
+    }
+    
+    private func contactUpdatedListener() {
+        guard contactUpdatedSubscription == nil else { return }
+        // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
+        // Rerender content elements also for mentions in text
+        contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
+            .subscribe(on: DispatchQueue.global())
+            .filter({ [weak self] (pubkey, contact) in
+                guard let self = self else { return false }
+                return self.missingPs.contains(pubkey)
+            })
+            .sink { [weak self] (pubkey, contact) in
+                guard let self = self else { return }
+                self.missingPs.remove(pubkey)
+                if self.missingPs.isEmpty {
+                    contactUpdatedSubscription?.cancel()
+                    contactUpdatedSubscription = nil
+                }
+                
+                guard !self.participantsOrSpeakers.contains(where: { $0.pubkey == pubkey }) else { return }
+                
+                bg().perform { [weak self] in
+                    let nrContact = NRContact.instance(of: pubkey, contact: contact, context: bg())
+                    
+                    DispatchQueue.main.async {
+                        self?.objectWillChange.send()
+                        self?.participantsOrSpeakers.append(nrContact)
+                    }
+                }
+            }
+    }
     
     @MainActor
     public func listenForPresence() {
@@ -612,5 +652,18 @@ extension Event {
         }
         
         return participantsOrSpeakers
+    }
+    
+    func pubkeysOnStage() -> Set<String> {
+        // Get participants, hosts, speakers
+        var pubkeys: [String] = self.fastPs
+            .filter { fastP in
+                return (fastP.3?.lowercased() == "speaker" ||
+                        fastP.3?.lowercased() == "host" ||
+                        fastP.3?.lowercased() == "participant")
+            }
+            .map { $0.1 }
+        
+        return Set(pubkeys + [self.pubkey])
     }
 }

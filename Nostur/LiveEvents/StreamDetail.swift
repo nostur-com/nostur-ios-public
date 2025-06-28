@@ -188,12 +188,17 @@ struct StreamDetail: View {
                                 satsReceivers = liveEvent.participantsOrSpeakers.filter { $0.anyLud }
                             }
                             .onAppear {
-                                let missingPs = liveEvent.participantsOrSpeakers
-                                    .filter { $0.metadata_created_at == 0 }
-                                    .map { $0.pubkey }
-
-                                if !missingPs.isEmpty {
-                                    QueuedFetcher.shared.enqueue(pTags: missingPs)
+//                                let missingPs = liveEvent.participantsOrSpeakers
+//                                    .filter { $0.metadata_created_at == 0 }
+//                                    .map { $0.pubkey }
+//
+//                                if !missingPs.isEmpty {
+//                                    QueuedFetcher.shared.enqueue(pTags: missingPs)
+//                                }
+                                // better just fetch all Ps for now
+                                let allPs = Set(liveEvent.fastPs.map { $0.1 })
+                                if !allPs.isEmpty {
+                                    QueuedFetcher.shared.enqueue(pTags: allPs)
                                 }
                                 
                                 satsReceivers = liveEvent.participantsOrSpeakers.filter { $0.anyLud }

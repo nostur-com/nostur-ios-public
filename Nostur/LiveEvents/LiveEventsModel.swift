@@ -258,6 +258,7 @@ class LiveEventsModel: ObservableObject {
                     
                     if (event.isLive() || event.isPlanned()) { // update if still live or planned
                         
+                        let pubkeysOnStage = event.pubkeysOnStage()
                         let participantsOrSpeakers = event.participantsOrSpeakers()
                         let fastPs = event.fastPs
                         let totalParticipants = if let currentParticipantsTag = event.fastTags.first(where: { $0.0 == "current_participants" }) {
@@ -296,6 +297,7 @@ class LiveEventsModel: ObservableObject {
                             DispatchQueue.main.async {
                                 nrLiveEvent.objectWillChange.send()
                                 nrLiveEvent.loadReplacableData((nEvent: nEvent,
+                                                              pubkeysOnStage: pubkeysOnStage,
                                                               participantsOrSpeakers: participantsOrSpeakers,
                                                               title: title,
                                                               summary: summary,
