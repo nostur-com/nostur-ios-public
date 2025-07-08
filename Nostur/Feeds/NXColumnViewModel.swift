@@ -183,13 +183,13 @@ class NXColumnViewModel: ObservableObject {
                     
                     // Don't add duplicates to .lastRead but also keep the most recent one
                     // so remove new markAsReadSyncQueue from existing lastRead and then prepend markAsReadSyncQueue to lastRead (move existing ids to the front again)
-                    // after that when we remove > 300 it is always less recent ones that are removed.
+                    // after that when we remove > 700 it is always less recent ones that are removed.
                     feed.lastRead.removeAll { self.markAsReadSyncQueue.contains($0) }
                     feed.lastRead.insert(contentsOf: self.markAsReadSyncQueue, at: 0)
                     
-                    // if size of feed.lastRead is > 350, remove all beyond index 350
-                    if feed.lastRead.count > 350 {
-                        feed.lastRead = Array(feed.lastRead[..<350])
+                    // if size of feed.lastRead is > 700, remove all beyond index 700
+                    if feed.lastRead.count > 700 {
+                        feed.lastRead = Array(feed.lastRead[..<700])
                     }
                     
                     self.markAsReadSyncQueue.removeAll()
