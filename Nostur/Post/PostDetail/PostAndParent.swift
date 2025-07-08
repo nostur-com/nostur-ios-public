@@ -69,6 +69,7 @@ struct PostAndParent: View {
                         timerTask = Task {
                             do {
                                 try await Task.sleep(nanoseconds: UInt64(2.25) * NSEC_PER_SEC)
+                                nrPost.loadReplyTo()
                                 if nrPost.replyTo == nil {
                                     // try search relays
                                     req(RM.getEvent(id: replyToId), relayType: .SEARCH)

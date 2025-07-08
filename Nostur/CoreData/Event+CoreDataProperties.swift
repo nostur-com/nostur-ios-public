@@ -1474,7 +1474,6 @@ extension Event {
                         guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyTo = savedEvent") else { return }
                         waitingEvent.replyTo = savedEvent
                     })
-//                    waitingEvent.replyToUpdated.send(savedEvent)
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyTo, id: waitingEvent.id, event: savedEvent)))
                 }
                 if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
@@ -1482,7 +1481,6 @@ extension Event {
                         guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyToRoot = savedEvent") else { return }
                         waitingEvent.replyToRoot = savedEvent
                     })
-//                    waitingEvent.replyToRootUpdated.send(savedEvent)
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
                     ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRootInverse, id: savedEvent.id, event: waitingEvent)))
                 }
