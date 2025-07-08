@@ -149,6 +149,69 @@ class AccountManager {
         }
     }
     
+    @MainActor func cleanUp(for logoutAccountPubkey: String) {
+        guard !logoutAccountPubkey.isEmpty else { return }
+        
+        let context = viewContext()
+        
+        // Delete following feeds
+        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "CloudFeed")
+        fr.predicate = NSPredicate(format: "accountPubkey == %@ AND type == \"following\"")
+        let frBatchDelete = NSBatchDeleteRequest(fetchRequest: fr)
+        frBatchDelete.resultType = .resultTypeCount
+        
+        if let result = try? context.execute(frBatchDelete) as? NSBatchDeleteResult {
+            if let count = result.result as? Int, count > 0 {
+#if DEBUG
+                L.og.debug("🧹🧹🧹🧹 Deleted \(count) CloudFeeds")
+#endif
+            }
+        }
+
+        // Delete DM states
+        let fr2 = NSFetchRequest<NSFetchRequestResult>(entityName: "CloudDMState")
+        fr2.predicate = NSPredicate(format: "accountPubkey_ == %@")
+        let frBatchDelete2 = NSBatchDeleteRequest(fetchRequest: fr2)
+        frBatchDelete2.resultType = .resultTypeCount
+        
+        if let result2 = try? context.execute(frBatchDelete2) as? NSBatchDeleteResult {
+            if let count = result2.result as? Int, count > 0 {
+#if DEBUG
+                L.og.debug("🧹🧹🧹🧹 Deleted \(count) CloudDMStates")
+#endif
+            }
+        }
+        
+        // Cloud Tasks
+        let fr3 = NSFetchRequest<NSFetchRequestResult>(entityName: "CloudDMState")
+        fr3.predicate = NSPredicate(format: "accountPubkey_ == %@")
+        let frBatchDelete3 = NSBatchDeleteRequest(fetchRequest: fr3)
+        frBatchDelete3.resultType = .resultTypeCount
+        
+        if let result3 = try? context.execute(frBatchDelete3) as? NSBatchDeleteResult {
+            if let count = result3.result as? Int, count > 0 {
+#if DEBUG
+                L.og.debug("🧹🧹🧹🧹 Deleted \(count) CloudTasks")
+#endif
+            }
+        }
+        
+        // Delete WoT cache
+        let fileManager = FileManager.default
+        let cachesDirectory = try! fileManager.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        let txtFilename = cachesDirectory.appendingPathComponent("web-of-trust-\(logoutAccountPubkey).txt")
+        
+        if fileManager.fileExists(atPath: txtFilename.path) {
+            // Migrate from .txt to .bin
+            do {
+                try fileManager.removeItem(at: txtFilename)
+#if DEBUG
+                L.og.debug("🧹🧹🧹🧹 Deleted WoT cache web-of-trust-\(logoutAccountPubkey).txt")
+#endif
+            } catch { }
+        }
+    }
+    
     static func createUserMetadataEvent(account: CloudAccount) -> NEvent? {
         guard account.privateKey != nil else { return nil }
         
