@@ -106,7 +106,7 @@ struct MainFeedsScreen: View {
         if (la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed) { return false }
 //        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
-        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverListsFeed) { return false }
+        if enableDiscoverListsFeed { return false }
         if enableExploreFeed { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableArticleFeed) { return false }
         if lists.count > 0 { return false }
@@ -183,7 +183,7 @@ struct MainFeedsScreen: View {
                                     Spacer()
                                 }
                                 
-                                if la.viewFollowingPublicKeys.count > 10 && enableDiscoverListsFeed {
+                                if enableDiscoverListsFeed {
                                     TabButton(
                                         action: { selectedSubTab = "DiscoverLists" },
                                         title: String(localized: "Discover", comment:"Tab title for Discover Lists feed"),
@@ -335,8 +335,8 @@ struct MainFeedsScreen: View {
                     .opacity(selectedSubTab == "Explore" ? 1.0 : 0)
                 }
                 
-                // ZAPPED/HOT/ARTICLES/GALLERY
-                if la.viewFollowingPublicKeys.count > 10 && selectedSubTab == "DiscoverLists" {
+                // DISCOVER LISTS / FOLLOW PACKS
+                if selectedSubTab == "DiscoverLists" {
                     AvailableWidthContainer {
                         DiscoverLists()
                             .environmentObject(discoverListsVM)

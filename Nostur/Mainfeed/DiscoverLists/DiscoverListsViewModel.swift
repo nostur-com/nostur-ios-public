@@ -42,7 +42,8 @@ class DiscoverListsViewModel: ObservableObject {
         self.state = .initializing
 
         self.backlog = Backlog(timeout: 5.0, auto: true)
-        self.follows = Nostur.follows()
+        
+        self.follows = resolveFollows()
         
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in
@@ -185,7 +186,7 @@ class DiscoverListsViewModel: ObservableObject {
 #if DEBUG
         L.og.debug("Discover lists feed: load()")
 #endif
-        self.follows = Nostur.follows()
+        self.follows = resolveFollows()
         self.state = .loading
         self.discoverLists = []
         
@@ -208,7 +209,7 @@ class DiscoverListsViewModel: ObservableObject {
         self.state = .loading
         self.discoverLists = []
         self.backlog.clear()
-        self.follows = Nostur.follows()
+        self.follows = resolveFollows()
         self.discoverLists = []
         
         self.speedTest?.start()
@@ -231,7 +232,7 @@ class DiscoverListsViewModel: ObservableObject {
             self.discoverLists = []
         }
         self.backlog.clear()
-        self.follows = Nostur.follows()
+        self.follows = resolveFollows()
         
         self.speedTest?.start()
         await withCheckedContinuation { continuation in
@@ -255,5 +256,17 @@ class DiscoverListsViewModel: ObservableObject {
         case loading
         case ready
         case timeout
+    }
+}
+
+
+fileprivate func resolveFollows() -> Set<String> {
+    let accountFollows: Set<String> = Nostur.follows()
+
+    // Use guest account follows if we don't have enough to discover lists
+    return if accountFollows.count < 20, let guestAccount = try? CloudAccount.fetchAccount(publicKey: GUEST_ACCOUNT_PUBKEY, context: viewContext()) {
+        (guestAccount.getFollowingPublicKeys(includeBlocked: true).count > 10) ? guestAccount.getFollowingPublicKeys(includeBlocked: true) : GUEST_FOLLOWS_FALLBACK
+    } else {
+        accountFollows.count > 20 ? accountFollows : GUEST_FOLLOWS_FALLBACK
     }
 }
