@@ -81,12 +81,15 @@ final class SettingsStore: ObservableObject {
     
     public static let walletOptions:[LightningWallet] = [
         LightningWallet(name: "none", scheme: "lightning:"),
-        LightningWallet(name: "Zebedee", scheme: "zebedee:lightning:"), // https://documentation.zebedee.io/docs/zbd-app-uri-schemes/
-        LightningWallet(name: "Wallet of Satoshi", scheme: "walletofsatoshi:lightning:"), // guessed. must check if works
-        LightningWallet(name: "Muun", scheme: "muun:lightning:"), // guessed. must check if works
-        LightningWallet(name: "Phoenix", scheme: "phoenix:lightning:"), // guessed. must check if works
-        LightningWallet(name: "Breez", scheme: "breez:lightning:"), // https://github.com/breez/breezmobile/issues/300
+        LightningWallet(name: "Alby Go", scheme: "alby:"),
         LightningWallet(name: "BlueWallet", scheme: "bluewallet:lightning:"), // https://github.com/BlueWallet/BlueWallet/wiki/Deeplinking
+        LightningWallet(name: "Breez", scheme: "breez:lightning:"), // https://github.com/breez/breezmobile/issues/300
+        LightningWallet(name: "Cash App", scheme: "https://cash.app/launch/lightning/"),
+        LightningWallet(name: "Muun", scheme: "muun:"),
+        LightningWallet(name: "Phoenix", scheme: "phoenix:lightning:"),
+        LightningWallet(name: "Strike", scheme: "strike:"),
+        LightningWallet(name: "Wallet of Satoshi", scheme: "walletofsatoshi:lightning:"), // guessed. must check if works
+        LightningWallet(name: "Zebedee", scheme: "zebedee:lightning:"), // https://documentation.zebedee.io/docs/zbd-app-uri-schemes/
         LightningWallet(name: "Zeus", scheme: "zeusln:lightning:"), // https://github.com/ZeusLN/zeus/blob/b0d129114390d8c6f56904e6c7a7404ca09a80f5/ios/zeus/Info.plist#LL42C5-L42C27
         LightningWallet(name: "Alby (Nostr Wallet Connect)", scheme: "nostur:nwc:alby:"), // NWC
         LightningWallet(name: "Custom Nostr Wallet Connect...", scheme: "nostur:nwc:custom:") // CUSTOM NWC
