@@ -237,7 +237,7 @@ class NewOnboardingTracker {
             L.onboarding.info("✈️✈️ created relays from kind 10002")
         }
         else {
-            L.onboarding.info("✈️✈️ kind kind 10002 not found. ")
+            L.onboarding.info("✈️✈️ kind 10002 not found. ")
         }
     }
     

@@ -88,11 +88,6 @@ struct NRContentTextRendererInner: View {
                 .onTapGesture {
                     onTap?()
                 }
-#if DEBUG
-                .background {
-                    Color.green.opacity(0.15)
-                }
-#endif
             
                 .onReceive(
                     ViewUpdates.shared.contactUpdated
