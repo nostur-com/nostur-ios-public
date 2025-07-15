@@ -184,7 +184,7 @@ struct InnerPFP: View {
                         else { color }
                     }
                     .pipeline(ImageProcessing.shared.pfp)
-                    .drawingGroup()
+//                    .drawingGroup()
                     .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
                         guard profile.pubkey == pubkey, let pictureUrl = profile.pictureUrl else { return }
                         updatedPictureUrl = pictureUrl
@@ -329,7 +329,7 @@ struct MiniPFP: View {
                 else { fallBackColor ?? Color.defaultSecondaryBackground }
             }
             .pipeline(ImageProcessing.shared.pfp)
-            .drawingGroup()
+//            .drawingGroup()
             .frame(width: size, height: size)
             .cornerRadius(size/2)
             .background(

@@ -69,10 +69,12 @@ class EventRelationsQueue {
 //            L.og.debug("🔴🔴 event is not bg")
 //        }
 //#endif
-        
+  
+#if DEBUG
         if event.managedObjectContext == nil {
-            L.og.debug("🔴🔴 addAwaitingEvent: event is not yet saved, problem???")
+            L.og.debug("🔴🔴 addAwaitingEvent: event is not yet saved, problem??? event.id: \(event.id): \((event.content ?? "").prefix(150))")
         }
+#endif
         
         // nil can apparently happen when we have event.replyTo.replyToRoot. 
         //                                          ^      ^        ^

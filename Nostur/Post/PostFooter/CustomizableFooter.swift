@@ -206,7 +206,7 @@ struct CustomizablePreviewFooterFragmentView: View {
 
 let IS_NOT_APPSTORE = ((Bundle.main.infoDictionary?["NOSTUR_IS_DESKTOP"] as? String) ?? "NO") != "NNO"
 
-//let FOOTER_BUTTONS_PREVIEW = "💬🔄+🔖"
-let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️💜❤️💜🔖"
+let FOOTER_BUTTONS_PREVIEW = "💬🔄+🔖"
+//let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️💜❤️💜🔖"
 //let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️😆👍🤔🔖"
 //let FOOTER_BUTTONS_PREVIEW = "💬🔄+⚡️😆👍🤔🔖"
