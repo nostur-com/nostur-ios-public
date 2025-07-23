@@ -124,43 +124,6 @@ public struct RequestMessage {
 """
     }
     
-    
-    // For fetching events posted by people you follow
-    // or reactions by others reacting to the people you follow
-    static func getFollowingEvents(pubkeys:[String], limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
-        let sub = subscriptionId ?? ("F-"+UUID().uuidString)
-        if let since {
-            return """
-["REQ", "\(sub)", {"authors":  \(JSON.shared.toString(pubkeys)), "kinds": [1,5,6,20,9802,30023,34235], "since": \(since.timestamp)}]
-"""
-        }
-        else if let until {
-            return """
-["REQ", "\(sub)", {"authors":  \(JSON.shared.toString(pubkeys)), "kinds": [1,5,6,20,9802,30023,34235], "until": \(until.timestamp)}]
-"""
-        }
-        return """
-["REQ", "\(sub)", {"authors":  \(JSON.shared.toString(pubkeys)), "kinds": [1,5,6,20,9802,30023,34235], "limit": \(limit)}]
-"""
-    }
-    // Same as above but pubkeys already in string
-    static func getFollowingEvents(pubkeysString:String, limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
-        let sub = subscriptionId ?? ("F-"+UUID().uuidString)
-        if let since {
-            return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,20,9802,30023,34235], "since": \(since.timestamp), "limit": \(limit)}]
-"""
-        }
-        else if let until {
-            return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,20,9802,30023,34235], "until": \(until.timestamp), "limit": \(limit)}]
-"""
-        }
-        return """
-["REQ", "\(sub)", {"authors": \(pubkeysString), "kinds": [1,5,6,20,9802,30023,34235], "limit": \(limit)}]
-"""
-    }
-    
     // For fetching any "global" feed events on a relay
     static func getGlobalFeedEvents(limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("G-"+UUID().uuidString)

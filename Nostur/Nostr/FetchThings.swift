@@ -29,21 +29,6 @@ func fetchProfiles(pubkeys: Set<String>, subscriptionId: String? = nil) {
         )
 }
 
-func fetchEvents(pubkeys: Set<String>, amount: Int? = 5000, since: Int64? = nil, subscriptionId: String? = nil) {
-    ConnectionPool.shared
-        .sendMessage(
-            NosturClientMessage(
-                clientMessage: NostrEssentials.ClientMessage(
-                    type: .REQ,
-                    subscriptionId: subscriptionId,
-                    filters: [Filters(authors: pubkeys, kinds: [1,5,6,20,9802,30023,34235], since: since != nil ? Int(since!) : nil, limit: amount)]
-                ),
-                relayType: .READ
-            ),
-            subscriptionId: subscriptionId
-        )
-}
-
 func fetchStuffForLastAddedNotes(ids: [String]) {
     guard !ids.isEmpty else {
 #if DEBUG
