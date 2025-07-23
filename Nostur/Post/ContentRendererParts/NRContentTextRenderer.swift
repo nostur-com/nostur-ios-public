@@ -20,6 +20,7 @@ struct NRContentTextRenderer: View, Equatable {
     }
     
     public let attributedStringWithPs: AttributedStringWithPs
+    @Binding public var showMore: Bool
     public var availableWidth: CGFloat? = nil
     public var isDetail = false
     public var primaryColor: Color? = nil
@@ -30,7 +31,7 @@ struct NRContentTextRenderer: View, Equatable {
     @EnvironmentObject private var dim: DIMENSIONS
     
     var body: some View {
-        NRContentTextRendererInner(nxViewingContext: nxViewingContext, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
+        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
     }
 }
 
@@ -38,6 +39,7 @@ let SELECTABLE_TEXT_CONTEXTS: Set<NXViewingContextOptions> = Set([.detailPane, .
 
 struct NRContentTextRendererInner: View {
     private let attributedStringWithPs: AttributedStringWithPs
+    @Binding var showMore: Bool
     private let availableWidth: CGFloat
     private let isDetail: Bool
     private let primaryColor: Color
@@ -49,11 +51,15 @@ struct NRContentTextRendererInner: View {
     @State private var nxText: AttributedString?
     @State private var textWidth: CGFloat
     @State private var textHeight: CGFloat
+    @State private var shouldShowMoreButton: Bool
+    @State private var reparsedOutput: NSAttributedString? = nil
+    @State private var reparsedNxOutput: AttributedString? = nil
     
     @EnvironmentObject private var dim: DIMENSIONS
     
-    init(nxViewingContext: Set<NXViewingContextOptions>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
+    init(nxViewingContext: Set<NXViewingContextOptions>, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
         self.attributedStringWithPs = attributedStringWithPs
+        _showMore = showMore
         self.availableWidth = availableWidth
         self.isDetail = isDetail
         self.primaryColor = primaryColor ?? Themes.default.theme.primary
@@ -66,16 +72,20 @@ struct NRContentTextRendererInner: View {
         
         if nxViewingContext.isDisjoint(with: SELECTABLE_TEXT_CONTEXTS), let nxOutput = attributedStringWithPs.nxOutput { // Not selectable, but faster
             _nxText = State(wrappedValue: nxOutput)
-//            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT)) // Reminder: also add back below reparsedNxOutput
+//            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT)) // TODO: Reminder: also add back below reparsedNxOutput
+            _shouldShowMoreButton = State(wrappedValue: false && !showMore.wrappedValue)
         }
         else if let output = attributedStringWithPs.output { // Use selectable for isDetail
             _text = State(wrappedValue: isDetail ? output : output.prefix(NRTEXT_LIMIT))
+            _shouldShowMoreButton = State(wrappedValue: !showMore.wrappedValue && !isDetail && output.length > NRTEXT_LIMIT)
         }
         else if let nxOutput = attributedStringWithPs.nxOutput { // missing for some reason? fall back
             _nxText = State(wrappedValue: nxOutput)
+            _shouldShowMoreButton = State(wrappedValue: false && !showMore.wrappedValue)
         }
         else {
             _text = State(wrappedValue: NSAttributedString(string: ""))
+            _shouldShowMoreButton = State(wrappedValue: false && !showMore.wrappedValue)
         }
     }
     
@@ -113,6 +123,30 @@ struct NRContentTextRendererInner: View {
                         }
                     }
                 }
+                .onChange(of: showMore) { [oldValue = self.showMore] newValue in
+                    if newValue && !oldValue {
+                        self.shouldShowMoreButton = false
+                        if let nxOutput = reparsedNxOutput ?? attributedStringWithPs.nxOutput {
+                            withAnimation {
+                                self.nxText = nxOutput
+                            }
+                        }
+                    }
+                }
+            
+                .overlay(alignment: .bottomTrailing) {
+                    if shouldShowMoreButton {
+                        Button {
+                            showMore = true
+                        } label: {
+                            Text("Read more...")
+                                .foregroundColor(Color.white)
+                                .fontWeightBold()
+                                .padding(5)
+                                .background(Color.black)
+                        }
+                    }
+                }
         }
         else if let text {
             if nxViewingContext.contains(.preview) {
@@ -143,8 +177,9 @@ struct NRContentTextRendererInner: View {
                             bg().perform {
                                 guard let event = attributedStringWithPs.event else { return }
                                 let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
-                                guard let reparsedOutput = reparsed.output else { return }
-                                let output = isDetail ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
+                                reparsedOutput = reparsed.output
+                                guard let reparsedOutput else { return }
+                                let output = isDetail || shouldShowMoreButton ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
                                 if self.text != output {
 #if DEBUG
                                     L.og.debug("NRTextFixed.Reparsed: \(reparsed.input) ----> \(output)")
@@ -161,6 +196,30 @@ struct NRContentTextRendererInner: View {
                             textWidth = newWidth
                         }
                         .frame(maxWidth: .infinity, alignment: .topLeading)
+                        .onChange(of: showMore) { [oldValue = self.showMore] newValue in
+                            if newValue && !oldValue {
+                                self.shouldShowMoreButton = false
+                                if let output = reparsedOutput ?? attributedStringWithPs.output {
+                                    withAnimation {
+                                        self.text = output
+                                    }
+                                }
+                            }
+                        }
+                    
+                        .overlay(alignment: .bottomTrailing) {
+                            if shouldShowMoreButton {
+                                Button {
+                                    showMore = true
+                                } label: {
+                                    Text("Read more...")
+                                        .foregroundColor(Color.white)
+                                        .fontWeightBold()
+                                        .padding(5)
+                                        .background(Color.black)
+                                }
+                            }
+                        }
                 }
                 else {
                     NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
@@ -180,7 +239,7 @@ struct NRContentTextRendererInner: View {
                                 guard let event = attributedStringWithPs.event else { return }
                                 let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
                                 guard let reparsedOutput = reparsed.output else { return }
-                                let output = isDetail ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
+                                let output = isDetail || shouldShowMoreButton ? reparsedOutput : reparsedOutput.prefix(NRTEXT_LIMIT)
                                 if self.text != output {
 #if DEBUG
                                     L.og.debug("NRTextDynamic.Reparsed: \(reparsed.input) ----> \(output)")
@@ -188,6 +247,30 @@ struct NRContentTextRendererInner: View {
                                     DispatchQueue.main.async {
                                         self.text = output
                                     }
+                                }
+                            }
+                        }
+                        .onChange(of: showMore) { [oldValue = self.showMore] newValue in
+                            if newValue && !oldValue {
+                                self.shouldShowMoreButton = false
+                                if let output = reparsedOutput ?? attributedStringWithPs.output {
+                                    withAnimation {
+                                        self.text = output
+                                    }
+                                }
+                            }
+                        }
+                    
+                        .overlay(alignment: .bottomTrailing) {
+                            if shouldShowMoreButton {
+                                Button {
+                                    showMore = true
+                                } label: {
+                                    Text("Read more...")
+                                        .foregroundColor(Color.white)
+                                        .fontWeightBold()
+                                        .padding(5)
+                                        .background(Color.black)
                                 }
                             }
                         }

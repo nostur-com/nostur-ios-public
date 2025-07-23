@@ -104,7 +104,7 @@ struct Kind9802: View {
     var content: some View {
         
         // Comment on quote from "comment" tag
-        ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
+        ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
             .frame(maxWidth: .infinity, alignment:.leading)
         
         // The highlight, from .content

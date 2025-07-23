@@ -116,7 +116,7 @@ struct ChatRenderer: View { // VIEW things
 //                    Color.red
 //                        .frame(height: 50)
 //                        .debugDimensions("ContentRenderer.availableWidth \(availableWidth)", alignment: .center)
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: true, primaryColor: theme.primary, accentColor: theme.accent)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: availableWidth, isDetail: true, primaryColor: theme.primary, accentColor: theme.accent)
                         .equatable()
                         .id(index)
                 case .md(let markdownContentWithPs): // For long form articles

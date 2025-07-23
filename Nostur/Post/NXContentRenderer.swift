@@ -153,7 +153,7 @@ struct NXContentRenderer: View { // VIEW things
                             .font(.system(.body, design: .monospaced))
                             .id(index)
                     case .text(let attributedStringWithPs): // For text notes
-                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: vc.availableWidth, isDetail: vc.isDetail, primaryColor: vc.theme.primary, accentColor: vc.theme.accent)
+                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: vc.availableWidth, isDetail: vc.isDetail, primaryColor: vc.theme.primary, accentColor: vc.theme.accent)
                             .equatable()
                             .id(index)
                     case .md(let markdownContentWithPs): // For long form articles

@@ -21,7 +21,7 @@ class PreviewWeights {
             weight += (pictures * 0.8)
             weight += (linkPreviews * 0.3)
             weight += (other * 0.8)
-            weight += (text * 0.0000001)
+            weight += (Double(characters) * 0.0029)
         
         return weight
     }
@@ -64,66 +64,75 @@ enum RowSizeEstimate: CGFloat {
 
 func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement], PreviewWeights) {
     let w = PreviewWeights()
+    var isFirst = true
     
     let previewElements = contentElements.filter { element in
         switch element {
         case .note1, .nrPost:
             w.posts += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.morePosts += 1
                 return false
             }
+            isFirst = false
             return true
         case .noteHex:
             w.posts += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.morePosts += 1
                 return false
             }
+            isFirst = false
             return true
         case .lnbc, .cashu:
             w.other += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.moreOther += 1
                 return false
             }
+            isFirst = false
             return true
         case .image:
             w.pictures += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.morePictures += 1
                 return false
             }
+            isFirst = false
             return true
         case .video:
             w.videos += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.moreVideos += 1
                 return false
             }
+            isFirst = false
             return true
         case .linkPreview:
             w.linkPreviews += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.moreLinkPreviews += 1
                 return false
             }
+            isFirst = false
             return true
         case .postPreviewImage:
             return true
         case .nevent1:
             w.posts += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.morePosts += 1
                 return false
             }
+            isFirst = false
             return true
         case .nprofile1, .npub1:
             w.other += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.moreOther += 1
                 return false
             }
+            isFirst = false
             return true
         case .text(let attributedStringWithPs):
             if let output = attributedStringWithPs.output {
@@ -132,19 +141,21 @@ func filteredForPreview(_ contentElements:[ContentElement]) -> ([ContentElement]
             else if let nxOutput = attributedStringWithPs.nxOutput {
                 w.characters += nxOutput.characters.count
             }
-            w.characters += (attributedStringWithPs.input.utf8.lazy.count { $0 == 10 } * 40) // count newlines 90 characters
+            w.characters += (attributedStringWithPs.input.utf8.lazy.count { $0 == 10 } * 40) // count newlines 40 characters
             w.text += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.moreText += 1
                 return false
             }
+            isFirst = false
             return true
         default:
             w.other += 1;
-            guard w.weight < 2 else {
+            guard isFirst || w.weight < 2 else {
                 w.moreOther += 1
                 return false
             }
+            isFirst = false
             return true
         }
     }

@@ -88,7 +88,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth - 130, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: availableWidth - 130, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
                         .equatable()
                         .environmentObject(childDIM)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
@@ -144,7 +144,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("473f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }
@@ -163,7 +163,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }
@@ -182,7 +182,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }

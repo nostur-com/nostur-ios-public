@@ -157,7 +157,7 @@ struct Kind30023: View {
                         .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {

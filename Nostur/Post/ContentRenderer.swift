@@ -19,17 +19,19 @@ struct ContentRenderer: View { // VIEW things
     private let isDetail: Bool
     private let fullWidth: Bool
     private let availableWidth: CGFloat
-    private let contentElements: [ContentElement]
     private let forceAutoload: Bool
     private var zoomableId: String
     @StateObject private var childDIM: DIMENSIONS
+    @Binding var showMore: Bool
+    @State private var contentElements: [ContentElement]
     
-    init(nrPost: NRPost, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, zoomableId: String = "Default") {
+    init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, zoomableId: String = "Default") {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
         self.availableWidth = availableWidth
-        self.contentElements = isDetail ? nrPost.contentElementsDetail : nrPost.contentElements
+        _contentElements = State(wrappedValue: isDetail ? nrPost.contentElementsDetail : nrPost.contentElements)
+        _showMore = showMore
         self.forceAutoload = forceAutoload
         self.theme = theme
         self.zoomableId = zoomableId
@@ -132,7 +134,7 @@ struct ContentRenderer: View { // VIEW things
 //                            guard !isDetail else { return }
 //                            navigateTo(nrPost, context: childDIM.id)
 //                        }
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: $showMore, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: childDIM.id)
@@ -243,6 +245,13 @@ struct ContentRenderer: View { // VIEW things
                 }
             }
         }
+        .onChange(of: showMore) { [oldValue = self.showMore] newValue in
+            if newValue && !oldValue {
+                withAnimation {
+                    self.contentElements = self.nrPost.contentElementsDetail
+                }
+            }
+        }
         .onAppear {
             childDIM.id = dim.id
         }
@@ -261,7 +270,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("473f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }
@@ -280,7 +289,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }
@@ -299,7 +308,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
                 }
             }
         }

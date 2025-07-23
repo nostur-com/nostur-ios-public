@@ -14,6 +14,7 @@ struct Kind1: View {
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var pfpAttributes: PFPAttributes
+    @State private var showMore = false
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
@@ -39,6 +40,7 @@ struct Kind1: View {
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
     
     @State var showMiniProfile = false
+    @State var clipBottomHeight: CGFloat = 900.0
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -95,7 +97,7 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView")
                 
-                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
                     .frame(maxWidth: .infinity, alignment:.leading)
             }
             else {
@@ -117,17 +119,25 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView2")
                 
-                ContentRenderer(nrPost: nrPost, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: $showMore, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
 //                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: 900, alignment: .top)
-                    .clipBottom(height: 900)
-                                            
-                if (nrPost.previewWeights?.moreItems ?? false) {
-                    ReadMoreButton(nrPost: nrPost)
-                        .padding(.vertical, 5)
-                        .hCentered()
-                }
+                    .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
+                    .clipBottom(height: clipBottomHeight)
+                    .overlay(alignment: .bottomTrailing) {
+                        if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
+                            Button {
+                                showMore = true
+                                clipBottomHeight = 18000.0
+                            } label: {
+                                Text("Read more...")
+                                    .foregroundColor(Color.white)
+                                    .fontWeightBold()
+                                    .padding(5)
+                                    .background(Color.black)
+                            }
+                        }
+                    }
             }
         }
     }
@@ -148,7 +158,7 @@ struct Kind1: View {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             
-            ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload, theme: theme)
+            ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload, theme: theme)
         }
     }
 }

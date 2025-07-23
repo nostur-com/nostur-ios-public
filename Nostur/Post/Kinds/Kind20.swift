@@ -123,7 +123,7 @@ struct Kind20: View {
                     }
                 
                 
-                ContentRenderer(nrPost: nrPost, isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
                     .padding(.vertical, 10)
             }
         }
@@ -137,7 +137,7 @@ struct Kind20: View {
     private var detailContent: some View {
         VStack {
             if nrPost.galleryItems.count > 1 {
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
                     .padding(.top, 10)
             }
             ForEach(nrPost.galleryItems) { galleryItem in
@@ -154,7 +154,7 @@ struct Kind20: View {
             }
             
             if nrPost.galleryItems.count < 2 {
-                ContentRenderer(nrPost: nrPost, isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
                     .padding(.vertical, 10)
             }
         }
