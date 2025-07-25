@@ -9,7 +9,7 @@ import SwiftUI
 import Photos
 
 struct GalleryFullScreenSwiper: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.fullScreenSize) var fullScreenSize: CGSize
 
     public var initialIndex: Int
@@ -204,14 +204,14 @@ struct GalleryFullScreenSwiper: View {
             Button("Save to Photo Library") {
                 saveCurrentImageToPhotos()
             }
-            .foregroundColor(themes.theme.accent)
+            .foregroundColor(theme.accent)
             
             if let activeIndex = activeIndex, activeIndex < items.count {
                 Button("Copy image URL") {
                     UIPasteboard.general.string = items[activeIndex].url.absoluteString
                     sendNotification(.anyStatus, ("Image URL copied to clipboard", "APP_NOTICE"))
                 }
-                .foregroundColor(themes.theme.accent)
+                .foregroundColor(theme.accent)
             }
         }, label: {
             Group {

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AskLoginSheet: View {
     @Environment(\.openURL) private var openURL
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     @StateObject private var vm: Nip97LoginModel
     
@@ -72,7 +72,7 @@ struct AskLoginSheet: View {
                                 }
                                 .opacity(vm.account == account ? 1.0 : 0.25)
                                 .padding(5)
-                                .background(vm.account == account ? themes.theme.accent : Color.clear)
+                                .background(vm.account == account ? theme.accent : Color.clear)
                                 .clipShape(Circle())
                                 .overlay(alignment: .bottom) {
                                     if vm.account == account {
@@ -83,7 +83,7 @@ struct AskLoginSheet: View {
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 7)
                                             .padding(.vertical, 2)
-                                            .background(themes.theme.accent)
+                                            .background(theme.accent)
                                             .cornerRadius(13)
                                             .offset(y: 10)
                                     }

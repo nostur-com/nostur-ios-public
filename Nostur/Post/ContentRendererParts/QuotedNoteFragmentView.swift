@@ -8,22 +8,21 @@
 import SwiftUI
 
 struct QuotedNoteFragmentView: View {
+    @Environment(\.theme) private var theme
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var fullWidth: Bool
-    private var theme: Theme
     @EnvironmentObject private var parentDIM: DIMENSIONS
     @State private var couldBeImposter: Int16
     
-    init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload
         self.fullWidth = fullWidth
-        self.theme = theme
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
     
@@ -82,13 +81,13 @@ struct QuotedNoteFragmentView_Previews: PreviewProvider {
                 
                 if let event1 = PreviewFetcher.fetchNRPost("dec5a86ad780edd26fb8a1b85f919ddace9cb2b2b5d3a68d5124802fc2da4ed3") {
                     Box {
-                        QuotedNoteFragmentView(nrPost: event1, theme: Themes.default.theme)
+                        QuotedNoteFragmentView(nrPost: event1)
                     }
                 }
                 
                 if let event2 = PreviewFetcher.fetchNRPost("f985347c50a24e94277ae4d33b391191e2eabcba31d0553adfafafb18ca2727e") {
                     Box {
-                        QuotedNoteFragmentView(nrPost: event2, theme: Themes.default.theme)
+                        QuotedNoteFragmentView(nrPost: event2)
                     }
                 }
             }

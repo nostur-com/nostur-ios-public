@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct Box<Content: View>: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
     private let content: Content
@@ -15,7 +16,6 @@ struct Box<Content: View>: View {
     private let navMode: NavigationMode
     private var nrPost: NRPost? = nil
     private var showGutter: Bool
-    private var theme: Theme
     
     public enum NavigationMode {
         // Normal onTapGesture on entire view, but this makes Video in UIViewRepresentable not tappable
@@ -29,7 +29,7 @@ struct Box<Content: View>: View {
         case noNavigation // no navigation
     }
     
-    init(nrPost: NRPost? = nil, navMode: NavigationMode? = .background, theme: Theme = Themes.default.theme, showGutter: Bool = true, @ViewBuilder content: () -> Content) {
+    init(nrPost: NRPost? = nil, navMode: NavigationMode? = .background, showGutter: Bool = true, @ViewBuilder content: () -> Content) {
         self.kind = nrPost?.kind ?? 1
         
         // if not deleted: use given navMode or fallback to .background
@@ -43,7 +43,6 @@ struct Box<Content: View>: View {
         self.nrPost = nrPost
         self.content = content()
         self.showGutter = showGutter
-        self.theme = theme
     }
     
     var body: some View {

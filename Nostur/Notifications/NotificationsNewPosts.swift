@@ -18,7 +18,7 @@ struct NewPostsForPubkeys: Hashable {
 
 // Copy pasta from old NotificationsFollowers
 struct NotificationsNewPosts: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     
     @Binding private var navPath: NBNavigationPath
@@ -67,9 +67,9 @@ struct NotificationsNewPosts: View {
                                             .foregroundColor(.gray)
                                     }
                                     .padding(10)
-                                    .background(themes.theme.listBackground)
+                                    .background(theme.listBackground)
                                     .overlay(alignment: .bottom) {
-                                        themes.theme.background.frame(height: GUTTER)
+                                        theme.background.frame(height: GUTTER)
                                     }
                                     
                             })
@@ -98,8 +98,8 @@ struct NotificationsNewPosts: View {
                                 Image(systemName: "plus")
                                     .resizable()
                                     .frame(width: 10, height: 10)
-                                    .background(themes.theme.listBackground)
-                                    .border(themes.theme.listBackground, width: 2.0)
+                                    .background(theme.listBackground)
+                                    .border(theme.listBackground, width: 2.0)
                                     .offset(y: -3)
                             }
                             .offset(y: 3)
@@ -112,7 +112,7 @@ struct NotificationsNewPosts: View {
                                     .resizable()
                                     .frame(width: 10, height: 10)
                                     .foregroundColor(.green)
-                                    .background(themes.theme.listBackground)
+                                    .background(theme.listBackground)
                                     .offset(y: -3)
                             }
                             .offset(y: 3)
@@ -127,7 +127,7 @@ struct NotificationsNewPosts: View {
         }
         .nbNavigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
             NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
-                .environmentObject(themes)
+                .environment(\.theme, theme)
                 .environmentObject(dim)
         })
     }

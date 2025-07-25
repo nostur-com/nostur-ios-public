@@ -12,7 +12,7 @@ import NavigationBackport
 struct DMs: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State private var navPath = NBNavigationPath()
     
     private var selectedTab: String {
@@ -45,7 +45,7 @@ struct DMs: View {
                             HStack {
                                 Text("Accepted", comment: "Tab title for accepted DMs (Direct Messages)").lineLimit(1)
                                     .font(.subheadline)
-                                    .foregroundColor(themes.theme.accent)
+                                    .foregroundColor(theme.accent)
 //                                    .frame(maxWidth: .infinity)
 //                                    .padding(.top, 8)
 //                                    .padding(.bottom, 5)
@@ -69,7 +69,7 @@ struct DMs: View {
                             .padding(.horizontal, 5)
                             .frame(height: 41)
                             .fixedSize()
-                            themes.theme.accent
+                            theme.accent
                                 .frame(height: 3)
                                 .opacity(tab == "Accepted" ? 1 : 0.15)
                         }
@@ -86,7 +86,7 @@ struct DMs: View {
                             HStack {
                                 Text("Requests", comment: "Tab title for DM (Direct Message) requests").lineLimit(1)
                                     .font(.subheadline)
-                                    .foregroundColor(themes.theme.accent)
+                                    .foregroundColor(theme.accent)
 //                                    .frame(maxWidth: .infinity)
 //                                    .padding(.top, 8)
 //                                    .padding(.bottom, 5)
@@ -110,7 +110,7 @@ struct DMs: View {
                             .padding(.horizontal, 5)
                             .frame(height: 41)
                             .fixedSize()
-                            themes.theme.accent
+                            theme.accent
                                 .frame(height: 3)
                                 .opacity(tab == "Requests" ? 1 : 0.15)
                         }
@@ -127,7 +127,7 @@ struct DMs: View {
                 case "Accepted":
                     if !vm.conversationRows.isEmpty {
                         DirectMessageRows(pubkey: pubkey, conversationRows: $vm.conversationRows)
-                            .environmentObject(themes)
+                            .environment(\.theme, theme)
                     }
                     else {
                         Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
@@ -137,7 +137,7 @@ struct DMs: View {
                     if !vm.requestRows.isEmpty || vm.showNotWoT {
                         VStack {
                             DirectMessageRows(pubkey: pubkey, conversationRows: $vm.requestRows)
-                                .environmentObject(themes)
+                                .environment(\.theme, theme)
                         }
                     }
                     else {
@@ -166,13 +166,13 @@ struct DMs: View {
                             conv.dmState.markedReadAt_ = Date.now
                             conv.dmState.didUpdate.send()
                         }
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
             }
             .sheet(isPresented: $showingNewDM) {
                 NBNavigationStack {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
-                        .nosturNavBgCompat(themes: themes)
+                         .nosturNavBgCompat(theme: theme)
                         .onAppear {
                             if let preloadNewDMInfo {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
@@ -180,11 +180,11 @@ struct DMs: View {
                                 }
                             }
                         }
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                         .environmentObject(la)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
             .onReceive(receiveNotification(.triggerDM)) { notification in
                 let preloadNewDMInfo = notification.object as! (String, NRContact)
@@ -207,7 +207,7 @@ struct DMs: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Image(systemName: "gearshape")
-                        .foregroundColor(themes.theme.accent)
+                        .foregroundColor(theme.accent)
                         .onTapGesture {
                             sendNotification(.showDMToggles)
                         }
@@ -230,8 +230,8 @@ struct DMs: View {
                     }
                 }
             }
-            .background(themes.theme.listBackground)
-            .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
+            .background(theme.listBackground)
+             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
         }
         .nbUseNavigationStack(.never)
     }

@@ -10,7 +10,7 @@ import NukeUI
 import NavigationBackport
 
 struct Gallery: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject var vm: GalleryViewModel
     @StateObject private var speedTest = NXSpeedTest()
     @State private var showSettings = false
@@ -87,7 +87,7 @@ struct Gallery: View {
                 .centered()
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
@@ -118,10 +118,10 @@ struct Gallery: View {
         .sheet(isPresented: $showSettings) {
             NBNavigationStack {
                 GalleryFeedSettings(vm: vm)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 }

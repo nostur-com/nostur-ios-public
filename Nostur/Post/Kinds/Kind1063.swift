@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Kind1063: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -46,7 +46,7 @@ struct Kind1063: View {
     
     @State var showMiniProfile = false
     
-    init(nrPost: NRPost, fileMetadata: KindFileMetadata, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, fileMetadata: KindFileMetadata, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -57,7 +57,6 @@ struct Kind1063: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.grouped = grouped
-        self.theme = theme
         self.forceAutoload = forceAutoload
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
         self.fileMetadata = fileMetadata
@@ -86,7 +85,7 @@ struct Kind1063: View {
     
     @ViewBuilder
     private var normalView: some View {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true, theme: theme) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true) {
             
             content
             
@@ -109,7 +108,7 @@ struct Kind1063: View {
                     
             }
             if is1063Video(nrPost) {
-                EmbeddedVideoView(url: URL(string: fileMetadata.url)!, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? +20 : 0), autoload: shouldAutoload, theme: theme)
+                EmbeddedVideoView(url: URL(string: fileMetadata.url)!, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? +20 : 0), autoload: shouldAutoload)
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -131,7 +130,7 @@ struct Kind1063: View {
                     isNSFW: nrPost.isNSFW
                 )
                 .padding(.horizontal, fullWidth ? -10 : 0)
-//                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload, theme: theme)
+//                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload)
 //                    .padding(.horizontal, fullWidth ? -10 : 0)
 ////                    .padding(.horizontal, -10)
 ////                    .fixedSize(horizontal: false, vertical: true)

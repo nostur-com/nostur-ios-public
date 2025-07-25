@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct KindResolver: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     public let nrPost: NRPost
     public var fullWidth: Bool = false
@@ -18,7 +19,6 @@ struct KindResolver: View {
     public var isEmbedded: Bool = false
     public var connect: ThreadConnectDirection? = nil
     public var forceAutoload: Bool = false // To override auto downloaded of reposted post using pubkey of reposter
-    public var theme: Theme
     
     private var shouldAutoload: Bool {
         return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
@@ -31,15 +31,15 @@ struct KindResolver: View {
         switch nrPost.kind {
             
         case 0: // .kind 0 happens somehow when events are deleted (Core Data) but still on screen, so not actually kind:0 but missing event, refetch event as workaround:
-            EmbedById(id: nrPost.id, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            EmbedById(id: nrPost.id, fullWidth: fullWidth, forceAutoload: shouldAutoload)
         
         case 3,4,5,7,1984,9734,30009,8,30008:
             // We don't expect to show these, but anyone can quote or reply to any event so we still need to show something
-            OtherKnownKinds(nrPost: nrPost, hideFooter: hideFooter, theme: theme)
+            OtherKnownKinds(nrPost: nrPost, hideFooter: hideFooter)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
         case 443:
-            Kind443(nrPost: nrPost, theme: theme)
+            Kind443(nrPost: nrPost)
             // TODO: .navigationTitle should be somewhere else, only if isDetail
 //                .navigationTitle("Comments on \(nrPost.fastTags.first(where: { $0.0 == "r" } )?.1.replacingOccurrences(of: "https://", with: "") ?? "...")")
             if isDetail {
@@ -76,14 +76,14 @@ struct KindResolver: View {
             }
             
         case 9802:
-            Kind9802(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            Kind9802(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
             
         case 30311:
             if let liveEvent = nrPost.nrLiveEvent {
                 if isEmbedded {
-                    LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
+                    LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload)
                         .onAppear { self.enqueue() }
                         .onDisappear { self.dequeue() }
                 }
@@ -93,59 +93,59 @@ struct KindResolver: View {
                         .onDisappear { self.dequeue() }
                 }
                 else {
-                    PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, theme: theme) {
-                        LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload, theme: theme)
+                    PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true) {
+                        LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload)
                             .onAppear { self.enqueue() }
                             .onDisappear { self.dequeue() }
                     }
                 }
             }
         case 30023:
-            Kind30023(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            Kind30023(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
         case 1063:
             if canRender1063(nrPost), let fileMetadata = nrPost.fileMetadata {
-                Kind1063(nrPost: nrPost, fileMetadata: fileMetadata, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                Kind1063(nrPost: nrPost, fileMetadata: fileMetadata, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                     .onAppear { self.enqueue() }
                     .onDisappear { self.dequeue() }
             }
             else {
-                UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                     .onAppear { self.enqueue() }
                     .onDisappear { self.dequeue() }
             }
         case 20:
-            Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            Kind20(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
             
         case 99999: // Disabled and let NIP-89 handle it for now
             let title = nrPost.eventTitle ?? "Untitled"
             if let eventUrl = nrPost.eventUrl {
-                VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true, theme: theme)
+                VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true)
                     .padding(.vertical, 10)
                     .onAppear { self.enqueue() }
                     .onDisappear { self.dequeue() }
             }
             else {
-                UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                     .onAppear { self.enqueue() }
                     .onDisappear { self.dequeue() }
             }
             
         case 30000,39089:
-            Kind30000(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            Kind30000(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
         
         case 1:
-            Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth || (nrPost.kTag ?? "" == "20" && nrPost.galleryItems.count > 0), forceAutoload: shouldAutoload, theme: theme)
+            Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth || (nrPost.kTag ?? "" == "20" && nrPost.galleryItems.count > 0), forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
             
         default:
-            UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+            UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
             

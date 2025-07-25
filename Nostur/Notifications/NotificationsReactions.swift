@@ -13,7 +13,7 @@ import NavigationBackport
 struct NotificationsReactions: View {
     public let pubkey: String
     @Binding public var navPath: NBNavigationPath
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @StateObject private var model = GroupedReactionsFeedModel()
     @State private var backlog = Backlog()
     @ObservedObject private var settings: SettingsStore = .shared
@@ -69,7 +69,7 @@ struct NotificationsReactions: View {
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .onAppear {
             model.setup(pubkey: pubkey)
             model.load(limit: 150)

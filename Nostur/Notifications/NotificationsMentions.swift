@@ -12,7 +12,7 @@ import NavigationBackport
 struct NotificationsMentions: View {
     public let pubkey: String
     @Binding public var navPath: NBNavigationPath
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @StateObject private var model = MentionsFeedModel()
     @ObservedObject private var settings: SettingsStore = .shared
 
@@ -37,12 +37,12 @@ struct NotificationsMentions: View {
                 ForEach (model.mentions) { nrPost in
                     ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                         }
                     }
                     .id(nrPost.id) // <-- must use .id or can't .scrollTo
                     .listRowSeparator(.hidden)
-                    .listRowBackground(themes.theme.listBackground)
+                    .listRowBackground(theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     .padding(.bottom, GUTTER)
                 }
@@ -75,7 +75,7 @@ struct NotificationsMentions: View {
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .onAppear {
             model.setup(pubkey: pubkey)
             model.load(limit: 50)

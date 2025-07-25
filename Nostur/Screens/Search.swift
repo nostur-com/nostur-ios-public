@@ -14,7 +14,7 @@ import NavigationBackport
 struct Search: View {
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State var nrPosts: [NRPost] = []
     @State var contacts: [NRContact] = []
 
@@ -71,9 +71,9 @@ struct Search: View {
                                     }
                                 }
                                 .padding(10)
-                                .background(themes.theme.listBackground)
+                                .background(theme.listBackground)
                                 .overlay(alignment: .bottom) {
-                                    themes.theme.background.frame(height: GUTTER)
+                                    theme.background.frame(height: GUTTER)
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
@@ -84,10 +84,10 @@ struct Search: View {
                                 Box(nrPost: nrPost) {
                                     if nrPost.kind == 443 {
                                         VStack {
-                                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                                             HStack(spacing: 0) {
                                                 self.replyButton
-                                                    .foregroundColor(themes.theme.footerButtons)
+                                                    .foregroundColor(theme.footerButtons)
                                                     .padding(.leading, 10)
                                                     .padding(.vertical, 5)
                                                     .contentShape(Rectangle())
@@ -99,7 +99,7 @@ struct Search: View {
                                         }
                                     }
                                     else {
-                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                                     }
                                 }
                                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
@@ -138,8 +138,8 @@ struct Search: View {
                         .padding(.bottom, 10)
                 }
             }
-            .background(themes.theme.listBackground)
-            .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
+            .background(theme.listBackground)
+             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)

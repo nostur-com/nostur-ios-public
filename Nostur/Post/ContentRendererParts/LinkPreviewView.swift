@@ -11,9 +11,9 @@ import NukeUI
 import HTMLEntities
 
 struct LinkPreviewView: View {
+    @Environment(\.theme) private var theme
     public let url: URL
     public var autoload: Bool = false
-    public var theme: Theme
     public var linkColor: Color? = nil
     @State var tags: [String: String] = [:]
     
@@ -117,7 +117,7 @@ struct LinkPreviewView_Previews: PreviewProvider {
         let url = URL(string:"https://nostr.land/restore")!
 //        let url = URL(string:"https://nostur.com")!
         NBNavigationStack {
-            LinkPreviewView(url: url, autoload: true, theme: Themes.default.theme)
+            LinkPreviewView(url: url, autoload: true)
                 .padding(10)
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))

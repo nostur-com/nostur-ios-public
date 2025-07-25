@@ -159,12 +159,12 @@ struct PostHeaderView: View {
 
 
 struct RestrictedLabel: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     var body: some View {
         Text("restricted", comment: "Label shown on a restricted post").font(.system(size: 12.0))
             .padding(.horizontal, 8)
-            .background(themes.theme.accent.opacity(0.8))
+            .background(theme.accent.opacity(0.8))
             .foregroundColor(.white)
             .cornerRadius(8)
             .padding(.top, 3)

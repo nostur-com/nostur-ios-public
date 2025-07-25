@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Kind1: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -42,7 +42,7 @@ struct Kind1: View {
     @State var showMiniProfile = false
     @State var clipBottomHeight: CGFloat = 900.0
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -53,7 +53,6 @@ struct Kind1: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.grouped = grouped
-        self.theme = theme
         self.forceAutoload = forceAutoload
     }
     
@@ -78,10 +77,10 @@ struct Kind1: View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload, theme: theme) { 
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload) {
             if (isDetail) {
                 if missingReplyTo || nxViewingContext.contains(.screenshot) {
-                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
+                    ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let subject = nrPost.subject {
                     Text(subject)
@@ -97,13 +96,13 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView")
                 
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload)
                     .frame(maxWidth: .infinity, alignment:.leading)
             }
             else {
                 
                 if missingReplyTo || nxViewingContext.contains(.screenshot) {
-                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
+                    ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let subject = nrPost.subject {
                     Text(subject)
@@ -119,7 +118,7 @@ struct Kind1: View {
 //                    .overlay { Text(availableWidth.description) }
 //                    .debugDimensions("Kind1.normalView2")
                 
-                ContentRenderer(nrPost: nrPost, showMore: $showMore, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: $showMore, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload)
 //                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
@@ -145,10 +144,10 @@ struct Kind1: View {
     
     @ViewBuilder
     private var embeddedView: some View {
-        PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
+        PostEmbeddedLayout(nrPost: nrPost) {
             
             if missingReplyTo {
-                ReplyingToFragmentView(nrPost: nrPost, theme: theme)
+                ReplyingToFragmentView(nrPost: nrPost)
             }
             if let subject = nrPost.subject {
                 Text(subject)
@@ -159,7 +158,7 @@ struct Kind1: View {
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             
-            ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload, theme: theme)
+            ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload)
         }
     }
 }

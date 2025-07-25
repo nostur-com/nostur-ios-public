@@ -13,7 +13,7 @@
 //// TODO: finish this
 //struct Kind30311: View {
 //    @EnvironmentObject private var dim: DIMENSIONS
-//    @EnvironmentObject private var themes: Themes
+//    @Environment(\.theme) private var theme
 //    @ObservedObject private var settings: SettingsStore = .shared
 //    @ObservedObject private var nrPost: NRPost
 //    @ObservedObject private var liveEvent: NRLiveEvent
@@ -62,7 +62,7 @@
 //    
 //    @ViewBuilder
 //    private var embeddedView: some View {
-//        PostEmbeddedLayout(nrPost: nrPost, theme: themes.theme) {
+//        PostEmbeddedLayout(nrPost: nrPost) {
 //            VStack(alignment: .leading, spacing: 0) {
 //                VStack {
 //                    headerView
@@ -182,7 +182,7 @@
 //                                    }
 //                                
 //                                videoStreamView
-//                                    .background(themes.theme.background)
+//                                    .background(theme.background)
 //                            }
 //                            .onTapGesture {
 //                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
@@ -194,7 +194,7 @@
 //                                }
 //                            }
 //                            
-//                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously, chatVM: liveEvent.chatVM)
+//                            ChatRoom(aTag: liveEvent.id, anonymous: liveKitVoiceSession.listenAnonymously, chatVM: liveEvent.chatVM)
 //                                .padding(.horizontal, 10)
 //                                .environmentObject(vc)
 //                        }
@@ -208,7 +208,7 @@
 //                        .padding(10)
 //                        .layoutPriority(1)
 //                }
-//                .background(themes.theme.background)
+//                .background(theme.background)
 //            }
 //            .onAppear {
 //                if let relaysTag = liveEvent.nEvent.fastTags.first(where: { $0.0 == "relays" }) {
@@ -228,13 +228,13 @@
 //                    }
 //                }
 //                
-//                vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, theme: themes.theme, viewType: .row)
+//                vc = ViewingContext(availableWidth: dim.articleRowImageWidth(), fullWidthImages: false, viewType: .row)
 //                liveEvent.fetchPresenceFromRelays()
 //                if let liveKitVoiceSession, liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
 //                    account = Nostur.account()
 //                }
 //            }
-//            .background(themes.theme.background)
+//            .background(theme.background)
 //            .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
 //            .withNavigationDestinations()
 //            .nbNavigationDestination(isPresented: $showZapSheet, destination: {
@@ -242,8 +242,8 @@
 //                    ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
 //                        .environmentObject(NRState.shared)
 //                        .presentationDetentsLarge()
-//                        .environmentObject(themes)
-//                        .presentationBackgroundCompat(themes.theme.listBackground)
+//                        .environment(\.theme, theme)
+//                        .presentationBackgroundCompat(theme.listBackground)
 //                }
 //            })
 //            .nbNavigationDestination(isPresented: $showNonNWCZapSheet, destination: {
@@ -251,8 +251,8 @@
 //                    PaymentAmountSelector(paymentInfo: paymentInfo)
 //                        .environmentObject(NRState.shared)
 //                        .presentationDetentsLarge()
-//                        .environmentObject(themes)
-//                        .presentationBackgroundCompat(themes.theme.listBackground)
+//                        .environment(\.theme, theme)
+//                        .presentationBackgroundCompat(theme.listBackground)
 //                }
 //            })
 //            .sheet(item: $selectedContact) { nrContact in
@@ -279,7 +279,7 @@
 //                                        }
 //                                        .font(.title2)
 //                                        .labelStyle(.iconOnly)
-//                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+//                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
 //                                        
 //                                        Text("Remove from stage")
 //                                            .font(.caption)
@@ -298,7 +298,7 @@
 //                                        }
 //                                        .font(.title2)
 //                                        .labelStyle(.iconOnly)
-//                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+//                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
 //                                        
 //                                        Text("Add to stage")
 //                                            .font(.caption)
@@ -321,7 +321,7 @@
 //                                        }
 //                                        .font(.title2)
 //                                        .labelStyle(.iconOnly)
-//                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+//                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
 //                                        
 //                                        Text("Remove moderator")
 //                                            .font(.caption)
@@ -340,7 +340,7 @@
 //                                        }
 //                                        .font(.title2)
 //                                        .labelStyle(.iconOnly)
-//                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+//                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
 //                                        
 //                                        Text("Make moderator")
 //                                            .font(.caption)
@@ -350,7 +350,7 @@
 //                                .padding(10)
 //                        }
 //                    }
-//                    .environmentObject(themes)
+//                    .environment(\.theme, theme)
 //                    .padding(10)
 //                    .toolbar {
 //                        ToolbarItem(placement: .confirmationAction) {
@@ -366,7 +366,7 @@
 //                    }
 //                }
 //                .nbUseNavigationStack(.never)
-//                .presentationBackgroundCompat(themes.theme.background)
+//                .presentationBackgroundCompat(theme.background)
 //                .presentationDetents45ml()
 //            }
 //            .withLightningEffect()
@@ -405,7 +405,7 @@
 //            }
 //                .padding(.top, 10)
 //                .font(.footnote)
-//                .foregroundColor(themes.theme.secondary)
+//                .foregroundColor(theme.secondary)
 //        }
 //        
 //        Text(liveEvent.title ?? " ")
@@ -543,7 +543,7 @@
 //                        .foregroundColor(.white)
 //                        .frame(maxWidth: .infinity, alignment: .center)
 //                }
-//                .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
+//                .buttonStyle(NosturButton(height: 36, bgColor: theme.accent))
 //                .frame(maxWidth: .infinity, alignment: .center)
 //                .padding(.horizontal, 10)
 //                .disabled(true)
@@ -581,7 +581,7 @@
 //                        }
 //                        .frame(maxWidth: .infinity, alignment: .center)
 //                    }
-//                    .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
+//                    .buttonStyle(NosturButton(height: 36, bgColor: theme.accent))
 //                    .frame(maxWidth: .infinity, alignment: .center)
 //                    .disabled(liveKitVoiceSession.room.connectionState != .disconnected)
 //                    
@@ -611,14 +611,14 @@
 //    @ViewBuilder
 //    private var videoStreamView: some View {
 //        if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-//            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+//            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
 //        }
 //        else if liveEvent.streamHasEnded {
 //            EmptyView()
 //        }
 //        else if let url = liveEvent.url {
 //            if url.absoluteString.suffix(5) == ".m3u8" {
-//                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, theme: themes.theme, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
+//                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: videoWidth, autoload: true, didStart: $didStart, thumbnail: liveEvent.thumbUrl)
 //            }
 //            else if liveEvent.liveKitConnectUrl == nil {
 //                Button {

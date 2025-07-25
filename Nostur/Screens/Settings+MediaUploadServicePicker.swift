@@ -13,7 +13,7 @@ let BLOSSOM_LABEL = "Use Blossom server(s)"
 let NIP96_LABEL = "Custom File Storage (NIP-96)"
 
 struct MediaUploadServicePicker: View {  
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State private var nip96apiUrl:String // Should just use @AppStorage("nip96_api_url") here, but this freezes on desktop. so workaround via init() and .onChange(of: nip96apiUrl).
     
     @ObservedObject private var settings: SettingsStore = .shared
@@ -29,12 +29,12 @@ struct MediaUploadServicePicker: View {
         Picker(selection: $settings.defaultMediaUploadService) {
             ForEach(SettingsStore.mediaUploadServiceOptions) {
                 Text($0.name).tag($0)
-                    .foregroundColor(themes.theme.primary)
+                    .foregroundColor(theme.primary)
             }
         } label: {
             Text("Upload method", comment:"Setting on settings screen")
         }
-        .listRowBackground(themes.theme.background)
+        .listRowBackground(theme.background)
         .pickerStyleCompatNavigationLink()
         .onChange(of: settings.defaultMediaUploadService) { newValue in
             if newValue.name == BLOSSOM_LABEL {
@@ -61,18 +61,18 @@ struct MediaUploadServicePicker: View {
         .sheet(isPresented: $nip96configuratorShown) {
             NBNavigationStack {
                 Nip96Configurator()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .sheet(isPresented: $blossomConfiguratorShown) {
             NBNavigationStack {
                 BlossomServerList()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .scrollContentBackgroundHidden()
     }

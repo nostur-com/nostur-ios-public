@@ -11,9 +11,9 @@ import NukeUI
 
 // Same as NRContentTextRenderer, but with Markdown instead of AttributedString
 struct NRContentMarkdownRenderer: View {
+    @Environment(\.theme) private var theme
     public let markdownContentWithPs: MarkdownContentWithPs
     public let fullWidth = false
-    public var theme: Theme
     public var maxWidth: CGFloat
     @State var text: MarkdownContent? = nil
     

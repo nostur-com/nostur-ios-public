@@ -12,7 +12,7 @@ import Combine
 
 //struct ZapReceipt: View {
 //    @Environment(\.nxViewingContext) private var nxViewingContext
-//    @EnvironmentObject private var themes: Themes
+//    @Environment(\.theme) private var theme
 //    @EnvironmentObject private var dim: DIMENSIONS
 //    
 //    @ObservedObject public var nrPost: NRPost
@@ -47,7 +47,7 @@ import Combine
 ////        #if DEBUG
 ////        let _ = Self._printChanges()
 ////        #endif
-//        PostLayout(nrPost: nrPost, hideFooter: true, isDetail: false, theme: themes.theme) {
+//        PostLayout(nrPost: nrPost, hideFooter: true, isDetail: false) {
 //            
 //            content
 //
@@ -56,7 +56,7 @@ import Combine
 //    
 //    @ViewBuilder
 //    private var embeddedView: some View {
-//        PostEmbeddedLayout(nrPost: nrPost, theme: themes.theme) {
+//        PostEmbeddedLayout(nrPost: nrPost) {
 //            content
 //        }
 //    }
@@ -72,7 +72,7 @@ import Combine
 //                            .resizable()
 //                            .scaledToFit()
 //                            .frame(width: 30, height: 30)
-//                            .foregroundColor(themes.theme.accent)
+//                            .foregroundColor(theme.accent)
 //                            .offset(x: 6, y: 6)
 //                    }
 //                    .onTapGesture {
@@ -95,7 +95,7 @@ import Combine
 //                ZappedFrom(pubkey: fromPubkey, name: name, couldBeImposter: 0, createdAt: from.date, context: dim.id)
 //                
 //                if let nrZapFrom = nrZapFrom {
-//                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth(), theme: themes.theme)
+//                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth())
 //                        .frame(maxWidth: .infinity, minHeight: 40, alignment:.leading)
 //                }
 //                else {
@@ -159,7 +159,7 @@ struct ZappedFrom: View {
 }
 
 struct ReceiptFrom: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     let pubkey:String
     
     @State private var name:String?
@@ -174,7 +174,7 @@ struct ReceiptFrom: View {
             Text(name ?? String(pubkey.prefix(11)))
         }
         .font(.footnote)
-        .foregroundColor(themes.theme.secondary)
+        .foregroundColor(theme.secondary)
         .frame(maxWidth: .infinity, alignment: .trailing)
         .task {
             Kind0Processor.shared.receive

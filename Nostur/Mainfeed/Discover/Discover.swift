@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct Discover: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var settings: SettingsStore = .shared
     @EnvironmentObject var discoverVM: DiscoverViewModel
     @StateObject private var speedTest = NXSpeedTest()
@@ -56,7 +56,7 @@ struct Discover: View {
                                 }
                         }
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
                 }
@@ -85,7 +85,7 @@ struct Discover: View {
                 .centered()
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
@@ -112,10 +112,10 @@ struct Discover: View {
         .sheet(isPresented: $showSettings) {
             NBNavigationStack {
                 DiscoverFeedSettings(discoverVM: discoverVM)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
     
@@ -123,7 +123,7 @@ struct Discover: View {
     var topAnchor: some View {
         Color.clear
             .listRowSeparator(.hidden)
-            .listRowBackground(themes.theme.listBackground)
+            .listRowBackground(theme.listBackground)
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
             .frame(height: 0)
             .id("top")

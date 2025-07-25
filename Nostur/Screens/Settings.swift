@@ -13,7 +13,7 @@ import NavigationBackport
 
 struct Settings: View {
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var network: NetworkMonitor = .shared
     @AppStorage("devToggle") private var devToggle: Bool = false
@@ -198,7 +198,7 @@ struct Settings: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Group {
                 Section(header: Text("Spam filtering", comment:"Setting heading on settings screen")) {
@@ -310,7 +310,7 @@ struct Settings: View {
                         }
                     }.font(.caption).foregroundColor(.secondary)
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Media uploading", comment:"Setting heading on settings screen")) {
                     
@@ -322,7 +322,7 @@ struct Settings: View {
                             Text(nip96ApiUrl)
                                 .font(.caption)
                         }
-                        .foregroundColor(themes.theme.secondary)
+                        .foregroundColor(theme.secondary)
                     }
                     
                     if mediaUploadService == BLOSSOM_LABEL {
@@ -332,15 +332,15 @@ struct Settings: View {
                         .sheet(isPresented: $blossomConfiguratorShown) {
                             NBNavigationStack {
                                 BlossomServerList()
-                                    .environmentObject(themes)
-                                    .presentationBackgroundCompat(themes.theme.listBackground)
+                                    .environment(\.theme, theme)
+                                    .presentationBackgroundCompat(theme.listBackground)
                             }
                             .nbUseNavigationStack(.never)
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(theme.listBackground)
                         }
                     }
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             }
             
             Group {
@@ -390,7 +390,7 @@ struct Settings: View {
                         Picker(selection: $settings.thunderzapLevel) {
                             ForEach(ThunderzapLevel.allCases, id:\.self) {
                                 Text($0.localized).tag($0.rawValue)
-                                    .foregroundColor(themes.theme.primary)
+                                    .foregroundColor(theme.primary)
                             }
                         } label: {
                             Text("Lightning sound effect", comment:"Setting on settings screen")
@@ -398,19 +398,19 @@ struct Settings: View {
                         .pickerStyleCompatNavigationLink()
                     }
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Posting", comment:"Setting heading on settings screen")) {
                     PostingToggle()
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Relays", comment: "Relay settings heading")) {
                     RelaysLink()
-                        .listRowBackground(themes.theme.background)
+                        .listRowBackground(theme.background)
                     
                     RelayMasteryLink() // Wrapped in View else SwiftUI will freeze
-                        .listRowBackground(themes.theme.background)
+                        .listRowBackground(theme.background)
                     
                     Toggle(isOn: $settings.enableOutboxRelays) {
                         VStack(alignment: .leading) {
@@ -465,10 +465,10 @@ struct Settings: View {
                     }
                     
                     RelaysStatsLink()
-                        .listRowBackground(themes.theme.background)
+                        .listRowBackground(theme.background)
                     
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
                 
                 
                 Section(header: Text("Data usage", comment: "Setting heading on settings screen")) {
@@ -482,7 +482,7 @@ struct Settings: View {
                     }
                     // TODO: add limited/primary relay selection
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
                 
                 Section(header: Text("Media cache", comment: "Settings heading")) {
                     HStack {
@@ -566,7 +566,7 @@ struct Settings: View {
                         }
                     }
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             }
             
             Section(header: Text("Database status", comment: "Settings heading")) {
@@ -615,7 +615,7 @@ struct Settings: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Section(header: Text("Message verification", comment: "Setting heading on settings screen")) {
                 Toggle(isOn: $settings.isSignatureVerificationEnabled) {
@@ -627,7 +627,7 @@ struct Settings: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             if #available(iOS 16, *) {
                 Section(header: Text("Data export")) {
@@ -648,7 +648,7 @@ struct Settings: View {
                             }
                     }
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             }
             
             if account()?.privateKey != nil && !(account()?.isNC ?? false) {
@@ -659,42 +659,42 @@ struct Settings: View {
                         Label(String(localized:"Delete account", comment: "Button to delete account"), systemImage: "trash")
                     }                    
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             }
         }
         .sheet(isPresented: $showDefaultZapAmountSheet) {
             NBNavigationStack {
                 SettingsDefaultZapAmount()
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                    .environment(\.theme, theme)
+                    .presentationBackgroundCompat(theme.listBackground)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .scrollContentBackgroundHidden()
-        .background(themes.theme.listBackground)
-        .nosturNavBgCompat(themes: themes)
+        .background(theme.listBackground)
+         .nosturNavBgCompat(theme: theme)
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
             NRNavigationStack {
                 DeleteAccountSheet()
             }
             .environmentObject(la)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .sheet(isPresented: $albyNWCsheetShown) {
             NRNavigationStack {
                 AlbyNWCConnectSheet()
             }
             .environmentObject(la)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .sheet(isPresented: $customNWCsheetShown) {
             NRNavigationStack {
                 CustomNWCConnectSheet()
             }
             .environmentObject(la)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
     
@@ -736,13 +736,13 @@ extension Localizable {
 }
 
 struct FooterConfiguratorLink: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     
     var body: some View {
         NavigationLink(destination: {
             FooterConfigurator(footerButtons: $settings.footerButtons)
-                .background(themes.theme.listBackground)
+                .background(theme.listBackground)
         }, label: {
             HStack {
                 Text("Reaction buttons")

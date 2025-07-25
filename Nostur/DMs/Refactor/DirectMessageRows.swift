@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct DirectMessageRows: View {
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     let pubkey: String
     @Binding var conversationRows: [Conversation]
@@ -51,10 +51,10 @@ struct DirectMessageRows: View {
                             Label("Pin", systemImage: "pin")
                         }
                     }
-                    .tint(themes.theme.accent)
+                    .tint(theme.accent)
                 }
             }
-            .listRowBackground(themes.theme.listBackground)
+            .listRowBackground(theme.listBackground)
         }
         .listStyle(.plain)
     }

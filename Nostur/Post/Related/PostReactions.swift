@@ -11,7 +11,7 @@ import NavigationBackport
 
 struct PostReactions: View {
     public var eventId: String
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @StateObject private var model = PostReactionsModel()
 
@@ -24,7 +24,7 @@ struct PostReactions: View {
         #endif
         ScrollViewReader { proxy in
             ZStack {
-                themes.theme.listBackground // list background
+                theme.listBackground // list background
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: GUTTER) {
@@ -41,9 +41,9 @@ struct PostReactions: View {
                                 }
                             }
                             .padding(10)
-                            .background(themes.theme.listBackground) // each row
+                            .background(theme.listBackground) // each row
                             .overlay(alignment: .bottom) {
-                                themes.theme.background.frame(height: GUTTER)
+                                theme.background.frame(height: GUTTER)
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
@@ -69,7 +69,7 @@ struct PostReactions: View {
         }
         .navigationTitle(String(localized: "Reactions", comment: "Title of list of reactions screen"))
         .navigationBarTitleDisplayMode(.inline)
-        .background(themes.theme.listBackground) // screen / toolbar
+        .background(theme.listBackground) // screen / toolbar
         .onAppear {
             model.setup(eventId: eventId)
             model.load(limit: 500)

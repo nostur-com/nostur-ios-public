@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LiveEventCapsule: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var liveEvent: NRLiveEvent
     public var onRemove: (String) -> ()
     
@@ -44,7 +44,7 @@ struct LiveEventCapsule: View {
         }
         .foregroundColor(.white)
         .padding(.horizontal, 8)
-        .background(themes.theme.accent)
+        .background(theme.accent)
         .frame(height: 34.0)
         .clipShape(.rect(cornerRadius: 30))
         .frame(height: 44.0)

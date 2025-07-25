@@ -12,7 +12,7 @@ import NavigationBackport
 
 struct BadgeDetailView: View {
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.managedObjectContext) var viewContext
     @Environment(\.dismiss) var dismiss
     
@@ -103,7 +103,7 @@ struct BadgeDetailView: View {
             
             
             Button { awardToPeopleIsShown = true } label: { Text("Award to people", comment: "Button to award a badge to people") }
-                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
             // award to people
             
             // lazy vstack foreach award p
@@ -134,7 +134,7 @@ struct BadgeDetailView: View {
                 })
                 .navigationTitle(String(localized:"Award to", comment: "Navigation title of screen where you choose who to award badge to"))
                 .navigationBarTitleDisplayMode(.inline)
-                .environmentObject(themes)
+                .environment(\.theme, theme)
                 .environmentObject(la)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -145,7 +145,7 @@ struct BadgeDetailView: View {
                 }
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 }

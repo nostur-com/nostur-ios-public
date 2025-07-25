@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct CustomFeedsListScreen: View {
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture"]))
@@ -37,7 +37,7 @@ struct CustomFeedsListScreen: View {
                         NBNavigationLink(value: list) {
                             ListRow(list: list)
                         }
-                        .listRowBackground(themes.theme.background)
+                        .listRowBackground(theme.background)
                     }
                     .onDelete { indexSet in
                         deleteList(section: Array(lists), offsets: indexSet)
@@ -53,7 +53,7 @@ struct CustomFeedsListScreen: View {
                 } header: {
                     Text("Custom Feeds")
                 }
-                .listRowBackground(themes.theme.listBackground)
+                .listRowBackground(theme.listBackground)
             }
             
             Section {
@@ -95,17 +95,17 @@ struct CustomFeedsListScreen: View {
                         Text("Posts from people followed by the [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account")
                     })
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             } header: {
                 Text("Default feeds")
             } footer: {
                 Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                     .font(.footnote)
             }
-            .listRowBackground(themes.theme.listBackground)
+            .listRowBackground(theme.listBackground)
         }
         .scrollContentBackgroundCompat(.hidden)
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .listStyle(.plain)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -125,12 +125,12 @@ struct CustomFeedsListScreen: View {
         .sheet(isPresented: $newListSheet) {
             NBNavigationStack {
                 NewListSheet()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                     .environmentObject(la)
             }
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
-        .nosturNavBgCompat(themes: themes)
+         .nosturNavBgCompat(theme: theme)
     }
     
     private func deleteList(section: [CloudFeed], offsets: IndexSet) {

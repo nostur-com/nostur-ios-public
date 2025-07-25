@@ -11,7 +11,7 @@ import NavigationBackport
 
 struct AppRow: View {
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.openURL) private var openURL
     public var app: SuggestedApp
     private var appName: String { app.name }
@@ -19,7 +19,6 @@ struct AppRow: View {
     private var appLogoUrl: URL? { app.logoUrl }
     private var appOpenURL: URL { app.openUrl }
     
-    public var theme: Theme
     @ObservedObject private var ss: SettingsStore = .shared
     @State private var showDetailSheet = false
     
@@ -71,11 +70,11 @@ struct AppRow: View {
             NBNavigationStack {
                 VStack(spacing: 10) {
                     Spacer()
-                    AppDetail(app: app, theme: theme, onDismiss: {
+                    AppDetail(app: app, onDismiss: {
                         showDetailSheet = false
                     })
                     .padding()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                     .environmentObject(dim)
                 }
             }
@@ -116,7 +115,7 @@ struct AppRow: View {
                 "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
             )
-        ]), theme: Themes.default.theme)
+        ]))
             .padding(10)
             .environmentObject(DIMENSIONS.shared)
     }

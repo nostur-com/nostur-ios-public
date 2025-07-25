@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct ChatInputField: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Binding var message: String
     var startWithFocus: Bool = true
     var onSubmit: (() -> Void)?
@@ -51,9 +51,9 @@ struct ChatInputField: View {
                     onSubmit()
                 }
             }
-            .accentColor(themes.theme.accent)
+            .accentColor(theme.accent)
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .cornerRadius(25)
         .overlay(
             RoundedRectangle(cornerRadius: 25)

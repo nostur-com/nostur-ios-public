@@ -12,7 +12,7 @@ import NostrEssentials
 /// Sign any unsigned nostr event with your key
 struct AnySigner: View {
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @State private var input = ""
     @State private var error: String?
@@ -75,15 +75,15 @@ struct AnySigner: View {
                             .lineLimit(16)
                     }
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
                 
                 if let account = AccountsState.shared.loggedInAccount?.account, account.privateKey != nil, tab == "Signer" {
                     HStack {
                         Text("Signing as")
                         PFP(pubkey: account.publicKey, account: account, size: 30)
                     }
-                    .listRowBackground(themes.theme.background)
-//                    .background(themes.theme.background)
+                    .listRowBackground(theme.background)
+//                    .background(theme.background)
                 }
                 if let error {
                     Text(error)

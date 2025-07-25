@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct DetailTab: View {
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State private var navPath = NBNavigationPath()
     @EnvironmentObject private var tm: DetailTabsModel
     @ObservedObject public var tab: TabModel
@@ -19,7 +19,7 @@ struct DetailTab: View {
         NBNavigationStack(path: $navPath) {
             if let nrPost = tab.nrPost {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     PostDetailView(nrPost: nrPost, navTitleHidden: true)
 //                        .debugDimensions("DetailTab.PostDetailView", alignment: .topLeading)
@@ -28,7 +28,7 @@ struct DetailTab: View {
             }
             else if let nrLiveEvent = tab.nrLiveEvent {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     LiveEventDetail(liveEvent: nrLiveEvent)
                         .withNavigationDestinations()
@@ -36,7 +36,7 @@ struct DetailTab: View {
             }
             else if let nrContact = tab.nrContact {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()
@@ -44,7 +44,7 @@ struct DetailTab: View {
             }
             else if let notePathId = tab.notePath?.id {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     NoteById(id: notePathId, navTitleHidden: true)//.opacity(tm.selected == tab ? 1 : 0)
 //                        .environmentObject(dim)
@@ -54,14 +54,14 @@ struct DetailTab: View {
             }
             else if let naddr1 = tab.naddr1  {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     switch naddr1.kind {
                     case 30311:
-                        LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true, theme: themes.theme)
+                        LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
                             .withNavigationDestinations()
                     default:
-                        ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true, theme: themes.theme)
+                        ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
                             .withNavigationDestinations()
                     }
                 }
@@ -69,16 +69,16 @@ struct DetailTab: View {
             }
             else if let articleId = tab.articlePath?.id {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
-                    ArticleById(id: articleId, navTitleHidden: true, theme: themes.theme)
+                    ArticleById(id: articleId, navTitleHidden: true)
                         .withNavigationDestinations()
                 }
                 
             }
             else if let contactPubkey = tab.contactPath?.key {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     ProfileByPubkey(pubkey: contactPubkey, tab: tab.contactPath?.tab)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
@@ -87,7 +87,7 @@ struct DetailTab: View {
             }
             else if let nrContact = tab.nrContactPath?.nrContact {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()
@@ -96,7 +96,7 @@ struct DetailTab: View {
             }
             else if let galleryVM = tab.galleryVM {
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .ignoresSafeArea()
                     Gallery()
                         .environmentObject(galleryVM)

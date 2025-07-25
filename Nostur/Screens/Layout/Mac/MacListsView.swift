@@ -13,7 +13,7 @@ let COLUMN_SPACING = 1.0
 @available(iOS 16.0, *)
 struct MacListsView: View {
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
 //    @EnvironmentObject private var screenSpace: ScreenSpace
     
     let SIDEBAR_WIDTH: CGFloat = 50.0
@@ -104,7 +104,7 @@ struct MacListsView: View {
 struct PhoneViewIsh: View {
     
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var ss: SettingsStore = .shared
     
@@ -124,7 +124,7 @@ struct PhoneViewIsh: View {
         NBNavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 ZStack {
-                    themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
+                    theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                     // FOLLOWING
                     if let followingConfig {
                         AvailableWidthContainer {
@@ -231,7 +231,7 @@ struct ColumnViewWrapper: View {
 }
 
 struct ColumnView: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     let availableFeeds: [CloudFeed]
     @Binding var selectedFeed: CloudFeed?
     @Binding var navPath: NBNavigationPath
@@ -240,7 +240,7 @@ struct ColumnView: View {
     var body: some View {
         NBNavigationStack(path: $navPath) {
             ZStack {
-                themes.theme.listBackground
+                theme.listBackground
                 VStack {
                     Button("feeds....") {
                         navPath.append(ViewPath.Lists)
@@ -251,7 +251,7 @@ struct ColumnView: View {
     //                    Color.green
     ////                    ListViewContainer(vm: lvm)
     ////                        .overlay(alignment: .topTrailing) {
-    ////                            ListUnreadCounter(vm: lvm, theme: themes.theme)
+    ////                            ListUnreadCounter(vm: lvm)
     ////                                .padding(.trailing, 10)
     ////                                .padding(.top, 5)
     ////                        }
@@ -336,7 +336,7 @@ struct MacList<Content: View>: View {
 
 
 struct SideTabs:View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Binding var columnsCount: Int
     @Binding var selectedTab: String
     
@@ -353,7 +353,7 @@ struct SideTabs:View {
                     selectedTab = "Main"
                 }
                 .frame(width: 40, height: 40)
-                .background(selectedTab == "Main" ? themes.theme.accent.opacity(0.2) : Color.clear)
+                .background(selectedTab == "Main" ? theme.accent.opacity(0.2) : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 
@@ -361,7 +361,7 @@ struct SideTabs:View {
                     selectedTab = "Notifications"
                 }
                 .frame(width: 40, height: 40)
-                .background(selectedTab == "Notifications" ? themes.theme.accent.opacity(0.2) : Color.clear)
+                .background(selectedTab == "Notifications" ? theme.accent.opacity(0.2) : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 
@@ -369,7 +369,7 @@ struct SideTabs:View {
                     selectedTab = "Search"
                 }
                 .frame(width: 40, height: 40)
-                .background(selectedTab == "Search" ? themes.theme.accent.opacity(0.2) : Color.clear)
+                .background(selectedTab == "Search" ? theme.accent.opacity(0.2) : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 
@@ -377,7 +377,7 @@ struct SideTabs:View {
                     selectedTab = "Bookmarks"
                 }
                 .frame(width: 40, height: 40)
-                .background(selectedTab == "Bookmarks" ? themes.theme.accent.opacity(0.2) : Color.clear)
+                .background(selectedTab == "Bookmarks" ? theme.accent.opacity(0.2) : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 
@@ -385,7 +385,7 @@ struct SideTabs:View {
                     selectedTab = "Messages"
                 }
                 .frame(width: 40, height: 40)
-                .background(selectedTab == "Messages" ? themes.theme.accent.opacity(0.2) : Color.clear)
+                .background(selectedTab == "Messages" ? theme.accent.opacity(0.2) : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
             
@@ -393,7 +393,7 @@ struct SideTabs:View {
             .labelStyle(.iconOnly)
             .buttonStyle(.plain)
             .font(.system(size: 20))
-            .foregroundColor(themes.theme.accent)
+            .foregroundColor(theme.accent)
             
             Spacer()
             

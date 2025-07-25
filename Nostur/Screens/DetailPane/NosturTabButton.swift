@@ -10,7 +10,7 @@ import NavigationBackport
 
 // Tabs for DetailPane, not main feeds
 struct NosturTabButton: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public var isSelected: Bool = false
     public var onSelect: () -> Void
     public var onClose: () -> Void
@@ -46,13 +46,13 @@ struct NosturTabButton: View {
             }
             Text(tab.navigationTitle)
                 .lineLimit(1)
-                .foregroundColor(themes.theme.accent)
+                .foregroundColor(theme.accent)
                 .frame(maxWidth: 150)
             
             if let galleryVM = tab.galleryVM {
                 Text(String(format: "%ih", galleryVM.ago)).lineLimit(1)
                     .font(.caption)
-                    .foregroundColor(themes.theme.accent.opacity(0.5))
+                    .foregroundColor(theme.accent.opacity(0.5))
                 
                 Image(systemName: "gearshape")
                     .onTapGesture {
@@ -61,19 +61,19 @@ struct NosturTabButton: View {
                     .sheet(isPresented: $showGallerySettings, content: {
                         NBNavigationStack {
                             GalleryFeedSettings(vm: galleryVM)
-                                .environmentObject(themes)
+                                .environment(\.theme, theme)
                         }
                         .nbUseNavigationStack(.never)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .presentationBackgroundCompat(theme.listBackground)
                     })
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     .padding(.leading, 5)
             }
         }
         .padding(.trailing, 23)
         .padding(.vertical, 10)
         .padding(.leading, 5)
-        .background(isSelected ? (isArticle ? themes.theme.secondaryBackground : themes.theme.listBackground) : themes.theme.background)
+        .background(isSelected ? (isArticle ? theme.secondaryBackground : theme.listBackground) : theme.background)
         .contentShape(Rectangle())
         .onHover { over in
             isHoveringTab = over

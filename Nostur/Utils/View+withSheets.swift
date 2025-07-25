@@ -20,7 +20,7 @@ extension View {
 
 struct WithSheets: ViewModifier {
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.dismiss) private var dismiss
@@ -82,10 +82,10 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     EditPrivateNoteSheet(privateNote: note)
                         .environmentObject(la)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnPost)) { notification in
@@ -96,10 +96,10 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     NewPrivateNoteSheet(post: post)
                         .environmentObject(la)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
         
             .onReceive(receiveNotification(.newPrivateNoteOnContact)) { notification in
@@ -110,10 +110,10 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     NewPrivateNoteSheet(contact: contact)
                         .environmentObject(la)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
         
             .onReceive(receiveNotification(.reportPost), perform: { notification in
@@ -125,8 +125,8 @@ struct WithSheets: ViewModifier {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(la)
                         .environmentObject(dim)
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             })
@@ -139,8 +139,8 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     PossibleImposterDetail(possibleImposterPubkey: imposterDetails.pubkey, followingPubkey: imposterDetails.similarToPubkey)
                         .environmentObject(la)
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             })
@@ -152,8 +152,8 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     ReportContactSheet(reportContact: reportContact)
                         .environmentObject(la)
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             })
@@ -222,16 +222,16 @@ struct WithSheets: ViewModifier {
                             ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                                 .environmentObject(la)
                                 .environmentObject(dim)
-                                .environmentObject(themes)
-                                .presentationBackgroundCompat(themes.theme.listBackground)
+                                .environment(\.theme, theme)
+                                .presentationBackgroundCompat(theme.listBackground)
                         }
                     }
                     else {
                         ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                             .environmentObject(la)
                             .environmentObject(dim)
-                            .environmentObject(themes)
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .environment(\.theme, theme)
+                            .presentationBackgroundCompat(theme.listBackground)
                     }
                 }
                 .nbUseNavigationStack(.never)
@@ -245,9 +245,9 @@ struct WithSheets: ViewModifier {
                             .environmentObject(dim)
                             .presentationDetents200()
                             .presentationDragIndicatorVisible()
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(theme.listBackground)
                     }
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                 }
                 else {
                     QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
@@ -255,8 +255,8 @@ struct WithSheets: ViewModifier {
                         .environmentObject(dim)
                         .presentationDetents200()
                         .presentationDragIndicatorVisible()
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
             }
         
@@ -267,16 +267,16 @@ struct WithSheets: ViewModifier {
                             ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                                 .environmentObject(la)
                                 .environmentObject(dim)
-                                .presentationBackgroundCompat(themes.theme.listBackground)
+                                .presentationBackgroundCompat(theme.listBackground)
                         }
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                     }
                     else {
                         ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                             .environmentObject(la)
                             .environmentObject(dim)
-                            .environmentObject(themes)
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .environment(\.theme, theme)
+                            .presentationBackgroundCompat(theme.listBackground)
                     }
                 }
                 .nbUseNavigationStack(.never)
@@ -294,8 +294,8 @@ struct WithSheets: ViewModifier {
             .sheet(item: $paymentInfo) { paymentInfo in
                 PaymentAmountSelector(paymentInfo: paymentInfo)
                     .environmentObject(la)
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                    .environment(\.theme, theme)
+                    .presentationBackgroundCompat(theme.listBackground)
             }
         
             .onReceive(receiveNotification(.addRemoveToListsheet)) { notification in
@@ -306,9 +306,9 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     AddRemoveToListsheet(nrContact: nrContact)
                         .environmentObject(la)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                         .environment(\.managedObjectContext, viewContext())
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             }
@@ -325,9 +325,9 @@ struct WithSheets: ViewModifier {
                     }, kind: .highlight, highlight: newHighlight)
                         .environmentObject(la)
                         .environmentObject(dim)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                         .environment(\.managedObjectContext, viewContext())
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             }
@@ -342,8 +342,8 @@ struct WithSheets: ViewModifier {
                     LazyNoteMenuSheet(nrPost: nrPost)
                         .presentationDetentsMedium()
                         .environmentObject(la)
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             }
@@ -358,8 +358,8 @@ struct WithSheets: ViewModifier {
                     ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
                         .presentationDetentsLarge()
                         .environmentObject(la)
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
             }
         
         // Share post screenshot
@@ -382,7 +382,7 @@ struct WithSheets: ViewModifier {
                     let renderer = ImageRenderer(content:
                         VStack(spacing:0) {
                             // TODO: Fix image size + GIF in screenshot
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: themes.theme)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true)
 
                             Group {
                                 if SettingsStore.shared.includeSharedFrom {
@@ -400,7 +400,7 @@ struct WithSheets: ViewModifier {
                         .padding(10)
                         .background(
                             RoundedRectangle(cornerRadius: 10.0)
-                                .foregroundColor(themes.theme.listBackground)
+                                .foregroundColor(theme.listBackground)
                                 .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
                         )
                         .frame(width: min(402, UIScreen.main.bounds.width))
@@ -410,7 +410,7 @@ struct WithSheets: ViewModifier {
                         .environmentObject(la)
                         .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                         .environment(\.colorScheme, colorScheme)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                         .environment(\.nxViewingContext, [.screenshot, .postDetail]) // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
                     )
                     

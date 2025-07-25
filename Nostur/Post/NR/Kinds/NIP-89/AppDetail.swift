@@ -9,6 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct AppDetail: View {
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.openURL) private var openURL
     public var app: SuggestedApp
@@ -18,7 +19,6 @@ struct AppDetail: View {
     private var appOpenURL: URL { app.openUrl }
     private var recommendedByPFPs: [(Pubkey, URL)] { app.recommendedBy }
     
-    public var theme: Theme
     public var onDismiss: () -> Void
     
     @ObservedObject private var ss: SettingsStore = .shared
@@ -153,8 +153,7 @@ struct AppDetail: View {
                                 "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
                                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
                             )
-                        ]),
-                theme: Themes.default.theme, onDismiss: { } )
+                        ]), onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -163,8 +162,7 @@ struct AppDetail: View {
                         description: "A nostr client",
                         logoUrl: URL(string: "https://nostur.com/nostur.png")!,
                         openUrl: URL(string: "https://nostur.com")!,
-                        recommendedBy: []),
-                theme: Themes.default.theme, onDismiss: { } )
+                        recommendedBy: []), onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -178,8 +176,7 @@ struct AppDetail: View {
                                 "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
                                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
                             )
-                        ]),
-                theme: Themes.default.theme, onDismiss: { } )
+                        ]), onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -197,8 +194,7 @@ struct AppDetail: View {
                                 "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
                                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
                             )
-                        ]),
-                theme: Themes.default.theme, onDismiss: { } )
+                        ]), onDismiss: { } )
             
             AppDetail(
                 app: SuggestedApp(
@@ -225,8 +221,7 @@ struct AppDetail: View {
                                 URL(string: "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972")!
                             ),
 
-                        ]),
-                theme: Themes.default.theme, onDismiss: { } )
+                        ]), onDismiss: { } )
         }
         .background(Color.black)
                 

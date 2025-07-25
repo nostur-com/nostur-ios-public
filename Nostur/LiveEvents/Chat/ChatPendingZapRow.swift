@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChatPendingZapRow: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var vc: ViewingContext
     private var pendingZap: NRChatPendingZap
@@ -40,7 +40,7 @@ struct ChatPendingZapRow: View {
                 .padding(.vertical, 2)
                 .foregroundColor(Color.white)
                 .background {
-                    themes.theme.accent
+                    theme.accent
                         .clipShape(Capsule())
                 }
                 
@@ -49,7 +49,7 @@ struct ChatPendingZapRow: View {
                 Text(pfpAttributes.anyName)
                     
                 Ago(pendingZap.createdAt)
-                    .foregroundColor(themes.theme.secondary)
+                    .foregroundColor(theme.secondary)
 
                 if settings.displayUserAgentEnabled, let via = pendingZap.via {
                     Text(String(format: "via %@", via))
@@ -83,7 +83,7 @@ struct ChatPendingZapRow: View {
                     }
                 }
             }))
-            .foregroundColor(themes.theme.accent)
+            .foregroundColor(theme.accent)
             
             NXContentRenderer(nxEvent: pendingZap.nxEvent, contentElements: pendingZap.content, zoomableId: zoomableId)
                 .frame(maxWidth: .infinity, alignment: .leading)

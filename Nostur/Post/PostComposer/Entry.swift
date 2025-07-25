@@ -11,7 +11,7 @@ import NostrEssentials
 
 struct Entry: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     private var vm: NewPostModel
     @ObservedObject var typingTextModel: TypingTextModel
     @Binding var photoPickerShown: Bool
@@ -76,7 +76,7 @@ struct Entry: View {
                             Image(systemName: "camera")
                         }
                         .accessibilityHint(Text("Take a photo"))
-                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
 
                         .padding()
                         
@@ -86,7 +86,7 @@ struct Entry: View {
                             Image(systemName: "photo")
                         }
                         .accessibilityHint(Text("Choose a photo"))
-                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         .padding()
         
                         Spacer()
@@ -163,10 +163,10 @@ struct Entry: View {
                     GifSearcher { gifUrl in
                         typingTextModel.text += gifUrl + "\n"
                     }
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
@@ -174,10 +174,10 @@ struct Entry: View {
                         guard let pngData = uiImage.pngData() else { return }
                         typingTextModel.pastedImages.append(PostedImageMeta(index: typingTextModel.pastedImages.count, data: pngData, type: .png, uniqueId: UUID().uuidString))
                     })
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
             
             if kind != .picture {
@@ -292,7 +292,7 @@ struct Entry: View {
                             Text("Post.verb", comment: "Button to post (publish) a post")
                         }
                     }
-                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                     .cornerRadius(20)
                     .disabled(shouldDisablePostButton)
                     .opacity(shouldDisablePostButton ? 0.25 : 1.0)
@@ -313,7 +313,7 @@ struct Entry: View {
                     isAuthorSelectionShown = false
                 })
                 .equatable()
-                .environmentObject(themes)
+                .environment(\.theme, theme)
                 .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -325,7 +325,7 @@ struct Entry: View {
                 }
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 }

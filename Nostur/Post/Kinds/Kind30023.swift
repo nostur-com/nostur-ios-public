@@ -10,7 +10,7 @@ import MarkdownUI
 
 struct Kind30023: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -37,7 +37,7 @@ struct Kind30023: View {
     
     @State var showMiniProfile = false
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -48,7 +48,6 @@ struct Kind30023: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.grouped = grouped
-        self.theme = theme
         self.forceAutoload = forceAutoload
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
@@ -157,11 +156,11 @@ struct Kind30023: View {
                         .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
-                        CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
+                        CustomizableFooterFragmentView(nrPost: nrPost)
                             .background(theme.secondaryBackground)
                             .drawingGroup(opaque: true)
                             .padding(.vertical, 10)
@@ -447,7 +446,7 @@ struct Kind30023: View {
             }
             
             if !hideFooter {
-                CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
+                CustomizableFooterFragmentView(nrPost: nrPost)
                     .background(theme.secondaryBackground)
                     .drawingGroup(opaque: true)
             }

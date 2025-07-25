@@ -11,7 +11,7 @@ import Nuke
 
 struct ProfileBanner: View {
     @ObservedObject private var settings:SettingsStore = .shared
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     public var banner:String?
     public var width:CGFloat
     public let BANNER_HEIGHT = 150.0
@@ -43,7 +43,7 @@ struct ProfileBanner: View {
                             else {
                                 HStack {
                                     LinearGradient(
-                                        gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
+                                        gradient: Gradient(colors: [theme.listBackground, theme.accent]),
                                         startPoint: .bottom,
                                         endPoint: .top
                                     )
@@ -55,7 +55,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
+                                    gradient: Gradient(colors: [theme.listBackground, theme.accent]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
@@ -80,7 +80,7 @@ struct ProfileBanner: View {
                         else {
                             HStack {
                                 LinearGradient(
-                                    gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
+                                    gradient: Gradient(colors: [theme.listBackground, theme.accent]),
                                     startPoint: .bottom,
                                     endPoint: .top
                                 )
@@ -95,7 +95,7 @@ struct ProfileBanner: View {
             else {
                 HStack {
                     LinearGradient(
-                        gradient: Gradient(colors: [themes.theme.listBackground, themes.theme.accent]),
+                        gradient: Gradient(colors: [theme.listBackground, theme.accent]),
                         startPoint: .bottom,
                         endPoint: .top
                     )

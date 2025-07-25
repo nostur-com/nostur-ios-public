@@ -13,7 +13,7 @@ struct EditNosturList: View {
     @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject public var list: CloudFeed
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     
     @State private var confirmDeleteShown = false
@@ -54,7 +54,7 @@ struct EditNosturList: View {
                         Text("Show replies")
                     }
                 }
-                .listRowBackground(themes.theme.listBackground)
+                .listRowBackground(theme.listBackground)
             }
             
             if !accounts.isEmpty { // Only show if we have full accounts
@@ -97,7 +97,7 @@ struct EditNosturList: View {
                                 .disabled(list.aTag != nil)
                         }
                     }
-                    .listRowBackground(themes.theme.listBackground)
+                    .listRowBackground(theme.listBackground)
                 }
             }
             
@@ -118,15 +118,15 @@ struct EditNosturList: View {
                             }
                             
                         }
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                 }
             } header: {
                 Text("Contacts in list")
             }
         }
         .scrollContentBackgroundCompat(.hidden)
-        .background(themes.theme.background)
-        .nosturNavBgCompat(themes: themes)
+        .background(theme.background)
+         .nosturNavBgCompat(theme: theme)
         .navigationTitle("\(list.name ?? "feed")")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -168,11 +168,11 @@ struct EditNosturList: View {
                         }
                     }
                 }
-                .environmentObject(themes)
+                .environment(\.theme, theme)
                 .environmentObject(la)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .onAppear {
             accounts = AccountsState.shared.accounts
@@ -399,7 +399,7 @@ struct EditList_Previews: PreviewProvider {
 
 
 struct ListAccountPicker: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Binding var accountPubkey: String?
     var accounts: [CloudAccount]
     
@@ -412,7 +412,7 @@ struct ListAccountPicker: View {
                     Text(account.anyName)
                 }
                 .tag(account.publicKey)
-                .foregroundColor(themes.theme.primary)
+                .foregroundColor(theme.primary)
             }
             
         } label: {

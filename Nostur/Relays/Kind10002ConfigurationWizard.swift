@@ -269,7 +269,7 @@ import NavigationBackport
 
 
 struct RelaySelector: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     public var availableRelays:[CloudRelay]
     @Binding public var selectedRelays:Set<CloudRelay>
     

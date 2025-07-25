@@ -10,7 +10,7 @@ import CoreData
 import NavigationBackport
 
 struct NotificationsContainer: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject var la: LoggedInAccount
 
     // Not observed so manual UserDefaults
@@ -29,8 +29,8 @@ struct NotificationsContainer: View {
         #endif
         NBNavigationStack(path: $navPath) {
             NotificationsScreen(account: la.account, navPath: $navPath)
-                .background(themes.theme.listBackground)
-                .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
+                .background(theme.listBackground)
+                .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
         }
         .nbUseNavigationStack(.never)
@@ -53,7 +53,7 @@ struct NotificationsScreen: View {
 
     @Binding public var navPath: NBNavigationPath
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject var dim: DIMENSIONS
     @ObservedObject private var nvm: NotificationsViewModel = .shared
     @ObservedObject private var settings: SettingsStore = .shared
@@ -136,7 +136,7 @@ struct NotificationsScreen: View {
                 }
             }
             .padding(.top, GUTTER)
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
             Spacer()
             
             AudioOnlyBarSpace()
@@ -164,7 +164,7 @@ struct NotificationsScreen: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Image(systemName: "gearshape")
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     .onTapGesture {
                         showNotificationSettings.toggle()
                     }
@@ -173,7 +173,7 @@ struct NotificationsScreen: View {
         .sheet(isPresented: $showNotificationSettings, content: {
             NBNavigationStack {
                 NotificationSettings()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
         })

@@ -11,7 +11,7 @@ import NavigationBackport
 struct BookmarksTab: View {
     @StateObject private var bookmarksVM = BookmarksFeedModel()
     @EnvironmentObject private var fa: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State private var navPath = NBNavigationPath()
 
     private var selectedTab: String {
@@ -55,7 +55,7 @@ struct BookmarksTab: View {
                     }, title: String(localized: "Private Notes", comment: "Tab to switch to private notes"), secondaryText: privateNotesCount, selected: selectedSubTab == "Private Notes")
                 }
                 ZStack {
-                    themes.theme.listBackground
+                    theme.listBackground
                     
                     AvailableWidthContainer {
                         switch selectedSubTab {
@@ -71,8 +71,8 @@ struct BookmarksTab: View {
                 }
                 AudioOnlyBarSpace()
             }
-            .background(themes.theme.listBackground) // screen / toolbar background
-            .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
+            .background(theme.listBackground) // screen / toolbar background
+            .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
@@ -97,10 +97,10 @@ struct BookmarksTab: View {
             }, content: {
                 NBNavigationStack {
                     BookmarkFilters(onlyShow: $bookmarksVM.bookmarkFilters)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.background)
+                .presentationBackgroundCompat(theme.background)
                 .presentationDetents200()
             })
         }

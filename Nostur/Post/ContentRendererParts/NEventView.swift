@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct NEventView: View {
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
     
     public let identifier: ShareableIdentifier
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
-    public var theme: Theme
     
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
         
@@ -96,7 +96,7 @@ struct NEventView: View {
                     .stroke(theme.lineColor, lineWidth: 1)
             )
         case .ready(let nrPost):
-            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
 
         case .timeout:
             Text("Unable to fetch content")
@@ -129,7 +129,7 @@ struct NEventView_Previews: PreviewProvider {
         }) {
             NBNavigationStack {
                 if let identifier = try? ShareableIdentifier("nevent1qqspg0h7quunckc8a7lxag0uvmpeewv9hx8cs3r9pmwsp77tqsfz3gcens7um") {
-                    NEventView(identifier: identifier, theme: Themes.default.theme)
+                    NEventView(identifier: identifier)
                 }
             }
         }

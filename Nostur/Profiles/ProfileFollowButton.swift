@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ProfileFollowButton: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var contact: Contact
     @EnvironmentObject private var la: LoggedInAccount
     @State private var editingAccount: CloudAccount?
@@ -30,10 +30,10 @@ struct ProfileFollowButton: View {
             .sheet(item: $editingAccount) { account in
                 NBNavigationStack {
                     AccountEditView(account: account)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
         }
     }

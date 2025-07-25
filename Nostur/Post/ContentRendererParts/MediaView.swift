@@ -82,7 +82,7 @@ struct MediaContentView: View {
 struct MediaPlaceholder: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @StateObject private var vm = MediaViewVM()
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     
     public let galleryItem: GalleryItem
@@ -176,7 +176,7 @@ struct MediaPlaceholder: View {
     private var mediaPlaceholder: some View {
         switch vm.state {
         case .loading(let percentage), .paused(let percentage):
-            themes.theme.background.opacity(0.7)
+            theme.background.opacity(0.7)
                 .overlay {
                     if let blurImage {
                         Image(uiImage: blurImage)
@@ -244,7 +244,7 @@ struct MediaPlaceholder: View {
                     }
             }
             else {
-                themes.theme.background.opacity(0.7)
+                theme.background.opacity(0.7)
                     .frame(
                         width: availableWidth,
                         height: height
@@ -276,13 +276,13 @@ struct MediaPlaceholder: View {
                 Text(galleryItem.url.absoluteString)
                     .truncationMode(.middle)
                     .fontItalic()
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                 Button(String(localized: "Show anyway", comment: "Button to show the blocked content anyway")) {
                     load(forceLoad: true)
                 }
             }
         case .dontAutoLoad:
-            themes.theme.background.opacity(0.7)
+            theme.background.opacity(0.7)
                 .overlay {
                     if let blurImage {
                         Image(uiImage: blurImage)
@@ -313,7 +313,7 @@ struct MediaPlaceholder: View {
                         Text("Tap to load media", comment: "An image placeholder the user can tap to load media (usually an image or gif)")
                             .frame(maxWidth: .infinity, alignment: .center)
                         Text(galleryItem.url.absoluteString)
-                            .foregroundColor(themes.theme.accent)
+                            .foregroundColor(theme.accent)
                             .lineLimit(1)
                             .truncationMode(.middle)
                             .fontItalic()
@@ -523,7 +523,7 @@ struct MediaPlaceholder: View {
                 }
             }
         case .error(_):
-            themes.theme.background.opacity(0.7)
+            theme.background.opacity(0.7)
                 .overlay {
                     if let blurImage {
                         Image(uiImage: blurImage)
@@ -553,7 +553,7 @@ struct MediaPlaceholder: View {
                         Text(galleryItem.url.absoluteString)
                             .truncationMode(.middle)
                             .fontItalic()
-                            .foregroundColor(themes.theme.accent)
+                            .foregroundColor(theme.accent)
                         Button(String(localized: "Try again", comment: "Button try again")) {
                             load(forceLoad: true)
                         }
@@ -621,7 +621,7 @@ struct MediaPlaceholder: View {
 
 
 struct MediaPostPreview: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     private let nrPost: NRPost
     @ObservedObject private var pfpAttributes: PFPAttributes
     @Binding private var showMiniProfile: Bool

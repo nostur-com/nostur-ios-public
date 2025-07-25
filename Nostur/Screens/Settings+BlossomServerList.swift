@@ -11,7 +11,7 @@ import NostrEssentials
 
 struct BlossomServerList: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     @ObservedObject private var settings: SettingsStore = .shared
     @State private var newServerSheet = false
@@ -57,7 +57,7 @@ struct BlossomServerList: View {
                     Text("Servers higher on the list will be used first")
                 }
             }
-            .listRowBackground(themes.theme.listBackground)
+            .listRowBackground(theme.listBackground)
             
             if let account, !serverList.isEmpty {
                 Section {
@@ -85,7 +85,7 @@ struct BlossomServerList: View {
             }
         }
         .scrollContentBackgroundCompat(.hidden)
-        .background(themes.theme.background)
+        .background(theme.background)
         .toolbar {
             
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -110,9 +110,9 @@ struct BlossomServerList: View {
                     serverList.insert(serverUrlString, at: 0)
                     SettingsStore.shared.blossomServerList = serverList 
                 })
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .onAppear {
             if let account = Nostur.account(), account.isFullAccount {

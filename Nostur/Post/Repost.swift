@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct Repost: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var noteRowAttributes: NoteRowAttributes
@@ -18,7 +19,6 @@ struct Repost: View {
     private let isReply: Bool // is reply on PostDetail (needs 2*10 less box width)
     private let isDetail: Bool
     private let grouped: Bool
-    private var theme: Theme
     
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     @State private var relayHint: String?
@@ -26,7 +26,7 @@ struct Repost: View {
 //    @State private var kind6Source: String?
 //#endif
     
-    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, grouped: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, grouped: Bool = false) {
         self.nrPost = nrPost
         self.noteRowAttributes = nrPost.noteRowAttributes
         self.hideFooter = hideFooter
@@ -36,7 +36,6 @@ struct Repost: View {
         self.isReply = isReply
         self.isDetail = isDetail
         self.grouped = grouped
-        self.theme = theme
     }
     
     private var shouldForceAutoLoad: Bool { // To override auto download of the reposted post
@@ -67,7 +66,7 @@ struct Repost: View {
                     .hCentered()
                 }
                 else {
-                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, forceAutoload: shouldForceAutoLoad, theme: theme)
+                    KindResolver(nrPost: firstQuote, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: true, isReply: isReply, isDetail: isDetail, connect: connect, forceAutoload: shouldForceAutoLoad)
 
                     // Extra padding reposted long form, because normal repost/post has 10, but longform uses 20
                     // so add the extra 10 here

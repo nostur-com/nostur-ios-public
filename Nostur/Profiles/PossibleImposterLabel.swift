@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 //struct PossibleImposterLabel: View {
-//    @EnvironmentObject private var themes: Themes
+//    @Environment(\.theme) private var theme
 //    public var possibleImposterPubkey: String
 //    public var followingPubkey: String? = nil
 //    @State private var showDetails: Bool = false
@@ -30,7 +30,7 @@ import NavigationBackport
 //}
 
 //struct XPossibleImposterLabel: View {
-//    @EnvironmentObject private var themes: Themes
+//    @Environment(\.theme) private var theme
 //    @StateObject private var pfp: PFPAttributes
 //    @State private var showDetails: Bool = false
 //
@@ -63,7 +63,7 @@ import NavigationBackport
 //}
 
 struct PossibleImposterLabelView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var pfp: PFPAttributes
     
     var body: some View {
@@ -92,7 +92,7 @@ struct PossibleImposterLabelView: View {
 }
 
 struct PossibleImposterLabelView2: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
 
     @StateObject private var pfp: PFPAttributes
 
@@ -130,7 +130,7 @@ struct PossibleImposterLabelView2: View {
 }
 
 struct PossibleImposterDetail: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     public var possibleImposterPubkey: String
     public var followingPubkey: String? = nil
@@ -152,7 +152,7 @@ struct PossibleImposterDetail: View {
                     FollowedBy(pubkey: possibleImposterContact.pubkey, alignment: .trailing, minimal: false, showZero: true)
                         .padding(10)
                 }
-                .background(themes.theme.background)
+                .background(theme.background)
                 .clipShape(RoundedRectangle(cornerRadius: 15))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)
@@ -174,7 +174,7 @@ struct PossibleImposterDetail: View {
                     FollowedBy(pubkey: followingContact.pubkey, alignment: .trailing, minimal: false, showZero: true)
                         .padding(10)
                 }
-                .background(themes.theme.background)
+                .background(theme.background)
                 .clipShape(RoundedRectangle(cornerRadius: 15))
                 .overlay(
                     RoundedRectangle(cornerRadius: 15)

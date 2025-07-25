@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AlbyNWCConnectSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @Environment(\.openURL) var openURL
     @Environment(\.dismiss) var dismiss
     @State var nwcConnection:NWCConnection? = nil
@@ -76,7 +76,7 @@ struct AlbyNWCConnectSheet: View {
             }
             else {
                 Button(String(localized:"Connect Alby wallet", comment:"Button to connect to Alby wallet")) { startNWC() }
-                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
             }
             
             if !nwcErrorMessage.isEmpty {

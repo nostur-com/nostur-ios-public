@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ZapCustomizerSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var ss: SettingsStore = .shared
     public var name: String
     public var customZapId: String?
@@ -174,14 +174,14 @@ struct ZapCustomizerSheet: View {
                                 .multilineTextAlignment(.leading)
                                 .lineLimit(5, reservesSpace: true)
                                 .textFieldStyle(.roundedBorder)
-                                .border(themes.theme.lineColor.opacity(0.5))
+                                .border(theme.lineColor.opacity(0.5))
                         }
                         else {
                             TextField("Add public note (optional)", text: $zapMessage)
                                 .multilineTextAlignment(.leading)
                                 .lineLimit(5)
                                 .textFieldStyle(.roundedBorder)
-                                .border(themes.theme.lineColor.opacity(0.5))
+                                .border(theme.lineColor.opacity(0.5))
                         }
                     }
                     .padding(10)
@@ -213,7 +213,7 @@ struct ZapCustomizerSheet: View {
                         .foregroundColor(Color.white)
                         .fontWeightBold()
                         .padding(10)
-                        .background(themes.theme.accent)
+                        .background(theme.accent)
                         .clipShape(RoundedRectangle(cornerRadius: 8.0))
                         .frame(maxWidth: 300)
                         .controlSize(.large)
@@ -242,7 +242,7 @@ struct ZapCustomizerSheet: View {
                     CustomZapAmountEntry(customAmount: $customAmount)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
             .onAppear {
                 selectedAmount = SettingsStore.shared.defaultZapAmount

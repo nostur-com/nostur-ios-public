@@ -9,7 +9,7 @@ import SwiftUI
 import NostrEssentials
 
 struct PostPreview: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS // previewDIM from ComposePost
     @Environment(\.dismiss) private var dismissPostPreview
     public let nrPost: NRPost
@@ -43,7 +43,7 @@ struct PostPreview: View {
 //                .frame(height: 30)
 //                .debugDimensions("PostPreview.ScrollView")
             AnyStatus()
-            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: themes.theme)
+            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
                 .environment(\.nxViewingContext, [.preview, .postDetail])
                 .padding(10)
                 .disabled(true)
@@ -57,7 +57,7 @@ struct PostPreview: View {
         .overlay(alignment: .bottom) {
             MediaUploadProgress(uploader: vm.uploader) // @TODO: Make progress independent of Uploader type (NIP96 / Blossom)
                 .frame(height: Double(vm.uploader.queued.count * 38))
-                .background(themes.theme.listBackground)
+                .background(theme.listBackground)
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -94,7 +94,7 @@ struct PostPreview: View {
                         Text("Post.verb", comment: "Button to post (publish) a post")
                     }
                 }
-                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                 .cornerRadius(20)
                 .disabled(shouldDisablePostButton)
                 .opacity(shouldDisablePostButton ? 0.25 : 1.0)
@@ -102,7 +102,7 @@ struct PostPreview: View {
         }
         .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .frame(width: dim.listWidth)
         .fixedSize(horizontal: true, vertical: false)
     }

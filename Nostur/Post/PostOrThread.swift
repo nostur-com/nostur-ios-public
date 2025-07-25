@@ -15,7 +15,7 @@ struct PostOrThread: View { //, Equatable {
 //        lhs.nrPost.id == rhs.nrPost.id
 //    }
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     private let nrPost: NRPost
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
     private var rootId: String? = nil
@@ -32,24 +32,24 @@ struct PostOrThread: View { //, Equatable {
 //        let _ = Self._printChanges()
 //        #endif
         if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
-            Box(nrPost: nrPost, theme: themes.theme) {
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: themes.theme)
+            Box(nrPost: nrPost) {
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false)
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
             .background {
                 if nrPost.kind == 30023 {
-                    themes.theme.secondaryBackground
+                    theme.secondaryBackground
                 }
             }
         }
         else { // Reply thread
             VStack(spacing: GUTTER) {
                 ForEach(postOrThreadAttributes.parentPosts) { nrParent in
-                    Box(nrPost: nrParent, theme: themes.theme, showGutter: false) {
+                    Box(nrPost: nrParent, showGutter: false) {
                         PostRowDeletable(nrPost: nrParent,
                                          hideFooter: true,
                                          missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
-                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: themes.theme)
+                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false)
                     }
                     .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                     //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
@@ -57,18 +57,18 @@ struct PostOrThread: View { //, Equatable {
                     .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 }
 
-                Box(nrPost: nrPost, theme: themes.theme) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: themes.theme)
+                Box(nrPost: nrPost) {
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false)
                 }
                 .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
             }
             .background { // Still need .background here, normally use Box, but this is for between Boxes (in the same thread)
                 if nrPost.kind == 30023 {
-                    themes.theme.secondaryBackground
+                    theme.secondaryBackground
                 }
                 else {
-                    themes.theme.listBackground // needs to be post background because it links together posts
+                    theme.listBackground // needs to be post background because it links together posts
                 }
             }
         }

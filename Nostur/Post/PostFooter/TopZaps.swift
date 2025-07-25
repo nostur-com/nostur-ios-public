@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftUIFlow
 
 struct TopZaps: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public let id: String
     
     @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
@@ -49,7 +49,7 @@ struct TopZaps: View {
             guard actualSize == nil else { return }
             actualSize = size
         }
-        .nosturNavBgCompat(themes: themes)
+         .nosturNavBgCompat(theme: theme)
         .onAppear {
             loadZaps(zapsSorted)
         }
@@ -77,7 +77,7 @@ struct ZapAndZapFrom: Identifiable {
 }
 
 struct ZapPill: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public var zap: ZapAndZapFrom
     public var index: Int
     public var availableWidth: CGFloat
@@ -96,7 +96,7 @@ struct ZapPill: View {
                     }
                 }
             Text(zap.zap.naiveSats.satsFormatted)
-                .foregroundColor(themes.theme.accent)
+                .foregroundColor(theme.accent)
                 .padding(.trailing, 5)
             if index < 3, let content = zap.zapFrom.content {
                 Text(content)
@@ -104,8 +104,8 @@ struct ZapPill: View {
                     .lineLimit(1)
             }
         }
-        .background(themes.theme.listBackground.opacity(0.5))
-        .foregroundColor(themes.theme.primary)
+        .background(theme.listBackground.opacity(0.5))
+        .foregroundColor(theme.primary)
         .font(.footnote)
         .clipShape(Capsule())
         .frame(maxWidth: index == 0 ? availableWidth : ((availableWidth-20) / 2))

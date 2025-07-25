@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ArticlesFeed: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var settings:SettingsStore = .shared
     @EnvironmentObject var vm: ArticlesFeedViewModel
     @StateObject private var speedTest = NXSpeedTest()
@@ -46,7 +46,7 @@ struct ArticlesFeed: View {
                     LazyVStack(spacing: GUTTER) {
                         ForEach(vm.articles) { post in
                             Box(nrPost: post) {
-                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                             }
                             .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
 //                            .transaction { t in
@@ -81,7 +81,7 @@ struct ArticlesFeed: View {
                 .padding(0)
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
@@ -107,10 +107,10 @@ struct ArticlesFeed: View {
         .sheet(isPresented: $showSettings) {
             NBNavigationStack {
                 ArticleFeedSettings(vm: vm)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 }

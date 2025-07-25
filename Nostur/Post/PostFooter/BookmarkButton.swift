@@ -8,19 +8,19 @@
 import SwiftUI
 
 struct BookmarkButton: View {
+    @Environment(\.theme) private var theme
     private let nrPost: NRPost
     @ObservedObject private var footerAttributes: FooterAttributes
     private var isFirst: Bool
     private var isLast: Bool
-    private var theme: Theme
+
     @State private var showColorSelector = false
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
         self.isFirst = isFirst
         self.isLast = isLast
-        self.theme = theme
     }
     
     var body: some View {
@@ -180,7 +180,7 @@ struct BookmarkButton: View {
                 .fixedSize()
             VStack(spacing: 10) {
                 if let p = PreviewFetcher.fetchNRPost("21a1b8e4083c11eab8f280dc0c0bddf3837949df75662e181ad117bd0bd5fdf3") {
-                    BookmarkButton(nrPost: p, isLast: true, theme: Themes.default.theme)
+                    BookmarkButton(nrPost: p, isLast: true)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 else {

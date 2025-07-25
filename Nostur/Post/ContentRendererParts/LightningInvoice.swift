@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct LightningInvoice: View {
+    @Environment(\.theme) private var theme
     @Environment(\.openURL) private var openURL
     @ObservedObject private var ss: SettingsStore = .shared
     public var invoice: String
-    public var theme: Theme
     @State var divider :Double = 1 // 1 = SATS, 100000000 = BTC
     @State var fiatPrice = ""
     @State var cancellationId: UUID? = nil

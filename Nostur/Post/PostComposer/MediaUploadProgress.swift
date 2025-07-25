@@ -21,7 +21,7 @@ struct MediaUploadProgress: View {
 }
 
 struct Bar:View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim:DIMENSIONS
     @ObservedObject public var bag:MediaRequestBag
     
@@ -29,9 +29,9 @@ struct Bar:View {
         Group {
             switch bag.state {
             case .uploading(let percentage):
-                themes.theme.secondaryBackground
+                theme.secondaryBackground
                     .overlay(alignment: .leading) {
-                        themes.theme.accent
+                        theme.accent
                             .frame(width: ((dim.listWidth * Double(percentage ?? 0) / 100) * 0.7)) // to max 70%
                             .animation(.easeInOut, value: percentage)
                     }
@@ -39,9 +39,9 @@ struct Bar:View {
                         Text(Int(Double(percentage ?? 0) * 0.7), format: .percent)
                     }
             case .processing(let percentage):
-                themes.theme.secondaryBackground
+                theme.secondaryBackground
                     .overlay(alignment: .leading) {
-                        themes.theme.accent
+                        theme.accent
                             .frame(width: (dim.listWidth * 0.7) + ((dim.listWidth * Double(percentage ?? 0) / 100) * 0.3)) // the remaining 30%
                             .animation(.easeInOut, value: percentage)
                     }
@@ -61,7 +61,7 @@ struct Bar:View {
                         Text(message)
                     }
             case .initializing:
-                themes.theme.background
+                theme.background
                     .overlay {
                         Text(0, format: .percent)
                     }

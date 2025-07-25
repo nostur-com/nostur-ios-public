@@ -32,7 +32,7 @@
 //                ForEach(fl.nrPosts) { nrPost in
 //                    Box(nrPost: nrPost) {
 //                        // TODO: Put grouped repost header here
-//                        KindResolver(nrPost: nrPost, fullWidth: settings.fullWidthImages, hideFooter: !settings.rowFooterEnabled, missingReplyTo: true, isDetail: false, theme: themes.theme)
+//                        KindResolver(nrPost: nrPost, fullWidth: settings.fullWidthImages, hideFooter: !settings.rowFooterEnabled, missingReplyTo: true, isDetail: false)
 //                    }
 //                    .id(nrPost.id)
 //                }
@@ -51,7 +51,7 @@
 //                .hCentered()
 //            }
 //        }
-//        .background(themes.theme.listBackground)
+//        .background(theme.listBackground)
 //        .onAppear {
 //            guard !didLoad else { return }
 //            load()

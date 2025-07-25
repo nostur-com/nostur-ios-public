@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct DiscoverLists: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var settings: SettingsStore = .shared
     @EnvironmentObject var discoverListsVM: DiscoverListsViewModel
     @StateObject private var speedTest = NXSpeedTest()
@@ -40,12 +40,12 @@ struct DiscoverLists: View {
                 List {
                     ForEach(discoverListsVM.discoverLists) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
-                            Box(nrPost: nrPost, theme: themes.theme) {
-                                PostRowDeletable(nrPost: nrPost, isDetail: false, theme: themes.theme)
+                            Box(nrPost: nrPost) {
+                                PostRowDeletable(nrPost: nrPost, isDetail: false)
                             }
                         }
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
                 }
@@ -84,7 +84,7 @@ struct DiscoverLists: View {
                 .centered()
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
@@ -102,10 +102,10 @@ struct DiscoverLists: View {
         .sheet(isPresented: $showSettings) {
             NBNavigationStack {
                 DiscoverListsFeedSettings(discoverListsVM: discoverListsVM)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 }

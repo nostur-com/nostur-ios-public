@@ -11,10 +11,10 @@ import NukeUI
 import HTMLEntities
 
 struct BigLinkPreview: View {
+    @Environment(\.theme) private var theme
     static let BIG_PREVIEW_IMAGE_HEIGHT: CGFloat = 350
     public let url: URL
     public var autoload:Bool = false
-    public var theme:Theme
     @State var tags:[String: String] = [:]
     
     static let aspect:CGFloat = 16/9
@@ -125,10 +125,10 @@ struct BigLinkPreview_Previews: PreviewProvider {
 //        let url = URL(string:"https://nostur.com")!
         NBNavigationStack {
             VStack(alignment: .leading) {
-                BigLinkPreview(url: url, theme: Themes.default.theme)
+                BigLinkPreview(url: url)
                     .padding(.vertical, 5)
                 
-                BigLinkPreview(url: url2, theme: Themes.default.theme)
+                BigLinkPreview(url: url2)
                     .padding(.vertical, 5)
                 
             }

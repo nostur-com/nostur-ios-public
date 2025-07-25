@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BlockListScreen: View {
-    @EnvironmentObject var themes: Themes
+    @Environment(\.theme) private var theme
     @State var tab = "Blocked"
     
     var body: some View {
@@ -38,14 +38,14 @@ struct BlockListScreen: View {
             }
             Spacer()
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .navigationTitle(tab)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
 
 struct BlockedContactsView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -60,7 +60,7 @@ struct BlockedContactsView: View {
                 Box {
                     if let contact = Contact.fetchByPubkey(blockedPubkey.pubkey, context: viewContext) {
                         ProfileRow(withoutFollowButton: true, contact: contact)
-//                            .background(themes.theme.background)
+//                            .background(theme.background)
                             .overlay(alignment: .topTrailing) {
                                 if let until = blocksUntil[blockedPubkey.pubkey] {
                                     Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
@@ -89,7 +89,7 @@ struct BlockedContactsView: View {
                         .onTapGesture {
                             navigateTo(ContactPath(key: blockedPubkey.pubkey), context: "Default")
                         }
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                         .overlay(alignment: .topTrailing) {
                             if let until = blocksUntil[blockedPubkey.pubkey] {
                                 Text("blocked until \(until.formatted(date: .abbreviated, time: .shortened))")
@@ -101,7 +101,7 @@ struct BlockedContactsView: View {
                     }
                 }
                 .listRowSeparator(.hidden)
-//                .listRowBackground(themes.theme.listBackground)
+//                .listRowBackground(theme.listBackground)
                 .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
 //                .padding(.bottom, GUTTER)
             }
@@ -157,7 +157,7 @@ struct BlockedContactsView: View {
 }
 
 struct MutedConversationsView: View {
-    @EnvironmentObject var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var settings:SettingsStore = .shared
     
     @Environment(\.managedObjectContext) private var viewContext
@@ -193,7 +193,7 @@ struct MutedConversationsView: View {
                 }
                 .id(mutedRootId.eventId)
                 .listRowSeparator(.hidden)
-                .listRowBackground(themes.theme.listBackground)
+                .listRowBackground(theme.listBackground)
                 .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 .padding(.bottom, GUTTER)
             }

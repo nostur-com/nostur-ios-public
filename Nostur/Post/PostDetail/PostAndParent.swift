@@ -12,7 +12,7 @@ import SwiftUI
 // so it recursively renders up to the root
 struct PostAndParent: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @ObservedObject private var themes: Themes = .default
+    @Environment(\.theme) private var theme
     @ObservedObject private var nrPost: NRPost
     @EnvironmentObject private var dim: DIMENSIONS
     
@@ -42,7 +42,7 @@ struct PostAndParent: View {
                     let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, connect: connect)
                         .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 }
                 else {
                     Text("_Deleted by author_", comment: "Message shown when a post is deleted")
@@ -51,7 +51,7 @@ struct PostAndParent: View {
                         nrPost.objectWillChange.send()
                         replyTo.undelete()
                     }
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     .hCentered()
                 }
             }
@@ -82,7 +82,7 @@ struct PostAndParent: View {
                             catch { }
                         }
                     }
-                    .background(themes.theme.listBackground)
+                    .background(theme.listBackground)
                     .onDisappear {
                         timerTask?.cancel()
                         timerTask = nil
@@ -96,7 +96,7 @@ struct PostAndParent: View {
                         .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .background(
-                            themes.theme.listBackground
+                            theme.listBackground
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
                                     navigateTo(nrPost, context: dim.id)
@@ -104,7 +104,7 @@ struct PostAndParent: View {
                         )
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: themes.theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true)
                         .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
                         .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line

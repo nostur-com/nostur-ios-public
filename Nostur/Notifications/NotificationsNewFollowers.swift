@@ -12,7 +12,7 @@ import NavigationBackport
 
 // Copy pasta from old NotificationsPosts, only using the new follower parts.
 struct NotificationsFollowers: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
     @State private var backlog = Backlog()
@@ -46,15 +46,15 @@ struct NotificationsFollowers: View {
         #endif
         ScrollViewReader { proxy in
             ZStack {
-                themes.theme.listBackground // List background, not toolbar / screen
+                theme.listBackground // List background, not toolbar / screen
                 ScrollView {
                     LazyVStack(spacing: GUTTER) {
                         ForEach(notifications) { notification in
                             NewFollowersNotificationView(notification: notification)
                                 .padding(10)
-                                .background(themes.theme.listBackground)
+                                .background(theme.listBackground)
                                 .overlay(alignment: .bottom) {
-                                    themes.theme.background.frame(height: GUTTER)
+                                    theme.background.frame(height: GUTTER)
                                 }
                                 .id(notification.id)
                         }
@@ -71,7 +71,7 @@ struct NotificationsFollowers: View {
                 }
             }
         }
-        .background(themes.theme.listBackground) // Screen / toolbar background
+        .background(theme.listBackground) // Screen / toolbar background
         .onReceive(receiveNotification(.activeAccountChanged)) { notification in
             let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newFollowers.rawValue)

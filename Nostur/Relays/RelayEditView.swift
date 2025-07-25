@@ -10,7 +10,7 @@ import Combine
 import NostrEssentials
 
 struct RelayEditView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var relay: CloudRelay
@@ -56,7 +56,7 @@ struct RelayEditView: View {
                 guard newValue != connection?.url else { return } // init from "" to socket.url
                 connection?.disconnect()
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Section(header: Text("Relay settings", comment: "Relay settings header") ) {
                 Toggle(isOn: $relay.auth) {
@@ -88,7 +88,7 @@ struct RelayEditView: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Section(header: Text("Status", comment: "Connection status header") ) {
                 HStack {
@@ -151,7 +151,7 @@ struct RelayEditView: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Section(header: Text("")) {
                 Text("Remove")
@@ -178,7 +178,7 @@ struct RelayEditView: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
         }
         .scrollContentBackgroundHidden()
         .navigationTitle(String(localized:"Edit relay", comment:"Navigation title for Edit relay screen"))

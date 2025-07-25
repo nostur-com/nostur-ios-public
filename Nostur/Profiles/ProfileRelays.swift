@@ -10,7 +10,7 @@ import NostrEssentials
 import Combine
 
 struct ProfileRelays: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     public var pubkey: String
     public var name: String
     
@@ -39,7 +39,7 @@ struct ProfileRelays: View {
             if loading {
                 ProgressView()
                     .hCentered()
-                    .listRowBackground(themes.theme.background)
+                    .listRowBackground(theme.background)
                     .task { [weak backlog] in
                         let task = ReqTask(
                             debounceTime: 0.02,
@@ -84,7 +84,7 @@ struct ProfileRelays: View {
                                 .padding(.top, 40)
                         }
                     }
-                    .listRowBackground(themes.theme.background)
+                    .listRowBackground(theme.background)
                 }
                 
                 if !readRelays.isEmpty {
@@ -99,7 +99,7 @@ struct ProfileRelays: View {
                     } header: {
                         Text("\(name) reads posts from")
                     }
-                    .listRowBackground(themes.theme.background)
+                    .listRowBackground(theme.background)
                 }
                 
                 Text("Last updated \(item.date.formatted())")
@@ -109,13 +109,13 @@ struct ProfileRelays: View {
             else {
                 Text("\(name) has not published preferred relays or is using an older configuration.")
                     .padding(10)
-                    .listRowBackground(themes.theme.background)
+                    .listRowBackground(theme.background)
             }
         }
         .scrollContentBackgroundHidden()
         .scrollDisabledCompat()
         .frame(height: UIScreen.main.bounds.height * 2.5)
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .task {
             relayListMetadata.nsPredicate = NSPredicate(format: "kind == 10002 AND pubkey == %@", pubkey)
         }

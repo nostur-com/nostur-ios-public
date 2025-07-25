@@ -54,7 +54,7 @@ struct PostTest_Previews: PreviewProvider {
 
 struct PreviewFeed<Content: View>: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     let content: Content
     
     init(@ViewBuilder _ content: ()->Content) {
@@ -70,7 +70,7 @@ struct PreviewFeed<Content: View>: View {
                 List {
                     content
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                 }
                 .environment(\.defaultMinListRowHeight, 50)

@@ -9,7 +9,7 @@ import SwiftUI
 import NostrEssentials
 
 struct NWCWalletBalance: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var ss:SettingsStore = .shared
     @ObservedObject private var nrq:NWCRequestQueue = .shared
     public var noIcon = false

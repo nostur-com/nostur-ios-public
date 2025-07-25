@@ -9,6 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct VideoEventView: View {
+    @Environment(\.theme) private var theme
     @Environment(\.openURL) private var openURL
     @EnvironmentObject private var dim: DIMENSIONS
     
@@ -20,8 +21,6 @@ struct VideoEventView: View {
     public var thumb: String?
     
     public var autoload: Bool = false
-    
-    public var theme: Theme
     
     public var availableWidth: CGFloat?
     
@@ -103,7 +102,7 @@ struct VideoEventView: View {
 }
 
 #Preview {
-    VideoEventView(title: "Categorias de Aristóteles", url: URL(string: "https://www.youtube.com/watch?v=je-n0Ro-B5k")!, summary: "", imageUrl: URL(string: "https://i3.ytimg.com/vi/je-n0Ro-B5k/hqdefault.jpg")!, autoload: true, theme: Themes.default.theme)
-        .environmentObject(Themes.default)
+    VideoEventView(title: "Categorias de Aristóteles", url: URL(string: "https://www.youtube.com/watch?v=je-n0Ro-B5k")!, summary: "", imageUrl: URL(string: "https://i3.ytimg.com/vi/je-n0Ro-B5k/hqdefault.jpg")!, autoload: true)
+//        .environmentObject(Themes.default)
         .environmentObject(DIMENSIONS.shared)
 }

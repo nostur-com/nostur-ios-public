@@ -12,7 +12,7 @@ import NavigationBackport
 
 struct NotificationsZaps: View {
     private let pubkey: String
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var model = ZapsFeedModel()
     @State private var backlog = Backlog()
@@ -64,9 +64,9 @@ struct NotificationsZaps: View {
                         case .NOTIFICATION:
                             ZapNotificationView(notification: pNotification.notification!)
                                 .padding(10)
-                                .background(themes.theme.listBackground)
+                                .background(theme.listBackground)
                                 .overlay(alignment: .bottom) {
-                                    themes.theme.background.frame(height: GUTTER)
+                                    theme.background.frame(height: GUTTER)
                                 }
                                 .id(pNotification.id)
                         case .ZAP:
@@ -81,9 +81,9 @@ struct NotificationsZaps: View {
                                 }
                             }
                             .padding(10)
-                            .background(themes.theme.listBackground)
+                            .background(theme.listBackground)
                             .overlay(alignment: .bottom) {
-                                themes.theme.background.frame(height: GUTTER)
+                                theme.background.frame(height: GUTTER)
                             }
                             .id(pNotification.id)
                         }
@@ -113,7 +113,7 @@ struct NotificationsZaps: View {
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .onAppear {
             model.setup(pubkey: pubkey)
             model.load(limit: 150)
@@ -184,7 +184,7 @@ struct NotificationsZaps: View {
 }
 
 struct PostZapsView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var postZaps: GroupedPostZaps
     @ObservedObject private var footerAttributes: FooterAttributes
     
@@ -197,7 +197,7 @@ struct PostZapsView: View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
 //                Text(Double(footerAttributes.zapTally).satsFormatted)
 //                    .font(.title2)
                 Text(postZaps.zaps.reduce(0, { $0 + $1.sats }).satsFormatted)
@@ -227,13 +227,13 @@ struct PostZapsView: View {
 
 struct ProfileZap: View {
     public var zap: SingleZap
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     var body: some View {
         HStack(alignment: .top) {
             VStack {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                 Text(zap.sats.satsFormatted)
                     .font(.title2)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {

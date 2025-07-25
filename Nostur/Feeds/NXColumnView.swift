@@ -12,7 +12,7 @@ struct NXColumnView: View {
     
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     @StateObject private var viewModel = NXColumnViewModel()
     @StateObject private var speedTest = NXSpeedTest()
@@ -36,23 +36,23 @@ struct NXColumnView: View {
             switch(viewModel.viewState) {
             case .loading:
                 ZStack(alignment: .center) {
-                    themes.theme.listBackground
+                    theme.listBackground
                     CenteredProgressView()
                 }
             case .posts(let nrPosts):
                 NXPostsFeed(vm: viewModel, posts: nrPosts)
             case .timeout:
                 ZStack(alignment: .center) {
-                    themes.theme.listBackground
+                    theme.listBackground
                     Text("Nothing here :(")
-                        .foregroundColor(themes.theme.accent)
+                        .foregroundColor(theme.accent)
                         .centered()
                 }
             case .error(let errorMessage):
                 ZStack(alignment: .center) {
-                    themes.theme.listBackground
+                    theme.listBackground
                     Text(errorMessage)
-                        .foregroundColor(themes.theme.accent)
+                        .foregroundColor(theme.accent)
                         .centered()
                 }
                 
@@ -156,10 +156,10 @@ struct NXColumnView: View {
         .sheet(item: $feedSettingsFeed, content: { feed in
             NBNavigationStack {
                 FeedSettings(feed: feed)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         })
     }
     

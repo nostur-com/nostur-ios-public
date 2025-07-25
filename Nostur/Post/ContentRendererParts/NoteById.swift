@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NoteById: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public let id: String
     public var navTitleHidden: Bool = false
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
@@ -59,7 +59,7 @@ struct NoteById: View {
                 }
         case .ready(let nrPost):
             if nrPost.kind == 30023 {
-                ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false, theme: themes.theme)
+                ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
             }
             else {
                 PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)

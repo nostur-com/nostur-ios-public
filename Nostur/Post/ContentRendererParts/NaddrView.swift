@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NaddrView: View {
+    @Environment(\.theme) private var theme: Theme
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var dim: DIMENSIONS
     
@@ -16,7 +17,6 @@ struct NaddrView: View {
     public var navTitleHidden: Bool = false
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
-    public var theme: Theme
     
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
@@ -106,7 +106,7 @@ struct NaddrView: View {
                     .stroke(theme.lineColor, lineWidth: 1)
             )
         case .ready(let nrPost):
-            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
             
         case .timeout:
             Text("Unable to fetch content")
@@ -140,7 +140,7 @@ struct NaddrView_Previews: PreviewProvider {
         }) {
             NBNavigationStack {
                 if let identifier = try? ShareableIdentifier("naddr1qqjrgep5xs6kgefh943kvces956rydnz94skvdp594nrwvfkxa3nxve48pjxgq3qeaz6dwsnvwkha5sn5puwwyxjgy26uusundrm684lg3vw4ma5c2jsxpqqqpmxwqgcwaehxw309aex2mrp0yh8xmn0wf6zuum0vd5kzmqpp4mhxue69uhkummn9ekx7mqpz3mhxue69uhhyetvv9ujuerpd46hxtnfduq3vamnwvaz7tmjv4kxz7fwdehhxarj9e3xzmnyt86q2r") {
-                    NaddrView(naddr1: identifier.bech32string, theme: Themes.default.theme)
+                    NaddrView(naddr1: identifier.bech32string)
                 }
             }
         }

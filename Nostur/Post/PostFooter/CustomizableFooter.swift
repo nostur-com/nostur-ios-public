@@ -10,18 +10,17 @@ import SwiftUI
 import Algorithms
 
 struct CustomizableFooterFragmentView: View {
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var vmc: ViewModelCache = .shared
-    private var theme: Theme
 
     private let nrPost: NRPost
     private var isDetail = false
     private let isItem: Bool
     
-    init(nrPost: NRPost, isDetail: Bool = false, theme: Theme, isItem: Bool = false) {
+    init(nrPost: NRPost, isDetail: Bool = false, isItem: Bool = false) {
         self.nrPost = nrPost
         self.isDetail = isDetail
-        self.theme = theme
         self.isItem = isItem
     }
     
@@ -38,7 +37,7 @@ struct CustomizableFooterFragmentView: View {
             }
             
             // UNDO SEND AND SENT TO RELAYS
-            OwnPostFooter(nrPost: nrPost, theme: theme)
+            OwnPostFooter(nrPost: nrPost)
                 .offset(y: 14)
         }
         .padding(.top, 5)
@@ -53,12 +52,12 @@ struct CustomizableFooterFragmentView: View {
             ForEach(vmc.buttonRow) { button in
                 switch button.id {
                 case "🔄":
-                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme, isItem: true)
+                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, isItem: true)
                 case "+":
-                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
-                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
                             .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
                             .disabled(!(nrPost.contact?.anyLud ?? false))
                     }
@@ -66,7 +65,7 @@ struct CustomizableFooterFragmentView: View {
                         EmptyView()
                     }
                 case "🔖":
-                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
                 default:
                     EmptyView()
                 }
@@ -94,14 +93,14 @@ struct CustomizableFooterFragmentView: View {
             ForEach(vmc.buttonRow) { button in
                 switch button.id {
                 case "💬":
-                    ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast)
                 case "🔄":
-                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
                 case "+":
-                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
-                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
                             .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
                             .disabled(!(nrPost.contact?.anyLud ?? false))
                     }
@@ -109,7 +108,7 @@ struct CustomizableFooterFragmentView: View {
                         EmptyView()
                     }
                 case "🔖":
-                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
                 default:
                     ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
                         .equatable()
@@ -136,16 +135,16 @@ struct CustomizableFooterFragmentView: View {
 struct CustomizablePreviewFooterFragmentView: View {
     
     @State private var nrPost: NRPost? = nil
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var vmc: ViewModelCache = .shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if let nrPost {
-                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false, theme: themes.theme)
+                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false)
             }
         }
-        .foregroundColor(themes.theme.footerButtons)
+        .foregroundColor(theme.footerButtons)
         .font(.system(size: 14))
         .onAppear {
             bg().perform {
@@ -189,7 +188,7 @@ struct CustomizablePreviewFooterFragmentView: View {
                 
                 if let p = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81", withReplies: true) {
                     
-                    CustomizableFooterFragmentView(nrPost: p, theme: Themes.default.theme)
+                    CustomizableFooterFragmentView(nrPost: p)
                         .drawingGroup(opaque: true)
                     
                     ForEach(p.replies) {

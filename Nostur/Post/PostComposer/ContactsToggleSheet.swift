@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ContactsToggleSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     public var requiredP: String? = nil
     public var available: Set<NRContact>
@@ -98,7 +98,7 @@ struct ContactsToggleSheet: View {
                 
             }
         }
-        .environmentObject(themes)
+        .environment(\.theme, theme)
         .navigationTitle("Notify selection (\(selected.count))")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

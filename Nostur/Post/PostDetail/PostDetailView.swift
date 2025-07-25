@@ -15,7 +15,7 @@ struct PostDetailView: View {
 //        lhs.nrPost.id == rhs.nrPost.id && lhs.didLoad == rhs.didLoad
 //    }
     
-    @ObservedObject private var themes: Themes = .default
+    @Environment(\.theme) private var theme
     private let nrPost: NRPost
     private var navTitleHidden: Bool = false
     @State private var didLoad = false
@@ -38,11 +38,11 @@ struct PostDetailView: View {
                         
                             // Around parents + detail (not replies)
                             .padding(10)
-                            .background(themes.theme.listBackground)
+                            .background(theme.listBackground)
                             .overlay(alignment: .bottom) {
-                                themes.theme.background.frame(height: GUTTER)
+                                theme.background.frame(height: GUTTER)
                             }
-//                            .background(themes.theme.background)
+//                            .background(theme.background)
 //                            .background(Color.blue)
 //                        
 //                        if (nrPost.kind == 443) {
@@ -64,7 +64,7 @@ struct PostDetailView: View {
                                 .environment(\.nxViewingContext, [.selectableText, .postReply, .detailPane])
                         }
                     }
-//                    .background(themes.theme.listBackground)
+//                    .background(theme.listBackground)
 //                    .background(Color.red)
                 }
                 .onAppear {
@@ -91,8 +91,8 @@ struct PostDetailView: View {
                 .navigationBarHidden(navTitleHidden)
             }
         }
-            .nosturNavBgCompat(themes: themes)
-            .background(themes.theme.listBackground)
+            .nosturNavBgCompat(theme: theme)
+            .background(theme.listBackground)
             .environment(\.nxViewingContext, [.selectableText, .detailPane])
     }
 }

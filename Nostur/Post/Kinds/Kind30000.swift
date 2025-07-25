@@ -12,7 +12,7 @@ import OrderedCollections
 // Also kind: 39089
 struct Kind30000: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -45,7 +45,7 @@ struct Kind30000: View {
     @State private var pfpAttributesForContactsToRender: [PFPAttributes] = []
     @State private var didLoadFollowNRContacts = false
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -56,7 +56,6 @@ struct Kind30000: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.grouped = grouped
-        self.theme = theme
         self.forceAutoload = forceAutoload
         let followingPubkeys = follows()
         self.followPs = OrderedSet(nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
@@ -112,7 +111,7 @@ struct Kind30000: View {
 //        let _ = Self._printChanges()
 //        #endif
 //        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, theme: theme) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true) {
             
             if didLoadFollowNRContacts && isDetail { // Show full list
                 // if more that 20 do 2 columns
@@ -202,7 +201,7 @@ struct Kind30000: View {
     
     @ViewBuilder
     private var embeddedView: some View {
-        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
+        PostEmbeddedLayout(nrPost: nrPost, authorAtBottom: true) {
             HStack {
                 Text(title)
                     .fontWeight(.bold)
@@ -324,7 +323,7 @@ struct PubkeyRow: View {
     }) {
         if let kind1withNaddr = PreviewFetcher.fetchNRPost("294e9d025dfcc096ef52474fa9905537a7b0c9091af723b074a77f96c8c325e0") {
             Box {
-                KindResolver(nrPost: kind1withNaddr, theme: Themes.default.theme)
+                KindResolver(nrPost: kind1withNaddr)
             }
         }
     }
@@ -340,7 +339,7 @@ struct PubkeyRow: View {
             LazyVStack {
                 ForEach(nrLists) { nrList in
                     Box {
-                        KindResolver(nrPost: nrList, theme: Themes.default.theme)
+                        KindResolver(nrPost: nrList)
                     }
                 }
             }

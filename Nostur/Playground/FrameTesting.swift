@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FrameTesting: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     
     var body: some View {
         HStack {
@@ -28,7 +28,7 @@ struct FrameTesting: View {
 //                    .fixedSize()
 //                    .clipped()
             }
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
             
             LazyVStack(spacing: GUTTER) {
                 Something()
@@ -39,7 +39,7 @@ struct FrameTesting: View {
                     .frame(height: 50)
     //                .clipped()
             }
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
         }
         .frame(maxHeight: 50)
 //        .clipped()

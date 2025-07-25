@@ -17,7 +17,7 @@ import NostrEssentials
 // and then reverse the rows, and flip then also.
 struct DMConversationView: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Namespace private var top
     
     @EnvironmentObject var la: LoggedInAccount
@@ -145,7 +145,7 @@ struct DMConversationView: View {
                         }
                         .listRowInsets(.init())
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         
                         
                         if let contactPubkey {
@@ -257,13 +257,13 @@ struct DMConversationView: View {
                             .scaleEffect(x: 1, y: -1, anchor: .center)
                             .listRowInsets(.init())
                             .listRowSeparator(.hidden)
-                            .listRowBackground(themes.theme.listBackground)
+                            .listRowBackground(theme.listBackground)
                         }
                         Color.clear.frame(height: 1)
                             .id(top)
                             .listRowInsets(.init())
                             .listRowSeparator(.hidden)
-                            .listRowBackground(themes.theme.listBackground)
+                            .listRowBackground(theme.listBackground)
                         
                     }
                     .scrollContentBackgroundCompat(.hidden)
@@ -315,11 +315,11 @@ struct DMConversationView: View {
                                     DirectMessageViewModel.default.reloadAccepted()
                                     
                                 }
-                                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                             }
                         }
                         .padding(.vertical, 5)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                     }
                 }
                 .onAppear {
@@ -356,9 +356,9 @@ struct DMConversationView: View {
                             }
                     }
                 }
-                .background(themes.theme.listBackground)
+                .background(theme.listBackground)
             }
-            .nosturNavBgCompat(themes: themes)
+             .nosturNavBgCompat(theme: theme)
             .task {
                 // TODO: CHANGE TO REALTIME DM SUBSCRIPTION
                 guard let theirPubkey = self.theirPubkey else {
@@ -391,7 +391,7 @@ struct DMConversationView: View {
         else {
             Text("Error: could not find contact pubkey", comment: "Error shown on DM conversation screen")
                 .centered()
-                .nosturNavBgCompat(themes: themes)
+                 .nosturNavBgCompat(theme: theme)
         }
     }
 }

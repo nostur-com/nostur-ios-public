@@ -12,7 +12,7 @@ struct LiveEventsBanner: View {
     @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var npn: NewPostNotifier
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var apm: AnyPlayerModel = .shared
     @ObservedObject private var liveEventsModel: LiveEventsModel = .shared
@@ -91,7 +91,7 @@ struct LiveEventsBanner: View {
                                 }
                             }
                         }
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .environmentObject(la)
             }

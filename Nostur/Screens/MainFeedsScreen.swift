@@ -15,7 +15,7 @@ let MAINFEEDS_TABS_HEIGHT = 42.0
 struct MainFeedsScreen: View {
     
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @Binding var showingOtherContact: NRContact?
     @ObservedObject private var ss: SettingsStore = .shared
@@ -276,7 +276,7 @@ struct MainFeedsScreen: View {
             LiveEventsBanner()
             
             ZStack {
-                themes.theme.listBackground // needed to give this ZStack and parents size, else everything becomes weird small
+                theme.listBackground // needed to give this ZStack and parents size, else everything becomes weird small
                 
                 // FOLLOWING
                 if (showingOtherContact == nil && la.viewFollowingPublicKeys.count <= 1 && !didSend) {
@@ -292,7 +292,7 @@ struct MainFeedsScreen: View {
                         } label: {
                             Text("Explore", comment: "Button to go to the Explore tab")
                         }
-                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         Spacer()
                     }
                     .onReceive(receiveNotification(.didSend)) { _ in
@@ -447,15 +447,15 @@ struct MainFeedsScreen: View {
                         ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                             .environmentObject(dim)
                     }
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                 }
                 else {
                     ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
                         .environmentObject(dim)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
             }
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
             .environmentObject(la)
         }
         

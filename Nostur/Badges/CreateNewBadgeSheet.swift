@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct CreateNewBadgeSheet: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
@@ -53,7 +53,7 @@ struct CreateNewBadgeSheet: View {
                     .disableAutocorrection(true)
                     .lineLimit(1)
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
         }
         .scrollContentBackgroundHidden()
         .toolbar {

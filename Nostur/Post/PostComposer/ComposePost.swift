@@ -24,7 +24,7 @@ struct ComposePost: View {
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     
     @StateObject private var vm = NewPostModel()
@@ -123,7 +123,7 @@ struct ComposePost: View {
                                                     isAuthorSelectionShown = false
                                                 })
                                                 .equatable()
-                                                .environmentObject(themes)
+                                                .environment(\.theme, theme)
                                                 .environmentObject(la)
                                                 .navigationTitle(String(localized:"Find author", comment:"Navigation title of Find author screen"))
                                                 .navigationBarTitleDisplayMode(.inline)
@@ -136,7 +136,7 @@ struct ComposePost: View {
                                                 }
                                             }
                                             .nbUseNavigationStack(.never)
-                                            .presentationBackgroundCompat(themes.theme.listBackground)
+                                            .presentationBackgroundCompat(theme.listBackground)
                                         }
                                     }
                                 }
@@ -193,7 +193,7 @@ struct ComposePost: View {
                                 VStack {
                                     if let replyToNRPost = replyToNRPost {
                                         // Reply, so full-width false and connecting line to bottom
-                                        KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom, theme: themes.theme)
+                                        KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom)
                                             .environment(\.nxViewingContext, [.preview, .selectableText, .postParent])
                                             .onTapGesture { }
                                     }
@@ -210,7 +210,7 @@ struct ComposePost: View {
                                     .padding(.top, 10)
                                     
                                     if let quotingNRPost = quotePost?.nrPost {
-                                        KindResolver(nrPost: quotingNRPost, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: true, isEmbedded: true, theme: themes.theme)
+                                        KindResolver(nrPost: quotingNRPost, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: true, isEmbedded: true)
                                             .environment(\.nxViewingContext, [.preview, .selectableText, .postEmbedded])
                                             .fixedSize(horizontal: false, vertical: true)
                                             .onTapGesture { }
@@ -243,19 +243,19 @@ struct ComposePost: View {
                     .overlay(alignment: .bottom) {
                         MediaUploadProgress(uploader: vm.uploader) // @TODO: Make progress independent of Uploader type (NIP96 / Blossom)
                             .frame(height: geo.size.height * 0.60)
-                            .background(themes.theme.listBackground)
+                            .background(theme.listBackground)
                     }
                     .overlay(alignment: .bottom) {
                         MentionChoices(vm: vm)
                             .frame(height: geo.size.height * 0.60)
-                            .background(themes.theme.listBackground)
+                            .background(theme.listBackground)
                     }
                     .sheet(item: $vm.previewNRPost) { nrPost in
                         if #available(iOS 16, *) {
                             NavigationStack {
                                 VStack(alignment: .leading) {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
-                                        .environmentObject(themes)
+                                        .environment(\.theme, theme)
                                         .environmentObject(la)
                                         .environmentObject(previewDIM)
                                     
@@ -264,13 +264,13 @@ struct ComposePost: View {
                                     }
                                 }
                             }
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(theme.listBackground)
                         }
                         else {
                             NBNavigationStack {
                                 VStack(alignment: .leading) {
                                     PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
-                                        .environmentObject(themes)
+                                        .environment(\.theme, theme)
                                         .environmentObject(la)
                                         .environmentObject(previewDIM)
                                     
@@ -280,7 +280,7 @@ struct ComposePost: View {
                                 }
                             }
                             .nbUseNavigationStack(.never)
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(theme.listBackground)
                         }
                     }
                     .sheet(isPresented: $videoPickerShown) {
@@ -390,7 +390,7 @@ struct ComposePost: View {
             }
             ConnectionPool.shared.connectAllWrite()
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
     }
     
     @ViewBuilder

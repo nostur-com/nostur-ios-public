@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct LightningWalletPicker: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     
     @State private var lastCreatedNWCId: String? = nil
@@ -19,12 +19,12 @@ struct LightningWalletPicker: View {
         Picker(selection: $settings.defaultLightningWallet) {
             ForEach(SettingsStore.walletOptions) {
                 Text($0.name).tag($0)
-                    .foregroundColor(themes.theme.primary)
+                    .foregroundColor(theme.primary)
             }
             
             if settings.activeNWCconnectionId == "", let lastCreatedNWCId {
                 Text("Restore previous NWC configuration").tag(LightningWallet(name: "Restore previous NWC configuration", scheme: "nostur:nwc:last:\(lastCreatedNWCId)"))
-                    .foregroundColor(themes.theme.primary)
+                    .foregroundColor(theme.primary)
                     .onTapGesture {
                         settings.activeNWCconnectionId = lastCreatedNWCId
                         if let lastNWCtype, lastNWCtype == "ALBY" {

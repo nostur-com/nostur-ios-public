@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ProfileByPubkey: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     public let pubkey: String
     public var tab: String?
@@ -76,10 +76,10 @@ struct ProfileByPubkey: View {
             .sheet(item: $editingAccount) { account in
                 NBNavigationStack {
                     AccountEditView(account: account)
-                        .environmentObject(themes)
+                        .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
             }
         case .error(let error):
             Text(error)

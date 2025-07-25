@@ -9,14 +9,13 @@ import SwiftUI
 
 struct LiveEventRowView: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     private var nrPost: NRPost
     @ObservedObject private var liveEvent: NRLiveEvent
     private var fullWidth: Bool = false
     private var hideFooter: Bool = false
     private var navTitleHidden: Bool = false
-    private var theme: Theme
     private var forceAutoload: Bool
     
     private var shouldAutoload: Bool {
@@ -27,14 +26,13 @@ struct LiveEventRowView: View {
         dim.listWidth - 40
     }
     
-    init(nrPost: NRPost, liveEvent: NRLiveEvent, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false, theme: Theme = Themes.default.theme) {
+    init(nrPost: NRPost, liveEvent: NRLiveEvent, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.liveEvent = liveEvent
         self.fullWidth = fullWidth
         self.hideFooter = hideFooter
         self.navTitleHidden = navTitleHidden
         self.forceAutoload = forceAutoload
-        self.theme = theme
     }
     
     @State private var showMiniProfile = false
@@ -153,7 +151,7 @@ struct LiveEventRowView: View {
             }
                 .padding(.top, 10)
                 .font(.footnote)
-                .foregroundColor(themes.theme.secondary)
+                .foregroundColor(theme.secondary)
         }
         
         if let title = liveEvent.title {

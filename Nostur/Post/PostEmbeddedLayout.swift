@@ -8,25 +8,24 @@
 import SwiftUI
 
 struct PostEmbeddedLayout<Content: View>: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var pfpAttributes: PFPAttributes
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var fullWidth: Bool
-    private var theme: Theme
     @EnvironmentObject private var parentDIM: DIMENSIONS
 
     private let content: Content
     private let authorAtBottom: Bool
     
-    init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, theme: Theme, authorAtBottom: Bool = false, @ViewBuilder _ content: () -> Content) {
+    init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, authorAtBottom: Bool = false, @ViewBuilder _ content: () -> Content) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload
         self.fullWidth = fullWidth
-        self.theme = theme
         self.authorAtBottom = authorAtBottom
         self.content = content()
     }
@@ -73,7 +72,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                             .foregroundColor(.secondary)
                         }
                     }
-                    ReplyingToFragmentView(nrPost: nrPost, theme: theme)
+                    ReplyingToFragmentView(nrPost: nrPost)
                 }
                 
                 Spacer()

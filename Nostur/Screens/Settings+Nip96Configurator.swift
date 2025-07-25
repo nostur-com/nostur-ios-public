@@ -11,7 +11,7 @@ import Combine
 
 struct Nip96Configurator: View {
     @AppStorage("nip96_api_url") private var nip96apiUrl = ""
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @State private var state:ConfiguratorState = .initialized
     @State private var tosUrl: String?
@@ -76,7 +76,7 @@ struct Nip96Configurator: View {
 
                 if state != .checking {
                     Button(String(localized:"Activate", comment: "Button to check if a file storage server is compatible")) { startCheck() }
-                        .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         .disabled(!validUri)
                         .opacity(validUri ? 1.0 : 0.5)
                         .padding()

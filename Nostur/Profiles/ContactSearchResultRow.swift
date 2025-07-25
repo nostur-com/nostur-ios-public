@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContactSearchResultRow: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var contact: Contact
     var onSelect: (() -> Void)?
     
@@ -103,7 +103,7 @@ struct ContactSearchResultRow: View {
 }
 
 struct NRContactSearchResultRow: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var nrContact: NRContact
     var onSelect: (() -> Void)?
 

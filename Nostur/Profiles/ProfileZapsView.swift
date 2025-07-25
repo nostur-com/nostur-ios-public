@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileZapsView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var vm: ProfileZapsViewModel
     @State private var pfpURL: URL?
@@ -41,7 +41,7 @@ struct ProfileZapsView: View {
             ForEach(vm.posts) { nrPost in
                 ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                     Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: themes.theme)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
                                 .padding(.top, 20) // bit more padding so we have some space to put zap
                     }
                     .overlay(alignment: .topLeading) {
@@ -71,7 +71,7 @@ struct ProfileZapsView: View {
                                 }
                             }
                             .padding(4)
-                            .background(themes.theme.accent)
+                            .background(theme.accent)
                             .clipShape(Capsule())
                         }
                     }

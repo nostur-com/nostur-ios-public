@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ChatRow: View {
+    @Environment(\.theme) private var theme
     public let content: ChatRowContent
-    public let theme: Theme
     public var zoomableId: String = "Default"
     @Binding var selectedContact: NRContact?
     

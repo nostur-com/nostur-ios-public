@@ -12,7 +12,7 @@ struct HomeTab: View {
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     @State private var fg: FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it
     @State private var fn: FollowerNotifier = .shared
@@ -40,8 +40,8 @@ struct HomeTab: View {
         #endif
         NBNavigationStack(path: $navPath) {
             MainFeedsScreen(showingOtherContact: $showingOtherContact)
-                .background(themes.theme.listBackground)
-                .nosturNavBgCompat(themes: themes) // <-- Needs to be inside navigation stack
+                .background(theme.listBackground)
+                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
                 .overlay(alignment: .bottom) {
                     VStack {
@@ -110,7 +110,7 @@ struct HomeTab: View {
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Image(systemName: "tortoise")
-                            .foregroundColor(themes.theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                            .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
                             .onTapGesture {
                                 settings.lowDataMode.toggle()
                                 sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
@@ -119,7 +119,7 @@ struct HomeTab: View {
                     
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Image(systemName: "gearshape")
-                            .foregroundColor(themes.theme.accent)
+                            .foregroundColor(theme.accent)
                             .onTapGesture {
                                 sendNotification(.showFeedToggles)
                             }

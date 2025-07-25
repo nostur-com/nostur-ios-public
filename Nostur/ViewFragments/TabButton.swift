@@ -9,7 +9,7 @@ import SwiftUI
 
 // Tabs for main feeds, not for DetailPane
 struct TabButton<Content: View>: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public var action: () -> Void
     public var systemIcon: String?
     public var imageName: String?
@@ -49,25 +49,25 @@ struct TabButton<Content: View>: View {
                     if let systemIcon = systemIcon {
                         Image(systemName: systemIcon)
                             .font(.subheadline)
-                            .foregroundColor(themes.theme.accent)
+                            .foregroundColor(theme.accent)
                     }
                     else if let imageName = imageName {
                         Image(imageName)
                             .resizable()
                             .scaledToFit()
                             .frame(width: 16, height: 16)
-                            .foregroundColor(themes.theme.accent)
+                            .foregroundColor(theme.accent)
                     }
                     else {
                         Text(title).lineLimit(1)
                             .font(.subheadline)
-                            .foregroundColor(themes.theme.accent)
+                            .foregroundColor(theme.accent)
                     }
                         
                     if let secondaryText {
                         Text(secondaryText).lineLimit(1)
                             .font(.caption)
-                            .foregroundColor(themes.theme.accent.opacity(0.5))
+                            .foregroundColor(theme.accent.opacity(0.5))
                     }
                     self.tools()
                     if let unread, unread > 0 {
@@ -75,7 +75,7 @@ struct TabButton<Content: View>: View {
                             .font(.footnote)
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
-                            .background(Capsule().foregroundColor(themes.theme.badge))
+                            .background(Capsule().foregroundColor(theme.badge))
                             .opacity(muted ? 0.25 : 1.0)
                             .offset(y: -2)
                     }
@@ -83,7 +83,7 @@ struct TabButton<Content: View>: View {
                 .padding(.horizontal, 5)
                 .frame(height: 41)
                 .fixedSize()
-                themes.theme.accent
+                theme.accent
                     .frame(height: 1)
                     .opacity(selected ? 1 : 0)
             }

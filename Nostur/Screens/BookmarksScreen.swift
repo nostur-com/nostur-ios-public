@@ -12,7 +12,7 @@ import NavigationBackport
 
 struct BookmarksScreen: View {
     @ObservedObject var vm: BookmarksFeedModel
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     private var selectedSubTab: String {
         get { UserDefaults.standard.string(forKey: "selected_bookmarkssubtab") ?? "Bookmarks" }
@@ -34,20 +34,20 @@ struct BookmarksScreen: View {
         ScrollViewReader { proxy in
             if vm.isLoading {
                 CenteredProgressView()
-                    .background(themes.theme.listBackground)
+                    .background(theme.listBackground)
             }
             else if !vm.nrLazyBookmarks.isEmpty {
                 List {
                     SearchBox(prompt: String(localized: "Search in bookmarks...", comment: "Placeholder text in bookmarks search input box"), text: $vm.searchText, autoFocus: false)
                         .id("top")
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     
                     ForEach(vm.filteredNrLazyBookmarks) { nrLazyBookmark in
                         LazyBookmark(nrLazyBookmark: nrLazyBookmark, fullWidth: settings.fullWidthImages)
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                         .padding(.bottom, GUTTER)
                         
@@ -98,7 +98,7 @@ struct BookmarksScreen: View {
             else {
                 Text("When you bookmark a post it will show up here.")
                     .centered()
-                    .background(themes.theme.listBackground)
+                    .background(theme.listBackground)
             }
         }
         .onAppear {
@@ -189,7 +189,7 @@ struct PrivateNotesCountPreferenceKey: PreferenceKey {
 
 struct LazyBookmark: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var nrLazyBookmark: NRLazyBookmark
     public var fullWidth: Bool
 
@@ -198,10 +198,10 @@ struct LazyBookmark: View {
             if let nrPost = nrLazyBookmark.nrPost {
                 if nrPost.kind == 443 {
                     VStack {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth, theme: themes.theme)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth)
                         HStack(spacing: 0) {
                             self.replyButton
-                                .foregroundColor(themes.theme.footerButtons)
+                                .foregroundColor(theme.footerButtons)
                                 .padding(.leading, 10)
                                 .padding(.vertical, 5)
                                 .contentShape(Rectangle())
@@ -213,7 +213,7 @@ struct LazyBookmark: View {
                     }
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth, theme: themes.theme)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth)
                 }
             }
             else {

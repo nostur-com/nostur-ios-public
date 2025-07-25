@@ -54,16 +54,15 @@ class OwnPostAttributes: ObservableObject {
 }
 
 struct OwnPostFooter: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     private let nrPost: NRPost
     @ObservedObject private var own: OwnPostAttributes
     @State private var unpublishing = false
-    private var theme: Theme
     
-    init(nrPost: NRPost, theme: Theme) {
+    init(nrPost: NRPost) {
         self.nrPost = nrPost
         self.own = nrPost.ownPostAttributes
-        self.theme = theme
     }
     
     var body: some View {
@@ -135,7 +134,7 @@ struct OwnPostFooter_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in pe.loadPosts() }){
             if let p = PreviewFetcher.fetchNRPost() {
-                OwnPostFooter(nrPost: p, theme: Themes.default.theme)
+                OwnPostFooter(nrPost: p)
             }
         }
     }

@@ -18,7 +18,7 @@ struct NProfileView: View {
     }
     
     struct NProfileViewInner: View {
-        @EnvironmentObject private var themes: Themes
+        @Environment(\.theme) private var theme
         @EnvironmentObject private var settings: SettingsStore
         @State var nrPost: NRPost?
         @State var fetchTask: Task<Void, Never>?
@@ -86,7 +86,7 @@ struct NProfileView: View {
             }
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
-                    .stroke(themes.theme.lineColor, lineWidth: 1)
+                    .stroke(theme.lineColor, lineWidth: 1)
             )
         }
     }

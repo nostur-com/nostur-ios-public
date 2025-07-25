@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WebOfTrustLevelPicker: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var wot = WebOfTrust.shared
     @ObservedObject private var settings: SettingsStore = .shared
     
@@ -16,7 +16,7 @@ struct WebOfTrustLevelPicker: View {
         Picker(selection: $settings.webOfTrustLevel) {
             ForEach(SettingsStore.WebOfTrustLevel.allCases, id:\.self) {
                 Text($0.localized).tag($0.rawValue)
-                    .foregroundColor(themes.theme.primary)
+                    .foregroundColor(theme.primary)
             }
         } label: {
             Text("Web of Trust filter", comment: "Setting on settings screen")

@@ -15,7 +15,7 @@ let TOOLBAR_HEIGHT: CGFloat = 160.0 // TODO: Fix magic number 160 or make sure i
 
 struct OverlayPlayer: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var vm: AnyPlayerModel = .shared
     
     private var videoHeight: CGFloat {
@@ -256,10 +256,10 @@ struct OverlayPlayer: View {
                                                     
                                                     if let nrPost = vm.nrPost {
                                                         HStack {
-                                                            EmojiButton(nrPost: nrPost, isFirst: true, isLast: false, theme: themes.theme)
-                                                                .foregroundColor(themes.theme.footerButtons)
+                                                            EmojiButton(nrPost: nrPost, isFirst: true, isLast: false)
+                                                                .foregroundColor(theme.footerButtons)
                                                             if IS_NOT_APPSTORE { // Only available in non app store version
-                                                                ZapButton(nrPost: nrPost, isFirst: false, isLast: false, theme: themes.theme)
+                                                                ZapButton(nrPost: nrPost, isFirst: false, isLast: false)
                                                                     .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
                                                                     .disabled(!(nrPost.contact?.anyLud ?? false))
                                                             }
@@ -349,7 +349,7 @@ struct OverlayPlayer: View {
                                         }
                                         .font(.title2)
                                         .buttonStyle(.borderless)
-                                        .foregroundColor(themes.theme.accent)
+                                        .foregroundColor(theme.accent)
                                     }
                                 }
                                 
@@ -361,7 +361,7 @@ struct OverlayPlayer: View {
                                                 saveAVAssetToPhotos()
                                             }
                                             .tint(Color.white)
-                                            .foregroundColor(themes.theme.accent)
+                                            .foregroundColor(theme.accent)
                                             
                                             Button("Copy video URL") {
                                                 if let url = vm.currentlyPlayingUrl {
@@ -369,7 +369,7 @@ struct OverlayPlayer: View {
                                                     sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
                                                 }
                                             }
-                                            .foregroundColor(themes.theme.accent)
+                                            .foregroundColor(theme.accent)
                                             
                                         }, label: {
                                             if isSaving {
@@ -378,27 +378,27 @@ struct OverlayPlayer: View {
                                                     Text(vm.downloadProgress, format: .percent)
                                                 }
                                                 .foregroundColor(Color.white)
-                                                .tint(themes.theme.accent)
+                                                .tint(theme.accent)
                                                 .padding(5)
                                             }
                                             else if didSave {
                                                 Image(systemName: "square.and.arrow.down.badge.checkmark.fill")
-                                                    .tint(themes.theme.accent)
-                                                    .foregroundColor(themes.theme.accent)
+                                                    .tint(theme.accent)
+                                                    .foregroundColor(theme.accent)
                                                     .padding(5)
                                                     .offset(y: -2)
                                             }
                                             else {
                                                 Image(systemName: "square.and.arrow.down")
-                                                    .tint(themes.theme.accent)
-                                                    .foregroundColor(themes.theme.accent)
+                                                    .tint(theme.accent)
+                                                    .foregroundColor(theme.accent)
                                                     .padding(5)
                                                     .offset(y: -6)
                                             }
                                         })
                                         .disabled(isSaving)
                                         .font(.title2)
-                                        .foregroundColor(themes.theme.accent)
+                                        .foregroundColor(theme.accent)
                                     }
                                 }
                                 
@@ -412,7 +412,7 @@ struct OverlayPlayer: View {
                                         }
                                         .font(.title2)
                                         .buttonStyle(.borderless)
-                                        .foregroundColor(themes.theme.accent)
+                                        .foregroundColor(theme.accent)
                                     }
                                 }
                             }

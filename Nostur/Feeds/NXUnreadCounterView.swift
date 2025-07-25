@@ -9,12 +9,12 @@ import SwiftUI
 
 struct NXUnreadCounterView: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var vm: NXColumnViewModelInner
     
     var body: some View {
         RoundedRectangle(cornerRadius: 20)
-            .foregroundColor(themes.theme.accent)
+            .foregroundColor(theme.accent)
             .frame(width: 61, height: 36)
             .overlay(alignment: .leading) {
                 Text(vm.unreadCount.description)

@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct EditRelaysNosturList: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     let list: CloudFeed
     @Environment(\.dismiss) var dismiss
     
@@ -42,10 +42,10 @@ struct EditRelaysNosturList: View {
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             
             Section(header: Text("Relay selection", comment: "Header for a feed setting")) {
                 ForEach(relays, id:\.objectID) { relay in
@@ -66,7 +66,7 @@ struct EditRelaysNosturList: View {
                         }
                     }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Section(header: Text("Spam filter", comment: "Header for a feed setting")) {
                 Toggle(isOn: $wotEnabled) {
@@ -74,11 +74,11 @@ struct EditRelaysNosturList: View {
                     Text("Only show content from your follows or follows-follows")
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
         }
         .scrollContentBackgroundCompat(.hidden)
-        .background(themes.theme.listBackground)
-        .nosturNavBgCompat(themes: themes)
+        .background(theme.listBackground)
+         .nosturNavBgCompat(theme: theme)
         .navigationTitle("Edit relays feed")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {

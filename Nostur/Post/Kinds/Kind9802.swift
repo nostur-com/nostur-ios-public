@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Kind9802: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme: Theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -36,7 +36,7 @@ struct Kind9802: View {
         return dim.availableNoteRowImageWidth()
     }
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.highlightAttributes = nrPost.highlightAttributes
@@ -47,7 +47,6 @@ struct Kind9802: View {
         self.fullWidth = fullWidth
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
-        self.theme = theme
         self.forceAutoload = forceAutoload
     }
     
@@ -66,7 +65,7 @@ struct Kind9802: View {
     
     @ViewBuilder
     private var normalView: some View {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true, theme: theme) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true) {
             
             content
             
@@ -87,7 +86,7 @@ struct Kind9802: View {
                 }
         }
         else {
-            PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
+            PostEmbeddedLayout(nrPost: nrPost) {
                 
                 content
                     .contentShape(Rectangle())
@@ -104,7 +103,7 @@ struct Kind9802: View {
     var content: some View {
         
         // Comment on quote from "comment" tag
-        ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload, theme: theme)
+        ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload)
             .frame(maxWidth: .infinity, alignment:.leading)
         
         // The highlight, from .content

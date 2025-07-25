@@ -11,7 +11,7 @@ import NavigationBackport
 import NostrEssentials
 
 struct DetailPane: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @StateObject private var tm = DetailTabsModel()
     @State private var offsetX = 200.0
@@ -201,10 +201,10 @@ struct DetailPane: View {
                             )
                             .padding(.leading, index == 0 ? 30 : 0)
                             .id(tm.tabs[index].id)
-                            themes.theme.background
+                            theme.background
                                 .frame(width: 1.0, height: 30)
                                 .overlay {
-                                    themes.theme.listBackground
+                                    theme.listBackground
                                         .frame(width: 1.0, height: 20)
                                 }
                                 .opacity(index == tm.tabs.count-1 ? 0 : 1)
@@ -217,7 +217,7 @@ struct DetailPane: View {
                         proxy.scrollTo(lastTab.id)
                     }
                 }
-                .background(themes.theme.background)
+                .background(theme.background)
                 .onReceive(receiveNotification(.navigateTo)) { notification in
                     // This does similar as .withNavigationDestinations() but for DetailPane, should refactor / clean up
                     let destination = notification.object as! NavigationDestination
@@ -373,7 +373,7 @@ struct DetailPane: View {
         .navigationBarTitle("")
         .navigationBarTitleDisplayMode(.inline)
 
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .onReceive(receiveNotification(.navigateToOnDetail)) { notification in
             // For now, for opening the Gallery on Detail Pane. Could use for other things too
             let destination = notification.object as! NavigationDestination

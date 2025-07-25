@@ -17,7 +17,7 @@ public extension View {
 
 private struct InfoText: ViewModifier {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     let text: String
     
     @State var showInfoSheet = false
@@ -42,8 +42,8 @@ private struct InfoText: ViewModifier {
                         Spacer()
                     }
                     .padding(.horizontal, 10)
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                    .environment(\.theme, theme)
+                    .presentationBackgroundCompat(theme.listBackground)
                     .toolbar {
                         ToolbarItem(placement: .primaryAction) {
                             Button("OK") {

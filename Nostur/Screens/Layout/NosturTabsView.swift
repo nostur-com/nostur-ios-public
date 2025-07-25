@@ -10,7 +10,7 @@ import NavigationBackport
 @_spi(Advanced) import SwiftUIIntrospect
 
 struct NosturTabsView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dm: DirectMessageViewModel
     
     @AppStorage("selected_tab") private var selectedTab = "Main"
@@ -40,39 +40,39 @@ struct NosturTabsView: View {
 //                                .environmentObject(la)
                                 .tabItem { Label("", systemImage: "house") }
                                 .tag("Main")
-                                .nosturTabsCompat(themes: themes)
+                                .nosturTabsCompat(theme: theme)
                             
         //                    DiscoverCommunities()
         //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
         //                        .tag("Communities")
-//                                .nosturTabsCompat(themes: themes)
+//                                .nosturTabsCompat(theme: theme)
 
                             BookmarksTab()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "bookmark") }
                                 .tag("Bookmarks")
-                                .nosturTabsCompat(themes: themes)
+                                .nosturTabsCompat(theme: theme)
                             
                             
                             Search()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "magnifyingglass") }
                                 .tag("Search")
-                                .nosturTabsCompat(themes: themes)
+                                .nosturTabsCompat(theme: theme)
                             
                             NotificationsContainer()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "bell.fill") }
                                 .tag("Notifications")
                                 .badge(unread)
-                                .nosturTabsCompat(themes: themes)
+                                .nosturTabsCompat(theme: theme)
 
                             DMContainer()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
                                 .tabItem { Label("", systemImage: "envelope.fill") }
                                 .tag("Messages")
                                 .badge((dm.unread + dm.newRequests))
-                                .nosturTabsCompat(themes: themes)
+                                .nosturTabsCompat(theme: theme)
                         }
                         .environment(\.horizontalSizeClass, .compact)
                         .withSheets() // Move .sheets to each (NB)NavigationStack?
@@ -83,12 +83,12 @@ struct NosturTabsView: View {
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
                     AvailableWidthContainer(id: "DetailPane") {
                         DetailPane()
-                            .background(themes.theme.listBackground)
+                            .background(theme.listBackground)
                     }
                 }
             }
             .contentShape(Rectangle())
-            .background(themes.theme.background) // GUTTER
+            .background(theme.background) // GUTTER
             .withLightningEffect()
             .onChange(of: selectedTab) { newValue in
                 if newValue == "Notifications" {

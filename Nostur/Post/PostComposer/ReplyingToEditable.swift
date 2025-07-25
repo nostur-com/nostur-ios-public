@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReplyingToEditable: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public var requiredP: String? = nil
     public var available: Set<NRContact>
     @Binding var selected: Set<NRContact>
@@ -26,10 +26,10 @@ struct ReplyingToEditable: View {
         HStack(alignment: .top, spacing: 0) {
             Group {
                 Text("Replying to ")
-                    .foregroundColor(themes.theme.secondary)
+                    .foregroundColor(theme.secondary)
                     .lineLimit(1)
                 Text(selectedSorted.map { "@\($0.anyName)" }.formatted(.list(type: .and)))
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     .lineLimit(3)
             }
             .font(.body)
@@ -44,7 +44,7 @@ struct ReplyingToEditable: View {
             NBNavigationStack {
                 ContactsToggleSheet(requiredP: requiredP, available: available, selected: $selected, unselected: $unselected)
                     .presentationDetentsMedium()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
         }

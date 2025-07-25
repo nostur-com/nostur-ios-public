@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProcessingStatus: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @State var message:String? = nil
     @State var socketMessage:String? = nil
     @State var connectedMessage:String? = nil
@@ -46,7 +46,7 @@ struct ProcessingStatus: View {
                 .frame(minWidth: 250)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Capsule().fill(themes.theme.accent))
+                .background(Capsule().fill(theme.accent))
                 .clipShape(Capsule())
                 .opacity(message == nil ? 0 : 1.0)
         }

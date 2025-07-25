@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct EmojiFeed: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var settings: SettingsStore = .shared
     @EnvironmentObject var vm: EmojiFeedViewModel
     @StateObject private var speedTest = NXSpeedTest()
@@ -38,7 +38,7 @@ struct EmojiFeed: View {
                 CenteredProgressView()
             case .fetchingFromFollows:
                 ZStack(alignment: .center) {
-                    themes.theme.listBackground
+                    theme.listBackground
                         .overlay(alignment: .bottom) {
                             Text("Checking what your follows found funny...")
                                 .pulseEffect()
@@ -59,7 +59,7 @@ struct EmojiFeed: View {
                                 }
                         }
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
                 }
@@ -98,7 +98,7 @@ struct EmojiFeed: View {
                 .centered()
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .overlay(alignment: .top) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
@@ -125,10 +125,10 @@ struct EmojiFeed: View {
         .sheet(isPresented: $showSettings) {
             NBNavigationStack {
                 EmojiFeedSettings(vm: vm)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 }

@@ -12,7 +12,7 @@ struct SelectedParticipantView: View {
     @Environment(\.dismiss) private var dismiss
     public var withoutFollowButton = false
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var nrContact: NRContact
     public let showZapButton: Bool
     public let aTag: String
@@ -98,7 +98,7 @@ struct SelectedParticipantView: View {
                                 .resizable()
                                 .frame(width: 10, height: 10)
                                 .foregroundColor(.green)
-                                .background(themes.theme.listBackground)
+                                .background(theme.listBackground)
                                 .offset(y: -3)
                         }
                         .offset(y: 3)
@@ -114,8 +114,8 @@ struct SelectedParticipantView: View {
                             Image(systemName: "plus")
                                 .resizable()
                                 .frame(width: 10, height: 10)
-                                .background(themes.theme.listBackground)
-                                .border(themes.theme.listBackground, width: 2.0)
+                                .background(theme.listBackground)
+                                .border(theme.listBackground, width: 2.0)
                                 .offset(y: -3)
                         }
                         .offset(y: 3)

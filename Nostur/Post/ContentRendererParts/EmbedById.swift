@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct EmbedById: View {
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     public let id: String
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
-    public var theme: Theme
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
     var body: some View {
@@ -30,7 +30,7 @@ struct EmbedById: View {
                         .stroke(theme.lineColor, lineWidth: 1)
                 )
         case .ready(let nrPost):
-            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+            KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
             
         case .timeout:
             VStack {
@@ -101,7 +101,7 @@ struct EmbedById: View {
 #Preview {
     PreviewContainer({ pe in pe.loadPosts() }) {
         if let post = PreviewFetcher.fetchNRPost() {
-            EmbedById(id: post.id, theme: Themes.default.theme)
+            EmbedById(id: post.id)
         }
     }
 }

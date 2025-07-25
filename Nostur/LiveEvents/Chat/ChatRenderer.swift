@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ChatRenderer: View { // VIEW things
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme
     private let nrChat: NRChatMessage
     
     private let availableWidth: CGFloat
@@ -19,12 +19,11 @@ struct ChatRenderer: View { // VIEW things
     private var zoomableId: String
     @StateObject private var childDIM: DIMENSIONS
     
-    init(nrChat: NRChatMessage, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, zoomableId: String = "Default") {
+    init(nrChat: NRChatMessage, availableWidth: CGFloat, forceAutoload: Bool = false, zoomableId: String = "Default") {
         self.nrChat = nrChat
         self.availableWidth = availableWidth
         self.contentElements = nrChat.contentElementsDetail
         self.forceAutoload = forceAutoload
-        self.theme = theme
         self.zoomableId = zoomableId
         _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
     }
@@ -38,7 +37,7 @@ struct ChatRenderer: View { // VIEW things
             ForEach(contentElements.indices, id:\.self) { index in
                 switch contentElements[index] {
                 case .nrPost(let nrPost):
-                    KindResolver(nrPost: nrPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload, theme: theme)
+                    KindResolver(nrPost: nrPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
@@ -49,7 +48,7 @@ struct ChatRenderer: View { // VIEW things
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                 case .nevent1(let identifier):
-                    NEventView(identifier: identifier, forceAutoload: shouldAutoload, theme: theme)
+                    NEventView(identifier: identifier, forceAutoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
@@ -60,7 +59,7 @@ struct ChatRenderer: View { // VIEW things
 //                        .transaction { t in t.animation = nil }
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
-                        ProfileCardByPubkey(pubkey: pubkey, theme: theme)
+                        ProfileCardByPubkey(pubkey: pubkey)
                             .frame(maxWidth: max(600, availableWidth))
                             .padding(.vertical, 10)
                             .id(index)
@@ -78,7 +77,7 @@ struct ChatRenderer: View { // VIEW things
 //                        .transaction { t in t.animation = nil }
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
-                        EmbedById(id: noteHex, forceAutoload: shouldAutoload, theme: theme)
+                        EmbedById(id: noteHex, forceAutoload: shouldAutoload)
                             .frame(maxWidth: max(600, availableWidth))
 //                            .frame(minHeight: 75)
                             .environmentObject(childDIM)
@@ -96,7 +95,7 @@ struct ChatRenderer: View { // VIEW things
                             .id(index)
                     }
                 case .noteHex(let hex):
-                    EmbedById(id: hex, forceAutoload: shouldAutoload, theme: theme)
+                    EmbedById(id: hex, forceAutoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
@@ -120,20 +119,20 @@ struct ChatRenderer: View { // VIEW things
                         .equatable()
                         .id(index)
                 case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, maxWidth: availableWidth)
                         .id(index)
                 case .lnbc(let text):
-                    LightningInvoice(invoice: text, theme: theme)
+                    LightningInvoice(invoice: text)
                         .frame(maxWidth: max(600, availableWidth))
                         .padding(.vertical, 10)
                         .id(index)
                 case .cashu(let text):
-                    CashuTokenView(token: text, theme: theme)
+                    CashuTokenView(token: text)
                         .frame(maxWidth: max(600, availableWidth))
                         .padding(.vertical, 10)
                         .id(index)
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrChat.pubkey, availableWidth: availableWidth, autoload: shouldAutoload, theme: theme)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrChat.pubkey, availableWidth: availableWidth, autoload: shouldAutoload)
                 case .image(let galleryItem):
                     MediaContentView(
                         galleryItem: galleryItem,
@@ -147,7 +146,7 @@ struct ChatRenderer: View { // VIEW things
                     )
                     .padding(.vertical, 10)
                 case .linkPreview(let url):
-                    LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
+                    LinkPreviewView(url: url, autoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
                         .padding(.vertical, 10)
                         .id(index)
@@ -215,7 +214,7 @@ struct ChatRenderer: View { // VIEW things
         if let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory"),
            let nEvent = message.event {
             let nrChat: NRChatMessage = NRChatMessage(nEvent: nEvent)
-            ChatRow(content: .chatMessage(nrChat), theme: Themes.default.theme, selectedContact: .constant(nil))
+            ChatRow(content: .chatMessage(nrChat), selectedContact: .constant(nil))
         }
     }
 }

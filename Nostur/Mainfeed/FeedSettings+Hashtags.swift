@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FeedSettings_Hashtags: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State public var hashtags: [String]
     public var onChange: (([String]) -> ())?
     var body: some View {

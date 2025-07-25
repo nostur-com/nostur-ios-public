@@ -9,7 +9,7 @@ import SwiftUI
 import NukeUI
 
 struct GifSearcher: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) var dismiss
     @State var searchTerm = ""
     @State var searchResults:[TenorResult] = []
@@ -49,7 +49,7 @@ struct GifSearcher: View {
 //                                autocompleteResults = []
 //                                suggestionResults = []
                             }
-                            .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                            .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         }
                     }
                 }
@@ -65,7 +65,7 @@ struct GifSearcher: View {
                                         GIFImage(data: data, isPlaying: .constant(true))
 //                                            .aspectRatio(contentMode: .fit)
                                             .hCentered()
-                                            .background(themes.theme.lineColor.opacity(0.2))
+                                            .background(theme.lineColor.opacity(0.2))
                                             .onTapGesture {
                                                 if let url = gifResult.media_formats["gif"]?.url {
                                                     onSelect(url)
@@ -87,7 +87,7 @@ struct GifSearcher: View {
                                             GIFImage(data: data, isPlaying: .constant(true))
 //                                                .aspectRatio(contentMode: .fit)
                                                 .hCentered()
-                                                .background(themes.theme.lineColor.opacity(0.2))
+                                                .background(theme.lineColor.opacity(0.2))
                                                 .onTapGesture {
                                                     if let url = gifResult.media_formats["gif"]?.url {
                                                         onSelect(url)

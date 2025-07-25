@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfilePostsView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var vm: ProfilePostsViewModel
     @State var showMore = true
@@ -43,7 +43,7 @@ struct ProfilePostsView: View {
             ForEach(vm.posts) { nrPost in
                 ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                     Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: themes.theme)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true)
                     }
                 }
                 .onBecomingVisible {

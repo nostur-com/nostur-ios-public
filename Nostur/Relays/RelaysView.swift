@@ -11,7 +11,7 @@ import NavigationBackport
 import Combine
 
 struct RelayRowView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var relay: CloudRelay
     @ObservedObject private var cp: ConnectionPool = .shared
     
@@ -40,7 +40,7 @@ struct RelayRowView: View {
             
             Spacer()
             
-            Image(systemName:"magnifyingglass.circle.fill").foregroundColor(relay.search ? themes.theme.accent : .gray)
+            Image(systemName:"magnifyingglass.circle.fill").foregroundColor(relay.search ? theme.accent : .gray)
                 .opacity(relay.search ? 1.0 : 0.2)
                 .onTapGesture {
                     relay.search.toggle()
@@ -119,7 +119,7 @@ struct RelayRowView: View {
 }
 
 struct RelaysView: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State var createRelayPresented = false
     @State var editRelay: CloudRelay?
 
@@ -153,21 +153,21 @@ struct RelaysView: View {
         .sheet(isPresented: $createRelayPresented) {
             NBNavigationStack {
                 NewRelayView()
-                    .presentationBackgroundCompat(themes.theme.listBackground)
-                    .environmentObject(themes)
+                    .presentationBackgroundCompat(theme.listBackground)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
         }
         .sheet(item: $editRelay, content: { relay in
             NBNavigationStack {
                 RelayEditView(relay: relay)
-                    .environmentObject(themes)
-                    .presentationBackgroundCompat(themes.theme.listBackground)
+                    .environment(\.theme, theme)
+                    .presentationBackgroundCompat(theme.listBackground)
             }
             .nbUseNavigationStack(.never)
             
         })
-        .nosturNavBgCompat(themes: themes)
+        .nosturNavBgCompat(theme: theme)
     }
 }
 

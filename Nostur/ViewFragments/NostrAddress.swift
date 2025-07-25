@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NostrAddress: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
 
     public var nip05: String
     public var shortened = false
@@ -27,11 +27,11 @@ struct NostrAddress: View {
                 Text(localPart)
             }
             Image(systemName: "at.circle.fill")
-                .foregroundColor(themes.theme.accent)
+                .foregroundColor(theme.accent)
                 .offset(y: 1)
             Text(domainPart)
         }
-        .foregroundColor(themes.theme.accent)
+        .foregroundColor(theme.accent)
         .lineLimit(1)
     }
 }

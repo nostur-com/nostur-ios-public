@@ -10,7 +10,7 @@ import NostrEssentials
 
 // Copy pasta from NoteReactions and adjusted a bit. ReactionRow replaced with ProfileRows
 struct NoteReposts: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     let id: String
     
@@ -29,11 +29,11 @@ struct NoteReposts: View {
             ProfileRows(repostsPubkeys)
             Spacer()
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .onAppear {
             req(CM(type: .REQ, filters: [Filters(kinds: [6], tagFilter: TagFilter(tag: "e", values: [id]))]).json()!)
         }
-        .nosturNavBgCompat(themes: themes)
+         .nosturNavBgCompat(theme: theme)
     }
 }
 

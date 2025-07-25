@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct WelcomeSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public var offerTryOut = false
     
     var body: some View {

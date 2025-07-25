@@ -32,7 +32,7 @@ class AppSheetsModel: ObservableObject {
 
 struct WithAppSheets: ViewModifier {
     
-    @ObservedObject private var themes: Themes = .default
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @ObservedObject private var asm = AppSheetsModel.shared
     
@@ -40,7 +40,7 @@ struct WithAppSheets: ViewModifier {
         content
             .sheet(item: $asm.addContactsToListInfo, content: { info in
                 NRSheetNavigationStack {
-                    AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys, theme: themes.theme)
+                    AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys)
                         .presentationDetentsLarge()
                 }
                 .environmentObject(loggedInAccount)
@@ -60,7 +60,7 @@ struct WithAppSheets: ViewModifier {
                 }
                 .nbUseNavigationStack(.never)
                 .presentationDetents250medium()
-                .presentationBackgroundCompat(Themes.default.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground) // TODO: Test login sheet
             })
             .fullScreenCover(item: $asm.feedPreviewSheetInfo) { feedPreviewSheetInfo in
                 NRSheetNavigationStack {

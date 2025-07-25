@@ -13,7 +13,7 @@ struct NRBalloonView: View {
     public var isSentByCurrentUser: Bool
     public var time: String
     @State private var contentElements: [ContentElement] = []
-    @EnvironmentObject var themes: Themes
+    @Environment(\.theme) private var theme
     
     var body: some View {
         HStack {
@@ -25,16 +25,16 @@ struct NRBalloonView: View {
                 NRTextDynamic(convertToHieroglyphs(text: event.noteText))
             }
             else if !contentElements.isEmpty {
-                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: dim.listWidth, theme: themes.theme, isSentByCurrentUser: isSentByCurrentUser)
+                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: dim.listWidth, isSentByCurrentUser: isSentByCurrentUser)
 //                    .debugDimensions("DMContentRenderer")
                     .padding(10)
                     .background(
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(isSentByCurrentUser ? themes.theme.accent : themes.theme.background)
+                            .fill(isSentByCurrentUser ? theme.accent : theme.background)
                     )
                     .background(alignment: isSentByCurrentUser ? .bottomTrailing : .bottomLeading) {
                         Image(systemName: "moon.fill")
-                            .foregroundColor(isSentByCurrentUser ? themes.theme.accent : themes.theme.background)
+                            .foregroundColor(isSentByCurrentUser ? theme.accent : theme.background)
                             .scaleEffect(x: isSentByCurrentUser ? 1 : -1)
                             .rotationEffect(.degrees(isSentByCurrentUser ? 35 : -35))
                             .offset(x: isSentByCurrentUser ? 10 : -10, y: 0)
@@ -59,7 +59,7 @@ struct NRBalloonView: View {
         .onAppear {
             // Take width of NRContentTextRendererInner > NRTextFixed.debugDimensions("NRTextFixed")
             // Subtract that from dim.listWidth. We need to pass that result (98.0) to NRContentElementBuilder.buildElements(_ event:Event, dm:Bool, availableWidth: CGFloat?) so our NRTextFixed calculates correct heights and doesn't cut off
-            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(input: event.noteText, fastTags: event.fastTags, event: event , primaryColor: isSentByCurrentUser ? .white : themes.theme.primary)
+            let (elements, _, _) = NRContentElementBuilder.shared.buildElements(input: event.noteText, fastTags: event.fastTags, event: event , primaryColor: isSentByCurrentUser ? .white : theme.primary)
             self.contentElements = elements
         }
     }

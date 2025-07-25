@@ -12,9 +12,9 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
-    private var theme: Theme
     private let nrPost: NRPost
     private let isDetail: Bool
     private let fullWidth: Bool
@@ -25,7 +25,7 @@ struct ContentRenderer: View { // VIEW things
     @Binding var showMore: Bool
     @State private var contentElements: [ContentElement]
     
-    init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, theme: Theme, zoomableId: String = "Default") {
+    init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, zoomableId: String = "Default") {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
@@ -33,7 +33,6 @@ struct ContentRenderer: View { // VIEW things
         _contentElements = State(wrappedValue: isDetail ? nrPost.contentElementsDetail : nrPost.contentElements)
         _showMore = showMore
         self.forceAutoload = forceAutoload
-        self.theme = theme
         self.zoomableId = zoomableId
         _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
     }
@@ -47,12 +46,12 @@ struct ContentRenderer: View { // VIEW things
             ForEach(contentElements) { element in
                 switch element {
                 case .nrPost(let nrPost):
-                    KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true, theme: theme)
+                    KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
                         .environmentObject(childDIM)
                         .padding(.vertical, 10)
 
                 case .nevent1(let identifier):
-                    NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                         .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
@@ -60,7 +59,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .transaction { t in t.animation = nil }
                     
                 case .naddr1(let identifier):
-                    NaddrView(naddr1: identifier.bech32string, fullWidth: fullWidth, theme: theme)
+                    NaddrView(naddr1: identifier.bech32string, fullWidth: fullWidth)
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
@@ -70,7 +69,7 @@ struct ContentRenderer: View { // VIEW things
                     
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
-                        ProfileCardByPubkey(pubkey: pubkey, theme: theme)
+                        ProfileCardByPubkey(pubkey: pubkey)
                             .padding(.vertical, 10)
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
@@ -84,7 +83,7 @@ struct ContentRenderer: View { // VIEW things
                     
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
-                        EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                        EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
 //                            .frame(minHeight: 75)
                             .environmentObject(childDIM)
 //                            .debugDimensions("QuoteById.note1")
@@ -102,7 +101,7 @@ struct ContentRenderer: View { // VIEW things
                     }
                     
                 case .noteHex(let hex):
-                    EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload, theme: theme)
+                    EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
 //                        .frame(minHeight: 75)
                         .environmentObject(childDIM)
 //                        .debugDimensions("QuoteById.noteHex")
@@ -142,7 +141,7 @@ struct ContentRenderer: View { // VIEW things
                     .equatable()
                     
                 case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: availableWidth)
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, maxWidth: availableWidth)
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
@@ -150,15 +149,15 @@ struct ContentRenderer: View { // VIEW things
                         }
                     
                 case .lnbc(let text):
-                    LightningInvoice(invoice: text, theme: theme)
+                    LightningInvoice(invoice: text)
                         .padding(.vertical, 10)
                     
                 case .cashu(let text):
-                    CashuTokenView(token: text, theme: theme)
+                    CashuTokenView(token: text)
                         .padding(.vertical, 10)
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload, theme: theme)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload)
                         .padding(.horizontal, fullWidth ? -10 : 0)
                         .padding(.vertical, 10)
                     
@@ -189,7 +188,7 @@ struct ContentRenderer: View { // VIEW things
                     // no full width no detial -> .frame(width: max(25, scaledDimensions.width), height: max(25,scaledDimensions.height))
                     
                 case .linkPreview(let url):
-                    LinkPreviewView(url: url, autoload: shouldAutoload, theme: theme)
+                    LinkPreviewView(url: url, autoload: shouldAutoload)
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
@@ -270,7 +269,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("473f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
                 }
             }
         }
@@ -289,7 +288,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
                 }
             }
         }
@@ -308,7 +307,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
                 }
             }
         }

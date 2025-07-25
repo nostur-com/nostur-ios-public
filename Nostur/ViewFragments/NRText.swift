@@ -9,7 +9,7 @@ import SwiftUI
 import RepresentableKit
 
 struct NRTextDynamic: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     private let attributedString: NSAttributedString
     private let plain: Bool
@@ -88,7 +88,7 @@ struct NRTextDynamic: View {
         view.isScrollEnabled = false
         view.adjustsFontForContentSizeCategory = true
         view.textColor = UIColor(self.fontColor)
-        view.tintColor = UIColor(accentColor ?? themes.theme.accent)
+        view.tintColor = UIColor(accentColor ?? theme.accent)
         view.isSelectable = true
         view.isEditable = false
         view.dataDetectorTypes = plain ? [] : [.link]
@@ -358,7 +358,7 @@ extension NSMutableAttributedString {
 
 
 struct NRTextFixedTester: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject public var nrPost: NRPost
     @State private var text = NSAttributedString(string: "")
@@ -383,8 +383,8 @@ struct NRTextFixedTester: View {
             .onAppear {
                 textWidth = dim.listWidth - 20
                 text = NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output ?? NSAttributedString(string: "")
-                primaryColor = themes.theme.primary
-                accentColor = themes.theme.accent
+                primaryColor = theme.primary
+                accentColor = theme.accent
             }
             .fixedSize(horizontal: false, vertical: true)
             .opacity(0.5)

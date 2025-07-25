@@ -11,7 +11,7 @@ import NavigationBackport
 let NOSTUR_SIDEBAR_WIDTH = 310.0
 
 struct SideBar: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @Binding var showSidebar: Bool
     
@@ -44,7 +44,7 @@ struct SideBar: View {
                         .equatable()
                         .overlay(
                             Circle()
-                                .strokeBorder(themes.theme.listBackground, lineWidth: 3)
+                                .strokeBorder(theme.listBackground, lineWidth: 3)
                         )
                         .onTapGesture {
                             if IS_IPAD {
@@ -70,7 +70,7 @@ struct SideBar: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 25, height: 25)
-                                .foregroundColor(themes.theme.accent)
+                                .foregroundColor(theme.accent)
                         }
                     }
                     .zIndex(20)
@@ -116,7 +116,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor
+                            theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -138,7 +138,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor
+                            theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -157,7 +157,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor
+                            theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -188,7 +188,7 @@ struct SideBar: View {
                             .padding(.vertical, Self.BUTTON_VPADDING)
                             .contentShape(Rectangle())
                             .overlay(alignment: .bottom) {
-                                themes.theme.lineColor
+                                theme.lineColor
                                     .frame(height: 1)
                             }
                         }
@@ -211,7 +211,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor
+                            theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -233,7 +233,7 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                         .overlay(alignment: .bottom) {
-                            themes.theme.lineColor
+                            theme.lineColor
                                 .frame(height: 1)
                         }
                     }
@@ -252,7 +252,7 @@ struct SideBar: View {
                             .padding(.vertical, Self.BUTTON_VPADDING)
                             .contentShape(Rectangle())
                             .overlay(alignment: .bottom) {
-                                themes.theme.lineColor
+                                theme.lineColor
                                     .frame(height: 1)
                             }
                         }
@@ -285,7 +285,7 @@ struct SideBar: View {
 #endif
                     .opacity(0.5)
                 Text("[__Source code__](https://github.com/nostur-com/nostur-ios-public)")
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     .font(.footnote)
                     .padding(.bottom, 20)
             }
@@ -299,20 +299,20 @@ struct SideBar: View {
                     showSidebar = false
                 })
                     .presentationDetents45ml()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                     .environmentObject(loggedInAccount)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .sheet(isPresented: $showAnySigner) {
             NBNavigationStack {
                 AnySigner()
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                     .environmentObject(loggedInAccount)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .actionSheet(item: $logoutAccount) { account in
             ActionSheet(
@@ -345,7 +345,7 @@ struct SideBar: View {
                     .cancel(Text("Cancel"))
                 ])
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .compositingGroup()
         .opacity(showSidebar ? 1.0 : 0)
         .offset(x: sidebarOffset)
@@ -358,11 +358,11 @@ struct SideBar: View {
 }
 
 struct SideBarOverlay: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Binding var showSidebar: Bool
     
     var body: some View {
-        themes.theme.listBackground
+        theme.listBackground
             .opacity(showSidebar ? 0.75 : 0.0)
             .onTapGesture {
                 showSidebar = false // TODO: Add swipe left/right to show/hide side menu

@@ -10,7 +10,7 @@ import Combine
 import NavigationBackport
 
 struct DeleteAccountSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var la:LoggedInAccount
     @Environment(\.dismiss) private var dismiss
     @State private var remaining = 10
@@ -62,7 +62,7 @@ struct DeleteAccountSheet: View {
                     } label: {
                         Label(String(localized: "Copy private key", comment: "Button to copy your private key to clipboard"), systemImage: "doc.on.doc")
                     }
-                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                     
                     Button(role: .destructive) {
                         self.cancel = timer.connect()
@@ -71,7 +71,7 @@ struct DeleteAccountSheet: View {
                         Label("Delete", systemImage: "trash")
                         //                        Image(systemName: "trash")
                     }
-                    .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                 }
             }
             else {
@@ -81,7 +81,7 @@ struct DeleteAccountSheet: View {
                 } label: {
                     Text("Cancel")
                 }
-                .buttonStyle(NRButtonStyle(theme: themes.theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
             }
         }
         .onReceive(timer, perform: { _ in

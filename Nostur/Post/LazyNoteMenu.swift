@@ -10,13 +10,13 @@ import NavigationBackport
 import NostrEssentials
 
 struct LazyNoteMenuButton: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     var nrPost: NRPost
     
     var body: some View {
         Image(systemName: "ellipsis")
             .fontWeightBold()
-            .foregroundColor(themes.theme.footerButtons)
+            .foregroundColor(theme.footerButtons)
             .padding(.leading, 15)
             .padding(.bottom, 14)
             .padding(.top, 10)
@@ -34,7 +34,7 @@ struct LazyNoteMenuButton: View {
 }
 
 struct LazyNoteMenuSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     public let nrPost: NRPost
     @Environment(\.dismiss) private var dismiss
@@ -235,8 +235,8 @@ struct LazyNoteMenuSheet: View {
                     }
                 }
             }
-            .foregroundColor(themes.theme.accent)
-            .listRowBackground(themes.theme.background)
+            .foregroundColor(theme.accent)
+            .listRowBackground(theme.background)
             
             Group {
                 HStack {
@@ -271,8 +271,8 @@ struct LazyNoteMenuSheet: View {
                     Label(String(localized:"Report.verb", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
                 }
             }
-            .foregroundColor(themes.theme.accent)
-            .listRowBackground(themes.theme.background)
+            .foregroundColor(theme.accent)
+            .listRowBackground(theme.background)
             
             if (AccountsState.shared.activeAccountPublicKey == nrPost.pubkey) {
                 Button {
@@ -283,8 +283,8 @@ struct LazyNoteMenuSheet: View {
                 } label: {
                     Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
                 }
-                .foregroundColor(themes.theme.accent)
-                .listRowBackground(themes.theme.background)
+                .foregroundColor(theme.accent)
+                .listRowBackground(theme.background)
             }
             
             Button {
@@ -308,8 +308,8 @@ struct LazyNoteMenuSheet: View {
                     Label(String(localized:"Rebroadcast", comment: "Button to rebroadcast a post"), systemImage: "dot.radiowaves.left.and.right")
                 }
             }
-            .foregroundColor(themes.theme.accent)
-            .listRowBackground(themes.theme.background)
+            .foregroundColor(theme.accent)
+            .listRowBackground(theme.background)
             
             if !nrPost.footerAttributes.relays.isEmpty {
                 VStack(alignment: .leading) {
@@ -328,13 +328,13 @@ struct LazyNoteMenuSheet: View {
                     }
                 }
                 .foregroundColor(.gray)
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             }
         }
-        .environmentObject(themes)
+        .environment(\.theme, theme)
         .scrollContentBackgroundHidden()
         .listStyle(.plain)
-        .background(themes.theme.background)
+        .background(theme.background)
         .navigationTitle(String(localized:"Post actions", comment:"Title of sheet showing actions to perform on post"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -349,11 +349,11 @@ struct LazyNoteMenuSheet: View {
         }
         .nbNavigationDestination(isPresented: $followToggles) {
             MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
-                .environmentObject(themes)
+                .environment(\.theme, theme)
         }
         .nbNavigationDestination(isPresented: $blockOptions) {
             BlockOptions(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
-                .environmentObject(themes)
+                .environment(\.theme, theme)
         }
         .onAppear {
             let onlyPtags: [String] = nrPost.fastTags.compactMap({ fastTag in
@@ -397,7 +397,7 @@ struct LazyNoteMenuSheet_Previews: PreviewProvider {
 }
 
 struct BlockOptions: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     public let pubkey: String
     public let name: String
@@ -414,8 +414,8 @@ struct BlockOptions: View {
                 Button("Block for 1 month") { temporaryBlock(pubkey: pubkey, forHours: 24*31, name: name); onDismiss?() }
             }
         }
-        .foregroundColor(themes.theme.accent)
-        .listRowBackground(themes.theme.background)
+        .foregroundColor(theme.accent)
+        .listRowBackground(theme.background)
         .navigationTitle("Block \(name)")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

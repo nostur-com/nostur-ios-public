@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PostLayout<Content: View, TitleContent: View>: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -47,7 +47,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     private let titleContent: TitleContent
     
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, theme: Theme, @ViewBuilder content: () -> Content, @ViewBuilder title: () -> TitleContent) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, @ViewBuilder content: () -> Content, @ViewBuilder title: () -> TitleContent) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -56,7 +56,6 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         self.isReply = isReply
         self.fullWidth = fullWidth
         self.isDetail = isDetail
-        self.theme = theme
         self.forceAutoload = forceAutoload
         self.isItem = isItem
         self.content = content()
@@ -104,7 +103,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 // No need for DetailFooterFragment here because .isDetail will always be in .fullWidthLayout
                 
                 if (!hideFooter && settings.rowFooterEnabled) && !isItem { // also no footer for items (only in Detail)
-                    CustomizableFooterFragmentView(nrPost: nrPost, theme: theme, isItem: isItem)
+                    CustomizableFooterFragmentView(nrPost: nrPost, isItem: isItem)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
@@ -152,7 +151,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 
                 if isDetail || ((!hideFooter && settings.rowFooterEnabled) && !isItem) {
-                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, theme: theme, isItem: isItem)
+                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, isItem: isItem)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
@@ -277,9 +276,9 @@ struct PostLayout<Content: View, TitleContent: View>: View {
 
 extension PostLayout where TitleContent == EmptyView {
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, theme: Theme, @ViewBuilder content: () -> Content) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, @ViewBuilder content: () -> Content) {
      
-        self.init(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, isItem: isItem, theme: theme, content: content, title: { EmptyView() })
+        self.init(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, isItem: isItem, content: content, title: { EmptyView() })
         
     }
 }

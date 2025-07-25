@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct EditListTitleSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) var dismiss
     var list: CloudFeed
     @State var newTitle = ""
@@ -25,12 +25,12 @@ struct EditListTitleSheet: View {
                     
                     Toggle(isOn: $showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             }
         }
         .scrollContentBackgroundCompat(.hidden)
-        .background(themes.theme.listBackground)
-        .nosturNavBgCompat(themes: themes)
+        .background(theme.listBackground)
+         .nosturNavBgCompat(theme: theme)
         .onAppear {
             newTitle = list.name_
             showAsTab = list.showAsTab

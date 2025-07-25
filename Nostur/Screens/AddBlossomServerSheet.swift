@@ -10,7 +10,7 @@ import NostrEssentials
 import NavigationBackport
 
 struct AddBlossomServerSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     
     @State private var server = ""
@@ -32,10 +32,10 @@ struct AddBlossomServerSheet: View {
                         .foregroundColor(Color.red)
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
         }
         .scrollContentBackgroundCompat(.hidden)
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .navigationTitle(String(localized:"Add blossom server", comment:"Navigation title for screen to create a new feed"))
         .navigationBarTitleDisplayMode(.inline)
         

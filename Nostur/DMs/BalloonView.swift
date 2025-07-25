@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct BalloonView: View {
-    @EnvironmentObject var themes: Themes
+    @Environment(\.theme) private var theme
     var message: String
     var isSentByCurrentUser: Bool
     var time: String
@@ -30,11 +30,11 @@ struct BalloonView: View {
                 .padding(10)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(isSentByCurrentUser ? themes.theme.background : themes.theme.listBackground)
+                        .fill(isSentByCurrentUser ? theme.background : theme.listBackground)
                 )
                 .background(alignment: isSentByCurrentUser ? .bottomTrailing : .bottomLeading) {
                     Image(systemName: "moon.fill")
-                        .foregroundColor(isSentByCurrentUser ? themes.theme.background : themes.theme.listBackground)
+                        .foregroundColor(isSentByCurrentUser ? theme.background : theme.listBackground)
                         .scaleEffect(x: isSentByCurrentUser ? 1 : -1)
                         .rotationEffect(.degrees(isSentByCurrentUser ? 35 : -35))
                         .offset(x: isSentByCurrentUser ? 10 : -10, y: 0)

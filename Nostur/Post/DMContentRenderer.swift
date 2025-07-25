@@ -12,19 +12,18 @@ import Combine
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct DMContentRenderer: View { // VIEW things
+    @Environment(\.theme) private var theme
     @Environment(\.openURL) private var openURL
     private let pubkey: String // author of balloon (message)
-    private var theme: Theme
     private let availableWidth: CGFloat
     private let contentElements: [ContentElement]
     @StateObject private var childDIM: DIMENSIONS
     private let isSentByCurrentUser: Bool
     
-    init(pubkey: String, contentElements: [ContentElement] = [], availableWidth: CGFloat, theme: Theme, isSentByCurrentUser: Bool = false) {
+    init(pubkey: String, contentElements: [ContentElement] = [], availableWidth: CGFloat, isSentByCurrentUser: Bool = false) {
         self.pubkey = pubkey
         self.availableWidth = availableWidth
         self.contentElements = contentElements
-        self.theme = theme
         self.isSentByCurrentUser = isSentByCurrentUser
         _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 130))
     }
@@ -38,20 +37,20 @@ struct DMContentRenderer: View { // VIEW things
             ForEach(contentElements) { contentElement in
                 switch contentElement {
                 case .nrPost(let nrPost):
-                    KindResolver(nrPost: nrPost, fullWidth: false, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: false, theme: theme)
+                    KindResolver(nrPost: nrPost, fullWidth: false, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: false)
                         .environmentObject(childDIM)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 
                 case .nevent1(let identifier):
-                    NEventView(identifier: identifier, forceAutoload: false, theme: theme)
+                    NEventView(identifier: identifier, forceAutoload: false)
                         .environmentObject(childDIM)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 
                 case .npub1(let npub):
                     if let pubkey = hex(npub) {
-                        ProfileCardByPubkey(pubkey: pubkey, theme: theme)
+                        ProfileCardByPubkey(pubkey: pubkey)
                             .padding(.vertical, 10)
                             .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     }
@@ -62,7 +61,7 @@ struct DMContentRenderer: View { // VIEW things
                 
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
-                        EmbedById(id: noteHex, forceAutoload: true, theme: theme)
+                        EmbedById(id: noteHex, forceAutoload: true)
                             .environmentObject(childDIM)
                             .padding(.vertical, 10)
                             .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
@@ -74,7 +73,7 @@ struct DMContentRenderer: View { // VIEW things
                         EmptyView()
                     }
                 case .noteHex(let hex):
-                    EmbedById(id: hex, forceAutoload: true, theme: theme)
+                    EmbedById(id: hex, forceAutoload: true)
                         .environmentObject(childDIM)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
@@ -94,21 +93,21 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .md(let markdownContentWithPs): // For long form articles
-                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, theme: theme, maxWidth: dmAvailableWidth)
+                    NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, maxWidth: dmAvailableWidth)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .lnbc(let text):
-                    LightningInvoice(invoice: text, theme: theme)
+                    LightningInvoice(invoice: text)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .cashu(let text):
-                    CashuTokenView(token: text, theme: theme)
+                    CashuTokenView(token: text)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: dmAvailableWidth, autoload: false, theme: theme)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: dmAvailableWidth, autoload: false)
                     
                 case .image(let galleryItem):
                     MediaContentView(
@@ -121,7 +120,7 @@ struct DMContentRenderer: View { // VIEW things
                     .padding(.vertical, 10)
 
                 case .linkPreview(let url):
-                    LinkPreviewView(url: url, autoload: false, theme: theme, linkColor: isSentByCurrentUser ? .mint : theme.accent)
+                    LinkPreviewView(url: url, autoload: false, linkColor: isSentByCurrentUser ? .mint : theme.accent)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 default:
@@ -144,7 +143,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("473f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
                 }
             }
         }
@@ -163,7 +162,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
                 }
             }
         }
@@ -182,7 +181,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width, theme: Themes.default.theme)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
                 }
             }
         }

@@ -9,17 +9,16 @@ import SwiftUI
 
 // https://github.com/nostur-com/nids/blob/main/02.md
 struct Kind443: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.openURL) private var openURL
     @ObservedObject private var settings:SettingsStore = .shared
     
     private let nrPost: NRPost
-    private var theme: Theme
     @State private var url: URL?
     
-    init(nrPost: NRPost, theme: Theme) {
+    init(nrPost: NRPost) {
         self.nrPost = nrPost
-        self.theme = theme
     }
     
     private var shouldAutoload: Bool {
@@ -31,7 +30,7 @@ struct Kind443: View {
             VStack(alignment:.leading, spacing: 3) {// Post container
                 if let url {
                     // Link preview here
-                    BigLinkPreview(url: url, autoload: shouldAutoload, theme: theme)
+                    BigLinkPreview(url: url, autoload: shouldAutoload)
                 }
             }
             .contentShape(Rectangle())
@@ -69,7 +68,7 @@ struct Kind443: View {
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("7d56ff8134fa6e500776c2d0dce1e26131f859f352a390d2dd96303458821d82") {
                 Box {
-                    Kind443(nrPost: nrPost, theme: Themes.default.theme)
+                    Kind443(nrPost: nrPost)
                 }
             }
         }

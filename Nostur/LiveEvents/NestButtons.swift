@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NestButtons: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession
     
     var body: some View {
@@ -17,7 +17,7 @@ struct NestButtons: View {
                 Toggle("Mute mic", systemImage: liveKitVoiceSession.isMuted ? "mic.slash.fill" : "mic.fill", isOn: $liveKitVoiceSession.isMuted)
                     .font(.largeTitle)
                     .labelStyle(.iconOnly)
-                    .toggleStyle(NestToggleStyle(theme: themes.theme))
+                    .toggleStyle(NestToggleStyle(theme: theme))
                 
                 Text(liveKitVoiceSession.isMuted ? "Mic is off" : "Mic is on")
             }
@@ -28,7 +28,7 @@ struct NestButtons: View {
                 Toggle("Raise hand", systemImage: liveKitVoiceSession.raisedHand ? "hand.raised.fill" : "hand.raised", isOn: $liveKitVoiceSession.raisedHand)
                     .font(.largeTitle)
                     .labelStyle(.iconOnly)
-                    .toggleStyle(NestToggleStyle(theme: themes.theme))
+                    .toggleStyle(NestToggleStyle(theme: theme))
                 
                 Text("Hand is raised")
                     .opacity(liveKitVoiceSession.raisedHand ? 1.0 : 0)
@@ -54,13 +54,13 @@ struct NestButtonStyle: ButtonStyle {
     }
     
     func makeBody(configuration: Configuration) -> some View {
-        MyButton(configuration: configuration, style: style, theme: theme)
+        MyButton(configuration: configuration, style: style)
     }
     
     struct MyButton: View {
         let configuration: ButtonStyle.Configuration
         var style: Style = .default
-        var theme: Theme
+        @Environment(\.theme) private var theme
     
         @Environment(\.isEnabled) private var isEnabled: Bool
     

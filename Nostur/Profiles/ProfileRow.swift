@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ProfileCardByPubkey: View {
+    @Environment(\.theme) private var theme
     public let pubkey: String
-    public var theme: Theme = Themes.default.theme
     @StateObject private var vm = FetchVM<Contact>(timeout: 2.5, debounceTime: 0.05)
     @State var fixedPfp: URL?
     
@@ -71,7 +71,7 @@ struct ProfileCardByPubkey: View {
 
 struct ProfileRow: View {
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject private var fg: FollowingGuardian = .shared
      

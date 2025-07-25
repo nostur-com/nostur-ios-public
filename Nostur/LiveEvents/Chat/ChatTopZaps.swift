@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftUIFlow
 
 struct ChatTopZaps: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     let messages: [NRChatConfirmedZap]
     
     var body: some View {
@@ -22,7 +22,7 @@ struct ChatTopZaps: View {
 }
 
 struct ChatZapPill: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     private let zap: NRChatConfirmedZap
     @ObservedObject private var pfpAttributes: PFPAttributes
     
@@ -39,13 +39,13 @@ struct ChatZapPill: View {
 //                .frame(width: 20.0, height: 20.0)
             Text(zap.amount.satsFormatted)
                 .fontWeightBold()
-                .foregroundColor(themes.theme.accent)
+                .foregroundColor(theme.accent)
                 .padding(.trailing, 5)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(themes.theme.listBackground.opacity(0.85))
-        .foregroundColor(themes.theme.primary)
+        .background(theme.listBackground.opacity(0.85))
+        .foregroundColor(theme.primary)
         .font(.footnote)
         .clipShape(Capsule())
         .onTapGesture {

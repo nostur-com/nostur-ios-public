@@ -82,7 +82,7 @@ struct FollowButton: View {
 struct FollowLink: View {
     
     public let pubkey: String
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var fg: FollowingGuardian = .shared
     
     @State private var followState: FollowState = .unfollowed
@@ -94,7 +94,7 @@ struct FollowLink: View {
         ZStack {
             if didFollow {
                 Text("Unfollow")
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     .fontWeightBold()
                     .highPriorityGesture(TapGesture().onEnded {
                         guard let la = AccountsState.shared.loggedInAccount else { return }
@@ -110,7 +110,7 @@ struct FollowLink: View {
             }
             else {
                 Text("Follow")
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                     .fontWeightBold()
                     .highPriorityGesture(TapGesture().onEnded {
                         guard isFullAccount() else { showReadOnlyMessage(); return }

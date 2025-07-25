@@ -25,7 +25,7 @@ struct BadgesIssuedContainer:View {
 
 struct BadgesIssuedView: View {
     @EnvironmentObject var la: LoggedInAccount
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State var createNewBadgeSheetShown = false
     @FetchRequest
     var badges: FetchedResults<Event>
@@ -46,12 +46,12 @@ struct BadgesIssuedView: View {
                 NBNavigationLink(value: Badge(badge)) {
                     BadgeIssuedRow(badge: badge)
                 }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
             }
             .scrollContentBackgroundHidden()
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .onAppear {
             // fetch missing badge definitions:
             // or just all...
@@ -72,16 +72,16 @@ struct BadgesIssuedView: View {
             NBNavigationStack {
                 CreateNewBadgeSheet()
                     .environmentObject(la)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
     }
 }
 
 struct BadgeIssuedRow: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     var badge: Event
     var nBadge:NEvent { badge.toNEvent() }
     
@@ -147,7 +147,7 @@ struct BadgeIssuedRow: View {
                 Text("Awarded to \(badge.awardedTo.count) people", comment: "Text showing how many badges have been awarded").font(.caption)
             }.padding(10)
         }
-        .background(themes.theme.background)
+        .background(theme.background)
         .navigationTitle("")
     }
     

@@ -10,7 +10,7 @@ import UserNotifications
 
 struct ScheduleReminderButton: View {
     // TODO: keep track of already set reminders in LiveEventsModel
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     let at: Date
     var name: String? = nil
     var reminderId: String?
@@ -31,7 +31,7 @@ struct ScheduleReminderButton: View {
             } label: {
                 Text("Set reminder")
             }
-            .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
+            .buttonStyle(NosturButton(height: 36, bgColor: theme.accent))
             .frame(maxWidth: .infinity, alignment: .center)
         }
         

@@ -12,7 +12,7 @@ import NavigationBackport
 
 struct PrivateNotesScreen: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     
     private var selectedSubTab: String {
         get { UserDefaults.standard.string(forKey: "selected_bookmarkssubtab") ?? "Private Notes" }
@@ -55,7 +55,7 @@ struct PrivateNotesScreen: View {
                       .tint(.red)
                     }
                     .listRowSeparator(.hidden)
-                    .listRowBackground(themes.theme.listBackground)
+                    .listRowBackground(theme.listBackground)
                     .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     .padding(.bottom, GUTTER)
                 }
@@ -174,7 +174,7 @@ import NavigationBackport
 
 struct LazyPrivateNote: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings:SettingsStore = .shared
     
     @ObservedObject public var pn:CloudPrivateNote

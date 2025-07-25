@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MainWoTaccountPicker: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State private var selectedMainWoTaccountPubkey: String // Should just use @AppStorage("app_theme") here, but this freezes on desktop. so workaround via init() and .onChange(of: selectedTheme).
     
     init() {
@@ -26,7 +26,7 @@ struct MainWoTaccountPicker: View {
                     Text(account.anyName)
                 }
                 .tag(account.publicKey)
-                .foregroundColor(themes.theme.primary)
+                .foregroundColor(theme.primary)
             }
             
         } label: {

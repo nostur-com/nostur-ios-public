@@ -119,7 +119,7 @@
 ////                    .background(Color.random)
 ////                    .hCentered()
 //            }
-//            .background(themes.theme.default.listBackground) // Between and around every PostOrThread (NoteRows)
+//            .background(theme.default.listBackground) // Between and around every PostOrThread (NoteRows)
 //            .margins(.all, 0)
 //        }
 //    }()

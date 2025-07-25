@@ -11,7 +11,7 @@ import Combine
 
 struct NXPostsFeed: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     private var vm: NXColumnViewModel
     private let posts: [NRPost]

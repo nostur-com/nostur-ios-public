@@ -10,7 +10,7 @@ import SwiftUI
 
 // TODO: Remove @FetchRequest
 struct ContactList: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     @FetchRequest
     private var contacts: FetchedResults<Contact>
@@ -43,9 +43,9 @@ struct ContactList: View {
         ForEach(contacts) { contact in
             ProfileRow(contact: contact)
                 .frame(height: 120)
-                .background(themes.theme.listBackground)
+                .background(theme.listBackground)
                 .overlay(alignment: .bottom) {
-                    themes.theme.background.frame(height: GUTTER)
+                    theme.background.frame(height: GUTTER)
                 }
         }
         .onAppear {
@@ -61,9 +61,9 @@ struct ContactList: View {
         ForEach(noMetadata, id:\.self) { pubkey in
             ProfileRowMissing(pubkey: pubkey)
                 .frame(height: 120)
-                .background(themes.theme.listBackground)
+                .background(theme.listBackground)
                 .overlay(alignment: .bottom) {
-                    themes.theme.background.frame(height: GUTTER)
+                    theme.background.frame(height: GUTTER)
                 }
         }
         
@@ -71,9 +71,9 @@ struct ContactList: View {
             Button("Add all to custom list") {
                 AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: Set(pubkeys))
             }
-            .buttonStyle(NRButtonStyle(theme: themes.theme))
+            .buttonStyle(NRButtonStyle(theme: theme))
             .frame(height: 120)
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
             .hCentered()
         }
     }

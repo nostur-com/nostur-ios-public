@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FooterConfigurator: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     @Binding public var footerButtons: String
     @ObservedObject private var ss: SettingsStore = .shared
@@ -35,7 +35,7 @@ struct FooterConfigurator: View {
             }, footer: {
                 Text("Configure the reaction buttons for each post. You can also change the position or remove buttons you don't need.", comment: "Informational message")
             })
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Section(content: {
                 if !ss.fullWidthImages {
@@ -54,7 +54,7 @@ struct FooterConfigurator: View {
             }, header: {
                 Text("Preview", comment: "Heading when entering Report details")
             })
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
             
             Group {
                 Button("Load default", action: {
@@ -77,7 +77,7 @@ struct FooterConfigurator: View {
                     footerButtons = "+❤️💜💙🧡💚🖤"
                 })
             }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
         })
         .scrollContentBackgroundHidden()
     }

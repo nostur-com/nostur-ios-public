@@ -9,7 +9,7 @@ import SwiftUI
 
 struct UnknownKind: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -28,7 +28,7 @@ struct UnknownKind: View {
     
     private let THREAD_LINE_OFFSET = 24.0
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.highlightAttributes = nrPost.highlightAttributes
@@ -40,7 +40,6 @@ struct UnknownKind: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.grouped = grouped
-        self.theme = theme
         self.forceAutoload = forceAutoload
     }
     
@@ -61,14 +60,14 @@ struct UnknownKind: View {
     
     @ViewBuilder
     private var normalView: some View {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true, theme: theme) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true) {
             unknownKindView
         }
     }
     
     @ViewBuilder
     private var embeddedView: some View {
-        PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
+        PostEmbeddedLayout(nrPost: nrPost) {
             unknownKindView
         }
     }
@@ -100,9 +99,7 @@ struct UnknownKind: View {
                         .padding(.horizontal, -10)
                     
                     ForEach(suggestedApps) { app in
-                        AppRow(app: app,
-                               theme: theme
-                        )
+                        AppRow(app: app)
                     }
                 }
                 else {

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FeedSettings: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @ObservedObject public var feed: CloudFeed
     @EnvironmentObject private var la: LoggedInAccount
@@ -36,7 +36,7 @@ struct FeedSettings: View {
                                 la.account.publishNewContactList()
                             })
                         }
-                        .listRowBackground(themes.theme.background)
+                        .listRowBackground(theme.background)
                     }
                 }
                 
@@ -49,7 +49,7 @@ struct FeedSettings: View {
                             Text("Configure relays...")
                         }
                     }
-                    .listRowBackground(themes.theme.background)
+                    .listRowBackground(theme.background)
                 }
             
             case "pubkeys", nil, "30000", "39089":
@@ -67,7 +67,7 @@ struct FeedSettings: View {
                                 .listRowInsets(EdgeInsets())
                                 .padding(.horizontal, 20)
                         }
-                        .listRowBackground(themes.theme.background)
+                        .listRowBackground(theme.background)
                         
                         Section {
                             // Copy to own feed. No longer managed
@@ -87,7 +87,7 @@ struct FeedSettings: View {
                             Text("Updates refer to people added or removed from this list, not posts or content.")
                                 .font(.footnote)
                         }
-                        .listRowBackground(themes.theme.background)
+                        .listRowBackground(theme.background)
                     }
                 }
                 else {
@@ -100,7 +100,7 @@ struct FeedSettings: View {
                        Section("App theme") {
                            AppThemeSwitcher()
                        }
-                       .listRowBackground(themes.theme.background)
+                       .listRowBackground(theme.background)
                    }
                 }
             }
@@ -152,7 +152,7 @@ struct FeedSettings: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
         }
     }
 }

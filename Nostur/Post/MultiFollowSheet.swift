@@ -12,7 +12,7 @@ struct MultiFollowSheet: View {
     public let name: String
     public var onDismiss: (() -> Void)?
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     private var accounts: [CloudAccount] { // Only accounts with private key
         AccountsState.shared.accounts.filter { $0.isFullAccount }
@@ -76,7 +76,7 @@ struct MultiFollowSheet: View {
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 7)
                                             .padding(.vertical, 2)
-                                            .background(themes.theme.accent)
+                                            .background(theme.accent)
                                             .cornerRadius(13)
                                             .offset(y: 10)
                                     }
@@ -109,7 +109,7 @@ struct MultiFollowSheet: View {
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 7)
                                             .padding(.vertical, 2)
-                                            .background(themes.theme.accent)
+                                            .background(theme.accent)
                                             .cornerRadius(13)
                                             .offset(y: 10)
                                     }
@@ -142,7 +142,7 @@ struct MultiFollowSheet: View {
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 7)
                                             .padding(.vertical, 2)
-                                            .background(themes.theme.accent)
+                                            .background(theme.accent)
                                             .cornerRadius(13)
                                             .offset(y: 10)
                                     }

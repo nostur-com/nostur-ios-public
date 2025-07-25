@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChatConfirmedZapRow: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var vc: ViewingContext
     private var confirmedZap: NRChatConfirmedZap
@@ -42,7 +42,7 @@ struct ChatConfirmedZapRow: View {
                     .padding(.vertical, 2)
                     .foregroundColor(Color.white)
                     .background {
-                        themes.theme.accent
+                        theme.accent
                             .clipShape(Capsule())
                     }
                     
@@ -52,7 +52,7 @@ struct ChatConfirmedZapRow: View {
                     Text(pfpAttributes.anyName)
                             
                     Ago(confirmedZap.zapRequestCreatedAt)
-                        .foregroundColor(themes.theme.secondary)
+                        .foregroundColor(theme.secondary)
                     
                     if settings.displayUserAgentEnabled, let via = confirmedZap.via {
                         Text(String(format: "via %@", via))
@@ -86,7 +86,7 @@ struct ChatConfirmedZapRow: View {
                         }
                     }
                 }))
-                .foregroundColor(themes.theme.accent)
+                .foregroundColor(theme.accent)
                 
             NXContentRenderer(nxEvent: confirmedZap.nxEvent, contentElements: confirmedZap.content, zoomableId: zoomableId)
                     .frame(maxWidth: .infinity, alignment: .leading)

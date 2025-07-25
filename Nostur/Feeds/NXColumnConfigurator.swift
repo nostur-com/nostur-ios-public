@@ -10,7 +10,7 @@ import SwiftUI
 
 
 struct NXColumnConfigurator: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @State private var cloudFeed: CloudFeed?
     @State private var columnConfig: NXColumnConfig?
     
@@ -52,7 +52,7 @@ struct NXColumnConfigurator: View {
                             Text(account.anyName)
                         }
                         .tag(account.publicKey)
-                        .foregroundColor(themes.theme.primary)
+                        .foregroundColor(theme.primary)
                     }
                     
                 } label: {

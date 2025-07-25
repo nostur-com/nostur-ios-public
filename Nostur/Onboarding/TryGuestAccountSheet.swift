@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TryGuestAccountSheet: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     @State var letsGo = false

@@ -9,11 +9,11 @@ import SwiftUI
 import NavigationBackport
 
 struct ProfileToolbar: View {
+    @Environment(\.theme) private var theme
     public let pubkey: String
     public let nrContact: NRContact
     @ObservedObject var scrollPosition: ScrollPosition
     @Binding var editingAccount: CloudAccount?
-    public let themes: Themes
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -21,7 +21,7 @@ struct ProfileToolbar: View {
                 PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 25)
                     .overlay(
                         Circle()
-                            .strokeBorder(themes.theme.listBackground, lineWidth: 1)
+                            .strokeBorder(theme.listBackground, lineWidth: 1)
                     )
                 Text("\(nrContact.anyName) ").font(.headline)
                 

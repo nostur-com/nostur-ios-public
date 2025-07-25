@@ -10,7 +10,7 @@ import secp256k1
 import Foundation
 
 struct NewAccountSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) private var viewContext
     

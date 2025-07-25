@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AudioOnlyBar: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject var vm: AnyPlayerModel = .shared
     
     private var title: String {
@@ -33,7 +33,7 @@ struct AudioOnlyBar: View {
     }
     
     var body: some View {
-        themes.theme.accent
+        theme.accent
             .frame(height: AUDIOONLYPILL_HEIGHT)
             .overlay {
                 HStack(spacing: 10) {

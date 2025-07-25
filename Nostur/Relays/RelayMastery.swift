@@ -10,7 +10,7 @@ import NavigationBackport
 
 struct RelayMastery: View {
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     public var relays: [CloudRelay]
     
@@ -40,7 +40,7 @@ struct RelayMastery: View {
                 }
                
                 ZStack {
-                    themes.theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
+                    theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
                     
 //                    SharedRelaySettings(relays: relays)
 //                        .opacity(accountTab == "SHARED" ? 1 : 0)
@@ -82,7 +82,7 @@ struct RelayMastery: View {
 
 
 struct SharedRelaySettings: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public var relays: [CloudRelay] = []
     @State var editRelay: CloudRelay?
     
@@ -106,16 +106,16 @@ struct SharedRelaySettings: View {
         .sheet(item: $editRelay, content: { relay in
             NBNavigationStack {
                 RelayEditView(relay: relay)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         })
     }
 }
 
 struct AccountRelaySettings: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public var accountPubkey: String
     public var relays: [CloudRelay] = []
     @ObservedObject public var account: CloudAccount
@@ -173,7 +173,7 @@ struct AccountRelaySettings: View {
                 Kind10002ConfigurationWizard(account: account, onDismiss: onDismiss)
                     .navigationTitle("Announced relays")
                     .navigationBarTitleDisplayMode(.inline)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
         })

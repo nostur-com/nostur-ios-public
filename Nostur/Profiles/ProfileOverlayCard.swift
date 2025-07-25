@@ -77,7 +77,7 @@
 //    public var withoutFollowButton = false
 //    
 //    @Environment(\.dismiss) private var dismiss
-//    @EnvironmentObject private var themes: Themes
+//    @Environment(\.theme) private var theme
 //    @EnvironmentObject private var dim: DIMENSIONS
 //    @ObservedObject private var fg: FollowingGuardian = .shared
 //    @ObservedObject private var npn: NewPostNotifier = .shared
@@ -145,14 +145,14 @@
 //                                Image(systemName: "bell")
 //                                    .resizable()
 //                                    .frame(width: 20, height: 20)
-//                                    .foregroundColor(themes.theme.primary)
+//                                    .foregroundColor(theme.primary)
 //                                    .overlay(alignment: .topTrailing) {
 //                                        Image(systemName: npn.enabledPubkeys.contains(contact.pubkey) ? "checkmark.circle.fill" : "plus")
 //                                            .resizable()
 //                                            .frame(width: 8, height: 8)
-//                                            .foregroundColor(npn.enabledPubkeys.contains(contact.pubkey) ? .green : themes.theme.primary)
+//                                            .foregroundColor(npn.enabledPubkeys.contains(contact.pubkey) ? .green : theme.primary)
 //                                            .padding(1)
-//                                            .background(themes.theme.listBackground)
+//                                            .background(theme.listBackground)
 //                                            .offset(y: -4)
 //                                    }
 //                            }
@@ -283,12 +283,12 @@
 //                    }
 //                }
 //                .padding(.top, 10)
-////                .background(themes.theme.listBackground)
+////                .background(theme.listBackground)
 //            }
 //        }
 //        .padding(10)
 //        .background {
-//            themes.theme.listBackground
+//            theme.listBackground
 //                .shadow(color: Color("ShadowColor").opacity(0.25), radius: 5)
 //        }
 //        .onChange(of: contact.pictureUrl) { newPictureUrl in

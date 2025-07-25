@@ -8,12 +8,13 @@
 import SwiftUI
 
 struct ArticleByNaddr: View {
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var settings: SettingsStore
     @EnvironmentObject private var dim: DIMENSIONS
     public let naddr1: String
     public var navigationTitle: String? = nil
     public var navTitleHidden: Bool = false
-    public var theme: Theme = Themes.default.theme
+
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
     
     var body: some View {
@@ -100,7 +101,7 @@ struct ArticleByNaddr: View {
                     }
             case .ready(let nrPost):
                 if nrPost.kind == 30023 {
-                    ArticleView(nrPost, isDetail: true, navTitleHidden: navTitleHidden, theme: theme)
+                    ArticleView(nrPost, isDetail: true, navTitleHidden: navTitleHidden)
                 }
                 else {
                     PostDetailView(nrPost: nrPost, navTitleHidden: navTitleHidden)

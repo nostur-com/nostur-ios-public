@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChatMessageRow: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var vc: ViewingContext
     @ObservedObject private var nrChat: NRChatMessage
@@ -32,9 +32,9 @@ struct ChatMessageRow: View {
                 MiniPFP(pictureUrl: pfpAttributes.pfpURL)
                 
                 Text(pfpAttributes.anyName)
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
 
-                Ago(nrChat.created_at).foregroundColor(themes.theme.secondary)
+                Ago(nrChat.created_at).foregroundColor(theme.secondary)
                 
                 if settings.displayUserAgentEnabled, let via = nrChat.via {
                     Text(String(format: "via %@", via))
@@ -69,7 +69,7 @@ struct ChatMessageRow: View {
                 }
             }))
             
-            ChatRenderer(nrChat: nrChat, availableWidth: min(600, vc.availableWidth) - 10, forceAutoload: false, theme: themes.theme, zoomableId: zoomableId)
+            ChatRenderer(nrChat: nrChat, availableWidth: min(600, vc.availableWidth) - 10, forceAutoload: false, zoomableId: zoomableId)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(maxHeight: 1800, alignment: .top)
                 .clipped()

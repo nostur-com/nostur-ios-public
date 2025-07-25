@@ -11,7 +11,7 @@ import Combine
 
 struct NewPostsBy: View {
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var vm: NewPostsVM
     
@@ -51,7 +51,7 @@ struct NewPostsBy: View {
                     }
             case .ready:
                 ZStack {
-                    themes.theme.listBackground // background for just the list, not toolbar
+                    theme.listBackground // background for just the list, not toolbar
                     List(vm.posts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                             PostOrThread(nrPost: nrPost)
@@ -62,7 +62,7 @@ struct NewPostsBy: View {
                         }
                         .id(nrPost.id) // <-- must use .id or can't .scrollTo
                         .listRowSeparator(.hidden)
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                         .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
                     }
                     .environment(\.defaultMinListRowHeight, 50)
@@ -87,7 +87,7 @@ struct NewPostsBy: View {
         }
         .navigationTitle("New Posts")
         .navigationBarTitleDisplayMode(.inline)
-        .background(themes.theme.listBackground) // Screen / Toolbar background
+        .background(theme.listBackground) // Screen / Toolbar background
         .onAppear {
             guard selectedTab == "Notifications" && selectedNotificationsTab == "New Posts" else { return }
             vm.load()

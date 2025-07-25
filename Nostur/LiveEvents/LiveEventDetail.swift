@@ -16,7 +16,7 @@ struct LiveEventDetail: View {
     
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var liveEvent: NRLiveEvent
     @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession = .shared
     
@@ -79,7 +79,7 @@ struct LiveEventDetail: View {
                                     }
                                 
                                 videoStreamView
-                                    .background(themes.theme.listBackground)
+                                    .background(theme.listBackground)
                             }
                             .onTapGesture {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
@@ -91,7 +91,7 @@ struct LiveEventDetail: View {
                                 }
                             }
                             
-                            ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: liveKitVoiceSession.listenAnonymously, chatVM: liveEvent.chatVM, zoomableId: "liveEvent", selectedContact: $selectedContact)
+                            ChatRoom(aTag: liveEvent.id, anonymous: liveKitVoiceSession.listenAnonymously, chatVM: liveEvent.chatVM, zoomableId: "liveEvent", selectedContact: $selectedContact)
                                 .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : (moreChatSpace ? 400 : 150), maxHeight: .infinity)
                                 .padding(.horizontal, 10)
                                 .environmentObject(vc)
@@ -106,7 +106,7 @@ struct LiveEventDetail: View {
                         .padding(10)
                         .layoutPriority(1)
                 }
-                .background(themes.theme.listBackground)
+                .background(theme.listBackground)
             }
             .onAppear {
                 if let relaysTag = liveEvent.nEvent.fastTags.first(where: { $0.0 == "relays" }) {
@@ -132,13 +132,13 @@ struct LiveEventDetail: View {
                     }
                 }
                 
-                vc = ViewingContext(availableWidth: min(600, dim.listWidth - 20), fullWidthImages: false, theme: themes.theme, viewType: .row)
+                vc = ViewingContext(availableWidth: min(600, dim.listWidth - 20), fullWidthImages: false, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
                 if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
                     account = Nostur.account()
                 }
             }
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
             .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
@@ -146,7 +146,7 @@ struct LiveEventDetail: View {
                     AppEnvironment(la: la) {
                         ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
                             .presentationDetentsLarge()
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(theme.listBackground)
                     }
                 }
             })
@@ -155,7 +155,7 @@ struct LiveEventDetail: View {
                     AppEnvironment(la: la) {
                         PaymentAmountSelector(paymentInfo: paymentInfo)
                             .presentationDetentsLarge()
-                            .presentationBackgroundCompat(themes.theme.listBackground)
+                            .presentationBackgroundCompat(theme.listBackground)
                     }
                 }
             })
@@ -183,7 +183,7 @@ struct LiveEventDetail: View {
                                         }
                                         .font(.title2)
                                         .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
                                         
                                         Text("Remove from stage")
                                             .font(.caption)
@@ -202,7 +202,7 @@ struct LiveEventDetail: View {
                                         }
                                         .font(.title2)
                                         .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
                                         
                                         Text("Add to stage")
                                             .font(.caption)
@@ -225,7 +225,7 @@ struct LiveEventDetail: View {
                                         }
                                         .font(.title2)
                                         .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
                                         
                                         Text("Remove moderator")
                                             .font(.caption)
@@ -244,7 +244,7 @@ struct LiveEventDetail: View {
                                         }
                                         .font(.title2)
                                         .labelStyle(.iconOnly)
-                                        .buttonStyle(NestButtonStyle(theme: themes.theme, style: .borderedProminent))
+                                        .buttonStyle(NestButtonStyle(theme: theme, style: .borderedProminent))
                                         
                                         Text("Make moderator")
                                             .font(.caption)
@@ -254,7 +254,7 @@ struct LiveEventDetail: View {
                                 .padding(10)
                         }
                     }
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                     .environmentObject(la)
                     .padding(10)
                     .toolbar {
@@ -271,7 +271,7 @@ struct LiveEventDetail: View {
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
                 .presentationDetents45ml()
             }
             .withLightningEffect()
@@ -310,7 +310,7 @@ struct LiveEventDetail: View {
             }
                 .padding(.top, 10)
                 .font(.footnote)
-                .foregroundColor(themes.theme.secondary)
+                .foregroundColor(theme.secondary)
         }
         
         Text(liveEvent.title ?? " ")
@@ -453,7 +453,7 @@ struct LiveEventDetail: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .center)
             }
-            .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
+            .buttonStyle(NosturButton(height: 36, bgColor: theme.accent))
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 10)
             .disabled(true)
@@ -491,7 +491,7 @@ struct LiveEventDetail: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .center)
                 }
-                .buttonStyle(NosturButton(height: 36, bgColor: themes.theme.accent))
+                .buttonStyle(NosturButton(height: 36, bgColor: theme.accent))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .disabled(liveKitVoiceSession.room.connectionState != .disconnected)
                 
@@ -520,14 +520,14 @@ struct LiveEventDetail: View {
     @ViewBuilder
     private var videoStreamView: some View {
         if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, thumbnail: liveEvent.thumbUrl)
+            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, thumbnail: liveEvent.thumbUrl)
         }
         else if liveEvent.streamHasEnded {
             EmptyView()
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
-                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, theme: themes.theme, thumbnail: liveEvent.thumbUrl)
+                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, thumbnail: liveEvent.thumbUrl)
             }
             else if liveEvent.liveKitConnectUrl == nil {
                 Button {

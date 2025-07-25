@@ -9,7 +9,7 @@ import SwiftUI
 
 struct Kind20: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    private var theme: Theme
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -46,7 +46,7 @@ struct Kind20: View {
     
     @State var showMiniProfile = false
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
@@ -57,7 +57,6 @@ struct Kind20: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.grouped = grouped
-        self.theme = theme
         self.forceAutoload = forceAutoload
         self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
@@ -77,7 +76,7 @@ struct Kind20: View {
     
     @ViewBuilder
     private var normalView: some View {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: true, theme: theme) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: true) {
             
             if isDetail {
                 detailContent
@@ -91,7 +90,7 @@ struct Kind20: View {
     
     @ViewBuilder
     private var embeddedView: some View {
-        PostEmbeddedLayout(nrPost: nrPost, theme: theme) {
+        PostEmbeddedLayout(nrPost: nrPost) {
             rowContent
         }
     }
@@ -123,7 +122,7 @@ struct Kind20: View {
                     }
                 
                 
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload)
                     .padding(.vertical, 10)
             }
         }
@@ -137,7 +136,7 @@ struct Kind20: View {
     private var detailContent: some View {
         VStack {
             if nrPost.galleryItems.count > 1 {
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20)
                     .padding(.top, 10)
             }
             ForEach(nrPost.galleryItems) { galleryItem in
@@ -154,7 +153,7 @@ struct Kind20: View {
             }
             
             if nrPost.galleryItems.count < 2 {
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20, theme: theme)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20)
                     .padding(.vertical, 10)
             }
         }

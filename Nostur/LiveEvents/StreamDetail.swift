@@ -17,7 +17,7 @@ struct StreamDetail: View {
     
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @ObservedObject public var liveEvent: NRLiveEvent
 
     
@@ -61,21 +61,21 @@ struct StreamDetail: View {
                     if let vc {
                         VStack {
                             videoStreamView
-                                    .background(themes.theme.listBackground)
+                                    .background(theme.listBackground)
                         }
                         .onTapGesture {
                             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                             to: nil, from: nil, for: nil)
                         }
                         
-                        ChatRoom(aTag: liveEvent.id, theme: themes.theme, anonymous: false, chatVM: liveEvent.chatVM, selectedContact: $selectedContact)
+                        ChatRoom(aTag: liveEvent.id, anonymous: false, chatVM: liveEvent.chatVM, selectedContact: $selectedContact)
                             .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
                             .padding(.horizontal, 5)
                             .padding(.bottom, 15)
                             .environmentObject(vc)
                             .overlay {
                                 if sendSatsToWhoShown {
-                                    themes.theme.listBackground
+                                    theme.listBackground
                                 }
                             }
                         
@@ -207,7 +207,7 @@ struct StreamDetail: View {
                 }
                 .frame(minHeight: geo.size.height)
                 .onAppear {
-                    vc = ViewingContext(availableWidth: min(600, dim.listWidth - 10), fullWidthImages: false, theme: themes.theme, viewType: .row)
+                    vc = ViewingContext(availableWidth: min(600, dim.listWidth - 10), fullWidthImages: false, viewType: .row)
                 }
             }
             .toolbar {
@@ -227,7 +227,7 @@ struct StreamDetail: View {
                             Text(scheduledAt.formatted())
                         }
                             .font(.footnote)
-                            .foregroundColor(themes.theme.secondary)
+                            .foregroundColor(theme.secondary)
                     }
                 }
                 
@@ -244,7 +244,7 @@ struct StreamDetail: View {
                             }
                         }
                         .buttonStyle(.borderless)
-                        .foregroundColor(themes.theme.accent)
+                        .foregroundColor(theme.accent)
                         .font(.title2)
                         .offset(y: -5)
                     }
@@ -283,8 +283,8 @@ struct StreamDetail: View {
                 if let zapCustomizerSheetInfo {
                     ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)
                         .presentationDetentsLarge()
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                         .onDisappear {
                             sendSatsToWhoShown = false
                         }
@@ -294,8 +294,8 @@ struct StreamDetail: View {
                 if let paymentInfo {
                     PaymentAmountSelector(paymentInfo: paymentInfo)
                         .presentationDetentsLarge()
-                        .environmentObject(themes)
-                        .presentationBackgroundCompat(themes.theme.listBackground)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                         .onDisappear {
                             sendSatsToWhoShown = false
                         }
@@ -304,7 +304,7 @@ struct StreamDetail: View {
             .sheet(item: $selectedContact) { nrContact in
                 NBNavigationStack {
                     SelectedParticipantView(nrContact: nrContact, showZapButton: true, aTag: liveEvent.id, showModeratorControls: false, selectedContact: $selectedContact)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
                     .environmentObject(la)
                     .padding(10)
                     .toolbar {
@@ -321,7 +321,7 @@ struct StreamDetail: View {
                     }
                 }
                 .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .presentationBackgroundCompat(theme.listBackground)
                 .presentationDetents45ml()
             }
         }
@@ -412,7 +412,7 @@ struct StreamDetail: View {
             }
         }
         else {
-            themes.theme.listBackground.frame(height: 100)
+            theme.listBackground.frame(height: 100)
         }
     }
     

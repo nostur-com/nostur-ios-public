@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NewNoteButton: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @Binding var showingNewNote:Bool
     
     var body: some View {
@@ -19,7 +19,7 @@ struct NewNoteButton: View {
             Image(systemName: "plus.circle.fill")
                 .resizable()
                 .scaledToFit()
-                .foregroundStyle(Color.white, themes.theme.accent)
+                .foregroundStyle(Color.white, theme.accent)
                 .frame(width: 45, height: 45)
         }
         .accessibilityLabel(String(localized:"New post", comment: "Button to create a new post"))

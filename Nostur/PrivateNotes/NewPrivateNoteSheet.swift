@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct NewPrivateNoteSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
@@ -68,7 +68,7 @@ struct NewPrivateNoteSheet: View {
                         .lineLimit(10)
                 }
             }
-                .listRowBackground(themes.theme.background)
+                .listRowBackground(theme.background)
         }
         .scrollContentBackgroundHidden()
         .navigationTitle(String(localized: "New private note", comment: "Navigation title for new private note screen"))

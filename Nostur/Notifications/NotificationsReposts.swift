@@ -13,7 +13,7 @@ import NavigationBackport
 struct NotificationsReposts: View {
     public let pubkey: String
     @Binding public var navPath: NBNavigationPath
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @StateObject private var model = RepostsFeedModel()
     @ObservedObject private var settings: SettingsStore = .shared
 
@@ -83,7 +83,7 @@ struct NotificationsReposts: View {
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .onAppear {
             model.setup(pubkey: pubkey)
             model.load(limit: 50)

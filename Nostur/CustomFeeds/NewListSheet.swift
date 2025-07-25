@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct NewListSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @State private var newList: CloudFeed?
     @State private var title = ""
@@ -82,7 +82,7 @@ struct NewListSheet: View {
                     }
                 }
             }
-            .listRowBackground(themes.theme.background)
+            .listRowBackground(theme.background)
         }
         .scrollContentBackgroundCompat(.hidden)
         .navigationTitle(String(localized:"New feed", comment:"Navigation title for screen to create a new feed"))
@@ -98,9 +98,9 @@ struct NewListSheet: View {
                 dismiss()
             })
             .equatable()
-            .environmentObject(themes)
+            .environment(\.theme, theme)
             .navigationTitle(String(localized:"Add contacts to feed", comment:"Navigation title for screen where you can add contacts to a feed"))
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {

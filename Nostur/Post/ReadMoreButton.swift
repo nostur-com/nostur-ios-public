@@ -10,7 +10,7 @@ import SwiftUI
 struct ReadMoreButton: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     var nrPost:NRPost
     
     var moreItems:Int { nrPost.previewWeights?.moreItemsCount ?? 0 }
@@ -32,7 +32,7 @@ struct ReadMoreButton: View {
         .padding(.leading, 8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(themes.theme.lineColor.opacity(0.5), lineWidth: 1)
+                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
         )
         .onTapGesture {
             guard !nxViewingContext.contains(.preview) else { return }

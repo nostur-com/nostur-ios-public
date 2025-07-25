@@ -12,7 +12,7 @@ import Combine
 
 struct PostZaps: View {
     public let nrPost: NRPost
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @StateObject private var model = PostZapsModel()
 
     @State private var backlog = Backlog()
@@ -26,7 +26,7 @@ struct PostZaps: View {
         #endif
         ScrollViewReader { proxy in
             ZStack {
-                themes.theme.listBackground
+                theme.listBackground
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: GUTTER) {
@@ -88,7 +88,7 @@ struct PostZaps: View {
                 }
             }
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .navigationTitle(String(localized: "Zaps", comment: "Title of list of zaps screen"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -139,7 +139,7 @@ struct PostZaps: View {
 }
 
 struct NxZapReceipt: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     
     public let sats: Double
@@ -159,7 +159,7 @@ struct NxZapReceipt: View {
         HStack(alignment: .top) {
             VStack(alignment: .center) {
                 Image(systemName: "bolt.fill")
-                    .foregroundColor(themes.theme.accent)
+                    .foregroundColor(theme.accent)
                 Text(sats.satsFormatted)
                     .font(.title3)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
@@ -204,7 +204,7 @@ struct NxZapReceipt: View {
             VStack(alignment: .leading, spacing: 3) { // Post container
                 ZappedFrom(nrZapFrom: nrZapFrom)
                 
-                ContentRenderer(nrPost: nrZapFrom, showMore: .constant(true), isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowWidth - 80, theme: themes.theme)
+                ContentRenderer(nrPost: nrZapFrom, showMore: .constant(true), isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowWidth - 80)
                     .frame(maxWidth: dim.availableNoteRowWidth - 80, minHeight: 40, alignment: .leading)
 //                ReceiptFrom(pubkey: receiptPubkey)
             }

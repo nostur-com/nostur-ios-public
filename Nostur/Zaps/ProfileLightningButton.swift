@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileLightningButton: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     
     public var nrContact: NRContact?
     public var zapEtag: String?
@@ -32,8 +32,8 @@ struct ProfileLightningButton: View {
         .buttonStyle(NosturButton())
         .sheet(isPresented: $payAmountSelectorShown) {
             PaymentAmountSelector(paymentInfo: paymentInfo!)
-                .environmentObject(themes)
-                .presentationBackgroundCompat(themes.theme.listBackground)
+                .environment(\.theme, theme)
+                .presentationBackgroundCompat(theme.listBackground)
         }
         .opacity((nrContact?.anyLud ?? false) ? 1 : 0)
     }

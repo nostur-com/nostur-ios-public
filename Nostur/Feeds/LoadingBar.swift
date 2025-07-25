@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoadingBar: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Binding public var loadingBarViewState: LoadingBar.ViewState
     public let height: CGFloat = 2.0
     
@@ -65,7 +65,7 @@ struct LoadingBar: View {
     
     var body: some View {
         GeometryReader { geo in
-            themes.theme.accent
+            theme.accent
                 .frame(width: barWidth(geo.size.width))
         }
         .frame(height: height)

@@ -97,7 +97,7 @@ class WebsiteCommentsViewModel: ObservableObject {
 }
 
 struct WebsiteComments: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     public let nrPost: NRPost
     
     @StateObject private var vm = WebsiteCommentsViewModel()
@@ -112,7 +112,7 @@ struct WebsiteComments: View {
         VStack {
             HStack(spacing: 0) {
                 self.replyButton
-                    .foregroundColor(themes.theme.footerButtons)
+                    .foregroundColor(theme.footerButtons)
                     .padding(.leading, 10)
                     .padding(.vertical, 5)
                     .contentShape(Rectangle())

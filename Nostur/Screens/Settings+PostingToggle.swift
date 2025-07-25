@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PostingToggle: View {
-    @EnvironmentObject private var themes:Themes
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     
     private var accounts:[CloudAccount] {

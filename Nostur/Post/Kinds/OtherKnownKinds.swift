@@ -9,19 +9,18 @@ import SwiftUI
 
 // Kinds we know and need but don't really render
 struct OtherKnownKinds: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
     private let nrPost: NRPost
     @ObservedObject var pfpAttributes: PFPAttributes
     private let hideFooter: Bool
-    private let theme: Theme
     
-    init(nrPost: NRPost, hideFooter: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = false) {
         self.nrPost = nrPost
         self.pfpAttributes = nrPost.pfpAttributes
         self.hideFooter = hideFooter
-        self.theme = theme
     }
     
     var body: some View {
@@ -74,7 +73,7 @@ struct OtherKnownKinds: View {
             }
             
             if (!hideFooter && settings.rowFooterEnabled) {
-                CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
+                CustomizableFooterFragmentView(nrPost: nrPost)
                     .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                     .drawingGroup(opaque: true)
             }

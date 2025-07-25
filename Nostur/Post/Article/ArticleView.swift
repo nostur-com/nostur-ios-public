@@ -10,6 +10,7 @@ import MarkdownUI
 import NavigationBackport
 
 struct ArticleView: View {
+    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var article: NRPost
@@ -19,16 +20,14 @@ struct ArticleView: View {
     private var hideFooter: Bool = false
     private var navTitleHidden: Bool = false
     private var forceAutoload: Bool
-    private var theme: Theme
     
-    init(_ article: NRPost, isDetail: Bool = false, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false, theme: Theme = Themes.default.theme) {
+    init(_ article: NRPost, isDetail: Bool = false, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false) {
         self.article = article
         self.isDetail = isDetail
         self.fullWidth = fullWidth
         self.hideFooter = hideFooter
         self.navTitleHidden = navTitleHidden
         self.forceAutoload = forceAutoload
-        self.theme = theme
     }
     
     private let WORDS_PER_MINUTE: Double = 200.0
@@ -132,11 +131,11 @@ struct ArticleView: View {
                         .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: article, showMore: .constant(true), isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true, theme: theme)
+                    ContentRenderer(nrPost: article, showMore: .constant(true), isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
-                        CustomizableFooterFragmentView(nrPost: article, theme: theme)
+                        CustomizableFooterFragmentView(nrPost: article)
                             .background(theme.secondaryBackground)
                             .drawingGroup(opaque: true)
                             .padding(.vertical, 10)
@@ -397,7 +396,7 @@ struct ArticleView: View {
                 }
                 
                 if !hideFooter {
-                    CustomizableFooterFragmentView(nrPost: article, theme: theme)
+                    CustomizableFooterFragmentView(nrPost: article)
                         .background(theme.secondaryBackground)
                         .drawingGroup(opaque: true)
                 }
@@ -441,7 +440,7 @@ struct ArticleView_Previews: PreviewProvider {
                                                              context: DataProvider.shared().viewContext)
             {
                 NBNavigationStack {
-                    ArticleView(NRPost(event: article), isDetail: true, theme: Themes.default.theme)
+                    ArticleView(NRPost(event: article), isDetail: true)
                 }
             }
             
@@ -465,11 +464,11 @@ struct Articles_Previews: PreviewProvider {
             PreviewFeed {
                 if let p = PreviewFetcher.fetchNRPost("12c29454fc1f995eb6e08a97f91dff37f891d1de130fbb333b5976f2cca99395") {
                     Box(nrPost: p) {
-                        PostRowDeletable(nrPost: p, fullWidth: true, theme: Themes.default.theme)
+                        PostRowDeletable(nrPost: p, fullWidth: true)
                     }
                     
                     Box(nrPost: p) {
-                        PostRowDeletable(nrPost: p, theme: Themes.default.theme)
+                        PostRowDeletable(nrPost: p)
                     }
                         
                 }

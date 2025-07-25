@@ -18,7 +18,7 @@ struct ProfileView: View {
     public var tab: String?
     
     
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var la: LoggedInAccount
     
@@ -46,7 +46,7 @@ struct ProfileView: View {
                                 PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
                                     .overlay(
                                         Circle()
-                                            .strokeBorder(themes.theme.listBackground, lineWidth: 3)
+                                            .strokeBorder(theme.listBackground, lineWidth: 3)
                                     )
                                     .background {
                                         GeometryReader { geometry in
@@ -67,7 +67,7 @@ struct ProfileView: View {
                                 }
                                 else {
                                     Circle()
-                                        .strokeBorder(themes.theme.listBackground, lineWidth: 3)
+                                        .strokeBorder(theme.listBackground, lineWidth: 3)
                                 }
                             }
                             .overlay(alignment: .bottomTrailing) {
@@ -103,7 +103,7 @@ struct ProfileView: View {
                                         .resizable()
                                         .frame(width: 10, height: 10)
                                         .foregroundColor(.green)
-                                        .background(themes.theme.listBackground)
+                                        .background(theme.listBackground)
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
@@ -118,8 +118,8 @@ struct ProfileView: View {
                                     Image(systemName: "plus")
                                         .resizable()
                                         .frame(width: 10, height: 10)
-                                        .background(themes.theme.listBackground)
-                                        .border(themes.theme.listBackground, width: 2.0)
+                                        .background(theme.listBackground)
+                                        .border(theme.listBackground, width: 2.0)
                                         .offset(y: -3)
                                 }
                                 .offset(y: 3)
@@ -260,43 +260,43 @@ struct ProfileView: View {
             .lineSpacing(0)
             .listSectionSeparator(.hidden)
             .listRowSeparator(.hidden)
-            .background(themes.theme.listBackground)
+            .background(theme.listBackground)
             
             Section(content: {
                 switch selectedSubTab {
                 case "Posts":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .posts)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Replies":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .replies)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Lists":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .lists)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Articles":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Interactions":
                     ProfileInteractionsView(nrContact: nrContact)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Following":
                     ProfileFollowingList(pubkey: nrContact.pubkey)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Media":
                     ProfileMediaView(pubkey: nrContact.pubkey)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Reactions":
                     ProfileReactionsView(pubkey: nrContact.pubkey)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Zaps":
                     ProfileZapsView(nrContact: nrContact)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Relays":
                     ProfileRelays(pubkey: nrContact.pubkey, name: nrContact.anyName)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 case "Followers":
                     FollowersList(pubkey: nrContact.pubkey)
-                        .background(themes.theme.listBackground)
+                        .background(theme.listBackground)
                 default:
                     Text("🥪")
                 }
@@ -370,11 +370,11 @@ struct ProfileView: View {
             .listSectionSeparator(.hidden)
             .listRowSeparator(.hidden)
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
         .listRowInsets(EdgeInsets())
         .listStyle(.plain)
         .toolbar {
-            ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount, themes: themes)
+            ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount)
         }
         .overlay(alignment: .bottomTrailing) {
             NewNoteButton(showingNewNote: $showingNewNote)
@@ -384,10 +384,10 @@ struct ProfileView: View {
         .sheet(item: $editingAccount) { account in
             NBNavigationStack {
                 AccountEditView(account: account)
-                    .environmentObject(themes)
+                    .environment(\.theme, theme)
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .sheet(isPresented: $showingNewNote) {
             NBNavigationStack {
@@ -395,21 +395,21 @@ struct ProfileView: View {
                     if account.isNC {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
-                                .environmentObject(themes)
+                                .environment(\.theme, theme)
                                 .environmentObject(la)
 //                                .environmentObject(screenSpace)
                         }
                     }
                     else {
                         ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
-                            .environmentObject(themes)
+                            .environment(\.theme, theme)
                             .environmentObject(la)
 //                            .environmentObject(screenSpace)
                     }
                 }
             }
             .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(themes.theme.listBackground)
+            .presentationBackgroundCompat(theme.listBackground)
         }
         .onAppear {
             if let tab = tab {

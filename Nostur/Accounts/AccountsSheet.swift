@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct AccountsSheet: View {
-    @EnvironmentObject private var themes: Themes
+    @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     @Environment(\.showSidebar) @Binding private var showSidebar
     
@@ -48,7 +48,7 @@ struct AccountsSheet: View {
                                 logoutAccount = account
                             }
                         }
-                        .listRowBackground(themes.theme.listBackground)
+                        .listRowBackground(theme.listBackground)
                 }
             }
             .scrollContentBackgroundHidden()
@@ -116,7 +116,7 @@ struct AccountsSheet: View {
                     .cancel(Text("Cancel"))
                 ])
         }
-        .background(themes.theme.listBackground)
+        .background(theme.listBackground)
     }
 }
 

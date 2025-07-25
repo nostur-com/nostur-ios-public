@@ -9,29 +9,28 @@ import SwiftUI
 
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ZapButton: View, Equatable {
+
     static func == (lhs: ZapButton, rhs: ZapButton) -> Bool {
-        lhs.nrPost.id == rhs.nrPost.id &&
-        lhs.theme == rhs.theme
+        lhs.nrPost.id == rhs.nrPost.id
     }
     
     private let nrPost: NRPost
     private var isFirst: Bool
     private var isLast: Bool
-    private var theme: Theme
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.isFirst = isFirst
         self.isLast = isLast
-        self.theme = theme
     }
 
     var body: some View {
-        ZapButtonInner(nrPost: nrPost, isFirst: isFirst, isLast: isLast, theme: theme)
+        ZapButtonInner(nrPost: nrPost, isFirst: isFirst, isLast: isLast)
     }
 }
 
 struct ZapButtonInner: View {
+    @Environment(\.theme) private var theme
     private let nrPost: NRPost
     @ObservedObject private var footerAttributes: FooterAttributes
     @ObservedObject private var ss: SettingsStore = .shared
@@ -49,14 +48,12 @@ struct ZapButtonInner: View {
     
     private var isFirst: Bool
     private var isLast: Bool
-    private var theme: Theme
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
         self.isFirst = isFirst
         self.isLast = isLast
-        self.theme = theme
     }
     
     private var icon: String {
@@ -270,7 +267,7 @@ struct ZapButton_Previews: PreviewProvider {
         }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                    ZapButton(nrPost: nrPost, theme: Themes.default.theme)
+                    ZapButton(nrPost: nrPost)
                 }
                 
                 Image("BoltIconActive").foregroundColor(.yellow)

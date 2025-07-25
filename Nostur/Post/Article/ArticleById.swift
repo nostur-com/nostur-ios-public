@@ -8,10 +8,10 @@
 import SwiftUI
 
 struct ArticleById: View {
+    @Environment(\.theme) private var theme
     public let id:String
     public var navigationTitle:String? = nil
     public var navTitleHidden: Bool = false
-    public var theme:Theme = Themes.default.theme
     @State var article:NRPost? = nil
     @State var backlog = Backlog(timeout: 15, auto: true)
     @State var error:String? = nil
@@ -22,7 +22,7 @@ struct ArticleById: View {
                 Text(error)
             }
             else if let article {
-                ArticleView(article, isDetail: true, theme: theme)
+                ArticleView(article, isDetail: true)
 //                    .background(Color(.secondarySystemBackground))
             }
             else {
