@@ -141,7 +141,7 @@ struct NRContentTextRendererInner: View {
                             showMore = true
                         } label: {
                             Text("Read more...")
-                                .foregroundColor(theme.primary)
+                                .foregroundColor(.white)
                                 .fontWeightBold()
                                 .padding(5)
                                 .background(theme.accent)
@@ -215,7 +215,7 @@ struct NRContentTextRendererInner: View {
                                     showMore = true
                                 } label: {
                                     Text("Read more...")
-                                        .foregroundColor(theme.primary)
+                                        .foregroundColor(.white)
                                         .fontWeightBold()
                                         .padding(5)
                                         .background(theme.accent)
@@ -270,7 +270,7 @@ struct NRContentTextRendererInner: View {
                                     showMore = true
                                 } label: {
                                     Text("Read more...")
-                                        .foregroundColor(theme.primary)
+                                        .foregroundColor(.white)
                                         .fontWeightBold()
                                         .padding(5)
                                         .background(theme.accent)
