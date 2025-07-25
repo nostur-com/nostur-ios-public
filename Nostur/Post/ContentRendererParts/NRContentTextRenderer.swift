@@ -137,16 +137,15 @@ struct NRContentTextRendererInner: View {
             
                 .overlay(alignment: .bottomTrailing) {
                     if shouldShowMoreButton {
-                        Button {
-                            showMore = true
-                        } label: {
-                            Text("Read more...")
-                                .foregroundColor(.white)
-                                .fontWeightBold()
-                                .padding(5)
-                                .background(theme.accent)
-                                .contentShape(Rectangle())
-                        }
+                        Text("Read more...")
+                            .foregroundColor(.white)
+                            .fontWeightBold()
+                            .padding(5)
+                            .background(theme.accent)
+                            .contentShape(Rectangle())
+                            .highPriorityGesture(TapGesture().onEnded {
+                                showMore = true
+                            })
                     }
                 }
         }
@@ -211,16 +210,15 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Button {
-                                    showMore = true
-                                } label: {
-                                    Text("Read more...")
-                                        .foregroundColor(.white)
-                                        .fontWeightBold()
-                                        .padding(5)
-                                        .background(theme.accent)
-                                        .contentShape(Rectangle())
-                                }
+                                Text("Read more...")
+                                    .foregroundColor(.white)
+                                    .fontWeightBold()
+                                    .padding(5)
+                                    .background(theme.accent)
+                                    .contentShape(Rectangle())
+                                    .highPriorityGesture(TapGesture().onEnded {
+                                        showMore = true
+                                    })
                             }
                         }
                 }
@@ -266,16 +264,15 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Button {
-                                    showMore = true
-                                } label: {
-                                    Text("Read more...")
-                                        .foregroundColor(.white)
-                                        .fontWeightBold()
-                                        .padding(5)
-                                        .background(theme.accent)
-                                        .contentShape(Rectangle())
-                                }
+                                Text("Read more...")
+                                    .foregroundColor(.white)
+                                    .fontWeightBold()
+                                    .padding(5)
+                                    .background(theme.accent)
+                                    .contentShape(Rectangle())
+                                    .highPriorityGesture(TapGesture().onEnded {
+                                        showMore = true
+                                    })
                             }
                         }
                 }
