@@ -138,6 +138,11 @@ struct KindResolver: View {
             Kind30000(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
+            
+        case 1222, 1244:
+            Kind1222(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth || (nrPost.kTag ?? "" == "20" && nrPost.galleryItems.count > 0), forceAutoload: shouldAutoload)
+                .onAppear { self.enqueue() }
+                .onDisappear { self.dequeue() }
         
         case 1:
             Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth || (nrPost.kTag ?? "" == "20" && nrPost.galleryItems.count > 0), forceAutoload: shouldAutoload)
