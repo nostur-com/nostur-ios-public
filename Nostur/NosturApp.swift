@@ -45,6 +45,8 @@ struct iOSApp: App {
     private let evc: LRUCache2<String, Event> = EventCache.shared
     private let lpc: LinkPreviewCache = .shared
     
+    private let dlm: DownloadManager = .shared
+    
     private let regexes = NostrRegexes.default
     
     var body: some Scene {
