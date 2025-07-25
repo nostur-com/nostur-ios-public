@@ -143,8 +143,7 @@ class InstantFeed {
 #if DEBUG
                 L.og.notice("🟪 Fetching posts from relays using \(pubkeys.count) pubkeys")
 #endif
-//                req(RM.getFollowingEvents(pubkeys: Array(pubkeys), limit: 400, subscriptionId: taskId))
-                let filters = [Filters(authors: pubkeys, kinds: [1,5,6,20,9802,30023,34235], since: self.since, limit: 500)]
+                let filters = [Filters(authors: pubkeys, kinds: [1,1222,5,6,20,9802,30023,34235], since: self.since, limit: 500)]
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
                 
             } processResponseCommand: { [weak self] taskId, _, _ in
@@ -197,7 +196,7 @@ class InstantFeed {
 #if DEBUG
                     L.og.notice("🟪 Fetching posts from globalish relays using \(relayCount) relays")
 #endif
-                    let filters = [Filters(kinds: [1,5,6,20,9802,30023,34235], since: self.since != 0 ? self.since : nil, limit: 500)]
+                    let filters = [Filters(kinds: [1,1222,5,6,20,9802,30023,34235], since: self.since != 0 ? self.since : nil, limit: 500)]
                     if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                         req(message, relays: self.relays)
                     }

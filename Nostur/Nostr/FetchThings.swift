@@ -45,7 +45,7 @@ func fetchStuffForLastAddedNotes(ids: [String]) {
                 clientMessage: NostrEssentials.ClientMessage(
                     type: .REQ,
                     subscriptionId: sub,
-                    filters: [Filters(kinds: [1,6,7,9735], tagFilter: TagFilter(tag: "e", values: Set(ids)), limit: 5000)]
+                    filters: [Filters(kinds: [1,1244,6,7,9735], tagFilter: TagFilter(tag: "e", values: Set(ids)), limit: 5000)]
                 ),
                 relayType: .READ
             )

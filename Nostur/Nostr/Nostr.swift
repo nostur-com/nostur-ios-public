@@ -103,6 +103,8 @@ public enum NEventKind: Codable, Equatable {
     case chatMessage
     case reaction
     case picture
+    case shortVoiceMessage
+    case shortVoiceMessageComment
     case report
     case zapRequest
     case zapNote
@@ -136,6 +138,8 @@ public enum NEventKind: Codable, Equatable {
         case     6: self = .repost
         case     7: self = .reaction
         case    20: self = .picture
+        case  1222: self = .shortVoiceMessage
+        case  1244: self = .shortVoiceMessageComment
         case  1311: self = .chatMessage
         case  1984: self = .report
         case  9734: self = .zapRequest
@@ -163,37 +167,39 @@ public enum NEventKind: Codable, Equatable {
 
     var id: Int {
         switch self {
-        case .setMetadata:          return 0
-        case .textNote:             return 1
-        case .recommendServer:      return 2
-        case .contactList:          return 3
-        case .directMessage:        return 4
-        case .delete:               return 5
-        case .repost:               return 6
-        case .chatMessage:          return 1311
-        case .reaction:             return 7
-        case .picture:              return 20
-        case .report:               return 1984
-        case .zapRequest:           return 9734
-        case .zapNote:              return 9735
-        case .highlight:            return 9802
-        case .relayList:            return 10002
-        case .blossomServerList:    return 10063
-        case .nwcInfo:              return 13194
-        case .nwcRequest:           return 23194
-        case .nwcResponse:          return 23195
-        case .ncMessage:            return 24133
-        case .badgeDefinition:      return 30009
-        case .badgeAward:           return 8
-        case .followSet:            return 30000
-        case .profileBadges:        return 30008
-        case .article:              return 30023
-        case .video:                return 34235
-        case .community:            return 34550
-        case .followPack:           return 39089
-        case .auth:                 return 22242
-        case .blossomAuth:          return 24242
-        case .custom(let customId): return customId
+        case .setMetadata:              return 0
+        case .textNote:                 return 1
+        case .recommendServer:          return 2
+        case .contactList:              return 3
+        case .directMessage:            return 4
+        case .delete:                   return 5
+        case .repost:                   return 6
+        case .chatMessage:              return 1311
+        case .reaction:                 return 7
+        case .picture:                  return 20
+        case .shortVoiceMessage:        return 1222
+        case .shortVoiceMessageComment: return 1244
+        case .report:                   return 1984
+        case .zapRequest:               return 9734
+        case .zapNote:                  return 9735
+        case .highlight:                return 9802
+        case .relayList:                return 10002
+        case .blossomServerList:        return 10063
+        case .nwcInfo:                  return 13194
+        case .nwcRequest:               return 23194
+        case .nwcResponse:              return 23195
+        case .ncMessage:                return 24133
+        case .badgeDefinition:          return 30009
+        case .badgeAward:               return 8
+        case .followSet:                return 30000
+        case .profileBadges:            return 30008
+        case .article:                  return 30023
+        case .video:                    return 34235
+        case .community:                return 34550
+        case .followPack:               return 39089
+        case .auth:                     return 22242
+        case .blossomAuth:              return 24242
+        case .custom(let customId):     return customId
         }
     }
 

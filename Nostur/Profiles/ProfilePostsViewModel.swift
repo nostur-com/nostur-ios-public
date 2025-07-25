@@ -10,7 +10,8 @@ import NostrEssentials
 import CoreData
 import Combine
 
-let PROFILE_KINDS = Set([1,5,6,20,9802,34235])
+let PROFILE_KINDS = Set([1,1222,5,6,20,9802,34235])
+let PROFILE_KINDS_REPLIES = Set([1,1244,5])
 let ARTICLE_KINDS = Set([30023])
 let LIST_KINDS = Set([30000,39089])
 
@@ -101,8 +102,10 @@ class ProfilePostsViewModel: ObservableObject {
                 guard let self else { return }
                 
                 let kinds = switch self.type {
-                case .posts, .replies:
+                case .posts:
                     PROFILE_KINDS
+                case .replies:
+                    PROFILE_KINDS_REPLIES
                 case .articles:
                     ARTICLE_KINDS
                 case .lists:
@@ -196,7 +199,7 @@ class ProfilePostsViewModel: ObservableObject {
                     fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToId == nil AND replyToRootId == nil", self.pubkey, PROFILE_KINDS.subtracting([5]))
                 }
                 else {
-                    fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToId != nil OR replyToRootId != nil)", self.pubkey, PROFILE_KINDS.subtracting([5]))
+                    fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToId != nil OR replyToRootId != nil)", self.pubkey, PROFILE_KINDS_REPLIES.subtracting([5]))
                 }
                 fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
                 fr.fetchOffset = 0
@@ -248,8 +251,10 @@ class ProfilePostsViewModel: ObservableObject {
     private func prefetchOnSixthPost() {
         guard let oldestPostDate = self.posts.last?.createdAt else { return }
         let kinds = switch self.type {
-        case .posts, .replies:
+        case .posts:
             PROFILE_KINDS
+        case .replies:
+            PROFILE_KINDS_REPLIES
         case .articles:
             ARTICLE_KINDS
         case .lists:
@@ -343,7 +348,7 @@ class ProfilePostsViewModel: ObservableObject {
                 fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND created_at <= %i", self.pubkey, PROFILE_KINDS.subtracting([5]), Int(firstPostCreatedAt))
             }
             else {
-                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToRootId != nil OR replyToId != nil) AND created_at <= %i", self.pubkey, PROFILE_KINDS.subtracting([5]), Int(firstPostCreatedAt))
+                fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@ AND (replyToRootId != nil OR replyToId != nil) AND created_at <= %i", self.pubkey, PROFILE_KINDS_REPLIES.subtracting([5]), Int(firstPostCreatedAt))
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
             fr.fetchOffset = offset
@@ -390,8 +395,10 @@ class ProfilePostsViewModel: ObservableObject {
     
     public func fetchMore(after: NRPost, amount: Int) {
         let kinds = switch self.type {
-        case .posts, .replies:
+        case .posts:
             PROFILE_KINDS
+        case .replies:
+            PROFILE_KINDS_REPLIES
         case .articles:
             ARTICLE_KINDS
         case .lists:
