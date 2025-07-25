@@ -38,6 +38,7 @@ struct NRContentTextRenderer: View, Equatable {
 let SELECTABLE_TEXT_CONTEXTS: Set<NXViewingContextOptions> = Set([.detailPane, .selectableText, .preview])
 
 struct NRContentTextRendererInner: View {
+    @Environment(\.theme) private var theme
     private let attributedStringWithPs: AttributedStringWithPs
     @Binding var showMore: Bool
     private let availableWidth: CGFloat
@@ -140,10 +141,11 @@ struct NRContentTextRendererInner: View {
                             showMore = true
                         } label: {
                             Text("Read more...")
-                                .foregroundColor(Color.white)
+                                .foregroundColor(theme.primary)
                                 .fontWeightBold()
                                 .padding(5)
-                                .background(Color.black)
+                                .background(theme.accent)
+                                .contentShape(Rectangle())
                         }
                     }
                 }
@@ -213,10 +215,11 @@ struct NRContentTextRendererInner: View {
                                     showMore = true
                                 } label: {
                                     Text("Read more...")
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(theme.primary)
                                         .fontWeightBold()
                                         .padding(5)
-                                        .background(Color.black)
+                                        .background(theme.accent)
+                                        .contentShape(Rectangle())
                                 }
                             }
                         }
@@ -267,10 +270,11 @@ struct NRContentTextRendererInner: View {
                                     showMore = true
                                 } label: {
                                     Text("Read more...")
-                                        .foregroundColor(Color.white)
+                                        .foregroundColor(theme.primary)
                                         .fontWeightBold()
                                         .padding(5)
-                                        .background(Color.black)
+                                        .background(theme.accent)
+                                        .contentShape(Rectangle())
                                 }
                             }
                         }

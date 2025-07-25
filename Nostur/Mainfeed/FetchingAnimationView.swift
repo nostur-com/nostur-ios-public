@@ -110,7 +110,7 @@ struct CircleAnimationViews: View {
 }
 
 struct PfpAnimationViews: View {
-    @Environment(\.themes) private var themes
+    @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     @State private var isAnimating = false
 
@@ -153,7 +153,7 @@ struct PfpAnimationViews: View {
             }
             else {
                 Circle()
-                    .foregroundColor(themes.theme.listBackground)
+                    .foregroundColor(theme.listBackground)
                     .frame(width: 60, height: 60)
                     .scaleEffect(isAnimating ? 1.3 : 0.9)
                     .animation(
@@ -198,7 +198,7 @@ import Nuke
 import NukeUI
 
 struct TinyLoadingPFP: View {
-    @Environment(\.themes) private var themes
+    @Environment(\.theme) private var theme
     
     var url: URL
     var size: CGFloat = 12
@@ -220,7 +220,7 @@ struct TinyLoadingPFP: View {
                         .frame(width: size, height: size)
                 }
             }
-            else { themes.theme.listBackground }
+            else { theme.listBackground }
         }
         .pipeline(ImageProcessing.shared.pfp)
         .frame(width: size, height: size)

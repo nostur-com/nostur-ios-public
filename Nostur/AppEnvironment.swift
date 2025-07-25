@@ -11,6 +11,7 @@ import SwiftUI
 // wrap in AppEnvironment { } to always have our EnvironmentObjects
 struct AppEnvironment<Content: View>: View {
     
+    @ObservedObject private var themes: Themes = .default
     public var la: LoggedInAccount
     
     @ViewBuilder
@@ -18,6 +19,7 @@ struct AppEnvironment<Content: View>: View {
         
     var body: some View {
         self.content
+            .environment(\.theme, themes.theme)
             .tint(Themes.default.theme.accent)
             .accentColor(Themes.default.theme.accent)
             .environmentObject(Themes.default)
@@ -32,11 +34,11 @@ struct AppEnvironment<Content: View>: View {
 }
 
 struct ThemesEnvironmentKey: EnvironmentKey {
-    static let defaultValue: Themes = .default
+    static let defaultValue: Theme = Themes.default.theme
 }
 
 extension EnvironmentValues {
-    var themes: Themes {
+    var theme: Theme {
         get { self[ThemesEnvironmentKey.self] }
         set { self[ThemesEnvironmentKey.self] = newValue }
     }

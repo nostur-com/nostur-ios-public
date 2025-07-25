@@ -131,10 +131,11 @@ struct Kind1: View {
                                 clipBottomHeight = 18000.0
                             } label: {
                                 Text("Read more...")
-                                    .foregroundColor(Color.white)
+                                    .foregroundColor(theme.primary)
                                     .fontWeightBold()
                                     .padding(5)
-                                    .background(Color.black)
+                                    .background(theme.accent)
+                                    .contentShape(Rectangle())
                             }
                         }
                     }
