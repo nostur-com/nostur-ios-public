@@ -1,0 +1,37 @@
+# Claude Code ignore file
+# Add patterns for files and directories that should be ignored by Claude Code
+
+# From existing .cursorignore
+Config.xcconfig
+Nostur/Nostr/DummyData/DummyEvents.swift
+Nostur.xcodeproj/project.xcworkspace/xcuserdata/*.xcuserstate
+
+# Large dummy/test content files
+**/DummyData/
+**/dummy-data/
+
+# Common large files to ignore
+*.log
+*.dump
+*.sql
+*.csv
+*.json.large
+*.xml.large
+
+# Build artifacts
+build/
+DerivedData/
+*.xcarchive/
+
+# Generated files
+*.generated.swift
+*.generated.h
+*.generated.m
+
+# Documentation builds
+docs/build/
+**/Documentation.docc/
+
+# Other large text files
+CHANGELOG.md
+CONTRIBUTORS.md
