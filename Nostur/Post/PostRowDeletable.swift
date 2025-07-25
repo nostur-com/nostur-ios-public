@@ -20,7 +20,7 @@
 //    private var ignoreBlock: Bool = false // Force show, when we open profile of blocked account
 //    private var theme: Theme
 //    
-//    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, grouped: Bool = false, ignoreBlock: Bool = false, theme: Theme = Themes.default.theme) {
+//    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, grouped: Bool = false, ignoreBlock: Bool = false) {
 //        self.nrPost = nrPost
 //        self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
 //        self.hideFooter = hideFooter
@@ -52,7 +52,7 @@
 //            .hCentered()
 //        }
 //        else if postRowDeletableAttributes.deletedById == nil {
-//            NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped, theme: theme)
+//            NoteRow(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail, grouped:grouped)
 //        }
 //        else {
 //            HStack {

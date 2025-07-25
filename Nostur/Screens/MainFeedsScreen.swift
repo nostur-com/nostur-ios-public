@@ -300,6 +300,7 @@ struct MainFeedsScreen: View {
                     }
                 }
                 else {
+//                    AudioRecorderContentView()
                     if let followingConfig {
                         AvailableWidthContainer {
                             NXColumnView(config: followingConfig, isVisible: selectedSubTab == "Following")

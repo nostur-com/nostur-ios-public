@@ -35,7 +35,7 @@ struct PostAndParent: View {
     var body: some View {
 //        let _ = Self._printChanges()
         VStack(spacing: 10) {
-            // MARK: PARENT NOTE
+            // MARK: PARENT POST WITH POTENTIALLY ANOTHER PARENT
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId
             if let replyTo = nrPost.replyTo {
                 if replyTo.deletedById == nil {
@@ -88,8 +88,7 @@ struct PostAndParent: View {
                         timerTask = nil
                     }
             }
-            // OUR (DETAIL) REPLY:
-            // MARK: DETAIL NOTE
+            // MARK: A POST 
             VStack(alignment: .leading, spacing: 0) {
                 if nxViewingContext.contains(.postParent) {
                     PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: connect)

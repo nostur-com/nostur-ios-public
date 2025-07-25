@@ -193,7 +193,7 @@ class NRChatConfirmedZap {
 
 //@available(iOS 18.0, *)
 //#Preview("Pending zap") {
-//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
+//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, viewType: .row)
 //    PreviewContainer({ pe in
 //        
 //    }) {
@@ -223,7 +223,7 @@ class NRChatConfirmedZap {
 //
 //@available(iOS 18.0, *)
 //#Preview("Confirmed zap") {
-//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
+//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, viewType: .row)
 //    PreviewContainer({ pe in
 //        
 //    }) {
@@ -257,7 +257,7 @@ class NRChatConfirmedZap {
 //
 //@available(iOS 18.0, *)
 //#Preview("Both zaps") {
-//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, theme: Themes.default.theme, viewType: .row)
+//    @Previewable @State var vc = ViewingContext(availableWidth: 200, fullWidthImages: false, viewType: .row)
 //    PreviewContainer({ pe in
 //        pe.loadContacts()
 //    }) {

@@ -110,7 +110,7 @@ struct Kind30000: View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
-//        PostEmbeddedLayout(nrPost: nrPost, theme: theme, authorAtBottom: true) {
+//        PostEmbeddedLayout(nrPost: nrPost, authorAtBottom: true) {
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true) {
             
             if didLoadFollowNRContacts && isDetail { // Show full list
