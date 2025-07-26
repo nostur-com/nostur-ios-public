@@ -125,11 +125,13 @@ struct Kind1: View {
                     .clipBottom(height: clipBottomHeight)
                     .overlay(alignment: .bottomTrailing) {
                         if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
-                            Text("Read more...")
+                            Text("Show more...")
                                 .foregroundColor(.white)
-                                .fontWeightBold()
                                 .padding(5)
-                                .background(theme.accent)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .foregroundColor(theme.accent)
+                                }
                                 .contentShape(Rectangle())
                                 .highPriorityGesture(TapGesture().onEnded {
                                     showMore = true

@@ -137,11 +137,14 @@ struct NRContentTextRendererInner: View {
             
                 .overlay(alignment: .bottomTrailing) {
                     if shouldShowMoreButton {
-                        Text("Read more...")
+                        Text("Show more...")
                             .foregroundColor(.white)
-                            .fontWeightBold()
+
                             .padding(5)
-                            .background(theme.accent)
+                            .background {
+                                RoundedRectangle(cornerRadius: 5)
+                                    .foregroundColor(theme.accent)
+                            }
                             .contentShape(Rectangle())
                             .highPriorityGesture(TapGesture().onEnded {
                                 showMore = true
@@ -210,11 +213,13 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Text("Read more...")
+                                Text("Show more...")
                                     .foregroundColor(.white)
-                                    .fontWeightBold()
                                     .padding(5)
-                                    .background(theme.accent)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .foregroundColor(theme.accent)
+                                    }
                                     .contentShape(Rectangle())
                                     .highPriorityGesture(TapGesture().onEnded {
                                         showMore = true
@@ -264,11 +269,13 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Text("Read more...")
+                                Text("Show more...")
                                     .foregroundColor(.white)
-                                    .fontWeightBold()
                                     .padding(5)
-                                    .background(theme.accent)
+                                    .background {
+                                        RoundedRectangle(cornerRadius: 5)
+                                            .foregroundColor(theme.accent)
+                                    }
                                     .contentShape(Rectangle())
                                     .highPriorityGesture(TapGesture().onEnded {
                                         showMore = true
