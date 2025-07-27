@@ -165,10 +165,12 @@ public final class NewPostModel: ObservableObject {
                 nip96apiUrl = "https://nostrcheck.me/api/v2/media"
             }
             
-            if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostr.build") { 
+            // Convert older api url to nip96 endpoint
+            if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostr.build") {
                 nip96apiUrl = "https://nostr.build/api/v2/nip96/upload"
             }
             
+            // Blossom upload method
             if SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
                 guard let blossomServer = SettingsStore.shared.blossomServerList.first, let blossomServerURL = URL(string: blossomServer) else {
                     sendNotification(.anyStatus, ("Blossom server list is empty", "NewPost"))
@@ -176,67 +178,16 @@ public final class NewPostModel: ObservableObject {
                 }
                 // TODO: remove hashing same data over and over, clean up a bit
                 
-                let maxWidth: CGFloat = 2800.0
+                
                 // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
-                let uploadItems: [(Data, String, String?, Int, NEvent)] = typingTextModel.pastedImages
-                    .compactMap { imageMeta in // Resize images
-
-                        // .GIF
-                        if imageMeta.type == .gif {
-                            // Resize first for faster blurhash
-                            if let scaledImage = UIImage(data: imageMeta.data) {
-                                let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
-                                let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                                
-                                let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
-                                
-                                return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
-                            }
-                            
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
-                            
-                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
-                        }
-                        
-                        // NOT .GIF
-                        guard let imageData = imageMeta.uiImage else { return nil }
-                        let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
-                        let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
-                        
-                        let format = UIGraphicsImageRendererFormat()
-                        format.scale = 1 // 1x scale, for 2x use 2, and so on
-                        let renderer = UIGraphicsImageRenderer(size: size, format: format)
-                        let scaledImage = renderer.image { _ in
-                            imageData.draw(in: CGRect(origin: .zero, size: size))
-                        }
-                        
-                        if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
-                            // Resize first for faster blurhash
-                            let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
-                            let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                            
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: scaledData.sha256().hexEncodedString())
-                            
-                            return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
-                        }
-                        return nil
-                    } + typingTextModel.pastedVideos
-                    .compactMap { videoMeta in // compress
-                        let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
-                        typingTextModel.compressedVideoFiles.append(compressedURL)
-                        if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
-                                         
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
-                            
-                            return (compressedVideoData, "video/mp4", nil, typingTextModel.pastedImages.count + videoMeta.index, unsignedAuthHeaderEvent)
-                        }
-                        
-                        // Version without compression: TODO: Add toggle for compression ON/OFF
-//                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
-//                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
-//                        }
-                        return nil
-                    }
+                let uploadItems: [(Data, String, String?, Int, NEvent)] = prepareUploadItems(
+                    pubkey: pubkey,
+                    images: typingTextModel.pastedImages,
+                    videos: typingTextModel.pastedVideos,
+                    voiceMessage: typingTextModel.voiceRecording,
+                    typingTextModel: typingTextModel,
+                    uploadMethod: .blossom
+                )
                 
                 let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
                 
@@ -324,85 +275,23 @@ public final class NewPostModel: ObservableObject {
                         .store(in: &self.subscriptions)
                 }
             }
-            else if !nip96apiUrl.isEmpty { // new nip96 media services
+            else if !nip96apiUrl.isEmpty { // nip96 upload method
                 guard let nip96apiURL = URL(string: nip96apiUrl) else {
                     sendNotification(.anyStatus, ("Problem with Custom File Storage Server", "NewPost"))
                     return
                 }
                 let boundary = UUID().uuidString
                 
-                let maxWidth: CGFloat = 2800.0
                 // [(resizedImage, type, blurhash, index, unsignedAuthHeaderEvent)]
-                let uploadItems: [(Data, String, String?, Int, NEvent)] = typingTextModel.pastedImages
-                    .compactMap({ (imageMeta: PostedImageMeta) -> (Data, String, String?, Int, NEvent)? in // Resize images
-                        
-                        // .GIF
-                        if imageMeta.type == .gif {
-                            
-                            let filename = "media.gif"
-                            let contentType = contentType(for: filename)
-                            let httpBody = makeHttpBody(mediaData: imageMeta.data, contentType: contentType, boundary: boundary)
-                            let sha256hex = httpBody.sha256().hexEncodedString()
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
-                            
-                            // Resize first for faster blurhash
-                            if let scaledImage = UIImage(data: imageMeta.data) {
-                                let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
-                                let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
- 
-                                return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
-                            }
-                            
-                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
-                        }
-                        
-                        // NOT .GIF
-                        guard let imageData = imageMeta.uiImage else { return nil }
-                        let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
-                        let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
-                        
-                        let format = UIGraphicsImageRendererFormat()
-                        format.scale = 1 // 1x scale, for 2x use 2, and so on
-                        let renderer = UIGraphicsImageRenderer(size: size, format: format)
-                        let scaledImage = renderer.image { _ in
-                            imageData.draw(in: CGRect(origin: .zero, size: size))
-                        }
-                        
-                        if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
-                            // Resize first for faster blurhash
-                            let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
-                            let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
-                            
-                            let filename = "media.jpg"
-                            let contentType = contentType(for: filename)
-                            let httpBody = makeHttpBody(mediaData: scaledData, contentType: contentType, boundary: boundary)
-                            let sha256hex = httpBody.sha256().hexEncodedString()
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
-                            
-                            return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
-                        }
-                        return nil
-                    }) + typingTextModel.pastedVideos
-                    .compactMap({ (videoMeta: PostedVideoMeta) -> (Data, String, String?, Int, NEvent)? in // compress
-                        let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
-                        typingTextModel.compressedVideoFiles.append(compressedURL)
-                        if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
-                            
-                            let filename = "media.mp4"
-                            let contentType = contentType(for: filename)
-                            let httpBody = makeHttpBody(mediaData: compressedVideoData, contentType: contentType, boundary: boundary)
-                            let sha256hex = httpBody.sha256().hexEncodedString()
-                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
-                            
-                            return (compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent)
-                        }
-                        
-                        // Version without compression: TODO: Add toggle for compression ON/OFF
-//                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
-//                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
-//                        }
-                        return nil
-                    })
+                let uploadItems: [(Data, String, String?, Int, NEvent)] = prepareUploadItems(
+                    pubkey: pubkey,
+                    images: typingTextModel.pastedImages,
+                    videos: typingTextModel.pastedVideos,
+                    voiceMessage: typingTextModel.voiceRecording,
+                    typingTextModel: typingTextModel,
+                    uploadMethod: .nip96(nip96apiURL)
+                )
+                
 
                 let unsignedAuthHeaderEvents: [NEvent] = uploadItems.map { $0.4 }
                 
@@ -417,6 +306,8 @@ public final class NewPostModel: ObservableObject {
                                 "media.png"
                             case "video/mp4":
                                 "media.mp4"
+                            case "audio/mp4":
+                                "media.m4a"
                             default:
                                 "media"
                             }
@@ -623,8 +514,26 @@ public final class NewPostModel: ObservableObject {
         
         var content: String = typingTextModel.text // put this eventually in .content or comment tag, depending on kind 9802 or not
         
+        // Handle voice message
+        if (nEvent.kind == .shortVoiceMessage || nEvent.kind == .shortVoiceMessageComment), let imeta = imetas.first {
+            content += imeta.url
+            
+            var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
+            if let duration = typingTextModel.voiceRecording?.duration {
+                imetaParts.append("duration \(duration)")
+            }
+            if let waveform = typingTextModel.voiceRecording?.samples, !waveform.isEmpty {
+                imetaParts.append("waveform \(waveform.map { String($0) }.joined(separator: " "))")
+            }
+            if let hash = imeta.hash, !hash.isEmpty {
+                imetaParts.append("sha256 \(hash)")
+            }
+
+            nEvent.tags.append(NostrTag(imetaParts))
+        }
+        
         // Handle images
-        if !imetas.isEmpty || !remoteIMetas.isEmpty {
+        else if !imetas.isEmpty || !remoteIMetas.isEmpty {
              
             // imetas from local uploaded / pasted images
             for imeta in imetas {
@@ -914,7 +823,12 @@ public final class NewPostModel: ObservableObject {
     func loadReplyTo(_ replyTo: ReplyTo) {
         requiredP = replyTo.nrPost.pubkey
         var newReply = NEvent(content: typingTextModel.text)
-        newReply.kind = .textNote
+        if replyTo.nrPost.kind == 1222 || replyTo.nrPost.kind == 1244 {
+            newReply.kind = .shortVoiceMessageComment
+        }
+        else {
+            newReply.kind = .textNote
+        }
         bg().perform {
             guard let replyToEvent = replyTo.nrPost.event else { return }
             let existingPtags = replyToEvent.pTags()
@@ -1002,6 +916,8 @@ struct Imeta {
     var dim: String?
     var hash: String?
     var blurhash: String?
+    var duration: Int?
+    var waveform: [Int]?
 }
 
 
@@ -1032,9 +948,6 @@ public func getUnsignedAuthorizationHeaderEvent(pubkey: String, sha256hex: Strin
 
 // NIP-96
 public func getUnsignedAuthorizationHeaderEvent96(pubkey: String, sha256hex: String, method: String, apiUrl: URL) -> NEvent {
-    // 5 minutes from now timestamp
-    let expirationTimestamp = Int(Date().timeIntervalSince1970) + 300
-    
     var unsignedEvent = NEvent(content: "", kind: .custom(27235), tags: [
         NostrTag(["u", apiUrl.absoluteString]),
         NostrTag(["method", method]),
@@ -1043,4 +956,160 @@ public func getUnsignedAuthorizationHeaderEvent96(pubkey: String, sha256hex: Str
     unsignedEvent.publicKey = pubkey
     unsignedEvent = unsignedEvent.withId()
     return unsignedEvent
+}
+
+
+public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], videos: [PostedVideoMeta] = [], voiceMessage: VoiceRecording? = nil, typingTextModel: TypingTextModel, uploadMethod: UploadMethod) -> [(Data, String, String?, Int, NEvent)] {
+    if let voiceMessage = voiceMessage {
+        guard let recordingData = try? Data(contentsOf: voiceMessage.localFileURL) else { return [] }
+
+        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: recordingData.sha256().hexEncodedString())
+        
+        return [(recordingData, "audio/mp4", nil, 0, unsignedAuthHeaderEvent)]
+    }
+    else {
+        let maxWidth: CGFloat = 2800.0
+        
+        if case .nip96(let nip96apiURL) = uploadMethod {
+            
+            let boundary = UUID().uuidString
+            
+            return images
+                .compactMap({ (imageMeta: PostedImageMeta) -> (Data, String, String?, Int, NEvent)? in // Resize images
+                    
+                    // .GIF
+                    if imageMeta.type == .gif {
+                        
+                        let filename = "media.gif"
+                        let contentType = contentType(for: filename)
+                        let httpBody = makeHttpBody(mediaData: imageMeta.data, contentType: contentType, boundary: boundary)
+                        let sha256hex = httpBody.sha256().hexEncodedString()
+                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
+                        
+                        // Resize first for faster blurhash
+                        if let scaledImage = UIImage(data: imageMeta.data) {
+                            let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                            let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+
+                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                        }
+                        
+                        return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
+                    }
+                    
+                    // NOT .GIF
+                    guard let imageData = imageMeta.uiImage else { return nil }
+                    let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
+                    let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
+                    
+                    let format = UIGraphicsImageRendererFormat()
+                    format.scale = 1 // 1x scale, for 2x use 2, and so on
+                    let renderer = UIGraphicsImageRenderer(size: size, format: format)
+                    let scaledImage = renderer.image { _ in
+                        imageData.draw(in: CGRect(origin: .zero, size: size))
+                    }
+                    
+                    if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
+                        // Resize first for faster blurhash
+                        let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                        let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                        
+                        let filename = "media.jpg"
+                        let contentType = contentType(for: filename)
+                        let httpBody = makeHttpBody(mediaData: scaledData, contentType: contentType, boundary: boundary)
+                        let sha256hex = httpBody.sha256().hexEncodedString()
+                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
+                        
+                        return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                    }
+                    return nil
+                }) + videos
+                .compactMap({ (videoMeta: PostedVideoMeta) -> (Data, String, String?, Int, NEvent)? in // compress
+                    let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                    typingTextModel.compressedVideoFiles.append(compressedURL)
+                    if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                        
+                        let filename = "media.mp4"
+                        let contentType = contentType(for: filename)
+                        let httpBody = makeHttpBody(mediaData: compressedVideoData, contentType: contentType, boundary: boundary)
+                        let sha256hex = httpBody.sha256().hexEncodedString()
+                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: sha256hex, method: "POST", apiUrl: nip96apiURL)
+                        
+                        return (compressedVideoData, "video/mp4", nil, (typingTextModel.pastedImages.count + videoMeta.index), unsignedAuthHeaderEvent)
+                    }
+                    
+                    // Version without compression: TODO: Add toggle for compression ON/OFF
+//                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
+//                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
+//                        }
+                    return nil
+                })
+        }
+        else { // case == .blossom
+            return images
+                .compactMap { imageMeta in // Resize images
+                    
+                    // .GIF
+                    if imageMeta.type == .gif {
+                        // Resize first for faster blurhash
+                        if let scaledImage = UIImage(data: imageMeta.data) {
+                            let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                            let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                            
+                            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
+                            
+                            return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                        }
+                        
+                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: imageMeta.data.sha256().hexEncodedString())
+                        
+                        return (imageMeta.data, PostedImageMeta.ImageType.gif.rawValue, nil, imageMeta.index, unsignedAuthHeaderEvent)
+                    }
+                    
+                    // NOT .GIF
+                    guard let imageData = imageMeta.uiImage else { return nil }
+                    let scale = imageData.size.width > maxWidth ? imageData.size.width / maxWidth : 1
+                    let size = CGSize(width: imageData.size.width / scale, height: imageData.size.height / scale)
+                    
+                    let format = UIGraphicsImageRendererFormat()
+                    format.scale = 1 // 1x scale, for 2x use 2, and so on
+                    let renderer = UIGraphicsImageRenderer(size: size, format: format)
+                    let scaledImage = renderer.image { _ in
+                        imageData.draw(in: CGRect(origin: .zero, size: size))
+                    }
+                    
+                    if let scaledData = scaledImage.jpegData(compressionQuality: 0.85) {
+                        // Resize first for faster blurhash
+                        let resized = scaledImage.resized(to: CGSize(width: 32, height: 32))
+                        let blurhash: String? = resized.blurHash(numberOfComponents: (4, 3))
+                        
+                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: scaledData.sha256().hexEncodedString())
+                        
+                        return (scaledData, PostedImageMeta.ImageType.jpeg.rawValue, blurhash, imageMeta.index, unsignedAuthHeaderEvent)
+                    }
+                    return nil
+                } + videos
+                .compactMap { videoMeta in // compress
+                    let compressedURL = URL(fileURLWithPath: NSTemporaryDirectory() + UUID().uuidString + ".mp4")
+                    //                typingTextModel.compressedVideoFiles.append(compressedURL)
+                    if let url = compressVideoSynchronously(inputURL: videoMeta.videoURL, outputURL: compressedURL), let compressedVideoData = try? Data(contentsOf: url) {
+                        
+                        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: compressedVideoData.sha256().hexEncodedString())
+                        
+                        return (compressedVideoData, "video/mp4", nil, images.count + videoMeta.index, unsignedAuthHeaderEvent)
+                    }
+                    
+                    // Version without compression: TODO: Add toggle for compression ON/OFF
+                    //                        if let compressedVideoData = try? Data(contentsOf: videoMeta.videoURL) {
+                    //                            return (compressedVideoData, typingTextModel.pastedImages.count + videoMeta.index)
+                    //                        }
+                    return nil
+                }
+        }
+    }
+}
+
+public enum UploadMethod {
+    case nip96(URL) // URL = nip96apiURL
+    case blossom
 }
