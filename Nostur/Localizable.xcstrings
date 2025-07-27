@@ -909,6 +909,12 @@
       },
       "shouldTranslate" : false
     },
+    "⚠️ Error: %@" : {
+
+    },
+    "✅ Downloaded: %@" : {
+
+    },
     "📸" : {
       "comment" : "Tab title for Olas/Picture feed",
       "localizations" : {
@@ -3482,6 +3488,12 @@
         }
       }
     },
+    "Download" : {
+
+    },
+    "Downloading..." : {
+
+    },
     "Drop image..." : {
       "localizations" : {
         "nl" : {
@@ -4712,6 +4724,9 @@
           }
         }
       }
+    },
+    "Keep your message short" : {
+
     },
     "Keeps track across all feeds posts you have already seen, don't show them again" : {
       "comment" : "Setting on settings screen",
@@ -6995,9 +7010,6 @@
         }
       }
     },
-    "Read more..." : {
-
-    },
     "Read only" : {
       "comment" : "Label to indicate this a Read Only account",
       "localizations" : {
@@ -8326,6 +8338,9 @@
         }
       }
     },
+    "Show more..." : {
+
+    },
     "Show post stats on timeline" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -8745,6 +8760,9 @@
           }
         }
       }
+    },
+    "Tap mic to record a voice message" : {
+
     },
     "Tap the notification bell when viewing someone's profile to receive a notification when they post." : {
       "localizations" : {

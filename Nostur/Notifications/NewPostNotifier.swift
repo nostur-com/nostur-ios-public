@@ -178,7 +178,9 @@ class NewPostNotifier: ObservableObject {
         // Create the new notification with all unread contacts merged
         let newPostNotification = PersistentNotification.createNewPostsNotification(pubkey: accountPubkey, contacts: Array(Set(allContacts)), since: since)
         NotificationsViewModel.shared.checkNeedsUpdate(newPostNotification)
-        viewContextSave() // <-- need this or @FetchRequest in NotificationsNewPosts doesn't update realtime
+        Task { @MainActor in
+            viewContextSave() // <-- need this or @FetchRequest in NotificationsNewPosts doesn't update realtime
+        }
         
         if SettingsStore.shared.receiveLocalNotifications && AppState.shared.appIsInBackground { // only when app is in background
             // if there is only 1 new post we can use it as body text of notification
