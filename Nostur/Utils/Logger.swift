@@ -12,6 +12,7 @@ class L {
     static let p = OSLog(subsystem: "com.nostur.Nostur", category: "Performance")
     static let og = Logger(subsystem: "com.nostur.Nostur", category: "Nostur")
     static let nests = Logger(subsystem: "com.nostur.Nostur", category: "Nests")
+    static let a1 = Logger(subsystem: "com.nostur.Nostur", category: "Voice Messages")
     static let cloud = Logger(subsystem: "com.nostur.Nostur", category: "iCloud")
     static let sl = Logger(subsystem: "com.nostur.Nostur", category: "SmoothList")
     static let onboarding = Logger(subsystem: "com.nostur.Nostur", category: "Onboarding")

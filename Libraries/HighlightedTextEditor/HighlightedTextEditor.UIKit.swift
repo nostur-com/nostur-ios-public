@@ -14,6 +14,7 @@ public typealias VideoPickerTappedCallback = () -> Void
 public typealias GifsTappedCallback = () -> Void
 public typealias CameraTappedCallback = () -> Void
 public typealias NestsTappedCallback = () -> Void
+public typealias VoiceMessageTappedCallback = () -> Void
 
 protocol PastedMediaDelegate: UITextViewDelegate {
     func didPasteImage(_ image: UIImage)
@@ -28,6 +29,7 @@ protocol PastedMediaDelegate: UITextViewDelegate {
     func gifsTapped()
     func cameraTapped()
     func nestsTapped()
+    func voiceMessageTapped()
 }
 
 class NosturTextView: UITextView {
@@ -98,6 +100,10 @@ class NosturTextView: UITextView {
         pastedMediaDelegate?.nestsTapped()
     }
     
+    @objc func voiceMessageTapped() {
+        pastedMediaDelegate?.voiceMessageTapped()
+    }
+    
     
 }
 
@@ -112,6 +118,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     
     @Binding var pastedImages: [PostedImageMeta]
     @Binding var pastedVideos: [PostedVideoMeta]
+    @Binding var showVoiceRecorderButton: Bool
     
     var shouldBecomeFirstResponder: Bool
     
@@ -122,6 +129,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     var gifsTapped: GifsTappedCallback?
     var cameraTapped: CameraTappedCallback?
     var nestsTapped: NestsTappedCallback?
+    var voiceMessageTapped: VoiceMessageTappedCallback?
     var kind: NEventKind?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
@@ -131,6 +139,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     public init(
         text: Binding<String>,
         kind: NEventKind? = nil,
+        showVoiceRecorderButton: Binding<Bool>,
         pastedImages: Binding<[PostedImageMeta]>,
         pastedVideos: Binding<[PostedVideoMeta]>,
         shouldBecomeFirstResponder: Bool,
@@ -139,9 +148,11 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         videoPickerTapped: VideoPickerTappedCallback? = nil,
         gifsTapped: GifsTappedCallback? = nil,
         cameraTapped: CameraTappedCallback? = nil,
-        nestsTapped: NestsTappedCallback? = nil
+        nestsTapped: NestsTappedCallback? = nil,
+        voiceMessageTapped: VoiceMessageTappedCallback? = nil
     ) {
         _text = text
+        _showVoiceRecorderButton = showVoiceRecorderButton
         _pastedImages = pastedImages
         _pastedVideos = pastedVideos
         self.shouldBecomeFirstResponder = shouldBecomeFirstResponder
@@ -151,6 +162,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         self.gifsTapped = gifsTapped
         self.cameraTapped = cameraTapped
         self.nestsTapped = nestsTapped
+        self.voiceMessageTapped = voiceMessageTapped
         self.kind = kind
     }
     
@@ -173,6 +185,56 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         textView.delegate = context.coordinator
         textView.pastedMediaDelegate = context.coordinator
         
+        makeToolbar(textView, context: context)
+        textView.font = UIFont.systemFont(ofSize: UIFont.systemFontSize + 4.0)
+        
+        updateTextViewModifiers(textView)
+        if (shouldBecomeFirstResponder) {
+            textView.becomeFirstResponder()
+        }
+        return textView
+    }
+    
+    public func updateUIView(_ uiView: UITextView, context: Context) {
+        uiView.isScrollEnabled = false
+        context.coordinator.updatingUIView = true
+        
+        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
+        
+        if showVoiceRecorderButton != context.coordinator.isShowingVoiceRecorderButton {
+            makeToolbar(textView, context: context)
+        }
+        
+        let highlightedText = HighlightedTextEditor.getHighlightedText(
+            text: text,
+            highlightRules: highlightRules
+        )
+        
+        if let range = uiView.markedTextNSRange {
+            uiView.setAttributedMarkedText(highlightedText, selectedRange: range)
+        } else {
+            uiView.attributedText = highlightedText
+        }
+        updateTextViewModifiers(uiView)
+        runIntrospect(uiView)
+        uiView.isScrollEnabled = true
+        uiView.selectedTextRange = context.coordinator.selectedTextRange
+        context.coordinator.updatingUIView = false
+    }
+    
+    private func runIntrospect(_ textView: UITextView) {
+        guard let introspect = introspect else { return }
+        let internals = Internals(textView: textView, scrollView: nil)
+        introspect(internals)
+    }
+    
+    private func updateTextViewModifiers(_ textView: UITextView) {
+        // BUGFIX #19: https://stackoverflow.com/questions/60537039/change-prompt-color-for-uitextfield-on-mac-catalyst
+        let textInputTraits = textView.value(forKey: "textInputTraits") as? NSObject
+        textInputTraits?.setValue(textView.tintColor, forKey: "insertionPointColor")
+    }
+    
+    private func makeToolbar(_ uiView: UITextView, context: Context) {
         let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         
         let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
@@ -180,13 +242,29 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         var barButtons: [UIBarButtonItem] = []
         
-        if kind != .picture && kind != .highlight {
+        if showVoiceRecorderButton {
             let nestsButton = UIButton(type: .system)
             nestsButton.setImage(UIImage(systemName: "mic"), for: .normal)
+            nestsButton.tintColor = UIColor(Themes.default.theme.accent)
+            nestsButton.addTarget(self, action: #selector(textView.voiceMessageTapped), for: .touchUpInside)
+            let nests = UIBarButtonItem(customView: nestsButton)
+            
+            if barButtons.count != 0 {
+                barButtons.append(fixedSpace)
+            }
+            barButtons.append(nests)
+        }
+        
+        if kind != .picture && kind != .highlight {
+            let nestsButton = UIButton(type: .system)
+            nestsButton.setImage(UIImage(systemName: "dot.radiowaves.left.and.right"), for: .normal)
             nestsButton.tintColor = UIColor(Themes.default.theme.accent)
             nestsButton.addTarget(self, action: #selector(textView.nestsTapped), for: .touchUpInside)
             let nests = UIBarButtonItem(customView: nestsButton)
             
+            if barButtons.count != 0 {
+                barButtons.append(fixedSpace)
+            }
             barButtons.append(nests)
         }
         
@@ -249,51 +327,11 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
       
 
         textView.inputAccessoryView = doneToolbar
-        textView.font = UIFont.systemFont(ofSize: UIFont.systemFontSize + 4.0)
-        
-        updateTextViewModifiers(textView)
-        if (shouldBecomeFirstResponder) {
-            textView.becomeFirstResponder()
-        }
-        return textView
-    }
-    
-    public func updateUIView(_ uiView: UITextView, context: Context) {
-        uiView.isScrollEnabled = false
-        context.coordinator.updatingUIView = true
-        
-        uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
-        
-        let highlightedText = HighlightedTextEditor.getHighlightedText(
-            text: text,
-            highlightRules: highlightRules
-        )
-        
-        if let range = uiView.markedTextNSRange {
-            uiView.setAttributedMarkedText(highlightedText, selectedRange: range)
-        } else {
-            uiView.attributedText = highlightedText
-        }
-        updateTextViewModifiers(uiView)
-        runIntrospect(uiView)
-        uiView.isScrollEnabled = true
-        uiView.selectedTextRange = context.coordinator.selectedTextRange
-        context.coordinator.updatingUIView = false
-    }
-    
-    private func runIntrospect(_ textView: UITextView) {
-        guard let introspect = introspect else { return }
-        let internals = Internals(textView: textView, scrollView: nil)
-        introspect(internals)
-    }
-    
-    private func updateTextViewModifiers(_ textView: UITextView) {
-        // BUGFIX #19: https://stackoverflow.com/questions/60537039/change-prompt-color-for-uitextfield-on-mac-catalyst
-        let textInputTraits = textView.value(forKey: "textInputTraits") as? NSObject
-        textInputTraits?.setValue(textView.tintColor, forKey: "insertionPointColor")
     }
     
     public final class Coordinator: NSObject, UITextViewDelegate, PastedMediaDelegate {
+        
+        var isShowingVoiceRecorderButton = false
         
         func didPasteImage(_ image: UIImage) {
             if let gifData = image.gifData() {
@@ -353,6 +391,11 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         func nestsTapped() {
             guard let nestsTapped = self.parent.nestsTapped else { return }
             nestsTapped()
+        }
+        
+        func voiceMessageTapped() {
+            guard let voiceMessageTapped = self.parent.voiceMessageTapped else { return }
+            voiceMessageTapped()
         }
         
         var parent: HighlightedTextEditor

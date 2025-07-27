@@ -118,7 +118,7 @@ struct InlineAccountSwitcher: View, Equatable {
                 case .trailing:
                     self.bottom
                 case .top:
-                    self.bottom
+                    self.top
                 case .bottom:
                     self.bottom
                 }

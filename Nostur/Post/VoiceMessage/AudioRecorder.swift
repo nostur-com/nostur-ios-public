@@ -28,19 +28,12 @@ class AudioRecorder: ObservableObject {
     @Published var recordingURL: URL?
     @Published var waitingForSamples = false
     
-//    public var durationString: String {
-//        let seconds = duration
-//        let secondsText = String(format: "%02d", Int(seconds) % 60)
-//        let minutesText = String(format: "%02d", Int(seconds) / 60)
-//        return "\(minutesText):\(secondsText)"
-//    }
-    
     func requestPermission() {
         audioSession.requestRecordPermission { granted in
             if granted {
-                print("Microphone permission granted")
+                L.a1.debug("Microphone permission granted")
             } else {
-                print("Microphone permission denied")
+                L.a1.error("Microphone permission denied")
             }
         }
     }
@@ -140,17 +133,30 @@ class AudioRecorder: ObservableObject {
 struct AudioRecorderContentView: View {
     @Environment(\.theme) private var theme
     @StateObject private var recorder = AudioRecorder()
+    private var vm: NewPostModel
+    @ObservedObject var typingTextModel: TypingTextModel
     @State var isTooLong = false
     let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
+    private var onDismiss: () -> Void
+    private var replyTo: ReplyTo? = nil
     
+    private var shouldDisablePostButton: Bool {
+        (typingTextModel.sending || typingTextModel.uploading || recorder.isRecording || recorder.waitingForSamples || recorder.recordingURL == nil)
+    }
     
+    init(vm: NewPostModel, replyTo: ReplyTo? = nil, onDismiss: @escaping () -> Void) {
+        self.vm = vm
+        self.onDismiss = onDismiss
+        self.typingTextModel = vm.typingTextModel
+        self.replyTo = replyTo
+    }
     
     var body: some View {
         VStack(spacing: 0) {
             
             // FINISHED RECORDING
             if !recorder.isRecording && !recorder.waitingForSamples, let recordingURL = recorder.recordingURL { //, recorder.duration > 0 {
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     Button(action: {
                         recorder.resetRecording()
                         isTooLong = false
@@ -166,29 +172,8 @@ struct AudioRecorderContentView: View {
                     
                     VoiceMessagePlayer(fileURL: recordingURL, samples: recorder.samples)
                         .frame(maxWidth: .infinity)
-                    
-                    Button(action: {
-                        // generate imeta
-                        
-                        // can use NewPostModel?
-                        
-                        // dont forget remote signing
-                        
-                        // upload to nip96/blossom
-                        
-                        // publish to relays
-                    }) {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 50, height: 50)
-                            .background(Color.green)
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(PlainButtonStyle())
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.vertical, 10)
             }
             else if recorder.waitingForSamples {
                 ProgressView()
@@ -196,6 +181,9 @@ struct AudioRecorderContentView: View {
             }
             else {
                 VStack(spacing: 16) {
+                    
+                    
+                    
                     // RECORDING TIMER
                     if recorder.isRecording, let recordingSince = recorder.recordingSince {
                         Text("\(recordingSince, style: .timer)")
@@ -227,9 +215,6 @@ struct AudioRecorderContentView: View {
                     .padding(.horizontal, 16)
                 }
             }
-            
-            
-            
         }
         .background(theme.background)
         .onAppear {
@@ -245,9 +230,54 @@ struct AudioRecorderContentView: View {
 //                recorder.updateWaveform()
 //            }
         }
+        
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack {
+                    Button {
+                        typingTextModel.sending = true
+            
+                        // Need to do these here in main thread
+                        guard let account = vm.activeAccount, account.isFullAccount else {
+                            sendNotification(.anyStatus, ("Problem with account", "NewPost"))
+                            return
+                        }
+                        let isNC = account.isNC
+                        let pubkey = account.publicKey
+                      
+                        guard let localFileURL = recorder.recordingURL else { return }
+                        
+                        typingTextModel.voiceRecording = VoiceRecording(localFileURL: localFileURL, samples: recorder.samples, duration: Int(recorder.duration))
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
+                            Task {
+                                await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, onDismiss: { onDismiss() })
+                            }
+                        }
+                    } label: {
+                        if (typingTextModel.uploading || typingTextModel.sending) {
+                            ProgressView().colorInvert()
+                        }
+                        else {
+                            Text("Post.verb", comment: "Button to post (publish) a post")
+                        }
+                    }
+                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                    .cornerRadius(20)
+                    .disabled(shouldDisablePostButton)
+                    .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+                }
+            }
+            
+            ToolbarItem(placement: .principal) {
+                if let uploadError = vm.uploadError {
+                    Text(uploadError).foregroundColor(.red)
+                }
+            }
+        }
     }
 }
 
-#Preview("Audio Recorder") {
-    AudioRecorderContentView()
-}
+//#Preview("Audio Recorder") {
+//    AudioRecorderContentView()
+//}

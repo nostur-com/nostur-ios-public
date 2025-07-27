@@ -36,6 +36,9 @@ public final class TypingTextModel: ObservableObject {
     }
     @Published var pastedImages: [PostedImageMeta] = []
     @Published var pastedVideos: [PostedVideoMeta] = []
+    
+    @Published var voiceRecording: VoiceRecording?
+    
     public var compressedVideoFiles: [URL] = [] // need a place to track tmp files created so we can clean up after upload
     @Published var selectedMentions: Set<NRContact> = [] // will become p-tags in the final post
     @Published var unselectedMentions: Set<NRContact> = [] // unselected from reply-p's, but maybe mentioned as nostr:npub, so should not be put back in p
@@ -152,11 +155,12 @@ public final class NewPostModel: ObservableObject {
     
     func sendNow(isNC: Bool, pubkey: String, account: CloudAccount, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, onDismiss: @escaping () -> Void) async {
         Importer.shared.delayProcessing()
-        if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty) {
+        if (!typingTextModel.pastedImages.isEmpty || !typingTextModel.pastedVideos.isEmpty || typingTextModel.voiceRecording != nil) {
             Task { @MainActor in
                 typingTextModel.uploading = true
             }
             
+            // Convert older api url to nip96 endpoint
             if (nip96apiUrl.isEmpty && SettingsStore.shared.defaultMediaUploadService.name == "nostrcheck.me") { // upgrade nostrcheck.me v1 to v2
                 nip96apiUrl = "https://nostrcheck.me/api/v2/media"
             }

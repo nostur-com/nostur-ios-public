@@ -19,6 +19,7 @@ struct Entry: View {
     @Binding var gifSheetShown: Bool
     @Binding var cameraSheetShown: Bool
     @Binding var selectedAuthor: Contact?
+    @Binding var showAudioRecorder: Bool
     
     private var replyTo: ReplyTo?
     private var quotePost: QuotePost?
@@ -38,12 +39,13 @@ struct Entry: View {
     }
     
     @State private var isAuthorSelectionShown = false
+    @State private var showVoiceRecorderButton: Bool = true
     
     private var shouldDisablePostButton: Bool {
         (kind == .picture && typingTextModel.pastedImages.isEmpty) || typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && kind != .highlight)
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, selectedAuthor: Binding<Contact?>) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, selectedAuthor: Binding<Contact?>, showAudioRecorder: Binding<Bool>) {
         self.replyTo = replyTo
         self.quotePost = quotePost
         self.directMention = directMention
@@ -57,6 +59,7 @@ struct Entry: View {
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
         _selectedAuthor = selectedAuthor
+        _showAudioRecorder = showAudioRecorder
     }
     
     var body: some View {
@@ -118,13 +121,14 @@ struct Entry: View {
             HighlightedTextEditor(
                 text: $typingTextModel.text,
                 kind: kind,
+                showVoiceRecorderButton: $showVoiceRecorderButton,
                 pastedImages: $typingTextModel.pastedImages,
                 pastedVideos: $typingTextModel.pastedVideos,
                 shouldBecomeFirstResponder: true,
                 highlightRules: NewPostModel.rules,
                 photoPickerTapped: {
                     photoPickerShown = true
-                },              
+                },
                 videoPickerTapped: {
                     videoPickerShown = true
                 },
@@ -139,6 +143,9 @@ struct Entry: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
                         sendNotification(.showCreateNestsSheet, vm.activeAccount)
                     }
+                },
+                voiceMessageTapped: {
+                    showAudioRecorder = true
                 }
             )
             .introspect { editor in
@@ -165,8 +172,6 @@ struct Entry: View {
                     }
                     .environment(\.theme, theme)
                 }
-                .nbUseNavigationStack(.never)
-                .presentationBackgroundCompat(theme.listBackground)
             }
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
@@ -179,6 +184,8 @@ struct Entry: View {
                 .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(theme.listBackground)
             }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(theme.listBackground)
             
             if kind != .picture {
                 if !typingTextModel.pastedImages.isEmpty {
