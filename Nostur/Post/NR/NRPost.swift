@@ -57,6 +57,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var via: String?
     var proxy: String?
     var comment: String? // treat as content for kind 9802
+    var samples: [Int]? // kind 1222+1244 waveform data
+    var duration: Int? // kind 1222+1244 audio length in seconds
     
     var nxZap: NxZap?
     
@@ -257,6 +259,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         // Process tags
         for tag in event.fastTags {
             switch tag.0 {
+            case "imeta":
+                if let content = event.content, (event.kind == 1222 || event.kind == 1244) && tag.1 == "url " + content {
+                    let (waveformSamples, duration) = parseVoiceMessageIMeta(tag)
+                    self.samples = waveformSamples
+                    self.duration = duration
+                }
             case "k":
                 if self.kTag == nil {
                     self.kTag = tag.1

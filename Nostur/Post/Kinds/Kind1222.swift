@@ -123,7 +123,7 @@ struct Kind1222: View {
     @ViewBuilder
     private var audioView: some View {
         if let localAudioFileURL {
-            VoiceMessagePlayer(fileURL: localAudioFileURL)
+            VoiceMessagePlayer(fileURL: localAudioFileURL, samples: nrPost.samples)
         }
         else {
             ProgressView()

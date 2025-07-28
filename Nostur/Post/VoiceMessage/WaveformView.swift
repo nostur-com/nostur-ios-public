@@ -72,7 +72,9 @@ struct WaveformView: View {
 // Cache for audio samples to avoid reprocessing
 private nonisolated(unsafe) var audioSamplesCache: [URL: [Int]] = [:]
 
-func loadAudioSamples(from url: URL, sampleCount: Int = 100) async throws -> [Int] {
+let DEFAULT_SAMPLE_COUNT: Int = 100
+
+func loadAudioSamples(from url: URL, sampleCount: Int = DEFAULT_SAMPLE_COUNT) async throws -> [Int] {
     // Check cache first
     if let cached = audioSamplesCache[url] {
         return cached
@@ -81,11 +83,20 @@ func loadAudioSamples(from url: URL, sampleCount: Int = 100) async throws -> [In
     // Try AVAudioFile first for supported formats
     do {
         let audioFile = try AVAudioFile(forReading: url)
-        return try loadSamplesFromAudioFile(audioFile, sampleCount: sampleCount, url: url)
+        let audioSamples = try loadSamplesFromAudioFile(audioFile, sampleCount: sampleCount, url: url)
+        
+        // Cache result
+        audioSamplesCache[url] = audioSamples
+        
+        return audioSamples
     } catch {
         L.a0.error("loadAudioSamples AVAudioFile failed, trying AVAudioEngine instead, error: \(error)")
         // If AVAudioFile fails (e.g., for Opus), try AVAudioEngine approach
-        return try await loadSamplesWithAudioEngine(from: url, sampleCount: sampleCount)
+        let audioSamples = try await loadSamplesWithAudioEngine(from: url, sampleCount: sampleCount)
+    
+        // Cache result
+        audioSamplesCache[url] = audioSamples
+        return audioSamples
     }
 }
 
@@ -106,9 +117,7 @@ private func loadSamplesFromAudioFile(_ audioFile: AVAudioFile, sampleCount: Int
 
     try audioFile.read(into: buffer)
     let samples = try processSamples(from: buffer, sampleCount: sampleCount)
-    
-    // Cache result
-    audioSamplesCache[url] = samples
+
     return samples
 }
 
@@ -154,33 +163,51 @@ private func loadSamplesWithAudioEngine(from url: URL, sampleCount: Int) async t
         audioSamples.append(contentsOf: audioData)
     }
     
-    // Process samples to match the required count
+    // Process samples to match the required count using RMS for better accuracy
     let totalSamples = audioSamples.count
-    let step = max(1, totalSamples / sampleCount)
+    let samplesPerWindow = max(1, totalSamples / sampleCount)
     var processedSamples: [Float] = []
     processedSamples.reserveCapacity(sampleCount)
     var maxAmplitude: Float = 0
     
-    for i in stride(from: 0, to: totalSamples, by: step) {
-        let amplitude = abs(audioSamples[i])
-        processedSamples.append(amplitude)
-        maxAmplitude = max(maxAmplitude, amplitude)
+    for windowIndex in 0..<sampleCount {
+        let startIndex = windowIndex * samplesPerWindow
+        let endIndex = min(startIndex + samplesPerWindow, totalSamples)
+        
+        guard startIndex < totalSamples else { break }
+        
+        // Use peak detection combined with RMS for better transient capture
+        var sumSquares: Float = 0
+        var peakValue: Float = 0
+        let windowSize = endIndex - startIndex
+        
+        for i in startIndex..<endIndex {
+            let sample = abs(audioSamples[i])
+            sumSquares += sample * sample
+            peakValue = max(peakValue, sample)
+        }
+        
+        let rms = sqrt(sumSquares / Float(windowSize))
+        // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
+        let combinedValue = (peakValue * 0.7) + (rms * 0.3)
+        processedSamples.append(combinedValue)
+        maxAmplitude = max(maxAmplitude, combinedValue)
     }
     
-    // Enhanced normalization for better visibility - convert to Int (0-100)
+    // Enhanced normalization optimized for transient detection - convert to Int (0-100)
     let normalizedSamples = processedSamples.map { sample in
         guard maxAmplitude > 0 else { return 0 }
         // Normalize to 0-1 range first
         let normalized = sample / maxAmplitude
-        // Apply logarithmic scaling for better dynamic range
-        let logScaled = log10(normalized * 9 + 1) // Maps 0-1 to 0-1 with log curve
-        // Apply aggressive scaling with minimum threshold
-        let scaled = max(logScaled * 3.0, normalized * 0.3) // 3x scaling with 0.3x minimum
+        // Use gentler power scaling for natural voice dynamics
+        let powerScaled = pow(normalized, 0.75) // Less aggressive expansion
+        // Apply conservative scaling to preserve natural dynamics
+        let scaled = max(powerScaled * 0.85, normalized * 0.15) // 0.85x scaling with 0.15x minimum
         return min(Int(scaled * 100), 100) // Convert to Int 0-100 range
     }
     
-    // Cache result
-    audioSamplesCache[url] = normalizedSamples
+    L.a0.debug("loadSamplesWithAudioEngine: Processed \(normalizedSamples.count) samples, max amplitude: \(maxAmplitude)")
+    L.a0.debug("loadSamplesWithAudioEngine: Samples: \(normalizedSamples.suffix(20))")
     return normalizedSamples
 }
 
@@ -211,7 +238,7 @@ private func processSamples(from buffer: AVAudioPCMBuffer, sampleCount: Int) thr
 
     let channelCount = Int(buffer.format.channelCount)
     let totalSamples = Int(buffer.frameLength)
-    let step = max(1, totalSamples / sampleCount)
+    let samplesPerWindow = max(1, totalSamples / sampleCount)
     
     var samples: [Float] = []
     samples.reserveCapacity(sampleCount)
@@ -219,18 +246,55 @@ private func processSamples(from buffer: AVAudioPCMBuffer, sampleCount: Int) thr
 
     if channelCount == 1 {
         let sampleData = UnsafeBufferPointer(start: floatChannelData[0], count: totalSamples)
-        for i in stride(from: 0, to: totalSamples, by: step) {
-            let amplitude = abs(sampleData[i])
-            samples.append(amplitude)
-            maxAmplitude = max(maxAmplitude, amplitude)
+        for windowIndex in 0..<sampleCount {
+            let startIndex = windowIndex * samplesPerWindow
+            let endIndex = min(startIndex + samplesPerWindow, totalSamples)
+            
+            guard startIndex < totalSamples else { break }
+            
+            // Use peak detection combined with RMS for better transient capture
+            var sumSquares: Float = 0
+            var peakValue: Float = 0
+            let windowSize = endIndex - startIndex
+            
+            for i in startIndex..<endIndex {
+                let sample = abs(sampleData[i])
+                sumSquares += sample * sample
+                peakValue = max(peakValue, sample)
+            }
+            
+            let rms = sqrt(sumSquares / Float(windowSize))
+            // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
+            let combinedValue = (peakValue * 0.7) + (rms * 0.3)
+            samples.append(combinedValue)
+            maxAmplitude = max(maxAmplitude, combinedValue)
         }
     } else {
         let leftChannel = UnsafeBufferPointer(start: floatChannelData[0], count: totalSamples)
         let rightChannel = UnsafeBufferPointer(start: floatChannelData[1], count: totalSamples)
-        for i in stride(from: 0, to: totalSamples, by: step) {
-            let amplitude = abs((leftChannel[i] + rightChannel[i]) / 2)
-            samples.append(amplitude)
-            maxAmplitude = max(maxAmplitude, amplitude)
+        for windowIndex in 0..<sampleCount {
+            let startIndex = windowIndex * samplesPerWindow
+            let endIndex = min(startIndex + samplesPerWindow, totalSamples)
+            
+            guard startIndex < totalSamples else { break }
+            
+            // Use peak detection combined with RMS for better transient capture (stereo mixed)
+            var sumSquares: Float = 0
+            var peakValue: Float = 0
+            let windowSize = endIndex - startIndex
+            
+            for i in startIndex..<endIndex {
+                let mixedSample = (leftChannel[i] + rightChannel[i]) / 2
+                let absSample = abs(mixedSample)
+                sumSquares += mixedSample * mixedSample
+                peakValue = max(peakValue, absSample)
+            }
+            
+            let rms = sqrt(sumSquares / Float(windowSize))
+            // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
+            let combinedValue = (peakValue * 0.7) + (rms * 0.3)
+            samples.append(combinedValue)
+            maxAmplitude = max(maxAmplitude, combinedValue)
         }
     }
 
@@ -242,10 +306,10 @@ private func processSamples(from buffer: AVAudioPCMBuffer, sampleCount: Int) thr
     let normalizedSamples = samples.map { sample in
         // Normalize to 0-1 range first
         let normalized = sample / maxAmplitude
-        // Apply logarithmic scaling for better dynamic range
-        let logScaled = log10(normalized * 9 + 1) // Maps 0-1 to 0-1 with log curve
-        // Apply aggressive scaling with minimum threshold
-        let scaled = max(logScaled * 3.0, normalized * 0.3) // 3x scaling with 0.3x minimum
+        // Use gentler power scaling for natural voice dynamics
+        let powerScaled = pow(normalized, 0.75) // Less aggressive expansion
+        // Apply conservative scaling to preserve natural dynamics
+        let scaled = max(powerScaled * 0.85, normalized * 0.15) // 0.85x scaling with 0.15x minimum
         return min(Int(scaled * 100), 100) // Convert to Int 0-100 range
     }
     
@@ -253,11 +317,11 @@ private func processSamples(from buffer: AVAudioPCMBuffer, sampleCount: Int) thr
 }
 
 // Async version for better UI responsiveness
-func loadAudioSamplesAsync(from url: URL, sampleCount: Int = 100) async throws -> [Int] {
+func loadAudioSamplesAsync(from url: URL, sampleCount: Int = DEFAULT_SAMPLE_COUNT) async throws -> [Int] {
     return try await loadAudioSamples(from: url, sampleCount: sampleCount)
 }
 
-func loadAudioSamples(from data: Data, sampleCount: Int = 100) throws -> [Int] {
+func loadAudioSamples(from data: Data, sampleCount: Int = DEFAULT_SAMPLE_COUNT) throws -> [Int] {
     // Assume data is raw PCM audio (float32 format) since AVAudioFile requires file URLs
     // Create an AVAudioFormat for raw PCM data
     guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100, channels: 1, interleaved: false) else {
@@ -296,20 +360,60 @@ func loadAudioSamples(from data: Data, sampleCount: Int = 100) throws -> [Int] {
         throw NSError(domain: "AudioError", code: 4, userInfo: [NSLocalizedDescriptionKey: "Failed to get float channel data"])
     }
 
-    // Process samples (similar to original function)
+    // Process samples using RMS windows for better accuracy
     var downsampled: [Float] = []
-    let step = max(1, totalSamples / sampleCount)
+    let samplesPerWindow = max(1, totalSamples / sampleCount)
+    downsampled.reserveCapacity(sampleCount)
     
     if channelCount == 1 {
         let sampleData = UnsafeBufferPointer(start: floatChannelData[0], count: totalSamples)
-        downsampled = stride(from: 0, to: totalSamples, by: step).map { index in
-            abs(sampleData[index])
+        for windowIndex in 0..<sampleCount {
+            let startIndex = windowIndex * samplesPerWindow
+            let endIndex = min(startIndex + samplesPerWindow, totalSamples)
+            
+            guard startIndex < totalSamples else { break }
+            
+            // Use peak detection combined with RMS for better transient capture
+            var sumSquares: Float = 0
+            var peakValue: Float = 0
+            let windowSize = endIndex - startIndex
+            
+            for i in startIndex..<endIndex {
+                let sample = abs(sampleData[i])
+                sumSquares += sample * sample
+                peakValue = max(peakValue, sample)
+            }
+            
+            let rms = sqrt(sumSquares / Float(windowSize))
+            // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
+            let combinedValue = (peakValue * 0.7) + (rms * 0.3)
+            downsampled.append(combinedValue)
         }
     } else {
         let leftChannel = UnsafeBufferPointer(start: floatChannelData[0], count: totalSamples)
         let rightChannel = UnsafeBufferPointer(start: floatChannelData[1], count: totalSamples)
-        downsampled = stride(from: 0, to: totalSamples, by: step).map { index in
-            abs((leftChannel[index] + rightChannel[index]) / 2)
+        for windowIndex in 0..<sampleCount {
+            let startIndex = windowIndex * samplesPerWindow
+            let endIndex = min(startIndex + samplesPerWindow, totalSamples)
+            
+            guard startIndex < totalSamples else { break }
+            
+            // Use peak detection combined with RMS for better transient capture (stereo mixed)
+            var sumSquares: Float = 0
+            var peakValue: Float = 0
+            let windowSize = endIndex - startIndex
+            
+            for i in startIndex..<endIndex {
+                let mixedSample = (leftChannel[i] + rightChannel[i]) / 2
+                let absSample = abs(mixedSample)
+                sumSquares += mixedSample * mixedSample
+                peakValue = max(peakValue, absSample)
+            }
+            
+            let rms = sqrt(sumSquares / Float(windowSize))
+            // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
+            let combinedValue = (peakValue * 0.7) + (rms * 0.3)
+            downsampled.append(combinedValue)
         }
     }
 
@@ -352,7 +456,7 @@ struct WaveformShape: Shape {
         
         for i in 0..<min(sampleCount, maxBars) {
             let sampleIndex = i * step
-            let amplitude = CGFloat(samples[sampleIndex]) / 100.0 // Convert from 0-100 to 0.0-1.0
+            let amplitude = CGFloat(max(1, samples[sampleIndex])) / 100.0 // Convert from 0-100 to 0.0-1.0, minimum 0.01 so line is always visible
             let barExtent = amplitude * maxBarExtent
             let x = CGFloat(i) * totalBarWidth
             let y = height / 2
@@ -364,6 +468,62 @@ struct WaveformShape: Shape {
         }
         
         return path
+    }
+}
+
+func parseVoiceMessageIMeta(_ tag: FastTag) -> ([Int]?, Int?) {
+    guard tag.0 == "imeta" else { return (nil, nil) }
+    
+    var waveform: [Int]?
+    var duration: Int?
+    
+    // Iterate through optional fields (2–9)
+    for field in [tag.2, tag.3, tag.4, tag.5, tag.6, tag.7, tag.8, tag.9] {
+        guard let value = field else { continue }
+        let components = value.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+        print("a0 components: \(components)")
+        guard let key = components.first else { continue }
+        print("a0 key: \(key)")
+        guard let value = components.dropFirst().first else { continue }
+        print("a0 value: \(value)")
+        
+        switch key {
+        case "waveform":
+            // normalize to integers
+            if value.contains(".") {
+                let floatSamples = value
+                    .split(separator: " ", omittingEmptySubsequences: true)
+                    .compactMap { Float($0) }
+                waveform = normalizeToIntegers(floatSamples)
+            }
+            else {
+                waveform = value
+                    .split(separator: " ", omittingEmptySubsequences: true)
+                    .compactMap { Int($0) }
+            }
+        case "duration":
+            duration = Int(value)
+        default:
+            continue
+        }
+    }
+    
+    return (waveform, duration)
+}
+
+func normalizeToIntegers(_ floats: [Float]) -> [Int] {
+    guard !floats.isEmpty else { return [] }
+    
+    // Find min and max values
+    let minVal = floats.min() ?? 0
+    let maxVal = floats.max() ?? 0
+    
+    // Handle case where all values are the same (avoid division by zero)
+    guard maxVal != minVal else { return Array(repeating: 0, count: floats.count) }
+    
+    // Normalize to [0, 100] and convert to integers
+    return floats.map { value in
+        Int(round(((value - minVal) / (maxVal - minVal)) * 100))
     }
 }
 

@@ -394,6 +394,9 @@ struct iMetaInfo {
             return nil
         }
     }
+    
+    var duration: Int?
+    var waveform: [Int]?
 }
 
 func findImeta(_ fastTags: [FastTag], url:String) -> iMetaInfo? {
