@@ -229,7 +229,7 @@ struct AudioRecorderContentView: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                     
-                    VoiceMessagePlayer(fileURL: recordingURL, samples: recorder.samples)
+                    VoiceMessagePlayer(url: recordingURL, samples: recorder.samples)
                         .frame(maxWidth: .infinity)
                 }
                 .padding(.vertical, 10)

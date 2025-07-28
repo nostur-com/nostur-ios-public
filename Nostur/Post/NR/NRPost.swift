@@ -57,8 +57,10 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var via: String?
     var proxy: String?
     var comment: String? // treat as content for kind 9802
+    
     var samples: [Int]? // kind 1222+1244 waveform data
     var duration: Int? // kind 1222+1244 audio length in seconds
+    var audioUrl: URL? // kind 1222+1244 audio url from content
     
     var nxZap: NxZap?
     
@@ -474,6 +476,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         }
         
         switch kind {
+        case 1222,1244:
+            guard let urlContent = event.content, !urlContent.isEmpty, let url = URL(string: urlContent) else { break }
+            self.audioUrl = url
         case 1063:
             self.fileMetadata = getKindFileMetadata(event: event)
 

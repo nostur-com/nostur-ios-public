@@ -118,33 +118,13 @@ struct Kind1222: View {
         }
     }
     
-    @State var cancellable: AnyCancellable?
-    
     @ViewBuilder
     private var audioView: some View {
-        if let localAudioFileURL {
-            VoiceMessagePlayer(fileURL: localAudioFileURL, samples: nrPost.samples)
+        if let audioUrl = nrPost.audioUrl {
+            VoiceMessagePlayer(url: audioUrl, samples: nrPost.samples)
         }
         else {
-            ProgressView()
-                .onAppear {
-                    guard let urlContent = nrPost.content, !urlContent.isEmpty, let url = URL(string: urlContent)
-                    else { return }
-                    
-                    cancellable = DownloadManager.shared.publisher(for: url, subFolder: "a0")
-                        .sink { state in
-                            if state.isDownloading {
-                                L.a0.debug("Downloading: \(url)")
-                            } else if let fileURL = state.fileURL {
-                                L.a0.debug("✅ Downloaded to: \(fileURL.path)")
-                                self.localAudioFileURL = fileURL
-                            } else if let error = state.error {
-                                L.a0.debug("❌ Error: \(error.localizedDescription)")
-                            }
-                        }
-                    
-                    DownloadManager.shared.startDownload(from: url, subFolder: "a0")
-                }
+            Text("Error: missing audio file")
         }
     }
     
@@ -202,9 +182,12 @@ class AudioPlayerObserver: NSObject {
 
 struct VoiceMessagePlayer: View {
     @Environment(\.theme) private var theme
-    let fileURL: URL
+    var url: URL // Remote audio file url
     var samples: [Int]?
     
+    
+    @State private var cancellable: AnyCancellable?
+    @State private var localFileURL: URL? // downloaded file url
     @State private var player: AVPlayer?
     @State private var isPlaying: Bool = false
     @State private var audioObserver: AudioPlayerObserver?
@@ -230,15 +213,6 @@ struct VoiceMessagePlayer: View {
         audioObserver?.removeObservers()
         audioObserver = nil
         player = nil
-        
-        // Clean up temporary file
-        if fileURL.pathExtension.isEmpty { // with extension if it exists
-            let tempURL = fileURL.appendingPathExtension("m4a")
-            try? FileManager.default.removeItem(at: tempURL)
-        }
-        else {
-            try? FileManager.default.removeItem(at: fileURL)
-        }
     }
     
     private func startProgressTimer() {
@@ -259,31 +233,150 @@ struct VoiceMessagePlayer: View {
     
     var body: some View {
         HStack {
-            Button { 
-                if isPlaying {
-                    player?.pause()
-                    isPlaying = false
-                } else {
-                    if isFinished {
-                        player?.seek(to: .zero)
-                        isFinished = false
+            if let localFileURL {
+                Button {
+                    if isPlaying {
+                        player?.pause()
+                        isPlaying = false
+                    } else {
+                        if isFinished {
+                            player?.seek(to: .zero)
+                            isFinished = false
+                        }
+                        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+                        try? AVAudioSession.sharedInstance().setActive(true)
+                        player?.play()
+                        isPlaying = true
+                        startProgressTimer()
                     }
-                    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-                    try? AVAudioSession.sharedInstance().setActive(true)
-                    player?.play()
-                    isPlaying = true
-                    startProgressTimer()
+                } label: {
+                    Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 50, height: 50)
+                        .background(theme.accent)
+                        .clipShape(Circle())
                 }
-            } label: {
-                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: 50, height: 50)
-                    .background(theme.accent)
-                    .clipShape(Circle())
+                .buttonStyle(PlainButtonStyle())
+                .disabled(player == nil)
+                .onAppear {
+                    Task.detached(priority: .userInitiated) {
+                        if await _samples == nil {
+                            L.a0.debug("VoiceMessagePlayer.onAppear: loadAudioSamples(from: \(localFileURL))")
+                            let samples = (try? await loadAudioSamples(from: localFileURL)) ?? []
+                            Task { @MainActor in
+                                self._samples = samples
+                                print(samples.map {
+                                    if $0 == 0 {
+                                        return "0"
+                                    }
+                                    return String($0)
+                                }.joined(separator: " "))
+                            }
+                        }
+                        
+                        Task { @MainActor in
+                            audioObserver = AudioPlayerObserver {
+                                isPlaying = false
+                                isFinished = true
+                                progress = 1.0
+                                progressTimer?.invalidate()
+                                progressTimer = nil
+                            }
+                        }
+
+                        let playerItem: AVPlayerItem
+                        
+                        if localFileURL.pathExtension.isEmpty { // AVPlayer doesn't play files without extension, so just try appending .m4a and it works.
+                            // For files without extension, create a copy with .m4a extension
+                            let tempURL = localFileURL.appendingPathExtension("m4a")
+                            
+                            // Try to create a symbolic link or copy the file with the correct extension
+                            do {
+                                // Remove any existing temp file
+                                try? FileManager.default.removeItem(at: tempURL)
+                                
+                                // Try creating a hard link first (most efficient)
+                                do {
+                                    try FileManager.default.linkItem(at: localFileURL, to: tempURL)
+                                    playerItem = AVPlayerItem(url: tempURL)
+                                    L.a0.debug("VoiceMessagePlayer: Created hard link for extensionless file")
+                                } catch {
+                                    // If hard link fails, try copying the file
+                                    try FileManager.default.copyItem(at: localFileURL, to: tempURL)
+                                    playerItem = AVPlayerItem(url: tempURL)
+                                    L.a0.debug("VoiceMessagePlayer: Copied file with .m4a extension")
+                                }
+                            } catch {
+                                // If all else fails, try the original approach
+                                L.a0.debug("VoiceMessagePlayer: Failed to create temp file, using original: \(error)")
+                                playerItem = AVPlayerItem(url: localFileURL)
+                            }
+                        } else {
+                            // File has extension, use directly
+                            playerItem = AVPlayerItem(url: localFileURL)
+                        }
+                        
+                        Task { @MainActor in
+                            player = AVPlayer(playerItem: playerItem)
+                            L.a0.debug("VoiceMessagePlayer.onAppear: Trying to load: \(localFileURL)")
+                            audioObserver?.addFinishObserver(to: player!)
+                        }
+                        
+                        // Observe when player item finishes
+                        NotificationCenter.default.addObserver(
+                            forName: .AVPlayerItemDidPlayToEndTime,
+                            object: playerItem,
+                            queue: .main
+                        ) { _ in
+                            isPlaying = false
+                            isFinished = true
+                            progress = 1.0
+                            progressTimer?.invalidate()
+                            progressTimer = nil
+                        }
+                        
+                        // Get duration when ready
+                        Task {
+                            while playerItem.status != .readyToPlay {
+                                try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
+                            }
+                            
+                            let durationSeconds = CMTimeGetSeconds(playerItem.duration)
+                            if durationSeconds.isFinite && durationSeconds > 0 {
+                                await MainActor.run {
+                                    self.duration = durationSeconds
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            .buttonStyle(PlainButtonStyle())
-            .disabled(player == nil)
+            else {
+                ProgressView()
+                    .onAppear {
+                        // if url is a local file url
+                        if url.isFileURL {
+                            localFileURL = url
+                        }
+                        else {
+                            
+                            cancellable = DownloadManager.shared.publisher(for: url, subFolder: "a0")
+                                .sink { state in
+                                    if state.isDownloading {
+                                        L.a0.debug("Downloading: \(url)")
+                                    } else if let fileURL = state.fileURL {
+                                        L.a0.debug("✅ Downloaded to: \(fileURL.path)")
+                                        self.localFileURL = fileURL
+                                    } else if let error = state.error {
+                                        L.a0.debug("❌ Error: \(error.localizedDescription)")
+                                    }
+                                }
+                            
+                            DownloadManager.shared.startDownload(from: url, subFolder: "a0")
+                        }
+                    }
+            }
             
             if let errorMessage = errorMessage {
                 Text(errorMessage).foregroundColor(.red)
@@ -298,6 +391,7 @@ struct VoiceMessagePlayer: View {
                     }
                 }, duration: duration, isPlaying: isPlaying)
                 .frame(maxHeight: .infinity)
+                .allowsHitTesting(localFileURL != nil)
             }
             else {
                 ProgressView()
@@ -310,98 +404,6 @@ struct VoiceMessagePlayer: View {
                 if let samples {
                     L.a0.debug("VoiceMessagePlayer.onAppear: samples: \(samples.count)")
                     self._samples = samples
-                }
-                else {
-                    Task.detached(priority: .userInitiated) {
-                        L.a0.debug("VoiceMessagePlayer.onAppear: loadAudioSamples(from: \(fileURL)")
-                        let samples = (try? await loadAudioSamples(from: fileURL)) ?? []
-                        Task { @MainActor in
-                            self._samples = samples
-                            print(samples.map {
-                                if $0 == 0 {
-                                    return "0"
-                                }
-                                return String($0)
-                            }.joined(separator: " "))
-                        }
-                    }
-                }
-                
-                do {
-                    audioObserver = AudioPlayerObserver {
-                        isPlaying = false
-                        isFinished = true
-                        progress = 1.0
-                        progressTimer?.invalidate()
-                        progressTimer = nil
-                    }
-                    
-                    let playerItem: AVPlayerItem
-                    
-                    if fileURL.pathExtension.isEmpty { // AVPlayer doesn't play files without extension, so just try appending .m4a and it works.
-                        // For files without extension, create a copy with .m4a extension
-                        let tempURL = fileURL.appendingPathExtension("m4a")
-                        
-                        // Try to create a symbolic link or copy the file with the correct extension
-                        do {
-                            // Remove any existing temp file
-                            try? FileManager.default.removeItem(at: tempURL)
-                            
-                            // Try creating a hard link first (most efficient)
-                            do {
-                                try FileManager.default.linkItem(at: fileURL, to: tempURL)
-                                playerItem = AVPlayerItem(url: tempURL)
-                                L.a0.debug("VoiceMessagePlayer: Created hard link for extensionless file")
-                            } catch {
-                                // If hard link fails, try copying the file
-                                try FileManager.default.copyItem(at: fileURL, to: tempURL)
-                                playerItem = AVPlayerItem(url: tempURL)
-                                L.a0.debug("VoiceMessagePlayer: Copied file with .m4a extension")
-                            }
-                        } catch {
-                            // If all else fails, try the original approach
-                            L.a0.debug("VoiceMessagePlayer: Failed to create temp file, using original: \(error)")
-                            playerItem = AVPlayerItem(url: fileURL)
-                        }
-                    } else {
-                        // File has extension, use directly
-                        playerItem = AVPlayerItem(url: fileURL)
-                    }
-                    player = AVPlayer(playerItem: playerItem)
-                    L.a0.debug("VoiceMessagePlayer.onAppear: Trying to load: \(fileURL)")
-                    
-                    audioObserver?.addFinishObserver(to: player!)
-                    
-                    // Observe when player item finishes
-                    NotificationCenter.default.addObserver(
-                        forName: .AVPlayerItemDidPlayToEndTime,
-                        object: playerItem,
-                        queue: .main
-                    ) { _ in
-                        isPlaying = false
-                        isFinished = true
-                        progress = 1.0
-                        progressTimer?.invalidate()
-                        progressTimer = nil
-                    }
-                    
-                    // Get duration when ready
-                    Task {
-                        while playerItem.status != .readyToPlay {
-                            try? await Task.sleep(nanoseconds: 10_000_000) // 10ms
-                        }
-                        
-                        let durationSeconds = CMTimeGetSeconds(playerItem.duration)
-                        if durationSeconds.isFinite && durationSeconds > 0 {
-                            await MainActor.run {
-                                self.duration = durationSeconds
-                            }
-                        }
-                    }
-                    
-                } catch {
-                    errorMessage = "Failed to load audio: \(error.localizedDescription)"
-                    L.a0.error("VoiceMessagePlayer.onAppear: Failed to load audio: \(error.localizedDescription)")
                 }
             }
         }
