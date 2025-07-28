@@ -212,8 +212,19 @@ struct Entry: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 HStack {
                     if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+                        if showVoiceRecorderButton {
+                            Button {
+                                showAudioRecorder = true
+                            } label: {
+                                Image(systemName: "mic")
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(typingTextModel.uploading)
+                        }
+                        
                         if kind != .picture && kind != .highlight {
                             Button {
+                                showVoiceRecorderButton = false
                                 if IS_CATALYST { // MacOS can reuse same weird sheet
                                     sendNotification(.showCreateNestsSheet, vm.activeAccount)
                                 }
@@ -224,27 +235,36 @@ struct Entry: View {
                                     }
                                 }
                             } label: {
-                                Image(systemName: "mic")
+                                Image(systemName: "dot.radiowaves.left.and.right")
                             }
                             .buttonStyle(.borderless)
                             .disabled(typingTextModel.uploading)
                         }
                         
-                        Button { cameraSheetShown = true } label: {
+                        Button {
+                            showVoiceRecorderButton = false
+                            cameraSheetShown = true
+                        } label: {
                             Image(systemName: "camera")
                         }
                         .buttonStyle(.borderless)
                         .disabled(typingTextModel.uploading)
                         
                         if #available(iOS 16, *) {
-                            Button { photoPickerShown = true } label: {
+                            Button {
+                                showVoiceRecorderButton = false
+                                photoPickerShown = true
+                            } label: {
                                 Image(systemName: "photo")
                             }
                             .buttonStyle(.borderless)
                             .disabled(typingTextModel.uploading)
                             
                             if kind != .picture && kind != .highlight {
-                                Button { videoPickerShown = true } label: {
+                                Button {
+                                    showVoiceRecorderButton = false
+                                    videoPickerShown = true
+                                } label: {
                                     Image(systemName: "video")
                                 }
                                 .buttonStyle(.borderless)
@@ -253,7 +273,10 @@ struct Entry: View {
                         }
                         
                         if kind != .picture {
-                            Button { gifSheetShown = true } label: {
+                            Button {
+                                showVoiceRecorderButton = false
+                                gifSheetShown = true
+                            } label: {
                                 Image("GifButton")
                             }
                             .buttonStyle(.borderless)
