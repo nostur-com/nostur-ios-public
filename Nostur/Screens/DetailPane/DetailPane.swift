@@ -51,6 +51,70 @@ struct DetailPane: View {
                                         else {
                                             req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
                                         }
+                                        
+                                        if nrPost.kind == 30023 {
+                                            // Fetch A direct or sub 1111 (new commments style)
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1111],
+                                                    tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
+                                                    limit: 500
+                                                ),
+                                                subscriptionId: "DETAIL-"+UUID().uuidString
+                                            )
+                                            
+                                            // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1111],
+                                                    tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
+                                                    since: NTimestamp(date: Date.now).timestamp
+                                                ),
+                                                subscriptionId: "REALTIME-DETAIL-22"
+                                            )
+                                        }
+                                        else if nrPost.kind == 1222 || nrPost.kind == 1244 {
+                                            // Fetch E direct or sub 1111,1244 (new commments style)
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1244],
+                                                    tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
+                                                    limit: 500
+                                                ),
+                                                subscriptionId: "DETAIL-"+UUID().uuidString
+                                            )
+                                            
+                                            // Fetch E direct or sub 1111,1244 (new commments style) - REAL TIME UPDATES
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1244],
+                                                    tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
+                                                    since: NTimestamp(date: Date.now).timestamp
+                                                ),
+                                                subscriptionId: "REALTIME-DETAIL-22"
+                                            )
+                                        }
+                                        else if nrPost.kind == 20 {
+                                            // Fetch E direct or sub 1111,1244 (new commments style)
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1111],
+                                                    tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
+                                                    limit: 500
+                                                ),
+                                                subscriptionId: "DETAIL-"+UUID().uuidString
+                                            )
+                                            
+                                            // Fetch E direct or sub 1111,1244 (new commments style) - REAL TIME UPDATES
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1111],
+                                                    tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
+                                                    since: NTimestamp(date: Date.now).timestamp
+                                                ),
+                                                subscriptionId: "REALTIME-DETAIL-22"
+                                            )
+                                        }
                                     }
                                     else if let notePath = tm.selected?.notePath {
                                         req(RM.getEventReferences(ids: [notePath.id], subscriptionId: "REALTIME-DETAIL"))
@@ -83,6 +147,28 @@ struct DetailPane: View {
                                         }
                                         else {
                                             req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
+                                        }
+                                        
+                                        if naddrPath.kind == 30023 {
+                                            // Fetch A direct or sub 1111 (new commments style)
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1111],
+                                                    tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
+                                                    limit: 500
+                                                ),
+                                                subscriptionId: "DETAIL-"+UUID().uuidString
+                                            )
+                                            
+                                            // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
+                                            nxReq(
+                                                Filters(
+                                                    kinds: [1111],
+                                                    tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
+                                                    since: NTimestamp(date: Date.now).timestamp
+                                                ),
+                                                subscriptionId: "REALTIME-DETAIL-22"
+                                            )
                                         }
                                     }
                                 },
@@ -132,6 +218,28 @@ struct DetailPane: View {
                                             else {
                                                 req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL"))
                                             }
+                                            
+                                            if nrPost.kind == 30023 {
+                                                // Fetch A direct or sub 1111 (new commments style)
+                                                nxReq(
+                                                    Filters(
+                                                        kinds: [1111],
+                                                        tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
+                                                        limit: 500
+                                                    ),
+                                                    subscriptionId: "DETAIL-"+UUID().uuidString
+                                                )
+                                                
+                                                // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
+                                                nxReq(
+                                                    Filters(
+                                                        kinds: [1111],
+                                                        tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
+                                                        since: NTimestamp(date: Date.now).timestamp
+                                                    ),
+                                                    subscriptionId: "REALTIME-DETAIL-22"
+                                                )
+                                            }
                                         }
                                         else if let notePath = tm.selected?.notePath {
                                             req(RM.getEventReferences(ids: [notePath.id], subscriptionId: "REALTIME-DETAIL"))
@@ -165,6 +273,28 @@ struct DetailPane: View {
                                             else {
                                                 req(RM.getEventReferences(ids: [naddrPath.id], subscriptionId: "REALTIME-DETAIL"))
                                             }
+                                            
+                                            if naddrPath.kind == 30023 {
+                                                // Fetch A direct or sub 1111 (new commments style)
+                                                nxReq(
+                                                    Filters(
+                                                        kinds: [1111],
+                                                        tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
+                                                        limit: 500
+                                                    ),
+                                                    subscriptionId: "DETAIL-"+UUID().uuidString
+                                                )
+                                                
+                                                // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
+                                                nxReq(
+                                                    Filters(
+                                                        kinds: [1111],
+                                                        tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
+                                                        since: NTimestamp(date: Date.now).timestamp
+                                                    ),
+                                                    subscriptionId: "REALTIME-DETAIL-22"
+                                                )
+                                            }
                                         }
                                         else {
                                             // Close REALTIME-DETAIL subscription if the new active tab is not a nrPost
@@ -173,6 +303,17 @@ struct DetailPane: View {
                                                     clientMessage: NostrEssentials.ClientMessage(
                                                         type: .CLOSE,
                                                         subscriptionId: "REALTIME-DETAIL"
+                                                    ),
+                                                    relayType: .READ
+                                                )
+                                            )
+                                            
+                                            // Close REALTIME-DETAIL-22 subscription if the new active tab is not a nrPost
+                                            ConnectionPool.shared.sendMessage(
+                                                NosturClientMessage(
+                                                    clientMessage: NostrEssentials.ClientMessage(
+                                                        type: .CLOSE,
+                                                        subscriptionId: "REALTIME-DETAIL-22"
                                                     ),
                                                     relayType: .READ
                                                 )
