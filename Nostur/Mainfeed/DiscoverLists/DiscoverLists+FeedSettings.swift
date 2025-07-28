@@ -15,12 +15,6 @@ struct DiscoverListsFeedSettings: View {
     
     var body: some View {
         Form {
-            if #available(iOS 16, *) {
-                Section("App theme") {
-                    AppThemeSwitcher()
-                }
-            }
-            
             Toggle(isOn: $enableDiscoverListsFeed, label: {
                 Text("Show feed in tab bar")
             })

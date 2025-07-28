@@ -15,11 +15,6 @@ struct ZappedFeedSettings: View {
     
     var body: some View {
         Form {
-            if #available(iOS 16, *) {
-                Section("App theme") {
-                    AppThemeSwitcher()
-                }
-            }
             Section {
                 Picker("Time frame", selection: $zappedVM.ago) {
                     Text("48h").tag(48)

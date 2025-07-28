@@ -15,11 +15,6 @@ struct EmojiFeedSettings: View {
     
     var body: some View {
         Form {
-            if #available(iOS 16, *) {
-                Section("App theme") {
-                    AppThemeSwitcher()
-                }
-            }
             Section {
                 Picker("Configure feed type", selection: $vm.emojiType) {
                     Text("😂").tag("😂")
