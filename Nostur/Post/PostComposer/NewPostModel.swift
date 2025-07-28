@@ -976,10 +976,18 @@ public func getUnsignedAuthorizationHeaderEvent96(pubkey: String, sha256hex: Str
 public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], videos: [PostedVideoMeta] = [], voiceMessage: VoiceRecording? = nil, typingTextModel: TypingTextModel, uploadMethod: UploadMethod) -> [(Data, String, String?, Int, NEvent)] {
     if let voiceMessage = voiceMessage {
         guard let recordingData = try? Data(contentsOf: voiceMessage.localFileURL) else { return [] }
-
-        let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: recordingData.sha256().hexEncodedString())
         
-        return [(recordingData, "audio/mp4", nil, 0, unsignedAuthHeaderEvent)]
+        if case .nip96(let nip96apiURL) = uploadMethod {
+            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent96(pubkey: pubkey, sha256hex: recordingData.sha256().hexEncodedString(), method: "POST", apiUrl: nip96apiURL)
+            return [(recordingData, "audio/mp4", nil, 0, unsignedAuthHeaderEvent)]
+        }
+        else if SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
+            let unsignedAuthHeaderEvent = getUnsignedAuthorizationHeaderEvent(pubkey: pubkey, sha256hex: recordingData.sha256().hexEncodedString())
+            return [(recordingData, "audio/mp4", nil, 0, unsignedAuthHeaderEvent)]
+        }
+        else {
+            return []
+        }
     }
     else {
         let maxWidth: CGFloat = 2800.0
