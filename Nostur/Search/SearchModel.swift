@@ -50,7 +50,7 @@ class SearchModel {
                 for term in terms {
                     let fr = Event.fetchRequest()
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-                    fr.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind IN {1,20,9802} AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", blockedPubkeys, term, "lnbc")
+                    fr.predicate = NSPredicate(format: "NOT pubkey IN %@ AND kind IN {1,1111,1222,1244,20,9802} AND content CONTAINS[cd] %@ AND NOT content BEGINSWITH %@", blockedPubkeys, term, "lnbc")
                     
                     if let posts = try? bg().fetch(fr) {
                         for post in posts {

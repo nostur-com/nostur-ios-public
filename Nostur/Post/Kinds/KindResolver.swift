@@ -144,7 +144,7 @@ struct KindResolver: View {
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
         
-        case 1:
+        case 1,1111:
             Kind1(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth || (nrPost.kTag ?? "" == "20" && nrPost.galleryItems.count > 0), forceAutoload: shouldAutoload)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }

@@ -66,7 +66,7 @@ class MentionsFeedModel: ObservableObject {
             guard let self else { return }
             let r1 = Event.fetchRequest()
             r1.predicate = NSPredicate(
-                format: "NOT pubkey IN %@ AND kind IN {1,20,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
+                format: "NOT pubkey IN %@ AND kind IN {1,1111,1222,1244,20,9802,30023,34235} AND tagsSerialized CONTAINS %@ AND NOT id IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\" ",
                 (AppState.shared.bgAppState.blockedPubkeys + [pubkey]),
                 serializedP(pubkey),
                 AppState.shared.bgAppState.mutedRootIds,
@@ -131,13 +131,13 @@ class MentionsFeedModel: ObservableObject {
             if let until = allMentionEvents.last?.created_at {
                 req(RM.getMentions(
                     pubkeys: [pubkey],
-                    kinds: [1,20,9802,30023,34235],
+                    kinds: [1,1111,1222,1244,20,9802,30023,34235],
                     limit: 500,
                     until: NTimestamp(timestamp: Int(until))
                 ))
             }
             else {
-                req(RM.getMentions(pubkeys: [pubkey], kinds: [1,20,9802,30023,34235], limit: 500))
+                req(RM.getMentions(pubkeys: [pubkey], kinds: [1,1111,1222,1244,20,9802,30023,34235], limit: 500))
             }
             
             self.load(limit: 500)

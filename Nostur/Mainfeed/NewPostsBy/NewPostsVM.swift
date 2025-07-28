@@ -48,7 +48,7 @@ class NewPostsVM: ObservableObject {
                                        filters: [
                                         Filters(
                                             authors: self.pubkeys,
-                                            kinds: PROFILE_KINDS.subtracting(Set([6,5])), // not reposts or delete requests
+                                            kinds: PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([6,5])), // not reposts or delete requests
                                             since: self.since != 0 ? Int(self.since) : nil,
                                             limit: 150
                                         )
@@ -91,7 +91,7 @@ class NewPostsVM: ObservableObject {
             guard let self else { return }
             let fr = Event.fetchRequest()
             fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND (replyToRootId == nil OR NOT replyToRootId IN %@) AND (replyToId == nil OR NOT replyToId IN %@) AND flags != \"is_update\"", self.since, self.pubkeys,
-                                       PROFILE_KINDS.subtracting(Set([5,6])), // not reposts or delete requests
+                                       PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([5,6])), // not reposts or delete requests
                                        AppState.shared.bgAppState.mutedRootIds,
                                        AppState.shared.bgAppState.mutedRootIds,
                                        AppState.shared.bgAppState.mutedRootIds)

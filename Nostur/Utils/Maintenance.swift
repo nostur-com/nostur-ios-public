@@ -272,11 +272,11 @@ struct Maintenance {
         
         
         
-        // KIND 1,4,5,6,20,9802,30023,34235
+        // KIND 1,1111,1222,1244,4,5,6,20,9802,30023,34235
         // OLDER THAN X DAYS
         // IS NOT BOOKMARKED
         // IS NOT OWN EVENT
-        // DOES NOT HAVE OUR PUBKEY IN P (Notifications)
+        // DOES NOT HAVE OUR PUBKEY IN p (Notifications)
         // DONT DELETE MUTED BLOCKED, SO OUR BLOCK LIST STILL FUNCTIONS....
         // DONT DELETE POSTS THAT SHOULD BE SAVED FOR LOCAL FEED STATE RESTORE (LocalFeedState.onScreenIds/.parentIds) ONLY PINNED TABS (CLOUDFEED)
         // TODO: DONT EXPORT MUTED / BLOCKED. KEEP HERE SO WE DONT HAVE TO KEEP ..REPARSING
@@ -288,7 +288,7 @@ struct Maintenance {
         let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(feedStateIdsToKeep)
         
         let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-        fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,4,5,6,20,9802,30023,34235} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
+        fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,1111,1222,1244,4,5,6,20,9802,30023,34235} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
         
         let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
         fr16batchDelete.resultType = .resultTypeCount
@@ -296,10 +296,10 @@ struct Maintenance {
         do {
             let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
             if let count = result.result as? Int, count > 0 {
-                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,4,5,6,20,9802,30023,34235} events - keeping \(mergedIds.count) ids")
+                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,1111,1222,1244,4,5,6,20,9802,30023,34235} events - keeping \(mergedIds.count) ids")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete {1,4,5,6,20,9802,30023,34235} data")
+            L.maintenance.info("🔴🔴 Failed to delete {1,1111,1222,1244,4,5,6,20,9802,30023,34235} data")
         }
         
         
@@ -307,7 +307,6 @@ struct Maintenance {
         // OLDER THAN X DAYS
         // PUBKEY NOT IN OWN ACCOUNTS
         // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
-        //            context.perform {
         let fr78 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         
         fr78.predicate = NSPredicate(format: "created_at < %i AND kind IN {8,7} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
@@ -327,7 +326,6 @@ struct Maintenance {
         // KIND 9735
         // OLDER THAN X DAYS
         // otherPubkey NOT IN OWN ACCOUNTS
-        //            context.perform {
         let fr9735 = Event.fetchRequest()
         fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND (otherPubkey == nil OR NOT otherPubkey IN %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
         
@@ -349,7 +347,6 @@ struct Maintenance {
         // KIND 0
         // REMOVE ALL BECAUSE EVERY KIND 0 HAS A CONTACT
         // DONT REMOVE OWN KIND 0
-        //            context.perform {
         let fr0 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         fr0.predicate = NSPredicate(format: "(kind == 0) AND NOT pubkey IN %@", ownAccountPubkeys)
         
@@ -368,7 +365,7 @@ struct Maintenance {
         
         // DELETE OLDER KIND 3 + 10002 EVENTS
         // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING (FOR WoT follows-follows)
-        // AND NOT OUR PUBKEY IN Ps (is following us, for following notifications)
+        // AND NOT OUR PUBKEY IN p (is following us, for following notifications)
         
         var followingPubkeys = Set(ownAccountPubkeys)
         for account in allAccounts {
@@ -416,10 +413,9 @@ struct Maintenance {
         // OLDER THAN X DAYS
         // PUBKEY NOT IN OWN ACCOUNTS
         // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
-        //            context.perform {
         let frOther = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         
-        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,3,4,5,6,7,8,20,9734,9735,9802,10002,30023,34235} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,1111,1222,1244,3,4,5,6,7,8,20,9734,9735,9802,10002,30023,34235} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
         
         let frOtherbatchDelete = NSBatchDeleteRequest(fetchRequest: frOther)
         frOtherbatchDelete.resultType = .resultTypeCount
@@ -437,10 +433,9 @@ struct Maintenance {
         // Posts, Reactions, Zaps where our account is mentioned in tag
         // OLDER THAN 2 MONTHS
         // PUBKEY NOT IN OWN ACCOUNTS
-        //            context.perform {
         let frTagsSerialized = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         
-        frTagsSerialized.predicate = NSPredicate(format: "(created_at < %i AND kind IN {1,7,9734,9735} AND NOT pubkey IN %@) AND tagsSerialized MATCHES %@", Int64(monthsAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        frTagsSerialized.predicate = NSPredicate(format: "(created_at < %i AND kind IN {1,1111,1222,1244,7,9734,9735} AND NOT pubkey IN %@) AND tagsSerialized MATCHES %@", Int64(monthsAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
         
         let frTagsSerializedbatchDelete = NSBatchDeleteRequest(fetchRequest: frTagsSerialized)
         frTagsSerializedbatchDelete.resultType = .resultTypeCount

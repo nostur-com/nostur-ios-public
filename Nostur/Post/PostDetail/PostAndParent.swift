@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 // Renders reply, and parent
 // the parent is another PostAndParent
@@ -133,21 +134,65 @@ struct PostAndParent: View {
                     
                     if (!nxViewingContext.contains(.postParent)) {
                         
-                        // Fetch all related (e and p.kind=0)
-                        // (the events and contacts mentioned in this DETAIL NOTE.
-                        if let message = RequestMessage.getFastTags(nrPost.fastTags) {
-                            req(message)
+                        // NEW NIP-22:
+                        if NIP22_ROOT_KINDS.contains(Int(nrPost.kind)) {
+                            // Fetch p (0)
+                            let pTags = Set(nrPost.fastTags.filter { $0.0 == "p" }.map { $0.1 })
+                            if !pTags.isEmpty {
+                                QueuedFetcher.shared.enqueue(pTags: pTags)
+                            }
+                            
+                            // Fetch E direct or sub 1111,1244 (new commments style)
+                            nxReq(
+                                Filters(
+                                    kinds: [1111,1244],
+                                    tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
+                                    limit: 500
+                                ),
+                                subscriptionId: "DETAIL-"+UUID().uuidString
+                            )
+                            
+                            // Fetch E direct or sub 1111,1244 (new commments style) - REAL TIME UPDATES
+                            nxReq(
+                                Filters(
+                                    kinds: [1111,1244],
+                                    tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
+                                    since: NTimestamp(date: Date.now).timestamp
+                                ),
+                                subscriptionId: "REALTIME-DETAIL"
+                            )
+                            
+                            // Fetch e direct or sub comments (1) (old style)
+                            nxReq(
+                                Filters(
+                                    kinds: [1],
+                                    tagFilter: TagFilter(tag: "e", values: [nrPost.id]),
+                                    limit: 500
+                                ),
+                                subscriptionId: "DETAIL-"+UUID().uuidString
+                            )
                         }
-                        
-                        // Fetch all that reference this detail note (Replies, zaps, reactions)
-                        req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "DETAIL-"+UUID().uuidString))
-                        // REAL TIME UPDATES FOR POST DETAIL
-                        req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
-                        
-                        if let replyToRootId = nrPost.replyToRootId {
-                            // Fetch all that reference the root note
-                            // to build the thread, maybe kind=1 is enough, or all...?
-                            req(RM.getEventReferences(ids: [replyToRootId], subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
+                        else {
+                            
+                            // OLD NIP-10 ETC:
+                            
+                            // Fetch all related (e and p.kind=0)
+                            // (the events and contacts mentioned in this DETAIL NOTE.
+                            if let message = RequestMessage.getFastTags(nrPost.fastTags) {
+                                req(message)
+                            }
+                            
+                            
+                            // Fetch all that reference this detail note (Replies, zaps, reactions)
+                            req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "DETAIL-"+UUID().uuidString))
+                            // REAL TIME UPDATES FOR POST DETAIL
+                            req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "REALTIME-DETAIL", since: NTimestamp(date: Date.now)))
+                            
+                            if let replyToRootId = nrPost.replyToRootId {
+                                // Fetch all that reference the root note
+                                // to build the thread, maybe kind=1 is enough, or all...?
+                                req(RM.getEventReferences(ids: [replyToRootId], subscriptionId: "ROOT-"+UUID().uuidString, kinds:[1]))
+                            }
                         }
                     }
                 }

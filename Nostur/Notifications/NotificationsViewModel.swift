@@ -41,7 +41,7 @@ class NotificationsViewModel: ObservableObject {
     public func checkNeedsUpdate(_ event: Event) {
         guard let account = account() else { return }
         switch event.kind {
-        case 1,4,20,9802,30023,34235: // TODO: Should check if not muted or blocked
+        case 1,1111,1222,1244,4,20,9802,30023,34235: // TODO: Should check if not muted or blocked
             let before = needsUpdate
             needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == account.publicKey })
             if needsUpdate && needsUpdate != before {
@@ -253,7 +253,7 @@ class NotificationsViewModel: ObservableObject {
         let sinceNTimestamp = NTimestamp(date: ago)
         
         // Public req for notifications
-        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,6,7,20,9735,9802,30023,34235],
+        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235],
                            subscriptionId: "Notifications", since: sinceNTimestamp),
             activeSubscriptionId: "Notifications")
         
@@ -286,7 +286,7 @@ class NotificationsViewModel: ObservableObject {
             self?.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP", since: since))
+                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP", since: since))
                 
                 // Separate req for kind 4, because possibly needs auth
                 req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [4], subscriptionId: "NotificationsDM-CATCHUP", since: since))
@@ -845,7 +845,7 @@ fileprivate class NotificationFetchRequests {
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND NOT pubkey IN %@ " +
-                                    "AND kind IN {1,20,9802,30023,34235} " +
+                                    "AND kind IN {1,1111,1222,1244,20,9802,30023,34235} " +
                                     "AND tagsSerialized CONTAINS %@ " +
                                     "AND NOT id IN %@ " + // mutedRootIds
                                     "AND (replyToRootId == nil OR NOT replyToRootId IN %@) " + // mutedRootIds
@@ -1000,7 +1000,7 @@ class OfflinePosts {
                 r1.predicate = NSPredicate(format:
                                             "created_at > %i " +
                                             "AND pubkey = %@ " +
-                                            "AND kind IN {0,1,3,4,5,6,7,20,9802,34235} " +
+                                            "AND kind IN {0,1,1111,1222,1244,3,4,5,6,7,20,9802,34235} " +
                                             "AND relays = \"\"" +
                                             "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\",\"draft\"}" +
                                             "AND sig != nil",

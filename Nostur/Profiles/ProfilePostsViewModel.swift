@@ -11,7 +11,7 @@ import CoreData
 import Combine
 
 let PROFILE_KINDS = Set([1,1222,5,6,20,9802,34235])
-let PROFILE_KINDS_REPLIES = Set([1,1244,5])
+let PROFILE_KINDS_REPLIES = Set([1,1111,1244,5])
 let ARTICLE_KINDS = Set([30023])
 let LIST_KINDS = Set([30000,39089])
 

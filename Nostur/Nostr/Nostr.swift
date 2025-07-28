@@ -103,6 +103,7 @@ public enum NEventKind: Codable, Equatable {
     case chatMessage
     case reaction
     case picture
+    case comment
     case shortVoiceMessage
     case shortVoiceMessageComment
     case report
@@ -138,6 +139,7 @@ public enum NEventKind: Codable, Equatable {
         case     6: self = .repost
         case     7: self = .reaction
         case    20: self = .picture
+        case  1111: self = .comment
         case  1222: self = .shortVoiceMessage
         case  1244: self = .shortVoiceMessageComment
         case  1311: self = .chatMessage
@@ -177,6 +179,7 @@ public enum NEventKind: Codable, Equatable {
         case .chatMessage:              return 1311
         case .reaction:                 return 7
         case .picture:                  return 20
+        case .comment:                  return 1111
         case .shortVoiceMessage:        return 1222
         case .shortVoiceMessageComment: return 1244
         case .report:                   return 1984
@@ -486,6 +489,11 @@ extension NEvent {
     
     // E TAGS
     func replyToEtag() -> NostrTag? {
+        // NIP-22
+        if NIP22_COMMENT_KINDS.contains(self.kind.id) { // Should be only one "e", take the last one like old  NIP-10 if multiple
+            return tags.last(where:  { $0.type == "e" })
+        }
+        
         if threadETags.isEmpty {
             return nil
         }
@@ -517,6 +525,11 @@ extension NEvent {
     }
     
     func replyToRootEtag() -> NostrTag? {
+        // NIP-22
+        if NIP22_COMMENT_KINDS.contains(self.kind.id) { // Should be only one "E"
+            return tags.last(where:  { $0.type == "E" })
+        }
+        
         if threadETags.isEmpty {
             return nil
         }
@@ -550,12 +563,21 @@ extension NEvent {
     // ARTICLE/PARAMETERIZED REPLACEABLE EVENTS / NIP-33 reply / root
 
     func replyToAtag() -> NostrTag? {
+        // NIP-22
+        if NIP22_COMMENT_KINDS.contains(self.kind.id) { // Should be only one "a"
+            return tags.last(where:  { $0.type == "a" })
+        }
+        
         // NIP-10: Those marked with "reply" denote the id of the reply event being responded to.
         // The spec is for "e" but we do the same for "a"
         return tags.first(where: { $0.type == "a" && $0.tag[safe: 3] == "reply" })
     }
     
     func replyToRootAtag() -> NostrTag? {
+        if NIP22_COMMENT_KINDS.contains(self.kind.id) { // Should be only one "A"
+            return tags.last(where:  { $0.type == "A" })
+        }
+        
         return tags.first(where: { $0.type == "a" && $0.tag[safe: 3] == "root" })
     }
 }

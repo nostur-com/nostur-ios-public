@@ -272,7 +272,7 @@ func checkForNotifications(accountData: AccountData) async {
                     let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
                     bg().perform {
                         NotificationsViewModel.shared.needsUpdate = true
-                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,20,9802,30023,34235], subscriptionId: taskId, since: since))
+                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[1,1111,1222,1244,20,9802,30023,34235], subscriptionId: taskId, since: since))
                     }
                 },
                 processResponseCommand: { taskId, relayMessage, event in
