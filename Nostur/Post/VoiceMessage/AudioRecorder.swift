@@ -221,7 +221,7 @@ struct AudioRecorderContentView: View {
             recorder.requestPermission()
         }
         .onReceive(timer) { _ in
-            if recorder.isRecording, let recordingSince = recorder.recordingSince, recordingSince.timeIntervalSince(Date()) < -3 {
+            if recorder.isRecording, let recordingSince = recorder.recordingSince, recordingSince.timeIntervalSince(Date()) < -50 {
                     withAnimation {
                         isTooLong = true
                     }
