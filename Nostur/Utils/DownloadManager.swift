@@ -19,6 +19,7 @@ class DownloadManager: ObservableObject {
         var isDownloading = false
         var fileURL: URL? = nil
         var error: Error? = nil
+        var subFolder = "tmp"
     }
     
     @Published private(set) var states: [URL: DownloadState] = [:]
@@ -27,22 +28,22 @@ class DownloadManager: ObservableObject {
     private var progressSubjects: [URL: PassthroughSubject<DownloadState, Never>] = [:]
     private let fileManager = FileManager.default
     
-    func publisher(for url: URL) -> AnyPublisher<DownloadState, Never> {
+    func publisher(for url: URL, subFolder: String = "tmp") -> AnyPublisher<DownloadState, Never> {
         if let subject = progressSubjects[url] {
             return subject.eraseToAnyPublisher()
         } else {
             let subject = PassthroughSubject<DownloadState, Never>()
             progressSubjects[url] = subject
-            subject.send(states[url] ?? .init())
+            subject.send(states[url] ?? DownloadState(subFolder: subFolder))
             return subject.eraseToAnyPublisher()
         }
     }
     
-    func startDownload(from url: URL) {
+    func startDownload(from url: URL, subFolder: String = "tmp") {
         guard tasks[url] == nil else {
             L.a0.debug("Already downloading: \(url.lastPathComponent)")
             if let subject = progressSubjects[url], let state = states[url], let _ = state.fileURL {
-                subject.send(states[url] ?? .init())
+                subject.send(states[url] ?? DownloadState(subFolder: subFolder))
                 return
             }
             return
@@ -52,7 +53,7 @@ class DownloadManager: ObservableObject {
         
         L.a0.debug("Starting download: \(url.lastPathComponent)")
         
-        var state = states[url] ?? DownloadState()
+        var state = states[url] ?? DownloadState(subFolder: subFolder)
         state.isDownloading = true
         state.error = nil
         states[url] = state
@@ -61,7 +62,7 @@ class DownloadManager: ObservableObject {
         let task = URLSession.shared.downloadTask(with: url) { [weak self] tempURL, response, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                var state = self.states[url] ?? DownloadState()
+                var state = self.states[url] ?? DownloadState(subFolder: subFolder)
                 state.isDownloading = false
 
                 if let error = error {
@@ -80,8 +81,9 @@ class DownloadManager: ObservableObject {
 
                 // Save to disk
                 do {
-                    let destination = self.localFileURL(for: url)
+                    let destination = self.localFileURL(for: url, folder: subFolder)
                     try? self.fileManager.removeItem(at: destination)
+                    try? self.fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
                     try self.fileManager.moveItem(at: tempURL, to: destination)
                     state.fileURL = destination
                     self.states[url] = state
@@ -99,10 +101,10 @@ class DownloadManager: ObservableObject {
         task.resume()
     }
     
-    func localFileURL(for url: URL) -> URL {
+    func localFileURL(for url: URL, folder: String = "tmp") -> URL {
         let filename = url.lastPathComponent
         let dir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        return dir.appendingPathComponent(filename)
+        return dir.appendingPathComponent(folder).appendingPathComponent(filename)
     }
 }
 

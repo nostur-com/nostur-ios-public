@@ -131,19 +131,19 @@ struct Kind1222: View {
                     guard let urlContent = nrPost.content, !urlContent.isEmpty, let url = URL(string: urlContent)
                     else { return }
                     
-                    cancellable = DownloadManager.shared.publisher(for: url)
+                    cancellable = DownloadManager.shared.publisher(for: url, subFolder: "a0")
                         .sink { state in
                             if state.isDownloading {
-                                print("Downloading: \(url)")
+                                L.a0.debug("Downloading: \(url)")
                             } else if let fileURL = state.fileURL {
-                                print("✅ Downloaded to: \(fileURL.path)")
+                                L.a0.debug("✅ Downloaded to: \(fileURL.path)")
                                 self.localAudioFileURL = fileURL
                             } else if let error = state.error {
-                                print("❌ Error: \(error.localizedDescription)")
+                                L.a0.debug("❌ Error: \(error.localizedDescription)")
                             }
                         }
                     
-                    DownloadManager.shared.startDownload(from: url)
+                    DownloadManager.shared.startDownload(from: url, subFolder: "a0")
                 }
         }
     }
