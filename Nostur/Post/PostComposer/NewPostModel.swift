@@ -418,12 +418,14 @@ public final class NewPostModel: ObservableObject {
             bgContext.perform {
                 let savedEvent = Event.saveEvent(event: finalEvent, flags: "nsecbunker_unsigned", context: bgContext)
                 savedEvent.cancellationId = cancellationId
-                DispatchQueue.main.async {
-                    if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
-                        sendNotification(.newSingleRelayPostSaved, (savedEvent, lockToThisRelay))
-                    }
-                    else {
-                        sendNotification(.newPostSaved, savedEvent)
+                if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                    DispatchQueue.main.async {
+                        if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
+                            sendNotification(.newSingleRelayPostSaved, (savedEvent, lockToThisRelay))
+                        }
+                        else {
+                            sendNotification(.newPostSaved, savedEvent)
+                        }
                     }
                 }
                 DataProvider.shared().bgSave()
@@ -455,7 +457,7 @@ public final class NewPostModel: ObservableObject {
                 }
                 
                 DataProvider.shared().bgSave()
-                if ([1,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {
                             sendNotification(.newSingleRelayPostSaved, (savedEvent, lockToThisRelay))

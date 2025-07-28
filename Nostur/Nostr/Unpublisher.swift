@@ -196,7 +196,7 @@ class Unpublisher {
                 }
                 
                 DataProvider.shared().bgSave()
-                if ([1,6,20,9802,30023,34235].contains(savedEvent.kind)) {
+                if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let singleRelay = lockToThisRelay {
                             sendNotification(.newSingleRelayPostSaved, (savedEvent, singleRelay))
@@ -210,7 +210,7 @@ class Unpublisher {
                             accountCache.addReposted(firstquoteId)
                         }
                     }
-                    else if savedEvent.kind == 1 {
+                    else if Set([1,1111,1244]).contains(savedEvent.kind) {
                         if let accountCache = accountCache(), accountCache.pubkey == savedEvent.pubkey, let replyToId = savedEvent.replyToId  {
                             accountCache.addRepliedTo(replyToId)
                         }
