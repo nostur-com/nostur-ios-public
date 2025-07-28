@@ -268,6 +268,8 @@ struct VoiceMessagePlayer: View {
                         player?.seek(to: .zero)
                         isFinished = false
                     }
+                    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+                    try? AVAudioSession.sharedInstance().setActive(true)
                     player?.play()
                     isPlaying = true
                     startProgressTimer()
