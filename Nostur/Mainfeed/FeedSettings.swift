@@ -120,7 +120,9 @@ struct FeedSettings: View {
     private var feedSettingsSection: some View {
         Section(header: Text("Feed settings", comment: "Header for entering title of a feed")) {
             Group {
-                Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                if feed.accountPubkey != la.pubkey { // Don't show if it is our own main following feed
+                    Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                }
                 
                 if feed.showAsTab {
                     VStack(alignment: .leading) {
