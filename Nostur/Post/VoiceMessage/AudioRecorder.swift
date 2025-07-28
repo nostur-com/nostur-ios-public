@@ -309,7 +309,6 @@ struct AudioRecorderContentView: View {
                 }
             }
         }
-        .background(theme.background)
         .onAppear {
             recorder.requestPermission()
         }
