@@ -139,6 +139,7 @@ struct Maintenance {
         L.maintenance.info("Starting time based maintenance")
         
         return await context.perform {
+            Self.audioDownloadCacheCleanUp()
             Self.databaseCleanUp(context)
             try? context.save()
             return true
@@ -205,6 +206,55 @@ struct Maintenance {
         //                L.maintenance.info("😢😢😢 XX \(error)")
         //            }
         //        }
+    }
+    
+    static func audioDownloadCacheCleanUp() {
+        let tmpPath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let ownRecordingsPath = tmpPath.appendingPathComponent("a0-own-recordings")
+        let otherAudioFilesPath = tmpPath.appendingPathComponent("a0")
+        
+        // Define 8-hour threshold
+        let eightHoursAgo = Date().addingTimeInterval(-2 * 60 * 60)
+        
+        // Clean up ownRecordingsPath
+        if FileManager.default.fileExists(atPath: ownRecordingsPath.path) {
+            do {
+                let fileURLs = try FileManager.default.contentsOfDirectory(
+                    at: ownRecordingsPath,
+                    includingPropertiesForKeys: [.creationDateKey],
+                    options: [.skipsHiddenFiles]
+                )
+                for fileURL in fileURLs {
+                    let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+                    if let creationDate = attributes[.creationDate] as? Date,
+                       creationDate < eightHoursAgo {
+                        try FileManager.default.removeItem(at: fileURL)
+                    }
+                }
+            } catch {
+                L.maintenance.error("Error cleaning own recordings cache: \(error)")
+            }
+        }
+        
+        // Clean up otherAudioFilesPath
+        if FileManager.default.fileExists(atPath: otherAudioFilesPath.path) {
+            do {
+                let fileURLs = try FileManager.default.contentsOfDirectory(
+                    at: otherAudioFilesPath,
+                    includingPropertiesForKeys: [.creationDateKey],
+                    options: [.skipsHiddenFiles]
+                )
+                for fileURL in fileURLs {
+                    let attributes = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+                    if let creationDate = attributes[.creationDate] as? Date,
+                       creationDate < eightHoursAgo {
+                        try FileManager.default.removeItem(at: fileURL)
+                    }
+                }
+            } catch {
+                L.maintenance.error("Error cleaning other audio files cache: \(error)")
+            }
+        }
     }
     
     static func databaseCleanUp(_ context: NSManagedObjectContext) {
