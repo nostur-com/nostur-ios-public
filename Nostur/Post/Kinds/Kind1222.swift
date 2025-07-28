@@ -231,8 +231,14 @@ struct VoiceMessagePlayer: View {
         audioObserver = nil
         player = nil
         
-//        // Clean up downloaded file
-//        try? FileManager.default.removeItem(at: fileURL)
+        // Clean up temporary file
+        if fileURL.pathExtension.isEmpty { // with extension if it exists
+            let tempURL = fileURL.appendingPathExtension("m4a")
+            try? FileManager.default.removeItem(at: tempURL)
+        }
+        else {
+            try? FileManager.default.removeItem(at: fileURL)
+        }
     }
     
     private func startProgressTimer() {
@@ -328,7 +334,37 @@ struct VoiceMessagePlayer: View {
                         progressTimer = nil
                     }
                     
-                    let playerItem = AVPlayerItem(url: fileURL)
+                    let playerItem: AVPlayerItem
+                    
+                    if fileURL.pathExtension.isEmpty { // AVPlayer doesn't play files without extension, so just try appending .m4a and it works.
+                        // For files without extension, create a copy with .m4a extension
+                        let tempURL = fileURL.appendingPathExtension("m4a")
+                        
+                        // Try to create a symbolic link or copy the file with the correct extension
+                        do {
+                            // Remove any existing temp file
+                            try? FileManager.default.removeItem(at: tempURL)
+                            
+                            // Try creating a hard link first (most efficient)
+                            do {
+                                try FileManager.default.linkItem(at: fileURL, to: tempURL)
+                                playerItem = AVPlayerItem(url: tempURL)
+                                L.a0.debug("VoiceMessagePlayer: Created hard link for extensionless file")
+                            } catch {
+                                // If hard link fails, try copying the file
+                                try FileManager.default.copyItem(at: fileURL, to: tempURL)
+                                playerItem = AVPlayerItem(url: tempURL)
+                                L.a0.debug("VoiceMessagePlayer: Copied file with .m4a extension")
+                            }
+                        } catch {
+                            // If all else fails, try the original approach
+                            L.a0.debug("VoiceMessagePlayer: Failed to create temp file, using original: \(error)")
+                            playerItem = AVPlayerItem(url: fileURL)
+                        }
+                    } else {
+                        // File has extension, use directly
+                        playerItem = AVPlayerItem(url: fileURL)
+                    }
                     player = AVPlayer(playerItem: playerItem)
                     L.a1.debug("VoiceMessagePlayer.onAppear: Trying to load: \(fileURL)")
                     
