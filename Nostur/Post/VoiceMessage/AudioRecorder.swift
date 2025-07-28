@@ -24,6 +24,7 @@ class AudioRecorder: ObservableObject {
     }
     @Published var recordingSince: Date? = nil
     @Published var duration: TimeInterval = 0
+    private var samplesFromMic: [Float] = []
     @Published var samples: [Int] = []
     @Published var recordingURL: URL?
     @Published var waitingForSamples = false
@@ -39,8 +40,9 @@ class AudioRecorder: ObservableObject {
     }
     
     func startRecording() {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let audioFilename = documentsPath.appendingPathComponent("NIP-A0-\(UUID().uuidString).m4a")
+        let tmpPath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let audioFilename = tmpPath.appendingPathComponent("a0-own-recordings").appendingPathComponent("\(UUID().uuidString).m4a")
+        try? FileManager.default.createDirectory(at: audioFilename.deletingLastPathComponent(), withIntermediateDirectories: true)
         recordingURL = audioFilename
         
         L.a0.debug("AudioRecorder.startRecording() to: \(audioFilename)")
@@ -62,6 +64,7 @@ class AudioRecorder: ObservableObject {
             audioRecorder?.isMeteringEnabled = true // Enable metering for getting audio levels
             audioRecorder?.record()
             isRecording = true
+            samplesFromMic = []
             samples = [] // Reset samples
             L.a0.debug("Recording started")
         } catch {
@@ -83,7 +86,7 @@ class AudioRecorder: ObservableObject {
                 L.a0.debug("Recorded time: \(currentTime.description)")
                 recorder.stop()
                 
-                let samples = (try? await loadAudioSamples(from: recordingURL)) ?? []
+                let samples: [Int] = samplesFromMicToFullIntegers(self.samplesFromMic, limit: DEFAULT_SAMPLE_COUNT)
                 
                 Task { @MainActor in
                     withAnimation {
@@ -108,6 +111,7 @@ class AudioRecorder: ObservableObject {
             waitingForSamples = false
             recordingSince = nil
             duration = 0
+            samplesFromMic = []
             samples = []
         }
         
@@ -121,13 +125,68 @@ class AudioRecorder: ObservableObject {
     func updateWaveform() {
         guard isRecording, let recorder = audioRecorder else { return }
         recorder.updateMeters()
-        let power = recorder.averagePower(forChannel: 0)
-        // Convert decibels to linear scale and append to samples
-        let normalizedValue = pow(10, power / 20)
+        let power = recorder.averagePower(forChannel: 0) // Returns dB, typically -160 to 0
         
+        // Better conversion for voice recordings: clamp and normalize the dB range
+        let clampedPower = max(power, -60.0) // Clamp at -60dB (very quiet)
+        let normalizedValue = (clampedPower + 60.0) / 60.0 // Map -60dB to 0dB -> 0.0 to 1.0
         
-        samples.append(Int(normalizedValue * 100))
+        samplesFromMic.append(normalizedValue)
     }
+}
+
+func samplesFromMicToFullIntegers(_ samples: [Float], limit: Int = 100) -> [Int] {
+    // Take samples, normalize them to full integers
+    
+    // If the number of samples is more than given limit, redistribute the samples to make it fit the limit
+    // this function is used somewhere else to render a waveform, lower limit just means a lower resolution
+    
+    guard !samples.isEmpty else { return [] }
+    
+    let totalSamples = samples.count
+    let samplesPerWindow = max(1, totalSamples / limit)
+    var processedSamples: [Float] = []
+    processedSamples.reserveCapacity(limit)
+    var maxAmplitude: Float = 0
+    
+    // Process samples using peak+RMS windowing for better transient capture
+    for windowIndex in 0..<limit {
+        let startIndex = windowIndex * samplesPerWindow
+        let endIndex = min(startIndex + samplesPerWindow, totalSamples)
+        
+        guard startIndex < totalSamples else { break }
+        
+        // Calculate peak and RMS for this window
+        var sumSquares: Float = 0
+        var peakValue: Float = 0
+        let windowSize = endIndex - startIndex
+        
+        for i in startIndex..<endIndex {
+            let sample = abs(samples[i])
+            sumSquares += sample * sample
+            peakValue = max(peakValue, sample)
+        }
+        
+        let rms = sqrt(sumSquares / Float(windowSize))
+        // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
+        let combinedValue = (peakValue * 0.7) + (rms * 0.3)
+        processedSamples.append(combinedValue)
+        maxAmplitude = max(maxAmplitude, combinedValue)
+    }
+    
+    // Normalize to integers 0-100 optimized for voice recordings
+    let normalizedSamples = processedSamples.map { sample in
+        guard maxAmplitude > 0 else { return 0 }
+        // Normalize to 0-1 range first
+        let normalized = sample / maxAmplitude
+        // Use gentler power scaling for natural voice dynamics
+        let powerScaled = pow(normalized, 0.75) // Less aggressive expansion
+        // Apply conservative scaling to preserve natural dynamics
+        let scaled = max(powerScaled * 0.85, normalized * 0.15) // 0.85x scaling with 0.15x minimum
+        return min(Int(scaled * 100), 100) // Convert to Int 0-100 range
+    }
+    
+    return normalizedSamples
 }
 
 struct AudioRecorderContentView: View {
@@ -136,7 +195,7 @@ struct AudioRecorderContentView: View {
     private var vm: NewPostModel
     @ObservedObject var typingTextModel: TypingTextModel
     @State var isTooLong = false
-    let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
+    let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
     private var onDismiss: () -> Void
     private var replyTo: ReplyTo? = nil
     
@@ -226,9 +285,9 @@ struct AudioRecorderContentView: View {
                         isTooLong = true
                     }
             }
-//            if recorder.isRecording {
-//                recorder.updateWaveform()
-//            }
+            if recorder.isRecording {
+                recorder.updateWaveform()
+            }
         }
         
         .toolbar {
