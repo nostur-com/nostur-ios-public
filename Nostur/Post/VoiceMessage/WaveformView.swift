@@ -447,18 +447,28 @@ struct WaveformShape: Shape {
             return path
         }
         
-        let barWidth: CGFloat = 4
-        let spacing: CGFloat = 2
-        let totalBarWidth = barWidth + spacing
-        let maxBars = max(Int(width / totalBarWidth), 20)
-        let step = max(1, sampleCount / maxBars)
-        let maxBarExtent: CGFloat = height / 2
+        let minBars = 30 // Minimum number of bars to show for visual appeal
+        let barWidth: CGFloat = 3
+        let spacing: CGFloat = 1.5
         
-        for i in 0..<min(sampleCount, maxBars) {
-            let sampleIndex = i * step
+        // Calculate how many bars we want to draw based on available width
+        // But ensure we have at least minBars for good visual appearance
+        let availableBarsFromWidth = max(Int(width / (barWidth + spacing)), minBars)
+        let barsToRender = max(min(sampleCount, availableBarsFromWidth), minBars)
+        
+        // Calculate actual spacing to distribute bars evenly across full width
+        let totalBarsWidth = CGFloat(barsToRender) * barWidth
+        let totalSpacing = width - totalBarsWidth
+        let actualSpacing = barsToRender > 1 ? totalSpacing / CGFloat(barsToRender - 1) : 0
+        
+        let maxBarExtent: CGFloat = height / 2
+        let step = max(1, sampleCount / barsToRender)
+        
+        for i in 0..<barsToRender {
+            let sampleIndex = min(i * step, sampleCount - 1)
             let amplitude = CGFloat(max(1, samples[sampleIndex])) / 100.0 // Convert from 0-100 to 0.0-1.0, minimum 0.01 so line is always visible
             let barExtent = amplitude * maxBarExtent
-            let x = CGFloat(i) * totalBarWidth
+            let x = CGFloat(i) * (barWidth + actualSpacing)
             let y = height / 2
             
             path.addRoundedRect(
