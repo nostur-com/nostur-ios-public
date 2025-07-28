@@ -40,7 +40,7 @@ class AudioRecorder: ObservableObject {
     
     func startRecording() {
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let audioFilename = documentsPath.appendingPathComponent("NIP-A1-\(UUID().uuidString).m4a")
+        let audioFilename = documentsPath.appendingPathComponent("NIP-A0-\(UUID().uuidString).m4a")
         recordingURL = audioFilename
         
         L.a0.debug("AudioRecorder.startRecording() to: \(audioFilename)")

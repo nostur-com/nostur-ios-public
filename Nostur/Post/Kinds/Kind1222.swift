@@ -306,12 +306,12 @@ struct VoiceMessagePlayer: View {
         .onAppear {
             Task {
                 if let samples {
-                    L.a1.debug("VoiceMessagePlayer.onAppear: samples: \(samples.count)")
+                    L.a0.debug("VoiceMessagePlayer.onAppear: samples: \(samples.count)")
                     self._samples = samples
                 }
                 else {
                     Task.detached(priority: .userInitiated) {
-                        L.a1.debug("VoiceMessagePlayer.onAppear: loadAudioSamples(from: \(fileURL)")
+                        L.a0.debug("VoiceMessagePlayer.onAppear: loadAudioSamples(from: \(fileURL)")
                         let samples = (try? await loadAudioSamples(from: fileURL)) ?? []
                         Task { @MainActor in
                             self._samples = samples
@@ -366,7 +366,7 @@ struct VoiceMessagePlayer: View {
                         playerItem = AVPlayerItem(url: fileURL)
                     }
                     player = AVPlayer(playerItem: playerItem)
-                    L.a1.debug("VoiceMessagePlayer.onAppear: Trying to load: \(fileURL)")
+                    L.a0.debug("VoiceMessagePlayer.onAppear: Trying to load: \(fileURL)")
                     
                     audioObserver?.addFinishObserver(to: player!)
                     
@@ -399,7 +399,7 @@ struct VoiceMessagePlayer: View {
                     
                 } catch {
                     errorMessage = "Failed to load audio: \(error.localizedDescription)"
-                    L.a1.error("VoiceMessagePlayer.onAppear: Failed to load audio: \(error.localizedDescription)")
+                    L.a0.error("VoiceMessagePlayer.onAppear: Failed to load audio: \(error.localizedDescription)")
                 }
             }
         }
