@@ -128,15 +128,19 @@ struct Entry: View {
                 highlightRules: NewPostModel.rules,
                 photoPickerTapped: {
                     photoPickerShown = true
+                    showVoiceRecorderButton = false
                 },
                 videoPickerTapped: {
                     videoPickerShown = true
+                    showVoiceRecorderButton = false
                 },
                 gifsTapped: {
                     gifSheetShown = true
+                    showVoiceRecorderButton = false
                 },
                 cameraTapped: {
                     cameraSheetShown = true
+                    showVoiceRecorderButton = false
                 },
                 nestsTapped: {
                     onDismiss()
@@ -333,6 +337,25 @@ struct Entry: View {
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
+        }
+        
+        // Hide voice recording button if not supported
+        .onAppear {
+            if let replyTo, (replyTo.nrPost.kind != 1222 && replyTo.nrPost.kind != 1244) {
+                showVoiceRecorderButton = false
+            }
+            else if quotePost != nil {
+                showVoiceRecorderButton = false
+            }
+            else if typingTextModel.text != "" {
+                showVoiceRecorderButton = false
+            }
+        }
+        .onChange(of: typingTextModel.text) { newText in
+            guard showVoiceRecorderButton else { return }
+            if !newText.isEmpty {
+                showVoiceRecorderButton = false
+            }
         }
     }
 }

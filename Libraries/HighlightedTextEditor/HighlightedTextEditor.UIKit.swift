@@ -201,8 +201,13 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         uiView.backgroundColor = text.isEmpty ? UIColor.clear : UIColor(Themes.default.theme.listBackground)
         
-        if showVoiceRecorderButton != context.coordinator.isShowingVoiceRecorderButton {
-            makeToolbar(textView, context: context)
+        // Only turn off, never turn on
+        if !showVoiceRecorderButton && context.coordinator.isShowingVoiceRecorderButton {
+            makeToolbar(uiView, context: context)
+            context.coordinator.isShowingVoiceRecorderButton = false
+            
+            // Force the text view to reload its input accessory view or button doesn't go away
+            uiView.reloadInputViews()
         }
         
         let highlightedText = HighlightedTextEditor.getHighlightedText(
@@ -243,16 +248,16 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         var barButtons: [UIBarButtonItem] = []
         
         if showVoiceRecorderButton {
-            let nestsButton = UIButton(type: .system)
-            nestsButton.setImage(UIImage(systemName: "mic"), for: .normal)
-            nestsButton.tintColor = UIColor(Themes.default.theme.accent)
-            nestsButton.addTarget(self, action: #selector(textView.voiceMessageTapped), for: .touchUpInside)
-            let nests = UIBarButtonItem(customView: nestsButton)
+            let voiceRecordingButton = UIButton(type: .system)
+            voiceRecordingButton.setImage(UIImage(systemName: "mic"), for: .normal)
+            voiceRecordingButton.tintColor = UIColor(Themes.default.theme.accent)
+            voiceRecordingButton.addTarget(self, action: #selector(textView.voiceMessageTapped), for: .touchUpInside)
+            let voiceRecording = UIBarButtonItem(customView: voiceRecordingButton)
             
             if barButtons.count != 0 {
                 barButtons.append(fixedSpace)
             }
-            barButtons.append(nests)
+            barButtons.append(voiceRecording)
         }
         
         if kind != .picture && kind != .highlight {
@@ -323,15 +328,13 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         barButtons.append(flexibleSpace) // last
         
         doneToolbar.setItems(barButtons, animated: false)
-            
-      
-
-        textView.inputAccessoryView = doneToolbar
+        
+        uiView.inputAccessoryView = doneToolbar
     }
     
     public final class Coordinator: NSObject, UITextViewDelegate, PastedMediaDelegate {
         
-        var isShowingVoiceRecorderButton = false
+        var isShowingVoiceRecorderButton = true
         
         func didPasteImage(_ image: UIImage) {
             if let gifData = image.gifData() {
