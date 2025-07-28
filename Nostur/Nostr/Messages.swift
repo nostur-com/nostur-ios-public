@@ -117,13 +117,6 @@ public struct RequestMessage {
 """
     }
     
-    // FETCH A SINGLE EVENT AND REFERENCES
-    static func getEventAndReferences(id:String, subscriptionId:String? = nil) -> String {
-        return """
-["REQ", "\(subscriptionId ?? ("ER-"+UUID().uuidString))", {"ids": ["\(id)"]}, {"#e": ["\(id)"]}]
-"""
-    }
-    
     // For fetching any "global" feed events on a relay
     static func getGlobalFeedEvents(limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
         let sub = subscriptionId ?? ("G-"+UUID().uuidString)

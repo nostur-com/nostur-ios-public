@@ -147,7 +147,9 @@ struct NotificationsZaps: View {
     }
     
     private func fetchNewer() {
+#if DEBUG
         L.og.debug("🥎🥎 fetchNewer() (ZAPS)")
+#endif
         let fetchNewerTask = ReqTask(
             reqCommand: { taskId in
                 bg().perform {

@@ -117,7 +117,9 @@ struct NotificationsReposts: View {
     }
     
     private func fetchNewer() {
+#if DEBUG
         L.og.debug("🥎🥎 fetchNewer() (REPOSTS)")
+#endif
         let fetchNewerTask = ReqTask(
             reqCommand: { taskId in
                 bg().perform {

@@ -186,6 +186,8 @@ struct Kind30023: View {
                         req(message)
                     }
                     
+                    
+                    
                     // Fetch all that reference this detail note (Replies, zaps, reactions) - E:
                     req(RM.getEventReferences(ids: [nrPost.id], subscriptionId: "DETAIL-"+UUID().uuidString))
                     // Same but use the a-tag (proper) // TODO: when other clients handle replies to ParaReplaceEvents properly we can remove the old E fetching

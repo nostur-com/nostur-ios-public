@@ -113,7 +113,9 @@ struct PostZaps: View {
     }
     
     private func fetchNewer() {
+#if DEBUG
         L.og.debug("🥎🥎 fetchNewer() (POST ZAPS)")
+#endif
         let fetchNewerTask = ReqTask(
             reqCommand: { taskId in
                 bg().perform {

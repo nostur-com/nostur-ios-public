@@ -87,7 +87,9 @@ struct PostReactions: View {
     }
     
     private func fetchNewer() {
+#if DEBUG
         L.og.debug("🥎🥎 fetchNewer() (POST REACTIONS)")
+#endif
         let fetchNewerTask = ReqTask(
             reqCommand: { taskId in
                 bg().perform {

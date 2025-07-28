@@ -31,9 +31,9 @@ class AudioRecorder: ObservableObject {
     func requestPermission() {
         audioSession.requestRecordPermission { granted in
             if granted {
-                L.a1.debug("Microphone permission granted")
+                L.a0.debug("Microphone permission granted")
             } else {
-                L.a1.error("Microphone permission denied")
+                L.a0.error("Microphone permission denied")
             }
         }
     }
@@ -43,7 +43,7 @@ class AudioRecorder: ObservableObject {
         let audioFilename = documentsPath.appendingPathComponent("NIP-A1-\(UUID().uuidString).m4a")
         recordingURL = audioFilename
         
-        L.a1.debug("AudioRecorder.startRecording() to: \(audioFilename)")
+        L.a0.debug("AudioRecorder.startRecording() to: \(audioFilename)")
         
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -63,14 +63,14 @@ class AudioRecorder: ObservableObject {
             audioRecorder?.record()
             isRecording = true
             samples = [] // Reset samples
-            L.a1.debug("Recording started")
+            L.a0.debug("Recording started")
         } catch {
-            L.a1.error("Failed to start recording: \(error.localizedDescription) - \(audioFilename)")
+            L.a0.error("Failed to start recording: \(error.localizedDescription) - \(audioFilename)")
         }
     }
     
     func stopRecording() {
-        L.a1.debug("AudioRecorder.stopRecording()")
+        L.a0.debug("AudioRecorder.stopRecording()")
         Task { @MainActor in
             waitingForSamples = true
             isRecording = false
@@ -80,7 +80,7 @@ class AudioRecorder: ObservableObject {
         if let recordingURL {
             Task.detached(priority: .userInitiated) {
                 let currentTime = recorder.currentTime
-                L.a1.debug("Recorded time: \(currentTime.description)")
+                L.a0.debug("Recorded time: \(currentTime.description)")
                 recorder.stop()
                 
                 let samples = (try? await loadAudioSamples(from: recordingURL)) ?? []
@@ -92,10 +92,10 @@ class AudioRecorder: ObservableObject {
                         self.samples = samples
                         
                         
-                        L.a1.debug("Recording stopped - Duration: \(self.duration) seconds")
-                        L.a1.debug("Recording stopped - Samples: \(samples)")
+                        L.a0.debug("Recording stopped - Duration: \(self.duration) seconds")
+                        L.a0.debug("Recording stopped - Samples: \(samples)")
                     }
-                    L.a1.debug("self.audioSession.setActive(false)")
+                    L.a0.debug("self.audioSession.setActive(false)")
                     try? self.audioSession.setActive(false)
                 }
             }
