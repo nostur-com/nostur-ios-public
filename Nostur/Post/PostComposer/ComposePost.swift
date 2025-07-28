@@ -91,13 +91,14 @@ struct ComposePost: View {
                                     .font(.footnote)
                                     .foregroundStyle(theme.secondary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                    .offset(x: 5.0, y: 4.0)
                             }
                         }
                         .padding(.top, 10)
                         
                         Spacer()
                         
-                        AudioRecorderContentView(vm: vm, onDismiss: { onDismiss() })
+                        AudioRecorderContentView(vm: vm, replyTo: replyTo, onDismiss: { onDismiss() })
                             .frame(maxWidth: .infinity, alignment: .center)
                             .toolbar {
                                 ToolbarItem(placement: .navigationBarLeading) {
@@ -112,14 +113,17 @@ struct ComposePost: View {
                             .background(theme.listBackground)
                     }
                     .onAppear {
-                        var voiceMessageEvent = NEvent(content: "")
-                        if let replyTo, (replyTo.nrPost.kind == 1222 || replyTo.nrPost.kind == 1244) {
-                            voiceMessageEvent.kind = .shortVoiceMessageComment
-                        }
-                        else {
+                        // Only ROOT voice message here. (reply voice message is created when .loadReplyTo() is called)
+                        
+                        
+                        if replyTo == nil {
+                            var voiceMessageEvent = NEvent(content: "")
                             voiceMessageEvent.kind = .shortVoiceMessage
+                            vm.nEvent = voiceMessageEvent
                         }
-                        vm.nEvent = voiceMessageEvent
+                        else { // Voice comment to other kind??? hmm lets try
+                            vm.nEvent?.kind = .shortVoiceMessageComment
+                        }
                     }
                 }
                 else {

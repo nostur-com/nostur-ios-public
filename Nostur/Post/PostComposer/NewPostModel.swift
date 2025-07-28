@@ -673,6 +673,11 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["q", qTag]))
         }
         
+        if let replyTo, NIP22_COMMENT_KINDS.contains(nEvent.kind.id) { // NIP-22 COMMENT HANDLING
+            nEvent = addRootScopeTags(nEvent: nEvent, replyTo: replyTo)
+            nEvent = addReplyToTags(nEvent: nEvent, replyTo: replyTo)
+        }
+        
         if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
             content = replaceNsecWithHunter2(content)
         }
@@ -823,7 +828,13 @@ public final class NewPostModel: ObservableObject {
     func loadReplyTo(_ replyTo: ReplyTo) {
         requiredP = replyTo.nrPost.pubkey
         var newReply = NEvent(content: typingTextModel.text)
-        if replyTo.nrPost.kind == 1222 || replyTo.nrPost.kind == 1244 {
+        
+        // TODO: enable 1111 for 20,30023 after a few months
+//        if Set([20,30023]).contains(replyTo.nrPost.kind) {
+//            newReply.kind = .comment
+//        }
+//        else if Set([1222,1244]).contains(replyTo.nrPost.kind) {
+        if Set([1222,1244]).contains(replyTo.nrPost.kind) {
             newReply.kind = .shortVoiceMessageComment
         }
         else {
@@ -848,30 +859,33 @@ public final class NewPostModel: ObservableObject {
                 self.typingTextModel.selectedMentions = Set([replyToNrContact].compactMap { $0 } + availableContacts)
             }
             
-            let root = TagsHelpers(replyToEvent.tags()).replyToRootEtag()
-            
-            if (root != nil) { // ADD "ROOT" + "REPLY"
-                let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
-                newReply.tags.append(newRootTag)
+            if !NIP22_COMMENT_KINDS.contains(newReply.kind.id) { // Original NIP-10 root/reply handling for non-NIP-22 kinds
+                        
+                let root = TagsHelpers(replyToEvent.tags()).replyToRootEtag()
                 
-                let newReplyTag = NostrTag(["e", replyToEvent.id, "", "reply"])
+                if (root != nil) { // ADD "ROOT" + "REPLY"
+                    let newRootTag = NostrTag(["e", root!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+                    newReply.tags.append(newRootTag)
+                    
+                    let newReplyTag = NostrTag(["e", replyToEvent.id, "", "reply"])
+                    
+                    newReply.tags.append(newReplyTag)
+                }
+                else { // ADD ONLY "ROOT"
+                    let newRootTag = NostrTag(["e", replyToEvent.id, "", "root"])
+                    newReply.tags.append(newRootTag)
+                }
                 
-                newReply.tags.append(newReplyTag)
-            }
-            else { // ADD ONLY "ROOT"
-                let newRootTag = NostrTag(["e", replyToEvent.id, "", "root"])
-                newReply.tags.append(newRootTag)
-            }
-            
-            let rootA = replyToEvent.toNEvent().replyToRootAtag()
-            
-            if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
-                let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
-                newReply.tags.append(newRootATag)
-            }
-            else if replyToEvent.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
-                let newRootTag = NostrTag(["a", replyToEvent.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
-                newReply.tags.append(newRootTag)
+                let rootA = replyToEvent.toNEvent().replyToRootAtag()
+                
+                if (rootA != nil) { // ADD EXISTING "ROOT" (aTag) FROM REPLYTO
+                    let newRootATag = NostrTag(["a", rootA!.tag[1], "", "root"]) // TODO RECOMMENDED RELAY HERE
+                    newReply.tags.append(newRootATag)
+                }
+                else if replyToEvent.kind == 30023 { // ADD ONLY "ROOT" (aTag) (DIRECT REPLY TO ARTICLE)
+                    let newRootTag = NostrTag(["a", replyToEvent.aTag, "", "root"]) // TODO RECOMMENDED RELAY HERE
+                    newReply.tags.append(newRootTag)
+                }
             }
 
             Task { @MainActor in
@@ -1112,4 +1126,79 @@ public func prepareUploadItems(pubkey: String, images: [PostedImageMeta] = [], v
 public enum UploadMethod {
     case nip96(URL) // URL = nip96apiURL
     case blossom
+}
+
+
+// All reply or comment kinds that should use NIP-22
+let NIP22_COMMENT_KINDS: Set<Int> = [1111,1244] // default and voice message comment
+
+// All roots that use NIP22 replies/comments
+let NIP22_ROOT_KINDS: Set<Int> = [1222,20,30023] // voice messages / pictures / articles
+
+// NIP-22
+// Comments MUST point to the root scope using uppercase tag names (e.g. K, E, A or I)
+func addRootScopeTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
+    var nEvent = input
+    
+    // Tags K MUST be present to define the event kind of the root item.
+    
+    // When replying to a reply, we may not have or know the root K/P/E/A. But that reply should already have it, so we take that
+    if NIP22_COMMENT_KINDS.contains(Int(replyTo.nrPost.kind)) {
+        if let rootK = replyTo.nrPost.fastTags.first(where: { $0.0 == "K" }) {
+            nEvent.tags.append(NostrTag(["K", rootK.1]))
+        }
+        if let rootP = replyTo.nrPost.fastTags.first(where: { $0.0 == "P" }) {
+            nEvent.tags.append(NostrTag(["P", rootP.1]))
+        }
+        
+        
+        // Add E or A, but not both
+        if let rootE = replyTo.nrPost.fastTags.first(where: { $0.0 == "E" }) {
+            nEvent.tags.append(NostrTag(["E", rootE.1]))
+        }
+        else if let rootA = replyTo.nrPost.fastTags.first(where: { $0.0 == "A" }) {
+            nEvent.tags.append(NostrTag(["A", rootA.1]))
+        }
+    }
+    else if !NIP22_COMMENT_KINDS.contains(Int(replyTo.nrPost.kind)) { // probably replying to a ROOT
+        nEvent.tags.append(NostrTag(["K", String(replyTo.nrPost.kind)]))
+        nEvent.tags.append(NostrTag(["P", replyTo.nrPost.pubkey]))
+        
+        
+        // Add A or E, but not both
+        let relayHint: String? = resolveRelayHint(forPubkey: replyTo.nrPost.pubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
+        if (replyTo.nrPost.kind >= 30000 && replyTo.nrPost.kind < 40000) {
+            nEvent.tags.append(NostrTag(["A", replyTo.nrPost.aTag, relayHint ?? "", replyTo.nrPost.pubkey]))
+        }
+        else {
+            nEvent.tags.append(NostrTag(["E", replyTo.nrPost.id, relayHint ?? "", replyTo.nrPost.pubkey]))
+        }
+    }
+    
+    return nEvent
+}
+
+// and MUST point to the parent item with lowercase ones (e.g. k, e, a or i).
+func addReplyToTags(nEvent input: NEvent, replyTo: ReplyTo) -> NEvent {
+    var nEvent = input
+    
+    // Tags k MUST be present to define the event kind of the parent items.
+    nEvent.tags.append(NostrTag(["k", String(replyTo.nrPost.kind)]))
+    
+    // Comments MUST point to the authors when one is available (i.e. tagging a nostr event). p for the author of the parent item.
+    if !nEvent.pTags().contains(replyTo.nrPost.pubkey) {
+        nEvent.tags.append(NostrTag(["p", replyTo.nrPost.pubkey]))
+    }
+    
+    let relayHint: String? = resolveRelayHint(forPubkey: replyTo.nrPost.pubkey, receivedFromRelays: replyTo.nrPost.footerAttributes.relays).first
+    
+    // Add a (in addition to e)
+    if (replyTo.nrPost.kind >= 30000 && replyTo.nrPost.kind < 40000) {
+        nEvent.tags.append(NostrTag(["a", replyTo.nrPost.aTag, relayHint ?? "", replyTo.nrPost.pubkey]))
+    }
+    
+    nEvent.tags.append(NostrTag(["e", replyTo.nrPost.id, relayHint ?? "", replyTo.nrPost.pubkey]))
+    
+    
+    return nEvent
 }
