@@ -40,6 +40,15 @@ class AudioRecorder: ObservableObject {
     }
     
     func startRecording() {
+        // Check permissions first
+        let permissionStatus = audioSession.recordPermission
+        L.a0.debug("AudioRecorder: Current permission status: \(permissionStatus.rawValue)")
+        
+        guard permissionStatus == .granted else {
+            L.a0.error("AudioRecorder: Recording permission not granted")
+            return
+        }
+        
         let tmpPath = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         let audioFilename = tmpPath.appendingPathComponent("a0-own-recordings").appendingPathComponent("\(UUID().uuidString).m4a")
         try? FileManager.default.createDirectory(at: audioFilename.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -58,8 +67,33 @@ class AudioRecorder: ObservableObject {
         ] as [String : Any]
         
         do {
+            // Platform-specific audio session configuration
+            #if targetEnvironment(macCatalyst)
+            // macOS Catalyst needs different audio session setup
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.allowBluetooth, .allowBluetoothA2DP])
+            L.a0.debug("AudioRecorder: Using macOS Catalyst audio session configuration")
+            
+//            // Try to set preferred input
+//            if let availableInputs = audioSession.availableInputs {
+//                L.a0.debug("AudioRecorder: Available inputs: \(availableInputs.map { $0.portName })")
+//                for input in availableInputs {
+//                    if input.portType == .builtInMic {
+//                        try audioSession.setPreferredInput(input)
+//                        L.a0.debug("AudioRecorder: Set preferred input to built-in mic: \(input.portName)")
+//                        break
+//                    }
+//                }
+//            } else {
+//                L.a0.debug("AudioRecorder: No available inputs found")
+//            }
+            #else
+            // iOS configuration
             try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            L.a0.debug("AudioRecorder: Using iOS audio session configuration")
+            #endif
+            
             try audioSession.setActive(true)
+    
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
             audioRecorder?.isMeteringEnabled = true // Enable metering for getting audio levels
             audioRecorder?.record()
@@ -80,7 +114,7 @@ class AudioRecorder: ObservableObject {
         }
         guard let recorder = audioRecorder else { return }
         
-        if let recordingURL {
+        if recordingURL != nil {
             Task.detached(priority: .userInitiated) {
                 let currentTime = recorder.currentTime
                 L.a0.debug("Recorded time: \(currentTime.description)")

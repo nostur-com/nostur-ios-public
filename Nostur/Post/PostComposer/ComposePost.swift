@@ -82,7 +82,7 @@ struct ComposePost: View {
                             }).equatable()
                             
                             VStack(alignment: .leading, spacing: 3) {
-                                if let replyTo {
+                                if replyTo != nil {
                                     ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $vm.typingTextModel.selectedMentions, unselected: $vm.typingTextModel.unselectedMentions)
                                         .offset(x: 5.0, y: 4.0)
                                 }
