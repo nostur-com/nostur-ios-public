@@ -491,11 +491,8 @@ func parseVoiceMessageIMeta(_ tag: FastTag) -> ([Int]?, Int?) {
     for field in [tag.2, tag.3, tag.4, tag.5, tag.6, tag.7, tag.8, tag.9] {
         guard let value = field else { continue }
         let components = value.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
-        print("a0 components: \(components)")
         guard let key = components.first else { continue }
-        print("a0 key: \(key)")
         guard let value = components.dropFirst().first else { continue }
-        print("a0 value: \(value)")
         
         switch key {
         case "waveform":
