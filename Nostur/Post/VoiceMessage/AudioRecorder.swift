@@ -181,7 +181,6 @@ func samplesFromMicToFullIntegers(_ samples: [Float], limit: Int = 100) -> [Int]
     let samplesPerWindow = max(1, totalSamples / limit)
     var processedSamples: [Float] = []
     processedSamples.reserveCapacity(limit)
-    var maxAmplitude: Float = 0
     
     // Process samples using peak+RMS windowing for better transient capture
     for windowIndex in 0..<limit {
@@ -205,19 +204,17 @@ func samplesFromMicToFullIntegers(_ samples: [Float], limit: Int = 100) -> [Int]
         // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
         let combinedValue = (peakValue * 0.7) + (rms * 0.3)
         processedSamples.append(combinedValue)
-        maxAmplitude = max(maxAmplitude, combinedValue)
     }
     
-    // Normalize to integers 0-100 optimized for voice recordings
+    // Create proper dynamic range for voice recognition
     let normalizedSamples = processedSamples.map { sample in
-        guard maxAmplitude > 0 else { return 0 }
-        // Normalize to 0-1 range first
-        let normalized = sample / maxAmplitude
-        // Use gentler power scaling for natural voice dynamics
-        let powerScaled = pow(normalized, 0.75) // Less aggressive expansion
-        // Apply conservative scaling to preserve natural dynamics
-        let scaled = max(powerScaled * 0.85, normalized * 0.15) // 0.85x scaling with 0.15x minimum
-        return min(Int(scaled * 100), 100) // Convert to Int 0-100 range
+        // Scale to reasonable range for voice (samples are already 0.0-1.0 from updateWaveform)
+        let scaled = sample * 80.0 // Scale to 0-80 range to avoid saturation
+        
+        // Add minimum threshold to show quiet parts
+        let withFloor = max(scaled, sample > 0.05 ? 5.0 : 0.0) // 5% minimum for audible parts
+        
+        return min(Int(withFloor), 100)
     }
     
     return normalizedSamples
