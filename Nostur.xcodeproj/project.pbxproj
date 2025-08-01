@@ -18,8 +18,15 @@
 		1F75257A29962AA300477AF2 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1F75257929962AA300477AF2 /* NukeUI */; };
 		1F77AD0B2A42133000585E12 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1F77AD0A2A42133000585E12 /* MarkdownUI */; };
 		1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B21902AE3D6C000CE972E /* NostrEssentials */; };
-		1F7D18AF2E3D116B00395289 /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7D18AE2E3D116B00395289 /* FFmpeg-iOS */; };
-		1F7D1E1A2E3D174D00395289 /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7D1E192E3D174D00395289 /* FFmpeg-iOS */; };
+		1F7D28BA2E3D370700395289 /* avcodec.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B22E3D370700395289 /* avcodec.xcframework */; };
+		1F7D28BB2E3D370700395289 /* avformat.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B52E3D370700395289 /* avformat.xcframework */; };
+		1F7D28BC2E3D370700395289 /* avutil.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B62E3D370700395289 /* avutil.xcframework */; };
+		1F7D28BD2E3D370700395289 /* swscale.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B92E3D370700395289 /* swscale.xcframework */; };
+		1F7D28BE2E3D370700395289 /* swresample.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B82E3D370700395289 /* swresample.xcframework */; };
+		1F7D28BF2E3D370700395289 /* avfilter.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B42E3D370700395289 /* avfilter.xcframework */; };
+		1F7D28C02E3D370700395289 /* fftools.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B72E3D370700395289 /* fftools.xcframework */; };
+		1F7D28C12E3D370700395289 /* avdevice.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7D28B32E3D370700395289 /* avdevice.xcframework */; };
+		1F7D28C42E3D374200395289 /* FFmpeg-iOS-Support in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7D28C32E3D374200395289 /* FFmpeg-iOS-Support */; };
 		1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1F91D8F52A17C55F00C419A3 /* Collections */; };
 		1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */; };
 		1FA97AA62C3F61480091446A /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA97AA52C3F61480091446A /* LiveKit */; };
@@ -93,6 +100,14 @@
 		1F18035C2C381D570025227E /* NostrEssentials.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = NostrEssentials.xctestplan; sourceTree = "<group>"; };
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
 		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
+		1F7D28B22E3D370700395289 /* avcodec.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = avcodec.xcframework; sourceTree = "<group>"; };
+		1F7D28B32E3D370700395289 /* avdevice.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = avdevice.xcframework; sourceTree = "<group>"; };
+		1F7D28B42E3D370700395289 /* avfilter.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = avfilter.xcframework; sourceTree = "<group>"; };
+		1F7D28B52E3D370700395289 /* avformat.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = avformat.xcframework; sourceTree = "<group>"; };
+		1F7D28B62E3D370700395289 /* avutil.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = avutil.xcframework; sourceTree = "<group>"; };
+		1F7D28B72E3D370700395289 /* fftools.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = fftools.xcframework; sourceTree = "<group>"; };
+		1F7D28B82E3D370700395289 /* swresample.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = swresample.xcframework; sourceTree = "<group>"; };
+		1F7D28B92E3D370700395289 /* swscale.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = swscale.xcframework; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
 		1FB4132B2D9C544B0069936C /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		1FB448BA2965F3D000038671 /* Nostur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nostur.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -137,10 +152,8 @@
 				1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */,
-				1F7D1E1A2E3D174D00395289 /* FFmpeg-iOS in Frameworks */,
 				1FB4132C2D9C544C0069936C /* CloudKit.framework in Frameworks */,
 				1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */,
-				1F7D18AF2E3D116B00395289 /* FFmpeg-iOS in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
@@ -148,6 +161,15 @@
 				1F75257629962AA300477AF2 /* Nuke in Frameworks */,
 				1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */,
 				1F747A102B3F1E9D0020F4A5 /* RepresentableKit in Frameworks */,
+				1F7D28BA2E3D370700395289 /* avcodec.xcframework in Frameworks */,
+				1F7D28BB2E3D370700395289 /* avformat.xcframework in Frameworks */,
+				1F7D28BC2E3D370700395289 /* avutil.xcframework in Frameworks */,
+				1F7D28BD2E3D370700395289 /* swscale.xcframework in Frameworks */,
+				1F7D28C42E3D374200395289 /* FFmpeg-iOS-Support in Frameworks */,
+				1F7D28BE2E3D370700395289 /* swresample.xcframework in Frameworks */,
+				1F7D28BF2E3D370700395289 /* avfilter.xcframework in Frameworks */,
+				1F7D28C02E3D370700395289 /* fftools.xcframework in Frameworks */,
+				1F7D28C12E3D370700395289 /* avdevice.xcframework in Frameworks */,
 				1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
@@ -179,6 +201,14 @@
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F7D28B22E3D370700395289 /* avcodec.xcframework */,
+				1F7D28B32E3D370700395289 /* avdevice.xcframework */,
+				1F7D28B42E3D370700395289 /* avfilter.xcframework */,
+				1F7D28B52E3D370700395289 /* avformat.xcframework */,
+				1F7D28B62E3D370700395289 /* avutil.xcframework */,
+				1F7D28B72E3D370700395289 /* fftools.xcframework */,
+				1F7D28B82E3D370700395289 /* swresample.xcframework */,
+				1F7D28B92E3D370700395289 /* swscale.xcframework */,
 				1FB4132B2D9C544B0069936C /* CloudKit.framework */,
 				1FBCD61B2CAAB127008258C3 /* XCTest.framework */,
 				1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */,
@@ -258,8 +288,7 @@
 				1FA97AA52C3F61480091446A /* LiveKit */,
 				1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */,
 				1F3C8B742D22D175008231A9 /* secp256k1 */,
-				1F7D18AE2E3D116B00395289 /* FFmpeg-iOS */,
-				1F7D1E192E3D174D00395289 /* FFmpeg-iOS */,
+				1F7D28C32E3D374200395289 /* FFmpeg-iOS-Support */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -394,7 +423,7 @@
 				1FA97AA42C3F61480091446A /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 				1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */,
 				1F3C8B732D22D175008231A9 /* XCRemoteSwiftPackageReference "secp256k1" */,
-				1F7D1E182E3D174D00395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */,
+				1F7D28C22E3D374200395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS-Support" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -963,12 +992,12 @@
 				revision = 8f3768f98c75b3fd2e3e45ae330823749f80548c;
 			};
 		};
-		1F7D1E182E3D174D00395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */ = {
+		1F7D28C22E3D374200395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS-Support" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/fabianfabian/FFmpeg-iOS";
+			repositoryURL = "https://github.com/kewlbear/FFmpeg-iOS-Support";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = revision;
+				revision = be3bd9149ac53760e8725652eee99c405b2be47a;
 			};
 		};
 		1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */ = {
@@ -1072,14 +1101,10 @@
 			package = 1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */;
 			productName = NostrEssentials;
 		};
-		1F7D18AE2E3D116B00395289 /* FFmpeg-iOS */ = {
+		1F7D28C32E3D374200395289 /* FFmpeg-iOS-Support */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = "FFmpeg-iOS";
-		};
-		1F7D1E192E3D174D00395289 /* FFmpeg-iOS */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1F7D1E182E3D174D00395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */;
-			productName = "FFmpeg-iOS";
+			package = 1F7D28C22E3D374200395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS-Support" */;
+			productName = "FFmpeg-iOS-Support";
 		};
 		1F91D8F52A17C55F00C419A3 /* Collections */ = {
 			isa = XCSwiftPackageProductDependency;
