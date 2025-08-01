@@ -90,7 +90,6 @@
 /* Begin PBXFileReference section */
 		1F06D2D92A584318007B9373 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Themes.xcassets; sourceTree = "<group>"; };
-		1F18035C2C381D570025227E /* NostrEssentials.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = NostrEssentials.xctestplan; sourceTree = "<group>"; };
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
 		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -198,7 +197,6 @@
 				1F9D69D82A3077F400628460 /* Config.xcconfig */,
 				1FB448C62965F3D200038671 /* Assets.xcassets */,
 				1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */,
-				1F18035C2C381D570025227E /* NostrEssentials.xctestplan */,
 				1FCEDD382D68914600587618 /* Highlight with Nostur */,
 				1FBCD6132CAAB112008258C3 /* NosturTests */,
 				1FB448BB2965F3D000038671 /* Products */,
