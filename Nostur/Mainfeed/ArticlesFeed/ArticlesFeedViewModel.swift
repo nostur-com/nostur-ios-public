@@ -252,6 +252,7 @@ class ArticlesFeedViewModel: ObservableObject {
     }
     
     // pull to refresh
+    @MainActor
     public func refresh() async {
         self.nothingFound = false
         self.lastFetch = nil

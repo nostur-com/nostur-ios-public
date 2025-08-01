@@ -74,7 +74,9 @@ class MediaViewVM: ObservableObject {
                         let blurhash: String? = response.container.image.blurHash(numberOfComponents: (4, 3))
                         let pixelSize = CGSize(width: response.container.image.size.width * UIScreen.main.scale, height: response.container.image.size.height * UIScreen.main.scale)
                         let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
-                        sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
+                        Task { @MainActor in
+                            sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
+                        }
                     }
                 }
             }
@@ -87,9 +89,11 @@ class MediaViewVM: ObservableObject {
                 }
                 if generateIMeta {
                     let blurhash: String? = response.image.blurHash(numberOfComponents: (4, 3))
-                    let pixelSize = CGSize(width: response.image.size.width * UIScreen.main.scale, height: response.image.size.height * UIScreen.main.scale)
+                    let pixelSize = await CGSize(width: response.image.size.width * UIScreen.main.scale, height: response.image.size.height * UIScreen.main.scale)
                     let iMetaInfo = iMetaInfo(size: pixelSize, blurHash: blurhash)
-                    sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
+                    Task { @MainActor in
+                        sendNotification(.iMetaInfoForUrl, (url.absoluteString, iMetaInfo))
+                    }
                 }
             }
         }
