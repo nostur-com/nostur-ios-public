@@ -143,7 +143,7 @@ struct PossibleImposterDetail: View {
         VStack {
             if let possibleImposterContact {
                 VStack {
-                    ProfileRow(withoutFollowButton: true, tapEnabled: false, contact: possibleImposterContact)
+                    ProfileRow(withoutFollowButton: true, tapEnabled: false, showNpub: true, contact: possibleImposterContact)
                         .overlay(alignment: .topTrailing) {
                             ImposterLabelToggle(contact: possibleImposterContact)
                                 .padding(.trailing, 5)

@@ -122,7 +122,7 @@ struct ProfileRow: View {
                                 .layoutPriority(3)
                         }
                         
-                        if similarToPubkey == nil && showNpub {
+                        if showNpub {
                             Text(contact.npub)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
