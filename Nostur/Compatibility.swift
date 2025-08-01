@@ -382,3 +382,29 @@ extension View {
         }
     }
 }
+
+
+// iOS 26
+extension View {
+    
+    @ViewBuilder
+    func buttonStyleGlassProminent() -> some View {
+        if #available(iOS 26.0, *) {
+            self.buttonStyle(.glassProminent)
+        }
+        else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func buttonStyleGlass() -> some View {
+        if #available(iOS 26.0, *) {
+            self.buttonStyle(.glass)
+        }
+        else {
+            self
+        }
+    }
+   
+}
