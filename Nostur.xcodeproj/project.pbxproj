@@ -18,6 +18,8 @@
 		1F75257A29962AA300477AF2 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1F75257929962AA300477AF2 /* NukeUI */; };
 		1F77AD0B2A42133000585E12 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1F77AD0A2A42133000585E12 /* MarkdownUI */; };
 		1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B21902AE3D6C000CE972E /* NostrEssentials */; };
+		1F7D18AF2E3D116B00395289 /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7D18AE2E3D116B00395289 /* FFmpeg-iOS */; };
+		1F7D1E1A2E3D174D00395289 /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7D1E192E3D174D00395289 /* FFmpeg-iOS */; };
 		1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1F91D8F52A17C55F00C419A3 /* Collections */; };
 		1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */; };
 		1FA97AA62C3F61480091446A /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA97AA52C3F61480091446A /* LiveKit */; };
@@ -51,18 +53,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		1FBCD61E2CAAB127008258C3 /* Embed Frameworks */ = {
+		1F7D1E022E3D162800395289 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				1FBCD61D2CAAB127008258C3 /* XCTest.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		1FCEA0B329992FBE00A309DC /* Embed Frameworks */ = {
+		1FBCD61E2CAAB127008258C3 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
@@ -135,8 +136,10 @@
 				1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */,
+				1F7D1E1A2E3D174D00395289 /* FFmpeg-iOS in Frameworks */,
 				1FB4132C2D9C544C0069936C /* CloudKit.framework in Frameworks */,
 				1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */,
+				1F7D18AF2E3D116B00395289 /* FFmpeg-iOS in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
@@ -223,8 +226,8 @@
 				1FB448B62965F3D000038671 /* Sources */,
 				1FB448B72965F3D000038671 /* Frameworks */,
 				1FB448B82965F3D000038671 /* Resources */,
-				1FCEA0B329992FBE00A309DC /* Embed Frameworks */,
 				1FCFDDCE29FCC735005320B8 /* Embed Foundation Extensions */,
+				1F7D1E022E3D162800395289 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -254,6 +257,8 @@
 				1FA97AA52C3F61480091446A /* LiveKit */,
 				1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */,
 				1F3C8B742D22D175008231A9 /* secp256k1 */,
+				1F7D18AE2E3D116B00395289 /* FFmpeg-iOS */,
+				1F7D1E192E3D174D00395289 /* FFmpeg-iOS */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -311,7 +316,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1610;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					1FB448B92965F3D000038671 = {
 						CreatedOnToolsVersion = 14.2;
@@ -388,6 +393,7 @@
 				1FA97AA42C3F61480091446A /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 				1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */,
 				1F3C8B732D22D175008231A9 /* XCRemoteSwiftPackageReference "secp256k1" */,
+				1F7D1E182E3D174D00395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -943,7 +949,15 @@
 			repositoryURL = "https://github.com/nostur-com/nostr-essentials";
 			requirement = {
 				kind = revision;
-				revision = 6840a1956ebfa56bc1737e1e68ebf1caf699d4c9;
+				revision = 8f3768f98c75b3fd2e3e45ae330823749f80548c;
+			};
+		};
+		1F7D1E182E3D174D00395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fabianfabian/FFmpeg-iOS";
+			requirement = {
+				branch = main;
+				kind = branch;
 			};
 		};
 		1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */ = {
@@ -1046,6 +1060,15 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1F7B218F2AE3D6C000CE972E /* XCRemoteSwiftPackageReference "nostr-essentials" */;
 			productName = NostrEssentials;
+		};
+		1F7D18AE2E3D116B00395289 /* FFmpeg-iOS */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = "FFmpeg-iOS";
+		};
+		1F7D1E192E3D174D00395289 /* FFmpeg-iOS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1F7D1E182E3D174D00395289 /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */;
+			productName = "FFmpeg-iOS";
 		};
 		1F91D8F52A17C55F00C419A3 /* Collections */ = {
 			isa = XCSwiftPackageProductDependency;
