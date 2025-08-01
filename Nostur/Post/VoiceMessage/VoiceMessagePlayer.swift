@@ -9,6 +9,7 @@ import SwiftUI
 import AVFoundation
 import CoreMedia
 import Combine
+import FFmpegSupport
 
 struct VoiceMessagePlayer: View {
     @Environment(\.theme) private var theme
@@ -30,6 +31,39 @@ struct VoiceMessagePlayer: View {
     
     @State private var _samples: [Int]?
     @State private var forceDownload: Bool = false
+    
+    private func convertWebmToM4a(webmURL: URL) async -> URL? {
+        guard webmURL.pathExtension.lowercased() == "webm" else {
+            return webmURL // Not a webm file, just return original
+        }
+        
+        // Create output URL with .m4a extension
+        let outputURL = webmURL.deletingPathExtension().appendingPathExtension("m4a")
+        
+        // Check if converted file already exists
+        if FileManager.default.fileExists(atPath: outputURL.path) {
+            L.a0.debug("VoiceMessagePlayer: Converted file already exists: \(outputURL.path)")
+            return outputURL
+        }
+        
+        L.a0.debug("VoiceMessagePlayer: Converting \(webmURL.path) to \(outputURL.path)")
+        
+        // Run ffmpeg conversion
+        let result = ffmpeg([
+            "ffmpeg",
+            "-y", // Overwrite output file if it exists
+            "-i", webmURL.path,
+            outputURL.path
+        ])
+        
+        if result == 0 && FileManager.default.fileExists(atPath: outputURL.path) {
+            L.a0.debug("VoiceMessagePlayer: ✅ Conversion successful: \(outputURL.path)")
+            return outputURL
+        } else {
+            L.a0.debug("VoiceMessagePlayer: ❌ Conversion failed with code: \(result)")
+            return nil
+        }
+    }
     
     private func cleanup() {
         progressTimer?.invalidate()
@@ -91,9 +125,21 @@ struct VoiceMessagePlayer: View {
                 .disabled(player == nil)
                 .onAppear {
                     Task.detached(priority: .userInitiated) {
+                        // Convert webm to m4a if needed
+                        let processedFileURL: URL
+                        if let convertedURL = await convertWebmToM4a(webmURL: localFileURL) {
+                            processedFileURL = convertedURL
+                            // Update localFileURL to point to the converted file
+                            Task { @MainActor in
+                                self.localFileURL = convertedURL
+                            }
+                        } else {
+                            processedFileURL = localFileURL
+                        }
+                        
                         if await _samples == nil {
-                            L.a0.debug("VoiceMessagePlayer.onAppear: loadAudioSamples(from: \(localFileURL))")
-                            let samples = (try? await loadAudioSamples(from: localFileURL)) ?? []
+                            L.a0.debug("VoiceMessagePlayer.onAppear: loadAudioSamples(from: \(processedFileURL))")
+                            let samples = (try? await loadAudioSamples(from: processedFileURL)) ?? []
                             Task { @MainActor in
                                 self._samples = samples
                                 print(samples.map {
@@ -117,9 +163,9 @@ struct VoiceMessagePlayer: View {
 
                         let playerItem: AVPlayerItem
                         
-                        if localFileURL.pathExtension.isEmpty { // AVPlayer doesn't play files without extension, so just try appending .m4a and it works.
+                        if processedFileURL.pathExtension.isEmpty { // AVPlayer doesn't play files without extension, so just try appending .m4a and it works.
                             // For files without extension, create a copy with .m4a extension
-                            let tempURL = localFileURL.appendingPathExtension("m4a")
+                            let tempURL = processedFileURL.appendingPathExtension("m4a")
                             
                             // Try to create a symbolic link or copy the file with the correct extension
                             do {
@@ -128,28 +174,28 @@ struct VoiceMessagePlayer: View {
                                 
                                 // Try creating a hard link first (most efficient)
                                 do {
-                                    try FileManager.default.linkItem(at: localFileURL, to: tempURL)
+                                    try FileManager.default.linkItem(at: processedFileURL, to: tempURL)
                                     playerItem = AVPlayerItem(url: tempURL)
                                     L.a0.debug("VoiceMessagePlayer: Created hard link for extensionless file")
                                 } catch {
                                     // If hard link fails, try copying the file
-                                    try FileManager.default.copyItem(at: localFileURL, to: tempURL)
+                                    try FileManager.default.copyItem(at: processedFileURL, to: tempURL)
                                     playerItem = AVPlayerItem(url: tempURL)
                                     L.a0.debug("VoiceMessagePlayer: Copied file with .m4a extension")
                                 }
                             } catch {
                                 // If all else fails, try the original approach
                                 L.a0.debug("VoiceMessagePlayer: Failed to create temp file, using original: \(error)")
-                                playerItem = AVPlayerItem(url: localFileURL)
+                                playerItem = AVPlayerItem(url: processedFileURL)
                             }
                         } else {
                             // File has extension, use directly
-                            playerItem = AVPlayerItem(url: localFileURL)
+                            playerItem = AVPlayerItem(url: processedFileURL)
                         }
                         
                         Task { @MainActor in
                             player = AVPlayer(playerItem: playerItem)
-                            L.a0.debug("VoiceMessagePlayer.onAppear: Trying to load: \(localFileURL)")
+                            L.a0.debug("VoiceMessagePlayer.onAppear: Trying to load: \(processedFileURL)")
                             audioObserver?.addFinishObserver(to: player!)
                         }
                         
