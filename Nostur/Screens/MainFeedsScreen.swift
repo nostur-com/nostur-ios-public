@@ -376,6 +376,7 @@ struct MainFeedsScreen: View {
                     NewNoteButton(showingNewNote: $showingNewNote)
                         .padding([.top, .leading, .bottom], 10)
                         .padding([.trailing], 25)
+                        .buttonStyleGlassProminent()
                 }
             
             AudioOnlyBarSpace()

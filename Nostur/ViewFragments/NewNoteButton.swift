@@ -36,6 +36,7 @@ struct NewNoteButton_Previews: PreviewProvider {
                 .sheet(isPresented: $showingNewNote) {
                     ComposePost(onDismiss: { })
                 }
+                .buttonStyleGlassProminent()
         }
     }
 }
