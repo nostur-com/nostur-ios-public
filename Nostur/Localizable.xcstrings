@@ -2242,13 +2242,34 @@
       }
     },
     "Checking what your follows found funny..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even checken wat jouw netwerk grappig vond…"
+          }
+        }
+      }
     },
     "Checking what your follows reposted or reacted to..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even de reacties en reposts van jouw netwerk checken…"
+          }
+        }
+      }
     },
     "Checking what your follows zapped..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Even checken wat jouw netwerk gezapped heeft…"
+          }
+        }
+      }
     },
     "Choose a photo" : {
       "localizations" : {
@@ -3829,7 +3850,14 @@
       }
     },
     "Error: missing audio file" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fout: Geluidsopname ontbreekt"
+          }
+        }
+      }
     },
     "Errors" : {
       "localizations" : {
@@ -4729,7 +4757,14 @@
       }
     },
     "Keep your message short" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Houd je bericht kort"
+          }
+        }
+      }
     },
     "Keeps track across all feeds posts you have already seen, don't show them again" : {
       "comment" : "Setting on settings screen",
@@ -8342,7 +8377,14 @@
       }
     },
     "Show more..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon meer…"
+          }
+        }
+      }
     },
     "Show post stats on timeline" : {
       "comment" : "Setting on settings screen",
@@ -8765,7 +8807,14 @@
       }
     },
     "Tap mic to record a voice message" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Druk op de microfoon om een bericht op te nemen"
+          }
+        }
+      }
     },
     "Tap the notification bell when viewing someone's profile to receive a notification when they post." : {
       "localizations" : {
@@ -9745,6 +9794,9 @@
           }
         }
       }
+    },
+    "viewState: %@" : {
+
     },
     "VPN detected" : {
       "localizations" : {
