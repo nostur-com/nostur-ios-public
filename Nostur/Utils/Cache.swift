@@ -216,7 +216,7 @@ class AccountCache {
     
     private func initReplied(_ pubkey: String) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "pubkey == %@ AND kind == 1", pubkey)
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,1111,1244}", pubkey)
         let allRepliedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.replyToId })
         self.repliedToIds = allRepliedIds
         self.initializedCaches.insert("replies")

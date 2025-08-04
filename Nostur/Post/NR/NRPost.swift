@@ -946,7 +946,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             
             let fr = Event.fetchRequest()
             let afterCreatedAt = self.created_at - 7200 // allow some time mismatch (2 hours)
-            fr.predicate = NSPredicate(format: "created_at > %i AND kind == 1 AND replyToId == %@ AND NOT pubkey IN %@", afterCreatedAt, String(self.id), blocks()) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
+            fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {1,1111,1244} AND replyToId == %@ AND NOT pubkey IN %@", afterCreatedAt, String(self.id), blocks()) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
             if let foundReplies = try? ctx.fetch(fr) {
                 if let existingReplies = self.event?.replies {
                     self.event?.replies = existingReplies.union(Set(foundReplies))
@@ -1058,7 +1058,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 sendNotification(.unpublishedNRPost, self)
             }
             if let accountCache = accountCache(), accountCache.pubkey == self.pubkey {
-                if self.kind == 1, let replyToId = self.replyToId {
+                if Set([1,1111,1244]).contains(self.kind), let replyToId = self.replyToId {
                     accountCache.removeRepliedTo(replyToId)
                     sendNotification(.postAction, PostActionNotification(type: .unreplied, eventId: replyToId))
                 }
@@ -1178,10 +1178,10 @@ extension NRPost { // Helpers for grouped replies
             let fr = Event.fetchRequest()
             let afterCreatedAt = self.created_at - 7200 // allow some time mismatch (2 hours)
             if let replyToRootId = self.replyToRootId { // We are not root, so load replies for actual root instead
-                fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind == 1 AND NOT pubkey IN %@", afterCreatedAt, replyToRootId, blocks())
+                fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind IN {1,1111,1244} AND NOT pubkey IN %@", afterCreatedAt, replyToRootId, blocks())
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind == 1 AND NOT pubkey IN %@", afterCreatedAt, self.id, blocks())
+                fr.predicate = NSPredicate(format: "created_at > %i AND replyToRootId = %@ AND kind IN {1,1111,1244} AND NOT pubkey IN %@", afterCreatedAt, self.id, blocks())
             }
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true )]
             let repliesToRoot = (try? ctx.fetch(fr)) ?? []

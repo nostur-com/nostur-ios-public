@@ -88,7 +88,7 @@ class ProfileInteractionsConversationsVM: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "kind == 1 AND pubkey == %@ AND tagsSerialized CONTAINS %@", self.pubkey, serializedP(accountPubkey))
+            fr.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND pubkey == %@ AND tagsSerialized CONTAINS %@", self.pubkey, serializedP(accountPubkey))
             
             guard let interactions = try? bg().fetch(fr) else { return }
             

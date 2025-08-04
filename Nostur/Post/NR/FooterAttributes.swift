@@ -273,7 +273,7 @@ class FooterAttributes: ObservableObject {
         }
         if let account = account() {
             let fr = Event.fetchRequest()
-            fr.predicate = NSPredicate(format: "created_at > %i AND replyToId == %@ AND pubkey == %@ AND kind == 1", event.created_at, event.id, account.publicKey)
+            fr.predicate = NSPredicate(format: "created_at > %i AND replyToId == %@ AND pubkey == %@ AND kind IN {1,1111,1244}", event.created_at, event.id, account.publicKey)
             fr.fetchLimit = 1
             fr.resultType = .countResultType
             let count = (try? bg().count(for: fr)) ?? 0
