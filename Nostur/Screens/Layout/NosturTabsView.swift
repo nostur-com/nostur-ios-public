@@ -38,7 +38,12 @@ struct NosturTabsView: View {
                             HomeTab()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
 //                                .environmentObject(la)
-                                .tabItem { Label("", systemImage: "house") }
+                                .tabItem {
+                                    Image(systemName: "house")
+//                                    Label("Home", systemImage: "house")
+//                                        .labelStyle(.iconOnly)
+                                }
+//                                .labelStyle(.iconOnly)
                                 .tag("Main")
                                 .nosturTabsCompat(theme: theme)
                             
@@ -49,27 +54,47 @@ struct NosturTabsView: View {
 
                             BookmarksTab()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem { Label("", systemImage: "bookmark") }
+                                .tabItem {
+                                    Image(systemName: "bookmark")
+//                                    Label("Bookmarks", systemImage: "bookmark")
+//                                        .labelStyle(.iconOnly)
+                                }
+//                                .labelStyle(.iconOnly)
                                 .tag("Bookmarks")
                                 .nosturTabsCompat(theme: theme)
                             
                             
                             Search()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem { Label("", systemImage: "magnifyingglass") }
+                                .tabItem {
+                                    Image(systemName: "magnifyingglass")
+//                                    Label("Search", systemImage: "magnifyingglass")
+//                                        .labelStyle(.iconOnly)
+                                }
+                                .labelStyle(.iconOnly)
                                 .tag("Search")
                                 .nosturTabsCompat(theme: theme)
                             
                             NotificationsContainer()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem { Label("", systemImage: "bell.fill") }
+                                .tabItem {
+                                    Image(systemName: "bell.fill")
+//                                    Label("Notifications", systemImage: "bell.fill")
+//                                        .labelStyle(.iconOnly)
+                                }
+                                .labelStyle(.iconOnly)
                                 .tag("Notifications")
                                 .badge(unread)
                                 .nosturTabsCompat(theme: theme)
 
                             DMContainer()
                                 .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem { Label("", systemImage: "envelope.fill") }
+                                .tabItem {
+                                    Image(systemName: "envelope.fill")
+//                                    Label("Messages", systemImage: "envelope.fill")
+//                                        .labelStyle(.iconOnly)
+                                }
+//                                .labelStyle(.iconOnly)
                                 .tag("Messages")
                                 .badge((dm.unread + dm.newRequests))
                                 .nosturTabsCompat(theme: theme)
