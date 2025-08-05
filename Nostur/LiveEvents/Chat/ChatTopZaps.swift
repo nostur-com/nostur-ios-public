@@ -24,17 +24,17 @@ struct ChatTopZaps: View {
 struct ChatZapPill: View {
     @Environment(\.theme) private var theme
     private let zap: NRChatConfirmedZap
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     
     init(zap: NRChatConfirmedZap) {
         self.zap = zap
-        self.pfpAttributes = zap.pfpAttributes
+        self.nrContact = zap.nrContact
     }
     
     var body: some View {
         HStack(spacing: 5) {
-            MiniPFP(pictureUrl: pfpAttributes.pfpURL, size: 20.0, fallBackColor: randomColor(seed: zap.zapRequestPubkey))
-                .animation(.easeIn, value: pfpAttributes.pfpURL)
+            MiniPFP(pictureUrl: nrContact.pictureUrl, size: 20.0, fallBackColor: randomColor(seed: zap.zapRequestPubkey))
+                .animation(.easeIn, value: nrContact.pictureUrl)
             
 //                .frame(width: 20.0, height: 20.0)
             Text(zap.amount.satsFormatted)
@@ -55,12 +55,7 @@ struct ChatZapPill: View {
             else if LiveKitVoiceSession.shared.visibleNest != nil {
                 LiveKitVoiceSession.shared.visibleNest = nil
             }
-            if let nrContact = zap.contact {
-                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-            }
-            else {
-                navigateTo(ContactPath(key: zap.zapRequestPubkey), context: "Default")
-            }
+            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
         }
     }
 }
@@ -78,8 +73,7 @@ struct ChatZapPill: View {
                 zapRequestCreatedAt: .now,
                 amount: 21000,
                 nxEvent: NXEvent(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", kind: 9734),
-                content: [.text(AttributedStringWithPs(input: "Hello", output: NSAttributedString(string: "Hello"), pTags: []))],
-                contact: nil
+                content: [.text(AttributedStringWithPs(input: "Hello", output: NSAttributedString(string: "Hello"), pTags: []))]
             ),
             NRChatConfirmedZap(
                 id: "2",
@@ -88,8 +82,7 @@ struct ChatZapPill: View {
                 zapRequestCreatedAt: .now,
                 amount: 1000,
                 nxEvent: NXEvent(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", kind: 9734),
-                content: [.text(AttributedStringWithPs(input: "World", output: NSAttributedString(string: "World"), pTags: []))],
-                contact: nil
+                content: [.text(AttributedStringWithPs(input: "World", output: NSAttributedString(string: "World"), pTags: []))]
             )
         ]
         ChatTopZaps(messages: messages)

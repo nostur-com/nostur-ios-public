@@ -13,7 +13,7 @@ struct Kind20: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
@@ -24,8 +24,6 @@ struct Kind20: View {
     private let fullWidth: Bool
     private let grouped: Bool
     private let forceAutoload: Bool
-
-    @State private var couldBeImposter: Int16 // TODO: this is here but also in NRPostHeaderContainer, need to clean up
     
     private let THREAD_LINE_OFFSET = 24.0
     
@@ -48,7 +46,7 @@ struct Kind20: View {
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = nrPost.contact
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -58,7 +56,6 @@ struct Kind20: View {
         self.isEmbedded = isEmbedded
         self.grouped = grouped
         self.forceAutoload = forceAutoload
-        self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
     
     var body: some View {

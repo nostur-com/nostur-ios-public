@@ -247,12 +247,7 @@ struct LazyPrivateNote: View {
                     HStack {
                         PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
                             .onTapGesture {
-                                if let nrContact = nrPost.contact {
-                                    navigateTo(nrContact, context: "Default")
-                                }
-                                else {
-                                    navigateTo(ContactPath(key: nrPost.pubkey), context: "Default")
-                                }
+                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrPost.contact, context: "Default")
                             }
                         
                         MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)

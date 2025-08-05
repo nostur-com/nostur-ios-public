@@ -110,8 +110,7 @@ struct ZapButtonInner: View {
                             .onAppear {
                                 guard !isZapped else { return }
                                 guard cancellationId == nil else { return }
-                                guard let contact = nrPost.contact?.contact else { return }
-                                self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact, zapMessage: zapMessage, amount: customAmount)
+                                self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount)
                             }
                     }
                 }
@@ -151,7 +150,7 @@ struct ZapButtonInner: View {
         }
     }
     
-    func triggerZap(strikeLocation: CGPoint, contact: Contact, zapMessage: String = "", amount: Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
@@ -170,7 +169,7 @@ struct ZapButtonInner: View {
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
             NWCZapQueue.shared.sendZap(zap)
             accountCache()?.addZapped(nrPost.id)
         }
@@ -192,10 +191,10 @@ struct ZapButtonInner: View {
     
     private func nonNWCtap() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
-        guard (nrPost.contact?.anyLud ?? false) else { return }
+        guard (nrPost.contact.anyLud) else { return }
         isLoading = true
         
-        if let lud16 = nrPost.contact!.lud16 {
+        if let lud16 = nrPost.contact.lud16 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
@@ -209,7 +208,7 @@ struct ZapButtonInner: View {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
+                                nrPost.contact.zapperPubkeys.insert(zapperPubkey)
                             }
                             // Old zap sheet
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
@@ -229,7 +228,7 @@ struct ZapButtonInner: View {
                 }
             }
         }
-        else if let lud06 = nrPost.contact!.lud06 {
+        else if let lud06 = nrPost.contact.lud06 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
@@ -243,7 +242,7 @@ struct ZapButtonInner: View {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
+                                nrPost.contact.zapperPubkeys.insert(zapperPubkey)
                             }
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
                             sendNotification(.showZapSheet, paymentInfo)

@@ -14,22 +14,22 @@ struct NewFollowersNotificationView: View {
         notification.content.split(separator: ",").map(String.init)
     }
     
-    @State private var pfps: [PFPAttributes] = []
+    @State private var nrContacts: [NRContact] = []
     
     var body: some View {
         VStack(alignment: .leading) {
             ZStack(alignment: .leading) {
-                ForEach(pfps.prefix(10).indices, id:\.self) { index in
-                    ObservedPFP(pfp: pfps[index])
-                        .id(pfps[index].pubkey)
+                ForEach(nrContacts.prefix(10).indices, id:\.self) { index in
+                    ObservedPFP(nrContact: nrContacts[index])
+                        .id(nrContacts[index].pubkey)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: pfps[index].pubkey, navigationTitle: pfps[index].anyName), context: "Default")
+                            navigateTo(ContactPath(key: nrContacts[index].pubkey, navigationTitle: nrContacts[index].anyName), context: "Default")
                         }
                         .zIndex(-Double(index))
                         .offset(x:Double(0 + (30*index)))
                         .overlay(alignment: .topLeading) {
                             if index == 0 {
-                                PossibleImposterLabelView(pfp: pfps[index])
+                                PossibleImposterLabelView(nrContact: nrContacts[index])
                                     .lineLimit(1)
                                     .fixedSize()
                                     .offset(x: -10, y: -10)
@@ -37,8 +37,8 @@ struct NewFollowersNotificationView: View {
                         }
                 }
             }
-            if let first = pfps.first {
-                NowFollowingYouMessage(first: first, newFollowersCount: pfps.count)
+            if let first = nrContacts.first {
+                NowFollowingYouMessage(first: first, newFollowersCount: nrContacts.count)
             }
         }
         .frame(maxWidth:.infinity, alignment:.leading)
@@ -55,27 +55,20 @@ struct NewFollowersNotificationView: View {
     func loadPFPs() {
         let notificationPubkeys = notificationPubkeys
         bg().perform {
-            let pfps = notificationPubkeys.prefix(10)
-                .map { pubkey in
-                    if let nrContact = NRContact.fetch(pubkey) {
-                        return PFPAttributes(contact: nrContact, pubkey: pubkey)
-                    }
-                    else {
-                        return PFPAttributes(pubkey: pubkey)
-                    }
-                }
+            let nrContacts = notificationPubkeys.prefix(10)
+                .map { NRContact.instance(of: $0) }
             
-            let missingPs = pfps.filter { $0.contact == nil || $0.contact?.metadata_created_at == 0 }.map { $0.pubkey }
+            let missingPs = nrContacts.filter { $0.metadata_created_at == 0 }.map { $0.pubkey }
             QueuedFetcher.shared.enqueue(pTags: missingPs)
             Task { @MainActor in
-                self.pfps = pfps
+                self.nrContacts = nrContacts
             }
         }
     }
 }
 
 struct NowFollowingYouMessage: View {
-    @ObservedObject public var first: PFPAttributes
+    @ObservedObject public var first: NRContact
     public let newFollowersCount: Int
     
     var body: some View {

@@ -38,13 +38,13 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                 // Everything below here is image or link preview fetching, skip if low data mode
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
-                if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
+                if let pictureUrl = item.contact.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
                     imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
-                    .compactMap { $0.contact?.pictureUrl }
+                    .compactMap { $0.contact.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
                     .map { pfpImageRequestFor($0) }
                 )
@@ -116,13 +116,13 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                 // Everything below here is image or link preview fetching, skip if low data mode
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
-                if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
+                if let pictureUrl = item.contact.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
                     imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
-                    .compactMap { $0.contact?.pictureUrl }
+                    .compactMap { $0.contact.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
                     .map { pfpImageRequestFor($0) }
                 )
@@ -186,13 +186,13 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                 // Everything below here is image or link preview fetching, skip if low data mode
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
-                if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
+                if let pictureUrl = item.contact.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
                     imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
-                    .compactMap { $0.contact?.pictureUrl }
+                    .compactMap { $0.contact.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
                     .map { pfpImageRequestFor($0) }
                 )
@@ -260,13 +260,13 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
                 // Everything below here is image or link preview fetching, skip if low data mode
                 guard !SettingsStore.shared.lowDataMode else { continue }
                 
-                if let pictureUrl = item.contact?.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
+                if let pictureUrl = item.contact.pictureUrl, pictureUrl.absoluteString.prefix(7) != "http://" {
                     imageRequestsPFP.append(pfpImageRequestFor(pictureUrl))
                 }
                 
                 imageRequestsPFP.append(contentsOf: item
                     .parentPosts
-                    .compactMap { $0.contact?.pictureUrl }
+                    .compactMap { $0.contact.pictureUrl }
                     .filter { $0.absoluteString.prefix(7) != "http://" }
                     .map { pfpImageRequestFor($0) }
                 )

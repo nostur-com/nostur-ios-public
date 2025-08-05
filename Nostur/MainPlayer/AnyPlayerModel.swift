@@ -132,7 +132,7 @@ class AnyPlayerModel: ObservableObject {
         }
         
         Task {
-            await setupNowPlayingInfo(artist: nrPost?.anyName, title: nrLiveEvent.title, mediaType: .anyVideo, thumbUrl: nrLiveEvent.thumbUrl, pfpUrl: nrPost?.contact?.pictureUrl, isLive: !nrLiveEvent.streamHasEnded)
+            await setupNowPlayingInfo(artist: nrPost?.anyName, title: nrLiveEvent.title, mediaType: .anyVideo, thumbUrl: nrLiveEvent.thumbUrl, pfpUrl: nrPost?.contact.pictureUrl, isLive: !nrLiveEvent.streamHasEnded)
         }
     }
     
@@ -261,7 +261,7 @@ class AnyPlayerModel: ObservableObject {
         }
         
         Task {
-            await setupNowPlayingInfo(artist: nrPost?.anyName, mediaType: .anyVideo, duration: cachedFirstFrame?.duration?.seconds, pfpUrl: nrPost?.contact?.pictureUrl, thumb: cachedFirstFrame?.uiImage )
+            await setupNowPlayingInfo(artist: nrPost?.anyName, mediaType: .anyVideo, duration: cachedFirstFrame?.duration?.seconds, pfpUrl: nrPost?.contact.pictureUrl, thumb: cachedFirstFrame?.uiImage )
         }
     }
     

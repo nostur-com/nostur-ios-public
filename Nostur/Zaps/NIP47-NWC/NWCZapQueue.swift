@@ -113,7 +113,7 @@ class Zap {
     var eventId:String?
     var aTag:String?
     var event:Event?
-    let contact:Contact
+    let nrContact: NRContact
     let cancellationId:UUID
     let contactPubkey:String
     var error:String? = nil
@@ -124,19 +124,19 @@ class Zap {
     var fromAccountPubkey:String
     var withPending = false
     
-    init(isNC: Bool = false, amount: Int64, contact: Contact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "", withPending: Bool = false) {
+    init(isNC: Bool = false, amount: Int64, nrContact: NRContact, eventId: String? = nil, aTag: String? = nil, event: Event? = nil, cancellationId: UUID, zapMessage: String = "", withPending: Bool = false) {
         self.isNC = isNC
         self.fromAccountPubkey = AccountsState.shared.activeAccountPublicKey
         self.queuedAt = .now
         self.amount = amount
-        self.contact = contact
+        self.nrContact = nrContact
         self.cancellationId = cancellationId
-        self.contactPubkey = contact.pubkey
+        self.contactPubkey = nrContact.pubkey
         self.eventId = eventId
         self.aTag = aTag
         self.event = event
-        self.lud16 = contact.lud16
-        self.lud06 = contact.lud06
+        self.lud16 = nrContact.lud16
+        self.lud06 = nrContact.lud06
         self.zapMessage = zapMessage
         self.withPending = withPending
         next()
@@ -222,9 +222,7 @@ class Zap {
                     if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                         self.supportsZap = true
                         // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                        await bg().perform {
-                            self.contact.zapperPubkeys.insert(zapperPubkey)
-                        }
+                        self.nrContact.zapperPubkeys.insert(zapperPubkey)
                     }
                     self.callbackUrl = callback
                     Task { @MainActor in
@@ -254,14 +252,10 @@ class Zap {
             .map { $0.url }
         
         guard let account = account() else { return }
-        let acountPubkey = account.publicKey
         
         if (self.supportsZap) {
             bg().perform { [weak self] in
                 guard let self = self else { return }
-                
-                
-                let accountNrContact = NRContact.instance(of: acountPubkey)
                 
                 if isNC {
                     let zapRequestNote = if let aTag = self.aTag {
@@ -290,7 +284,6 @@ class Zap {
                                             amount: self.amount,
                                             nxEvent: NXEvent(pubkey: signedEvent.publicKey, kind: signedEvent.kind.id),
                                             content: content,
-                                            contact: accountNrContact,
                                             via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedEvent.publicKey)) ? "Nostur" : nil
                                         ))
                                     }
@@ -344,7 +337,6 @@ class Zap {
                                         amount: self.amount,
                                         nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: signedZapRequestNote.kind.id),
                                         content: content,
-                                        contact: accountNrContact,
                                         via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? "Nostur" : nil
                                     ))
                             }

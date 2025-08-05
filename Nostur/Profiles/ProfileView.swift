@@ -165,7 +165,7 @@ struct ProfileView: View {
                             .lineLimit(1)
                         PossibleImposterLabelView2(nrContact: nrContact)
                         if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
-                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
+                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
                                 .layoutPriority(3)
                         }
                     }
@@ -418,12 +418,6 @@ struct ProfileView: View {
             vm.load(nrContact)
             lastSeenVM.checkLastSeen(nrContact.pubkey)
 //            imposterVM.runCheck(nrContact)
-        }
-        .onChange(of: nrContact.nip05) { nip05 in
-            bg().perform {
-                guard let contact = nrContact.contact, NIP05Verifier.shouldVerify(contact) else { return }
-                NIP05Verifier.shared.verify(contact)
-            }
         }
     }
 }

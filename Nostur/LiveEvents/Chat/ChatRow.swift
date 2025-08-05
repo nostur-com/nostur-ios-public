@@ -74,23 +74,23 @@ enum ChatRowContent: Identifiable {
         }
     }
     
-    var nrContact: NRContact? {
+    var nrContact: NRContact {
         switch self {
             case .chatConfirmedZap(let confirmedZap):
-                confirmedZap.contact
+                confirmedZap.nrContact
             case .chatPendingZap(let pendingZap):
-                pendingZap.contact
+                pendingZap.nrContact
             case .chatMessage(let nrChat):
-                nrChat.contact
+                nrChat.nrContact
         }
     }
     
     var missingPs: Set<String> {
         switch self {
             case .chatConfirmedZap(let confirmedZap):
-                confirmedZap.contact == nil ? Set([confirmedZap.zapRequestPubkey]) : Set<String>()
+            confirmedZap.nrContact.metadata_created_at == 0 ? Set([confirmedZap.zapRequestPubkey]) : Set<String>()
             case .chatPendingZap(let pendingZap):
-                pendingZap.contact == nil ? Set([pendingZap.pubkey]) : Set<String>()
+                pendingZap.nrContact.metadata_created_at == 0 ? Set([pendingZap.pubkey]) : Set<String>()
             case .chatMessage(let nrChat):
                 nrChat.missingPs
         }
@@ -106,20 +106,12 @@ class NRChatPendingZap {
     
     var nxEvent: NXEvent
     var content: [ContentElement] = []
-    
-    var contact: NRContact?  {
-        get { pfpAttributes.contact }
-        set {
-            DispatchQueue.main.async { [weak self] in
-                self?.pfpAttributes.contact = newValue
-            }
-        }
-    }
-    var pfpAttributes: PFPAttributes
+
+    var nrContact: NRContact
     
     var via: String?
     
-    init(id: String, pubkey: String, createdAt: Date, aTag: String, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil, via: String? = nil) {
+    init(id: String, pubkey: String, createdAt: Date, aTag: String, amount: Int64, nxEvent: NXEvent, content: [ContentElement], via: String? = nil) {
         self.id = id
         self.pubkey = pubkey
         self.createdAt = createdAt
@@ -128,19 +120,7 @@ class NRChatPendingZap {
         self.nxEvent = nxEvent
         self.content = content
         self.via = via
-        
-        if let contact { // From param
-            self.pfpAttributes = PFPAttributes(contact: contact, pubkey: pubkey)
-        }
-        else if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) { // from cache
-            self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
-        }
-        else if let contact = Contact.fetchByPubkey(pubkey, context: bg()) { // from db
-            self.pfpAttributes = PFPAttributes(contact: NRContact.instance(of: pubkey, contact: contact), pubkey: pubkey)
-        }
-        else { // we dont have it
-            self.pfpAttributes = PFPAttributes(pubkey: pubkey)
-        }
+        self.nrContact = NRContact.instance(of: pubkey)
     }
 }
 
@@ -154,19 +134,11 @@ class NRChatConfirmedZap {
     var nxEvent: NXEvent
     var content: [ContentElement] = []
     
-    var contact: NRContact?  {
-        get { pfpAttributes.contact }
-        set {
-            DispatchQueue.main.async { [weak self] in
-                self?.pfpAttributes.contact = newValue
-            }
-        }
-    }
-    var pfpAttributes: PFPAttributes
+    var nrContact: NRContact
     
     var via: String?
     
-    init(id: String, zapRequestId: String, zapRequestPubkey: String, zapRequestCreatedAt: Date, amount: Int64, nxEvent: NXEvent, content: [ContentElement], contact: NRContact? = nil, via: String? = nil) {
+    init(id: String, zapRequestId: String, zapRequestPubkey: String, zapRequestCreatedAt: Date, amount: Int64, nxEvent: NXEvent, content: [ContentElement], via: String? = nil) {
         self.id = id
         self.zapRequestId = zapRequestId
         self.zapRequestPubkey = zapRequestPubkey
@@ -175,19 +147,7 @@ class NRChatConfirmedZap {
         self.nxEvent = nxEvent
         self.content = content
         self.via = via
-        
-        if let contact { // From param
-            self.pfpAttributes = PFPAttributes(contact: contact, pubkey: zapRequestPubkey)
-        }
-        else if let cachedNRContact = NRContactCache.shared.retrieveObject(at: zapRequestPubkey) { // from cache
-            self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: zapRequestPubkey)
-        }
-        else if let contact = Contact.fetchByPubkey(zapRequestPubkey, context: bg()) { // from db
-            self.pfpAttributes = PFPAttributes(contact: NRContact.instance(of: zapRequestPubkey, contact: contact), pubkey: zapRequestPubkey)
-        }
-        else { // we dont have it
-            self.pfpAttributes = PFPAttributes(pubkey: zapRequestPubkey)
-        }
+        self.nrContact = NRContact.instance(of: zapRequestPubkey)
     }
 }
 

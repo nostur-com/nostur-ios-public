@@ -623,39 +623,34 @@ struct MediaPlaceholder: View {
 struct MediaPostPreview: View {
     @Environment(\.theme) private var theme
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     @Binding private var showMiniProfile: Bool
     
     init(_ nrPost: NRPost, showMiniProfile: Binding<Bool>) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = NRContact.instance(of: nrPost.pubkey)
         _showMiniProfile = showMiniProfile
     }
     
     var body: some View {
         HStack(alignment: .center) {
-            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
+            ZappablePFP(pubkey: nrPost.pubkey, contact: nrPost.contact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
             
             VStack(alignment: .leading) {
                 
-                Text(pfpAttributes.anyName)
+                Text(nrContact.anyName)
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
                     .lineLimit(1)
                     .layoutPriority(2)
                     .onTapGesture {
                         dismiss()
-                        if let nrContact = nrPost.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                        }
-                        else {
-                            navigateTo(ContactPath(key: nrPost.pubkey), context: "Default")
-                        }
+                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: "Default")
                     }
                     .onAppear {
                         // TODO: check .missingPs instead of .contact?
-                        guard nrPost.contact == nil else { return }
+                        guard nrPost.contact.metadata_created_at == 0 else { return }
                         bg().perform {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "FullImageViewer.001")
                             QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
@@ -665,8 +660,8 @@ struct MediaPostPreview: View {
                         QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
                     }
                 
-                if let nrContact = pfpAttributes.contact, nrContact.nip05verified, let nip05 = nrContact.nip05 {
-                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
+                if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
                             .layoutPriority(3)
                 }
                 

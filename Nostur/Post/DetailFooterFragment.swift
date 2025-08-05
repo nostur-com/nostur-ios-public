@@ -67,34 +67,33 @@ struct DetailFooterFragment: View {
         .font(.system(size: 14))
         .task { [weak nrPost] in
             guard let nrPost else { return }
-            guard let contact = nrPost.contact else { return }
-            guard contact.anyLud else { return }
-            guard contact.zapperPubkeys.isEmpty else {
-                reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
+            guard nrPost.contact.anyLud else { return }
+            guard nrPost.contact.zapperPubkeys.isEmpty else {
+                reverifyZaps(eventId: nrPost.id, expectedZpks: nrPost.contact.zapperPubkeys)
                 return
             }
             do {
-                if let lud16 = contact.lud16, lud16 != "" {
+                if let lud16 = nrPost.contact.lud16, lud16 != "" {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
                     await MainActor.run {
                         if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
-                            contact.zapperPubkeys.insert(zapperPubkey)
+                            nrPost.contact.zapperPubkeys.insert(zapperPubkey)
 #if DEBUG
                             L.og.debug("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
 #endif
-                            reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
+                            reverifyZaps(eventId: nrPost.id, expectedZpks: nrPost.contact.zapperPubkeys)
                         }
                     }
                 }
-                else if let lud06 = contact.lud06, lud06 != "" {
+                else if let lud06 = nrPost.contact.lud06, lud06 != "" {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
                     await MainActor.run {
                         if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
-                            contact.zapperPubkeys.insert(zapperPubkey)
+                            nrPost.contact.zapperPubkeys.insert(zapperPubkey)
 #if DEBUG
                             L.og.debug("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
 #endif
-                            reverifyZaps(eventId: nrPost.id, expectedZpks: contact.zapperPubkeys)
+                            reverifyZaps(eventId: nrPost.id, expectedZpks: nrPost.contact.zapperPubkeys)
                         }
                     }
                 }

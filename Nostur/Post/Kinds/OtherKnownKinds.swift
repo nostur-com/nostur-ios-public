@@ -14,12 +14,12 @@ struct OtherKnownKinds: View {
     @ObservedObject private var settings: SettingsStore = .shared
     @EnvironmentObject private var dim: DIMENSIONS
     private let nrPost: NRPost
-    @ObservedObject var pfpAttributes: PFPAttributes
+    @ObservedObject var nrContact: NRContact
     private let hideFooter: Bool
     
     init(nrPost: NRPost, hideFooter: Bool = false) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = nrPost.contact
         self.hideFooter = hideFooter
     }
     
@@ -37,28 +37,23 @@ struct OtherKnownKinds: View {
             
             HStack {
                 Spacer()
-                ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
+                ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                     .onTapGesture {
-                        navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
+                        navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
                     }
                 
-                Text(pfpAttributes.anyName)
+                Text(nrContact.anyName)
                     .foregroundColor(.primary)
                     .fontWeight(.bold)
                     .lineLimit(1)
                     .layoutPriority(2)
                     .onTapGesture {
                         guard !nxViewingContext.contains(.preview) else { return }
-                        if let nrContact = nrPost.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: dim.id)
-                        }
-                        else {
-                            navigateTo(ContactPath(key: nrPost.pubkey), context: dim.id)
-                        }
+                        navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
                     }
                     .onAppear {
                         // TODO: Check .missingPs instead of .contact?
-                        guard nrPost.contact == nil else { return }
+                        guard !nrPost.missingPs.isEmpty else { return }
                         bg().perform {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "OtherKnownKinds.001")
                             QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)

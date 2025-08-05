@@ -22,7 +22,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var postOrThreadAttributes: PostOrThreadAttributes
     var postRowDeletableAttributes: PostRowDeletableAttributes
     var noteRowAttributes: NoteRowAttributes
-    var pfpAttributes: PFPAttributes
     var highlightAttributes: HighlightAttributes = HighlightAttributes()
     var replyingToAttributes: ReplyingToAttributes
     var footerAttributes: FooterAttributes
@@ -64,14 +63,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     var nxZap: NxZap?
     
-    var contact: NRContact? {
-        get { pfpAttributes.contact }
-        set {
-            DispatchQueue.main.async { [weak self] in
-                self?.pfpAttributes.contact = newValue
-            }
-        }
-    }
+    var contact: NRContact
     
     var replyingToUsernamesMarkDown:AttributedString? {
         get { replyingToAttributes.replyingToUsernamesMarkDown }
@@ -216,10 +208,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             return url
         }
         else {
-            if let contact = contact {
-                return contact.anyName
-            }
-            return String(pubkey.suffix(11))
+            return contact.anyName
         }
     }
     
@@ -430,30 +419,14 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         let referencedContacts = cachedContacts + contactsFromDb
         
-        var anyName: String?
-        
-        if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
-            self.pfpAttributes = PFPAttributes(contact: cachedNRContact, pubkey: pubkey)
-            anyName = cachedNRContact.anyName
-        }
-        else if let contact = event.contact {
-            self.pfpAttributes = PFPAttributes(contact: NRContact.instance(of: contact.pubkey, contact: contact), pubkey: pubkey)
-            anyName = contact.anyName
-        }
-        else {
-            self.pfpAttributes = PFPAttributes(pubkey: pubkey)
-            EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.001"); isAwaiting = true
-        }
-        
+        self.contact = NRContact.instance(of: pubkey)
+
         var missingPs = Set<String>()
-        if self.pfpAttributes.contact == nil {
-            missingPs.insert(event.pubkey)
-        }
-        else if let c = self.pfpAttributes.contact?.contact, c.metadata_created_at == 0 {
+        if contact.metadata_created_at == 0 {
             missingPs.insert(event.pubkey)
         }
         let eventContactPs = (referencedContacts.compactMap({ contact in
-            if (contact.contact?.metadata_created_at ?? 0) != 0 {
+            if contact.metadata_created_at != 0 {
                 return contact.pubkey
             }
             return nil
@@ -619,7 +592,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         return Nostur.blocks().contains(pubkey)
     }
     
-    private var contactUpdatedSubscription: AnyCancellable?
+    private var profileUpdatedSubscription: AnyCancellable?
     private var postDeletedSubscription: AnyCancellable?
     private var repliesSubscription: AnyCancellable?
     private var repliesCountSubscription: AnyCancellable?
@@ -634,7 +607,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         // Don't listen if there is no need to listen (performance?)
         
         if !missingPs.isEmpty {
-            contactUpdatedListener()
+            profileUpdatedListener()
         }
         
         if deletedById == nil {
@@ -726,30 +699,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     // For rerendering ReplyingToFragment, or setting .contact
     // Or Rebuilding content elements for mentions in text
-    private func contactUpdatedListener() {
-        guard contactUpdatedSubscription == nil else { return }
+    private func profileUpdatedListener() {
+        guard profileUpdatedSubscription == nil else { return }
         // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
         // Rerender content elements also for mentions in text
-        contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
-            .subscribe(on: DispatchQueue.global())
-            .filter({ [weak self] (pubkey, contact) in
+        profileUpdatedSubscription = ViewUpdates.shared.profileUpdates
+            .filter({ [weak self] profileInfo in
                 guard let self = self else { return false }
-                return self.missingPs.contains(pubkey)
+                return self.missingPs.contains(profileInfo.pubkey)
             })
-            .sink { [weak self] (pubkey, contact) in
+            .sink { [weak self] profileInfo in
                 guard let self = self else { return }
-                self.missingPs.remove(pubkey)
+                self.missingPs.remove(profileInfo.pubkey)
                 
-                if self.pubkey == pubkey {
-                    bg().perform { [weak self] in
-                        let nrContact = NRContact.instance(of: pubkey, contact: contact)
-                        DispatchQueue.main.async {
-                            self?.objectWillChange.send()
-                            self?.contact = nrContact
-                        }
-                    }
-                }
-
                 if self.kind != 6 {
                     if self.replyToId != nil {
                         self.rerenderReplyingToFragment()
@@ -759,7 +721,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     
                     if self.kind == 9802 && self.highlightAttributes.authorPubkey == pubkey {
                         bg().perform {
-                            let nrContact = NRContact.instance(of: pubkey, contact: contact)
+                            let nrContact = NRContact.instance(of: self.pubkey)
                             DispatchQueue.main.async { [weak self] in
                                 self?.highlightAttributes.objectWillChange.send()
                                 self?.highlightAttributes.contact = nrContact
@@ -769,8 +731,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 }
                 
                 if self.missingPs.isEmpty {
-                    contactUpdatedSubscription?.cancel()
-                    contactUpdatedSubscription = nil
+                    profileUpdatedSubscription?.cancel()
+                    profileUpdatedSubscription = nil
                 }
             }
     }
@@ -1097,7 +1059,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     private var renderedReplyIds: Set<NRPostID> = []
     
     deinit {
-        contactUpdatedSubscription?.cancel()
+        profileUpdatedSubscription?.cancel()
         postDeletedSubscription?.cancel()
         repliesSubscription?.cancel()
         repliesCountSubscription?.cancel()
@@ -1361,7 +1323,7 @@ func getKindFileMetadata(event: Event) -> KindFileMetadata {
 
 
 // Has some subclass-ObservableObjects to isolate rerendering to specific view attributes:
-// PostOrThreadAttributes, PostRowDeletableAttributes, NoteRowAttributes, PFPAttributes
+// PostOrThreadAttributes, PostRowDeletableAttributes, NoteRowAttributes
 
 class PostOrThreadAttributes: ObservableObject {
     @Published var parentPosts: [NRPost] = []

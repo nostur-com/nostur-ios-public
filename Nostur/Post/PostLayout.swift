@@ -13,7 +13,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
@@ -49,7 +49,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, @ViewBuilder content: () -> Content, @ViewBuilder title: () -> TitleContent) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = nrPost.contact
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -163,7 +163,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     @ViewBuilder
     private var regularPFP: some View {
         if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
-            LiveEventPFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nxViewingContext.contains(.screenshot))
+            LiveEventPFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nxViewingContext.contains(.screenshot))
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
@@ -201,7 +201,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
         }
         else {
-            ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
+            ZappablePFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
@@ -212,17 +212,17 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
-                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: dim.id)
+                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost,  context: dim.id)
                 }
         }
     }
     
     @ViewBuilder
     private var itemPFP: some View { // No live event animation for item PFP
-        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: pfpAttributes, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
+        ZappablePFP(pubkey: nrPost.pubkey, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
             .frame(width: 20.0, height: 20.0)
             .onTapGesture {
-                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
+                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, context: dim.id)
             }
     }
     
@@ -238,33 +238,31 @@ struct PostLayout<Content: View, TitleContent: View>: View {
             
             itemPFP
             
-            if let contact = nrPost.contact {
-                Text(contact.anyName)
-                    .foregroundColor(.primary)
-                    .fontWeight(.bold)
-                    .lineLimit(1)
-                    .layoutPriority(2)
-                    .onTapGesture {
-                        guard !nxViewingContext.contains(.preview) else { return }
-                        navigateTo(contact, context: dim.id)
-                    }
-                
-                if contact.nip05verified, let nip05 = contact.nip05 {
-                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                        .layoutPriority(3)
+            
+            Text(nrContact.anyName)
+                .foregroundColor(.primary)
+                .fontWeight(.bold)
+                .lineLimit(1)
+                .layoutPriority(2)
+                .onTapGesture {
+                    guard !nxViewingContext.contains(.preview) else { return }
+                    navigateTo(nrPost, context: dim.id)
                 }
-            }
-            else {
-                Text(nrPost.anyName)
-                    .onAppear {
-                        bg().perform {
-                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "ArticleView.001")
-                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                        }
+                .onAppear {
+                    guard !nrPost.missingPs.isEmpty else { return }
+                    bg().perform {
+                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "ArticleView.001")
+                        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                     }
-                    .onDisappear {
-                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-                    }
+                }
+                .onDisappear {
+                    guard !nrPost.missingPs.isEmpty else { return }
+                    QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                }
+            
+            if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                    .layoutPriority(3)
             }
         }
         .padding(.vertical, 10)

@@ -144,10 +144,10 @@ struct ZappedFrom: View {
                 .layoutPriority(2)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
-                    navigateToContact(pubkey: nrZapFrom.pubkey, nrContact: nrZapFrom.contact, nrPost: nrZapFrom, pfpAttributes: nrZapFrom.pfpAttributes, context: context)
+                    navigateToContact(pubkey: nrZapFrom.pubkey, nrContact: nrZapFrom.contact, nrPost: nrZapFrom, context: context)
                 }
             
-            PossibleImposterLabelView(pfp: nrZapFrom.pfpAttributes)
+            PossibleImposterLabelView(nrContact: nrZapFrom.contact)
             
             Ago(nrZapFrom.createdAt)
                 .equatable()
@@ -160,36 +160,27 @@ struct ZappedFrom: View {
 
 struct ReceiptFrom: View {
     @Environment(\.theme) private var theme
-    let pubkey:String
+    let pubkey: String
     
-    @State private var name:String?
-    @State private var pictureUrl:URL?
-    @State private var subscriptions = Set<AnyCancellable>()
+    @ObservedObject private var nrContact: NRContact
+    
+    init(pubkey: String) {
+        self.pubkey = pubkey
+        self.nrContact = NRContact.instance(of: pubkey)
+    }
     
     var body: some View {
         HStack {
             Text("Zap receipt from")
-            InnerPFP(pubkey: pubkey, pictureUrl:pictureUrl, size: 20.0)
+            InnerPFP(pubkey: pubkey, pictureUrl: nrContact.pictureUrl, size: 20.0)
                 .frame(width: 20.0, height: 20.0)
-            Text(name ?? String(pubkey.prefix(11)))
+            Text(nrContact.anyName)
         }
         .font(.footnote)
         .foregroundColor(theme.secondary)
         .frame(maxWidth: .infinity, alignment: .trailing)
         .task {
-            Kind0Processor.shared.receive
-                .subscribe(on: DispatchQueue.global())
-                .receive(on: DispatchQueue.global())
-                .filter { $0.pubkey == pubkey }
-                .sink { profile in
-                    DispatchQueue.main.async {
-                        name = profile.name
-                        pictureUrl = profile.pictureUrl
-                    }
-                }
-                .store(in: &subscriptions)
-            
-            Kind0Processor.shared.request.send(pubkey)
+            QueuedFetcher.shared.enqueue(pTag: pubkey)
         }
     }
 }

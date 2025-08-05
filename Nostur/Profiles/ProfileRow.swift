@@ -187,6 +187,103 @@ struct ProfileRow: View {
     }
 }
 
+struct NRProfileRow: View {
+    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.theme) private var theme
+    @EnvironmentObject private var la: LoggedInAccount
+    @ObservedObject private var fg: FollowingGuardian = .shared
+     
+    public var withoutFollowButton = false
+    public var tapEnabled: Bool = true
+    public var showNpub: Bool = false
+    @ObservedObject public var nrContact: NRContact
+
+    var body: some View {
+        HStack(alignment: .top) {
+            PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
+                .overlay(alignment: .bottomTrailing) {
+                    if let fixedPfpURL = nrContact.fixedPfpURL {
+                        FixedPFP(picture: fixedPfpURL)
+                    }
+                }
+            VStack(alignment: .leading) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(nrContact.anyName).font(.headline).foregroundColor(.primary)
+                            .lineLimit(1)
+                        
+                        if let similarToPubkey = nrContact.similarToPubkey {
+                            Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
+                                .padding(.horizontal, 8)
+                                .background(.red)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                                .padding(.top, 3)
+                                .layoutPriority(2)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: nrContact.pubkey, similarToPubkey: similarToPubkey))
+                                }
+                            Text(nrContact.npub ?? "")
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .textSelection(.enabled)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .opacity(nrContact.npub != nil ? 1 : 0)
+                        }
+                        else if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                .layoutPriority(3)
+                        }
+                        
+                        if showNpub {
+                            Text(nrContact.npub ?? "")
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                                .textSelection(.enabled)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .opacity(nrContact.npub != nil ? 1 : 0)
+                                .task {
+                                    await nrContact.loadNpub()
+                                }
+                        }
+                        
+                        if let fixedName = nrContact.fixedName, fixedName != nrContact.anyName {
+                            HStack {
+                                Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
+                                    .lineLimit(1)
+                                Image(systemName: "multiply.circle.fill")
+                                    .onTapGesture {
+                                        nrContact.setFixedName(nrContact.anyName)
+                                    }
+                            }
+                        }
+                    }
+                    .multilineTextAlignment(.leading)
+                    Spacer()
+                    if (!withoutFollowButton) {
+                        FollowButton(pubkey: nrContact.pubkey)
+                            .buttonStyle(.borderless)
+                    }
+                }
+                Text(nrContact.about ?? "").foregroundColor(.primary)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .padding()
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard tapEnabled else { return }
+            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+        }
+        .onAppear {
+            nrContact.runImposterCheck()
+        }
+    }
+}
+
 struct ProfileRow_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in

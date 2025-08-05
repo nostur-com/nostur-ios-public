@@ -20,10 +20,10 @@ class ViewUpdates {
     
     // For reloading PostReactions or PostZaps
     public var relatedUpdates = PassthroughSubject<RelatedUpdate, Never>()
-    
-    public func sendMockProfileUpdate() {
-        profileUpdates.send(ProfileInfo(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: Int.random(in: 1...33).description, pfpUrl: Int.random(in: 44...500).description))
-    }
+//    
+//    public func sendMockProfileUpdate() {
+//        profileUpdates.send(ProfileInfo(pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: Int.random(in: 1...33).description, pfp: Int.random(in: 44...500).description))
+//    }
     
     public func sendMockBookmarkUpdate() {
         bookmarkUpdates.send(BookmarkUpdate(id: "3a72941da6030f155b6e5209e96057aec77ab3851a60bce61a36227c327c5322", isBookmarked: Bool.random()))
@@ -34,7 +34,7 @@ class ViewUpdates {
     public var repliesUpdated = PassthroughSubject<EventRepliesChange, Never>()
     public var postDeleted = PassthroughSubject<(toDelete: String, deletedBy: String), Never>()
     public var eventRelationUpdate = PassthroughSubject<EventRelationUpdate, Never>()
-    public var contactUpdated = PassthroughSubject<(String, Contact), Never>()
+//    public var contactUpdated = PassthroughSubject<(String, Contact), Never>()
     public var nip05updated = PassthroughSubject<(pubkey: String, isVerified: Bool, nip05: String, nameOnly: String), Never>() //
     public var updateNRPost = PassthroughSubject<Event, Never>()
     public var replacableEventUpdate = PassthroughSubject<Event, Never>()
@@ -85,8 +85,58 @@ public enum ZapState: String {
 
 struct ProfileInfo {
     let pubkey: String
-    var name: String?
-    var pfpUrl: String?
+    var anyName: String?
+    var fixedName: String?
+    
+    var pfp: String?
+    var pfpUrl: URL? {
+        if let pfp {
+            return URL(string: pfp)
+        }
+        return nil
+    }
+    
+    var fixedPfp: String?
+    var fixedPfpUrl: URL? {
+        if let fixedPfp {
+            return URL(string: fixedPfp)
+        }
+        return nil
+    }
+    
+    var about: String?
+    var banner: String?
+    var nip05: String?
+    var nip05verified: Bool
+    
+    var metadata_created_at: Int64
+    var couldBeImposter: Int16
+    var similarToPubkey: String?
+    
+    var lud06: String?
+    var lud16: String?
+    var anyLud: Bool
+    var zapperPubkeys: Set<String>
+}
+
+func profileInfo(_ contact: Contact) -> ProfileInfo {
+    return ProfileInfo(pubkey: contact.pubkey,
+                       anyName: contact.anyName,
+                       fixedName: contact.fixedName,
+                       pfp: contact.picture,
+                       fixedPfp: contact.fixedPfp,
+                       about: contact.about,
+                       banner: contact.banner,
+                       nip05: contact.nip05,
+                       nip05verified: contact.nip05veried,
+                       metadata_created_at: contact.metadata_created_at,
+                       couldBeImposter: contact.couldBeImposter,
+                       similarToPubkey: contact.similarToPubkey,
+                       lud06: contact.lud06,
+                       lud16: contact.lud16,
+                       anyLud: contact.anyLud,
+                       zapperPubkeys: contact.zapperPubkeys
+    )
 }
 
 struct BookmarkUpdate {

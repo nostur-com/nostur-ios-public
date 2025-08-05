@@ -229,65 +229,32 @@ class LiveKitVoiceSession: ObservableObject {
             
             ctx.perform { [weak self] in
                 guard let self else { return }
-                if let nrContact = NRContact.fetch(participantPubkey, context: ctx) {
-                    
-                    let isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
-                        true
-                    }
-                    else {
-                        false
-                    }
-                    
-                    if nrContact.pubkey == self.anonymousPubkeyCached {
-                        DispatchQueue.main.async {
-                            nrContact.name = "You"
-                            nrContact.anyName = "You"
-                            nrContact.isMuted = isMuted
-                        }
-                    }
-
-                    DispatchQueue.main.async {
-                        guard let nrLiveEvent = self.nrLiveEvent else { return }
-                        nrLiveEvent.objectWillChange.send()
-                        if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
-                            nrLiveEvent.participantsOrSpeakers.append(nrContact)
-                        }
-                    }
+                let nrContact = NRContact.instance(of: participantPubkey)
+                
+                let isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
+                    true
                 }
                 else {
-                    let contact = Contact(context: ctx)
-                    
-                    contact.pubkey = participantPubkey
-                    contact.metadata_created_at = 0
-                    contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
-                    
-                    EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "syncParticipants.001")
-                    QueuedFetcher.shared.enqueue(pTag: participantPubkey)
-                    
-                    let nrContact = NRContact.instance(of: contact.pubkey, contact: contact, context: ctx) 
-                    
-                    let isMuted = if let audioPublication = participant.firstAudioPublication, audioPublication.isMuted {
-                        true
-                    }
-                    else {
-                        false
-                    }
-                    
-                    if nrContact.pubkey == self.anonymousPubkeyCached {
-                        DispatchQueue.main.async {
-                            nrContact.name = "You"
-                            nrContact.anyName = "You"
-                            nrContact.isMuted = isMuted
-                        }
-                    }
+                    false
+                }
+                
+                if nrContact.pubkey == self.anonymousPubkeyCached {
                     DispatchQueue.main.async {
-                        guard let nrLiveEvent = self.nrLiveEvent else { return }
-                        nrLiveEvent.objectWillChange.send()
-                        if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
-                            nrLiveEvent.participantsOrSpeakers.append(nrContact)
-                        }
+                        nrContact.anyName = "You"
+                        nrContact.isMuted = isMuted
                     }
-                    bgSave()
+                }
+
+                DispatchQueue.main.async {
+                    guard let nrLiveEvent = self.nrLiveEvent else { return }
+                    nrLiveEvent.objectWillChange.send()
+                    if !nrLiveEvent.participantsOrSpeakers.contains(where: { $0.pubkey == nrContact.pubkey } ) {
+                        nrLiveEvent.participantsOrSpeakers.append(nrContact)
+                    }
+                }
+                
+                if nrContact.metadata_created_at == 0 {
+                    QueuedFetcher.shared.enqueue(pTag: participantPubkey)
                 }
             }
         }

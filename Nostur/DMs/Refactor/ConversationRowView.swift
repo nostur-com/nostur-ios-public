@@ -9,25 +9,24 @@ import SwiftUI
 
 struct ConversationRowView: View {
     @ObservedObject private var conv: Conversation
-    @StateObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     private var unread: Int { conv.unread }
     
     init(_ conv: Conversation) {
         self.conv = conv
-        _pfpAttributes = StateObject(wrappedValue: PFPAttributes(contact: conv.nrContact, pubkey: conv.contactPubkey))
+        nrContact = NRContact.instance(of: conv.contactPubkey)
     }
 
     var body: some View {
         HStack(alignment: .top) {
-            PFP(pubkey: conv.contactPubkey, pictureUrl: pfpAttributes.pfpURL)
+            PFP(pubkey: conv.contactPubkey, pictureUrl: nrContact.pictureUrl)
                 .onAppear {
-                    if let nrContact = conv.nrContact, nrContact.metadata_created_at == 0, let contact = nrContact.contact {
-                        EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "ConversationRowView.001")
+                    if nrContact.metadata_created_at == 0 {
                         QueuedFetcher.shared.enqueue(pTag: conv.contactPubkey)
                     }
                 }
                 .onDisappear {
-                    if let nrContact = conv.nrContact, nrContact.metadata_created_at == 0 {
+                    if nrContact.metadata_created_at == 0 {
                         QueuedFetcher.shared.dequeue(pTag: conv.contactPubkey)
                     }
                 }
@@ -42,41 +41,25 @@ struct ConversationRowView: View {
                     }
                 }
             VStack(alignment: .leading, spacing: 5) {
-                if let contact = conv.nrContact {
-                    HStack(alignment: .top, spacing: 5) {
-                        Group {
-                            Text(contact.anyName)
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                            
-                            PossibleImposterLabelView(pfp: pfpAttributes)
-                        }
-                    }
-                    .onAppear {
-                        if contact.metadata_created_at == 0 {
-                            guard let bgContact = contact.contact else { return }
-                            EventRelationsQueue.shared.addAwaitingContact(bgContact, debugInfo: "ConversationRowView.002")
-                            QueuedFetcher.shared.enqueue(pTag: contact.pubkey)
-                        }
-                    }
-                    .onDisappear {
-                        if contact.metadata_created_at == 0 {
-                            QueuedFetcher.shared.dequeue(pTag: contact.pubkey)
-                        }
+                HStack(alignment: .top, spacing: 5) {
+                    Group {
+                        Text(nrContact.anyName)
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                        
+                        PossibleImposterLabelView(nrContact: nrContact)
                     }
                 }
-                else {
-                    Text(conv.contactPubkey.prefix(11))
-                        .onAppear {
-                            bg().perform {
-                                EventRelationsQueue.shared.addAwaitingEvent(conv.mostRecentEvent, debugInfo: "ConversationRowView.002")
-                                QueuedFetcher.shared.enqueue(pTag: conv.contactPubkey)
-                            }
-                        }
-                        .onDisappear {
-                            QueuedFetcher.shared.dequeue(pTag: conv.contactPubkey)
-                        }
+                .onAppear {
+                    if nrContact.metadata_created_at == 0 {
+                        QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
+                    }
+                }
+                .onDisappear {
+                    if nrContact.metadata_created_at == 0 {
+                        QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
+                    }
                 }
                 Text(conv.mostRecentMessage).foregroundColor(.primary)
                     .lineLimit(3)

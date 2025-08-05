@@ -13,7 +13,7 @@ struct Kind9802: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     @ObservedObject private var highlightAttributes: HighlightAttributes
     
     private let hideFooter: Bool // For rendering in NewReply
@@ -38,7 +38,7 @@ struct Kind9802: View {
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, forceAutoload: Bool = false) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = nrPost.contact
         self.highlightAttributes = nrPost.highlightAttributes
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo

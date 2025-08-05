@@ -11,9 +11,6 @@ import CoreData
 import Combine
 
 public class Contact: NSManagedObject {
-
-    var zapState: ZapState?
-    
     func followsYou() -> Bool {
         guard let clEvent = clEvent else { return false }
         guard let accountPubkey = AccountsState.shared.loggedInAccount?.pubkey else { return false }
@@ -34,5 +31,15 @@ extension Contact {
         else {
             return bg().object(with: self.objectID) as? Contact
         }
+    }
+}
+
+
+func withContact(pubkey: String, completion: @escaping (Contact) -> Void) {
+    #if DEBUG
+    shouldBeBg()
+    #endif
+    if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
+        completion(contact)
     }
 }

@@ -12,7 +12,7 @@ struct ChatConfirmedZapRow: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var vc: ViewingContext
     private var confirmedZap: NRChatConfirmedZap
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     
     @ObservedObject var settings: SettingsStore = .shared
     
@@ -22,7 +22,7 @@ struct ChatConfirmedZapRow: View {
     
     init(confirmedZap: NRChatConfirmedZap, zoomableId: String = "Default", selectedContact: Binding<NRContact?>) {
         self.confirmedZap = confirmedZap
-        self.pfpAttributes = confirmedZap.pfpAttributes
+        self.nrContact = confirmedZap.nrContact
         self.zoomableId = zoomableId
         _selectedContact = selectedContact
     }
@@ -46,10 +46,10 @@ struct ChatConfirmedZapRow: View {
                             .clipShape(Capsule())
                     }
                     
-                    MiniPFP(pictureUrl: pfpAttributes.pfpURL)
+                    MiniPFP(pictureUrl: nrContact.pictureUrl)
                         
                     
-                    Text(pfpAttributes.anyName)
+                    Text(nrContact.anyName)
                             
                     Ago(confirmedZap.zapRequestCreatedAt)
                         .foregroundColor(theme.secondary)
@@ -64,27 +64,15 @@ struct ChatConfirmedZapRow: View {
                 }
                 .contentShape(Rectangle())
                 .highPriorityGesture(TapGesture().onEnded({ _ in
-                    if let nrContact = pfpAttributes.contact {
-                        selectedContact = nrContact
+                    selectedContact = nrContact
+                    if AnyPlayerModel.shared.viewMode == .detailstream {
+                        AnyPlayerModel.shared.viewMode = .overlay
                     }
-                    else if let nrContact = pfpAttributes.contact {
-                        selectedContact = nrContact
+                    else if LiveKitVoiceSession.shared.visibleNest != nil {
+                        LiveKitVoiceSession.shared.visibleNest = nil
                     }
-                    else {
-                        if AnyPlayerModel.shared.viewMode == .detailstream {
-                            AnyPlayerModel.shared.viewMode = .overlay
-                        }
-                        else if LiveKitVoiceSession.shared.visibleNest != nil {
-                            LiveKitVoiceSession.shared.visibleNest = nil
-                        }
-                        
-                        if let nrContact = pfpAttributes.contact {
-                            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
-                        }
-                        else {
-                            navigateTo(ContactPath(key: pfpAttributes.pubkey), context: "Default")
-                        }
-                    }
+                    
+                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
                 }))
                 .foregroundColor(theme.accent)
                 

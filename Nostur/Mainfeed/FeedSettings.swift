@@ -206,13 +206,13 @@ struct ListManagedByView: View {
 struct SendSatsToSupportView: View {
     @Environment(\.dismiss) private var dismiss
     private var pubkey: String
-    @StateObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     @ObservedObject private var ss: SettingsStore = .shared
     private var listName: String?
     
     init(pubkey: String, listName: String? = nil) {
         self.pubkey = pubkey
-        _pfpAttributes = StateObject(wrappedValue: PFPAttributes(pubkey: pubkey))
+        nrContact = NRContact.instance(of: pubkey)
         self.ss = ss
         self.listName = listName
     }
@@ -226,13 +226,11 @@ struct SendSatsToSupportView: View {
             }
             HStack {
                 Text("Maintained by ")
-                PFPandName(pfpAttributes: pfpAttributes, dismissOnNavigate: true)
+                PFPandName(nrContact: nrContact, dismissOnNavigate: true)
             }
             
             if  ss.nwcReady { // TODO: FIX FOR NON NWC
-                if let nrContact = pfpAttributes.contact {
-                    ProfileZapButton(contact: nrContact) // TODO: Support zapATag
-                }
+                ProfileZapButton(nrContact: nrContact) // TODO: Support zapATag
                 
                 // feed is based on a list of people managed by ....
                 // zap to support people who curate high quality lists
@@ -242,7 +240,7 @@ struct SendSatsToSupportView: View {
             }
             
         }
-        .navigationTitle("\(listName ?? "List") by \(pfpAttributes.anyName)")
+        .navigationTitle("\(listName ?? "List") by \(nrContact.anyName)")
     }
 }
 
@@ -252,30 +250,30 @@ struct SendSatsToSupportView: View {
 // TODO: Should start reusing this everywhere? add flags and toggles for size / layout / position etc / in sheet or not (for dismiss)
 struct PFPandName: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject public var pfpAttributes: PFPAttributes
+    @ObservedObject public var nrContact: NRContact
     
     public var dismissOnNavigate: Bool = false
     
     var body: some View {
         HStack {
-            ObservedPFP(pfp: pfpAttributes, size: 20.0)
+            ObservedPFP(nrContact: nrContact, size: 20.0)
                 .onTapGesture {
-                    navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes, context: "Default")
+                    navigateToContact(pubkey: nrContact.pubkey,  context: "Default")
                 }
-            Text(pfpAttributes.anyName)
+            Text(nrContact.anyName)
         }
 //        .navigationTitle("List by \(pfpAttributes.anyName)")
         .onAppear {
             bg().perform {
-                if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
-                    QueuedFetcher.shared.enqueue(pTag: pfpAttributes.pubkey)
+                if nrContact.metadata_created_at == 0 {
+                    QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
                 }
             }
         }
         .onDisappear {
             bg().perform {
-                if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
-                    QueuedFetcher.shared.dequeue(pTag: pfpAttributes.pubkey)
+                if nrContact.metadata_created_at == 0 {
+                    QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
                 }
             }
         }

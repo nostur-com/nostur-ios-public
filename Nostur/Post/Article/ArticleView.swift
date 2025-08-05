@@ -14,6 +14,7 @@ struct ArticleView: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var article: NRPost
+    @ObservedObject private var nrContact: NRContact
 
     private var isDetail: Bool = false
     private var fullWidth: Bool = false
@@ -23,6 +24,7 @@ struct ArticleView: View {
     
     init(_ article: NRPost, isDetail: Bool = false, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false) {
         self.article = article
+        self.nrContact = article.contact
         self.isDetail = isDetail
         self.fullWidth = fullWidth
         self.hideFooter = hideFooter
@@ -69,40 +71,39 @@ struct ArticleView: View {
                     }
                     
                     HStack {
-                        ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
+                        ZappablePFP(pubkey: article.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
-                                navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes, context: dim.id)
+                                navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: dim.id)
                             }
                         VStack(alignment: .leading) {
-                            if let contact = article.contact {
-                                HStack {
-                                    Text(contact.anyName)
-                                        .foregroundColor(.primary)
-                                        .fontWeight(.bold)
-                                        .lineLimit(1)
-                                        .layoutPriority(2)
-                                        .onTapGesture {
-                                            navigateTo(contact, context: dim.id)
-                                        }
-                                    
-                                    if contact.nip05verified, let nip05 = contact.nip05 {
-                                        NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                            .layoutPriority(3)
+                            
+                            HStack {
+                                Text(nrContact.anyName)
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
+                                    .layoutPriority(2)
+                                    .onTapGesture {
+                                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
                                     }
+                                
+                                if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                        .layoutPriority(3)
                                 }
                             }
-                            else {
-                                Text(article.anyName)
-                                    .onAppear {
-                                        bg().perform {
-                                            EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
-                                            QueuedFetcher.shared.enqueue(pTag: article.pubkey)
-                                        }
-                                    }
-                                    .onDisappear {
-                                        QueuedFetcher.shared.dequeue(pTag: article.pubkey)
-                                    }
+                            .onAppear {
+                                guard nrContact.metadata_created_at == 0 else { return }
+                                bg().perform {
+                                    EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
+                                    QueuedFetcher.shared.enqueue(pTag: article.pubkey)
+                                }
                             }
+                            .onDisappear {
+                                guard nrContact.metadata_created_at == 0 else { return }
+                                QueuedFetcher.shared.dequeue(pTag: article.pubkey)
+                            }
+                    
                             HStack {
                                 if minutesToRead > 0 {
                                     Text("\(minutesToRead) min read")
@@ -254,39 +255,38 @@ struct ArticleView: View {
                     ViewThatFits(in: .horizontal) {
                         HStack {
                             Spacer()
-                            ZappablePFP(pubkey: article.pubkey, pfpAttributes: article.pfpAttributes, size: 25.0, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
+                            ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: article.pubkey, nrPost: article, pfpAttributes: article.pfpAttributes, context: dim.id)
+                                    navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: dim.id)
                                 }
-                            if let contact = article.contact {
-                                Text(contact.anyName)
-                                    .foregroundColor(.primary)
-                                    .fontWeight(.bold)
-                                    .lineLimit(1)
-                                    .layoutPriority(2)
-                                    .onTapGesture {
-                                        guard !nxViewingContext.contains(.preview) else { return }
-                                        navigateTo(contact, context: dim.id)
-                                    }
-                                
-                                if contact.nip05verified, let nip05 = contact.nip05 {
-                                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                        .layoutPriority(3)
+                            
+                            Text(nrContact.anyName)
+                                .foregroundColor(.primary)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                                .layoutPriority(2)
+                                .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
                                 }
-                            }
-                            else {
-                                Text(article.anyName)
-                                    .onAppear {
-                                        bg().perform {
-                                            EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
-                                            QueuedFetcher.shared.enqueue(pTag: article.pubkey)
-                                        }
+                                .onAppear {
+                                    guard nrContact.metadata_created_at == 0 else { return }
+                                    bg().perform {
+                                        EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
+                                        QueuedFetcher.shared.enqueue(pTag: article.pubkey)
                                     }
-                                    .onDisappear {
-                                        QueuedFetcher.shared.dequeue(pTag: article.pubkey)
-                                    }
+                                }
+                                .onDisappear {
+                                    guard nrContact.metadata_created_at == 0 else { return }
+                                    QueuedFetcher.shared.dequeue(pTag: article.pubkey)
+                                }
+                            
+                            if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                                NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                    .layoutPriority(3)
                             }
+
                             if minutesToRead > 0 {
                                 Text("\(minutesToRead) min read")
                                 Text("·")
@@ -302,34 +302,32 @@ struct ArticleView: View {
                             HStack {
                                 Spacer()
                                 PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
-                                if let contact = article.contact {
-                                    Text(contact.anyName)
-                                        .foregroundColor(.primary)
-                                        .fontWeight(.bold)
-                                        .lineLimit(1)
-                                        .layoutPriority(2)
-                                        .onTapGesture {
-                                            guard !nxViewingContext.contains(.preview) else { return }
-                                            navigateTo(contact, context: dim.id)
-                                        }
-                                    
-                                    if contact.nip05verified, let nip05 = contact.nip05 {
-                                        NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                            .layoutPriority(3)
+                                Text(nrContact.anyName)
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
+                                    .layoutPriority(2)
+                                    .onTapGesture {
+                                        guard !nxViewingContext.contains(.preview) else { return }
+                                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
                                     }
-                                }
-                                else {
-                                    Text(article.anyName)
-                                        .onAppear {
-                                            bg().perform {
-                                                EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
-                                                QueuedFetcher.shared.enqueue(pTag: article.pubkey)
-                                            }
+                                    .onAppear {
+                                        guard nrContact.metadata_created_at == 0 else { return }
+                                        bg().perform {
+                                            EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
+                                            QueuedFetcher.shared.enqueue(pTag: article.pubkey)
                                         }
-                                        .onDisappear {
-                                            QueuedFetcher.shared.dequeue(pTag: article.pubkey)
-                                        }
+                                    }
+                                    .onDisappear {
+                                        guard nrContact.metadata_created_at == 0 else { return }
+                                        QueuedFetcher.shared.dequeue(pTag: article.pubkey)
+                                    }
+                                
+                                if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                        .layoutPriority(3)
                                 }
+
                             }
                             HStack {
                                 Spacer()
@@ -351,34 +349,24 @@ struct ArticleView: View {
                         HStack {
                             Spacer()
                             PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
-                            if let contact = article.contact {
-                                Text(contact.anyName)
-                                    .foregroundColor(.primary)
-                                    .fontWeight(.bold)
-                                    .lineLimit(1)
-                                    .layoutPriority(2)
-                                    .onTapGesture {
-                                        guard !nxViewingContext.contains(.preview) else { return }
-                                        navigateTo(contact, context: dim.id)
-                                    }
-                                
-                                if contact.nip05verified, let nip05 = contact.nip05 {
-                                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                        .layoutPriority(3)
+                            Text(nrContact.anyName)
+                                .foregroundColor(.primary)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                                .layoutPriority(2)
+                                .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
                                 }
-                            }
-                            else {
-                                Text(article.anyName)
-                                    .onAppear {
-                                        bg().perform {
-                                            EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
-                                            QueuedFetcher.shared.enqueue(pTag: article.pubkey)
-                                        }
+                                .onAppear {
+                                    bg().perform {
+                                        EventRelationsQueue.shared.addAwaitingEvent(article.event, debugInfo: "ArticleView.001")
+                                        QueuedFetcher.shared.enqueue(pTag: article.pubkey)
                                     }
-                                    .onDisappear {
-                                        QueuedFetcher.shared.dequeue(pTag: article.pubkey)
-                                    }
-                            }
+                                }
+                                .onDisappear {
+                                    QueuedFetcher.shared.dequeue(pTag: article.pubkey)
+                                }
                         }
                         HStack {
                             Spacer()

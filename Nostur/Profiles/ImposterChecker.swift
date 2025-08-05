@@ -185,8 +185,10 @@ class ImposterChecker {
                     completion(CouldBeImposterYes(similarToPubkey: followingPubkey))
                     
                     bg().perform {
-                        nrContact.contact?.couldBeImposter = couldBeImposter
-                        nrContact.contact?.similarToPubkey = similarToPubkey
+                        withContact(pubkey: nrContact.pubkey) { contact in
+                            contact.couldBeImposter = couldBeImposter
+                            contact.similarToPubkey = similarToPubkey
+                        }
                     }
                 }
             }

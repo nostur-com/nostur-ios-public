@@ -113,10 +113,13 @@ struct ZapPill: View {
             guard let pfpURL = zap.zapFrom.contact?.pictureUrl, self.pfpURL != pfpURL else { return }
             self.pfpURL = pfpURL
         }
-        .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-            guard profile.pubkey == zap.zapFrom.pubkey, pfpURL != profile.pictureUrl else { return }
+        .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
+            guard profile.pubkey == zap.zapFrom.pubkey,
+                  pfpURL?.absoluteString != profile.pfp,
+                  let updatedPfpURL = profile.pfpUrl
+            else { return }
             withAnimation {
-                pfpURL = profile.pictureUrl
+                pfpURL = updatedPfpURL
             }
         }
     }

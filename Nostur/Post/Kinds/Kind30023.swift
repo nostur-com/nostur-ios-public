@@ -15,7 +15,7 @@ struct Kind30023: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
@@ -27,7 +27,6 @@ struct Kind30023: View {
     private let grouped: Bool
     private let forceAutoload: Bool
 
-    @State private var couldBeImposter: Int16 // TODO: this is here but also in NRPostHeaderContainer, need to clean up
     @State private var didLoad = false
     
     private let THREAD_LINE_OFFSET = 24.0
@@ -40,7 +39,7 @@ struct Kind30023: View {
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = nrPost.contact
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -50,7 +49,6 @@ struct Kind30023: View {
         self.isEmbedded = isEmbedded
         self.grouped = grouped
         self.forceAutoload = forceAutoload
-        self.couldBeImposter = nrPost.pfpAttributes.contact?.couldBeImposter ?? -1
     }
     
     var body: some View {
@@ -95,39 +93,25 @@ struct Kind30023: View {
                     }
                     
                     HStack {
-                        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
+                        ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
-                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
+                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
                             }
                         VStack(alignment: .leading) {
-                            if let contact = nrPost.contact {
-                                HStack {
-                                    Text(contact.anyName)
-                                        .foregroundColor(.primary)
-                                        .fontWeight(.bold)
-                                        .lineLimit(1)
-                                        .layoutPriority(2)
-                                        .onTapGesture {
-                                            navigateTo(contact, context: dim.id)
-                                        }
-                                    
-                                    if contact.nip05verified, let nip05 = contact.nip05 {
-                                        NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                            .layoutPriority(3)
+                            HStack {
+                                Text(nrContact.anyName)
+                                    .foregroundColor(.primary)
+                                    .fontWeight(.bold)
+                                    .lineLimit(1)
+                                    .layoutPriority(2)
+                                    .onTapGesture {
+                                        navigateTo(nrContact, context: dim.id)
                                     }
+                                
+                                if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                        .layoutPriority(3)
                                 }
-                            }
-                            else {
-                                Text(nrPost.anyName)
-                                    .onAppear {
-                                        bg().perform {
-                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "ArticleView.001")
-                                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                                        }
-                                    }
-                                    .onDisappear {
-                                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-                                    }
                             }
                             HStack {
                                 if minutesToRead > 0 {
@@ -327,39 +311,25 @@ struct Kind30023: View {
                 ViewThatFits(in: .horizontal) {
                     HStack {
                         Spacer()
-                        ZappablePFP(pubkey: nrPost.pubkey, pfpAttributes: nrPost.pfpAttributes, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
+                        ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
                                 guard !nxViewingContext.contains(.preview) else { return }
-                                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: nrPost.pfpAttributes, context: dim.id)
+                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
                             }
 
-                        if let contact = nrPost.contact {
-                            Text(contact.anyName)
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                                .layoutPriority(2)
-                                .onTapGesture {
-                                    guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateTo(contact, context: dim.id)
-                                }
-                            
-                            if contact.nip05verified, let nip05 = contact.nip05 {
-                                NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                    .layoutPriority(3)
+                        Text(nrContact.anyName)
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                            .layoutPriority(2)
+                            .onTapGesture {
+                                guard !nxViewingContext.contains(.preview) else { return }
+                                navigateTo(nrContact, context: dim.id)
                             }
-                        }
-                        else {
-                            Text(nrPost.anyName)
-                                .onAppear {
-                                    bg().perform {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "nrPostView.001")
-                                        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                                    }
-                                }
-                                .onDisappear {
-                                    QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-                                }
+                        
+                        if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                .layoutPriority(3)
                         }
                         if minutesToRead > 0 {
                             Text("\(minutesToRead) min read")
@@ -376,33 +346,31 @@ struct Kind30023: View {
                         HStack {
                             Spacer()
                             PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
-                            if let contact = nrPost.contact {
-                                Text(contact.anyName)
-                                    .foregroundColor(.primary)
-                                    .fontWeight(.bold)
-                                    .lineLimit(1)
-                                    .layoutPriority(2)
-                                    .onTapGesture {
-                                        guard !nxViewingContext.contains(.preview) else { return }
-                                        navigateTo(contact, context: dim.id)
-                                    }
-                                
-                                if contact.nip05verified, let nip05 = contact.nip05 {
-                                    NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                        .layoutPriority(3)
+                            
+                            Text(nrContact.anyName)
+                                .foregroundColor(.primary)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                                .layoutPriority(2)
+                                .onTapGesture {
+                                    guard !nxViewingContext.contains(.preview) else { return }
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
                                 }
-                            }
-                            else {
-                                Text(nrPost.anyName)
-                                    .onAppear {
-                                        bg().perform {
-                                            EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "ArticleView.001")
-                                            QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                                        }
+                                .onAppear {
+                                    guard nrContact.metadata_created_at == 0 else { return }
+                                    bg().perform {
+                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "ArticleView.001")
+                                        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
                                     }
-                                    .onDisappear {
-                                        QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-                                    }
+                                }
+                                .onDisappear {
+                                    guard nrContact.metadata_created_at == 0 else { return }
+                                    QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
+                                }
+                            
+                            if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                                NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                    .layoutPriority(3)
                             }
                         }
                         HStack {
@@ -425,33 +393,19 @@ struct Kind30023: View {
                     HStack {
                         Spacer()
                         PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
-                        if let contact = nrPost.contact {
-                            Text(contact.anyName)
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                                .layoutPriority(2)
-                                .onTapGesture {
-                                    guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateTo(contact, context: dim.id)
-                                }
-                            
-                            if contact.nip05verified, let nip05 = contact.nip05 {
-                                NostrAddress(nip05: nip05, shortened: contact.anyName.lowercased() == contact.nip05nameOnly.lowercased())
-                                    .layoutPriority(3)
+                        Text(nrContact.anyName)
+                            .foregroundColor(.primary)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                            .layoutPriority(2)
+                            .onTapGesture {
+                                guard !nxViewingContext.contains(.preview) else { return }
+                                navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
                             }
-                        }
-                        else {
-                            Text(nrPost.anyName)
-                                .onAppear {
-                                    bg().perform {
-                                        EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "ArticleView.001")
-                                        QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
-                                    }
-                                }
-                                .onDisappear {
-                                    QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
-                                }
+                        
+                        if nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                                .layoutPriority(3)
                         }
                     }
                     HStack {

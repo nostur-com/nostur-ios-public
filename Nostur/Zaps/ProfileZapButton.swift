@@ -13,7 +13,7 @@ struct ProfileZapButton: View {
     @EnvironmentObject private var dim: DIMENSIONS
     private let er: ExchangeRateModel = .shared // Not Observed for performance
     
-    @ObservedObject var contact: NRContact
+    @ObservedObject var nrContact: NRContact
     public var zapEtag: String?
     
     @ObservedObject private var ss: SettingsStore = .shared
@@ -47,13 +47,8 @@ struct ProfileZapButton: View {
                             // TODO: MOVE state to contact (maybe increase lightning ring size)
                             activeColor = Self.grey
                             isZapped = false
-                            contact.zapState = .cancelled
-                            bg().perform {
-                                contact.contact?.zapState = .cancelled
-                                if let zapEtag {
-                                    ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: contact.pubkey, eTag: zapEtag, zapState: .cancelled))
-                                }
-                            }
+                            nrContact.zapState = .cancelled
+                            ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrContact.pubkey, eTag: zapEtag, zapState: .cancelled))
                             L.og.info("⚡️ Zap cancelled")
                         }
                 }
@@ -98,7 +93,7 @@ struct ProfileZapButton: View {
                                                // Trigger custom zap
                                                customZapId = String()
                                                if let customZapId {
-                                                   sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: contact.anyName, customZapId: customZapId))
+                                                   sendNotification(.showZapCustomizerSheet, ZapCustomizerSheetInfo(name: nrContact.anyName, customZapId: customZapId))
                                                }
                                            }
                                    )
@@ -106,7 +101,7 @@ struct ProfileZapButton: View {
                                        TapGesture()
                                            .onEnded { _ in
                                                let point = CGPoint(x: geo.frame(in: .global).origin.x + 55, y: geo.frame(in: .global).origin.y + 10)
-                                               self.triggerZap(strikeLocation: point, contact:contact)
+                                               self.triggerZap(strikeLocation: point, nrContact: nrContact)
                                            }
                                    )
                                    .onReceive(receiveNotification(.sendCustomZap)) { notification in
@@ -115,21 +110,21 @@ struct ProfileZapButton: View {
                                        guard customZapId != nil && customZap.customZapId == customZapId else { return }
                                        
                                        let point = CGPoint(x: geo.frame(in: .global).origin.x + 55, y: geo.frame(in: .global).origin.y + 10)
-                                       self.triggerZap(strikeLocation: point, contact:contact, zapMessage:customZap.publicNote, amount: customZap.amount)
+                                       self.triggerZap(strikeLocation: point, nrContact: nrContact, zapMessage: customZap.publicNote, amount: customZap.amount)
                                    }
                         }
                     )
                     .onAppear {
-                        isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(contact.zapState)
+                        isZapped = [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(nrContact.zapState)
                     }
             }
         }
         else {
-            ProfileLightningButton(nrContact: contact, zapEtag: zapEtag)
+            ProfileLightningButton(nrContact: nrContact, zapEtag: zapEtag)
         }
     }
     
-    func triggerZap(strikeLocation:CGPoint, contact:NRContact, zapMessage:String = "", amount:Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
@@ -142,16 +137,15 @@ struct ProfileZapButton: View {
         }
         cancellationId = UUID()
         SoundManager.shared.playThunderzap()
-        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: contact.pubkey, eTag: zapEtag, zapState: .initiated))
-        QueuedFetcher.shared.enqueue(pTag: contact.pubkey) // Get latest wallet info to be sure (from kind:0)
+        ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrContact.pubkey, eTag: zapEtag, zapState: .initiated))
+        QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey) // Get latest wallet info to be sure (from kind:0)
 
         bg().perform {
-            guard let bgContact = contact.contact else { return }
             NWCRequestQueue.shared.ensureNWCconnection()
             guard let cancellationId = cancellationId else { return }
-            let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), contact: bgContact, eventId: zapEtag, cancellationId: cancellationId, zapMessage: zapMessage)
+            let zap = Zap(isNC:isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: zapEtag, cancellationId: cancellationId, zapMessage: zapMessage)
             NWCZapQueue.shared.sendZap(zap)
-            bgContact.zapState = .initiated
+            nrContact.zapState = .initiated
         }
     }
 }
@@ -163,8 +157,8 @@ struct ProfileZapButton_Previews: PreviewProvider {
             pe.loadZaps()
         }) {
             VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1"), let contact = nrPost.contact {
-                    ProfileZapButton(contact: contact, zapEtag: nrPost.id)
+                if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
+                    ProfileZapButton(nrContact: nrPost.contact, zapEtag: nrPost.id)
                 }
                 
                 

@@ -120,3 +120,12 @@ struct NIP05Task {
 struct NostrJson: Codable {
     var names: [String:String]
 }
+
+
+func nip05nameOnly(nip05veried: Bool, nip05: String? = nil) -> String {
+    guard nip05veried else { return "..." }
+    guard let parts = nip05?.split(separator: "@"), parts.count >= 2 else { return "" }
+    guard let name = parts[safe: 0] else { return "" }
+    guard !name.isEmpty else { return "" }
+    return String(name)
+}

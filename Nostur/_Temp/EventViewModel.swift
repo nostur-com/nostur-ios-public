@@ -31,8 +31,8 @@ class EventViewModel: ObservableObject {
     }
     
     func applyUpdate(_ update: ProfileInfo) {
-        self.name = update.name
-        self.pfpUrl = update.pfpUrl
+        self.name = update.anyName
+        self.pfpUrl = update.pfp
     }
     
     func isRelevantUpdate(_ update: BookmarkUpdate) -> Bool {

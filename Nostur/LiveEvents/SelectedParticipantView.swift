@@ -42,13 +42,13 @@ struct SelectedParticipantView: View {
     
     private var hasNip05Shortened: Bool {
         guard nrContact.nip05 != nil, nrContact.nip05verified else { return false }
-        if nrContact.nip05nameOnly.lowercased() == nrContact.anyName.lowercased() {
+        if nrContact.nip05nameOnly?.lowercased() == nrContact.anyName.lowercased() {
             return true
         }
-        if nrContact.nip05nameOnly.lowercased() == "_" {
+        if nrContact.nip05nameOnly?.lowercased() == "_" {
             return true
         }
-        if nrContact.nip05nameOnly.lowercased() == "" {
+        if nrContact.nip05nameOnly?.lowercased() == "" {
             return true
         }
         return false
@@ -158,7 +158,7 @@ struct SelectedParticipantView: View {
                 .overlay(alignment: .leading) {
                     PossibleImposterLabelView2(nrContact: nrContact)
 
-                    if nrContact.similarToPubkey == nil, let nip05 = nrContact.nip05, nrContact.nip05verified, nrContact.nip05nameOnly.lowercased() != nrContact.anyName.lowercased(), !hasNip05Shortened {
+                    if nrContact.similarToPubkey == nil, let nip05 = nrContact.nip05, nrContact.nip05verified, nrContact.nip05nameOnly?.lowercased() != nrContact.anyName.lowercased(), !hasNip05Shortened {
                         NostrAddress(nip05: nip05, shortened: false)
                             .layoutPriority(3)
                     }
@@ -172,129 +172,118 @@ struct SelectedParticipantView: View {
 //        .navigationTitle(nrContact.anyName)
 //        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: nrContact.pictureUrl) { newPictureUrl in
-            guard let oldFixedPfp = nrContact.fixedPfp,
-                  oldFixedPfp != newPictureUrl?.absoluteString,
-                  let fixedPfpUrl = URL(string: oldFixedPfp),
-                  hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
+            guard let oldFixedPfpURL = nrContact.fixedPfpURL,
+                  oldFixedPfpURL != newPictureUrl,
+                  hasFPFcacheFor(pfpImageRequestFor(oldFixedPfpURL))
             else { return }
             DispatchQueue.main.async {
                 withAnimation {
-                    self.fixedPfp = fixedPfpUrl
+                    self.fixedPfp = oldFixedPfpURL
                 }
             }
         }
         .task {
             bg().perform {
-                if let fixedPfp = nrContact.fixedPfp,
-                   fixedPfp != nrContact.contact?.picture,
-                   let fixedPfpUrl = URL(string: fixedPfp),
-                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
+                if let fixedPfpURL = nrContact.fixedPfpURL,
+                   fixedPfpURL != nrContact.pictureUrl,
+                   hasFPFcacheFor(pfpImageRequestFor(fixedPfpURL))
                 {
                     DispatchQueue.main.async {
                         withAnimation {
-                            self.fixedPfp = fixedPfpUrl
+                            self.fixedPfp = fixedPfpURL
                         }
                     }
                 }
             }
         }
-        .task { [weak backlog] in
-            let contact = nrContact.contact
+        .onAppear { [weak backlog] in
+            bg().perform {
+                withContact(pubkey: nrContact.pubkey) { contact in
+                    guard let backlog else { return }
+                    let isFollowingYou = contact.followsYou()
+                    EventRelationsQueue.shared.addAwaitingContact(contact)
+                    
+                    Task { @MainActor in
+                        withAnimation {
+                            if (isFollowingYou) {
+                                self.isFollowingYou = true
+                            }
+                        }
+                    }
+                    
+                    let task = ReqTask(
+                        reqCommand: { (taskId) in
+                            req(RM.getUserProfileKinds(pubkey: nrContact.pubkey, subscriptionId: taskId, kinds: [0,3]))
+                        },
+                        processResponseCommand: { [weak contact] (taskId, _, _) in
+                            bg().perform {
+                                guard let contact else { return }
+                                if (contact.followsYou()) {
+                                    DispatchQueue.main.async {
+                                        self.isFollowingYou = true
+                                    }
+                                }
+                            }
+                        },
+                        timeoutCommand: { [weak contact] taskId in
+                            bg().perform {
+                                guard let contact else { return }
+                                if (contact.followsYou()) {
+                                    DispatchQueue.main.async {
+                                        self.isFollowingYou = true
+                                    }
+                                }
+                            }
+                        })
+                    
+                    backlog.add(task)
+                    task.fetch()
+                    
+                    if (NIP05Verifier.shouldVerify(contact)) {
+                        NIP05Verifier.shared.verify(contact)
+                    }
+                }
+            }
+        }
+        .task {
+            guard nrContact.anyLud else { return }
+            let lud16orNil = nrContact.lud16
+            let lud06orNil = nrContact.lud06
+            Task {
+                do {
+                    if let lud16 = lud16orNil, lud16 != "" {
+                        let response = try await LUD16.getCallbackUrl(lud16: lud16)
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            await bg().perform {
+                                guard let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
+                                nrContact.zapperPubkeys.insert(zapperPubkey)
+#if DEBUG
+                                L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
+                            }
+                        }
+                    }
+                    else if let lud06 = lud06orNil, lud06 != "" {
+                        let response = try await LUD16.getCallbackUrl(lud06: lud06)
+                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                            await bg().perform {
+                                guard let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
+                                nrContact.zapperPubkeys.insert(zapperPubkey)
+#if DEBUG
+                                L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
+#endif
+                            }
+                        }
+                    }
+                }
+                catch {
+#if DEBUG
+                    L.og.error("problem in lnurlp \(error)")
+#endif
+                }
+            }
             
-            bg().perform {
-                guard let backlog, let contact else { return }
-                
-                let npub = contact.npub
-                let isFollowingYou = contact.followsYou()
-                
-                EventRelationsQueue.shared.addAwaitingContact(contact)
-                
-                DispatchQueue.main.async {
-                    self.npub = npub
-                    withAnimation {
-                        if (isFollowingYou) {
-                            self.isFollowingYou = true
-                        }
-                    }
-                }
-                
-                let task = ReqTask(
-                    reqCommand: { (taskId) in
-                        req(RM.getUserProfileKinds(pubkey: contact.pubkey, subscriptionId: taskId, kinds: [0,3]))
-                    },
-                    processResponseCommand: { [weak contact] (taskId, _, _) in
-                        bg().perform {
-                            guard let contact else { return }
-                            if (contact.followsYou()) {
-                                DispatchQueue.main.async {
-                                    self.isFollowingYou = true
-                                }
-                            }
-                        }
-                    },
-                    timeoutCommand: { [weak contact] taskId in
-                        bg().perform {
-                            guard let contact else { return }
-                            if (contact.followsYou()) {
-                                DispatchQueue.main.async {
-                                    self.isFollowingYou = true
-                                }
-                            }
-                        }
-                    })
-
-                backlog.add(task)
-                task.fetch()
-                
-                if (NIP05Verifier.shouldVerify(contact)) {
-                    NIP05Verifier.shared.verify(contact)
-                }
-             
-                guard contact.anyLud else { return }
-                let lud16orNil = contact.lud16
-                let lud06orNil = contact.lud06
-                Task { [weak contact] in
-                    do {
-                        if let lud16 = lud16orNil, lud16 != "" {
-                            let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                                await bg().perform {
-                                    guard let contact, let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
-                                    contact.zapperPubkeys.insert(zapperPubkey)
-#if DEBUG
-                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
-#endif
-                                }
-                            }
-                        }
-                        else if let lud06 = lud06orNil, lud06 != "" {
-                            let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                            if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
-                                await bg().perform {
-                                    guard let contact, let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
-                                    contact.zapperPubkeys.insert(zapperPubkey)
-#if DEBUG
-                                    L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
-#endif
-                                }
-                            }
-                        }
-                    }
-                    catch {
-#if DEBUG
-                        L.og.error("problem in lnurlp \(error)")
-#endif
-                    }
-                }
-            }
-        }
-        .onChange(of: nrContact.nip05) { _ in
-            bg().perform {
-                guard let contact = nrContact.contact else { return }
-                if (NIP05Verifier.shouldVerify(contact)) {
-                    NIP05Verifier.shared.verify(contact)
-                }
-            }
+            await nrContact.loadNpub()
         }
     }
     
@@ -333,7 +322,9 @@ struct SelectedParticipantView: View {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrContact.zapperPubkeys.insert(zapperPubkey)
+                                bg().perform {
+                                    nrContact.zapperPubkeys.insert(zapperPubkey)
+                                }
                             }
                             // Old zap sheet
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapAtag: aTag, withPending: true)
@@ -367,7 +358,9 @@ struct SelectedParticipantView: View {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrContact.zapperPubkeys.insert(zapperPubkey)
+                                bg().perform {
+                                    nrContact.zapperPubkeys.insert(zapperPubkey)
+                                }
                             }
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrContact: nrContact, zapAtag: aTag, withPending: true)
                             sendNotification(.showZapSheet, paymentInfo)

@@ -10,215 +10,82 @@ import Combine
 import CoreData
 
 class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestination {
-    
-    static func == (lhs: NRContact, rhs: NRContact) -> Bool {
-        lhs.pubkey == rhs.pubkey
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(pubkey)
-        hasher.combine(anyName)
-        hasher.combine(pictureUrl)
-        hasher.combine(couldBeImposter)
-    }
-        
-    var id: String { pubkey }
-    let pubkey: String
 
+    public let pubkey: String
+
+    // FOR VIEW
     @Published var anyName: String
-    var fixedName:String?
-    var fixedPfp:String?
-    var display_name:String?
-    var name:String?
+    @Published var fixedName: String?
     @Published var pictureUrl: URL?
-    var banner:String?
-    var about:String?
+    @Published var fixedPfpURL: URL?
+    @Published var npub: String?
+    @Published var banner: String?
+    @Published var about: String?
     @Published var couldBeImposter: Int16 = -1 // -1: unchecked, 0:false 1:true
     @Published var similarToPubkey: String? 
     
-    var nip05verified:Bool
-    var nip05:String?
-    var nip05nameOnly:String
-    var metaDataCreatedAt:Date
-    var metadata_created_at:Int64
+    @Published var nip05verified: Bool = false
+    
+    // Internal state
+    private var didRunImposterCheck: Bool = false
+    
+    public var nip05: String?
+    public var nip05nameOnly: String?
+    public var metadata_created_at: Int64 = 0
     
     @Published var anyLud = false
-    var lud06:String?
-    var lud16:String?
+    public var lud06: String?
+    public var lud16: String?
     
-    var zapperPubkeys: Set<String> = []
-    var zapState: ZapState?
-    
-    var contact: Contact? // Only touch this in BG context!!!
-    
-    var randomColor: Color
-    
-    var npub: String {
-        try! NIP19(prefix: "npub", hexString: pubkey).displayString
-    }
-
-    private init(pubkey: String, contact: Contact? = nil) {
-        shouldBeBg()
-
-        self.contact = contact
-        self.pubkey = contact?.pubkey ?? pubkey
-        self.randomColor = Nostur.randomColor(seed: contact?.pubkey ?? pubkey)
-        self.anyName = contact?.anyName ?? "..."
-        self.fixedName = contact?.fixedName
-        self.fixedPfp = contact?.fixedPfp
-        self.display_name = contact?.display_name
-        self.name = contact?.name
-        self.pictureUrl = if let picture = contact?.picture {
-            URL(string: picture)
-        }
-        else {
-            nil
-        }
-        self.banner = contact?.banner
-        self.about = contact?.about
-        self.couldBeImposter = contact?.couldBeImposter ?? -1
-        self.similarToPubkey = (contact?.couldBeImposter ?? -1 == 1) ? contact?.similarToPubkey : nil
-        
-        self.nip05verified = contact?.nip05veried ?? false
-        self.nip05 = contact?.nip05
-        self.nip05nameOnly = contact?.nip05nameOnly ?? ""
-        self.metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact?.metadata_created_at ?? 0))
-        self.metadata_created_at = contact?.metadata_created_at ?? 0
-        
-        self.anyLud = contact?.anyLud ?? false
-        self.lud06 = contact?.lud06
-        self.lud16 = contact?.lud16
-        self.zapperPubkeys = contact?.zapperPubkeys ?? []
-        self.zapState = contact?.zapState
-        
-        listenForChanges()
-        listenForNip05()
-    }
-    
-    var subscriptions = Set<AnyCancellable>()
-    
-    private func listenForNip05() {
-        let pubkey = self.pubkey
-        ViewUpdates.shared.nip05updated
-            .subscribe(on: DispatchQueue.global())
-            .filter { $0.pubkey == pubkey }
-            .sink { [weak self] nip05update in
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    guard nip05update.isVerified != self.nip05verified else { return }
-                    self.objectWillChange.send()
-                    self.nip05verified = nip05update.isVerified
-                    self.nip05 = nip05update.nip05
-                    self.nip05nameOnly = nip05update.nameOnly
+    public var zapperPubkeys: Set<String> = [] {
+        didSet {
+            if Thread.isMainThread {
+                bg().perform {
+                    withContact(pubkey: self.pubkey) { [self] contact in
+                        contact.zapperPubkeys = zapperPubkeys
+                    }
                 }
             }
-            .store(in: &subscriptions)
+            else {
+                withContact(pubkey: self.pubkey) { [self] contact in
+                    contact.zapperPubkeys = zapperPubkeys
+                }
+            }
+        }
+    }
+    @Published var zapState: ZapState?
+    
+    public var randomColor: Color = Color.gray
+
+    private init(pubkey: String, contact: Contact? = nil) {
+        self.pubkey = pubkey
+        self.anyName = String(pubkey.suffix(11))
+        configure(pubkey: pubkey, contact: contact)
+    }
+    
+
+
+    private func listenForNip05() {
+        nip05Subscription = ViewUpdates.shared.nip05updated
+            .filter { $0.pubkey == self.pubkey }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] nip05update in
+                guard let self else { return }
+                guard nip05update.isVerified != self.nip05verified else { return }
+                self.nip05verified = nip05update.isVerified
+                self.nip05 = nip05update.nip05
+                self.nip05nameOnly = nip05update.nameOnly
+            }
     }
     
     private func listenForChanges() {
-        let pubkey = self.pubkey
-        ViewUpdates.shared.contactUpdated
-            .subscribe(on: DispatchQueue.global())
-            .filter { $0.0 == pubkey }
-            .sink { [weak self] (_, contact) in
-                bg().perform { [weak self] in
-                    guard let self = self else { return }
-                    let anyName = contact.anyName
-                    let fixedName = contact.fixedName
-                    let fixedPfp = contact.fixedPfp
-                    let display_name = contact.display_name
-                    let name = contact.name
-                    let pictureUrl:URL? = if let picture = contact.picture {
-                        URL(string: picture)
-                    }
-                    else {
-                        nil
-                    }
-                    let banner = contact.banner
-                    let about = contact.about
-                    let couldBeImposter = contact.couldBeImposter
-                    let similarToPubkey = contact.couldBeImposter == 1 ? contact.similarToPubkey : nil
-                    
-                    let nip05verified = contact.nip05veried
-                    let nip05 = contact.nip05
-                    let nip05nameOnly = contact.nip05nameOnly
-                    let metaDataCreatedAt = Date(timeIntervalSince1970: TimeInterval(contact.metadata_created_at))
-                    let metadata_created_at = contact.metadata_created_at
-                    
-                    let anyLud = contact.anyLud
-                    let lud06 = contact.lud06
-                    let lud16 = contact.lud16
-                    let zapperPubkeys = contact.zapperPubkeys
-//                    let zapState = contact.zapState
-                    
-                    DispatchQueue.main.async { [weak self] in
-                        guard let self else { return }
-                        
-//                        self.objectWillChange.send()
-                        
-                        withAnimation {
-                            self.anyName = anyName
-                            self.pictureUrl = pictureUrl
-                        }
-                        self.fixedName = fixedName
-                        self.fixedPfp = fixedPfp
-                        self.display_name = display_name
-                        self.name = name
-                        
-                        self.banner = banner
-                        self.about = about
-                        self.couldBeImposter = couldBeImposter
-                        self.similarToPubkey = similarToPubkey
-                        
-                        self.nip05verified = nip05verified
-                        self.nip05 = nip05
-                        self.nip05nameOnly = nip05nameOnly
-                        self.metaDataCreatedAt = metaDataCreatedAt
-                        // Data race in Nostur.NRContact.metadata_created_at.setter : Swift.Int64 at 0x12cb91380 (Thread 1)
-                        self.metadata_created_at = metadata_created_at
-                        
-                        self.anyLud = anyLud
-                        self.lud06 = lud06
-                        self.lud16 = lud16
-                        self.zapperPubkeys = zapperPubkeys
-//                        self.zappableAttributes.zapState = zapState
-                    }
-                }
+        profileUpdateSubscription = ViewUpdates.shared.profileUpdates
+            .filter { $0.pubkey == self.pubkey }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] profileInfo in
+                guard let self else { return }
+                configureFromProfileUpdate(profileInfo)
             }
-            .store(in: &subscriptions)
-    }
-    
-    @MainActor public func setFixedName(_ name: String) {
-        guard name != self.fixedName else { return }
-        self.objectWillChange.send()
-        self.fixedName = name
-        bg().perform { [weak self] in
-            self?.contact?.fixedName = name
-        }
-    }
-    
-    @MainActor public func setFixedPfp(_ url: String) {
-        guard url != self.fixedPfp else { return }
-        self.objectWillChange.send()
-        self.fixedPfp = url
-        bg().perform { [weak self] in
-            self?.contact?.fixedPfp = url
-        }
-    }
-    
-    @MainActor public func follow(privateFollow: Bool = false, la laOrNil: LoggedInAccount? = nil) {
-        self.objectWillChange.send()
-        self.couldBeImposter = 0
-        self.similarToPubkey = nil
-        
-        guard let la = (laOrNil ?? AccountsState.shared.loggedInAccount) else { return }
-        la.follow(pubkey, privateFollow: privateFollow)
-    }
-    
-    @MainActor public func unfollow(_ laOrNil: LoggedInAccount? = nil) {
-        self.objectWillChange.send()
-        guard let la = (laOrNil ?? AccountsState.shared.loggedInAccount) else { return }
-        la.unfollow(pubkey)
     }
     
     // Live events/activities/nests
@@ -261,16 +128,149 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     
     @Published public var volume: CGFloat = 0.0
     @Published public var isMuted: Bool = true
+    
+    private func configureFromProfileUpdate(_ profileInfo: ProfileInfo, animate: Bool = false) {
+        if animate {
+            withAnimation {
+                self.anyName = profileInfo.anyName ?? String(pubkey.suffix(11))
+                self.pictureUrl = profileInfo.pfpUrl
+            }
+        }
+        else {
+            self.anyName = profileInfo.anyName ?? String(pubkey.suffix(11))
+            self.pictureUrl = profileInfo.pfpUrl
+        }
+        self.fixedName = profileInfo.fixedName
+        self.fixedPfpURL = profileInfo.fixedPfpUrl
+        
+        self.banner = profileInfo.banner
+        self.about = profileInfo.about
+        self.couldBeImposter = profileInfo.couldBeImposter
+        self.similarToPubkey = profileInfo.couldBeImposter == 1 ? profileInfo.similarToPubkey : nil
+        
+        self.nip05verified = profileInfo.nip05verified
+        self.nip05 = profileInfo.nip05
+        self.nip05nameOnly = Nostur.nip05nameOnly(nip05veried: profileInfo.nip05verified, nip05: profileInfo.nip05)
+
+        self.metadata_created_at = profileInfo.metadata_created_at
+        
+        self.anyLud = profileInfo.anyLud
+        self.lud06 = profileInfo.lud06
+        self.lud16 = profileInfo.lud16
+        self.zapperPubkeys = profileInfo.zapperPubkeys
+    }
+    
+    private func configureFromBgContact(_ bgContact: Contact, animate: Bool = false) {
+        self.configureFromProfileUpdate(profileInfo(bgContact), animate: animate)
+    }
+    
+    private func configure(pubkey: String, contact: Contact? = nil) {
+        self.randomColor = Nostur.randomColor(seed: self.pubkey)
+        
+        if Thread.isMainThread {
+            bg().perform { [weak self] in
+                if let bgContact = (contact ?? Contact.fetchByPubkey(pubkey, context: bg())) {
+                    self?.configureFromBgContact(bgContact)
+                }
+                else {
+                    let newBgContact = Contact(context: bg())
+                    newBgContact.pubkey = pubkey
+                    newBgContact.metadata_created_at = 0
+                    newBgContact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
+                    
+                    self?.configureFromBgContact(newBgContact)
+                }
+            }
+        }
+        else {
+            if let bgContact = (contact ?? Contact.fetchByPubkey(pubkey, context: bg())) {
+                configureFromBgContact(bgContact)
+            }
+            else {
+                let newBgContact = Contact(context: bg())
+                newBgContact.pubkey = pubkey
+                newBgContact.metadata_created_at = 0
+                newBgContact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
+                
+                self.configureFromBgContact(newBgContact)
+            }
+        }
+        
+        listenForChanges()
+        listenForNip05()
+    }
+    
+    private var profileUpdateSubscription: AnyCancellable?
+    private var nip05Subscription: AnyCancellable?
+    
+    func runImposterCheck() {
+        guard !didRunImposterCheck && couldBeImposter == -1  else { return }
+        self.didRunImposterCheck = true
+        ImposterChecker.shared.runImposterCheck(nrContact: self) { imposterYes in
+            Task { @MainActor in
+                self.couldBeImposter = 1
+                self.similarToPubkey = imposterYes.similarToPubkey
+            }
+        }
+    }
+    
+    public var id: String { pubkey }
+    
+    static func == (lhs: NRContact, rhs: NRContact) -> Bool {
+        lhs.pubkey == rhs.pubkey
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(pubkey)
+        hasher.combine(anyName)
+        hasher.combine(pictureUrl)
+        hasher.combine(couldBeImposter)
+    }
+}
+
+extension NRContact {
+    
+    @MainActor public func setFixedName(_ name: String) {
+        guard name != self.fixedName else { return }
+        self.fixedName = name
+        bg().perform {
+            withContact(pubkey: self.pubkey) { contact in
+                contact.fixedName = name
+            }
+        }
+    }
+    
+    @MainActor public func follow(privateFollow: Bool = false, la laOrNil: LoggedInAccount? = nil) {
+        self.couldBeImposter = 0
+        self.similarToPubkey = nil
+        
+        guard let la = (laOrNil ?? AccountsState.shared.loggedInAccount) else { return }
+        la.follow(pubkey, privateFollow: privateFollow)
+    }
+    
+    @MainActor public func unfollow(_ laOrNil: LoggedInAccount? = nil) {
+        guard let la = (laOrNil ?? AccountsState.shared.loggedInAccount) else { return }
+        la.unfollow(pubkey)
+    }
+    
+    
+    @MainActor
+    public func loadNpub() async {
+        guard npub == nil else { return }
+        npub = await Task.detached {
+            try? NIP19(prefix: "npub", hexString: self.pubkey).displayString
+        }.value
+   }
 }
 
 
 extension NRContact {
     
     // Fetch EXISTING NRContact from cache, or create from passed contact, or create by fetching from DB first, or create new
-    static func instance(of pubkey: String, contact: Contact? = nil, context: NSManagedObjectContext? = nil) -> NRContact {
+    static func instance(of pubkey: String, contact: Contact? = nil) -> NRContact {
         
         // From cache
-        if let cachedNRContact = Self.fetch(pubkey, contact: contact, context: context) {
+        if let cachedNRContact = Self.fetch(pubkey, contact: contact) {
             return cachedNRContact
         }
         
@@ -282,7 +282,7 @@ extension NRContact {
     
     
     // Fetch EXISTING NRContact from cache, or create from passed contact, or create by fetching from DB first (never create new)
-    static func fetch(_ pubkey: String, contact: Contact? = nil, context: NSManagedObjectContext? = nil) -> NRContact? {
+    static func fetch(_ pubkey: String, contact: Contact? = nil) -> NRContact? {
         
         // From cache
         if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
@@ -293,7 +293,12 @@ extension NRContact {
             NRContactCache.shared.setObject(for: pubkey, value: nrContact)
             return nrContact
         }
-        else if let contact = Contact.fetchByPubkey(pubkey, context: context ?? bg()) { // from DB
+        else if Thread.isMainThread {
+            let nrContact = NRContact(pubkey: pubkey, contact: contact)
+            NRContactCache.shared.setObject(for: pubkey, value: nrContact)
+            return nrContact
+        }
+        else if let contact = Contact.fetchByPubkey(pubkey, context: bg()) { // from DB
             let nrContact = NRContact(pubkey: pubkey, contact: contact)
             NRContactCache.shared.setObject(for: pubkey, value: nrContact)
             return nrContact

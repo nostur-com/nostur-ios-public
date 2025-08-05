@@ -108,15 +108,15 @@ struct NRContactSearchResultRow: View {
     var onSelect: (() -> Void)?
 
     @State var isFollowing = false
-    @State var fixedPfp: URL?
+    @State var fixedPfpURL: URL?
 
     
     var body: some View {
         HStack(alignment: .top) {
             PFP(pubkey: nrContact.pubkey, nrContact: nrContact)
                 .overlay(alignment: .bottomTrailing) {
-                    if let fixedPfp {
-                        FixedPFP(picture: fixedPfp)
+                    if let fixedPfpURL {
+                        FixedPFP(picture: fixedPfpURL)
                     }
                 }
             VStack(alignment: .leading) {
@@ -129,7 +129,7 @@ struct NRContactSearchResultRow: View {
                         
                         PossibleImposterLabelView2(nrContact: nrContact)
                         if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
-                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly.lowercased())
+                            NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
                                 .layoutPriority(3)
                         }
                         
@@ -139,10 +139,7 @@ struct NRContactSearchResultRow: View {
                                     .lineLimit(1)
                                 Image(systemName: "multiply.circle.fill")
                                     .onTapGesture {
-                                        nrContact.fixedName = nrContact.anyName
-                                        bg().perform {
-                                            nrContact.contact?.fixedName = nrContact.anyName
-                                        }
+                                        nrContact.setFixedName(nrContact.anyName)
                                     }
                             }
                         }
@@ -169,14 +166,12 @@ struct NRContactSearchResultRow: View {
             if (Nostur.isFollowing(nrContact.pubkey)) {
                 isFollowing = true
             }
-            
-            if let fixedPfp = nrContact.fixedPfp,
-               fixedPfp != nrContact.pictureUrl?.absoluteString,
-               let fixedPfpUrl = URL(string: fixedPfp),
-               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
+            if let fixedPfpURL = nrContact.fixedPfpURL,
+               fixedPfpURL != nrContact.pictureUrl,
+               hasFPFcacheFor(pfpImageRequestFor(fixedPfpURL))
             {
                 withAnimation {
-                    self.fixedPfp = fixedPfpUrl
+                    self.fixedPfpURL = fixedPfpURL
                 }
             }
         }

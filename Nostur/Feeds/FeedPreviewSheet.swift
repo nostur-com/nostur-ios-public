@@ -13,12 +13,12 @@ struct FeedPreviewSheet: View {
     private var nrPost: NRPost // The kind:30000 list (from naddr or nevent)
     private let config: NXColumnConfig
     
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     
     init(nrPost: NRPost, config: NXColumnConfig) {
         self.nrPost = nrPost
         self.config = config
-        self.pfpAttributes = nrPost.pfpAttributes
+        nrContact = NRContact.instance(of: nrPost.pubkey)
     }
     
     var body: some View {
@@ -36,12 +36,12 @@ struct FeedPreviewSheet: View {
                     Text("**\((nrPost.eventTitle ?? nrPost.dTag) ?? "List")** by ")
                         .lineLimit(1)
                         .layoutPriority(1)
-                    ObservedPFP(pfp: nrPost.pfpAttributes, size: 20.0)
+                    ObservedPFP(nrContact: nrPost.contact, size: 20.0)
                         .onTapGesture {
-                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: "Default")
+                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: "Default")
                         }
                         .layoutPriority(2)
-                    Text(pfpAttributes.anyName)
+                    Text(nrContact.anyName)
                         .lineLimit(1)
                         .layoutPriority(3)
                 }

@@ -244,15 +244,12 @@ func navigateOnDetail(_ path: any IdentifiableDestination) {
 }
 
 // Navigate to contact helper
-func navigateToContact(pubkey: String, nrContact: NRContact? = nil, nrPost: NRPost? = nil, pfpAttributes: PFPAttributes? = nil, context: String) {
+func navigateToContact(pubkey: String, nrContact: NRContact? = nil, nrPost: NRPost? = nil, context: String) {
     if let nrContact {
         navigateTo(nrContact, context: context)
     }
-    else if let nrPost, let nrContact = nrPost.contact {
-        navigateTo(nrContact, context: context)
-    }
-    else if let pfpAttributes, let nrContact = pfpAttributes.contact {
-        navigateTo(nrContact, context: context)
+    else if let nrPost {
+        navigateTo(nrPost.contact, context: context)
     }
     else {
         navigateTo(ContactPath(key: pubkey), context: context)

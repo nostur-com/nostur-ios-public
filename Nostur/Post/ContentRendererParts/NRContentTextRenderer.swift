@@ -101,14 +101,14 @@ struct NRContentTextRendererInner: View {
                 }
             
                 .onReceive(
-                    ViewUpdates.shared.contactUpdated
+                    ViewUpdates.shared.profileUpdates
                         .receive(on: RunLoop.main)
-                        .filter { (pubkey, _) in
+                        .filter { profileUpdate in
                             guard !attributedStringWithPs.input.isEmpty else { return false }
                             guard !attributedStringWithPs.pTags.isEmpty else { return false }
-                            return self.attributedStringWithPs.pTags.contains(pubkey)
+                            return self.attributedStringWithPs.pTags.contains(profileUpdate.pubkey)
                         }
-                ) { pubkey in
+                ) { _ in
                     bg().perform {
                         guard let event = attributedStringWithPs.event else { return }
                         let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
@@ -170,14 +170,14 @@ struct NRContentTextRendererInner: View {
                     
                     NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight, onTap: onTap)
                         .onReceive(
-                            ViewUpdates.shared.contactUpdated
+                            ViewUpdates.shared.profileUpdates
                                 .receive(on: RunLoop.main)
-                                .filter { (pubkey, _) in
+                                .filter { profileUpdate in
                                     guard !attributedStringWithPs.input.isEmpty else { return false }
                                     guard !attributedStringWithPs.pTags.isEmpty else { return false }
-                                    return self.attributedStringWithPs.pTags.contains(pubkey)
+                                    return self.attributedStringWithPs.pTags.contains(profileUpdate.pubkey)
                                 }
-                        ) { pubkey in
+                        ) { _ in
                             bg().perform {
                                 guard let event = attributedStringWithPs.event else { return }
                                 let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)
@@ -233,14 +233,14 @@ struct NRContentTextRendererInner: View {
                             onTap?()
                         }
                         .onReceive(
-                            ViewUpdates.shared.contactUpdated
+                            ViewUpdates.shared.profileUpdates
                                 .receive(on: RunLoop.main)
-                                .filter { (pubkey, _) in
+                                .filter { profileUpdate in
                                     guard !attributedStringWithPs.input.isEmpty else { return false }
                                     guard !attributedStringWithPs.pTags.isEmpty else { return false }
-                                    return self.attributedStringWithPs.pTags.contains(pubkey)
+                                    return self.attributedStringWithPs.pTags.contains(profileUpdate.pubkey)
                                 }
-                        ) { pubkey in
+                        ) { _ in
                             bg().perform {
                                 guard let event = attributedStringWithPs.event else { return }
                                 let reparsed = NRTextParser.shared.parseText(fastTags: event.fastTags, event: event, text: attributedStringWithPs.input, primaryColor: primaryColor)

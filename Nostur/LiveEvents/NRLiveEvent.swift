@@ -117,7 +117,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.liveKitConnectUrl = event.liveKitConnectUrl()
         
         self.missingPs = Set(event.fastPs.map{ $0.1 }).union(Set([event.pubkey]))
-        contactUpdatedListener()
+        profileUpdatedListener()
         
         self.pubkeysOnStage = event.pubkeysOnStage()
         
@@ -395,33 +395,30 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
             othersPresent.contains(nrContact.pubkey)
         }
     }
-    private var contactUpdatedSubscription: AnyCancellable?
+    private var profileUpdatedSubscription: AnyCancellable?
     deinit {
-        contactUpdatedSubscription?.cancel()
+        profileUpdatedSubscription?.cancel()
     }
     
-    private func contactUpdatedListener() {
-        guard contactUpdatedSubscription == nil else { return }
-        // Rerender ReplyingToFragment when the new contact is saved (only if we replyToId is set)
-        // Rerender content elements also for mentions in text
-        contactUpdatedSubscription = ViewUpdates.shared.contactUpdated
-            .subscribe(on: DispatchQueue.global())
-            .filter({ [weak self] (pubkey, contact) in
+    private func profileUpdatedListener() {
+        guard profileUpdatedSubscription == nil else { return }
+        profileUpdatedSubscription = ViewUpdates.shared.profileUpdates
+            .filter({ [weak self] profileInfo in
                 guard let self = self else { return false }
-                return self.missingPs.contains(pubkey)
+                return self.missingPs.contains(profileInfo.pubkey)
             })
-            .sink { [weak self] (pubkey, contact) in
+            .sink { [weak self] profileInfo in
                 guard let self = self else { return }
-                self.missingPs.remove(pubkey)
+                self.missingPs.remove(profileInfo.pubkey)
                 if self.missingPs.isEmpty {
-                    contactUpdatedSubscription?.cancel()
-                    contactUpdatedSubscription = nil
+                    profileUpdatedSubscription?.cancel()
+                    profileUpdatedSubscription = nil
                 }
                 
-                guard !self.participantsOrSpeakers.contains(where: { $0.pubkey == pubkey }) else { return }
+                guard !self.participantsOrSpeakers.contains(where: { $0.pubkey == profileInfo.pubkey }) else { return }
                 
                 bg().perform { [weak self] in
-                    let nrContact = NRContact.instance(of: pubkey, contact: contact, context: bg())
+                    let nrContact = NRContact.instance(of: profileInfo.pubkey)
                     
                     DispatchQueue.main.async {
                         self?.objectWillChange.send()
@@ -456,7 +453,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
                     }
                     
                     bg().perform {
-                        let nrContact = NRContact.instance(of: event.publicKey, context: bg())
+                        let nrContact = NRContact.instance(of: event.publicKey)
                         DispatchQueue.main.async {
                             guard self.participantsOrSpeakers.first(where: { $0.pubkey == event.publicKey }) == nil else { return }
                             self.objectWillChange.send()

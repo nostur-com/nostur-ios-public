@@ -58,8 +58,8 @@ struct CustomizableFooterFragmentView: View {
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
                         ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
-                            .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                            .disabled(!(nrPost.contact?.anyLud ?? false))
+                            .opacity(nrPost.contact.anyLud ? 1 : 0.3)
+                            .disabled(!(nrPost.contact.anyLud))
                     }
                     else {
                         EmptyView()
@@ -101,8 +101,8 @@ struct CustomizableFooterFragmentView: View {
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
                         ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
-                            .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                            .disabled(!(nrPost.contact?.anyLud ?? false))
+                            .opacity(nrPost.contact.anyLud ? 1 : 0.3)
+                            .disabled(!(nrPost.contact.anyLud))
                     }
                     else {
                         EmptyView()

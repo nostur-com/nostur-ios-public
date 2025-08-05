@@ -44,7 +44,7 @@ struct Repost: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            RepostHeader(pfpAttributes: nrPost.pfpAttributes)
+            RepostHeader(nrContact: nrPost.contact)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
             
@@ -168,7 +168,7 @@ struct Repost: View {
 struct RepostHeader: View {
     @EnvironmentObject private var dim: DIMENSIONS
 
-    @ObservedObject public var pfpAttributes: PFPAttributes
+    @ObservedObject public var nrContact: NRContact
     
     var body: some View {
         HStack(spacing: 4) {
@@ -177,25 +177,25 @@ struct RepostHeader: View {
                 .scaleEffect(0.6)
                 .layoutPriority(1)
             
-            PFP(pubkey: pfpAttributes.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20.0)
+            PFP(pubkey: nrContact.pubkey, pictureUrl: nrContact.pictureUrl, size: 20.0)
             
             Group {
-                Text(pfpAttributes.anyName)
+                Text(nrContact.anyName)
                 Text("reposted")
                     .layoutPriority(1)
             }
             .font(.subheadline)
             .fontWeightBold()
             .onTapGesture {
-                navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes, context: dim.id)
+                navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
             }
             
-            PossibleImposterLabelView(pfp: pfpAttributes)
+            PossibleImposterLabelView(nrContact: nrContact)
                 .layoutPriority(2)
         }
         .foregroundColor(.gray)
         .onTapGesture {
-            navigateToContact(pubkey: pfpAttributes.pubkey, pfpAttributes: pfpAttributes, context: dim.id)
+            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
         }
         .padding(.leading, 30)
     }

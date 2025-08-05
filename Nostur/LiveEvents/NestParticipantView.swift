@@ -40,8 +40,7 @@ struct NestParticipantView: View {
                             Color.clear
                                 .onAppear {
                                     guard !isZapped else { return }
-                                    guard let contact = nrContact.contact else { return }
-                                    self.triggerZap(strikeLocation: geo.frame(in: .global).origin, contact: contact, zapMessage: zapMessage, amount: customAmount)
+                                    self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrContact, zapMessage: zapMessage, amount: customAmount)
                                 }
                         }
                     }
@@ -80,7 +79,7 @@ struct NestParticipantView: View {
         }
     }
     
-    func triggerZap(strikeLocation: CGPoint, contact: Contact, zapMessage: String = "", amount: Double? = nil) {
+    func triggerZap(strikeLocation: CGPoint, nrContact: NRContact, zapMessage: String = "", amount: Double? = nil) {
         guard isFullAccount() else { showReadOnlyMessage(); return }
         guard let account = account() else { return }
         let isNC = account.isNC
@@ -101,7 +100,7 @@ struct NestParticipantView: View {
 
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), contact: contact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage, withPending: true)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, aTag: aTag, cancellationId: cancellationId, zapMessage: zapMessage, withPending: true)
             NWCZapQueue.shared.sendZap(zap)
             Task { @MainActor in
                 self.isZapped = false

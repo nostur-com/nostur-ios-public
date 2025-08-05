@@ -11,7 +11,7 @@ struct PostEmbeddedLayout<Content: View>: View {
     @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @ObservedObject private var nrPost: NRPost
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var fullWidth: Bool
@@ -22,7 +22,7 @@ struct PostEmbeddedLayout<Content: View>: View {
     
     init(nrPost: NRPost, fullWidth: Bool = false, forceAutoload: Bool = false, authorAtBottom: Bool = false, @ViewBuilder _ content: () -> Content) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = nrPost.contact
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.forceAutoload = forceAutoload
         self.fullWidth = fullWidth
@@ -37,25 +37,25 @@ struct PostEmbeddedLayout<Content: View>: View {
                     if !authorAtBottom {
                         HStack(spacing: 5) {
                             // profile image
-                            PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
+                            PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
+                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
                                 }
                             
-                            Text(pfpAttributes.anyName) // Name
-                                .animation(.easeIn, value: pfpAttributes.anyName)
+                            Text(nrContact.anyName) // Name
+                                .animation(.easeIn, value: nrContact.anyName)
                                 .font(.body)
                                 .foregroundColor(.primary)
                                 .fontWeightBold()
                                 .lineLimit(1)
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
+                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
                                 }
                                 
                             
-                            PossibleImposterLabelView(pfp: nrPost.pfpAttributes)
+                            PossibleImposterLabelView(nrContact: nrContact)
                             
                             Group {
                                 Text(verbatim: " ·") //
@@ -84,24 +84,24 @@ struct PostEmbeddedLayout<Content: View>: View {
                 HStack(spacing: 5) {
                     Spacer()
                     // profile image
-                    PFP(pubkey: nrPost.pubkey, pictureUrl: pfpAttributes.pfpURL, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
+                    PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
-                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
+                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
                         }
                     
-                    Text(pfpAttributes.anyName) // Name
-                        .animation(.easeIn, value: pfpAttributes.anyName)
+                    Text(nrContact.anyName) // Name
+                        .animation(.easeIn, value: nrContact.anyName)
                         .font(.body)
                         .foregroundColor(.primary)
                         .fontWeightBold()
                         .lineLimit(1)
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
-                            navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, pfpAttributes: pfpAttributes, context: parentDIM.id)
+                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
                         }
                         
-                    PossibleImposterLabelView(pfp: nrPost.pfpAttributes)
+                    PossibleImposterLabelView(nrContact: nrContact)
                     
                     Group {
                         Text(verbatim: " ·") //

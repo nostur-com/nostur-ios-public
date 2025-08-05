@@ -318,11 +318,11 @@ class MessageParser {
                     }
                 }
                 else {
-                    let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)).\n\(error.message)"
+                    let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.nrContact.pubkey)).\n\(error.message)"
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
                     NotificationsViewModel.shared.checkNeedsUpdate(notification)
 #if DEBUG
-                    L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.contact.pubkey)). \(error.message)")
+                    L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.nrContact.pubkey)). \(error.message)")
 #endif
                 }
                 NWCZapQueue.shared.removeZap(byId: awaitingZap.id)

@@ -17,7 +17,6 @@ struct PFP: View, Equatable {
         lhs.contact == rhs.contact &&
         lhs.nrContact == rhs.nrContact &&
         lhs.account == rhs.account
-//        lhs.pfp == rhs.pfp
     }
     
     public var pubkey: String
@@ -25,14 +24,10 @@ struct PFP: View, Equatable {
     public var contact: Contact?
     public var nrContact: NRContact?
     public var account: CloudAccount?
-//    public var pfp: PFPAttributes?
     public var size: CGFloat = 50.0
     public var forceFlat = false
 
     var body: some View {
-//        if let pfp {
-//            ObservedPFP(pfp: pfp, size: size, forceFlat: forceFlat)
-//        }
         if let contact {
             ContactPFP(contact: contact, size: size, forceFlat: forceFlat)
         }
@@ -50,21 +45,15 @@ struct PFP: View, Equatable {
 
 struct ObservedPFP: View {
     
-    @StateObject private var pfp: PFPAttributes
-    private var pubkey: String { pfp.pubkey }
-    private var pictureUrl: URL? { pfp.pfpURL }
+    @ObservedObject private var nrContact: NRContact
+    private var pubkey: String { nrContact.pubkey }
+    private var pictureUrl: URL? { nrContact.pictureUrl }
     private var size: CGFloat = 50.0
     private var forceFlat = false
-    private var color: Color { randomColor(seed: pfp.pubkey) }
+    private var color: Color { nrContact.randomColor }
     
-    init(pfp: PFPAttributes, size: CGFloat = 50.0, forceFlat: Bool = false) {
-        _pfp = StateObject(wrappedValue: pfp)
-        self.size = size
-        self.forceFlat = forceFlat
-    }
-    
-    init(pubkey: String, nrContact: NRContact? = nil, size: CGFloat = 50.0, forceFlat: Bool = false) {
-        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: pubkey))
+    init(nrContact: NRContact, size: CGFloat = 50.0, forceFlat: Bool = false) {
+        self.nrContact = nrContact
         self.size = size
         self.forceFlat = forceFlat
     }
@@ -159,9 +148,9 @@ struct InnerPFP: View {
                     
                 case .noUrl, .noHttps:
                     EmptyView()
-                        .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                            guard profile.pubkey == pubkey, let pictureUrl = profile.pictureUrl else { return }
-                            updatedPictureUrl = pictureUrl
+                        .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
+                            guard profile.pubkey == pubkey, let pfpUrl = profile.pfpUrl else { return }
+                            updatedPictureUrl = pfpUrl
                         }
                     
                 case .flat(let url):
@@ -185,9 +174,9 @@ struct InnerPFP: View {
                     }
                     .pipeline(ImageProcessing.shared.pfp)
 //                    .drawingGroup()
-                    .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                        guard profile.pubkey == pubkey, let pictureUrl = profile.pictureUrl else { return }
-                        updatedPictureUrl = pictureUrl
+                    .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
+                        guard profile.pubkey == pubkey, let pfpUrl = profile.pfpUrl else { return }
+                        updatedPictureUrl = pfpUrl
                     }
                     
                 case .animatedGif(let url):
@@ -224,9 +213,9 @@ struct InnerPFP: View {
                     }
                     .priority(.low) // lower prio for animated gif, saves bandwidth?
                     .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                    .onReceive(Kind0Processor.shared.receive.receive(on: RunLoop.main)) { profile in
-                        guard profile.pubkey == pubkey, let pictureUrl = profile.pictureUrl else { return }
-                        updatedPictureUrl = pictureUrl
+                    .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
+                        guard profile.pubkey == pubkey, let pfpUrl = profile.pfpUrl else { return }
+                        updatedPictureUrl = pfpUrl
                     }
                 }
             }

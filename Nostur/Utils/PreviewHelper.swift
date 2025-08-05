@@ -18,7 +18,6 @@ public class PreviewEnvironment {
     let er:ExchangeRateModel = .shared
     let dim:DIMENSIONS = .shared
     let themes:Themes = .default
-    let kind0:Kind0Processor = .shared
     let npn:NewPostNotifier = NewPostNotifier.shared
     let cp:ConnectionPool = ConnectionPool.shared
     let dm:DirectMessageViewModel = .default

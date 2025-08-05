@@ -38,7 +38,7 @@ struct AppTest: View {
     
     var body: some View {
         VStack {
-            Button("Mock Profile update", action: sendMockProfileUpdate)
+//            Button("Mock Profile update", action: sendMockProfileUpdate)
             Button("Mock Bookmark update", action: sendMockBookmarkUpdate)
             EventView(
                 eventModel: EventViewModel(
@@ -52,10 +52,10 @@ struct AppTest: View {
         }
     }
     
-    private func sendMockProfileUpdate() {
-        viewUpdates.sendMockProfileUpdate()
-    }
-    
+//    private func sendMockProfileUpdate() {
+//        viewUpdates.sendMockProfileUpdate()
+//    }
+//    
     private func sendMockBookmarkUpdate() {
         viewUpdates.sendMockBookmarkUpdate()
     }

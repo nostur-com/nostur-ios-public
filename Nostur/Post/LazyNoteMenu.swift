@@ -84,9 +84,8 @@ struct LazyNoteMenuSheet: View {
                 }
                 Button {
                     dismiss()
-                    guard let nrContact = nrPost.contact else { return }
                     DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY + 0.35) { // Short delay freezes????
-                        sendNotification(.addRemoveToListsheet, nrContact)
+                        sendNotification(.addRemoveToListsheet, nrPost.contact)
                     }
                 } label: {
                     Label(String(localized:"Add/Remove \(nrPost.anyName) from custom feed", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
@@ -205,10 +204,9 @@ struct LazyNoteMenuSheet: View {
                     }
                 }
                 Button {
-                    guard let contact = nrPost.contact else { return }
                     dismiss()
                     sendNotification(.clearNavigation)
-                    sendNotification(.showingSomeoneElsesFeed, contact)
+                    sendNotification(.showingSomeoneElsesFeed, nrPost.contact)
                     sendNotification(.dismissMiniProfile)
                 } label: {
                     Label(String(localized:"Show \(nrPost.anyName)'s feed", comment: "Post context menu button to show someone's feed"), systemImage: "rectangle.stack.fill")

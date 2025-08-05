@@ -38,15 +38,15 @@ struct NRContentMarkdownRenderer: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 //            .padding(.horizontal, 20)
             .onReceive(
-                ViewUpdates.shared.contactUpdated
+                ViewUpdates.shared.profileUpdates
                     .receive(on: RunLoop.main)
-                    .filter { (pubkey, _) in
+                    .filter { profileUpdate in
                         guard !markdownContentWithPs.input.isEmpty else { return false }
                         guard !markdownContentWithPs.pTags.isEmpty else { return false }
-                        return self.markdownContentWithPs.pTags.contains(pubkey)
+                        return self.markdownContentWithPs.pTags.contains(profileUpdate.pubkey)
                     }
 //                    .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
-            ) { pubkey in
+            ) { _ in
                 bg().perform {
                     guard let event = markdownContentWithPs.event else { return }
                     let reparsed = NRTextParser.shared.parseMD(event, text: markdownContentWithPs.input)

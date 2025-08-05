@@ -8,66 +8,12 @@
 import SwiftUI
 import NavigationBackport
 
-//struct PossibleImposterLabel: View {
-//    @Environment(\.theme) private var theme
-//    public var possibleImposterPubkey: String
-//    public var followingPubkey: String? = nil
-//    @State private var showDetails: Bool = false
-//    
-//    var body: some View {
-//        Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
-//            .padding(.horizontal, 8)
-//            .background(.red)
-//            .foregroundColor(.white)
-//            .cornerRadius(8)
-//            .padding(.top, 3)
-//            .layoutPriority(2)
-//            .contentShape(Rectangle())
-//            .onTapGesture {
-//                sendNotification(.showImposterDetails, ImposterDetails(pubkey: possibleImposterPubkey, similarToPubkey: followingPubkey))
-//            }
-//    }
-//}
-
-//struct XPossibleImposterLabel: View {
-//    @Environment(\.theme) private var theme
-//    @StateObject private var pfp: PFPAttributes
-//    @State private var showDetails: Bool = false
-//
-//    init(pubkey: String, nrContact: NRContact? = nil) {
-//        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: pubkey))
-//    }
-//
-//    init(pfp: PFPAttributes) {
-//        _pfp = StateObject(wrappedValue: pfp)
-//    }
-//    
-//    init(nrContact: NRContact) {
-//        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey))
-//    }
-//    
-//    var body: some View {
-//        XXPossibleImposterLabel(pfp: pfp)
-//        if let similarToPubkey = pfp.similarToPubkey {
-//            PossibleImposterLabel(possibleImposterPubkey: pfp.pubkey, followingPubkey: similarToPubkey)
-//        }
-//        else {
-//            Rectangle()
-//                .frame(width: 0, height: 0)
-//                .hidden()
-//                .onAppear {
-//                    pfp.runImposterCheck()
-//                }
-//        }
-//    }
-//}
-
 struct PossibleImposterLabelView: View {
     @Environment(\.theme) private var theme
-    @ObservedObject public var pfp: PFPAttributes
+    @ObservedObject public var nrContact: NRContact
     
     var body: some View {
-        if let similarToPubkey = pfp.similarToPubkey {
+        if let similarToPubkey = nrContact.similarToPubkey {
             Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
                 .padding(.horizontal, 8)
                 .background(.red)
@@ -77,7 +23,7 @@ struct PossibleImposterLabelView: View {
                 .layoutPriority(2)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: pfp.pubkey, similarToPubkey: similarToPubkey))
+                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: nrContact.pubkey, similarToPubkey: similarToPubkey))
                 }
         }
         else {
@@ -85,7 +31,7 @@ struct PossibleImposterLabelView: View {
                 .frame(width: 0, height: 0)
                 .hidden()
                 .onAppear {
-                    pfp.runImposterCheck()
+                    nrContact.runImposterCheck()
                 }
         }
     }
@@ -94,18 +40,18 @@ struct PossibleImposterLabelView: View {
 struct PossibleImposterLabelView2: View {
     @Environment(\.theme) private var theme
 
-    @StateObject private var pfp: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
 
-    init(pubkey: String, nrContact: NRContact? = nil) {
-        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: pubkey))
+    init(pubkey: String) {
+        self.nrContact = NRContact.instance(of: pubkey)
     }
     
     init(nrContact: NRContact) {
-        _pfp = StateObject(wrappedValue: PFPAttributes(contact: nrContact, pubkey: nrContact.pubkey))
+        self.nrContact = nrContact
     }
     
     var body: some View {
-        if let similarToPubkey = pfp.similarToPubkey {
+        if let similarToPubkey = nrContact.similarToPubkey {
             Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
                 .padding(.horizontal, 8)
                 .background(.red)
@@ -115,7 +61,7 @@ struct PossibleImposterLabelView2: View {
                 .layoutPriority(2)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: pfp.pubkey, similarToPubkey: similarToPubkey))
+                    sendNotification(.showImposterDetails, ImposterDetails(pubkey: nrContact.pubkey, similarToPubkey: similarToPubkey))
                 }
         }
         else {
@@ -123,7 +69,7 @@ struct PossibleImposterLabelView2: View {
                 .frame(width: 0, height: 0)
                 .hidden()
                 .onAppear {
-                    pfp.runImposterCheck()
+                    nrContact.runImposterCheck()
                 }
         }
     }
@@ -132,45 +78,45 @@ struct PossibleImposterLabelView2: View {
 struct PossibleImposterDetail: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
-    public var possibleImposterPubkey: String
-    public var followingPubkey: String? = nil
+    private var possibleImposterPubkey: String
+    private var followingPubkey: String? = nil
     
     
-    @State private var possibleImposterContact: Contact? = nil
-    @State private var followingContact: Contact? = nil
+    @ObservedObject private var possibleImposterNRContact: NRContact
+    @State private var followingContact: NRContact? = nil
+    
+    init(possibleImposterPubkey: String, possibleImposterNRContact: NRContact? = nil, followingPubkey: String? = nil) {
+        self.possibleImposterNRContact = possibleImposterNRContact ?? NRContact.instance(of: possibleImposterPubkey)
+        self.possibleImposterPubkey = possibleImposterPubkey
+        self.followingPubkey = followingPubkey
+    }
     
     var body: some View {
         VStack {
-            if let possibleImposterContact {
-                VStack {
-                    ProfileRow(withoutFollowButton: true, tapEnabled: false, showNpub: true, contact: possibleImposterContact)
-                        .overlay(alignment: .topTrailing) {
-                            ImposterLabelToggle(contact: possibleImposterContact)
-                                .padding(.trailing, 5)
-                                .padding(.top, 5)
-                        }
-                    FollowedBy(pubkey: possibleImposterContact.pubkey, alignment: .trailing, minimal: false, showZero: true)
-                        .padding(10)
-                }
-                .background(theme.background)
-                .clipShape(RoundedRectangle(cornerRadius: 15))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(.regularMaterial, lineWidth: 1)
-                )
-                .padding(10)
-            }
-            else {
-                ProgressView()
+            VStack {
+                NRProfileRow(withoutFollowButton: true, tapEnabled: false, showNpub: true, nrContact: possibleImposterNRContact)
+                    .overlay(alignment: .topTrailing) {
+                        ImposterLabelToggle(nrContact: possibleImposterNRContact)
+                            .padding(.trailing, 5)
+                            .padding(.top, 5)
+                    }
+                FollowedBy(pubkey: possibleImposterNRContact.pubkey, alignment: .trailing, minimal: false, showZero: true)
                     .padding(10)
             }
+            .background(theme.background)
+            .clipShape(RoundedRectangle(cornerRadius: 15))
+            .overlay(
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(.regularMaterial, lineWidth: 1)
+            )
+            .padding(10)
             
             Text("The profile above was found to be similar to one below that you are already following:")
                 .padding(.horizontal, 20)
 
             if let followingContact {
                 VStack {
-                    ProfileRow(tapEnabled: false, showNpub: true, contact: followingContact)
+                    NRProfileRow(tapEnabled: false, showNpub: true, nrContact: followingContact)
                     FollowedBy(pubkey: followingContact.pubkey, alignment: .trailing, minimal: false, showZero: true)
                         .padding(10)
                 }
@@ -195,56 +141,29 @@ struct PossibleImposterDetail: View {
             }
         }
         .task {
-            possibleImposterContact = Contact.fetchByPubkey(possibleImposterPubkey, context: context())
             if let followingPubkey {
-                followingContact = Contact.fetchByPubkey(followingPubkey, context: context())
+                followingContact = NRContact.instance(of: followingPubkey)
             }
             else {
-                guard let mainContact = possibleImposterContact else { return }
-                guard let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
-
-                let contactAnyName = mainContact.anyName.lowercased()
-                let currentAccountPubkey = AccountsState.shared.activeAccountPublicKey
-                let cPubkey = mainContact.pubkey
-                guard let cPic = mainContact.pictureUrl else { return }
-
-                bg().perform {
-                    guard let account = account() else { return }
-                    guard account.publicKey == currentAccountPubkey else { return }
-                    guard let (followingPubkey, similarFollow) = followingCache.first(where: { (pubkey: String, follow: FollowCache) in
-                        pubkey != cPubkey && isSimilar(string1: follow.anyName.lowercased(), string2: contactAnyName)
-                    }) else { return }
-                    
-                    guard similarFollow.pfpURL != nil, let wotPic = similarFollow.pfpURL else { return }
-                    Task.detached(priority: .background) {
-                        let similarPFP = await pfpsAreSimilar(imposter: cPic, real: wotPic)
-                        guard similarPFP else {
-                            // TODO: Remove progress spinner
-                            return
-                        }
-                        DispatchQueue.main.async {
-                            guard currentAccountPubkey == AccountsState.shared.activeAccountPublicKey else { return }
-                            mainContact.similarToPubkey = followingPubkey
-                            followingContact = Contact.fetchByPubkey(followingPubkey, context: context())
-                        }
-                    }
-                }
+                possibleImposterNRContact.runImposterCheck()
             }
         }
     }
 }
 
 struct ImposterLabelToggle: View {
-    @ObservedObject public var contact: Contact
+    @ObservedObject public var nrContact: NRContact
     @State private var addBackSimilarToPubkey: String? = nil
     
     var body: some View {
-        if contact.couldBeImposter == 1 {
+        if nrContact.couldBeImposter == 1 {
             Button {
                 withAnimation {
-                    contact.couldBeImposter = 0
-                    addBackSimilarToPubkey = contact.similarToPubkey
-                    contact.similarToPubkey = nil
+                    nrContact.couldBeImposter = 0
+                    if nrContact.similarToPubkey != nil {
+                        addBackSimilarToPubkey = nrContact.similarToPubkey
+                    }
+                    nrContact.similarToPubkey = nil
                 }
                 save()
             } label: {
@@ -256,8 +175,8 @@ struct ImposterLabelToggle: View {
         else {
             Button {
                 withAnimation {
-                    contact.couldBeImposter = 1
-                    contact.similarToPubkey = addBackSimilarToPubkey
+                    nrContact.couldBeImposter = 1
+                    nrContact.similarToPubkey = addBackSimilarToPubkey
                 }
                 save()
             } label: {
@@ -265,17 +184,6 @@ struct ImposterLabelToggle: View {
                     .font(.caption)
             }
             .padding(.trailing, 10)
-        }
-    }
-}
-
-
-@available(iOS 18.0, *)
-#Preview {
-    @Previewable @StateObject var pfp = PFPAttributes(pubkey: "")
-    PreviewContainer({ pe in pe.loadContacts() }) {
-        NBNavigationStack {
-            PossibleImposterLabelView(pfp: pfp)
         }
     }
 }

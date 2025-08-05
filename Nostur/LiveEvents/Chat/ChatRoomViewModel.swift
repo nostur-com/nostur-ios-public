@@ -350,8 +350,7 @@ class ChatRoomViewModel: ObservableObject {
                             zapRequestCreatedAt: existing.zapRequestCreatedAt,
                             amount: existing.amount + zap.amount,
                             nxEvent: existing.nxEvent,
-                            content: existing.content,
-                            contact: existing.contact
+                            content: existing.content
                         )
                     } else {
                         result[zap.zapRequestPubkey] = zap

@@ -111,7 +111,7 @@ struct AddContactsToListSheet: View {
                                 .padding(.vertical, 10)
                                 .layoutPriority(1)
                             
-                            ObservedPFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: 20)
+                            ObservedPFP(nrContact: nrContact, size: 20)
                                 .layoutPriority(2)
                             
                             Text(nrContact.anyName)

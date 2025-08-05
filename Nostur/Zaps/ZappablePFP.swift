@@ -11,7 +11,7 @@ import Combine
 // PFP with animation when zapped
 struct ZappablePFP: View {
     private let pubkey: String
-    @StateObject private  var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     private var size: CGFloat
     private var zapEtag: String?
     private var zapAtag: String?
@@ -20,9 +20,9 @@ struct ZappablePFP: View {
     @State private var animate = false
     @State private var opacity: Double = 0.0
     
-    init(pubkey: String, pfpAttributes: PFPAttributes, size: CGFloat = 50.0, zapEtag: String? = nil, zapAtag: String? = nil, forceFlat: Bool? = nil) {
+    init(pubkey: String, size: CGFloat = 50.0, zapEtag: String? = nil, zapAtag: String? = nil, forceFlat: Bool? = nil) {
         self.pubkey = pubkey
-        _pfpAttributes = StateObject(wrappedValue: pfpAttributes)
+        self.nrContact = NRContact.instance(of: pubkey)
         self.size = size
         self.zapEtag = zapEtag
         self.zapAtag = zapAtag
@@ -31,7 +31,7 @@ struct ZappablePFP: View {
     
     init(pubkey: String, contact: NRContact, size: CGFloat = 50.0, zapEtag: String? = nil, zapAtag: String? = nil, forceFlat: Bool? = nil) {
         self.pubkey = pubkey
-        _pfpAttributes = StateObject(wrappedValue: PFPAttributes(contact: contact, pubkey: contact.pubkey))
+        self.nrContact = contact
         self.size = size
         self.zapEtag = zapEtag
         self.zapAtag = zapAtag
@@ -39,7 +39,7 @@ struct ZappablePFP: View {
     }
     
     var body: some View {
-        PFP(pubkey: pubkey, pictureUrl: pfpAttributes.pfpURL, size: size, forceFlat: (forceFlat ?? false))
+        PFP(pubkey: pubkey, pictureUrl: nrContact.pictureUrl, size: size, forceFlat: (forceFlat ?? false))
             .overlay(alignment: .center) {
                 if isZapped {
                     Circle()
@@ -76,15 +76,8 @@ struct ZappablePFP: View {
                     }
                 }
             }
-            .onChange(of: pfpAttributes.contact) { contact in
-                guard let contact = pfpAttributes.contact else { return }
-                guard let zapState = contact.zapState else { return }
-
-                isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState)
-            }
             .onAppear {
-                guard let contact = pfpAttributes.contact else { return }
-                guard let zapState = contact.zapState else { return }
+                guard let zapState = nrContact.zapState else { return }
 
                 isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapState)
             }
@@ -119,32 +112,28 @@ struct ZappablePreviews: View {
     var body: some View {
         VStack(spacing: 15.0) {
             if let contact = contact1 {
-                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
-                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
+                ZappablePFP(pubkey: contact.pubkey)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }
             }
             
             if let contact = contact2 {
-                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
-                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
+                ZappablePFP(pubkey: contact.pubkey)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }
             }
             
             if let contact = contact3 {
-                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
-                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
+                ZappablePFP(pubkey: contact.pubkey)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }
             }
             
             if let contact = contact4 {
-                let pfpAttributes = PFPAttributes(contact: contact, pubkey: contact.pubkey)
-                ZappablePFP(pubkey: contact.pubkey, pfpAttributes: pfpAttributes)
+                ZappablePFP(pubkey: contact.pubkey)
                     .onTapGesture {
                         contact.zapState = .initiated
                     }

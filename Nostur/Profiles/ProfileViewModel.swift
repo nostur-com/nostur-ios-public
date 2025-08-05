@@ -29,26 +29,27 @@ class ProfileViewModel: ObservableObject {
         Task { @MainActor in
             newPostsNotificationsEnabled = NewPostNotifier.shared.isEnabled(for: nrContact.pubkey)
         }
-        self.loadOldPFP(nrContact)
-        self.loadProfileKinds(nrContact)
-        self.loadArticles(nrContact)
-        self.loadLists(nrContact)
-        
-        bg().perform { [weak self] in
-            
-            if let contact = nrContact.contact, NIP05Verifier.shouldVerify(contact) {
-                NIP05Verifier.shared.verify(contact)
-            }
-            
+        Task.detached {
             // Load npub
             let npub = try! NIP19(prefix: "npub", hexString: pubkey).displayString
             Task { @MainActor [weak self] in
                 self?.npub = npub
             }
+        }
+        self.loadOldPFP(nrContact)
+        self.loadArticles(nrContact)
+        self.loadLists(nrContact)
+        
+        bg().perform { [weak self] in
+            guard let contact: Contact = Contact.fetchByPubkey(pubkey, context: bg()) else { return }
             
-            self?.loadLuds(nrContact)
+            self?.loadProfileKinds(contact)
             
-            guard let contact = nrContact.contact else { return }
+            if NIP05Verifier.shouldVerify(contact) {
+                NIP05Verifier.shared.verify(contact)
+            }
+            
+            self?.loadLuds(nrContact: nrContact)
             EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "ProfileViewModel")
             
             // "Follows you"
@@ -82,15 +83,15 @@ class ProfileViewModel: ObservableObject {
         }
     }
     
-    public func loadProfileKinds(_ nrContact: NRContact) {
+    public func loadProfileKinds(_ contact: Contact) {
         let task = ReqTask(
             reqCommand: { (taskId) in
-                let filters = [Filters(authors: [nrContact.pubkey], kinds: [0,3,30008,10002,10063], limit: 25)]
+                let filters = [Filters(authors: [contact.pubkey], kinds: [0,3,30008,10002,10063], limit: 25)]
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
             },
             processResponseCommand: { (taskId, _, _) in
                 bg().perform {
-                    if (nrContact.contact?.followsYou() ?? false) {
+                    if (contact.followsYou()) {
                         Task { @MainActor [weak self] in
                             self?.isFollowingYou = true
                         }
@@ -99,7 +100,7 @@ class ProfileViewModel: ObservableObject {
             },
             timeoutCommand: { taskId in
                 bg().perform {
-                    if (nrContact.contact?.followsYou() ?? false) {
+                    if (contact.followsYou()) {
                         Task { @MainActor [weak self] in
                             self?.isFollowingYou = true
                         }
@@ -111,19 +112,17 @@ class ProfileViewModel: ObservableObject {
         task.fetch()
     }
     
-    private func loadLuds(_ nrContact: NRContact) {
-        guard let contact = nrContact.contact else { return }
-        guard contact.anyLud else { return }
-        let lud16orNil = contact.lud16
-        let lud06orNil = contact.lud06
-        Task { [weak contact] in
+    private func loadLuds(nrContact: NRContact) {
+        guard nrContact.anyLud else { return }
+        let lud16orNil = nrContact.lud16
+        let lud06orNil = nrContact.lud06
+        Task {
             do {
                 if let lud16 = lud16orNil, lud16 != "" {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
                     if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                         await bg().perform {
-                            guard let contact else { return }
-                            contact.zapperPubkeys.insert(zapperPubkey)
+                            nrContact.zapperPubkeys.insert(zapperPubkey)
 #if DEBUG
                             L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
 #endif
@@ -134,8 +133,7 @@ class ProfileViewModel: ObservableObject {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
                     if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                         await bg().perform {
-                            guard let contact else { return }
-                            contact.zapperPubkeys.insert(zapperPubkey)
+                            nrContact.zapperPubkeys.insert(zapperPubkey)
 #if DEBUG
                             L.og.info("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
 #endif
@@ -157,14 +155,13 @@ class ProfileViewModel: ObservableObject {
         
         bg().perform { [weak self] in
             guard let self else { return }
-            if let fixedPfp = nrContact.contact?.fixedPfp,
-               fixedPfp != nrContact.contact?.picture,
-               let fixedPfpUrl = URL(string: fixedPfp),
-               hasFPFcacheFor(pfpImageRequestFor(fixedPfpUrl))
+            if let fixedPfpURL = nrContact.fixedPfpURL,
+               fixedPfpURL != nrContact.pictureUrl,
+               hasFPFcacheFor(pfpImageRequestFor(fixedPfpURL))
             {
                 Task { @MainActor [weak self] in
                     withAnimation {
-                        self?.fixedPfp = fixedPfpUrl
+                        self?.fixedPfp = fixedPfpURL
                     }
                 }
             }

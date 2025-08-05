@@ -69,11 +69,11 @@ class PaymentInfo: Identifiable {
 extension LightningButton {
     func buttonTapped() {
         guard isFullAccount() else { showReadOnlyMessage(); return }
-        guard (nrPost.contact?.anyLud ?? false) else { return }
+        guard nrPost.contact.anyLud else { return }
         isLoading = true
         
         
-        if let lud16 = nrPost.contact!.lud16 {
+        if let lud16 = nrPost.contact.lud16 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
@@ -87,7 +87,7 @@ extension LightningButton {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
+                                nrPost.contact.zapperPubkeys.insert(zapperPubkey)
                             }
                             // Old zap sheet
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
@@ -107,7 +107,7 @@ extension LightningButton {
                 }
             }
         }
-        else if let lud06 = nrPost.contact!.lud06 {
+        else if let lud06 = nrPost.contact.lud06 {
             Task {
                 do {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
@@ -121,7 +121,7 @@ extension LightningButton {
                             if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                                nrPost.contact!.zapperPubkeys.insert(zapperPubkey)
+                                nrPost.contact.zapperPubkeys.insert(zapperPubkey)
                             }
                             let paymentInfo = PaymentInfo(min: min, max: max, callback: callback, supportsZap: supportsZap, nrPost: nrPost, nrContact: nrPost.contact)
                             sendNotification(.showZapSheet, paymentInfo)

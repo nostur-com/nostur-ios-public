@@ -149,13 +149,18 @@ struct NxZapReceipt: View {
     
     public var fromPubkey: String
     public let nrZapFrom: NRPost
-    private var color: Color { randomColor(seed: fromPubkey) }
 
-    @State private var name: String?
-    @State private var pictureUrl: URL?
-    @State private var subscriptions = Set<AnyCancellable>()
-    
+    @ObservedObject private var nrContact: NRContact
     @State var showMiniProfile = false
+    
+    init(sats: Double, receiptPubkey: String, fromPubkey: String, nrZapFrom: NRPost) {
+        self.sats = sats
+        self.receiptPubkey = receiptPubkey
+        self.fromPubkey = fromPubkey
+        self.nrZapFrom = nrZapFrom
+        
+        self.nrContact = NRContact.instance(of: fromPubkey)
+    }
     
     var body: some View { // Copy pasta from Kind1Default, remove all non 9735 stuff, removed footer, removed thread connecting lines
         HStack(alignment: .top) {
@@ -174,33 +179,10 @@ struct NxZapReceipt: View {
             }
             .frame(width: 80)
             
-            InnerPFP(pubkey: fromPubkey, pictureUrl: pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: color)
+            InnerPFP(pubkey: fromPubkey, pictureUrl: nrContact.pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: nrContact.randomColor)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .onTapGesture {
-                    withAnimation { showMiniProfile = true }
-                }
-                .overlay(alignment: .topLeading) {
-                    if (showMiniProfile) {
-                        GeometryReader { geo in
-                            Color.clear
-                                .onAppear {
-                                    sendNotification(.showMiniProfile,
-                                                     MiniProfileSheetInfo(
-                                                        pubkey: fromPubkey,
-                                                        contact: nrZapFrom.contact,
-                                                        location: geo.frame(in: .global).origin
-                                                     )
-                                    )
-                                    showMiniProfile = false
-                                }
-                        }
-                          .frame(width: 10)
-                          .zIndex(100)
-                          .transition(.asymmetric(insertion: .scale(scale: 0.4), removal: .opacity))
-                          .onReceive(receiveNotification(.dismissMiniProfile)) { _ in
-                              showMiniProfile = false
-                          }
-                    }
+                    navigateTo(nrContact, context: dim.id)
                 }
             
             VStack(alignment: .leading, spacing: 3) { // Post container
@@ -211,19 +193,7 @@ struct NxZapReceipt: View {
 //                ReceiptFrom(pubkey: receiptPubkey)
             }
             .task {
-                Kind0Processor.shared.receive
-                    .subscribe(on: DispatchQueue.global())
-                    .receive(on: DispatchQueue.global())
-                    .filter { $0.pubkey == fromPubkey }
-                    .sink { profile in
-                        DispatchQueue.main.async {
-                            name = profile.name
-                            pictureUrl = profile.pictureUrl
-                        }
-                    }
-                    .store(in: &subscriptions)
-                
-                Kind0Processor.shared.request.send(fromPubkey)
+                QueuedFetcher.shared.enqueue(pTag: fromPubkey)
             }
         }
     }

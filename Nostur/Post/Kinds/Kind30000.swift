@@ -16,7 +16,7 @@ struct Kind30000: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
-    @ObservedObject private var pfpAttributes: PFPAttributes
+    @ObservedObject private var nrContact: NRContact
     
     private let hideFooter: Bool // For rendering in NewReply
     private let missingReplyTo: Bool // For rendering in thread
@@ -42,12 +42,12 @@ struct Kind30000: View {
     private var followPs: OrderedSet<String>
     
     @State private var followNRContacts: [String: NRContact] = [:]
-    @State private var pfpAttributesForContactsToRender: [PFPAttributes] = []
+    @State private var nrContactsToRender: [NRContact] = []
     @State private var didLoadFollowNRContacts = false
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
-        self.pfpAttributes = nrPost.pfpAttributes
+        self.nrContact = nrPost.contact
         self.hideFooter = hideFooter
         self.missingReplyTo = missingReplyTo
         self.connect = connect
@@ -165,18 +165,18 @@ struct Kind30000: View {
     @State private var showMiniProfile = false
     
     private func load10pfps() {
-        pfpAttributesForContactsToRender = followPs.prefix(10).indices.map { index in
-            PFPAttributes(contact: followNRContacts[followPs[index]], pubkey: followPs[index])
+        nrContactsToRender = followPs.prefix(10).indices.map { index in
+            NRContact.instance(of: followPs[index])
         }
     }
     
     @ViewBuilder
     private var overlappingPFPs: some View {
         ZStack(alignment: .leading) {
-            ForEach(pfpAttributesForContactsToRender.indices, id: \.self) { index in
+            ForEach(nrContactsToRender.indices, id: \.self) { index in
                 ZStack(alignment: .leading) {
-                    ObservedPFP(pfp: pfpAttributesForContactsToRender[index], forceFlat: true)
-                        .id(pfpAttributesForContactsToRender[index].pubkey)
+                    ObservedPFP(nrContact: nrContactsToRender[index], forceFlat: true)
+                        .id(nrContactsToRender[index].pubkey)
                         .zIndex(-Double(index))
                 }
                 .offset(x:Double(0 + (30*index)))
@@ -249,8 +249,8 @@ struct Kind30000: View {
     }
     
     private func loadContactRows() {
-        pfpAttributesForContactsToRender = followNRContacts.map({ pubkey, nrContact in
-            PFPAttributes(contact: nrContact, pubkey: pubkey)
+        nrContactsToRender = followNRContacts.map({ pubkey, nrContact in
+            nrContact
         })
         didLoad = true
     }
@@ -261,21 +261,21 @@ struct Kind30000: View {
     @ViewBuilder
     private var contactRows: some View {
         if didLoad {
-            ForEach(pfpAttributesForContactsToRender) { pfpAttributes in
-                PubkeyRow(pfp: pfpAttributes)
+            ForEach(nrContactsToRender) { nrContact in
+                PubkeyRow(nrContact: nrContact)
                     .lineLimit(1)
-                    .id(pfpAttributes.pubkey)
+                    .id(nrContact.pubkey)
                     .onAppear {
                         bg().perform {
-                            if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
-                                QueuedFetcher.shared.enqueue(pTag: pfpAttributes.pubkey)
+                            if nrContact.metadata_created_at == 0 {
+                                QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
                             }
                         }
                     }
                     .onDisappear {
                         bg().perform {
-                            if pfpAttributes.contact == nil || pfpAttributes.contact?.metadata_created_at == 0 {
-                                QueuedFetcher.shared.dequeue(pTag: pfpAttributes.pubkey)
+                            if nrContact.metadata_created_at == 0 {
+                                QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
                             }
                         }
                     }
@@ -294,21 +294,16 @@ struct Kind30000: View {
 struct PubkeyRow: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var dim: DIMENSIONS
-    @ObservedObject var pfp: PFPAttributes
+    @ObservedObject var nrContact: NRContact
     
     var body: some View {
         HStack {
-            ObservedPFP(pfp: pfp, size: 20.0)
-            Text(pfp.anyName)
+            ObservedPFP(nrContact: nrContact, size: 20.0)
+            Text(nrContact.anyName)
         }
         .onTapGesture {
             guard !nxViewingContext.contains(.preview) else { return }
-            if let nrContact = pfp.contact {
-                navigateTo(nrContact, context: dim.id)
-            }
-            else {
-                navigateTo(ContactPath(key: pfp.pubkey), context: dim.id)
-            }
+            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
         }
     }
 }

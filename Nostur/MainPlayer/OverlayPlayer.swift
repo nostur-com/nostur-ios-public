@@ -260,8 +260,8 @@ struct OverlayPlayer: View {
                                                                 .foregroundColor(theme.footerButtons)
                                                             if IS_NOT_APPSTORE { // Only available in non app store version
                                                                 ZapButton(nrPost: nrPost, isFirst: false, isLast: false)
-                                                                    .opacity(nrPost.contact?.anyLud ?? false ? 1 : 0.3)
-                                                                    .disabled(!(nrPost.contact?.anyLud ?? false))
+                                                                    .opacity(nrPost.contact.anyLud ? 1 : 0.3)
+                                                                    .disabled(!nrPost.contact.anyLud)
                                                             }
                                                             else {
                                                                 EmptyView()

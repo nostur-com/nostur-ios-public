@@ -192,13 +192,14 @@ extension Contact : Identifiable {
             return (try? self.managedObjectContext?.fetch(fr)) ?? []
         }
     }
+    
+    static let decoder = JSONDecoder()
 
     static func saveOrUpdateContact(event: NEvent, context: NSManagedObjectContext) {
 #if DEBUG
         shouldBeBg()
 #endif
-        let decoder = JSONDecoder()
-        guard let metaData = try? decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
+        guard let metaData = try? Self.decoder.decode(NSetMetadata.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) else {
             return
         }
         
@@ -251,6 +252,14 @@ extension Contact : Identifiable {
                 contact.picture = metaData.picture
                 contact.banner = metaData.banner
                 contact.nip05 = metaData.nip05
+                if (metaData.nip05 != contact.nip05) {
+                    contact.nip05verifiedAt = nil // WHEN SET
+                }
+                
+                if NIP05Verifier.shouldVerify(contact) {
+                    NIP05Verifier.shared.verify(contact)
+                }
+                
                 contact.lud16 = metaData.lud16
                 contact.lud06 = metaData.lud06
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
@@ -258,13 +267,9 @@ extension Contact : Identifiable {
                 
                 PubkeyUsernameCache.shared.setObject(for: event.publicKey, value: contact.anyName)
                 
-                // TODO: Should use this more?:
-                Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
-                
-                
                 updateRelatedEvents(contact)
                 updateRelatedAccounts(contact)
-                ViewUpdates.shared.contactUpdated.send((event.publicKey, contact))
+                ViewUpdates.shared.profileUpdates.send(profileInfo(contact))
             }
             else {
                 // Received metadata is older than stored Contact
@@ -282,6 +287,14 @@ extension Contact : Identifiable {
             contact.picture = metaData.picture
             contact.banner = metaData.banner
             contact.nip05 = metaData.nip05
+            if (metaData.nip05 != contact.nip05) {
+                contact.nip05verifiedAt = nil // WHEN SET
+            }
+            
+            if NIP05Verifier.shouldVerify(contact) {
+                NIP05Verifier.shared.verify(contact)
+            }
+            
             contact.lud16 = metaData.lud16
             contact.lud06 = metaData.lud06
             contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
@@ -294,11 +307,10 @@ extension Contact : Identifiable {
             
             PubkeyUsernameCache.shared.setObject(for: event.publicKey, value: contact.anyName)
             
-            Kind0Processor.shared.receive.send(Profile(pubkey: contact.pubkey, name: contact.anyName, pictureUrl: contact.pictureUrl))
             EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "saveOrUpdateContact")
             updateRelatedEvents(contact)
             updateRelatedAccounts(contact)
-            ViewUpdates.shared.contactUpdated.send((event.publicKey, contact))
+            ViewUpdates.shared.profileUpdates.send(profileInfo(contact))
         }
     }
     
@@ -386,44 +398,6 @@ extension Contact : Identifiable {
         
     static func npub(_ pubkey:String) -> String {
         return try! NIP19(prefix: "npub", hexString: pubkey).displayString
-    }
-    
-    static func updateMetadata(_ metaData:NSetMetadata, event:Event, context:NSManagedObjectContext) throws {
-        
-        let request = NSFetchRequest<Contact>(entityName: "Contact")
-        request.entity = Contact.entity()
-        request.predicate = NSPredicate(format: "pubkey == %@", event.pubkey)
-        
-        if let contactToUpdate = try context.fetch(request).first {
-            contactToUpdate.about = metaData.about
-            contactToUpdate.lud16 = metaData.lud16
-            contactToUpdate.lud06 = metaData.lud06
-            contactToUpdate.name = metaData.name
-            contactToUpdate.display_name = metaData.display_name
-            contactToUpdate.picture = metaData.picture
-            contactToUpdate.banner = metaData.banner
-            if (metaData.nip05 != contactToUpdate.nip05) {
-                contactToUpdate.nip05verifiedAt = nil // WHEN SET
-            }
-            contactToUpdate.nip05 = metaData.nip05
-            contactToUpdate.metadata_created_at = event.created_at
-            contactToUpdate.updated_at = Int64(Date().timeIntervalSince1970)
-        }
-        else {
-            let contact = Contact(context: context)
-            contact.pubkey = event.pubkey
-            contact.about = metaData.about
-            contact.lud16 = metaData.lud16
-            contact.lud06 = metaData.lud06
-            contact.name = metaData.name
-            contact.display_name = metaData.display_name
-            contact.picture = metaData.picture
-            contact.banner = metaData.banner
-            contact.nip05verifiedAt = nil // WHEN SET
-            contact.nip05 = metaData.nip05
-            contact.metadata_created_at = event.created_at
-            contact.updated_at = Int64(Date().timeIntervalSince1970)
-        }
     }
     
     static func fetchByPubkey(_ pubkey: String, context: NSManagedObjectContext) -> Contact? {

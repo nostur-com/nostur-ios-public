@@ -47,12 +47,12 @@ struct MinimalQuotedNoteFragment: View {
                 .stroke(.regularMaterial, lineWidth: 1)
         )
         .onAppear {
-            if (nrPost.contact == nil || nrPost.contact?.metadata_created_at == 0) {
+            if (nrPost.contact.metadata_created_at == 0) {
                 QueuedFetcher.shared.enqueue(pTag: nrPost.pubkey)
             }
         }
         .onDisappear {
-            if (nrPost.contact == nil || nrPost.contact?.metadata_created_at == 0) {
+            if (nrPost.contact.metadata_created_at == 0) {
                 QueuedFetcher.shared.dequeue(pTag: nrPost.pubkey)
             }
         }
