@@ -173,13 +173,12 @@ import NavigationBackport
 }
 
 struct LazyPrivateNote: View {
-    @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.theme) private var theme
-    @ObservedObject private var settings:SettingsStore = .shared
+    @ObservedObject private var settings: SettingsStore = .shared
     
-    @ObservedObject public var pn:CloudPrivateNote
+    @ObservedObject public var pn: CloudPrivateNote
     public var events:[Event] // bg
-    public var contacts:[Contact] // main
+    public var contacts: [Contact] // main
     
     @State private var viewState:ViewState = .loading
     @State private var nrPost:NRPost? // main

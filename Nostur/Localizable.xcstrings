@@ -4442,9 +4442,6 @@
         }
       }
     },
-    "hoho" : {
-      "shouldTranslate" : false
-    },
     "Home/Lock screen notifications" : {
       "localizations" : {
         "nl" : {
@@ -5470,6 +5467,7 @@
       }
     },
     "Mock Profile update" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
