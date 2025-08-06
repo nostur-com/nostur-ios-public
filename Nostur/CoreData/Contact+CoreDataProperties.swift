@@ -108,7 +108,7 @@ extension Contact : Identifiable {
     var anyName: String {
         let displayName = display_name != nil && display_name != "" ? display_name : nil
         let name = name != nil && name != "" ? name : nil
-        let theName = (displayName ?? name) ?? nip05nameOnly
+        let theName = (displayName ?? name) ?? (nip05veried ? nip05nameOnly : "")
         
         if theName.isEmpty { return authorKey }
         let spamFixedName = String(theName.prefix(255)) // 255 SPAM LIMIT

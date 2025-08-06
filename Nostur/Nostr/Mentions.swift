@@ -24,33 +24,37 @@ func replaceMentionsWithNpubs(_ text: String, selected: Set<NRContact> = []) -> 
             .replacingOccurrences(of: "\u{2063}", with: "")
             .replacingOccurrences(of: "\u{2064}", with: "")
         let fr = Contact.fetchRequest()
-        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, blocked)
+        fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, term, blocked)
         
         // prio selected contacts - exact result
         if let result = selected.first(where: {
-            let displayName = ($0.display_name ?? "").lowercased()
-            let name = ($0.name ?? "").lowercased()
+            let anyName = $0.anyName.lowercased()
+            let fixedName = ($0.fixedName ?? "").lowercased()
             
-            if displayName == term { return true }
-            if name == term { return true }
+            if anyName == term { return true }
+            if fixedName != "" && fixedName == term { return true }
             return false
         }) {
             //            print("selected [exact!] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
+            if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
+                newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(npub)", options: [.caseInsensitive])
+            }
             continue
         }
         
         // prio selected contacts - contains result
         else if let result = selected.first(where: {
-            let displayName = ($0.display_name ?? "").lowercased()
-            let name = ($0.name ?? "").lowercased()
+            let anyName = $0.anyName.lowercased()
+            let fixedName = ($0.fixedName ?? "").lowercased()
             
-            if displayName.contains(term) { return true }
-            if name.contains(term) { return true }
+            if anyName.contains(term) { return true }
+            if fixedName != "" && fixedName.contains(term) { return true }
             return false
         }) {
             //            print("selected [contains!] result: \(result.authorName)")
-            newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(result.npub)", options: [.caseInsensitive])
+            if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
+                newText = newText.replacingOccurrences(of: mention.output.2, with: "nostr:\(npub)", options: [.caseInsensitive])
+            }
             continue
         }
         
@@ -94,33 +98,37 @@ func replaceMentionsWithNpubs15(_ text: String, selected: Set<NRContact> = []) -
             let mention = text[mentionRange]
 
             let fr = Contact.fetchRequest()
-            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, blocked)
+            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@) AND NOT pubkey IN %@", term, term, term, blocked)
 
             // prio selected contacts - exact result
             if let result = selected.first(where: {
-                let displayName = ($0.display_name ?? "").lowercased()
-                let name = ($0.name ?? "").lowercased()
+                let anyName = $0.anyName.lowercased()
+                let fixedName = ($0.fixedName ?? "").lowercased()
                 
-                if displayName == term { return true }
-                if name == term { return true }
+                if anyName == term { return true }
+                if fixedName != "" && fixedName == term { return true }
                 return false
             }) {
                 //            print("selected [exact!] result: \(result.authorName)")
-                newText = newText.replacingOccurrences(of: mention, with: "nostr:\(result.npub)", options: [.caseInsensitive])
+                if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
+                    newText = newText.replacingOccurrences(of: mention, with: "nostr:\(npub)", options: [.caseInsensitive])
+                }
                 continue
             }
             
             // prio selected contacts - contains result
             else if let result = selected.first(where: {
-                let displayName = ($0.display_name ?? "").lowercased()
-                let name = ($0.name ?? "").lowercased()
+                let anyName = $0.anyName.lowercased()
+                let fixedName = ($0.fixedName ?? "").lowercased()
                 
-                if displayName.contains(term) { return true }
-                if name.contains(term) { return true }
+                if anyName.contains(term) { return true }
+                if fixedName != "" && fixedName.contains(term) { return true }
                 return false
             }) {
                 //            print("selected [contains!] result: \(result.authorName)")
-                newText = newText.replacingOccurrences(of: mention, with: "nostr:\(result.npub)", options: [.caseInsensitive])
+                if let npub = (result.npub ?? (try? NIP19(prefix: "npub", hexString: result.pubkey).displayString)) {
+                    newText = newText.replacingOccurrences(of: mention, with: "nostr:\(npub)", options: [.caseInsensitive])
+                }
                 continue
             }
             

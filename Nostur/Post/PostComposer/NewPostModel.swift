@@ -789,7 +789,9 @@ public final class NewPostModel: ObservableObject {
             else {
                 mentioning = true
                 term = mentionTerm
-                self.searchContacts(mentionTerm)
+                if mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines) != "" {
+                    self.searchContacts(mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines))
+                }
             }
             
         }
@@ -810,7 +812,7 @@ public final class NewPostModel: ObservableObject {
         bg().perform {
             let fr = Contact.fetchRequest()
             fr.sortDescriptors = [NSSortDescriptor(keyPath: \Contact.nip05verifiedAt, ascending: false)]
-            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), mentionTerm.trimmingCharacters(in: .whitespacesAndNewlines), AppState.shared.bgAppState.blockedPubkeys)
+            fr.predicate = NSPredicate(format: "(display_name CONTAINS[cd] %@ OR name CONTAINS[cd] %@ OR fixedName CONTAINS[cd] %@) AND NOT pubkey IN %@", mentionTerm, mentionTerm, mentionTerm, AppState.shared.bgAppState.blockedPubkeys)
             
             let contactSearchResults: [NRContact] = Array(((try? bg().fetch(fr)) ?? []).prefix(60))
                 .map { NRContact.instance(of: $0.pubkey, contact: $0) }
