@@ -12,32 +12,28 @@ struct TopZaps: View {
     @Environment(\.theme) private var theme
     public let id: String
     
-    @FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)], predicate: NSPredicate(value: false))
-    private var zaps: FetchedResults<Event>
-    private var zapsSorted: [Event] {
-        zaps
-            .sorted(by: { $0.naiveSats > $1.naiveSats })
-            .uniqued(on: { $0.id })
-    }
+    @StateObject private var model = PostZapsModel()
+    @StateObject private var reverifier = ZapperPubkeyVerifier()
+    @State private var backlog = Backlog()
     
-    @State private var verifiedZaps: [ZapAndZapFrom] = []
     @State var actualSize: CGSize? = nil
     @Namespace private var animation
     @State private var animateUpdate = UUID()
-  
-    
-    init(id: String) {
-        self.id = id
-        _zaps = FetchRequest(sortDescriptors: [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)], predicate: NSPredicate(format: "zappedEventId == %@ AND kind == 9735", id))
-    }
     
     var body: some View {
         Flow(.vertical, alignment: .topLeading) {
             if let actualSize {
-                ForEach(verifiedZaps.indices, id: \.self) { index in
-                    ZapPill(zap: verifiedZaps[index], index: index, availableWidth: actualSize.width)
-                        .id(verifiedZaps[index].id)
-                        .matchedGeometryEffect(id: verifiedZaps[index].id, in: animation)
+                ForEach(model.verifiedZaps.indices, id: \.self) { index in
+                    ZapPill(
+                        nxZap: model.verifiedZaps[index],
+                        index: index,
+                        availableWidth: actualSize.width
+                    )
+                    .id(model.verifiedZaps[index].id)
+                    .matchedGeometryEffect(
+                        id: model.verifiedZaps[index].id,
+                        in: animation
+                    )
                 }
             }
         }
@@ -49,56 +45,79 @@ struct TopZaps: View {
             guard actualSize == nil else { return }
             actualSize = size
         }
-         .nosturNavBgCompat(theme: theme)
+        .nosturNavBgCompat(theme: theme)
         .onAppear {
-            loadZaps(zapsSorted)
+            model.setup(eventId: id)
+            model.load(limit: 500)
+            fetchNewer()
         }
-        .onChange(of: zapsSorted) { newZapsSorted in
-            loadZaps(newZapsSorted)
+        .onChange(of: reverifier.state) { newState in
+            if newState == .done {
+                model.load(limit: 500, includeSpam: model.includeSpam)
+            }
+        }
+        .onReceive(Importer.shared.importedMessagesFromSubscriptionIds.receive(on: RunLoop.main)) { [weak backlog] subscriptionIds in
+            bg().perform {
+                guard let backlog else { return }
+                let reqTasks = backlog.tasks(with: subscriptionIds)
+                reqTasks.forEach { task in
+                    task.process()
+                }
+            }
         }
     }
     
-    private func loadZaps(_ zaps: [Event]) {
-        verifiedZaps = zaps
-            .filter { $0.flags != "zpk_mismatch_event" }
-            .prefix(17)
-            .compactMap({ zap in
-                guard let zapFrom = zap.zapFromRequest else { return nil }
-                return ZapAndZapFrom(zap: zap, zapFrom: zapFrom)
+    private func fetchNewer() {
+#if DEBUG
+        L.og.debug("🥎🥎 fetchNewer() (POST ZAPS)")
+#endif
+        let fetchNewerTask = ReqTask(
+            reqCommand: { taskId in
+                bg().perform {
+                    req(
+                        RM.getEventReferences(
+                            ids: [id],
+                            limit: 500,
+                            subscriptionId: taskId,
+                            kinds: [9735],
+                            since: NTimestamp(
+                                timestamp: Int(model.mostRecentZapCreatedAt)
+                            )
+                        )
+                    )
+                }
+            },
+            processResponseCommand: { (taskId, _, _) in
+                model.load(limit: 500, includeSpam: model.includeSpam)
+            },
+            timeoutCommand: { taskId in
+                model.load(limit: 500, includeSpam: model.includeSpam)
             })
-        animateUpdate = UUID()
+        
+        backlog.add(fetchNewerTask)
+        fetchNewerTask.fetch()
     }
 }
 
-struct ZapAndZapFrom: Identifiable {
-    var id: String { zap.id }
-    let zap: Event
-    let zapFrom: Event
-}
+//struct ZapAndZapFrom: Identifiable {
+//    var id: String { zap.id }
+//    let zap: Event
+//    let zapFrom: Event
+//}
 
 struct ZapPill: View {
     @Environment(\.theme) private var theme
-    public var zap: ZapAndZapFrom
+    public var nxZap: NxZap
     public var index: Int
     public var availableWidth: CGFloat
     
-    @State private var pfpURL: URL?
-    
     var body: some View {
         HStack(spacing: 5) {
-            Circle()
-                .foregroundColor(randomColor(seed: zap.zapFrom.pubkey))
-                .frame(width: 20.0, height: 20.0)
-                .overlay {
-                    if let pfpURL {
-                        MiniPFP(pictureUrl: pfpURL, size: 20.0)
-                            .animation(.easeIn, value: pfpURL)
-                    }
-                }
-            Text(zap.zap.naiveSats.satsFormatted)
+            ObservedPFP(pubkey: nxZap.fromPubkey, size: 20.0, forceFlat: false)
+            Text(nxZap.sats.satsFormatted)
                 .foregroundColor(theme.accent)
                 .padding(.trailing, 5)
-            if index < 3, let content = zap.zapFrom.content {
+            if index < 3, let content = nxZap.nrZapFrom.content {
                 Text(content)
                     .padding(.trailing, 5)
                     .lineLimit(1)
@@ -108,20 +127,9 @@ struct ZapPill: View {
         .foregroundColor(theme.primary)
         .font(.footnote)
         .clipShape(Capsule())
-        .frame(maxWidth: index == 0 ? availableWidth : ((availableWidth-20) / 2))
-        .onAppear {
-            guard let pfpURL = zap.zapFrom.contact?.pictureUrl, self.pfpURL != pfpURL else { return }
-            self.pfpURL = pfpURL
-        }
-        .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
-            guard profile.pubkey == zap.zapFrom.pubkey,
-                  pfpURL?.absoluteString != profile.pfp,
-                  let updatedPfpURL = profile.pfpUrl
-            else { return }
-            withAnimation {
-                pfpURL = updatedPfpURL
-            }
-        }
+        .frame(
+            maxWidth: index == 0 ? availableWidth : ((availableWidth-20) / 2)
+        )
     }
 }
 
@@ -130,6 +138,8 @@ struct ZapPill: View {
         pe.loadContacts()
         pe.loadZaps()
     }) {
-        TopZaps(id: "7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565")
+        TopZaps(
+            id: "7682031bb0b06d7b9c417dae30141357a74b4f089ebd46226990d418e2def565"
+        )
     }
 }
