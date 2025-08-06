@@ -125,7 +125,7 @@ struct Kind1: View {
                     .clipBottom(height: clipBottomHeight)
                     .overlay(alignment: .bottomTrailing) {
                         if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
-                            Text("Show more...")
+                            Image(systemName: "chevron.compact.down")
                                 .foregroundColor(.white)
                                 .padding(5)
                                 .background {

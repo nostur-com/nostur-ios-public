@@ -137,9 +137,8 @@ struct NRContentTextRendererInner: View {
             
                 .overlay(alignment: .bottomTrailing) {
                     if shouldShowMoreButton {
-                        Text("Show more...")
+                        Image(systemName: "chevron.compact.down")
                             .foregroundColor(.white)
-
                             .padding(5)
                             .background {
                                 RoundedRectangle(cornerRadius: 5)
@@ -213,7 +212,7 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Text("Show more...")
+                                Image(systemName: "chevron.compact.down")
                                     .foregroundColor(.white)
                                     .padding(5)
                                     .background {
@@ -269,7 +268,7 @@ struct NRContentTextRendererInner: View {
                     
                         .overlay(alignment: .bottomTrailing) {
                             if shouldShowMoreButton {
-                                Text("Show more...")
+                                Image(systemName: "chevron.compact.down")
                                     .foregroundColor(.white)
                                     .padding(5)
                                     .background {
