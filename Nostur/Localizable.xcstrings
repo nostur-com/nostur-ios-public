@@ -8375,6 +8375,7 @@
       }
     },
     "Show more..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

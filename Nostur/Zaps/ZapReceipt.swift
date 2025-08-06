@@ -6,148 +6,34 @@
 //
 
 import SwiftUI
-import Combine
-
-// Experiment with new "Processor" Combine mechanism
-
-//struct ZapReceipt: View {
-//    @Environment(\.nxViewingContext) private var nxViewingContext
-//    @Environment(\.theme) private var theme
-//    @EnvironmentObject private var dim: DIMENSIONS
-//    
-//    @ObservedObject public var nrPost: NRPost
-//    public let sats: Double
-//    public let receiptPubkey: String
-//    
-//    public var fromPubkey: String
-//    public let from: Event
-//    private var color: Color { randomColor(seed: fromPubkey) }
-//
-//    @State private var name: String?
-//    @State private var pictureUrl: URL?
-//    @State private var subscriptions = Set<AnyCancellable>()
-//    @State private var nrZapFrom: NRPost?
-//    
-//    @State var showMiniProfile = false
-//    
-//    public var isEmbedded: Bool = false
-//    
-//    var body: some View {
-//        if isEmbedded {
-//            embeddedView
-//        }
-//        else {
-//            normalView
-//        }
-//    }
-//        
-//    
-//    @ViewBuilder
-//    private var normalView: some View {
-////        #if DEBUG
-////        let _ = Self._printChanges()
-////        #endif
-//        PostLayout(nrPost: nrPost, hideFooter: true, isDetail: false) {
-//            
-//            content
-//
-//        }
-//    }
-//    
-//    @ViewBuilder
-//    private var embeddedView: some View {
-//        PostEmbeddedLayout(nrPost: nrPost) {
-//            content
-//        }
-//    }
-//    
-//    @ViewBuilder
-//    var content: some View {
-//        HStack(alignment: .top) {
-//            VStack {
-//                InnerPFP(pubkey: fromPubkey, pictureUrl: pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: color)
-//                    .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
-//                    .overlay(alignment: .bottomTrailing) {
-//                        Image(systemName:"bolt.fill")
-//                            .resizable()
-//                            .scaledToFit()
-//                            .frame(width: 30, height: 30)
-//                            .foregroundColor(theme.accent)
-//                            .offset(x: 6, y: 6)
-//                    }
-//                    .onTapGesture {
-//                        guard !nxViewingContext.contains(.preview) else { return }
-//                        navigateTo(ContactPath(key: fromPubkey), context: dim.id)
-//                    }
-//                
-//                Text(sats.satsFormatted)
-//                    .font(.title2)
-//                if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-//                    let fiatPrice = String(format: "$%.02f",(Double(sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
-//
-//                    Text("\(fiatPrice)")
-//                        .font(.caption)
-//                        .opacity(sats != 0 ? 0.5 : 0)
-//                }
-//            }
-//         
-//            VStack(alignment: .leading, spacing: 3) { // Post container
-//                ZappedFrom(pubkey: fromPubkey, name: name, couldBeImposter: 0, createdAt: from.date, context: dim.id)
-//                
-//                if let nrZapFrom = nrZapFrom {
-//                    ContentRenderer(nrPost: nrZapFrom, isDetail:false, fullWidth: false, availableWidth: dim.availableNoteRowImageWidth())
-//                        .frame(maxWidth: .infinity, minHeight: 40, alignment:.leading)
-//                }
-//                else {
-//                    Color.clear
-//                        .frame(height: 40)
-//                }
-//                
-//                ReceiptFrom(pubkey: receiptPubkey)
-//            }
-//            .task {
-//                bg().perform {
-//                    if let bgEvent = from.toBG() {
-//                        nrZapFrom = NRPost(event: bgEvent)
-//                    }
-//                }
-//                Kind0Processor.shared.receive
-//                    .subscribe(on: DispatchQueue.global())
-//                    .receive(on: DispatchQueue.global())
-//                    .filter { $0.pubkey == fromPubkey }
-//                    .sink { profile in
-//                        DispatchQueue.main.async {
-//                            name = profile.name
-//                            pictureUrl = profile.pictureUrl
-//                        }
-//                    }
-//                    .store(in: &subscriptions)
-//                
-//                Kind0Processor.shared.request.send(fromPubkey)
-//            }
-//        }
-//    }
-//}
 
 struct ZappedFrom: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    public let nrZapFrom: NRPost
+    private let nrZapFrom: NRPost
+    @ObservedObject private var nrContact: NRContact
+    private var context: String = "Default"
     
-    var context: String = "Default"
+    init(nrZapFrom: NRPost, context: String = "Default") {
+        self.nrZapFrom = nrZapFrom
+        self.nrContact = NRContact.instance(of: nrZapFrom.pubkey)
+        self.context = context
+    }
+    
+    
     
     var body: some View {
         HStack {
-            Text(nrZapFrom.anyName)
+            Text(nrContact.anyName)
                 .foregroundColor(.primary)
                 .fontWeight(.bold)
                 .lineLimit(2)
                 .layoutPriority(2)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
-                    navigateToContact(pubkey: nrZapFrom.pubkey, nrContact: nrZapFrom.contact, nrPost: nrZapFrom, context: context)
+                    navigateToContact(pubkey: nrZapFrom.pubkey, nrContact: nrContact, nrPost: nrZapFrom, context: context)
                 }
             
-            PossibleImposterLabelView(nrContact: nrZapFrom.contact)
+            PossibleImposterLabelView(nrContact: nrContact)
             
             Ago(nrZapFrom.createdAt)
                 .equatable()
