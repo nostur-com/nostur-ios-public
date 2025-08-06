@@ -102,8 +102,8 @@ class Importer {
     
     func sendReceivedNotifications() {
         sendReceivedNotification
-            .debounce(for: .seconds(0.15), scheduler: DispatchQueue.global())
-            .throttle(for: 0.5, scheduler: DispatchQueue.global(), latest: true)
+            .debounce(for: .seconds(0.075), scheduler: DispatchQueue.global())
+            .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
                 self?.bgContext.perform { [weak self] in
@@ -121,12 +121,12 @@ class Importer {
     
     func triggerImportWhenRelayMessagesAreAdded() {
         addedRelayMessage
-            .debounce(for: .seconds(0.1), scheduler: DispatchQueue.global())
-            .throttle(for: 0.25, scheduler: DispatchQueue.global(), latest: true)
+            .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
+            .throttle(for: 0.125, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
 #if DEBUG
-                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.25 seconds), but sends first after debounce (0.1) -[LOG]-")
+                L.importing.debug("🏎️🏎️ importEvents() after relay message received (throttle = 0.125 seconds), but sends first after debounce (0.05) -[LOG]-")
 #endif
                 self?.importEvents()
             }
@@ -134,11 +134,11 @@ class Importer {
         
         addedPrioRelayMessage
             .debounce(for: .seconds(0.05), scheduler: DispatchQueue.global())
-            .throttle(for: 0.15, scheduler: DispatchQueue.global(), latest: true)
+            .throttle(for: 0.075, scheduler: DispatchQueue.global(), latest: true)
             .receive(on: DispatchQueue.global())
             .sink { [weak self] in
 #if DEBUG
-                L.importing.debug("🏎️🏎️ importEvents() (PRIO) after relay message received (throttle = 0.15 seconds), but sends first after debounce (0.05) -[LOG]-")
+                L.importing.debug("🏎️🏎️ importEvents() (PRIO) after relay message received (throttle = 0.075 seconds), but sends first after debounce (0.05) -[LOG]-")
 #endif
                 self?.importPrioEvents()
             }
