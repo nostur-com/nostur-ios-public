@@ -307,26 +307,6 @@ extension Contact : Identifiable {
         L.og.debug("Updated account from new kind 0 from relay. pubkey: \(contact.pubkey)")
 #endif
     }
-
-    // Create dummy Contact if not already exists.
-    static func ensureContactsCreated(event: NEvent, context: NSManagedObjectContext, limit: Int = 75) -> [Contact] {
-        var contactsInThisEvent: [Contact] = []
-        for pTag in event.pTags().prefix(limit) { // sanity... limit 25
-            let contact = Contact.fetchByPubkey(pTag, context: context)
-            guard contact == nil else {
-                contactsInThisEvent.append(contact!)
-                continue
-            }
-            let newContact = Contact(context: context)
-            newContact.pubkey = pTag
-            newContact.metadata_created_at = 0
-            newContact.updated_at = 0
-            contactsInThisEvent.append(newContact)
-        }
-        
-        return contactsInThisEvent
-    }
-    
     
     static func allContactPubkeys(context:NSManagedObjectContext) async -> [String] {
         return await context.perform {

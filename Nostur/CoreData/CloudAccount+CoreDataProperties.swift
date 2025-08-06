@@ -338,23 +338,22 @@ extension CloudAccount : Identifiable {
         }
     }
     
-    // For when adding read only accounts, prefill with kind.3 info from relays (FROM CACHE)
-    static func preFillReadOnlyAccountFollowing(account:CloudAccount, context:NSManagedObjectContext) {
-        
-        guard let kind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
-            return
-        }
-        
-        let contacts = Contact.ensureContactsCreated(event: kind3.toNEvent(), context: context, limit:999)
-        
-        // if read only account, import follows. Or pendingFirstContactsFetch
-        if (!contacts.isEmpty) {
-//            account.objectWillChange.send()
-            for contact in contacts {
-                account.followingPubkeys.insert(contact.pubkey)
-            }
-        }
-    }
+//    // For when adding read only accounts, prefill with kind.3 info from relays (FROM CACHE)
+//    static func preFillReadOnlyAccountFollowing(account:CloudAccount, context:NSManagedObjectContext) {
+//        
+//        guard let kind3 = Event.contactListEvents(byAuthorPubkey: account.publicKey, context: context)?.first else {
+//            return
+//        }
+//        
+//        let pTags = kind3.toNEvent().pTags().prefix(2999)
+//        
+//        _ = pTags.map { pTag in
+//            let contact = Contact.instance(of: pTag)
+//            return contact
+//        }
+//    
+//        account.followingPubkeys.formUnion(Set(pTags))
+//    }
     
     func toBG() -> CloudAccount? {
         bg().object(with: self.objectID) as? CloudAccount

@@ -155,12 +155,6 @@ struct AccountEditView: View {
                             .opacity(0.85)
                     }
                 }
-//                Button {
-//                    loadFromRelays()
-//                } label: {
-//                    Text("Load info and contacts from relays")
-//                        .foregroundColor(Color.primary)
-//                }
             }
         }
         .background(Color(.systemGroupedBackground))
@@ -308,13 +302,13 @@ extension AccountEditView {
         }
     }
     
-    private func loadFromRelays() {
-        // 1. Prefill from cached event (if in cache)
-        CloudAccount.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
-        CloudAccount.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
-        
-        req(RM.getUserMetadataAndContactList(pubkey: account.publicKey))
-    }
+//    private func loadFromRelays() {
+//        // 1. Prefill from cached event (if in cache)
+//        CloudAccount.preFillReadOnlyAccountInfo(account: account, context: viewContext, forceOverwrite: true)
+//        CloudAccount.preFillReadOnlyAccountFollowing(account: account, context: viewContext)
+//        
+//        req(RM.getUserMetadataAndContactList(pubkey: account.publicKey))
+//    }
     
     private func loadFollowers(account: CloudAccount) {
         let fr = Event.fetchRequest()
