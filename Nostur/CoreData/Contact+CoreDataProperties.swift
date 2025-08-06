@@ -255,11 +255,6 @@ extension Contact : Identifiable {
                 if (metaData.nip05 != contact.nip05) {
                     contact.nip05verifiedAt = nil // WHEN SET
                 }
-                
-                if NIP05Verifier.shouldVerify(contact) {
-                    NIP05Verifier.shared.verify(contact)
-                }
-                
                 contact.lud16 = metaData.lud16
                 contact.lud06 = metaData.lud06
                 contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
@@ -290,11 +285,6 @@ extension Contact : Identifiable {
             if (metaData.nip05 != contact.nip05) {
                 contact.nip05verifiedAt = nil // WHEN SET
             }
-            
-            if NIP05Verifier.shouldVerify(contact) {
-                NIP05Verifier.shared.verify(contact)
-            }
-            
             contact.lud16 = metaData.lud16
             contact.lud06 = metaData.lud06
             contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
