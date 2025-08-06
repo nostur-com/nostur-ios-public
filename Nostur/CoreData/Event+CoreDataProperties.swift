@@ -1414,28 +1414,31 @@ extension Event {
             // 1. set pointer to most recent (this one)
             // 2. set "is_update" flag on this one so it doesn't show up as new in feed
             let r = Event.fetchRequest()
-            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@ AND created_at < %d", savedEvent.dTag, savedEvent.kind, event.publicKey, savedEvent.created_at)
+            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@", savedEvent.dTag, savedEvent.kind, event.publicKey)
 
-            var existingArticleIds = Set<String>() // need to repoint all replies to older articles to the newest id
+            var existingEventIds = Set<String>() // need to repoint all replies to older articles to the newest id
             
             // Set pointer on older events to the latest event id
-            if let olderEvents = try? context.fetch(r) {
-                for olderEvent in olderEvents {
-                    olderEvent.mostRecentId = savedEvent.id
-                    existingArticleIds.insert(olderEvent.id)
+            if let existingEvents = try? context.fetch(r) {
+                
+                let newestFirst = (existingEvents + [savedEvent]).sorted { $0.created_at > $1.created_at }
+                for existingEvent in newestFirst.dropFirst() {
+                    existingEvent.mostRecentId = savedEvent.id
+                    existingEventIds.insert(existingEvent.id)
                 }
                 
-                if olderEvents.count > 0 {
+                if !existingEvents.isEmpty {
                     savedEvent.flags = "is_update"
                 }
+                
             }
             
             // Find existing events referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
             // also do for replyToId
             if savedEvent.kind == 30023 { // Only do this for articles
-                existingArticleIds.insert(savedEvent.aTag)
+                existingEventIds.insert(savedEvent.aTag)
                 let fr = Event.fetchRequest()
-                fr.predicate = NSPredicate(format: "kind = 1 AND replyToRootId IN %@", existingArticleIds)
+                fr.predicate = NSPredicate(format: "kind = 1 AND replyToRootId IN %@", existingEventIds)
                 if let existingReplies = try? context.fetch(fr) {
                     for existingReply in existingReplies {
                         existingReply.replyToRootId = savedEvent.id
@@ -1444,7 +1447,7 @@ extension Event {
                 }
                 
                 let fr2 = Event.fetchRequest()
-                fr2.predicate = NSPredicate(format: "kind = 1 AND replyToId IN %@", existingArticleIds)
+                fr2.predicate = NSPredicate(format: "kind = 1 AND replyToId IN %@", existingEventIds)
                 if let existingReplies = try? context.fetch(fr) {
                     for existingReply in existingReplies {
                         existingReply.replyToId = savedEvent.id
