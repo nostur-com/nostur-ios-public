@@ -48,8 +48,6 @@ struct VoiceMessagePlayer: View {
         
         L.a0.debug("VoiceMessagePlayer: Converting \(webmURL.path) to \(outputURL.path)")
         
-        return nil
-        
         // Run ffmpeg conversion
         let result = ffmpeg([
             "ffmpeg",
