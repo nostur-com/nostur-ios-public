@@ -31,6 +31,7 @@
 		1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */ = {isa = PBXBuildFile; productRef = 1FC5834E2BDDBA5B000C3588 /* SwiftUIFlow */; };
 		1FC7A54529FA46F000645FEF /* UniformTypeIdentifiers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */; };
 		1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */ = {isa = PBXBuildFile; productRef = 1FE8828A2B48E9DC00A903F0 /* NavigationBackport */; };
+		1FF962FD2E43E7650015C1FD /* FFmpeg-iOS in Frameworks */ = {isa = PBXBuildFile; productRef = 1FF962FC2E43E7650015C1FD /* FFmpeg-iOS */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -136,6 +137,7 @@
 				1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */,
 				1FB4132C2D9C544C0069936C /* CloudKit.framework in Frameworks */,
 				1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */,
+				1FF962FD2E43E7650015C1FD /* FFmpeg-iOS in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
 				1FE8828B2B48E9DC00A903F0 /* NavigationBackport in Frameworks */,
 				1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */,
@@ -252,6 +254,7 @@
 				1FA97AA52C3F61480091446A /* LiveKit */,
 				1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */,
 				1F3C8B742D22D175008231A9 /* secp256k1 */,
+				1FF962FC2E43E7650015C1FD /* FFmpeg-iOS */,
 			);
 			productName = Nostur;
 			productReference = 1FB448BA2965F3D000038671 /* Nostur.app */;
@@ -386,6 +389,7 @@
 				1FA97AA42C3F61480091446A /* XCRemoteSwiftPackageReference "client-sdk-swift" */,
 				1FA6D5512C5A6A90001C3FDB /* XCRemoteSwiftPackageReference "swiftui-introspect" */,
 				1F3C8B732D22D175008231A9 /* XCRemoteSwiftPackageReference "secp256k1" */,
+				1FF962FB2E43E7650015C1FD /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */,
 			);
 			productRefGroup = 1FB448BB2965F3D000038671 /* Products */;
 			projectDirPath = "";
@@ -1002,6 +1006,14 @@
 				minimumVersion = 0.9.3;
 			};
 		};
+		1FF962FB2E43E7650015C1FD /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fabianfabian/FFmpeg-iOS";
+			requirement = {
+				kind = revision;
+				revision = c0d899355997a545b6c99946c730ae61afae028b;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1089,6 +1101,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1FE882892B48E9DC00A903F0 /* XCRemoteSwiftPackageReference "NavigationBackport" */;
 			productName = NavigationBackport;
+		};
+		1FF962FC2E43E7650015C1FD /* FFmpeg-iOS */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1FF962FB2E43E7650015C1FD /* XCRemoteSwiftPackageReference "FFmpeg-iOS" */;
+			productName = "FFmpeg-iOS";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
