@@ -135,7 +135,7 @@ struct Kind1: View {
                                 .contentShape(Rectangle())
                                 .highPriorityGesture(TapGesture().onEnded {
                                     showMore = true
-                                    clipBottomHeight = 18000.0
+                                    clipBottomHeight = 28000.0
                                 })                            
                         }
                     }
