@@ -248,39 +248,3 @@ struct SendSatsToSupportView: View {
         .navigationTitle("\(listName ?? "List") by \(nrContact.anyName)")
     }
 }
-
-
-
-
-// TODO: Should start reusing this everywhere? add flags and toggles for size / layout / position etc / in sheet or not (for dismiss)
-struct PFPandName: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject public var nrContact: NRContact
-    
-    public var dismissOnNavigate: Bool = false
-    
-    var body: some View {
-        HStack {
-            ObservedPFP(nrContact: nrContact, size: 20.0)
-                .onTapGesture {
-                    navigateToContact(pubkey: nrContact.pubkey,  context: "Default")
-                }
-            Text(nrContact.anyName)
-        }
-//        .navigationTitle("List by \(pfpAttributes.anyName)")
-        .onAppear {
-            bg().perform {
-                if nrContact.metadata_created_at == 0 {
-                    QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
-                }
-            }
-        }
-        .onDisappear {
-            bg().perform {
-                if nrContact.metadata_created_at == 0 {
-                    QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
-                }
-            }
-        }
-    }
-}
