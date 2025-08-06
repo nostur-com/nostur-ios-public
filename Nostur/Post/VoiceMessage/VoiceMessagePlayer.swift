@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 import CoreMedia
 import Combine
-import FFmpegSupport
+//import FFmpegSupport
 
 struct VoiceMessagePlayer: View {
     @Environment(\.theme) private var theme
@@ -48,21 +48,23 @@ struct VoiceMessagePlayer: View {
         
         L.a0.debug("VoiceMessagePlayer: Converting \(webmURL.path) to \(outputURL.path)")
         
-        // Run ffmpeg conversion
-        let result = ffmpeg([
-            "ffmpeg",
-            "-y", // Overwrite output file if it exists
-            "-i", webmURL.path,
-            outputURL.path
-        ])
+        return nil
         
-        if result == 0 && FileManager.default.fileExists(atPath: outputURL.path) {
-            L.a0.debug("VoiceMessagePlayer: ✅ Conversion successful: \(outputURL.path)")
-            return outputURL
-        } else {
-            L.a0.debug("VoiceMessagePlayer: ❌ Conversion failed with code: \(result)")
-            return nil
-        }
+//        // Run ffmpeg conversion
+//        let result = ffmpeg([
+//            "ffmpeg",
+//            "-y", // Overwrite output file if it exists
+//            "-i", webmURL.path,
+//            outputURL.path
+//        ])
+//        
+//        if result == 0 && FileManager.default.fileExists(atPath: outputURL.path) {
+//            L.a0.debug("VoiceMessagePlayer: ✅ Conversion successful: \(outputURL.path)")
+//            return outputURL
+//        } else {
+//            L.a0.debug("VoiceMessagePlayer: ❌ Conversion failed with code: \(result)")
+//            return nil
+//        }
     }
     
     private func cleanup() {
@@ -253,29 +255,38 @@ struct VoiceMessagePlayer: View {
                     .buttonStyle(PlainButtonStyle())
                 }
                 else {
-                    ProgressView()
-                        .onAppear {
-                            // if url is a local file url
-                            if url.isFileURL {
-                                localFileURL = url
-                            }
-                            else {
-                                
-                                cancellable = DownloadManager.shared.publisher(for: url, subFolder: "a0")
-                                    .sink { state in
-                                        if state.isDownloading {
-                                            L.a0.debug("Downloading: \(url)")
-                                        } else if let fileURL = state.fileURL {
-                                            L.a0.debug("✅ Downloaded to: \(fileURL.path)")
-                                            self.localFileURL = fileURL
-                                        } else if let error = state.error {
-                                            L.a0.debug("❌ Error: \(error.localizedDescription)")
-                                        }
-                                    }
-                                
-                                DownloadManager.shared.startDownload(from: url, subFolder: "a0")
-                            }
+                    Button {
+                        
+                    } label: {
+                        ProgressView()
+                            .tint(Color.white)
+                            .frame(width: 50, height: 50)
+                            .background(theme.accent)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .onAppear {
+                        // if url is a local file url
+                        if url.isFileURL {
+                            localFileURL = url
                         }
+                        else {
+                            
+                            cancellable = DownloadManager.shared.publisher(for: url, subFolder: "a0")
+                                .sink { state in
+                                    if state.isDownloading {
+                                        L.a0.debug("Downloading: \(url)")
+                                    } else if let fileURL = state.fileURL {
+                                        L.a0.debug("✅ Downloaded to: \(fileURL.path)")
+                                        self.localFileURL = fileURL
+                                    } else if let error = state.error {
+                                        L.a0.debug("❌ Error: \(error.localizedDescription)")
+                                    }
+                                }
+                            
+                            DownloadManager.shared.startDownload(from: url, subFolder: "a0")
+                        }
+                    }
                 }
             }
             

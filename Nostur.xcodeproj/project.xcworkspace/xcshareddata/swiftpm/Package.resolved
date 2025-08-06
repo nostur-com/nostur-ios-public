@@ -1,5 +1,5 @@
 {
-  "originHash" : "9e2c288f36fc5e4ef4061b28f968d369a74d18df4f451e6f8bf3107221b958dd",
+  "originHash" : "5b4309023548ed3bd1e5812882e9db61fb3733931e22cbb6dd76ee7b26ea644a",
   "pins" : [
     {
       "identity" : "client-sdk-swift",
@@ -17,22 +17,6 @@
       "state" : {
         "revision" : "e45a26384239e028ec87fbcc788f513b67e10d8f",
         "version" : "1.9.0"
-      }
-    },
-    {
-      "identity" : "ffmpeg-ios",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/fabianfabian/FFmpeg-iOS",
-      "state" : {
-        "revision" : "c89f99f402cc67a0b16cfacb47ddd7b24a3305e0"
-      }
-    },
-    {
-      "identity" : "ffmpeg-ios-support",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/kewlbear/FFmpeg-iOS-Support",
-      "state" : {
-        "revision" : "be3bd9149ac53760e8725652eee99c405b2be47a"
       }
     },
     {

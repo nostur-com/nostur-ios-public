@@ -7,7 +7,7 @@
 
 import Testing
 import Foundation
-@testable import FFmpegSupport
+//@testable import FFmpegSupport
 
 struct VoiceMessagesTests {
 
@@ -17,15 +17,15 @@ struct VoiceMessagesTests {
         let input = URL(fileURLWithPath: "/Users/fabian/Development/tmp/test-opus.webm")
         let output = URL(fileURLWithPath: "/Users/fabian/Development/tmp/test-opus.m4a")
         
-        for _ in 1..<2 {
-            _ = ffmpeg([
-                "ffmpeg",
-//                "-bsfs"
-                "-y",
-                "-i", input.path,
-                output.path
-            ])
-        }
+//        for _ in 1..<2 {
+//            _ = ffmpeg([
+//                "ffmpeg",
+////                "-bsfs"
+//                "-y",
+//                "-i", input.path,
+//                output.path
+//            ])
+//        }
     }
     
     
