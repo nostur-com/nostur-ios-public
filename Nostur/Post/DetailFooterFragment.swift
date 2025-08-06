@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct DetailFooterFragment: View {
+    @Environment(\.nxViewingContext) private var viewingContext
     private var nrPost: NRPost
     @ObservedObject private var footerAttributes: FooterAttributes
     
@@ -21,7 +22,9 @@ struct DetailFooterFragment: View {
     
     var body: some View {
         Divider()
-        TopZaps(id: nrPost.id)
+        if !viewingContext.contains(.preview) {
+            TopZaps(id: nrPost.id)
+        }
         HStack {
             NBNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
                 HStack(spacing: 3) {
@@ -54,6 +57,7 @@ struct DetailFooterFragment: View {
                 .lineLimit(1)
         }
         .onAppear {
+            guard !viewingContext.contains(.preview) else { return }
             loadTally(footerAttributes.zapTally)
         }
         .onChange(of: footerAttributes.zapTally) { [oldTally = footerAttributes.zapTally] newTally in
@@ -67,6 +71,7 @@ struct DetailFooterFragment: View {
         .font(.system(size: 14))
         .task { [weak nrPost] in
             guard let nrPost else { return }
+            guard !viewingContext.contains(.preview) else { return }
             guard nrPost.contact.anyLud else { return }
             guard nrPost.contact.zapperPubkeys.isEmpty else {
                 reverifyZaps(eventId: nrPost.id, expectedZpks: nrPost.contact.zapperPubkeys)
