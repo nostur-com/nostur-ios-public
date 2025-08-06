@@ -626,11 +626,7 @@ extension Event {
         #endif
         
         // Get author
-        let author: NRContact? = if let contact = self.contact {
-            NRContact.fetch(contact.pubkey, contact: contact)
-        } else {
-            nil
-        }
+        let author: NRContact = NRContact.instance(of: pubkey)
         
         // Get participants, hosts, speakers
         var participantsOrSpeakers: [NRContact] = self.fastPs
@@ -640,11 +636,11 @@ extension Event {
                         fastP.3?.lowercased() == "participant")
             }
             .map { $0.1 }
-            .compactMap { pubkey in
-                return NRContact.fetch(pubkey)
+            .map { pubkey in
+                return NRContact.instance(of: pubkey)
             }
         
-        if let author, !participantsOrSpeakers.contains(where: { $0.pubkey == author.pubkey }) {
+        if !participantsOrSpeakers.contains(where: { $0.pubkey == author.pubkey }) {
             participantsOrSpeakers.append(author)
         }
         
@@ -653,7 +649,7 @@ extension Event {
     
     func pubkeysOnStage() -> Set<String> {
         // Get participants, hosts, speakers
-        var pubkeys: [String] = self.fastPs
+        let pubkeys: [String] = self.fastPs
             .filter { fastP in
                 return (fastP.3?.lowercased() == "speaker" ||
                         fastP.3?.lowercased() == "host" ||
