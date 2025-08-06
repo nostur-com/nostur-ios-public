@@ -1011,7 +1011,7 @@
 			repositoryURL = "https://github.com/fabianfabian/FFmpeg-iOS";
 			requirement = {
 				kind = revision;
-				revision = c0d899355997a545b6c99946c730ae61afae028b;
+				revision = 1843eb7d79a5f8bc062fadd8bb20d355740b7784;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
