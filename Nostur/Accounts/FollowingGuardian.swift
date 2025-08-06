@@ -100,30 +100,37 @@ class FollowingGuardian: ObservableObject {
             .store(in: &subscriptions)
     }
     
-    func followNewContacts(added:Set<String>, account:CloudAccount) {
+    func followNewContacts(added :Set<String>, account: CloudAccount) {
         guard !added.isEmpty else { return }
         account.objectWillChange.send()
         
-        let context = DataProvider.shared().viewContext
         for pubkey in added {
-            let contact = Contact.fetchByPubkey(pubkey, context: context)
-            if let contact {
-                contact.couldBeImposter = 0
-                contact.similarToPubkey = nil
-                account.followingPubkeys.insert(pubkey)
+            account.followingPubkeys.insert(pubkey)
+        }
+        
+        let context = bg()
+        context.perform {
+            for pubkey in added {
+                let contact = Contact.fetchByPubkey(pubkey, context: context)
+                if let contact {
+                    contact.couldBeImposter = 0
+                    contact.similarToPubkey = nil
+                }
+                else {
+                    let newContact = Contact(context: context)
+                    newContact.pubkey = pubkey
+                    newContact.metadata_created_at = 0
+                    newContact.updated_at = 0
+                    newContact.couldBeImposter = 0
+                    newContact.similarToPubkey = nil
+                }
             }
-            else {
-                let newContact = Contact(context: context)
-                newContact.pubkey = pubkey
-                newContact.metadata_created_at = 0
-                newContact.updated_at = 0
-                newContact.couldBeImposter = 0
-                newContact.similarToPubkey = nil
-                account.followingPubkeys.insert(pubkey)
+            
+            Task { @MainActor in
+                DataProvider.shared().save()
+                AccountsState.shared.loggedInAccount?.reloadFollows()
             }
         }
-        DataProvider.shared().save()
-        AccountsState.shared.loggedInAccount?.reloadFollows()
     }
     
     func followTags(_ tags:[String], account: CloudAccount) {
@@ -134,29 +141,36 @@ class FollowingGuardian: ObservableObject {
         }
     }
     
-    func restoreFollowing(removed:Set<String>, republish:Bool = true) {
+    func restoreFollowing(removed: Set<String>, republish: Bool = true) {
         guard let account = account() else { return }
-        let context = DataProvider.shared().viewContext
+        let context = bg()
+        
         for pubkey in removed {
-            let contact = Contact.fetchByPubkey(pubkey, context: context)
-            if let contact {
-                contact.couldBeImposter = 0
-                contact.similarToPubkey = nil
-                account.followingPubkeys.insert(pubkey)
+            account.followingPubkeys.insert(pubkey)
+        }
+        
+        context.perform {
+            for pubkey in removed {
+                let contact = Contact.fetchByPubkey(pubkey, context: context)
+                if let contact {
+                    contact.couldBeImposter = 0
+                    contact.similarToPubkey = nil
+                }
+                else {
+                    let newContact = Contact(context: context)
+                    newContact.pubkey = pubkey
+                    newContact.metadata_created_at = 0
+                    newContact.updated_at = 0
+                    newContact.couldBeImposter = 0
+                    newContact.similarToPubkey = nil
+                }
             }
-            else {
-                let newContact = Contact(context: context)
-                newContact.pubkey = pubkey
-                newContact.metadata_created_at = 0
-                newContact.updated_at = 0
-                newContact.couldBeImposter = 0
-                newContact.similarToPubkey = nil
-                account.followingPubkeys.insert(pubkey)
+            Task { @MainActor in
+                AccountsState.shared.loggedInAccount?.reloadFollows()
+                guard republish else { return }
+                account.publishNewContactList()
             }
         }
-        AccountsState.shared.loggedInAccount?.reloadFollows()
-        guard republish else { return }
-        account.publishNewContactList()
     }
     
     func removeFollowing(_ pubkeys:Set<String>) {

@@ -172,27 +172,11 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
                 if let bgContact = (contact ?? Contact.fetchByPubkey(pubkey, context: bg())) {
                     self?.configureFromBgContact(bgContact)
                 }
-                else {
-                    let newBgContact = Contact(context: bg())
-                    newBgContact.pubkey = pubkey
-                    newBgContact.metadata_created_at = 0
-                    newBgContact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
-                    
-                    self?.configureFromBgContact(newBgContact)
-                }
             }
         }
         else {
             if let bgContact = (contact ?? Contact.fetchByPubkey(pubkey, context: bg())) {
                 configureFromBgContact(bgContact)
-            }
-            else {
-                let newBgContact = Contact(context: bg())
-                newBgContact.pubkey = pubkey
-                newBgContact.metadata_created_at = 0
-                newBgContact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
-                
-                self.configureFromBgContact(newBgContact)
             }
         }
         

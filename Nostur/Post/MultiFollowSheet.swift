@@ -186,6 +186,8 @@ struct MultiFollowSheet: View {
                 contact.pubkey = pubkey
                 contact.couldBeImposter = 0
                 contact.similarToPubkey = nil
+                contact.metadata_created_at = 0
+                contact.updated_at = 0
             }
             
             Task { @MainActor in
