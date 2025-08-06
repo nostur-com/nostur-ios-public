@@ -62,7 +62,7 @@ struct FeedSettings: View {
                     
                         // Feed managed by... zap author...
                         Section {
-                            ListManagedByView(feed: feed, aTag: aTag)
+                            ListManagedByView(feed: feed, aTag: aTag, parentDismiss: dismiss)
                                 .padding(.vertical, 10)
                                 .listRowInsets(EdgeInsets())
                                 .padding(.horizontal, 20)
@@ -196,25 +196,26 @@ struct FeedSettings_Previews: PreviewProvider {
 struct ListManagedByView: View {
     @ObservedObject var feed: CloudFeed
     public let aTag: ATag
+    let parentDismiss: DismissAction
     
     var body: some View {
-        SendSatsToSupportView(pubkey: aTag.pubkey, listName: feed.name)
+        SendSatsToSupportView(pubkey: aTag.pubkey, listName: feed.name, parentDismiss: parentDismiss)
     }
 }
 
 
 struct SendSatsToSupportView: View {
-    @Environment(\.dismiss) private var dismiss
     private var pubkey: String
     @ObservedObject private var nrContact: NRContact
     @ObservedObject private var ss: SettingsStore = .shared
     private var listName: String?
+    let parentDismiss: DismissAction
     
-    init(pubkey: String, listName: String? = nil) {
+    init(pubkey: String, listName: String? = nil, parentDismiss: DismissAction) {
         self.pubkey = pubkey
         nrContact = NRContact.instance(of: pubkey)
-        self.ss = ss
         self.listName = listName
+        self.parentDismiss = parentDismiss
     }
     
     
@@ -226,7 +227,11 @@ struct SendSatsToSupportView: View {
             }
             HStack {
                 Text("Maintained by ")
-                PFPandName(nrContact: nrContact, dismissOnNavigate: true)
+                PFPandName(nrContact: nrContact)
+                    .onTapGesture {
+                        navigateToContact(pubkey: nrContact.pubkey,  context: "Default")
+                        parentDismiss()
+                    }
             }
             
             if  ss.nwcReady { // TODO: FIX FOR NON NWC
