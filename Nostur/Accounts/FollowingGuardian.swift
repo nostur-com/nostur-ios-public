@@ -117,10 +117,7 @@ class FollowingGuardian: ObservableObject {
                     contact.similarToPubkey = nil
                 }
                 else {
-                    let newContact = Contact(context: context)
-                    newContact.pubkey = pubkey
-                    newContact.metadata_created_at = 0
-                    newContact.updated_at = 0
+                    let newContact = Contact.instance(of: pubkey)
                     newContact.couldBeImposter = 0
                     newContact.similarToPubkey = nil
                 }
@@ -145,6 +142,7 @@ class FollowingGuardian: ObservableObject {
         guard let account = account() else { return }
         let context = bg()
         
+        // The contacts that were removed need to be added back
         for pubkey in removed {
             account.followingPubkeys.insert(pubkey)
         }
@@ -157,10 +155,7 @@ class FollowingGuardian: ObservableObject {
                     contact.similarToPubkey = nil
                 }
                 else {
-                    let newContact = Contact(context: context)
-                    newContact.pubkey = pubkey
-                    newContact.metadata_created_at = 0
-                    newContact.updated_at = 0
+                    let newContact = Contact.instance(of: pubkey)
                     newContact.couldBeImposter = 0
                     newContact.similarToPubkey = nil
                 }

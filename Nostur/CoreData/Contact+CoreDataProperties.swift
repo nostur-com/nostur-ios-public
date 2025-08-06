@@ -203,105 +203,57 @@ extension Contact : Identifiable {
             return
         }
         
-        let awaitingContacts = EventRelationsQueue.shared.getAwaitingBgContacts()
-        var contact: Contact?
+        let contact: Contact = Contact.instance(of: event.publicKey)
         
-        contact = awaitingContacts.first(where: { $0.pubkey == event.publicKey })
-        
-        if contact == nil {
-            let request = NSFetchRequest<Contact>(entityName: "Contact")
-            request.predicate = NSPredicate(format: "pubkey == %@", event.publicKey)
-            request.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
-            request.fetchLimit = 1
-            contact = try? context.fetch(request).first
+        guard contact.metadata_created_at < event.createdAt.timestamp else {
+            // contact info is outdated / older
+            return
         }
         
-        if let contact {
-            
-            // Received metadata is newer than stored Contact
-            if contact.metadata_created_at < event.createdAt.timestamp {
-                
-                // Needs imposter recheck?
-                if contact.couldBeImposter == 0 && !isFollowing(contact.pubkey) { // only if wasnt imposter before and is not following
-                    if (contact.name != metaData.name) {
-                        contact.couldBeImposter = -1
-                        contact.similarToPubkey = nil
-                    }
-                    else if (contact.display_name != metaData.display_name) {
-                        contact.couldBeImposter = -1
-                        contact.similarToPubkey = nil
-                    }
-                    else if (contact.picture != metaData.picture) {
-                        contact.couldBeImposter = -1
-                        contact.similarToPubkey = nil
-                    }
-                }
-                
-                if (contact.fixedName ?? "").isEmpty && contact.anyName != contact.authorKey { // Store previous name
-                    contact.fixedName = contact.anyName
-                }
-                
-                if (contact.fixedPfp ?? "").isEmpty { // Store previous name
-                    contact.fixedPfp = contact.picture
-                }
-                // update contact
-//                    contact.objectWillChange.send()
-                contact.name = metaData.name
-                contact.display_name = metaData.display_name
-                contact.about = metaData.about
-                contact.picture = metaData.picture
-                contact.banner = metaData.banner
-                contact.nip05 = metaData.nip05
-                if (metaData.nip05 != contact.nip05) {
-                    contact.nip05verifiedAt = nil // WHEN SET
-                }
-                contact.lud16 = metaData.lud16
-                contact.lud06 = metaData.lud06
-                contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
-                contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
-                
-                PubkeyUsernameCache.shared.setObject(for: event.publicKey, value: contact.anyName)
-                
-                updateRelatedEvents(contact)
-                updateRelatedAccounts(contact)
-                ViewUpdates.shared.profileUpdates.send(profileInfo(contact))
+        // Update
+        // Needs imposter recheck?
+        if contact.couldBeImposter == 0 && !isFollowing(contact.pubkey) { // only if wasnt imposter before and is not following
+            if (contact.name != metaData.name) {
+                contact.couldBeImposter = -1
+                contact.similarToPubkey = nil
             }
-            else {
-                // Received metadata is older than stored Contact
-//                print("🟠🟠 Already have newer info stored in Contact. Skipped update.")
+            else if (contact.display_name != metaData.display_name) {
+                contact.couldBeImposter = -1
+                contact.similarToPubkey = nil
+            }
+            else if (contact.picture != metaData.picture) {
+                contact.couldBeImposter = -1
+                contact.similarToPubkey = nil
             }
         }
-        else {
-            // Received metadata is not in any Contact
-            // insert new contact
-            let contact = Contact(context: context)
-            contact.pubkey = event.publicKey
-            contact.name = metaData.name
-            contact.display_name = metaData.display_name
-            contact.about = metaData.about
-            contact.picture = metaData.picture
-            contact.banner = metaData.banner
-            contact.nip05 = metaData.nip05
-            if (metaData.nip05 != contact.nip05) {
-                contact.nip05verifiedAt = nil // WHEN SET
-            }
-            contact.lud16 = metaData.lud16
-            contact.lud06 = metaData.lud06
-            contact.metadata_created_at = Int64(event.createdAt.timestamp) // by author kind 0
-            contact.updated_at = Int64(Date.now.timeIntervalSince1970) // by Nostur
-            
-            if contact.anyName != contact.authorKey { // For showing "Previously known as"
-                contact.fixedName = contact.anyName
-            }
-            contact.fixedPfp = contact.picture // For showing "Previously known as"
-            
-            PubkeyUsernameCache.shared.setObject(for: event.publicKey, value: contact.anyName)
-            
-            EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "saveOrUpdateContact")
-            updateRelatedEvents(contact)
-            updateRelatedAccounts(contact)
-            ViewUpdates.shared.profileUpdates.send(profileInfo(contact))
+        
+        if (contact.fixedName ?? "").isEmpty && contact.anyName != contact.authorKey { // For showing "Previously known as"
+            contact.fixedName = contact.anyName
         }
+        
+        if (contact.fixedPfp ?? "").isEmpty { // For showing previous pfp
+            contact.fixedPfp = contact.picture
+        }
+        
+        contact.name = metaData.name
+        contact.display_name = metaData.display_name
+        contact.about = metaData.about
+        contact.picture = metaData.picture
+        contact.banner = metaData.banner
+        contact.nip05 = metaData.nip05
+        if (metaData.nip05 != contact.nip05) {
+            contact.nip05verifiedAt = nil // WHEN SET
+        }
+        contact.lud16 = metaData.lud16
+        contact.lud06 = metaData.lud06
+        contact.metadata_created_at = Int64(event.createdAt.timestamp) // By Author (kind 0)
+        contact.updated_at = Int64(Date().timeIntervalSince1970) // By Nostur
+        
+        PubkeyUsernameCache.shared.setObject(for: event.publicKey, value: contact.anyName)
+        
+        updateRelatedEvents(contact)
+        updateRelatedAccounts(contact)
+        ViewUpdates.shared.profileUpdates.send(profileInfo(contact))
     }
     
     static func updateRelatedEvents(_ contact: Contact) {
@@ -392,6 +344,9 @@ extension Contact : Identifiable {
     
     static func fetchByPubkey(_ pubkey: String, context: NSManagedObjectContext) -> Contact? {
         if !Thread.isMainThread { // Try to get from following cache first (bg only for now)
+            if let contact = EventRelationsQueue.shared.getAwaitingBgContact(byPubkey: pubkey) {
+                return contact
+            }
             if let contact = AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.bgContact {
                 return contact
             }
@@ -420,5 +375,38 @@ extension Contact : Identifiable {
         shouldBeBg()
         guard let contact = Self.fetchByPubkey(contactPubkey, context: bg()) else { return }
         contact.zapperPubkeys.insert(zapperPubkey)
+    }
+}
+
+extension Contact {
+    static public func instance(of pubkey: String) -> Contact {
+#if DEBUG
+        shouldBeBg()
+#endif
+        
+        if let contact = EventRelationsQueue.shared.getAwaitingBgContact(byPubkey: pubkey) {
+            return contact
+        }
+        
+        let r = Contact.fetchRequest()
+        r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
+        r.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
+        r.fetchLimit = 1
+        r.fetchBatchSize = 1
+        if let contact = try? bg().fetch(r).first {
+            return contact
+        }
+        
+        
+        // Create new Contact
+        let newContact = Contact(context: bg())
+        newContact.pubkey = pubkey
+        newContact.metadata_created_at = 0
+        newContact.updated_at = 0
+        newContact.couldBeImposter = -1
+        
+        EventRelationsQueue.shared.addAwaitingContact(newContact)
+        
+        return newContact
     }
 }

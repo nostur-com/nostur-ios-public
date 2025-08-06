@@ -176,20 +176,10 @@ struct MultiFollowSheet: View {
         account.followingPubkeys.insert(pubkey)
         
         bg().perform {
-            if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-                contact.couldBeImposter = 0
-                contact.similarToPubkey = nil
-            }
-            else {
-                // if nil, create new contact
-                let contact = Contact(context: bg())
-                contact.pubkey = pubkey
-                contact.couldBeImposter = 0
-                contact.similarToPubkey = nil
-                contact.metadata_created_at = 0
-                contact.updated_at = 0
-            }
-            
+            let contact = Contact.instance(of: pubkey)
+            contact.couldBeImposter = 0
+            contact.similarToPubkey = nil
+
             Task { @MainActor in
                 account.publishNewContactList()
                 

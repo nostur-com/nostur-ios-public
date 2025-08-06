@@ -40,7 +40,7 @@ class EventRelationsQueue {
     
     static let shared = EventRelationsQueue()
     
-    private var ctx = bg()
+    private var bgContext = bg()
     private var waitingEvents = [EventId: QueuedEvent]()
     private var waitingContacts = [ContactPubkey: QueuedContact]()
     private var cleanUpTimer: Timer?
@@ -49,7 +49,7 @@ class EventRelationsQueue {
         cleanUpTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true, block: { [unowned self] timer in
             let now = Date()
             
-            self.ctx.perform { [unowned self] in
+            self.bgContext.perform { [unowned self] in
                 self.waitingEvents = self.waitingEvents.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
                 self.waitingContacts = self.waitingContacts.filter { now.timeIntervalSince($0.value.queuedAt) < 30 }
             }            
@@ -118,7 +118,7 @@ class EventRelationsQueue {
     }
     
     public func removeAll() {
-        ctx.perform { [unowned self] in
+        bgContext.perform { [unowned self] in
             self.waitingEvents = [EventId: QueuedEvent]()
             self.waitingContacts = [ContactPubkey: QueuedContact]()
         }
@@ -127,22 +127,22 @@ class EventRelationsQueue {
     /// Adds contact to the queue waiting for info to be updated
     /// - Parameter contact: Contact should be from .bg context, if not this function will fetch it from .bg using .objectID
     public func addAwaitingContact(_ contact: Contact, debugInfo: String? = "") {
-        if contact.managedObjectContext == ctx {
-            guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
-            self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)
-#if DEBUG
-                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "") -[LOG]-")
-#endif
-        }
-        else {
-            ctx.perform { [unowned self] in
+        if Thread.isMainThread {
+            bgContext.perform { [unowned self] in
                 guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
-                guard let privateContact = self.ctx.object(with: contact.objectID) as? Contact else { return }
+                guard let privateContact = self.bgContext.object(with: contact.objectID) as? Contact else { return }
                 self.waitingContacts[privateContact.pubkey] = QueuedContact(contact: privateContact, queuedAt: Date.now)
 #if DEBUG
                 L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "") -[LOG]-")
 #endif
             }
+        }
+        else {
+            guard self.waitingContacts.count < SPAM_LIMIT else { L.og.info("🔴🔴 SPAM_LIMIT hit, addAwaitingContact() cancelled"); return }
+            self.waitingContacts[contact.pubkey] = QueuedContact(contact: contact, queuedAt: Date.now)
+#if DEBUG
+                L.og.debug("🟢🟢🟢 addAwaitingContact. now in queue: \(self.waitingContacts.count) -- \(debugInfo ?? "") -[LOG]-")
+#endif
         }
     }
 

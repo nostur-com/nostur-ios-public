@@ -188,7 +188,7 @@ class NewOnboardingTracker {
             didFetchKind3.send(kind3)
             let pTags = kind3.fastPs.map { $0.1 }
             let existingAndCreatedContacts = self.createContactsFromPs(pTags, isOwnAccount: account.isFullAccount)
-            account.followingPubkeys.formUnion(Set(existingAndCreatedContacts.map { $0.pubkey }))
+            account.followingPubkeys.formUnion(Set(pTags))
             let followingPublicKeys = account.getFollowingPublicKeys(includeBlocked: true)
             
             let tTags = kind3.fastTs.map { $0.1 }
@@ -282,24 +282,12 @@ class NewOnboardingTracker {
         fetchProfilesOfFollowsTask.fetch()
     }
     
-    private func createContactsFromPs(_ pTags:[String], isOwnAccount: Bool = false) -> [Contact] {
-        var existingAndCreatedContacts = [Contact]()
-        for pTag in pTags {
-            let contact = Contact.fetchByPubkey(pTag, context: self.bg)
-            guard contact == nil else {
-                // Skip if we already have a contact
-                existingAndCreatedContacts.append(contact!)
-                continue
-            }
-            // Else create a new one
-            let newContact = Contact(context: self.bg)
-            newContact.pubkey = pTag
-            newContact.metadata_created_at = 0
-            newContact.updated_at = 0
-            newContact.couldBeImposter = isOwnAccount ? 0 : -1 // If we are already following from own account, mark as NOT imposter
-            existingAndCreatedContacts.append(newContact)
+    private func createContactsFromPs(_ pTags: [String], isOwnAccount: Bool = false) -> [Contact] {
+        return pTags.map { pTag in
+            let contact = Contact.instance(of: pTag)
+            contact.couldBeImposter = isOwnAccount ? 0 : -1 // If we are already following from own account, mark as NOT imposter
+            return contact
         }
-        return existingAndCreatedContacts
     }
     
     private func createRelaysFromKind3Content(_ content:String) {
