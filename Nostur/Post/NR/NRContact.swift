@@ -81,10 +81,11 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     private func listenForChanges() {
         profileUpdateSubscription = ViewUpdates.shared.profileUpdates
             .filter { $0.pubkey == self.pubkey }
-            .receive(on: RunLoop.main)
             .sink { [weak self] profileInfo in
-                guard let self else { return }
-                configureFromProfileUpdate(profileInfo)
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.configureFromProfileInfo(profileInfo)
+                }
             }
     }
     
@@ -129,7 +130,8 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     @Published public var volume: CGFloat = 0.0
     @Published public var isMuted: Bool = true
     
-    private func configureFromProfileUpdate(_ profileInfo: ProfileInfo, animate: Bool = false) {
+    @MainActor
+    private func configureFromProfileInfo(_ profileInfo: ProfileInfo, animate: Bool = false) {
         if animate {
             withAnimation {
                 self.anyName = profileInfo.anyName ?? String(pubkey.suffix(11))
@@ -161,7 +163,10 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     }
     
     private func configureFromBgContact(_ bgContact: Contact, animate: Bool = false) {
-        self.configureFromProfileUpdate(profileInfo(bgContact), animate: animate)
+        let profileInfo = profileInfo(bgContact)
+        Task { @MainActor in
+            self.configureFromProfileInfo(profileInfo, animate: animate)
+        }
     }
     
     private func configure(pubkey: String, contact: Contact? = nil) {
