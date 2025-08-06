@@ -14,7 +14,6 @@ import Combine
 // WIP Rewrite where we remove Core Data "Event" as much as possible
 
 class ViewingContext: ObservableObject {
-    @Environment(\.theme) public var theme
     @Published public var availableWidth: CGFloat
     public var fullWidthImages: Bool
     
@@ -69,6 +68,7 @@ enum NXContentRendererViewState {
 
 // Renders embeds (VIEWS), not links (in TEXT)
 struct NXContentRenderer: View { // VIEW things
+    @Environment(\.theme) public var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var vc: ViewingContext
     public let nxEvent: NXEvent
@@ -152,7 +152,7 @@ struct NXContentRenderer: View { // VIEW things
                             .font(.system(.body, design: .monospaced))
                             .id(index)
                     case .text(let attributedStringWithPs): // For text notes
-                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: vc.availableWidth, isDetail: vc.isDetail, primaryColor: vc.theme.primary, accentColor: vc.theme.accent)
+                        NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: vc.availableWidth, isDetail: vc.isDetail, primaryColor: theme.primary, accentColor: theme.accent)
                             .equatable()
                             .id(index)
                     case .md(let markdownContentWithPs): // For long form articles
