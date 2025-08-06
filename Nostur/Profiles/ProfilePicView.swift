@@ -58,6 +58,12 @@ struct ObservedPFP: View {
         self.forceFlat = forceFlat
     }
     
+    init(pubkey: String, size: CGFloat = 50.0, forceFlat: Bool = false) {
+        self.nrContact = NRContact.instance(of: pubkey)
+        self.size = size
+        self.forceFlat = forceFlat
+    }
+    
     var body: some View {
         InnerPFP(pubkey: pubkey, pictureUrl: pictureUrl, size: size, color: color, forceFlat: forceFlat)
     }
@@ -116,7 +122,6 @@ struct InnerPFP: View {
     }
 
     @ObservedObject private var settings: SettingsStore = .shared
-    @State private var updatedPictureUrl: URL?
     
     // Always render default circle (color is pubkey derived)
     // If not https don't render
@@ -131,7 +136,7 @@ struct InnerPFP: View {
     }
     
     private var renderCase: RenderOption {
-        guard let pictureUrl = updatedPictureUrl ?? pictureUrl else { return .noUrl }
+        guard let pictureUrl = pictureUrl else { return .noUrl }
         guard pictureUrl.absoluteString.prefix(8) == "https://" else { return .noHttps }
         if forceFlat { return .flat(pictureUrl) }
         guard (pictureUrl.absoluteString.suffix(4) == ".gif") && settings.animatedPFPenabled else { return .flat(pictureUrl) }
@@ -148,10 +153,6 @@ struct InnerPFP: View {
                     
                 case .noUrl, .noHttps:
                     EmptyView()
-                        .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
-                            guard profile.pubkey == pubkey, let pfpUrl = profile.pfpUrl else { return }
-                            updatedPictureUrl = pfpUrl
-                        }
                     
                 case .flat(let url):
                     LazyImage(request: pfpImageRequestFor(url), transaction: .init(animation: .easeIn)) { state in
@@ -174,10 +175,6 @@ struct InnerPFP: View {
                     }
                     .pipeline(ImageProcessing.shared.pfp)
 //                    .drawingGroup()
-                    .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
-                        guard profile.pubkey == pubkey, let pfpUrl = profile.pfpUrl else { return }
-                        updatedPictureUrl = pfpUrl
-                    }
                     
                 case .animatedGif(let url):
                     LazyImage(request: pfpImageRequestFor(url), transaction: .init(animation: .easeIn)) { state in
@@ -213,17 +210,9 @@ struct InnerPFP: View {
                     }
                     .priority(.low) // lower prio for animated gif, saves bandwidth?
                     .pipeline(ImageProcessing.shared.pfp) // NO PROCESSING FOR ANIMATED GIF (BREAKS ANIMATION)
-                    .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profile in
-                        guard profile.pubkey == pubkey, let pfpUrl = profile.pfpUrl else { return }
-                        updatedPictureUrl = pfpUrl
-                    }
                 }
             }
             .cornerRadius(size/2)
-            .onChange(of: pubkey) { newPubkey in
-                guard pubkey != newPubkey else { return }
-                self.updatedPictureUrl = nil
-            }
     }
 }
 

@@ -97,6 +97,15 @@ struct Kind30000: View {
             Task { @MainActor in
                 self.followNRContacts = followNRContactsDict
                 self.didLoadFollowNRContacts = true
+                
+                self.missingPs = Set(followNRContactsDict.prefix(3).map { $0.value }
+                    .filter { $0.metadata_created_at == 0 }
+                    .map { $0.pubkey })
+                
+                self.listNamesText = followNRContactsDict.prefix(3).map { $0.value.anyName }.joined(separator: ", ")
+                
+                guard !missingPs.isEmpty else { return }
+                QueuedFetcher.shared.enqueue(pTags:  self.missingPs)
             }
         }
     }
@@ -170,6 +179,9 @@ struct Kind30000: View {
         }
     }
     
+    @State private var missingPs: Set<String> = []
+    @State private var listNamesText: String = ""
+    
     @ViewBuilder
     private var overlappingPFPs: some View {
         ZStack(alignment: .leading) {
@@ -188,8 +200,16 @@ struct Kind30000: View {
         
         if !followNRContacts.isEmpty {
             HStack {
-                Text(followNRContacts.prefix(3).map { $0.value.anyName }.joined(separator: ", "))
+                Text(listNamesText)
                     .layoutPriority(1)
+                    .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profileInfo in
+                        if missingPs.contains(profileInfo.pubkey) {
+                            missingPs.remove(profileInfo.pubkey)
+                            withAnimation {
+                                listNamesText = followNRContacts.prefix(3).map { $0.value.anyName }.joined(separator: ", ")
+                            }
+                        }
+                    }
                 if followPs.count > 3 {
                     Text("and \(followPs.count - 3) more")
                         .layoutPriority(2)

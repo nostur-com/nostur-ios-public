@@ -134,17 +134,13 @@ struct Kind9802: View {
                 }
             
             if let hlAuthorPubkey = highlightAttributes.authorPubkey {
-                HStack {
-                    Spacer()
-                    PFP(pubkey: hlAuthorPubkey, nrContact: highlightAttributes.contact, size: 20)
-                    Text(highlightAttributes.anyName ?? "Unknown")
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
-                    navigateTo(ContactPath(key: hlAuthorPubkey), context: dim.id)
-                }
-                .padding(.trailing, 40)
+                PFPandName(pubkey: hlAuthorPubkey, alignment: .trailing)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        guard !nxViewingContext.contains(.preview) else { return }
+                        navigateTo(ContactPath(key: hlAuthorPubkey), context: dim.id)
+                    }
+                    .padding(.trailing, 40)
             }
             HStack {
                 Spacer()

@@ -474,17 +474,17 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             
         case 9802:
             let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1
-            let highlightAuthorPubkey:String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
+            let highlightAuthorPubkey: String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
             
             let highlightContact: NRContact? = if let highlightAuthorPubkey {
-                NRContact.fetch(highlightAuthorPubkey)
+                NRContact.instance(of: highlightAuthorPubkey)
             }
             else {
                 nil
             }
             
-            if let highlightAuthorPubkey = highlightAuthorPubkey, highlightContact == nil || (highlightContact?.metadata_created_at ?? 0) == 0 {
-                missingPs.insert(highlightAuthorPubkey)
+            if let highlightContact, highlightContact.metadata_created_at == 0 {
+                missingPs.insert(highlightContact.pubkey)
             }
             self.highlightAttributes = HighlightAttributes(contact: highlightContact, authorPubkey: highlightAuthorPubkey, url: highlightUrl)
         case 30000, 39089:
