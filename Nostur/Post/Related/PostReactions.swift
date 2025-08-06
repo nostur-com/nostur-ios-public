@@ -30,7 +30,7 @@ struct PostReactions: View {
                     LazyVStack(spacing: GUTTER) {
                         ForEach(model.reactions) { nrPost in
                             HStack(alignment: .top) {
-                                PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact)
+                                ObservedPFP(nrContact: nrPost.contact)
                                     .onTapGesture {
                                         navigateTo(ContactPath(key: nrPost.pubkey), context: dim.id)
                                     }
@@ -83,6 +83,16 @@ struct PostReactions: View {
                     task.process()
                 }
             }
+        }
+        .onChange(of: model.reactions) { reactions in
+            let missingPs: [String] = reactions
+                .filter {
+                    $0.contact.metadata_created_at == 0
+                }
+                .map {
+                    $0.pubkey
+                }
+            QueuedFetcher.shared.enqueue(pTags: missingPs)
         }
     }
     
