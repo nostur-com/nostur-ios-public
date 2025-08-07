@@ -297,7 +297,12 @@ struct VoiceMessagePlayer: View {
                 .allowsHitTesting(localFileURL != nil)
             }
             else {
-                ProgressView()
+                if SettingsStore.shared.lowDataMode && !forceDownload {
+                    Spacer()
+                }
+                else {
+                    ProgressView()
+                }
             }
         }
         .frame(height: 50)
