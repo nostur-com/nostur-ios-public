@@ -64,8 +64,8 @@ struct VoiceMessagePlayer: View {
         
         if isPlaying {
             player?.pause()
-            isPlaying = false
         }
+        isPlaying = false
         
         audioObserver?.removeObservers()
         audioObserver = nil
@@ -230,6 +230,7 @@ struct VoiceMessagePlayer: View {
                         }
                     }
                 }
+                
             }
             else {
                 if SettingsStore.shared.lowDataMode && !forceDownload {
