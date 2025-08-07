@@ -60,7 +60,7 @@ struct WithAppSheets: ViewModifier {
                 }
                 .nbUseNavigationStack(.never)
                 .presentationDetents250medium()
-                .presentationBackgroundCompat(theme.listBackground) // TODO: Test login sheet
+                .presentationBackgroundCompat(theme.listBackground)
             })
             .fullScreenCover(item: $asm.feedPreviewSheetInfo) { feedPreviewSheetInfo in
                 NRSheetNavigationStack {

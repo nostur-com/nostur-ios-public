@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ProfileRowMissing: View {
-    @EnvironmentObject private var dim: DIMENSIONS // TODO: need to do with enviroment key instead?
+    @EnvironmentObject private var dim: DIMENSIONS 
     
     var pubkey:String
     

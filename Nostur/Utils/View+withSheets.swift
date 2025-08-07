@@ -365,23 +365,11 @@ struct WithSheets: ViewModifier {
         // Share post screenshot
             .onReceive(receiveNotification(.sharePostScreenshot)) { notification in
                 if #available(iOS 16.0, *) {
-                
-                    // TODO: Disabled for now, for some reason even after requesting permissions
-                    // we still don't get the "Save to Photos" option
-                    // Request write access to the user's photo library.
-    //                PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-    //                    L.og.debug("Requested access to write screenshot to photo library")
-    //                    // don't care if allowed or denied, will just show 1 less option in share sheet if denied
-    //                    // (Save to Photos)
-    //
-    //                }
-                    
-                    
+
                     let nrPost = notification.object as! NRPost
                     
                     let renderer = ImageRenderer(content:
                         VStack(spacing:0) {
-                            // TODO: Fix image size + GIF in screenshot
                             PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true)
 
                             Group {

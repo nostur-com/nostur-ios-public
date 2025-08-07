@@ -15,7 +15,6 @@ import Foundation
 // --form 'mediafile=@"pngtest1.png"' \
 // --form 'uploadtype="media"'
 
-// TODO: implement  NIP98 HTTP Auth
 func getNostrCheckMeService() -> MediaUploadService {
     
     let NOSTRCHECK_PUBLIC_API_KEY = Bundle.main.infoDictionary?["NOSTRCHECK_PUBLIC_API_KEY"] as? String ?? ""

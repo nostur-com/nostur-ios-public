@@ -69,7 +69,7 @@ class ProfilePostsViewModel: ObservableObject {
                     guard (event.replyToId != nil && self?.type == .replies) || (event.replyToId == nil && self?.type == .posts) else { return }
                     
                     EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "ProfilePostsViewModel.newPostSaved")
-                    let nrPost = NRPost(event: event, cancellationId: event.cancellationId) // TODO: TEST UNDO SEND
+                    let nrPost = NRPost(event: event, cancellationId: event.cancellationId)
                     DispatchQueue.main.async {
                         withAnimation {
                             self?.posts.insert(nrPost, at: 0)

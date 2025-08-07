@@ -115,14 +115,14 @@ class SearchModel {
                 
                 let postsResult: [Event] = (try? bg().fetch(fr3)) ?? []
                 let nrPostsResult: [NRPost] = if WOT_FILTER_ENABLED() {
-                    postsResult.map { NRPost(event: $0) } // TODO: NRPost cache???
+                    postsResult.map { NRPost(event: $0) } 
                         // WoT enabled, so put in-WoT before non-WoT
                         .sorted(by: { wot.isAllowed($0.pubkey) && !wot.isAllowed($1.pubkey) })
                         // Put following before non-following
                         .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
                 }
                 else {
-                    postsResult.map { NRPost(event: $0) } // TODO: NRPost cache???
+                    postsResult.map { NRPost(event: $0) }
                         // Put following before non-following
                         .sorted(by: { isFollowing($0.pubkey) && !isFollowing($1.pubkey) })
                 }
