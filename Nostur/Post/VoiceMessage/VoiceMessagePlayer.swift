@@ -9,7 +9,6 @@ import SwiftUI
 import AVFoundation
 import CoreMedia
 import Combine
-//import FFmpegSupport
 
 struct VoiceMessagePlayer: View {
     @Environment(\.theme) private var theme
@@ -48,22 +47,15 @@ struct VoiceMessagePlayer: View {
         
         L.a0.debug("VoiceMessagePlayer: Converting \(webmURL.path) to \(outputURL.path)")
         
-        return nil
-//        // Run ffmpeg conversion
-//        let result = ffmpeg([
-//            "ffmpeg",
-//            "-y", // Overwrite output file if it exists
-//            "-i", webmURL.path,
-//            outputURL.path
-//        ])
-//        
-//        if result == 0 && FileManager.default.fileExists(atPath: outputURL.path) {
-//            L.a0.debug("VoiceMessagePlayer: ✅ Conversion successful: \(outputURL.path)")
-//            return outputURL
-//        } else {
-//            L.a0.debug("VoiceMessagePlayer: ❌ Conversion failed with code: \(result)")
-//            return nil
-//        }
+        let result = convert_webm_to_m4a(webmURL.path, outputURL.path)
+
+        if result == 0 && FileManager.default.fileExists(atPath: outputURL.path) {
+            L.a0.debug("VoiceMessagePlayer: ✅ Conversion successful: \(outputURL.path)")
+            return outputURL
+        } else {
+            L.a0.debug("VoiceMessagePlayer: ❌ Conversion failed with code: \(result)")
+            return nil
+        }
     }
     
     private func cleanup() {
