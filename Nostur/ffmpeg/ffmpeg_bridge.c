@@ -8,11 +8,7 @@
 #include "ffmpeg_bridge.h"
 
 #include <libavutil/opt.h>
-//#include <libavutil/channel_layout.h>
 #include <libavutil/samplefmt.h>
-
-
-
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>

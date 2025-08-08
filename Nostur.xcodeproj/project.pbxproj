@@ -12,6 +12,7 @@
 		1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1F2F54E92A0236E500B6D7E4 /* Gifu */; };
 		1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3C8B742D22D175008231A9 /* secp256k1 */; };
 		1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3E135329C89B9F00D076EA /* NukeVideo */; };
+		1F5B5FD52E4617C800850E35 /* webm_to_m4a_ffmpeg.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F5B5FD42E4617C800850E35 /* webm_to_m4a_ffmpeg.xcframework */; };
 		1F747A102B3F1E9D0020F4A5 /* RepresentableKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1F747A0F2B3F1E9D0020F4A5 /* RepresentableKit */; };
 		1F75257629962AA300477AF2 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 1F75257529962AA300477AF2 /* Nuke */; };
 		1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 1F75257729962AA300477AF2 /* NukeExtensions */; };
@@ -78,6 +79,7 @@
 /* Begin PBXFileReference section */
 		1F06D2D92A584318007B9373 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Themes.xcassets; sourceTree = "<group>"; };
+		1F5B5FD42E4617C800850E35 /* webm_to_m4a_ffmpeg.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:5T4GDWX88Z:Fabian Lachman"; lastKnownFileType = wrapper.xcframework; path = webm_to_m4a_ffmpeg.xcframework; sourceTree = "<group>"; };
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
 		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -124,6 +126,7 @@
 				1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */,
 				1F75257829962AA300477AF2 /* NukeExtensions in Frameworks */,
 				1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */,
+				1F5B5FD52E4617C800850E35 /* webm_to_m4a_ffmpeg.xcframework in Frameworks */,
 				1FB4132C2D9C544C0069936C /* CloudKit.framework in Frameworks */,
 				1FC5834F2BDDBA5B000C3588 /* SwiftUIFlow in Frameworks */,
 				1FB6E6F529E31C71008BE8A6 /* HTMLEntities in Frameworks */,
@@ -164,6 +167,7 @@
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1F5B5FD42E4617C800850E35 /* webm_to_m4a_ffmpeg.xcframework */,
 				1FB4132B2D9C544B0069936C /* CloudKit.framework */,
 				1FBCD61B2CAAB127008258C3 /* XCTest.framework */,
 				1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */,
