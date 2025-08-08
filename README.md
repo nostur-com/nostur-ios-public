@@ -8,8 +8,8 @@
 
 ## Dependencies
 
-- Xcode 15.x
-- iOS SDK 16.x
+- Xcode 26.x
+- iOS SDK 26.x
 
 ## Setup dev environment
 
