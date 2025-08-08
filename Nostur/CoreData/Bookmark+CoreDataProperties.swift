@@ -36,6 +36,8 @@ extension Bookmark {
                     .green
                 case "orange":
                     .orange
+                case "brown":
+                    .brown
                 default:
                     .orange
                 
@@ -53,6 +55,8 @@ extension Bookmark {
                 "purple"
             case .green:
                 "green"
+            case .brown:
+                "brown"
             default:
                 "orange"
             }

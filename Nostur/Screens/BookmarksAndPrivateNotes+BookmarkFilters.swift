@@ -16,6 +16,13 @@ struct BookmarkFilters: View {
             Text("Show bookmarks")
             HStack {
                 Image(systemName: "bookmark.fill")
+                    .foregroundColor(.brown)
+                    .opacity(onlyShow.contains("brown") ? 1.0 : 0.2)
+                    .contentShape(Rectangle())
+                    .padding(10)
+                    .onTapGesture { self.toggle("brown") }
+                
+                Image(systemName: "bookmark.fill")
                     .foregroundColor(.red)
                     .opacity(onlyShow.contains("red") ? 1.0 : 0.2)
                     .contentShape(Rectangle())

@@ -46,10 +46,20 @@ struct BookmarkButton: View {
                 if showColorSelector {
                     HStack(spacing: 0) {
                         Image(systemName: "bookmark.fill")
-                            .foregroundColor(.red)
+                            .foregroundColor(.brown)
                             .contentShape(Rectangle())
                             .padding(.leading, 10)
                             .padding(.trailing, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.addBookmark(.brown)
+                                showColorSelector = false
+                            }
+                        
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.red)
+                            .contentShape(Rectangle())
+                            .padding(.horizontal, 10)
                             .padding(.vertical, 10)
                             .onTapGesture {
                                 self.addBookmark(.red)
@@ -110,7 +120,7 @@ struct BookmarkButton: View {
                         
                     .background(theme.listBackground)
                     .zIndex(1)
-                    .offset(x: -95)
+                    .offset(x: -115)
 //                        .frame(width: 100, height: 100)
                     
                 }
