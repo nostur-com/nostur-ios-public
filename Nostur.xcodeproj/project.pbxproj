@@ -18,7 +18,6 @@
 		1F75257A29962AA300477AF2 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1F75257929962AA300477AF2 /* NukeUI */; };
 		1F77AD0B2A42133000585E12 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1F77AD0A2A42133000585E12 /* MarkdownUI */; };
 		1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */ = {isa = PBXBuildFile; productRef = 1F7B21902AE3D6C000CE972E /* NostrEssentials */; };
-		1F7DA52A2E451AF3005762FE /* FFmpeg.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F7DA5292E451AF3005762FE /* FFmpeg.xcframework */; };
 		1F91D8F62A17C55F00C419A3 /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = 1F91D8F52A17C55F00C419A3 /* Collections */; };
 		1FA6D5532C5A6A90001C3FDB /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA6D5522C5A6A90001C3FDB /* SwiftUIIntrospect */; };
 		1FA97AA62C3F61480091446A /* LiveKit in Frameworks */ = {isa = PBXBuildFile; productRef = 1FA97AA52C3F61480091446A /* LiveKit */; };
@@ -81,7 +80,6 @@
 		1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Themes.xcassets; sourceTree = "<group>"; };
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
 		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
-		1F7DA5292E451AF3005762FE /* FFmpeg.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = FFmpeg.xcframework; sourceTree = "<group>"; };
 		1F9D69D82A3077F400628460 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = SOURCE_ROOT; };
 		1FB4132B2D9C544B0069936C /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		1FB448BA2965F3D000038671 /* Nostur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Nostur.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -137,7 +135,6 @@
 				1F747A102B3F1E9D0020F4A5 /* RepresentableKit in Frameworks */,
 				1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */,
 				1FC4D40B2997E58E004E88CD /* KeychainAccess in Frameworks */,
-				1F7DA52A2E451AF3005762FE /* FFmpeg.xcframework in Frameworks */,
 				1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */,
 				1F75257A29962AA300477AF2 /* NukeUI in Frameworks */,
 				1F7B21912AE3D6C000CE972E /* NostrEssentials in Frameworks */,
@@ -167,7 +164,6 @@
 		1F7C65B629A1466D009FF3EA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				1F7DA5292E451AF3005762FE /* FFmpeg.xcframework */,
 				1FB4132B2D9C544B0069936C /* CloudKit.framework */,
 				1FBCD61B2CAAB127008258C3 /* XCTest.framework */,
 				1FC7A4D929F99AB100645FEF /* UniformTypeIdentifiers.framework */,
