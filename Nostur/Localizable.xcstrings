@@ -910,10 +910,10 @@
       "shouldTranslate" : false
     },
     "⚠️ Error: %@" : {
-
+      "shouldTranslate" : false
     },
     "✅ Downloaded: %@" : {
-
+      "shouldTranslate" : false
     },
     "📸" : {
       "comment" : "Tab title for Olas/Picture feed",
@@ -3510,10 +3510,24 @@
       }
     },
     "Download" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download"
+          }
+        }
+      }
     },
     "Downloading..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloaden…"
+          }
+        }
+      }
     },
     "Drop image..." : {
       "localizations" : {
@@ -7678,6 +7692,7 @@
       }
     },
     "reposted" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8383,7 +8398,8 @@
             "value" : "Toon meer…"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "Show post stats on timeline" : {
       "comment" : "Setting on settings screen",
@@ -9795,7 +9811,7 @@
       }
     },
     "viewState: %@" : {
-
+      "shouldTranslate" : false
     },
     "VPN detected" : {
       "localizations" : {
