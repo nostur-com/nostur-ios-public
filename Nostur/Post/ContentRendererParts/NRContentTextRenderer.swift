@@ -140,6 +140,7 @@ struct NRContentTextRendererInner: View {
                         Image(systemName: "chevron.compact.down")
                             .foregroundColor(.white)
                             .padding(5)
+                            .padding(.top, 5)
                             .background {
                                 RoundedRectangle(cornerRadius: 5)
                                     .foregroundColor(theme.accent)
@@ -215,6 +216,7 @@ struct NRContentTextRendererInner: View {
                                 Image(systemName: "chevron.compact.down")
                                     .foregroundColor(.white)
                                     .padding(5)
+                                    .padding(.top, 5)
                                     .background {
                                         RoundedRectangle(cornerRadius: 5)
                                             .foregroundColor(theme.accent)
@@ -271,6 +273,7 @@ struct NRContentTextRendererInner: View {
                                 Image(systemName: "chevron.compact.down")
                                     .foregroundColor(.white)
                                     .padding(5)
+                                    .padding(.top, 5)
                                     .background {
                                         RoundedRectangle(cornerRadius: 5)
                                             .foregroundColor(theme.accent)
