@@ -12,8 +12,17 @@ import NavigationBackport
 @main
 struct AppLoader {
     static func main() {
-        iOSApp.main()
+        if isProduction() {
+            iOSApp.main()
+        }
+        else {
+            TestApp.main()
+        }
     }
+    
+    private static func isProduction() -> Bool {
+         return NSClassFromString("XCTestCase") == nil
+     }
 }
 
 struct iOSApp: App {
@@ -55,5 +64,13 @@ struct iOSApp: App {
                 .environmentObject(accountsState)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
         }
+    }
+}
+
+struct TestApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    var body: some Scene {
+        WindowGroup { }
     }
 }
