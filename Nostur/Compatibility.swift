@@ -390,7 +390,8 @@ extension View {
     @ViewBuilder
     func buttonStyleGlassProminent() -> some View {
         if #available(iOS 26.0, *) {
-            self.buttonStyle(.glassProminent)
+            self
+//            self.buttonStyle(.glassProminent)
         }
         else {
             self
@@ -400,7 +401,8 @@ extension View {
     @ViewBuilder
     func buttonStyleGlass() -> some View {
         if #available(iOS 26.0, *) {
-            self.buttonStyle(.glass)
+            self
+//            self.buttonStyle(.glass)
         }
         else {
             self

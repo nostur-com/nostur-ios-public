@@ -9810,9 +9810,6 @@
         }
       }
     },
-    "viewState: %@" : {
-      "shouldTranslate" : false
-    },
     "VPN detected" : {
       "localizations" : {
         "nl" : {
