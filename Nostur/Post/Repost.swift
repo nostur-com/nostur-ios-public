@@ -179,16 +179,14 @@ struct RepostHeader: View {
             
             PFP(pubkey: nrContact.pubkey, pictureUrl: nrContact.pictureUrl, size: 20.0)
             
-            Group {
-                Text(nrContact.anyName)
-                Text("reposted")
-                    .layoutPriority(1)
-            }
-            .font(.subheadline)
-            .fontWeightBold()
-            .onTapGesture {
-                navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
-            }
+            Text(nrContact.anyName)
+                .lineLimit(1)
+                .font(.subheadline)
+                .fontWeightBold()
+                .onTapGesture {
+                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                }
+
             
             PossibleImposterLabelView(nrContact: nrContact)
                 .layoutPriority(2)
