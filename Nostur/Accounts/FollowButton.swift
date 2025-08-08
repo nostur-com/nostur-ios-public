@@ -101,6 +101,7 @@ struct FollowLink: View {
                         
                         withAnimation {
                             followState = .unfollowed
+                            didFollow = false
                         }
                         la.unfollow(pubkey)
                     })
