@@ -38,6 +38,16 @@ struct KindResolver: View {
             OtherKnownKinds(nrPost: nrPost, hideFooter: hideFooter)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
+                .padding(.top, 10)
+                .padding(.bottom, 5)
+                .background(
+                    theme.listBackground
+                        .cornerRadius(8)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(theme.lineColor, lineWidth: 1)
+                )
         case 443:
             Kind443(nrPost: nrPost)
             // TODO: .navigationTitle should be somewhere else, only if isDetail
@@ -70,9 +80,27 @@ struct KindResolver: View {
             }
         case 9735: // TODO: need to check
             if let zap = nrPost.nxZap {
-                NxZapReceipt(sats: zap.sats, receiptPubkey: zap.receiptPubkey, fromPubkey: zap.fromPubkey, nrZapFrom: zap.nrZapFrom)
-                    .onAppear { self.enqueue() }
-                    .onDisappear { self.dequeue() }
+                if isEmbedded {
+                    NxZapReceipt(sats: zap.sats, receiptPubkey: zap.receiptPubkey, fromPubkey: zap.fromPubkey, nrZapFrom: zap.nrZapFrom)
+                        .onAppear { self.enqueue() }
+                        .onDisappear { self.dequeue() }
+                        .padding(.top, 5)
+                        .padding(.trailing, 5)
+                        .padding(.bottom, 5)
+//                        .background(
+//                            theme.listBackground
+//                                .cornerRadius(8)
+//                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(theme.lineColor, lineWidth: 1)
+                        )
+                }
+                else {
+                    NxZapReceipt(sats: zap.sats, receiptPubkey: zap.receiptPubkey, fromPubkey: zap.fromPubkey, nrZapFrom: zap.nrZapFrom)
+                        .onAppear { self.enqueue() }
+                        .onDisappear { self.dequeue() }
+                }
             }
             
         case 9802:

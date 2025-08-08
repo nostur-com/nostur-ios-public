@@ -177,7 +177,7 @@ struct NxZapReceipt: View {
                         .opacity(sats != 0 ? 0.5 : 0)
                 }
             }
-            .frame(width: 80)
+            .frame(width: 70)
             
             InnerPFP(pubkey: fromPubkey, pictureUrl: nrContact.pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: nrContact.randomColor)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
