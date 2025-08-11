@@ -282,7 +282,7 @@ struct MainFeedsScreen: View {
                 if (showingOtherContact == nil && la.viewFollowingPublicKeys.count <= 1 && !didSend) {
                     VStack {
                         Spacer()
-                        Text("You are not following anyone yet, visit the explore tab and follow some people")
+                        Text("You are not following anyone yet, visit the Explore tab and follow some people")
                             .multilineTextAlignment(.center)
                             .padding(.all, 30.0)
                         

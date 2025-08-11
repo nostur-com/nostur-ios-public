@@ -6408,6 +6408,16 @@
         }
       }
     },
+    "Pin feed as tab" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed vastpinnen als tab"
+          }
+        }
+      }
+    },
     "Pin on tab bar" : {
       "comment" : "Toggle to pin/unpin a feed on tab bar",
       "localizations" : {
@@ -8731,6 +8741,7 @@
       "shouldTranslate" : false
     },
     "Subscribe" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -10118,14 +10129,18 @@
       }
     },
     "You are not following anyone yet, visit the explore tab and follow some people" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Je volgt nog niemand, bekijk de Ontdek tab en volg een aantal mensen"
+            "value" : "Je volgt nog niemand, via het tabje Verkennen kan je beginnen met volgen"
           }
         }
       }
+    },
+    "You are not following anyone yet, visit the Explore tab and follow some people" : {
+
     },
     "You are using a read-only account.\n\nSwitch to another account or add the private key to fully use this account." : {
       "comment" : "Message about read-only mode",
