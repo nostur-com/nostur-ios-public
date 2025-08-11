@@ -15,6 +15,8 @@ struct FeedPreviewSheet: View {
     
     @ObservedObject private var nrContact: NRContact
     
+    @State private var didFollow: Bool = false
+    
     init(nrPost: NRPost, config: NXColumnConfig) {
         self.nrPost = nrPost
         self.config = config
@@ -22,7 +24,17 @@ struct FeedPreviewSheet: View {
     }
     
     var body: some View {
-        NXColumnView(config: config, isVisible: true)
+        VStack(spacing: 0) {
+            NXColumnView(config: config, isVisible: true, header: {
+                if let la = AccountsState.shared.loggedInAccount, !didFollow && la.account.isFullAccount && config.pubkeys.count > 1 {
+                    Button("Follow all \(config.pubkeys.count) people on this list") {
+                        la.multiFollow(config.pubkeys)
+                        didFollow = true
+                    }
+                    .frame(height: 40)
+                }
+            })
+        }
             .environment(\.nxViewingContext, [.feedPreview])
             .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -66,12 +78,6 @@ struct FeedPreviewSheet: View {
                     UIPasteboard.general.string = "nostr:\(si.identifier)"
                     
                     sendNotification(.anyStatus, ("Address copied to clipboard", "APP_NOTICE"))
-                }
-            }
-            
-            if let la = AccountsState.shared.loggedInAccount, la.account.isFullAccount && config.pubkeys.count > 1 {
-                Button("Follow all \(config.pubkeys.count) people on this list") {
-                    la.multiFollow(config.pubkeys)
                 }
             }
             
