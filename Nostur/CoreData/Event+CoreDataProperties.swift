@@ -1421,7 +1421,8 @@ extension Event {
             // Set pointer on older events to the latest event id
             if let existingEvents = try? context.fetch(r) {
                 
-                let newestFirst = (existingEvents + [savedEvent]).sorted { $0.created_at > $1.created_at }
+                // existingEvents will already include the new (savedEvent) event also
+                let newestFirst = existingEvents.sorted { $0.created_at > $1.created_at }
                 for existingEvent in newestFirst.dropFirst() {
                     existingEvent.mostRecentId = savedEvent.id
                     existingEventIds.insert(existingEvent.id)
