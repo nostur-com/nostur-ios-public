@@ -8,7 +8,7 @@
 import SwiftUI
 import NavigationBackport
 
-struct NXColumnView: View {
+struct NXColumnView<HeaderContent: View>: View {
     
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var dim: DIMENSIONS
@@ -19,10 +19,12 @@ struct NXColumnView: View {
     
     private var config: NXColumnConfig
     private var isVisible: Bool
+    private var header: HeaderContent
     
-    init(config: NXColumnConfig, isVisible: Bool) {
+    init(config: NXColumnConfig, isVisible: Bool, @ViewBuilder header: () -> HeaderContent) {
         self.config = config
         self.isVisible = isVisible
+        self.header = header()
     }
 
     @State private var feedSettingsFeed: CloudFeed?
@@ -40,7 +42,10 @@ struct NXColumnView: View {
                     CenteredProgressView()
                 }
             case .posts(let nrPosts):
-                NXPostsFeed(vm: viewModel, posts: nrPosts)
+                VStack(spacing: 0) {
+                    header
+                    NXPostsFeed(vm: viewModel, posts: nrPosts)
+                }
             case .timeout:
                 ZStack(alignment: .center) {
                     theme.listBackground
@@ -240,5 +245,15 @@ struct FeedListViewTester: View {
 //            ColumnConfig(id: "mentions", columnType: .mentions, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"),
 //            ColumnConfig(id: "reactions", columnType: .reactions, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e")
         ]
+    }
+}
+
+
+// Makes optional title possible in: PostLayout { } title: { }
+
+extension NXColumnView where HeaderContent == EmptyView {
+    
+    init(config: NXColumnConfig, isVisible: Bool) {
+        self.init(config: config, isVisible: isVisible, header: { EmptyView() })
     }
 }

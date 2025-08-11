@@ -68,7 +68,7 @@ struct FeedPreviewSheet: View {
     
     private var previewFeedActionsMenu: some View {
         Menu(content: {
-            Button("Subscribe") {
+            Button("Pin feed as tab") {
                 createFeedFromList()
             }
             
