@@ -66,9 +66,6 @@ struct Kind30000: View {
     var body: some View {
         if isEmbedded {
             self.embeddedView
-                .background(theme.listBackground)
-                .drawingGroup(opaque: true)
-                .onAppear(perform: self.onAppear)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
                     navigateTo(nrPost, context: dim.id)
@@ -76,8 +73,6 @@ struct Kind30000: View {
         }
         else {
             self.normalView
-                .background(theme.listBackground)
-                .drawingGroup(opaque: true)
                 .onAppear(perform: self.onAppear)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
@@ -185,6 +180,7 @@ struct Kind30000: View {
     @ViewBuilder
     private var overlappingPFPs: some View {
         ZStack(alignment: .leading) {
+            theme.listBackground
             ForEach(nrContactsToRender.indices, id: \.self) { index in
                 ZStack(alignment: .leading) {
                     ObservedPFP(nrContact: nrContactsToRender[index], forceFlat: true)
@@ -194,6 +190,7 @@ struct Kind30000: View {
                 .offset(x:Double(0 + (30*index)))
             }
         }
+        .drawingGroup(opaque: true)
         .onAppear {
             load10pfps()
         }
@@ -300,6 +297,8 @@ struct Kind30000: View {
                         }
                     }
             }
+            .background(theme.listBackground)
+            .drawingGroup(opaque: true)
         }
         else {
             ProgressView()
