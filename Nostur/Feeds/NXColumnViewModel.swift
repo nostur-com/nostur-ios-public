@@ -93,7 +93,7 @@ class NXColumnViewModel: ObservableObject {
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
     
     @MainActor
-    private var currentNRPostsOnScreen: [NRPost] {
+    public var currentNRPostsOnScreen: [NRPost] {
         if case .posts(let nrPosts) = viewState {
             return nrPosts
         }
@@ -673,6 +673,8 @@ class NXColumnViewModel: ObservableObject {
 #endif
         loadLocalSubject.send((config, older, completion))
     }
+    
+    public var loadAnyFlag: Bool = false
 
     @MainActor
     public func _loadLocal(_ config: NXColumnConfig, older: Bool = false, completion: (() -> Void)? = nil) {
@@ -790,8 +792,15 @@ class NXColumnViewModel: ObservableObject {
         let (sinceTimestamp, untilTimestamp) = if case .posts(let nrPosts) = viewState {
             ((nrPosts.first?.created_at ?? 300) - 300, (nrPosts.last?.created_at ?? Int64(Date().timeIntervalSince1970)))
         }
+        else if loadAnyFlag {
+            (1622888074, Int64(Date().timeIntervalSince1970)) // Very early date but not zero because zero defaults back 8 hours
+        }
         else { // or if empty screen: 0 (since) or now (until)
             (0, Int64(Date().timeIntervalSince1970))
+        }
+        
+        if loadAnyFlag {
+            self.loadAnyFlag = false
         }
         
         let sinceOrUntil = !older ? sinceTimestamp : untilTimestamp
@@ -1114,6 +1123,8 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     public func getFillGapReqStatement(_ config: NXColumnConfig, since: Int, until: Int? = nil) -> (cmd: () -> Void, subId: String)? {
+        let until: Int? = self.loadAnyFlag ? nil : until
+        let since: Int? = self.loadAnyFlag ? nil : since
         switch config.columnType {
         case .following(let feed):
             
@@ -1158,16 +1169,16 @@ class NXColumnViewModel: ObservableObject {
                 if feed.accountPubkey == EXPLORER_PUBKEY {
                     if let cm = NostrEssentials
                         .ClientMessage(type: .REQ,
-                                       subscriptionId: "RESUME-" + config.id + "-" + since.description,
+                                       subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"),
                                        filters: filters
                         ).json() {
                         req(cm)
                     }
                 }
                 else {
-                    outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
+                    outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters))
                 }
-            }, subId: "RESUME-" + config.id + "-" + since.description)
+            }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
 
         case .picture(let feed):
             // Make sure max pubkeys is < 2000 (relay limits)
@@ -1202,8 +1213,8 @@ class NXColumnViewModel: ObservableObject {
                     L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                     return
                 }
-                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters))
-            }, subId: "RESUME-" + config.id + "-" + since.description)
+                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters))
+            }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
@@ -1215,10 +1226,10 @@ class NXColumnViewModel: ObservableObject {
             }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
-            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
                     req(message)
-                }, subId: "RESUME-" + config.id + "-" + since.description)
+                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
                 // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
             }
             return nil
@@ -1232,10 +1243,10 @@ class NXColumnViewModel: ObservableObject {
             }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
-            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
                     req(message)
-                }, subId: "RESUME-" + config.id + "-" + since.description)
+                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
             }
             return nil
             
@@ -1248,10 +1259,10 @@ class NXColumnViewModel: ObservableObject {
             }
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
-            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + since.description, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
                     req(message)
-                }, subId: "RESUME-" + config.id + "-" + since.description)
+                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
             }
             return nil
         case .pubkey:
@@ -1262,10 +1273,10 @@ class NXColumnViewModel: ObservableObject {
             
             let filters = globalFeedReqFilters(since: since, until: until)
             
-            if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + since.description, filters: filters).json() {
+            if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
-                    req(message, activeSubscriptionId: "G-RESUME-" + config.id + "-" + since.description, relays: relaysData)
-                }, subId: "G-RESUME-" + config.id + "-" + since.description)
+                    req(message, activeSubscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), relays: relaysData)
+                }, subId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"))
             }
             return nil
         case .hashtags:

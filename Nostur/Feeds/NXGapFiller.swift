@@ -70,7 +70,7 @@ class NXGapFiller {
         if let (cmd, subId) = columnVM.getFillGapReqStatement(config, since: windowStart, until: windowEnd) {
             
             let reqTask = ReqTask(
-                timeout: 15.0,
+                timeout: 8.5,
                 subscriptionId: subId,
                 reqCommand: { [weak self] _ in
                     guard let self else { return }
@@ -85,7 +85,12 @@ class NXGapFiller {
 
                     self.columnVM?.speedTest?.relayFinished()
                     
-                    self.columnVM?.loadLocal(config)
+                    self.columnVM?.loadLocal(config, older: false) {
+                        if self.columnVM?.currentNRPostsOnScreen.isEmpty ?? false {
+                            self.columnVM?.loadAnyFlag = true
+                            self.fetchGap(since: 1622888074, currentGap: self.currentGap)
+                        }
+                    }
                     
                     self.currentGap += 1
                     
