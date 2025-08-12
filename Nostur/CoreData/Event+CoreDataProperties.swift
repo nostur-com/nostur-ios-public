@@ -1421,17 +1421,25 @@ extension Event {
             // Set pointer on older events to the latest event id
             if let existingEvents = try? context.fetch(r) {
                 
-                // existingEvents will already include the new (savedEvent) event also
+                // existingEvents will already include the savedEvent event also (can also be older one, if from relay that doesn't have latest
                 let newestFirst = existingEvents.sorted { $0.created_at > $1.created_at }
-                for existingEvent in newestFirst.dropFirst() {
-                    existingEvent.mostRecentId = savedEvent.id
-                    existingEventIds.insert(existingEvent.id)
-                }
                 
-                if !existingEvents.isEmpty {
-                    savedEvent.flags = "is_update"
+                // most recent event (.created_at)
+                if let first = newestFirst.first {
+                    // .mostRecentId should be nil
+                    first.mostRecentId = nil
+                    
+                    // if we already had this article, mark this one as "is_update" so it doesn't reappear in feed
+                    if existingEvents.count > 1 && first.id == savedEvent.id {
+                        savedEvent.flags = "is_update" // is supdate, don't reappear in feed
+                    }
+                    
+                    // older events
+                    for existingEvent in newestFirst.dropFirst() {
+                        existingEvent.mostRecentId = first.id
+                        existingEventIds.insert(existingEvent.id)
+                    }
                 }
-                
             }
             
             // Find existing events referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
