@@ -1439,33 +1439,34 @@ extension Event {
                         existingEvent.mostRecentId = first.id
                         existingEventIds.insert(existingEvent.id)
                     }
-                }
-            }
-            
-            // Find existing events referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
-            // also do for replyToId
-            if savedEvent.kind == 30023 { // Only do this for articles
-                existingEventIds.insert(savedEvent.aTag)
-                let fr = Event.fetchRequest()
-                fr.predicate = NSPredicate(format: "kind = 1 AND replyToRootId IN %@", existingEventIds)
-                if let existingReplies = try? context.fetch(fr) {
-                    for existingReply in existingReplies {
-                        existingReply.replyToRootId = savedEvent.id
-                        existingReply.replyToRoot = savedEvent
+                    
+                    
+                    
+                    // Find existing replies referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
+                    // also do for replyToId
+                    if savedEvent.kind == 30023 { // Only do this for articles
+                        existingEventIds.insert(savedEvent.aTag)
+                        let fr = Event.fetchRequest()
+                        fr.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND replyToRootId IN %@", existingEventIds)
+                        if let existingReplies = try? context.fetch(fr) {
+                            for existingReply in existingReplies {
+                                existingReply.replyToRootId = first.id
+                                existingReply.replyToRoot = first
+                            }
+                        }
+                        
+                        let fr2 = Event.fetchRequest()
+                        fr2.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND replyToId IN %@", existingEventIds)
+                        if let existingReplies = try? context.fetch(fr) {
+                            for existingReply in existingReplies {
+                                existingReply.replyToId = first.id
+                                existingReply.replyTo = first
+                            }
+                        }
                     }
                 }
-                
-                let fr2 = Event.fetchRequest()
-                fr2.predicate = NSPredicate(format: "kind = 1 AND replyToId IN %@", existingEventIds)
-                if let existingReplies = try? context.fetch(fr) {
-                    for existingReply in existingReplies {
-                        existingReply.replyToId = savedEvent.id
-                        existingReply.replyTo = savedEvent
-                    }
-                }
             }
-            
-            
+
             if Set([30311]).contains(savedEvent.kind) { // Only update views for kinds that need it (so far: 30311)
                 ViewUpdates.shared.replacableEventUpdate.send(savedEvent)
             }
