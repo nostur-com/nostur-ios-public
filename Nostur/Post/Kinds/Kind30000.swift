@@ -44,6 +44,7 @@ struct Kind30000: View {
     @State private var followNRContacts: [String: NRContact] = [:]
     @State private var nrContactsToRender: [NRContact] = []
     @State private var didLoadFollowNRContacts = false
+    @StateObject private var listNamesTextRenderer: ListNamesTextRenderer
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
         self.nrPost = nrPost
@@ -58,9 +59,17 @@ struct Kind30000: View {
         self.grouped = grouped
         self.forceAutoload = forceAutoload
         let followingPubkeys = follows()
-        self.followPs = OrderedSet(nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
+        let followPs = OrderedSet(nrPost.fastTags.filter { $0.0 == "p" && isValidPubkey($0.1) }.map { $0.1 }
             .sorted(by: { followingPubkeys.contains($0) && !followingPubkeys.contains($1) }))
+        self.followPs = followPs
         self.title = (nrPost.eventTitle ?? nrPost.dTag) ?? "List"
+        
+        _listNamesTextRenderer = StateObject(
+            wrappedValue: .init(
+                nrContacts: followPs.prefix(3).map { NRContact.instance(of: $0) },
+                total: followPs.count
+            )
+        )
     }
     
     var body: some View {
@@ -96,8 +105,6 @@ struct Kind30000: View {
                 self.missingPs = Set(followNRContactsDict.prefix(3).map { $0.value }
                     .filter { $0.metadata_created_at == 0 }
                     .map { $0.pubkey })
-                
-                self.listNamesText = followNRContactsDict.prefix(3).map { $0.value.anyName }.joined(separator: ", ")
                 
                 guard !missingPs.isEmpty else { return }
                 QueuedFetcher.shared.enqueue(pTags:  self.missingPs)
@@ -175,7 +182,6 @@ struct Kind30000: View {
     }
     
     @State private var missingPs: Set<String> = []
-    @State private var listNamesText: String = ""
     
     @ViewBuilder
     private var overlappingPFPs: some View {
@@ -196,23 +202,10 @@ struct Kind30000: View {
         }
         
         if !followNRContacts.isEmpty {
-            HStack {
-                Text(listNamesText)
-                    .layoutPriority(1)
-                    .onReceive(ViewUpdates.shared.profileUpdates.receive(on: RunLoop.main)) { profileInfo in
-                        if missingPs.contains(profileInfo.pubkey) {
-                            missingPs.remove(profileInfo.pubkey)
-                            withAnimation {
-                                listNamesText = followNRContacts.prefix(3).map { $0.value.anyName }.joined(separator: ", ")
-                            }
-                        }
-                    }
-                if followPs.count > 3 {
-                    Text("and \(followPs.count - 3) more")
-                        .layoutPriority(2)
-                }
-            }
-            .lineLimit(1)
+            Text(listNamesTextRenderer.text)
+                .truncationMode(.middle)
+                .layoutPriority(1)
+                .lineLimit(1)
         }
     }
     
@@ -358,5 +351,42 @@ struct PubkeyRow: View {
                 }
             }
         }
+    }
+}
+
+import Combine
+
+class ListNamesTextRenderer: ObservableObject {
+    @Published var text: String
+    private var cancellables: [AnyCancellable] = []
+    
+    init(nrContacts: [NRContact], total: Int) {
+        
+        
+        if total > nrContacts.count {
+            text = (nrContacts.map { $0.anyName }.joined(separator: ", ") + " and \(total - nrContacts.count) more")
+        }
+        else {
+            text = nrContacts.map { $0.anyName }.joined(separator: ", ")
+        }
+        
+        for nrContact in nrContacts {
+            nrContact.objectWillChange
+                .receive(on: RunLoop.main)
+                .sink { [weak self] _ in
+                    guard let self else { return }
+                    if total > nrContacts.count {
+                        text = (nrContacts.map { $0.anyName }.joined(separator: ", ") + " and \(total - nrContacts.count) more")
+                    }
+                    else {
+                        text = nrContacts.map { $0.anyName }.joined(separator: ", ")
+                    }
+                }
+                .store(in: &cancellables)
+        }
+    }
+    
+    deinit {
+        cancellables.forEach { $0.cancel() }
     }
 }
