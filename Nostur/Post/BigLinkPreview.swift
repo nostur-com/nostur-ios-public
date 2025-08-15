@@ -12,33 +12,32 @@ import HTMLEntities
 
 struct BigLinkPreview: View {
     @Environment(\.theme) private var theme
-    static let BIG_PREVIEW_IMAGE_HEIGHT: CGFloat = 350
-    public let url: URL
-    public var autoload:Bool = false
-    @State var tags:[String: String] = [:]
+    @Environment(\.dim) private var dim
     
-    static let aspect:CGFloat = 16/9
+    public let url: URL
+    public var autoload: Bool = false
+    
+    @State var tags: [String: String] = [:]
+    
+    static let aspect: CGFloat = 16/9
+    static let BIG_PREVIEW_IMAGE_HEIGHT: CGFloat = 350
     
     var body: some View {
         if autoload {
             Group {
                 VStack(alignment: .leading, spacing: 5) {
-                    if let image = tags["image"], image.prefix(7) != "http://" {
-                        LazyImage(
-                            request: ImageRequest(url: URL(string:image),
-                                                  processors: [.resize(height: Self.BIG_PREVIEW_IMAGE_HEIGHT, upscale: false)],
-                            options: SettingsStore.shared.lowDataMode ? [.returnCacheDataDontLoad] : [],
-                            userInfo: [.scaleKey: UIScreen.main.scale]), transaction: .init(animation: .easeIn)) { state in
-                                if let image = state.image {
-                                    image
-                                        .resizable()
-                                        .scaledToFit()
-                                }
-                        }
-                        .pipeline(ImageProcessing.shared.content)
-//                        .frame(width: (Self.BIG_PREVIEW_IMAGE_HEIGHT * Self.aspect))
+                    if let image = tags["image"], image.prefix(7) != "http://", let imageUrl = URL(string: image) {
+                        MediaContentView(
+                            galleryItem: GalleryItem(url: imageUrl),
+                            availableWidth: dim.listWidth,
+                            placeholderAspect: 16/9,
+                            maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
+                            contentMode: .fit,
+                            upscale: true,
+                            autoload: autoload
+                        )
+                        
                         .background(Color.gray)
-//                        .clipped()
                     }
                     else {
                         Image(systemName: "link")
@@ -47,7 +46,6 @@ struct BigLinkPreview: View {
                             .frame(maxHeight: 25)
                             .padding()
                             .foregroundColor(Color.gray)
-//                            .frame(width: Self.BIG_PREVIEW_IMAGE_HEIGHT * Self.aspect)
                     }
 
                     
@@ -116,24 +114,17 @@ struct BigLinkPreview: View {
 
 import NavigationBackport
 
-struct BigLinkPreview_Previews: PreviewProvider {
-    static var previews: some View {
-        //            let url = "https://open.spotify.com/track/5Tbpp3OLLClPJF8t1DmrFD"
-        //            let url = "https://youtu.be/qItugh-fFgg"
-        let url = URL(string: "https://youtu.be/QU9kRF9tHPU")!
-        let url2 = URL(string: "https://github.com/nostur-com/nids/blob/main/02.md")!
+#Preview {
+    let url = URL(string: "https://youtu.be/QU9kRF9tHPU")!
+    let url2 = URL(string: "https://github.com/nostur-com/nids/blob/main/02.md")!
 //        let url = URL(string:"https://nostur.com")!
-        NBNavigationStack {
-            VStack(alignment: .leading) {
-                BigLinkPreview(url: url)
-                    .padding(.vertical, 5)
-                
-                BigLinkPreview(url: url2)
-                    .padding(.vertical, 5)
-                
-            }
-        }
-        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-        .environmentObject(Themes.default)
+    VStack(alignment: .leading) {
+        BigLinkPreview(url: url, autoload: true)
+            .padding(.vertical, 5)
+        
+        BigLinkPreview(url: url2, autoload: true)
+            .padding(.vertical, 5)
+        
+        Spacer()
     }
 }
