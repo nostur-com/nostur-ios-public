@@ -115,3 +115,14 @@ enum NXViewingContextOptions {
     
     case feedPreview // to enable Follow button on every post for follow pack previews
 }
+
+struct DimensionsEnvironmentKey: EnvironmentKey {
+    static let defaultValue: DIMENSIONS = .shared
+}
+
+extension EnvironmentValues {
+    var dim: DIMENSIONS {
+        get { self[DimensionsEnvironmentKey.self] }
+        set { self[DimensionsEnvironmentKey.self] = newValue }
+    }
+}
