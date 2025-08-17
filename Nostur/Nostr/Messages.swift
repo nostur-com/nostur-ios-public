@@ -549,20 +549,25 @@ func req(_ rm: String, activeSubscriptionId: String? = nil, relays: Set<RelayDat
 }
 
 // Helper. isActiveSubscription for things where we need only 1 active subscription kept alive.
-func nxReq(_ filter: NostrEssentials.Filters, subscriptionId: String, isActiveSubscription: Bool = false, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ) {
+func nxReq(_ filter: NostrEssentials.Filters, subscriptionId: String, isActiveSubscription: Bool = false, relays: Set<RelayData> = [], accountPubkey: String? = nil, relayType: NosturClientMessage.RelayType = .READ, useOutbox: Bool = false) {
     
     let pubkey = (accountPubkey ?? AccountsState.shared.activeAccountPublicKey)
     
-    if let cm = NostrEssentials
-        .ClientMessage(type: .REQ,
-                       subscriptionId: subscriptionId,
-                       filters: [filter]
-        ).json() {
-        req(cm, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays, accountPubkey: pubkey, relayType: relayType)
+    let cm = NostrEssentials.ClientMessage(
+        type: .REQ,
+        subscriptionId: subscriptionId,
+        filters: [filter]
+    )
+    
+    if useOutbox {
+        outboxReq(cm, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays, accountPubkey: pubkey, relayType:  relayType)
+    }
+    else if let cmJsonString = cm.json() {
+        req(cmJsonString, activeSubscriptionId: isActiveSubscription ? subscriptionId : nil, relays: relays, accountPubkey: pubkey, relayType: relayType)
     }
     else {
 #if DEBUG
-        L.og.debug("🔴🔴 Problem generting REQ (nxReq)")
+        L.og.debug("🔴🔴 Problem generating REQ (nxReq)")
 #endif
     }
 }
