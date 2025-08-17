@@ -38,7 +38,7 @@ struct TopZaps: View {
             }
         }
         .animation(.easeIn, value: animateUpdate)
-        .frame(maxHeight: 75, alignment: .topLeading) // Max 3 rows
+        .frame(maxHeight: 78, alignment: .topLeading) // Max 3 rows
         .clipped()
         .drawingGroup()
         .readSize { size in
