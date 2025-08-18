@@ -380,7 +380,6 @@ struct WithSheets: ViewModifier {
                                 }
                             }
                             .frame(maxWidth: .infinity, alignment: .trailing)
-    //                        .padding(.trailing, 10)
                             .font(.caption)
                             .multilineTextAlignment(.trailing)
                             .foregroundColor(Color.secondary)
