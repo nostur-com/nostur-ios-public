@@ -34,7 +34,7 @@ struct ContentRenderer: View { // VIEW things
         _showMore = showMore
         self.forceAutoload = forceAutoload
         self.zoomableId = zoomableId
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20))
     }
     
     private var shouldAutoload: Bool {
@@ -157,9 +157,15 @@ struct ContentRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? 20 : 0), autoload: shouldAutoload)
-                        .padding(.horizontal, fullWidth ? -10 : 0)
-                        .padding(.vertical, 10)
+                    EmbeddedVideoView(
+                        url: mediaContent.url,
+                        pubkey: nrPost.pubkey,
+                        nrPost: nrPost,
+                        availableWidth: availableWidth + (fullWidth ? 20 : 0),
+                        autoload: shouldAutoload
+                    )
+                    .padding(.horizontal, fullWidth ? -10 : 0)
+                    .padding(.vertical, 10)
                     
                 case .image(let galleryItem):
 //                    Color.red
