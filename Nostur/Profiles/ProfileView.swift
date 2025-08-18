@@ -70,6 +70,7 @@ struct ProfileView: View {
                                         .strokeBorder(theme.listBackground, lineWidth: 3)
                                 }
                             }
+                            .allowsHitTesting(nrContact.pictureUrl != nil)
                             .overlay(alignment: .bottomTrailing) {
                                 if let fixedPfp = vm.fixedPfp {
                                     ZoomableItem({
