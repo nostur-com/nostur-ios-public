@@ -161,6 +161,25 @@ struct Kind1: View {
             }
             
             ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload)
+                .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
+                .clipBottom(height: clipBottomHeight)
+                .overlay(alignment: .bottomTrailing) {
+                    if (nrPost.previewWeights?.moreItems ?? false) && !showMore {
+                        Image(systemName: "chevron.compact.down")
+                            .foregroundColor(.white)
+                            .padding(5)
+                            .padding(.top, 5)
+                            .background {
+                                RoundedRectangle(cornerRadius: 5)
+                                    .foregroundColor(theme.accent)
+                            }
+                            .contentShape(Rectangle())
+                            .highPriorityGesture(TapGesture().onEnded {
+                                showMore = true
+                                clipBottomHeight = 28000.0
+                            })
+                    }
+                }
         }
     }
 }
