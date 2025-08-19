@@ -197,7 +197,10 @@ class HotViewModel: ObservableObject {
         fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {6,7} AND pubkey IN %@", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let likesOrReposts = try? bg().fetch(fr) else { return }
+            guard let likesOrReposts = try? bg().fetch(fr) else {
+                onComplete?()
+                return
+            }
             for item in likesOrReposts {
                 switch item.kind {
                 case 6:

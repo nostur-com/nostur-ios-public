@@ -217,7 +217,10 @@ class EmojiFeedViewModel: ObservableObject {
         fr.predicate = NSPredicate(format: "created_at > %i AND kind = 7 AND pubkey IN %@", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let reactions = try? bg().fetch(fr) else { return }
+            guard let reactions = try? bg().fetch(fr) else {
+                onComplete?()
+                return
+            }
             for item in reactions {
                 guard let reactionToId = item.reactionToId else { continue }
                 guard let reactionEmoji = item.content else { continue }
