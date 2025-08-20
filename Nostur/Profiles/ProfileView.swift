@@ -271,6 +271,8 @@ struct ProfileView: View {
                 case "Replies":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .replies)
                         .background(theme.listBackground)
+                case "Highlights":
+                    ProfileHighlights(pubkey: nrContact.pubkey)
                 case "Lists":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .lists)
                         .background(theme.listBackground)
@@ -314,6 +316,13 @@ struct ProfileView: View {
                             title: String(localized: "Replies", comment:"Tab title"),
                             selected: selectedSubTab == "Replies")
                         Spacer()
+                        if vm.showHighlightsTab {
+                            TabButton(
+                                action: { selectedSubTab = "Highlights" },
+                                title: String(localized: "Highlights", comment:"Tab title"),
+                                selected: selectedSubTab == "Highlights")
+                            Spacer()
+                        }
                         if vm.showListsTab {
                             TabButton(
                                 action: { selectedSubTab = "Lists" },
