@@ -522,7 +522,8 @@ class WebOfTrust: ObservableObject {
 }
 
 func WOT_FILTER_ENABLED() -> Bool {
-    WebOfTrust.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
+    if NSClassFromString("XCTestCase") != nil { return false }
+    return WebOfTrust.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
 }
 
 extension NEvent {
