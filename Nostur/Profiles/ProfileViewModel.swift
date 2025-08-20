@@ -11,6 +11,7 @@ import CoreData
 
 class ProfileViewModel: ObservableObject {
     @Published var isFollowingYou = false
+    @Published var showHighlightsTab = false
     @Published var showArticlesTab = false
     @Published var showListsTab = false
     @Published var fixedPfp: URL?
@@ -38,6 +39,9 @@ class ProfileViewModel: ObservableObject {
         }
         self.loadOldPFP(nrContact)
         self.loadArticles(nrContact)
+        Task.detached {
+            await self.loadHighlights(nrContact)
+        }
         self.loadLists(nrContact)
         
         bg().perform { [weak self] in
@@ -164,6 +168,36 @@ class ProfileViewModel: ObservableObject {
                         self?.fixedPfp = fixedPfpURL
                     }
                 }
+            }
+        }
+    }
+    
+    public func loadHighlights(_ nrContact: NRContact) async {
+        let pubkey = nrContact.pubkey
+        do {
+            _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]))
+            
+            let postIds: [String] = await withBgContext { _ in
+                Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
+            }
+            
+            guard !postIds.isEmpty else {
+                Task { @MainActor [weak self] in
+                    self?.showHighlightsTab = false
+                }
+                return
+            }
+            
+            Task { @MainActor [weak self] in
+                withAnimation {
+                    self?.showHighlightsTab = true
+                }
+            }
+        
+        }
+        catch {
+            Task { @MainActor [weak self] in
+                self?.showHighlightsTab = false
             }
         }
     }
