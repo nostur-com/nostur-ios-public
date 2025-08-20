@@ -200,7 +200,7 @@ class Backlog {
     // TODO: 25.00 ms    0.2%    0 s           closure #1 in Backlog.init(timeout:auto:)
     init(timeout: Double = 60.0, auto: Bool = false) {
         self.timeout = timeout
-        timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
+        timer = Timer.scheduledTimer(withTimeInterval: 1.1, repeats: true) { [weak self] timer in
             bg().perform { [weak self] in
                 guard let self = self else { return }
                 guard !self.tasks.isEmpty else { return } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
