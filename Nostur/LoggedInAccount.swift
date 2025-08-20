@@ -37,7 +37,7 @@ class LoggedInAccount: ObservableObject, Equatable, Hashable {
     
     
     
-    private var outboxLoader: OutboxLoader? = nil
+    public var outboxLoader: OutboxLoader? = nil
     
     // BG high speed
     public var accountCache: AccountCache?
@@ -273,7 +273,7 @@ extension LoggedInAccount {
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-                    WebOfTrust.shared.loadWoT()
+//                    WebOfTrust.shared.loadWoT()
                     DirectMessageViewModel.default.load()
                 }
                 else {
@@ -281,7 +281,9 @@ extension LoggedInAccount {
                     WebOfTrust.shared.loadWoT()
                 }
                 
-                self.outboxLoader = OutboxLoader(pubkey: self.pubkey, follows: follows, cp: ConnectionPool.shared)
+                if SettingsStore.shared.enableOutboxRelays {   
+                    self.outboxLoader = OutboxLoader(pubkey: self.pubkey, follows: follows, cp: ConnectionPool.shared)
+                }
             }
         }
     }

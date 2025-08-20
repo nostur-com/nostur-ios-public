@@ -420,6 +420,10 @@ struct Settings: View {
                                 .foregroundColor(.secondary)
                         }
                     }
+                    .onChange(of: settings.enableOutboxRelays) { newValue in
+                        guard newValue == true, let loggedInAccount = AccountsState.shared.loggedInAccount, loggedInAccount.outboxLoader == nil else { return }
+                        loggedInAccount.outboxLoader = OutboxLoader(pubkey: loggedInAccount.pubkey, follows: loggedInAccount.viewFollowingPublicKeys, cp: ConnectionPool.shared)
+                    }
           
                     
                     Toggle(isOn: $settings.followRelayHints) {
