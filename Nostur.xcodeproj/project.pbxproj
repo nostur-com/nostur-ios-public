@@ -89,6 +89,7 @@
 /* Begin PBXFileReference section */
 		1F06D2D92A584318007B9373 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Themes.xcassets; sourceTree = "<group>"; };
+		1F492DD62E55B9560089CE5E /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
 		1F5B5FD42E4617C800850E35 /* webm_to_m4a_ffmpeg.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:5T4GDWX88Z:Fabian Lachman"; lastKnownFileType = wrapper.xcframework; path = webm_to_m4a_ffmpeg.xcframework; sourceTree = "<group>"; };
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
 		1F7483572A6797F600CA7026 /* MISSION.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = MISSION.md; sourceTree = "<group>"; };
@@ -191,6 +192,7 @@
 				1FCEDD312D68913B00587618 /* ci_scripts */,
 				1FD94FD22D7A945300435BB0 /* Nostur */,
 				1F7483562A67904900CA7026 /* CREDITS.md */,
+				1F492DD62E55B9560089CE5E /* CLAUDE.md */,
 				1F7483572A6797F600CA7026 /* MISSION.md */,
 				1F06D2D92A584318007B9373 /* README.md */,
 				1FEA81B72BCB52040059D569 /* PrivacyInfo.xcprivacy */,

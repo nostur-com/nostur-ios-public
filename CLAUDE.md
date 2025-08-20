@@ -27,7 +27,7 @@ xcodebuild -scheme Nostur -archivePath Nostur.xcarchive archive
 ```
 
 ### Testing
-- **Test Command**: `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.0'`
+- **Test Command**: `xcodebuild test -scheme Nostur -destination 'platform=iOS Simulator,name=iPhone 16 Pro (18.5),OS=18.5'`
 - **In Xcode**: Use ⌘+U to run tests or use Test Navigator
 - **Test Files**: Located in `NosturTests/` directory
 - **Test Plans**: `Nostur.xctestplan` and `NostrEssentials.xctestplan`
