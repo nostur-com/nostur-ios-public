@@ -163,6 +163,9 @@ class RelayMessage {
                 if mMessage.pubkey == AccountsState.shared.activeAccountPublicKey && mMessage.kind == 3 { // To enable Follow button we need to have received a contact list
                     DispatchQueue.main.async {
                         FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                        L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
                     }
                 }
                 

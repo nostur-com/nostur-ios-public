@@ -561,9 +561,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     // didOpenWithProtocol
     public func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
-#if DEBUG
-            L.sockets.debug("didOpenWithProtocol: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(`protocol` ?? "")")
-#endif
         self.queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
             self.stats.connected += 1
@@ -624,7 +621,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             }
         }
 #if DEBUG
-        L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url)")
+        L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url) - didOpenWithProtocol")
 #endif
     }
     

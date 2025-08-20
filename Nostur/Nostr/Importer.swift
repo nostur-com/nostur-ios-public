@@ -232,6 +232,9 @@ class Importer {
                         if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
                             }
                         }
                         Event.updateRelays(event.id, relays: message.relays, context: bgContext)
@@ -257,6 +260,9 @@ class Importer {
                         if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
                             }
                         }
                         continue
@@ -295,6 +301,9 @@ class Importer {
                         if event.publicKey == AccountsState.shared.activeAccountPublicKey { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
                             }
                         }
 
@@ -476,6 +485,9 @@ class Importer {
                         if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
                             }
                         }
                         Event.updateRelays(event.id, relays: message.relays, context: bgContext)
@@ -493,6 +505,9 @@ class Importer {
                         if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
                             }
                         }
                         continue
@@ -531,6 +546,9 @@ class Importer {
                         if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
                             }
                         }
 

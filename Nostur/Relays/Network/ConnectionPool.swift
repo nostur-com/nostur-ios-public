@@ -444,11 +444,17 @@ public class ConnectionPool: ObservableObject {
     
     // Only use when already in connection queue
     private func sendMessageAlreadyInQueue(_ message: NosturClientMessage, subscriptionId: String? = nil, relays: Set<RelayData> = [], accountPubkey: String? = nil) {
-        #if DEBUG
+#if DEBUG
         if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
             fatalError("Should only be called from inside queue.async { }")
         }
-        #endif
+#endif
+        
+#if DEBUG
+        if !SettingsStore.shared.enableOutboxRelays && self.connections.isEmpty {
+            L.og.debug("There are no connections, and outbox is disabled")
+        }
+#endif
         
         let limitToRelayIds = relays.map({ $0.id })
         

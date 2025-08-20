@@ -16,26 +16,14 @@ public class NetworkMonitor: ObservableObject {
     private let monitor = NWPathMonitor()
     private var queue = DispatchQueue(label: "network-monitor")
     
-    @Published public var isConnected: Bool = true {
-        didSet {
-            L.og.debug("NetworkMonitor.isConnected was: \(oldValue) now: \(self.isConnected)")
-        }
-    }
+    @Published public var isConnected: Bool = true
     
     public var vpnDetected: Bool {
         vpnConfigurationDetected && actualVPNconnectionDetected
     }
     
-    @Published public var vpnConfigurationDetected: Bool = false {
-        didSet {
-            L.og.debug("NetworkMonitor.vpnConfigurationDetected was: \(oldValue) now: \(self.vpnConfigurationDetected)")
-        }
-    }
-    @Published public var actualVPNconnectionDetected: Bool = false {
-        didSet {
-            L.og.debug("NetworkMonitor.actualVPNconnectionDetected was: \(oldValue) now: \(self.actualVPNconnectionDetected)")
-        }
-    }
+    @Published public var vpnConfigurationDetected: Bool = false
+    @Published public var actualVPNconnectionDetected: Bool = false
     
     // Helper for SwiftUI views where a negative binding is needed
     // (example: .fullScreenCover(isPresented: $networkMonitor.isDisconnected)
@@ -113,12 +101,16 @@ public class NetworkMonitor: ObservableObject {
                     DispatchQueue.main.async { [weak self] in
                         self?.actualVPNconnectionDetected = true
                     }
+#if DEBUG
                     L.sockets.debug("📡📡 Connection is over VPN")
+#endif
                 } else {
                     DispatchQueue.main.async {
                         self?.actualVPNconnectionDetected = false
                     }
+#if DEBUG
                     L.sockets.debug("📡📡 Connection is not over VPN")
+#endif
                 }
                 c.cancel()
             }

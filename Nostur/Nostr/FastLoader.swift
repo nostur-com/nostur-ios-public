@@ -188,16 +188,17 @@ class Backlog {
     
     static let shared = Backlog(auto: true)
     
+    public var timeout = 60.0
+    
     private var tasks = Set<ReqTask>()
     private var timer: Timer?
-    public var timeout = 60.0
     private var subscriptions = Set<AnyCancellable>()
     
     // With auto: true we don't need receiveNotification(.importedMessagesFromSubscriptionIds) on a View's .onReceive
     // the Backlog itself will listen for .importedMessagesFromSubscriptionIds notifications and
     // trigger the task.process() commands
     // TODO: 25.00 ms    0.2%    0 s           closure #1 in Backlog.init(timeout:auto:)
-    init(timeout:Double = 60.0, auto:Bool = false) {
+    init(timeout: Double = 60.0, auto: Bool = false) {
         self.timeout = timeout
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] timer in
             bg().perform { [weak self] in
@@ -269,19 +270,19 @@ class Backlog {
         }
     }
     
-    public func add(_ task:ReqTask) {
+    public func add(_ task: ReqTask) {
         bg().perform { [weak self] in
             self?.tasks.insert(task)
         }
     }
     
-    public func remove(_ task:ReqTask) {
+    public func remove(_ task: ReqTask) {
         bg().perform { [weak self] in
             self?.tasks.remove(task)
         }
     }
     
-    public func task(with subscriptionId:String) -> ReqTask? {
+    public func task(with subscriptionId: String) -> ReqTask? {
 #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -290,7 +291,7 @@ class Backlog {
         return tasks.first(where: { $0.subscriptionId == subscriptionId })
     }
     
-    public func tasks(with subscriptionIds:Set<String>) -> [ReqTask] {
+    public func tasks(with subscriptionIds: Set<String>) -> [ReqTask] {
 #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -381,7 +382,7 @@ class ReqTask: Identifiable, Hashable {
     private var subscriptions = Set<AnyCancellable>()
     private var processSubject = PassthroughSubject<RelayMessage?, Never>()
     
-    public func process(_ message:RelayMessage? = nil) {
+    public func process(_ message: RelayMessage? = nil) {
         self.skipTimeout = true
         self.processSubject.send(message)
     }
