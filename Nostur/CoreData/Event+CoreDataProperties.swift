@@ -689,7 +689,18 @@ extension Event {
         return Self.fetchReplacableEvent(kind, pubkey: String(pubkey), definition: String(definition), context: context)
     }
     
-    static func fetchReplacableEvent(_ kind: Int64, pubkey: String, context: NSManagedObjectContext) -> Event? {
+    static func fetchEvents(_ ids: [String], context: NSManagedObjectContext = bg()) -> [Event] {
+        let request = NSFetchRequest<Event>(entityName: "Event")
+        request.predicate = NSPredicate(format: "id IN %@", ids)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        return (try? context.fetch(request)) ?? []
+    }
+    
+    static func fetchEvents(_ ids: Set<String>, context: NSManagedObjectContext = bg()) -> [Event] {
+        Self.fetchEvents(Array(ids), context: context)
+    }
+    
+    static func fetchReplacableEvent(_ kind: Int64, pubkey: String, context: NSManagedObjectContext = bg()) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@", kind, pubkey)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]

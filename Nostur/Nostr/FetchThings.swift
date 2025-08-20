@@ -7,6 +7,75 @@
 
 import Foundation
 import NostrEssentials
+import CoreData
+
+func relayReq(_ filter: NostrEssentials.Filters,
+              timeout: Double? = 2.5,
+              debounceTime: Double? = 0.05,
+              isActiveSubscription: Bool = false,
+              relays: Set<RelayData> = [],
+              accountPubkey: String? = nil,
+              relayType: NosturClientMessage.RelayType = .READ,
+              useOutbox: Bool = false) async throws -> ReqReturn {
+    return try await withCheckedThrowingContinuation({ continuation in
+        let reqTask = ReqTask(
+            debounceTime: debounceTime ?? 0.05,
+            timeout: timeout,
+            reqCommand: { taskId in
+                nxReq(filter,
+                      subscriptionId: taskId,
+                      isActiveSubscription: isActiveSubscription,
+                      relays: relays,
+                      accountPubkey: accountPubkey,
+                      relayType: relayType,
+                      useOutbox: useOutbox
+                )
+            },
+            processResponseCommand: { taskId, relayMessage, event in
+                continuation.resume(returning: ReqReturn(taskId: taskId, relayMessage: relayMessage, event: event))
+            },
+            timeoutCommand: { taskId in
+                continuation.resume(throwing: FetchError.timeout)
+            })
+        Backlog.shared.add(reqTask)
+        reqTask.fetch()
+    })
+
+}
+
+struct ReqReturn {
+    let taskId: String
+    var relayMessage: Nostur.RelayMessage?
+    var event: Nostur.Event?
+}
+
+enum FetchError: Error, LocalizedError, Equatable {
+    
+    static func == (lhs: FetchError, rhs: FetchError) -> Bool {
+        lhs.localizedDescription == rhs.localizedDescription
+    }
+    
+    case timeout
+    case unknown(Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .timeout: return "Timed out."
+        case .unknown(let err): return err.localizedDescription
+        }
+    }
+}
+
+func withBgContext<T>(transform: @escaping (NSManagedObjectContext) -> T) async -> T {
+    await withCheckedContinuation({ continuation in
+        let bgContext = bg()
+        bgContext.perform {
+            continuation.resume(returning: transform(bgContext))
+        }
+    })
+
+}
+
 
 func fetchProfiles(pubkeys: Set<String>, subscriptionId: String? = nil) {
     // Normally we use "Profiles" sub, and track the timestamp since last fetch
