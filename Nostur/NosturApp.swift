@@ -12,17 +12,29 @@ import NavigationBackport
 @main
 struct AppLoader {
     static func main() {
-        if isProduction() {
-            iOSApp.main()
+        if isXcodePreviewCanvas() {
+            TestApp.main() // XCODE PREVIEW CANVAS
         }
-        else {
+        else if isTestRun() { // TEST RUN
             TestApp.main()
+        }
+        else { // NORMAL APP
+            iOSApp.main()
         }
     }
     
-    private static func isProduction() -> Bool {
-         return NSClassFromString("XCTestCase") == nil
-     }
+    private static func isTestRun() -> Bool {
+         return NSClassFromString("XCTestCase") != nil
+    }
+    
+    private static func isXcodePreviewCanvas() -> Bool {
+#if DEBUG
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            return true
+        }
+#endif
+        return false
+    }
 }
 
 struct iOSApp: App {
@@ -68,8 +80,6 @@ struct iOSApp: App {
 }
 
 struct TestApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-
     var body: some Scene {
         WindowGroup { }
     }
