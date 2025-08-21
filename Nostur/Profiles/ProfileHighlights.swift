@@ -45,7 +45,7 @@ struct ProfileHighlights: View {
         }
         .task {
             do {
-                _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]))
+                _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 5.5)
                 
                 let postIds: [String] = await withBgContext { _ in
                     Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
@@ -56,7 +56,7 @@ struct ProfileHighlights: View {
                     return
                 }
                 
-                _ = try await relayReq(Filters(ids: Set(postIds)))
+                _ = try await relayReq(Filters(ids: Set(postIds)), timeout: 2.5)
                 
                 let nrPosts: [NRPost] = await withBgContext { bg in
                     Event.fetchEvents(postIds).map { NRPost(event: $0) }

@@ -175,7 +175,7 @@ class ProfileViewModel: ObservableObject {
     public func loadHighlights(_ nrContact: NRContact) async {
         let pubkey = nrContact.pubkey
         do {
-            _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]))
+            _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 4.5)
             
             let postIds: [String] = await withBgContext { _ in
                 Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
