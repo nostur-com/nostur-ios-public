@@ -22,7 +22,9 @@ class RelayAutoPilotPreviewModel: ObservableObject {
         
         guard let preferredRelays = ConnectionPool.shared.preferredRelays else {
             self.relays = []
+#if DEBUG
             L.og.debug("🔴🔴 No .preferredRelays")
+#endif
             return
         }
         
@@ -32,16 +34,18 @@ class RelayAutoPilotPreviewModel: ObservableObject {
             
             
             guard let messageString = message.clientMessage.json() else {
+#if DEBUG
                 L.og.debug("🔴🔴 No messageString")
+#endif
                 self.relays = []
                 return
             }
-            
-            L.og.debug("🔴🔴 messageString: \(messageString)")
-            
+                        
             let pTags: Set<String> = Set( message.clientMessage.event?.tags.filter { $0.type == "p" }.compactMap { $0.pubkey } ?? [] )
             guard !pTags.isEmpty else {
+#if DEBUG
                 L.og.debug("🔴🔴 No pTags")
+#endif
                 self.relays = []
                 return
             }
@@ -49,7 +53,9 @@ class RelayAutoPilotPreviewModel: ObservableObject {
             self.relays = Array(ConnectionPool.shared.previewOthersPreferredReadRelays(message.clientMessage, pubkeys: pTags))
         }
         else {
+#if DEBUG
             L.og.debug("🔴🔴 No .reachUserRelays")
+#endif
         }
     }
 }
