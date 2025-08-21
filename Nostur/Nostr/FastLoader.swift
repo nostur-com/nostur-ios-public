@@ -325,19 +325,19 @@ class ReqTask: Identifiable, Hashable {
         hasher.combine(id)
     }
     
-    private var prefix:String? = nil
+    private var prefix: String? = nil
     public let createdAt = Date.now
-    public let id:String
-    public var subscriptionId:String {
+    public let id: String
+    public var subscriptionId: String {
         if let prefix = prefix {
             return ((prio ? "prio-" : "") + prefix + id)
         }
         return ((prio ? "prio-" : "") + id)
     }
     
-    private let reqCommand:(_ taskId:String) -> Void
+    private let reqCommand:(_ taskId: String) -> Void
     public let processResponseCommand:(_: String, _:RelayMessage?, _:Event?) -> Void
-    private let timeoutCommand:((_ taskId:String) -> Void)?
+    private let timeoutCommand:((_ taskId: String) -> Void)?
     private var didProcess = false
     private var skipTimeout = false
     
@@ -349,8 +349,8 @@ class ReqTask: Identifiable, Hashable {
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
     // So both can listen for "pubkey-3" notifications. (make sure prefix is nil, and subscriptionId is set on ReqTask
-    init(prio:Bool = false, debounceTime:Double = 0.1, timeout:Double? = nil, prefix:String? = nil,
-         subscriptionId:String? = nil,
+    init(prio: Bool = false, debounceTime: Double = 0.1, timeout: Double? = nil, prefix: String? = nil,
+         subscriptionId: String? = nil,
          reqCommand: @escaping (_: String) -> Void,
          processResponseCommand: @escaping (_: String, _:RelayMessage?, _:Event?) -> Void,
          timeoutCommand: ( (_: String) -> Void)? = nil) {
