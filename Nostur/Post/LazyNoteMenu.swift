@@ -425,3 +425,59 @@ struct BlockOptions: View {
         }
     }
 }
+
+
+struct PostMenu: View {
+    @Environment(\.theme) private var theme
+    @EnvironmentObject private var la: LoggedInAccount
+    public let nrPost: NRPost
+    @Environment(\.dismiss) private var dismiss
+    private let NEXT_SHEET_DELAY = 0.05
+    @State private var followToggles = false
+    @State private var blockOptions = false
+    @State private var pubkeysInPost: Set<String> = []
+    
+    var body: some View {
+        List {
+            Button(role: .destructive, action: {
+                // Navigate to sheet with id / link / screenshot 
+            }) {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+            // Delete button
+            Button(role: .destructive, action: {
+                
+            }) {
+                Label("Delete post", systemImage: "trash")
+            }
+            
+            Button(action: {
+                
+            }) {
+                Label("Pin to your profile", systemImage: "pin")
+            }
+            
+            Button(action: {
+                
+            }) {
+                Label("Add/remove from Highlights", systemImage: "star")
+            }
+        }
+    }
+}
+
+#Preview("Post Menu") {
+    PreviewContainer({ pe in
+        pe.loadAccounts()
+        pe.loadPosts()
+    }) {
+        NBNavigationStack {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    PostMenu(nrPost: nrPost)
+                }
+            }
+        }
+    }
+}
+
