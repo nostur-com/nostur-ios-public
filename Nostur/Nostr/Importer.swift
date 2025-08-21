@@ -290,6 +290,17 @@ class Importer {
                         }
                     }
                     
+                    if event.kind == .latestPinned, let firstE = event.firstE() {
+                        // if we don't already have the to be pinned post (in .content), we decode and save it
+                        if !Event.eventExists(id: firstE, context: bgContext) && event.content.prefix(2) == #"{""# {
+                            if let toBePinnedPost = try? Importer.shared.decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
+                                let toBePinnedPostEvent = Event.saveEvent(event: toBePinnedPost, relays: message.relays, context: bgContext)
+                                NotificationsViewModel.shared.checkNeedsUpdate(toBePinnedPostEvent)
+                                Event.updateRelays(toBePinnedPost.id, relays: message.relays, context: bgContext)
+                            }
+                        }
+                    }
+                    
                     if event.kind == .contactList {
                         if event.publicKey == EXPLORER_PUBKEY {
                             // use explorer account p's for "Explorer" feed

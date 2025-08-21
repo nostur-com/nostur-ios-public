@@ -111,6 +111,8 @@ public enum NEventKind: Codable, Equatable {
     case zapNote
     case highlight
     case relayList
+    case pinnedList
+    case latestPinned
     case blossomServerList
     case nwcInfo
     case nwcRequest
@@ -147,7 +149,9 @@ public enum NEventKind: Codable, Equatable {
         case  9734: self = .zapRequest
         case  9735: self = .zapNote
         case  9802: self = .highlight
+        case 10001: self = .pinnedList
         case 10002: self = .relayList
+        case 10601: self = .latestPinned
         case 10063: self = .blossomServerList
         case 13194: self = .nwcInfo
         case 23194: self = .nwcRequest
@@ -186,7 +190,9 @@ public enum NEventKind: Codable, Equatable {
         case .zapRequest:               return 9734
         case .zapNote:                  return 9735
         case .highlight:                return 9802
+        case .pinnedList:               return 10001
         case .relayList:                return 10002
+        case .latestPinned:             return 10601
         case .blossomServerList:        return 10063
         case .nwcInfo:                  return 13194
         case .nwcRequest:               return 23194
