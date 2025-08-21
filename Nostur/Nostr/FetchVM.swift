@@ -17,7 +17,7 @@ class FetchVM<T: Equatable>: ObservableObject {
     private let debounceTime: Double
     private var fetchParams: FetchParams? = nil
     
-    init(timeout: Double = 3.0, debounceTime: Double = 0.25) {
+    init(timeout: Double = 4.0, debounceTime: Double = 0.25) {
         self.state = .initializing
         self.debounceTime = debounceTime
         self.backlog = Backlog(timeout: timeout, auto: true)
