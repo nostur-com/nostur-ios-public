@@ -53,6 +53,7 @@ extension Event {
     
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
+    @NSManaged public var kTag: Int64 // backwards compatible kind
 
     
     // A referenced A tag 
