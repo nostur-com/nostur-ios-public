@@ -91,6 +91,7 @@ struct Maintenance {
         L.maintenance.info("Starting version based maintenance")
 #endif
         await context.perform {
+            Self.runAddKtag(context: context)
             Self.runRestoreFooterButtons(context: context)
             Self.runDeleteEventsWithoutId(context: context)
             Self.runUseDtagForReplacableEvents(context: context)
@@ -556,6 +557,36 @@ struct Maintenance {
         return ((try? context.count(for: fr)) ?? 0) > 0
     }
     
+    // Run once to add kTag
+    static func runAddKtag(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.addKtag, context: context) else { return }
+        
+        // 1. For each kind:1 add k-tag to (backwards compatible other kind)
+        let fr = Event.fetchRequest()
+        fr.predicate = NSPredicate(format: "kind == 1")
+        
+        guard let kind1s = try? context.fetch(fr) else {
+            L.maintenance.error("runAddKtag: Could not fetch (runAddKtag)")
+            return
+        }
+        
+        L.maintenance.info("runAddKtag: Found \(kind1s.count) events")
+        
+        var countKtags = 0
+        for event in kind1s {
+            if let kTag = event.fastTags.first(where: { $0.0 == "k" })?.1, let kTagInt = Int64(kTag) {
+                event.kTag = kTagInt
+                countKtags += 1
+            }
+        }
+        
+        if countKtags > 0 {
+            L.maintenance.info("runAddKtag: kTag updated for \(countKtags) events")
+        }
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.useDtagForReplacableEvents.rawValue
+    }
     
     // Run once to fill dTag and delete old replacable events
     static func runUseDtagForReplacableEvents(context: NSManagedObjectContext) {
@@ -1099,6 +1130,9 @@ struct Maintenance {
         
         // Run once to delete events without id (old bug)
         case deleteEventsWithoutId = "deleteEventsWithoutId"
+        
+        // Run once to add k tag
+        case addKtag = "addKtag"
         
         // Run once to fill dTag and delete old replacable events
         case useDtagForReplacableEvents = "useDtagForReplacableEvents"
