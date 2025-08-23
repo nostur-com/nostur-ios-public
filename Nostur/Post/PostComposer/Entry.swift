@@ -42,7 +42,15 @@ struct Entry: View {
     @State private var showVoiceRecorderButton: Bool = true
     
     private var shouldDisablePostButton: Bool {
-        (kind == .picture && typingTextModel.pastedImages.isEmpty) || typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty && kind != .highlight)
+        if (kind == .picture && typingTextModel.pastedImages.isEmpty) { return true }
+            
+        if (typingTextModel.sending || typingTextModel.uploading) { return true }
+        
+        if kind == .highlight { return false }
+        
+        if (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty) { return true }
+            
+        return false
     }
     
     init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, selectedAuthor: Binding<Contact?>, showAudioRecorder: Binding<Bool>) {
