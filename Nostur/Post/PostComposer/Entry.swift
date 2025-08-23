@@ -75,7 +75,7 @@ struct Entry: View {
         let _ = Self._printChanges()
 #endif
         VStack(alignment: .leading, spacing: 3) {
-
+            
             if kind == .picture {
                 if typingTextModel.pastedImages.isEmpty {
                     HStack(alignment: .top) {
@@ -88,7 +88,7 @@ struct Entry: View {
                         }
                         .accessibilityHint(Text("Take a photo"))
                         .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
-
+                        
                         .padding()
                         
                         Button {
@@ -99,12 +99,12 @@ struct Entry: View {
                         .accessibilityHint(Text("Choose a photo"))
                         .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
                         .padding()
-        
+                        
                         Spacer()
                     }
                     .font(.largeTitle)
                 }
-                else {
+                else if typingTextModel.pastedImages.count == 1 {
                     ImagePreviews(pastedImages: $typingTextModel.pastedImages, showButtons: false)
                         .frame(maxWidth: .infinity)
                         .fixedSize(horizontal: false, vertical: true)
@@ -210,6 +210,12 @@ struct Entry: View {
                         VideoPreviews(pastedVideos: $typingTextModel.pastedVideos)
                     }
                 }
+            }
+            else if kind == .picture && typingTextModel.pastedImages.count > 1 {
+                ImagePreviews(pastedImages: $typingTextModel.pastedImages, showButtons: true, vertical: true)
+                    .frame(maxWidth: .infinity)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, -10)
             }
         }
         .toolbar {
