@@ -536,12 +536,18 @@ public final class NewPostModel: ObservableObject {
         
         // Handle images
         else if !imetas.isEmpty || !remoteIMetas.isEmpty {
-             
+            
+            var prepend: String = ""
+            
             // imetas from local uploaded / pasted images
             for imeta in imetas {
+              
                 
-                // don't add image urls in .content for kind:20
-                if nEvent.kind != .picture {
+                // kind:20 should not have pictures in .content, but we make backward compatible kind:1 + k-tag=20 so we add images at the top (if only 1 image)
+                if nEvent.kind == .picture && imetas.count < 2 {
+                    prepend += "\(imeta.url)\n"
+                }
+                else { // Add pictures at the end. (normal kind 1) or if there are multiple images
                     content += "\n\(imeta.url)"
                 }
                 
@@ -557,6 +563,10 @@ public final class NewPostModel: ObservableObject {
                 }
 
                 nEvent.tags.append(NostrTag(imetaParts))
+            }
+            
+            if nEvent.kind == .picture {
+                content = prepend + content
             }
             
             // imetas from included image urls (generated from MediaContentView)
@@ -690,6 +700,10 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["-"]))
         }
         
+        if nEvent.kind == .picture { // Turn kind:20 picture-first event into backward compatible kind:1
+            nEvent.kind = .textNote
+            nEvent.tags.append(NostrTag(["k", "20"]))
+        }
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
