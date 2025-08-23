@@ -33,7 +33,15 @@ struct PostPreview: View {
     }
     
     private var shouldDisablePostButton: Bool {
-        typingTextModel.sending || typingTextModel.uploading || (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty)
+        if (kind == .picture && typingTextModel.pastedImages.isEmpty) { return true }
+            
+        if (typingTextModel.sending || typingTextModel.uploading) { return true }
+        
+        if kind == .highlight { return false }
+        
+        if (typingTextModel.text.isEmpty && typingTextModel.pastedImages.isEmpty && typingTextModel.pastedVideos.isEmpty) { return true }
+            
+        return false
     }
 
     var body: some View {
