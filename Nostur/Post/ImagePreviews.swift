@@ -11,68 +11,133 @@ import UIKit
 struct ImagePreviews: View {
     @Binding var pastedImages: [PostedImageMeta]
     public var showButtons: Bool = true
+    public var vertical: Bool = false
     
     var body: some View {
 #if DEBUG
         let _ = Self._printChanges()
 #endif
-        HStack {
-            ForEach(pastedImages) { pastedImage in
-                if pastedImage.type == .gif {
-                    GIFImage(data: pastedImage.data, isPlaying: .constant(true))
-                        .aspectRatio(contentMode: .fit)
-                        .contentShape(Rectangle())
-                        .overlay(alignment: .topTrailing) {
-                            if showButtons {
-                                Image(systemName: "xmark.circle.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundColor(.black)
-                                    .background(Circle().foregroundColor(.white))
-                                    .frame(width: 20, height: 20)
-                                    .padding(5)
-                                    .onTapGesture {
-                                        pastedImages.removeAll { $0.uniqueId == pastedImage.uniqueId }
-                                    }
+        if !vertical {
+            HStack {
+                ForEach(pastedImages) { pastedImage in
+                    if pastedImage.type == .gif {
+                        GIFImage(data: pastedImage.data, isPlaying: .constant(true))
+                            .aspectRatio(contentMode: .fit)
+                            .contentShape(Rectangle())
+                            .overlay(alignment: .topTrailing) {
+                                if showButtons {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(.black)
+                                        .background(Circle().foregroundColor(.white))
+                                        .frame(width: 20, height: 20)
+                                        .padding(5)
+                                        .onTapGesture {
+                                            pastedImages.removeAll { $0.uniqueId == pastedImage.uniqueId }
+                                        }
+                                }
                             }
-                        }
-                        .id(pastedImage.uniqueId)
-                        .onAppear {
-                            if pastedImages.count == 1 {
-                                sendNotification(.newPostFirstImageAppeared)
+                            .id(pastedImage.uniqueId)
+                            .onAppear {
+                                if pastedImages.count == 1 {
+                                    sendNotification(.newPostFirstImageAppeared)
+                                }
                             }
-                        }
+                    }
+                    else if let imageData = pastedImage.uiImage {
+                        Image(uiImage: imageData)
+                            .resizable()
+                            .scaledToFit()
+                            .overlay(alignment: .center) {
+                                if pastedImage.isGifPlaceholder {
+                                    ProgressView()
+                                        .frame(width: 40, height: 40)
+                                }
+                            }
+                            .overlay(alignment: .topTrailing) {
+                                if showButtons {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(.black)
+                                        .background(Circle().foregroundColor(.white))
+                                        .frame(width: 20, height: 20)
+                                        .padding(5)
+                                        .onTapGesture {
+                                            pastedImages.removeAll { $0.uniqueId == pastedImage.uniqueId }
+                                        }
+                                }
+                            }
+                            .id(pastedImage.uniqueId)
+                            .onAppear {
+                                if pastedImages.count == 1 {
+                                    sendNotification(.newPostFirstImageAppeared)
+                                }
+                            }
+                    }
                 }
-                else if let imageData = pastedImage.uiImage {
-                    Image(uiImage: imageData)
-                        .resizable()
-                        .scaledToFit()
-                        .overlay(alignment: .center) {
-                            if pastedImage.isGifPlaceholder {
-                                ProgressView()
-                                    .frame(width: 40, height: 40)
+            }
+        }
+        else {
+            VStack {
+                ForEach(pastedImages) { pastedImage in
+                    if pastedImage.type == .gif {
+                        GIFImage(data: pastedImage.data, isPlaying: .constant(true))
+                            .aspectRatio(contentMode: .fit)
+                            .contentShape(Rectangle())
+                            .overlay(alignment: .topTrailing) {
+                                if showButtons {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(.black)
+                                        .background(Circle().foregroundColor(.white))
+                                        .frame(width: 20, height: 20)
+                                        .padding(5)
+                                        .onTapGesture {
+                                            pastedImages.removeAll { $0.uniqueId == pastedImage.uniqueId }
+                                        }
+                                }
                             }
-                        }
-                        .overlay(alignment: .topTrailing) {
-                            if showButtons {
-                                Image(systemName: "xmark.circle.fill")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .foregroundColor(.black)
-                                    .background(Circle().foregroundColor(.white))
-                                    .frame(width: 20, height: 20)
-                                    .padding(5)
-                                    .onTapGesture {
-                                        pastedImages.removeAll { $0.uniqueId == pastedImage.uniqueId }
-                                    }
+                            .id(pastedImage.uniqueId)
+                            .onAppear {
+                                if pastedImages.count == 1 {
+                                    sendNotification(.newPostFirstImageAppeared)
+                                }
                             }
-                        }
-                        .id(pastedImage.uniqueId)
-                        .onAppear {
-                            if pastedImages.count == 1 {
-                                sendNotification(.newPostFirstImageAppeared)
+                    }
+                    else if let imageData = pastedImage.uiImage {
+                        Image(uiImage: imageData)
+                            .resizable()
+                            .scaledToFit()
+                            .overlay(alignment: .center) {
+                                if pastedImage.isGifPlaceholder {
+                                    ProgressView()
+                                        .frame(width: 40, height: 40)
+                                }
                             }
-                        }
+                            .overlay(alignment: .topTrailing) {
+                                if showButtons {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .foregroundColor(.black)
+                                        .background(Circle().foregroundColor(.white))
+                                        .frame(width: 20, height: 20)
+                                        .padding(5)
+                                        .onTapGesture {
+                                            pastedImages.removeAll { $0.uniqueId == pastedImage.uniqueId }
+                                        }
+                                }
+                            }
+                            .id(pastedImage.uniqueId)
+                            .onAppear {
+                                if pastedImages.count == 1 {
+                                    sendNotification(.newPostFirstImageAppeared)
+                                }
+                            }
+                    }
                 }
             }
         }
