@@ -704,6 +704,12 @@ public final class NewPostModel: ObservableObject {
             nEvent.kind = .textNote
             nEvent.tags.append(NostrTag(["k", "20"]))
         }
+        
+        if nEvent.kind == .shortVoiceMessage { // Turn kind:1222 voice message event into backward compatible kind:1
+            nEvent.kind = .textNote
+            nEvent.tags.append(NostrTag(["k", "1222"]))
+        }
+        
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
             nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
         }
