@@ -24,7 +24,7 @@ class AudioRecorder: ObservableObject {
     }
     @Published var recordingSince: Date? = nil
     @Published var duration: TimeInterval = 0
-    private var samplesFromMic: [Float] = []
+    private var samplesFromMic: [CGFloat] = []
     @Published var samples: [Int] = []
     @Published var recordingURL: URL?
     @Published var waitingForSamples = false
@@ -95,12 +95,14 @@ class AudioRecorder: ObservableObject {
             try audioSession.setActive(true)
     
             audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
-            audioRecorder?.isMeteringEnabled = true // Enable metering for getting audio levels
+//            audioRecorder?.isMeteringEnabled = true // Enable metering for getting audio levels
             audioRecorder?.record()
             isRecording = true
-            samplesFromMic = []
+//            samplesFromMic = []
             samples = [] // Reset samples
             L.a0.debug("Recording started")
+            
+            try self.startMetering()
         } catch {
             L.a0.error("Failed to start recording: \(error.localizedDescription) - \(audioFilename)")
         }
@@ -108,6 +110,7 @@ class AudioRecorder: ObservableObject {
     
     func stopRecording() {
         L.a0.debug("AudioRecorder.stopRecording()")
+        self.stopMetering()
         Task { @MainActor in
             waitingForSamples = true
             isRecording = false
@@ -120,7 +123,9 @@ class AudioRecorder: ObservableObject {
                 L.a0.debug("Recorded time: \(currentTime.description)")
                 recorder.stop()
                 
-                let samples: [Int] = samplesFromMicToFullIntegers(self.samplesFromMic, limit: DEFAULT_SAMPLE_COUNT)
+//                let samples: [Int] = samplesFromMicToFullIntegers(self.samplesFromMic, limit: DEFAULT_SAMPLE_COUNT)
+//                let samples: [Int] = samplesFromMicToFullIntegers(self.envelope, limit: DEFAULT_SAMPLE_COUNT)
+                let samples: [Int] = resampleEnvelope(self.samplesFromMic, targetCount: 300)
                 
                 Task { @MainActor in
                     withAnimation {
@@ -156,16 +161,134 @@ class AudioRecorder: ObservableObject {
         }
     }
     
-    func updateWaveform() {
-        guard isRecording, let recorder = audioRecorder else { return }
-        recorder.updateMeters()
-        let power = recorder.averagePower(forChannel: 0) // Returns dB, typically -160 to 0
-        
-        // Better conversion for voice recordings: clamp and normalize the dB range
-        let clampedPower = max(power, -60.0) // Clamp at -60dB (very quiet)
-        let normalizedValue = (clampedPower + 60.0) / 60.0 // Map -60dB to 0dB -> 0.0 to 1.0
-        
-        samplesFromMic.append(normalizedValue)
+    @Published var waveformData: [CGFloat] = []
+    @Published var bars: [CGFloat] = []
+    
+    @Published var currentLevel: CGFloat = 0
+
+    
+//    func updateWaveform() {
+//        guard isRecording, let recorder = audioRecorder else { return }
+//        recorder.updateMeters()
+//        let power = recorder.averagePower(forChannel: 0) // Returns dB, typically -160 to 0
+//        
+//        let level = normalizedPowerLevel(from: power)
+//        waveformData.append(level)
+//        
+//        // Better conversion for voice recordings: clamp and normalize the dB range
+//        let clampedPower = max(power, -60.0) // Clamp at -60dB (very quiet)
+//        let normalizedValue = (clampedPower + 60.0) / 60.0 // Map -60dB to 0dB -> 0.0 to 1.0
+//        
+//        samplesFromMic.append(normalizedValue)
+//        
+//        let peakDB  = recorder.peakPower(forChannel: 0)     // [-160, 0]
+//        let avgDB   = recorder.averagePower(forChannel: 0)
+//
+//        func dbToLinear(_ db: Float) -> CGFloat {
+//            // map dBFS to 0…1 (silence…full scale)
+//            return CGFloat(pow(10.0, db / 20.0))
+//        }
+//
+//        let fast = dbToLinear(peakDB)
+//        let slow = dbToLinear(avgDB)
+//
+//        // fast attack / slow release
+//        let attack: CGFloat = 0.5   // bigger = snappier
+//        let release: CGFloat = 0.1  // smaller = longer tail
+//
+//        // keep this outside as state
+//        currentLevel = max(attack * fast + (1 - attack) * currentLevel,
+//                           release * slow + (1 - release) * currentLevel)
+//
+//        bars.append(currentLevel)   // drive your UI with this
+//    }
+    
+    func normalizedPowerLevel(from decibels: Float) -> CGFloat {
+        if decibels < -80 {
+            return 0.0
+        }
+        let minDb: Float = -80
+        return CGFloat((decibels - minDb) / -minDb)
+    }
+    
+    
+    private let engine = AVAudioEngine()
+    @Published var envelope: [CGFloat] = []
+
+      // tune these
+      private let windowSize = 8820          // samples per bar
+      private let maxBars = 300             // how many bars to keep
+
+    func startMetering() throws {
+//            let session = AVAudioSession.sharedInstance()
+//            try session.setCategory(.playAndRecord, mode: .measurement, options: [.allowBluetooth, .defaultToSpeaker])
+//            try session.setActive(true)
+
+            let input = engine.inputNode
+            let format = input.inputFormat(forBus: 0)
+
+            var carry: [Float] = []
+
+            input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
+                guard let self = self, let ch = buffer.floatChannelData else { return }
+                let frames = Int(buffer.frameLength)
+                let mono = Array(UnsafeBufferPointer(start: ch[0], count: frames))  // assume mono input; if stereo, average channels
+
+                // prepend leftovers from previous buffer
+                var data = carry + mono
+                var newBars: [CGFloat] = []
+
+                // consume in windows
+                while data.count >= self.windowSize {
+                    let chunk = data.prefix(self.windowSize)
+                    let rms = sqrt(chunk.reduce(0) { $0 + $1 * $1 } / Float(chunk.count))
+
+                    // Convert to decibels
+                    var db = 20 * log10(max(rms, 1e-7))   // avoid -inf
+                    if !db.isFinite { db = -160 }
+
+                    // Normalize: -60 dB (quiet) → 0, 0 dB (loud) → 1
+                    let minDb: Float = -60
+                    let clamped = max(db, minDb)
+                    let normalized = (clamped - minDb) / -minDb   // 0…1
+
+                    // Optional: apply a power curve to make quiet sounds more visible
+                    let visible = pow(normalized, 0.5)  // sqrt for louder-looking bars
+                    newBars.append(CGFloat(visible))
+                    data.removeFirst(self.windowSize)
+                }
+
+                // keep remainder for next callback
+                carry = data
+
+                DispatchQueue.main.async {
+                    self.samplesFromMic.append(contentsOf: newBars)
+                    if self.samplesFromMic.count > self.maxBars {
+                        self.samplesFromMic.removeFirst(self.samplesFromMic.count - self.maxBars)
+                    }
+                }
+            }
+
+            try engine.start()
+        }
+
+    func stopMetering() {
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+    }
+}
+
+struct RecWaveformView: View {
+    let samples: [CGFloat]
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 2) {
+            ForEach(samples.indices, id: \.self) { i in
+                Capsule()
+                    .fill(Color.blue)
+                    .frame(width: 2, height: max(2, samples[i] * 100))
+            }
+        }
     }
 }
 
@@ -219,6 +342,88 @@ func samplesFromMicToFullIntegers(_ samples: [Float], limit: Int = 100) -> [Int]
     
     return normalizedSamples
 }
+
+func samplesFromMicToFullIntegers(_ samples: [CGFloat], limit: Int = 100) -> [Int] {
+    // Take samples, normalize them to full integers
+    
+    // If the number of samples is more than given limit, redistribute the samples to make it fit the limit
+    // this function is used somewhere else to render a waveform, lower limit just means a lower resolution
+    
+    guard !samples.isEmpty else { return [] }
+    
+    let totalSamples = samples.count
+    let samplesPerWindow = max(1, totalSamples / limit)
+    var processedSamples: [CGFloat] = []
+    processedSamples.reserveCapacity(limit)
+    
+    // Process samples using peak+RMS windowing for better transient capture
+    for windowIndex in 0..<limit {
+        let startIndex = windowIndex * samplesPerWindow
+        let endIndex = min(startIndex + samplesPerWindow, totalSamples)
+        
+        guard startIndex < totalSamples else { break }
+        
+        // Calculate peak and RMS for this window
+        var sumSquares: CGFloat = 0
+        var peakValue: CGFloat = 0
+        let windowSize = endIndex - startIndex
+        
+        for i in startIndex..<endIndex {
+            let sample = abs(samples[i])
+            sumSquares += sample * sample
+            peakValue = max(peakValue, sample)
+        }
+        
+        let rms = sqrt(sumSquares / CGFloat(windowSize))
+        // Combine peak and RMS for better transient detection (70% peak, 30% RMS)
+        let combinedValue = (peakValue * 0.7) + (rms * 0.3)
+        processedSamples.append(combinedValue)
+    }
+    
+    // Create proper dynamic range for voice recognition
+    let normalizedSamples = processedSamples.map { sample in
+        // Scale to reasonable range for voice (samples are already 0.0-1.0 from updateWaveform)
+        let scaled = sample * 80.0 // Scale to 0-80 range to avoid saturation
+        
+        // Add minimum threshold to show quiet parts
+        let withFloor = max(scaled, sample > 0.05 ? 5.0 : 0.0) // 5% minimum for audible parts
+        
+        return min(Int(withFloor), 100)
+    }
+    
+    return normalizedSamples
+}
+
+func resampleEnvelope(_ samples: [CGFloat], targetCount: Int) -> [Int] {
+    guard !samples.isEmpty, targetCount > 0 else {
+        return Array(repeating: 0, count: targetCount)
+    }
+
+    let factor = Double(samples.count) / Double(targetCount)
+
+    var result: [Int] = []
+    result.reserveCapacity(targetCount)
+
+    for i in 0..<targetCount {
+        let start = Int(Double(i) * factor)
+        let end   = Int(Double(i + 1) * factor)
+        let slice = samples[start ..< min(end, samples.count)]
+        
+        // Choose AVG or MAX depending on the "look" you want
+        let value: CGFloat
+        if let maxVal = slice.max() {
+            value = maxVal   // punchier, iMessage-like
+        } else {
+            value = samples[start]
+        }
+
+        let scaled = Int((value * 100).rounded())  // 0–100
+        result.append(min(max(scaled, 0), 100))
+    }
+
+    return result
+}
+
 
 struct AudioRecorderContentView: View {
     @Environment(\.theme) private var theme
@@ -315,9 +520,9 @@ struct AudioRecorderContentView: View {
                         isTooLong = true
                     }
             }
-            if recorder.isRecording {
-                recorder.updateWaveform()
-            }
+//            if recorder.isRecording {
+//                recorder.updateWaveform()
+//            }
         }
         
         .toolbar {
