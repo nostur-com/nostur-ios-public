@@ -446,13 +446,13 @@ struct MainFeedsScreen: View {
             NRNavigationStack {
                 if la.account.isNC {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                        ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
+                        ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : .textNote)
                             .environmentObject(dim)
                     }
                     .environment(\.theme, theme)
                 }
                 else {
-                    ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : nil)
+                    ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : .textNote)
                         .environmentObject(dim)
                         .environment(\.theme, theme)
                 }

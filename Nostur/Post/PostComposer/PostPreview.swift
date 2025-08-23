@@ -13,6 +13,7 @@ struct PostPreview: View {
     @EnvironmentObject private var dim: DIMENSIONS // previewDIM from ComposePost
     @Environment(\.dismiss) private var dismissPostPreview
     public let nrPost: NRPost
+    public let kind: NEventKind
     public let replyTo: ReplyTo?
     public let quotePost: QuotePost?
     @ObservedObject public var vm: NewPostModel
@@ -23,8 +24,9 @@ struct PostPreview: View {
     // This previewEvent is not saved in database
     // Code is basically from Event.saveEvent, without unnecessary bits
     
-    init(nrPost: NRPost, replyTo: ReplyTo?, quotePost: QuotePost?, vm: NewPostModel, onDismiss: @escaping () -> Void) {
+    init(nrPost: NRPost, kind: NEventKind = .textNote, replyTo: ReplyTo?, quotePost: QuotePost?, vm: NewPostModel, onDismiss: @escaping () -> Void) {
         self.nrPost = nrPost
+        self.kind = kind
         self.replyTo = replyTo
         self.quotePost = quotePost
         self.vm = vm
@@ -194,7 +196,7 @@ struct PostPreview_Previews: PreviewProvider {
         }) {
             NBNavigationStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("026e5287944b34bc4068fcf3882b307d3ba8581f5cd6bc6087142ff2594c4a2a") {
-                    PostPreview(nrPost: nrPost, replyTo: nil, quotePost: nil, vm: vm, onDismiss: { dismiss() })
+                    PostPreview(nrPost: nrPost, kind: .textNote, replyTo: nil, quotePost: nil, vm: vm, onDismiss: { dismiss() })
                 }
             }
         }

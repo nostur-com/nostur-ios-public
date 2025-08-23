@@ -17,7 +17,7 @@ struct ComposePost: View {
     public var quotePost: QuotePost? = nil
     public var directMention: NRContact? = nil // For initiating a post from profile view
     public var onDismiss: () -> Void
-    public var kind: NEventKind? = nil
+    public var kind: NEventKind = .textNote
     public var highlight: NewHighlight?
     
     @State private var isAuthorSelectionShown = false
@@ -254,7 +254,7 @@ struct ComposePost: View {
                                         }
                                     }
                                     
-                                default:
+                                default: // (.textNote)
                                     VStack {
                                         if let replyToNRPost = replyToNRPost {
                                             // Reply, so full-width false and connecting line to bottom
@@ -320,7 +320,7 @@ struct ComposePost: View {
                             if #available(iOS 16, *) {
                                 NavigationStack {
                                     VStack(alignment: .leading) {
-                                        PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
+                                        PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                             .environment(\.theme, theme)
                                             .environmentObject(la)
                                             .environmentObject(previewDIM)
@@ -335,7 +335,7 @@ struct ComposePost: View {
                             else {
                                 NBNavigationStack {
                                     VStack(alignment: .leading) {
-                                        PostPreview(nrPost: nrPost, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
+                                        PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                             .environment(\.theme, theme)
                                             .environmentObject(la)
                                             .environmentObject(previewDIM)
@@ -568,40 +568,28 @@ struct ComposePost: View {
 @available(iOS 16.0, *)
 struct PhotosPicker16: View {
     @ObservedObject public var vm: NewPostModel
-    public var kind: NEventKind? = nil
+    public var kind: NEventKind
     @Binding public var photoPickerShown: Bool
     @StateObject private var ipm = MultipleImagePickerModel()
     
     var body: some View {
         Color.clear
             .photosPicker(isPresented: $photoPickerShown, selection: $ipm.imageSelection,
-                      maxSelectionCount: kind == .picture ? 1 : 8,
+                      maxSelectionCount: 12,
                       matching: .images, photoLibrary: .shared())
         
             .onChange(of: ipm.newImages) { newImages in
-                if kind == .picture, let firstImage = newImages.first {
-                    guard let data = firstImage.pngData() else { return }
-                    let imageType: PostedImageMeta.ImageType = firstImage.gifData() != nil ? .gif : .jpeg
-                    vm.typingTextModel.pastedImages = [PostedImageMeta(
-                        index: 0,
-                        data: data,
-                        type: imageType,
-                        uniqueId: UUID().uuidString
-                    )]
-                }
-                else {
-                    for (index, newImage) in newImages.enumerated() {
-                        guard let data = newImage.pngData() else { return }
-                        let imageType: PostedImageMeta.ImageType = newImage.gifData() != nil ? .gif : .jpeg
-                        vm.typingTextModel.pastedImages.append(
-                            PostedImageMeta(
-                                index: vm.typingTextModel.pastedImages.count + index,
-                                data: data,
-                                type: imageType,
-                                uniqueId: UUID().uuidString
-                            )
+                for (index, newImage) in newImages.enumerated() {
+                    guard let data = newImage.pngData() else { return }
+                    let imageType: PostedImageMeta.ImageType = newImage.gifData() != nil ? .gif : .jpeg
+                    vm.typingTextModel.pastedImages.append(
+                        PostedImageMeta(
+                            index: vm.typingTextModel.pastedImages.count + index,
+                            data: data,
+                            type: imageType,
+                            uniqueId: UUID().uuidString
                         )
-                    }
+                    )
                 }
                 ipm.newImages = []
             }
