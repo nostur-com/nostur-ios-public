@@ -48,119 +48,6 @@ struct LazyNoteMenuSheet: View {
     var body: some View {
         List {
             Group {
-
-                
-                Button {
-                    dismiss()
-                    if let pn = Event.fetchEvent(id: nrPost.id, context: viewContext())?.privateNote {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                            sendNotification(.editingPrivateNote, pn)
-                        }
-                    }
-                    else {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                            sendNotification(.newPrivateNoteOnPost, nrPost.id)
-                        }
-                    }
-                } label: {
-                    Label(String(localized:"Add private note", comment: "Post context menu button"), systemImage: "note.text")
-                }
-                HStack {
-                    Button {
-                        UIPasteboard.general.string = nrPost.plainText
-                        dismiss()
-                    } label: {
-                        Label(String(localized:"Copy post text", comment: "Post context menu button"), systemImage: "doc.on.clipboard")
-                            .padding(.trailing, 5)
-                    }
-                    .buttonStyle(.plain)
-                    Divider()
-                    Button {
-                        let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
-                        
-                        if nrPost.kind >= 30000 && nrPost.kind < 40000 {
-                            if let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: Int(nrPost.kind), pubkey: nrPost.pubkey, dTag: nrPost.dTag, relays: Array(relaysForHint)) {
-                                UIPasteboard.general.string = "nostr:\(si.identifier)"
-                                dismiss()
-                            }
-                        }
-                        else {
-                            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
-                                UIPasteboard.general.string = "nostr:\(si.identifier)"
-                                dismiss()
-                            }
-                        }
-                    } label: {
-                        Text("ID", comment:"Label for post identifier (ID)")
-                            .padding(.horizontal, 5)
-                    }
-                    .buttonStyle(.plain)
-                    .overlay(
-                        Color.white
-                            .opacity(0.01)
-                            .scaleEffect(x: 1.75, y:1.7)
-                    )
-                    .onTapGesture {
-                        let relaysForHint: Set<String> = resolveRelayHint(forPubkey: nrPost.pubkey, receivedFromRelays: nrPost.footerAttributes.relays)
-                        if nrPost.kind >= 30000 && nrPost.kind < 40000 {
-                            if let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: Int(nrPost.kind), pubkey: nrPost.pubkey, dTag: nrPost.dTag, relays: Array(relaysForHint)) {
-                                UIPasteboard.general.string = "nostr:\(si.identifier)"
-                                dismiss()
-                            }
-                        }
-                        else {
-                            if let si = try? NostrEssentials.ShareableIdentifier("nevent", id: nrPost.id, kind: Int(nrPost.kind), pubkey: nrPost.pubkey, relays: Array(relaysForHint)) {
-                                UIPasteboard.general.string = "nostr:\(si.identifier)"
-                                dismiss()
-                            }
-                        }
-                    }
-                    
-                    Divider()
-                    Button {
-                        UIPasteboard.general.string = nrPost.id
-                        dismiss()
-                    } label: {
-                        Text("hex", comment: "Short label for the word 'hexadecimal'")
-                            .padding(.horizontal, 5)
-                    }
-                    .buttonStyle(.plain)
-                    .overlay(
-                        Color.white
-                            .opacity(0.01)
-                            .scaleEffect(x: 1.3, y:1.7)
-                    )
-                    .onTapGesture {
-                        UIPasteboard.general.string = nrPost.id
-                        dismiss()
-                    }
-                    Divider()
-                    Button {
-                        dismiss()
-                        UIPasteboard.general.string = Event.fetchEvent(id: nrPost.id, context: viewContext())?.toNEvent().eventJson()
-                    } label: {
-                        Text("source", comment: "The word 'source' as in source code")
-                            .padding(.horizontal, 5)
-                    }
-                    .buttonStyle(.plain)
-                    .overlay(
-                        Color.white
-                            .opacity(0.01)
-                            .scaleEffect(x: 1.35, y:1.7)
-                    )
-                    .onTapGesture {
-                        dismiss()
-                        UIPasteboard.general.string = Event.fetchEvent(id: nrPost.id, context: viewContext())?.toNEvent().eventJson()
-                    }
-                }
-                Button {
-                    dismiss()
-                    sendNotification(.clearNavigation)
-                    sendNotification(.showingSomeoneElsesFeed, nrPost.contact)
-                    sendNotification(.dismissMiniProfile)
-                } label: {
-                    Label(String(localized:"Show \(nrPost.anyName)'s feed", comment: "Post context menu button to show someone's feed"), systemImage: "rectangle.stack.fill")
-                }
                 HStack {
                     Button {
                         guard isFullAccount() else {
@@ -186,54 +73,6 @@ struct LazyNoteMenuSheet: View {
             .foregroundColor(theme.accent)
             .listRowBackground(theme.background)
             
-            Group {
-                HStack {
-                    Button {
-                        dismiss()
-                        block(pubkey: nrPost.pubkey, name: nrPost.anyName)
-                    } label: {
-                        Label(String(localized:"Block \(nrPost.anyName)", comment: "Post context menu action to Block (name)"), systemImage: "slash.circle")
-                    }
-                    .buttonStyle(.plain)
-                    Spacer()
-                    Divider()
-                    Button { blockOptions = true } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                }
-                
-                Button {
-                    dismiss()
-                    L.og.debug("Mute conversation")
-                    mute(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
-                } label: {
-                    Label(String(localized:"Mute conversation", comment: "Post context menu action to mute conversation"), systemImage: "bell.slash.fill")
-                }
-                
-                Button {
-                    dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                        sendNotification(.reportPost, nrPost)
-                    }
-                } label: {
-                    Label(String(localized:"Report.verb", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
-                }
-            }
-            .foregroundColor(theme.accent)
-            .listRowBackground(theme.background)
-            
-            if (AccountsState.shared.activeAccountPublicKey == nrPost.pubkey) {
-                Button {
-                    dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                        sendNotification(.requestDeletePost, nrPost.id)
-                    }
-                } label: {
-                    Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
-                }
-                .foregroundColor(theme.accent)
-                .listRowBackground(theme.background)
-            }
             
             Button {
                 dismiss()
@@ -259,25 +98,7 @@ struct LazyNoteMenuSheet: View {
             .foregroundColor(theme.accent)
             .listRowBackground(theme.background)
             
-            if !nrPost.footerAttributes.relays.isEmpty {
-                VStack(alignment: .leading) {
-                    if let via = nrPost.via {
-                        Text("Posted via \(via)", comment: "Showing from which app this post was posted")
-                            .lineLimit(1)
-                    }
-                    if AccountsState.shared.activeAccountPublicKey == nrPost.pubkey {
-                        Text("Sent to:", comment:"Heading for list of relays sent to")
-                    }
-                    else {
-                        Text("Received from:", comment:"Heading for list of relays received from")
-                    }
-                    ForEach(nrPost.footerAttributes.relays.sorted(by: <), id: \.self) { relay in
-                        Text(String(relay)).lineLimit(1)
-                    }
-                }
-                .foregroundColor(.gray)
-                .listRowBackground(theme.background)
-            }
+
         }
         .environment(\.theme, theme)
         .scrollContentBackgroundHidden()
@@ -379,9 +200,12 @@ struct PostMenu: View {
             if isOwnPost {
                 // Delete button
                 Button(role: .destructive, action: {
-                    
+                    dismiss()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                        sendNotification(.requestDeletePost, nrPost.id)
+                    }
                 }) {
-                    Label("Delete post", systemImage: "trash")
+                    Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
                 }
                 
                 Button(action: {
@@ -400,9 +224,17 @@ struct PostMenu: View {
             Section {
                 if !isOwnPost {
                     Button(action: {
-                        
+                        guard isFullAccount() else {
+                            dismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05)  {
+                                showReadOnlyMessage()
+                            }
+                            return
+                        }
+                        dismiss()
+                        la.follow(nrPost.pubkey)
                     }) {
-                        Label("Follow \(nrContact.anyName)", systemImage: "person.badge.plus")
+                        Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.badge.plus")
                     }
                 }
                 
@@ -417,10 +249,12 @@ struct PostMenu: View {
         
                 if !isOwnPost {
                     Button(action: {
-                        showContactSubMenu = true
+                        dismiss()
+                        sendNotification(.clearNavigation)
+                        sendNotification(.showingSomeoneElsesFeed, nrPost.contact)
                     }) {
                         Label {
-                            Text("Show \(nrContact.anyName)'s feed")
+                            Text("Show \(nrContact.anyName)'s feed", comment: "Menu button to show someone's feed")
                         } icon: {
                             ObservedPFP(nrContact: nrContact, size: 20)
                         }
@@ -437,12 +271,12 @@ struct PostMenu: View {
                 }
                 
                 Button(action: {
-                    
+                    dismiss()
+                    L.og.debug("Mute conversation")
+                    mute(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
                 }) {
-                    Label("Mute", systemImage: "speaker.slash")
+                    Label("Mute", systemImage: "bell.slash")
                 }
-                
-
                 
                 Button {
                     dismiss()
