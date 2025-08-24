@@ -339,7 +339,7 @@ struct WithSheets: ViewModifier {
             }
             .sheet(item: $contextMenuNrPost) { nrPost in
                 NBNavigationStack {
-                    LazyNoteMenuSheet(nrPost: nrPost)
+                    PostMenu(nrPost: nrPost)
                         .presentationDetentsMedium()
                         .environmentObject(la)
                         .environment(\.theme, theme)
