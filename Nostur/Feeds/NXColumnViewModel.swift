@@ -457,12 +457,12 @@ class NXColumnViewModel: ObservableObject {
                 bg().perform { [weak self] in
                     
                     // Only kind 20 on picture-only feed
-                    if case .picture(_) = config.columnType, event.kind != 20 {
+                    if case .picture(_) = config.columnType, (event.kind != 20 && !(event.kind == 1 && event.kTag == 20)) {
                         return
                     }
                     
                     // No kind 20 on following feed
-                    if case .following(_) = config.columnType, event.kind == 20 {
+                    if case .following(_) = config.columnType, (event.kind == 20 || (event.kind == 1 && event.kTag == 20))  {
                         return
                     }
                     
@@ -1047,6 +1047,17 @@ class NXColumnViewModel: ObservableObject {
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [20,5])
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
+            
+            let compatFilters = [
+                Filters(
+                    authors: pubkeys,
+                    kinds: [1],
+                    tagFilter: TagFilter(tag: "k", values: ["20"]),
+                    since: NTimestamp(date: Date.now).timestamp
+                )
+            ]
+            
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: compatFilters), activeSubscriptionId: config.id)
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
             let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
@@ -1207,6 +1218,17 @@ class NXColumnViewModel: ObservableObject {
             else { [] } // Skip hashtags if filter is too large
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: [20,5])
+            
+            let compatFilters = [
+                Filters(
+                    authors: pubkeys,
+                    kinds: [1],
+                    tagFilter: TagFilter(tag: "k", values: ["20"]),
+                    since: since,
+                    until: until,
+                    limit: 5000
+                )
+            ]
              
             return (cmd: {
                 guard pubkeys.count > 0 || hashtags.count > 0 else {
@@ -1214,6 +1236,8 @@ class NXColumnViewModel: ObservableObject {
                     return
                 }
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters))
+                
+                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-COMPAT-" + config.id + "-" + (since?.description ?? "any"), filters: compatFilters))
             }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
@@ -1391,6 +1415,17 @@ class NXColumnViewModel: ObservableObject {
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: [20,5])
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
+            
+            let compatFilters = [
+                Filters(
+                    authors: pubkeys,
+                    kinds: [1],
+                    tagFilter: TagFilter(tag: "k", values: ["20"]),
+                    until: Int(until),
+                    limit: 150
+                )
+            ]
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-COMPAT-" + config.id, filters: compatFilters))
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
@@ -2464,7 +2499,7 @@ enum ColumnViewState {
 let FETCH_FEED_INTERVAL = 9.0
 let FEED_MAX_VISIBLE: Int = 20
 
-func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int = 5000, kinds: Set<Int>) -> [Filters] {
+func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, since: Int? = nil, until: Int? = nil, limit: Int? = nil, kinds: Set<Int>) -> [Filters] {
     guard !pubkeys.isEmpty || !hashtags.isEmpty else { return [] }
     
     var filters: [Filters] = []
@@ -2554,6 +2589,7 @@ import CoreData
 extension Event {
     
     // TODO: Optimize tagsSerialized / hashtags matching
+    // GET NEWER
     static func postsByPubkeys(_ pubkeys: Set<String>, lastAppearedCreatedAt: Int64 = 0, hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         let hoursAgo = Int64(Date.now.timeIntervalSince1970) - 28_800 // 8 hours ago
@@ -2568,21 +2604,45 @@ extension Event {
         let frBefore = Event.fetchRequest()
         frBefore.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         frBefore.fetchLimit = QUERY_FETCH_LIMIT
+        
+        
+        
         if let hashtagRegex = hashtagRegex {
-            if hideReplies {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
+            var predicate = "created_at <= %i"
+            
+            if kinds.contains(20) && kinds.count == 1 {
+                predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
+                predicate += " AND kind IN %@"
             }
+            
+            predicate += " AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@)"
+            
+            if hideReplies {
+                predicate += " AND replyToRootId == nil AND replyToId == nil"
+            }
+            
+            predicate += " AND flags != \"is_update\""
+            
+            frBefore.predicate = NSPredicate(format: predicate, cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
         }
         else {
-            if hideReplies {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
+            var predicate = "created_at <= %i AND pubkey IN %@"
+            if kinds.contains(20) && kinds.count == 1 {
+                predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {
-                frBefore.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
+                predicate += " AND kind IN %@"
             }
+            
+            if hideReplies {
+                predicate += " AND replyToRootId == nil AND replyToId == nil"
+            }
+            
+            predicate += " AND flags != \"is_update\" AND NOT pubkey IN %@"
+            
+            frBefore.predicate = NSPredicate(format: predicate, cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
         }
         
         let newFirstEvent = try? bg().fetch(frBefore).last
@@ -2592,15 +2652,28 @@ extension Event {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         fr.fetchLimit = QUERY_FETCH_LIMIT
-        if hideReplies {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND created_at < %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, threeHoursFromNow, pubkeys, kinds, blockedPubkeys)
+        
+        var predicate = "created_at >= %i AND created_at < %i AND pubkey IN %@"
+        
+        if kinds.contains(20) && kinds.count == 1 {
+            predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
         }
         else {
-            fr.predicate = NSPredicate(format: "created_at >= %i AND created_at < %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", newCutOffPoint, threeHoursFromNow, pubkeys, kinds, blockedPubkeys)
+            predicate += " AND kind IN %@"
         }
+        
+        if hideReplies {
+            predicate += " AND replyToRootId == nil AND replyToId == nil"
+        }
+        
+        predicate += " AND flags != \"is_update\" AND NOT pubkey IN %@"
+        
+        fr.predicate = NSPredicate(format: predicate, newCutOffPoint, threeHoursFromNow, pubkeys, kinds, blockedPubkeys)
         return fr
     }
     
+    
+    // GET OLDER
     static func postsByPubkeys(_ pubkeys: Set<String>, until cutOffPoint: Int64 = Int64(Date().timeIntervalSince1970), hideReplies: Bool = false, hashtagRegex: String? = nil, kinds: Set<Int>) -> NSFetchRequest<Event> {
         let blockedPubkeys = blocks()
         
@@ -2614,20 +2687,43 @@ extension Event {
             
             let after = cutOffPoint - 28_800 // we need just 25 posts, so don't scan too far back, the regex match on tagsSerialized seems slow
             
-            if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\"", after, cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
+            var predicate = "created_at > %i AND created_at <= %i"
+            
+            if kinds.contains(20) && kinds.count == 1 {
+                predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at > %i AND created_at <= %i AND kind IN %@ AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@) AND flags != \"is_update\"", after, cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
+                predicate += " AND kind IN %@"
             }
+            
+            predicate += " AND NOT pubkey IN %@ AND (pubkey IN %@ OR tagsSerialized MATCHES %@)"
+            
+            if hideReplies {
+                predicate += " AND replyToRootId == nil AND replyToId == nil"
+            }
+            
+            predicate += " AND flags != \"is_update\""
+            
+            fr.predicate = NSPredicate(format: predicate, after, cutOffNotInFuture, kinds, blockedPubkeys, pubkeys, hashtagRegex)
         }
         else {
-            if hideReplies {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND replyToRootId == nil AND replyToId == nil AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
+            
+            var predicate = "created_at <= %i AND pubkey IN %@"
+            
+            if kinds.contains(20) && kinds.count == 1 {
+                predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {
-                fr.predicate = NSPredicate(format: "created_at <= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\" AND NOT pubkey IN %@", cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
+                predicate += " AND kind IN %@"
             }
+            
+            if hideReplies {
+                predicate += " AND replyToRootId == nil AND replyToId == nil"
+            }
+            
+            predicate += " AND flags != \"is_update\" AND NOT pubkey IN %@"
+            
+            fr.predicate = NSPredicate(format: predicate, cutOffNotInFuture, pubkeys, kinds, blockedPubkeys)
         }
         return fr
     }
