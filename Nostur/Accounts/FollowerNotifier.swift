@@ -198,7 +198,7 @@ class FollowerNotifier {
             L.og.info("New followers (\(self.newFollowerPubkeys.count)) notification, for \(pubkey)")
             L.og.debug("Prefetching kind 0 for first 10 new followers")
 #endif
-            req(RM.getUserMetadata(pubkeys: Array(self.newFollowerPubkeys.prefix(10))))
+            QueuedFetcher.shared.enqueue(pTags: Array(self.newFollowerPubkeys.prefix(10)))
             self.newFollowerPubkeys.removeAll()
             DataProvider.shared().bgSave()
         }
