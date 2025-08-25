@@ -34,7 +34,7 @@ struct ContentRenderer: View { // VIEW things
         _showMore = showMore
         self.forceAutoload = forceAutoload
         self.zoomableId = zoomableId
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 20))
+        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
     }
     
     private var shouldAutoload: Bool {
