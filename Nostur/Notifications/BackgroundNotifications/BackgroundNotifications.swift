@@ -144,6 +144,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             // Check new posts
             NewPostNotifier.shared.runCheck(force: true)
             
+            if UserDefaults.standard.bool(forKey: SettingsStore.Keys.enableLiveEvents) {
+                LiveEventsModel.shared.fetchFromRelays()
+            }
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                 ConnectionPool.shared.disconnectAll()
             }

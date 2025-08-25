@@ -74,14 +74,14 @@ class LiveEventsModel: ObservableObject {
             let nrLiveEvents: [NRLiveEvent] = events
                 .filter { !self.dismissedLiveEvents.contains($0.aTag) } // don't show dismissed events
                 .filter { $0.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" }) } // only LIVE
-                .filter {
-                  // remove old events that appear live but where we maybe missed receiving the "ended" state
-                  // so only keep if $0.created_at is newer than 8 hours ago AND we have a "streaming" tag, should be enough sanity check
-                  // (AND also "live" from previous filter)
-                  let createdAt = Date(timeIntervalSince1970: Double($0.created_at))
-                  let eightHoursAgo = Date().addingTimeInterval(-8 * 60 * 60)
-                  return createdAt > eightHoursAgo && $0.fastTags.contains(where: { $0.0 == "streaming" })
-                }
+//                .filter {
+//                  // remove old events that appear live but where we maybe missed receiving the "ended" state
+//                  // so only keep if $0.created_at is newer than 8 hours ago AND we have a "streaming" tag, should be enough sanity check
+//                  // (AND also "live" from previous filter)
+//                  let createdAt = Date(timeIntervalSince1970: Double($0.created_at))
+//                  let eightHoursAgo = Date().addingTimeInterval(-8 * 60 * 60)
+//                  return createdAt > eightHoursAgo && $0.fastTags.contains(where: { $0.0 == "streaming" })
+//                }
                 .filter { self.hasSpeakerOrHostInFollows($0) || (accountPubkey == $0.pubkey) }
                 .sorted(by: { $0.created_at > $1.created_at })
                 .uniqued(on: { $0.aTag })
@@ -114,7 +114,7 @@ class LiveEventsModel: ObservableObject {
         Int(Date().timeIntervalSince1970 - (14400)) // Only with recent 4 hours
     }
     
-    private func fetchFromRelays(_ onComplete: (() -> ())? = nil) {
+    public func fetchFromRelays(_ onComplete: (() -> ())? = nil) {
         
         // Live Event created by follows
         let createdByTask = ReqTask(
@@ -126,24 +126,11 @@ class LiveEventsModel: ObservableObject {
                 
                 let follows = self.follows.count <= 1950 ? self.follows : Set(self.follows.shuffled().prefix(1950))
                 
-                if let cm = NostrEssentials
-                    .ClientMessage(type: .REQ,
-                                   subscriptionId: taskId,
-                                   filters: [
-                                    Filters(
-                                        authors: follows,
-                                        kinds: Set([30311]),
-                                        since: agoTimestamp
-                                    )
-                                   ]
-                    ).json() {
-                    req(cm)
-                }
-                else {
-#if DEBUG
-                    L.og.error("LIVE feed: Problem generating request")
-#endif
-                }
+                nxReq(Filters(
+                    authors: follows,
+                    kinds: Set([30311]),
+                    since: agoTimestamp
+                ), subscriptionId: taskId, isActiveSubscription: true)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 self?.fetchFromDB(onComplete)
@@ -168,24 +155,11 @@ class LiveEventsModel: ObservableObject {
                 
                 let follows = self.follows.count <= 1950 ? self.follows : Set(self.follows.shuffled().prefix(1950))
                 
-                if let cm = NostrEssentials
-                    .ClientMessage(type: .REQ,
-                                   subscriptionId: taskId,
-                                   filters: [
-                                    Filters(
-                                        kinds: Set([30311]),
-                                        tagFilter: TagFilter(tag: "p", values: follows),
-                                        since: agoTimestamp
-                                    ),
-                                   ]
-                    ).json() {
-                    req(cm)
-                }
-                else {
-#if DEBUG
-                    L.og.debug("LIVE feed: Problem generating request")
-#endif
-                }
+                nxReq(Filters(
+                    kinds: Set([30311]),
+                    tagFilter: TagFilter(tag: "p", values: follows),
+                    since: agoTimestamp
+                ), subscriptionId: taskId, isActiveSubscription: true)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
                 self?.fetchFromDB(onComplete)

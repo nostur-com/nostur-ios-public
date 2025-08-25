@@ -153,7 +153,7 @@ class MessageParser {
                     // Keep these subscriptions open.
                     guard let subscriptionId = message.subscriptionId else { return }
                     // TODO: Make generic -OPEN-, instead of "Following-" and "List-" etc..
-                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" && String(subscriptionId.prefix(14)) != "-DB-1311-9735-" && String(subscriptionId.prefix(10)) != "LIVEEVENTS" {
+                    if !Self.ACTIVE_SUBSCRIPTIONS.contains(subscriptionId) && String(subscriptionId.prefix(10)) != "Following-" && String(subscriptionId.prefix(5)) != "List-" && String(subscriptionId.prefix(9)) != "-DB-CHAT-" && String(subscriptionId.prefix(14)) != "-DB-1311-9735-" && String(subscriptionId.prefix(10)) != "LIVEEVENTS" && String(subscriptionId.prefix(5)) != "LIVE-" {
                         // Send close message to this specific socket, not all.
 #if DEBUG
                         L.sockets.debug("🔌🔌 \(relayUrl): EOSE received. Sending CLOSE to \(client.url) for \(subscriptionId) -[LOG]-")
