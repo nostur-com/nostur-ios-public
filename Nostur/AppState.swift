@@ -131,6 +131,7 @@ class AppState: ObservableObject {
     // App wide blocking of words, pubkeys, hashtags, threads
     
     public func loadMutedWords() {
+        return // TODO: FIXME
         let fr = MutedWords.fetchRequest()
         fr.predicate = NSPredicate(format: "enabled == true")
         guard let mutedWords = try? viewContext().fetch(fr) else { return }

@@ -1355,6 +1355,7 @@
     },
     "Add %lld contacts to custom feed" : {
       "comment" : "Post context menu button",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1363,6 +1364,9 @@
           }
         }
       }
+    },
+    "Add %lld contacts to List" : {
+      "comment" : "Post context menu button"
     },
     "Add +7" : {
       "extractionState" : "stale",
@@ -1496,6 +1500,7 @@
     },
     "Add private note" : {
       "comment" : "Post context menu button",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1504,6 +1509,9 @@
           }
         }
       }
+    },
+    "Add private note to post" : {
+      "comment" : "Post context menu button"
     },
     "Add public note (optional)" : {
       "localizations" : {
@@ -1558,6 +1566,7 @@
     },
     "Add/Remove %@ from custom feed" : {
       "comment" : "Post context menu button",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1588,6 +1597,12 @@
           }
         }
       }
+    },
+    "Add/remove from Highlights" : {
+
+    },
+    "Add/remove from Lists" : {
+
     },
     "All" : {
       "comment" : "Menu choice to filter by All",
@@ -1622,6 +1637,7 @@
       }
     },
     "and %lld more" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1976,8 +1992,11 @@
         }
       }
     },
+    "Block" : {
+
+    },
     "Block %@" : {
-      "comment" : "Menu action\nPost context menu action to Block (name)",
+      "comment" : "Menu action",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2725,6 +2744,9 @@
         }
       }
     },
+    "Contacts from this post" : {
+
+    },
     "Contacts in list" : {
       "localizations" : {
         "nl" : {
@@ -2852,6 +2874,7 @@
     },
     "Copy post text" : {
       "comment" : "Post context menu button",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2904,6 +2927,9 @@
           }
         }
       }
+    },
+    "Copy raw JSON" : {
+
     },
     "Copy video URL" : {
       "localizations" : {
@@ -3550,6 +3576,7 @@
       }
     },
     "Duration" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4392,6 +4419,7 @@
     },
     "hex" : {
       "comment" : "Short label for the word 'hexadecimal'",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4455,6 +4483,9 @@
           }
         }
       }
+    },
+    "Highlights" : {
+      "comment" : "Tab title"
     },
     "Home/Lock screen notifications" : {
       "localizations" : {
@@ -4533,6 +4564,7 @@
     },
     "ID" : {
       "comment" : "Label for post identifier (ID)",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4992,6 +5024,9 @@
           }
         }
       }
+    },
+    "Link" : {
+
     },
     "List" : {
       "localizations" : {
@@ -5534,6 +5569,9 @@
         }
       }
     },
+    "Mute" : {
+
+    },
     "Mute conversation" : {
       "comment" : "Post context menu action to mute conversation",
       "localizations" : {
@@ -5949,6 +5987,9 @@
           }
         }
       }
+    },
+    "Nostr ID" : {
+
     },
     "Nostr Wallet Connect" : {
       "comment" : "Navigation title for setting up Nostr Wallet Connect (NWC)",
@@ -6429,6 +6470,9 @@
         }
       }
     },
+    "Pin to your profile" : {
+
+    },
     "Pink" : {
       "localizations" : {
         "nl" : {
@@ -6498,6 +6542,7 @@
     },
     "Post actions" : {
       "comment" : "Title of sheet showing actions to perform on post",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6517,6 +6562,9 @@
           }
         }
       }
+    },
+    "Post details" : {
+
     },
     "Post preview" : {
       "comment" : "Navigation title for Post Preview screen",
@@ -7105,6 +7153,7 @@
     },
     "Rebroadcast" : {
       "comment" : "Button to rebroadcast a post",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7116,6 +7165,7 @@
     },
     "Rebroadcast (again)" : {
       "comment" : "Button to broadcast own post again",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7124,6 +7174,12 @@
           }
         }
       }
+    },
+    "Rebroadcast to relays" : {
+      "comment" : "Button to rebroadcast a post"
+    },
+    "Rebroadcast to relays(again)" : {
+      "comment" : "Button to broadcast own post again"
     },
     "REC" : {
       "localizations" : {
@@ -7953,6 +8009,7 @@
     },
     "screenshot" : {
       "comment" : "Post context menu button",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8272,6 +8329,9 @@
         }
       }
     },
+    "Share screenshot" : {
+
+    },
     "Share this list with a different title" : {
       "localizations" : {
         "nl" : {
@@ -8304,7 +8364,7 @@
       }
     },
     "Show %@'s feed" : {
-      "comment" : "Post context menu button to show someone's feed",
+      "comment" : "Menu button to show someone's feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8603,6 +8663,7 @@
     },
     "source" : {
       "comment" : "The word 'source' as in source code",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9649,6 +9710,9 @@
           }
         }
       }
+    },
+    "Unfollow %@" : {
+      "comment" : "Post context menu button to Unfollow (name)"
     },
     "Unhide" : {
       "localizations" : {
