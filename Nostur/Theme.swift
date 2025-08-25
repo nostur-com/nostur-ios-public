@@ -69,134 +69,150 @@ class Themes: ObservableObject {
         theme = Theme()
     }
     
+    static let CLASSIC = Theme(
+        id: "Classic",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("classicAccentColor"),
+        background: Color("classicBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("classicListBackground"),
+        badge: Color.red,
+        lineColor: Color("classicLineColor"),
+        footerButtons: Color("classicAccentColor")
+    )
+    
     public func loadClassic() {
         selectedTheme = "classic"
-        theme = Theme(
-            id: "Classic",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("classicAccentColor"),
-            background: Color("classicBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("classicListBackground"),
-            badge: Color.red,
-            lineColor: Color("classicLineColor"),
-            footerButtons: Color("classicAccentColor")
-        )
+        theme = Self.CLASSIC
     }
+    
+    static let GREEN = Theme(
+        id: "Green",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("greenAccentColor"),
+        background: Color("greenBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("greenListBackground"),
+        badge: Color.red,
+        lineColor: Color("greenLineColor"),
+        footerButtons: Color("greenAccentColor")
+    )
     
     public func loadGreen() {
         selectedTheme = "green"
-        theme = Theme(
-            id: "Green",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("greenAccentColor"),
-            background: Color("greenBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("greenListBackground"),
-            badge: Color.red,
-            lineColor: Color("greenLineColor"),
-            footerButtons: Color("greenAccentColor")
-        )
+        theme = Self.GREEN
     }
+    
+    static let PINK = Theme(
+        id: "Pink",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("pinkAccentColor"),
+        background: Color("pinkBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("pinkListBackground"),
+        badge: Color.red,
+        lineColor: Color("pinkLineColor"),
+        footerButtons: Color(red: 255/255, green: 50/255, blue: 221/255)
+    )
     
     public func loadPink() {
         selectedTheme = "pink"
         
-        theme = Theme(
-            id: "Pink",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("pinkAccentColor"),
-            background: Color("pinkBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("pinkListBackground"),
-            badge: Color.red,
-            lineColor: Color("pinkLineColor"),
-            footerButtons: Color(red: 255/255, green: 50/255, blue: 221/255)
-        )
+        theme = Self.PINK
     }
+    
+    static let ORANGE = Theme(
+        id: "Orange",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("orangeAccentColor"),
+        background: Color("orangeBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("orangeListBackground"),
+        badge: Color.red,
+        lineColor: Color("orangeLineColor"),
+        footerButtons: Color("orangeAccentColor")
+    )
     
     public func loadOrange() {
         selectedTheme = "orange"
-        theme = Theme(
-            id: "Orange",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("orangeAccentColor"),
-            background: Color("orangeBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("orangeListBackground"),
-            badge: Color.red,
-            lineColor: Color("orangeLineColor"),
-            footerButtons: Color("orangeAccentColor")
-        )
+        theme = Self.ORANGE
     }
+    
+    static let PURPLE = Theme(
+        id: "Purple",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("purpleAccentColor"),
+        background: Color("purpleBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("purpleListBackground"),
+        badge: Color.red,
+        lineColor: Color("purpleLineColor"),
+        footerButtons: Color("purpleAccentColor")
+    )
     
     public func loadPurple() {
         selectedTheme = "purple"
         
-        theme = Theme(
-            id: "Purple",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("purpleAccentColor"),
-            background: Color("purpleBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("purpleListBackground"),
-            badge: Color.red,
-            lineColor: Color("purpleLineColor"),
-            footerButtons: Color("purpleAccentColor")
-        )
+        theme = Self.PURPLE
     }
+    
+    static let RED = Theme(
+        id: "Red",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("redAccentColor"),
+        background: Color("redBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("redListBackground"),
+        badge: Color.red,
+        lineColor: Color("redLineColor"),
+        footerButtons: Color("redAccentColor")
+    )
     
     public func loadRed() {
         selectedTheme = "red"
-        theme = Theme(
-            id: "Red",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("redAccentColor"),
-            background: Color("redBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("redListBackground"),
-            badge: Color.red,
-            lineColor: Color("redLineColor"),
-            footerButtons: Color("redAccentColor")
-        )
+        theme = Self.RED
     }
+    
+    static let BLUE = Theme(
+        id: "Blue",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("blueAccentColor"),
+        background: Color("blueBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("blueListBackground"),
+        badge: Color.red,
+        lineColor: Color("blueLineColor"),
+        footerButtons: Color("blueAccentColor")
+    )
     
     public func loadBlue() {
         selectedTheme = "blue"
-        theme = Theme(
-            id: "Blue",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("blueAccentColor"),
-            background: Color("blueBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("blueListBackground"),
-            badge: Color.red,
-            lineColor: Color("blueLineColor"),
-            footerButtons: Color("blueAccentColor")
-        )
+        theme = Self.BLUE
     }
+    
+    static let BLACK_AND_WHITE = Theme(
+        id: "BlackAndWhite",
+        primary: Color.primary,
+        secondary: Color.secondary,
+        accent: Color("bwAccentColor"),
+        background: Color("bwBackground"),
+        secondaryBackground: Color(.secondarySystemBackground),
+        listBackground: Color("bwListBackground"),
+        badge: Color.red,
+        lineColor: Color("bwLineColor"),
+        footerButtons: Color("bwAccentColor")
+    )
     
     public func loadBlackAndWhite() {
         selectedTheme = "bw"
-        theme = Theme(
-            id: "BlackAndWhite",
-            primary: Color.primary,
-            secondary: Color.secondary,
-            accent: Color("bwAccentColor"),
-            background: Color("bwBackground"),
-            secondaryBackground: Color(.secondarySystemBackground),
-            listBackground: Color("bwListBackground"),
-            badge: Color.red,
-            lineColor: Color("bwLineColor"),
-            footerButtons: Color("bwAccentColor")
-        )
+        theme = Self.BLACK_AND_WHITE
     }
 }
 
