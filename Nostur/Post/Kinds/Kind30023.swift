@@ -76,7 +76,7 @@ struct Kind30023: View {
                         Text(nrPost.eventTitle ?? "")
                             .font(.custom("Charter-Black", size: 28))
                         Spacer()
-                        LazyNoteMenuButton(nrPost: nrPost)
+                        PostMenuButton(nrPost: nrPost)
                     }
                     .padding(.vertical, 10)
                     
@@ -251,7 +251,7 @@ struct Kind30023: View {
                     .font(.custom("Charter-Black", size: 24))
                     .lineLimit(5)
                 Spacer()
-                LazyNoteMenuButton(nrPost: nrPost)
+                PostMenuButton(nrPost: nrPost)
             }
             .padding(.bottom, 10)
             

@@ -54,7 +54,7 @@ struct ArticleView: View {
                         Text(article.eventTitle ?? "")
                             .font(.custom("Charter-Black", size: 28))
                         Spacer()
-                        LazyNoteMenuButton(nrPost: article)
+                        PostMenu(nrPost: article)
                     }
                     .padding(.vertical, 10)
                     
@@ -198,7 +198,7 @@ struct ArticleView: View {
                         .font(.custom("Charter-Black", size: 24))
                         .lineLimit(5)
                     Spacer()
-                    LazyNoteMenuButton(nrPost: article)
+                    PostMenuButton(nrPost: article)
                 }
                 .padding(.bottom, 10)
                 

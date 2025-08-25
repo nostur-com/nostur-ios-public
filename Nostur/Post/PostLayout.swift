@@ -91,7 +91,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     HStack(alignment: .top) { // name + reply + context menu
                         NRPostHeaderContainer(nrPost: nrPost)
                         Spacer()
-                        LazyNoteMenuButton(nrPost: nrPost)
+                        PostMenuButton(nrPost: nrPost)
                     }
                 }
                 
@@ -133,7 +133,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 
                 if !isItem || isDetail {
                     Spacer()
-                    LazyNoteMenuButton(nrPost: nrPost)
+                    PostMenuButton(nrPost: nrPost)
                 }
             }
             

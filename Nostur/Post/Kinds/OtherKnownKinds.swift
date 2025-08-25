@@ -29,7 +29,7 @@ struct OtherKnownKinds: View {
                 Text("Nostr event")
                     .font(.caption)
                 Spacer()
-                LazyNoteMenuButton(nrPost: nrPost)
+                PostMenuButton(nrPost: nrPost)
             }
             Text(fallbackDescription(for: nrPost))
                 .fontWeightBold()

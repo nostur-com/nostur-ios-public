@@ -1,5 +1,5 @@
 //
-//  LazyNoteMenu.swift
+//  PostMenu.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 28/05/2023.
@@ -8,168 +8,6 @@
 import SwiftUI
 import NavigationBackport
 import NostrEssentials
-
-struct LazyNoteMenuButton: View {
-    @Environment(\.theme) private var theme
-    var nrPost: NRPost
-    
-    var body: some View {
-        Image(systemName: "ellipsis")
-            .fontWeightBold()
-            .foregroundColor(theme.footerButtons)
-            .padding(.leading, 15)
-            .padding(.bottom, 14)
-            .padding(.top, 10)
-            .padding(.trailing, 10)
-            .contentShape(Rectangle())
-            .padding(.top, -10)
-            .padding(.trailing, -10)
-            .highPriorityGesture(
-                TapGesture()
-                    .onEnded { _ in
-                        sendNotification(.showNoteMenu, nrPost)
-                    }
-            )
-    }
-}
-
-let NEXT_SHEET_DELAY = 0.05
-
-struct LazyNoteMenuSheet: View {
-    @Environment(\.theme) private var theme
-    @EnvironmentObject private var la: LoggedInAccount
-    public let nrPost: NRPost
-    @Environment(\.dismiss) private var dismiss
-
-    @State private var followToggles = false
-    @State private var blockOptions = false
-    @State private var pubkeysInPost: Set<String> = []
-    
-    var body: some View {
-        List {
-            Group {
-                HStack {
-                    Button {
-                        guard isFullAccount() else {
-                            dismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05)  {
-                                showReadOnlyMessage()
-                            }
-                            return
-                        }
-                        dismiss()
-                        la.follow(nrPost.pubkey)
-                    } label: {
-                        Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.fill")
-                    }
-                    .buttonStyle(.plain)
-                    Spacer()
-                    Divider()
-                    Button { followToggles = true } label: {
-                        Image(systemName: "chevron.right")
-                    }
-                }
-            }
-            .foregroundColor(theme.accent)
-            .listRowBackground(theme.background)
-            
-            
-            Button {
-                dismiss()
-                guard let mainEvent = Event.fetchEvent(id: nrPost.id, context: viewContext()) else { return }
-                let nEvent = mainEvent.toNEvent()
-                
-                if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey && mainEvent.flags == "nsecbunker_unsigned" && la.account.isNC {
-                    NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
-                        Unpublisher.shared.publishNow(signedEvent)
-                    })
-                }
-                else {
-                    Unpublisher.shared.publishNow(nEvent)
-                }
-            } label: {
-                if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey {
-                    Label(String(localized:"Rebroadcast (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
-                }
-                else {
-                    Label(String(localized:"Rebroadcast", comment: "Button to rebroadcast a post"), systemImage: "dot.radiowaves.left.and.right")
-                }
-            }
-            .foregroundColor(theme.accent)
-            .listRowBackground(theme.background)
-            
-
-        }
-        .environment(\.theme, theme)
-        .scrollContentBackgroundHidden()
-        .listStyle(.plain)
-        .background(theme.background)
-        .navigationTitle(String(localized:"Post actions", comment:"Title of sheet showing actions to perform on post"))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button(role: .cancel) {
-                    dismiss()
-                } label: {
-                    Text("Cancel")
-                }
-                
-            }
-        }
-        .nbNavigationDestination(isPresented: $followToggles) {
-            MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
-                .environment(\.theme, theme)
-        }
-        .onAppear {
-            let onlyPtags: [String] = nrPost.fastTags.compactMap({ fastTag in
-                if (fastTag.0 != "p" || !isValidPubkey(fastTag.1)) { return nil }
-                return fastTag.1
-            })
-            let pTagPubkeys: Set<String> = Set(onlyPtags).union([nrPost.pubkey])
-            pubkeysInPost = pTagPubkeys
-        }
-    }
-}
-
-#Preview {
-    PreviewContainer({ pe in
-        pe.loadPosts()
-    }) {
-        NBNavigationStack {
-            if let nrPost = PreviewFetcher.fetchNRPost() {
-                LazyNoteMenuButton(nrPost:nrPost)
-                    .withSheets()
-            }
-        }
-    }
-}
-
-struct BlockOptions: View {
-    @Environment(\.theme) private var theme
-    
-    @ObservedObject var nrContact: NRContact
-    
-    public var onDismiss: (() -> Void)?
-
-    var body: some View {
-        Form {
-            Section("") {
-                Button("Block") { block(pubkey: nrContact.pubkey, name: nrContact.anyName); onDismiss?() }
-                Button("Block for 1 hour") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 1, name: nrContact.anyName); onDismiss?() }
-                Button("Block for 4 hours") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 4, name: nrContact.anyName); onDismiss?() }
-                Button("Block for 8 hours") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 8, name: nrContact.anyName); onDismiss?() }
-                Button("Block for 1 day") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 24, name: nrContact.anyName); onDismiss?() }
-                Button("Block for 1 week") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 24*7, name: nrContact.anyName); onDismiss?() }
-                Button("Block for 1 month") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 24*31, name: nrContact.anyName); onDismiss?() }
-            }
-        }
-        .foregroundColor(theme.accent)
-        .listRowBackground(theme.background)
-        .navigationTitle("Block \(nrContact.anyName)")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 
 struct PostMenu: View {
     @Environment(\.theme) private var theme
@@ -182,12 +20,14 @@ struct PostMenu: View {
     @State private var blockOptions = false
     @State private var pubkeysInPost: Set<String> = []
     
+    @State private var showMultiFollowSheet = false
     @State private var showContactSubMenu = false
     @State private var showContactBlockSubMenu = false
     @State private var showPostDetailsSubMenu = false
     @State private var showPostShareSheet = false
     
     @State private var isOwnPost = false
+    @State private var isFollowing = false
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost
@@ -206,36 +46,27 @@ struct PostMenu: View {
                     }
                 }) {
                     Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
+                        .foregroundColor(theme.accent)
                 }
                 
                 Button(action: {
                     
                 }) {
                     Label("Pin to your profile", systemImage: "pin")
+                        .foregroundColor(theme.accent)
                 }
                 
                 Button(action: {
                     
                 }) {
                     Label("Add/remove from Highlights", systemImage: "star")
+                        .foregroundColor(theme.accent)
                 }
             }
             
             Section {
                 if !isOwnPost {
-                    Button(action: {
-                        guard isFullAccount() else {
-                            dismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05)  {
-                                showReadOnlyMessage()
-                            }
-                            return
-                        }
-                        dismiss()
-                        la.follow(nrPost.pubkey)
-                    }) {
-                        Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.badge.plus")
-                    }
+                    self.followButton
                 }
                 
                 Button(action: {
@@ -245,6 +76,7 @@ struct PostMenu: View {
                     }
                 }) {
                     Label("Add/remove from Lists", systemImage: "person.2.crop.square.stack")
+                        .foregroundColor(theme.accent)
                 }
         
                 if !isOwnPost {
@@ -255,12 +87,15 @@ struct PostMenu: View {
                     }) {
                         Label {
                             Text("Show \(nrContact.anyName)'s feed", comment: "Menu button to show someone's feed")
+                                .foregroundColor(theme.accent)
                         } icon: {
                             ObservedPFP(nrContact: nrContact, size: 20)
                         }
                     }
                 }
             }
+            .listRowBackground(theme.background)
+            
             
             
             Section {
@@ -268,6 +103,7 @@ struct PostMenu: View {
                     showContactBlockSubMenu = true
                 }) {
                     Label("Block \(nrContact.anyName)", systemImage: "circle.slash")
+                        .foregroundColor(theme.accent)
                 }
                 
                 Button(action: {
@@ -276,6 +112,7 @@ struct PostMenu: View {
                     mute(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
                 }) {
                     Label("Mute", systemImage: "bell.slash")
+                        .foregroundColor(theme.accent)
                 }
                 
                 Button {
@@ -285,15 +122,19 @@ struct PostMenu: View {
                     }
                 } label: {
                     Label(String(localized:"Report.verb", comment:"Post context menu action to Report a post or user"), systemImage: "flag")
+                        .foregroundColor(theme.accent)
                 }
             }
+            .listRowBackground(theme.background)
             
             
             Button(action: {
                 showPostShareSheet = true
             }) {
                 Label("Share", systemImage: "square.and.arrow.up")
+                    .foregroundColor(theme.accent)
             }
+            .listRowBackground(theme.background)
             
             Button {
                 dismiss()
@@ -309,19 +150,36 @@ struct PostMenu: View {
                 }
             } label: {
                 Label(String(localized:"Add private note to post", comment: "Post context menu button"), systemImage: "note.text")
+                    .foregroundColor(theme.accent)
             }
-            
-            
+            .listRowBackground(theme.background)
+
             Button(action: {
                 showPostDetailsSubMenu = true
             }) {
                 Label("Post details", systemImage: "info.circle")
+                    .foregroundColor(theme.accent)
+                
             }
+            .listRowBackground(theme.background)
             
         }
 
+        .scrollContentBackgroundHidden()
+        .background(theme.listBackground)
+        
+        .onAppear {
+            isOwnPost = nrPost.pubkey == la.pubkey
+        }
+        
+        .nbNavigationDestination(isPresented: $showMultiFollowSheet) {
+            MultiFollowSheet(pubkey: nrPost.pubkey, name: nrPost.anyName, onDismiss: { dismiss() })
+                .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
+                .background(theme.listBackground)
+                .environment(\.theme, theme)
+        }
         .nbNavigationDestination(isPresented: $showContactBlockSubMenu) {
-            BlockOptions(nrContact: nrPost.contact, onDismiss: { dismiss() })
+            PostMenuBlockOptions(nrContact: nrPost.contact, onDismiss: { dismiss() })
                 .environment(\.theme, theme)
         }
         .nbNavigationDestination(isPresented: $showContactSubMenu) {
@@ -341,7 +199,7 @@ struct PostMenu: View {
             
         }
         .nbNavigationDestination(isPresented: $showPostShareSheet) {
-            PostShareSheet(nrPost: nrPost, onDismiss: { dismiss() })
+            PostMenuShareSheet(nrPost: nrPost, onDismiss: { dismiss() })
         }
         .nbNavigationDestination(isPresented: $showPostDetailsSubMenu) {
             PostDetailsMenuSheet(nrPost: nrPost, onDismiss: { dismiss() })
@@ -355,40 +213,87 @@ struct PostMenu: View {
                 }
             }
         }
+        
     }
-}
-
-#Preview("Post Menu") {
-    PreviewContainer({ pe in
-        pe.loadAccounts()
-        pe.loadPosts()
-    }) {
-        NBNavigationStack {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
-                    PostMenu(nrPost: nrPost)
+    
+    @ViewBuilder
+    private var followButton: some View {
+        Button(action: {
+            guard isFullAccount() else {
+                dismiss()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05)  {
+                    showReadOnlyMessage()
                 }
+                return
             }
+            dismiss()
+            if isFollowing {
+                la.unfollow(nrPost.pubkey)
+                isFollowing = false
+            }
+            else {
+                la.follow(nrPost.pubkey)
+            }
+        }) {
+            if isFollowing {
+                Label(String(localized:"Unfollow \(nrPost.anyName)", comment: "Post context menu button to Unfollow (name)"), systemImage: "person.badge.minus")
+                    .foregroundColor(theme.accent)
+                    .frame(maxWidth: .infinity, alignment: .leading) // Needed do List row tap area doesn't cover long tap
+                    .contentShape(Rectangle())
+            }
+            else {
+                Label(String(localized:"Follow \(nrPost.anyName)", comment: "Post context menu button to Follow (name)"), systemImage: "person.badge.plus")
+                    .foregroundColor(theme.accent)
+                    .frame(maxWidth: .infinity, alignment: .leading) // Needed do List row tap area doesn't cover long tap
+                    .contentShape(Rectangle())
+            }
+        }
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 0.5)
+                .onEnded { _ in
+                    showMultiFollowSheet = true
+                }
+        )
+        .onAppear {
+            isFollowing = Nostur.isFollowing(nrPost.pubkey)
         }
     }
 }
 
-#Preview("Post Menu - Post Details") {
-    PreviewContainer({ pe in
-        pe.loadAccounts()
-        pe.loadPosts()
-    }) {
-        NBNavigationStack {
-            VStack {
-                if let nrPost = PreviewFetcher.fetchNRPost() {
-                    PostDetailsMenuSheet(nrPost: nrPost)
+struct PostMenuBlockOptions: View {
+    @Environment(\.theme) private var theme
+    
+    @ObservedObject var nrContact: NRContact
+    
+    public var onDismiss: (() -> Void)?
+
+    var body: some View {
+        Form {
+            Section("") {
+                Group {
+                    Button("Block") { block(pubkey: nrContact.pubkey, name: nrContact.anyName); onDismiss?() }
+                    Button("Block for 1 hour") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 1, name: nrContact.anyName); onDismiss?() }
+                    Button("Block for 4 hours") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 4, name: nrContact.anyName); onDismiss?() }
+                    Button("Block for 8 hours") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 8, name: nrContact.anyName); onDismiss?() }
+                    Button("Block for 1 day") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 24, name: nrContact.anyName); onDismiss?() }
+                    Button("Block for 1 week") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 24*7, name: nrContact.anyName); onDismiss?() }
+                    Button("Block for 1 month") { temporaryBlock(pubkey: nrContact.pubkey, forHours: 24*31, name: nrContact.anyName); onDismiss?() }
                 }
+                .buttonStyle(.borderless)
+                .foregroundColor(theme.accent)
             }
+            .listRowBackground(theme.listBackground)
+
         }
+        
+        .scrollContentBackgroundHidden()
+        .background(theme.background)
+        .navigationTitle("Block \(nrContact.anyName)")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
-struct PostShareSheet: View {
+struct PostMenuShareSheet: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
     
@@ -620,6 +525,76 @@ struct PostDetailsMenuSheet: View {
                 else {
                     Unpublisher.shared.publishNow(nEvent)
                 }
+            }
+        }
+    }
+}
+
+let NEXT_SHEET_DELAY = 0.05
+
+struct PostMenuButton: View {
+    @Environment(\.theme) private var theme
+    var nrPost: NRPost
+    
+    var body: some View {
+        Image(systemName: "ellipsis")
+            .fontWeightBold()
+            .foregroundColor(theme.footerButtons)
+            .padding(.leading, 15)
+            .padding(.bottom, 14)
+            .padding(.top, 10)
+            .padding(.trailing, 10)
+            .contentShape(Rectangle())
+            .padding(.top, -10)
+            .padding(.trailing, -10)
+            .highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        sendNotification(.showNoteMenu, nrPost)
+                    }
+            )
+    }
+}
+
+#Preview("Post Menu") {
+    PreviewContainer({ pe in
+        pe.loadAccounts()
+        pe.loadPosts()
+    }) {
+        NBNavigationStack {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    PostMenu(nrPost: nrPost)
+                        .environment(\.theme, Themes.RED)
+                }
+            }
+        }
+    }
+}
+
+#Preview("Post Menu > Details") {
+    PreviewContainer({ pe in
+        pe.loadAccounts()
+        pe.loadPosts()
+    }) {
+        NBNavigationStack {
+            VStack {
+                if let nrPost = PreviewFetcher.fetchNRPost() {
+                    PostDetailsMenuSheet(nrPost: nrPost)
+                }
+            }
+        }
+    }
+}
+
+#Preview("Actual sheet") {
+    PreviewContainer({ pe in
+        pe.loadPosts()
+    }) {
+        NBNavigationStack {
+            if let nrPost = PreviewFetcher.fetchNRPost() {
+                PostMenuButton(nrPost: nrPost)
+                    .withSheets()
             }
         }
     }
