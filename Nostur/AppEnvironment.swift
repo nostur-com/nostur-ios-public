@@ -126,3 +126,14 @@ extension EnvironmentValues {
         set { self[DimensionsEnvironmentKey.self] = newValue }
     }
 }
+
+struct NetworkMonitorEnvironmentKey: EnvironmentKey {
+    static let defaultValue: NetworkMonitor = .shared
+}
+
+extension EnvironmentValues {
+    var networkMonitor: NetworkMonitor {
+        get { self[NetworkMonitorEnvironmentKey.self] }
+        set { self[NetworkMonitorEnvironmentKey.self] = newValue }
+    }
+}
