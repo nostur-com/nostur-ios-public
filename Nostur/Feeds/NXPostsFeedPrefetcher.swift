@@ -72,7 +72,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
                             let tags = try result.get()
                             LinkPreviewCache.shared.cache.setObject(for: url, value: tags)
 #if DEBUG
-                            L.og.debug("✓✓ Loaded link preview meta tags from \(url)")
+                            L.og.debug("✓✓ Loaded link preview meta tags from \(url) -[LOG]-")
 #endif
                         }
                         catch { }

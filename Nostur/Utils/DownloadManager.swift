@@ -41,7 +41,9 @@ class DownloadManager: ObservableObject {
     
     func startDownload(from url: URL, subFolder: String = "tmp") {
         guard tasks[url] == nil else {
+#if DEBUG
             L.a0.debug("Already downloading: \(url.lastPathComponent)")
+#endif
             if let subject = progressSubjects[url], let state = states[url], let _ = state.fileURL {
                 subject.send(states[url] ?? DownloadState(subFolder: subFolder))
                 return
@@ -50,8 +52,9 @@ class DownloadManager: ObservableObject {
         }
         
 
-        
+#if DEBUG
         L.a0.debug("Starting download: \(url.lastPathComponent)")
+#endif
         
         var state = states[url] ?? DownloadState(subFolder: subFolder)
         state.isDownloading = true
@@ -88,7 +91,9 @@ class DownloadManager: ObservableObject {
                     state.fileURL = destination
                     self.states[url] = state
                     self.progressSubjects[url]?.send(state)
+#if DEBUG
                     L.a0.debug("Saved file: \(destination.path)")
+#endif
                 } catch {
                     state.error = error
                     self.states[url] = state

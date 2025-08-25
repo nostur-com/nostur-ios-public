@@ -31,21 +31,27 @@ class AudioRecorder: ObservableObject {
     
     func requestPermission() {
         audioSession.requestRecordPermission { granted in
+#if DEBUG
             if granted {
                 L.a0.debug("Microphone permission granted")
             } else {
                 L.a0.error("Microphone permission denied")
             }
+#endif
         }
     }
     
     func startRecording() {
         // Check permissions first
         let permissionStatus = audioSession.recordPermission
+#if DEBUG
         L.a0.debug("AudioRecorder: Current permission status: \(permissionStatus.rawValue)")
+#endif
         
         guard permissionStatus == .granted else {
+#if DEBUG
             L.a0.error("AudioRecorder: Recording permission not granted")
+#endif
             return
         }
         
@@ -54,7 +60,9 @@ class AudioRecorder: ObservableObject {
         try? FileManager.default.createDirectory(at: audioFilename.deletingLastPathComponent(), withIntermediateDirectories: true)
         recordingURL = audioFilename
         
+#if DEBUG
         L.a0.debug("AudioRecorder.startRecording() to: \(audioFilename)")
+#endif
         
         let settings = [
             AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -100,16 +108,22 @@ class AudioRecorder: ObservableObject {
             isRecording = true
 //            samplesFromMic = []
             samples = [] // Reset samples
+#if DEBUG
             L.a0.debug("Recording started")
+#endif
             
             try self.startMetering()
         } catch {
+#if DEBUG
             L.a0.error("Failed to start recording: \(error.localizedDescription) - \(audioFilename)")
+#endif
         }
     }
     
     func stopRecording() {
+#if DEBUG
         L.a0.debug("AudioRecorder.stopRecording()")
+#endif
         self.stopMetering()
         Task { @MainActor in
             waitingForSamples = true
@@ -120,7 +134,9 @@ class AudioRecorder: ObservableObject {
         if recordingURL != nil {
             Task.detached(priority: .userInitiated) {
                 let currentTime = recorder.currentTime
+#if DEBUG
                 L.a0.debug("Recorded time: \(currentTime.description)")
+#endif
                 recorder.stop()
                 
 //                let samples: [Int] = samplesFromMicToFullIntegers(self.samplesFromMic, limit: DEFAULT_SAMPLE_COUNT)
@@ -134,10 +150,14 @@ class AudioRecorder: ObservableObject {
                         self.samples = samples
                         
                         
+#if DEBUG
                         L.a0.debug("Recording stopped - Duration: \(self.duration) seconds")
                         L.a0.debug("Recording stopped - Samples: \(samples)")
+#endif
                     }
+#if DEBUG
                     L.a0.debug("self.audioSession.setActive(false)")
+#endif
                     try? self.audioSession.setActive(false)
                 }
             }

@@ -41,19 +41,27 @@ struct VoiceMessagePlayer: View {
         
         // Check if converted file already exists
         if FileManager.default.fileExists(atPath: outputURL.path) {
+#if DEBUG
             L.a0.debug("VoiceMessagePlayer: Converted file already exists: \(outputURL.path)")
+#endif
             return outputURL
         }
         
+#if DEBUG
         L.a0.debug("VoiceMessagePlayer: Converting \(webmURL.path) to \(outputURL.path)")
+#endif
         
         let result = convert_webm_to_m4a(webmURL.path, outputURL.path)
 
         if result == 0 && FileManager.default.fileExists(atPath: outputURL.path) {
+#if DEBUG
             L.a0.debug("VoiceMessagePlayer: ✅ Conversion successful: \(outputURL.path)")
+#endif
             return outputURL
         } else {
+#if DEBUG
             L.a0.debug("VoiceMessagePlayer: ❌ Conversion failed with code: \(result)")
+#endif
             return nil
         }
     }
@@ -131,7 +139,9 @@ struct VoiceMessagePlayer: View {
                         }
                         
                         if await _samples == nil {
+#if DEBUG
                             L.a0.debug("VoiceMessagePlayer.onAppear: loadAudioSamples(from: \(processedFileURL))")
+#endif
                             let samples = (try? await loadAudioSamples(from: processedFileURL)) ?? []
                             Task { @MainActor in
                                 self._samples = samples
@@ -169,16 +179,22 @@ struct VoiceMessagePlayer: View {
                                 do {
                                     try FileManager.default.linkItem(at: processedFileURL, to: tempURL)
                                     playerItem = AVPlayerItem(url: tempURL)
+#if DEBUG
                                     L.a0.debug("VoiceMessagePlayer: Created hard link for extensionless file")
+#endif
                                 } catch {
                                     // If hard link fails, try copying the file
                                     try FileManager.default.copyItem(at: processedFileURL, to: tempURL)
                                     playerItem = AVPlayerItem(url: tempURL)
+#if DEBUG
                                     L.a0.debug("VoiceMessagePlayer: Copied file with .m4a extension")
+#endif
                                 }
                             } catch {
                                 // If all else fails, try the original approach
+#if DEBUG
                                 L.a0.debug("VoiceMessagePlayer: Failed to create temp file, using original: \(error)")
+#endif
                                 playerItem = AVPlayerItem(url: processedFileURL)
                             }
                         } else {
@@ -188,7 +204,9 @@ struct VoiceMessagePlayer: View {
                         
                         Task { @MainActor in
                             player = AVPlayer(playerItem: playerItem)
+#if DEBUG
                             L.a0.debug("VoiceMessagePlayer.onAppear: Trying to load: \(processedFileURL)")
+#endif
                             audioObserver?.addFinishObserver(to: player!)
                         }
                         
@@ -267,12 +285,18 @@ struct VoiceMessagePlayer: View {
                             cancellable = DownloadManager.shared.publisher(for: url, subFolder: "a0")
                                 .sink { state in
                                     if state.isDownloading {
+#if DEBUG
                                         L.a0.debug("Downloading: \(url)")
+#endif
                                     } else if let fileURL = state.fileURL {
+#if DEBUG
                                         L.a0.debug("✅ Downloaded to: \(fileURL.path)")
+#endif
                                         self.localFileURL = fileURL
                                     } else if let error = state.error {
+#if DEBUG
                                         L.a0.debug("❌ Error: \(error.localizedDescription)")
+#endif
                                     }
                                 }
                             
@@ -311,7 +335,9 @@ struct VoiceMessagePlayer: View {
         .onAppear {
             Task {
                 if let samples {
+#if DEBUG
                     L.a0.debug("VoiceMessagePlayer.onAppear: samples: \(samples.count)")
+#endif
                     self._samples = samples
                 }
             }

@@ -90,7 +90,9 @@ func loadAudioSamples(from url: URL, sampleCount: Int = DEFAULT_SAMPLE_COUNT) as
         
         return audioSamples
     } catch {
+#if DEBUG
         L.a0.error("loadAudioSamples AVAudioFile failed, trying AVAudioEngine instead, error: \(error)")
+#endif
         // If AVAudioFile fails (e.g., for Opus), try AVAudioEngine approach
         let audioSamples = try await loadSamplesWithAudioEngine(from: url, sampleCount: sampleCount)
     
@@ -105,13 +107,17 @@ private func loadSamplesFromAudioFile(_ audioFile: AVAudioFile, sampleCount: Int
                                    sampleRate: audioFile.processingFormat.sampleRate,
                                    channels: audioFile.processingFormat.channelCount,
                                    interleaved: audioFile.processingFormat.isInterleaved) else {
+#if DEBUG
         L.a0.error("loadSamplesFromAudioFile: Failed to create audio format")
+#endif
         throw NSError(domain: "AudioError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio format"])
     }
 
     let frameCount = UInt32(audioFile.length)
     guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+#if DEBUG
         L.a0.error("loadSamplesFromAudioFile: Failed to create buffer")
+#endif
         throw NSError(domain: "AudioError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to create buffer"])
     }
 
@@ -126,7 +132,9 @@ private func loadSamplesWithAudioEngine(from url: URL, sampleCount: Int) async t
     
     // Get audio track
     guard let audioTrack = asset.tracks(withMediaType: .audio).first else {
+#if DEBUG
         L.a0.error("loadSamplesWithAudioEngine: No audio track found")
+#endif
         throw NSError(domain: "AudioError", code: 1, userInfo: [NSLocalizedDescriptionKey: "No audio track found"])
     }
     
@@ -146,7 +154,9 @@ private func loadSamplesWithAudioEngine(from url: URL, sampleCount: Int) async t
     assetReader.add(assetReaderOutput)
     
     guard assetReader.startReading() else {
+#if DEBUG
         L.a0.error("loadSamplesWithAudioEngine: Failed to start reading asset")
+#endif
         throw NSError(domain: "AudioError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to start reading asset"])
     }
     
@@ -206,8 +216,10 @@ private func loadSamplesWithAudioEngine(from url: URL, sampleCount: Int) async t
         return min(Int(scaled * 100), 100) // Convert to Int 0-100 range
     }
     
+#if DEBUG
     L.a0.debug("loadSamplesWithAudioEngine: Processed \(normalizedSamples.count) samples, max amplitude: \(maxAmplitude)")
     L.a0.debug("loadSamplesWithAudioEngine: Samples: \(normalizedSamples.suffix(20))")
+#endif
     return normalizedSamples
 }
 
@@ -216,13 +228,17 @@ private func processSamples(from audioFile: AVAudioFile, sampleCount: Int) throw
                                    sampleRate: audioFile.processingFormat.sampleRate,
                                    channels: audioFile.processingFormat.channelCount,
                                    interleaved: audioFile.processingFormat.isInterleaved) else {
+#if DEBUG
         L.a0.error("processSamples(AVAudioFile): Failed to create audio format")
+#endif
         throw NSError(domain: "AudioError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio format"])
     }
 
     let frameCount = UInt32(audioFile.length)
     guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+#if DEBUG
         L.a0.error("processSamples(AVAudioFile): Failed to create buffer")
+#endif
         throw NSError(domain: "AudioError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to create buffer"])
     }
 
@@ -232,7 +248,9 @@ private func processSamples(from audioFile: AVAudioFile, sampleCount: Int) throw
 
 private func processSamples(from buffer: AVAudioPCMBuffer, sampleCount: Int) throws -> [Int] {
     guard let floatChannelData = buffer.floatChannelData else {
+#if DEBUG
         L.a0.error("processSamples(AVAudioPCMBuffer): Failed to get float channel data")
+#endif
         throw NSError(domain: "AudioError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to get float channel data"])
     }
 
@@ -299,7 +317,9 @@ private func processSamples(from buffer: AVAudioPCMBuffer, sampleCount: Int) thr
     }
 
     if maxAmplitude == 0 {
+#if DEBUG
         L.a0.error("processSamples(AVAudioPCMBuffer): No valid amplitude data")
+#endif
         throw NSError(domain: "AudioError", code: 4, userInfo: [NSLocalizedDescriptionKey: "No valid amplitude data"])
     }
     
@@ -325,7 +345,9 @@ func loadAudioSamples(from data: Data, sampleCount: Int = DEFAULT_SAMPLE_COUNT) 
     // Assume data is raw PCM audio (float32 format) since AVAudioFile requires file URLs
     // Create an AVAudioFormat for raw PCM data
     guard let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 44100, channels: 1, interleaved: false) else {
+#if DEBUG
         L.a0.error("loadAudioSamples: Format creation failed")
+#endif
         throw NSError(domain: "AudioError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio format"])
     }
 
@@ -336,13 +358,17 @@ func loadAudioSamples(from data: Data, sampleCount: Int = DEFAULT_SAMPLE_COUNT) 
     let frameCount = UInt32(totalSamples)
 
     guard frameCount > 0 else {
+#if DEBUG
         L.a0.error("loadAudioSamples: No valid audio data")
+#endif
         throw NSError(domain: "AudioError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid or empty audio data"])
     }
 
     // Create PCM buffer
     guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+#if DEBUG
         L.a0.error("loadAudioSamples: Buffer creation failed")
+#endif
         throw NSError(domain: "AudioError", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create buffer"])
     }
 
@@ -352,11 +378,14 @@ func loadAudioSamples(from data: Data, sampleCount: Int = DEFAULT_SAMPLE_COUNT) 
         memcpy(floatChannelData[0], rawBuffer.baseAddress, data.count)
         buffer.frameLength = frameCount
     }
-
+#if DEBUG
     L.a0.debug("loadAudioSamples: Successfully loaded \(buffer.frameLength) frames")
+#endif
 
     guard let floatChannelData = buffer.floatChannelData else {
+#if DEBUG
         L.a0.error("loadAudioSamples: Float channel data unavailable")
+#endif
         throw NSError(domain: "AudioError", code: 4, userInfo: [NSLocalizedDescriptionKey: "Failed to get float channel data"])
     }
 
@@ -419,7 +448,9 @@ func loadAudioSamples(from data: Data, sampleCount: Int = DEFAULT_SAMPLE_COUNT) 
 
     let maxAmplitude = downsampled.max() ?? 1.0
     if maxAmplitude == 0 {
+#if DEBUG
         L.a0.error("loadAudioSamples: Max amplitude is zero")
+#endif
         throw NSError(domain: "AudioError", code: 5, userInfo: [NSLocalizedDescriptionKey: "No valid amplitude data (all samples zero)"])
     }
     let normalizedSamples = downsampled.map { 
@@ -427,8 +458,10 @@ func loadAudioSamples(from data: Data, sampleCount: Int = DEFAULT_SAMPLE_COUNT) 
         return Int(round(normalized * 100))
     }
     
+#if DEBUG
     L.a0.debug("loadAudioSamples: Processed \(normalizedSamples.count) samples, max amplitude: \(maxAmplitude)")
     L.a0.debug("loadAudioSamples: Samples: \(normalizedSamples.suffix(20))")
+#endif
     return normalizedSamples
 }
 
@@ -443,7 +476,9 @@ struct WaveformShape: Shape {
         let sampleCount = samples.count
         
         guard sampleCount > 0 else {
+#if DEBUG
             L.a0.debug("WaveformShape: No samples to render")
+#endif
             return path
         }
         
