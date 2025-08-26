@@ -185,7 +185,6 @@ struct ImportedPrioNotification {
 }
 
 class Backlog {
-    
     static let shared = Backlog(auto: true)
     
     public var timeout = 60.0
@@ -200,13 +199,6 @@ class Backlog {
     // TODO: 25.00 ms    0.2%    0 s           closure #1 in Backlog.init(timeout:auto:)
     init(timeout: Double = 60.0, auto: Bool = false) {
         self.timeout = timeout
-        timer = Timer.scheduledTimer(withTimeInterval: 1.1, repeats: true) { [weak self] timer in
-            bg().perform { [weak self] in
-                guard let self = self else { return }
-                guard !self.tasks.isEmpty else { return } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
-                self.removeOldTasks()
-            }
-        }
         if (auto) {
             Importer.shared.importedMessagesFromSubscriptionIds
                 .sink { [weak self] subscriptionIds in
@@ -246,6 +238,23 @@ class Backlog {
                     }
                 }
                 .store(in: &subscriptions)
+        }
+    }
+    
+    private func startCleanUpTimer() {
+        guard timer == nil else { return }
+        timer = Timer.scheduledTimer(withTimeInterval: 0.27, repeats: true) { [weak self] timer in
+            bg().perform { [weak self] in
+                guard let self = self else { return }
+                guard !self.tasks.isEmpty else {
+                    self.cleanup()
+                    return
+                } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
+#if DEBUG
+                L.og.debug("withTimeInterval: 0.27 --> tasks: \(self.tasks.count) -[LOG]-")
+#endif
+                self.removeOldTasks()
+            }
         }
     }
     
