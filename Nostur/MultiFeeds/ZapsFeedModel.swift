@@ -22,7 +22,6 @@ class ZapsFeedModel: ObservableObject {
     private var allZapEvents: [Event] = []
     
     private var subscriptions: Set<AnyCancellable> = []
-//    private var backlog = Backlog()
     
     public init() {
         ViewUpdates.shared.feedUpdates

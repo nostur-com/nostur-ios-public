@@ -1835,6 +1835,7 @@ class NXColumnViewModel: ObservableObject {
         
         // Invalidate timer
         fetchFeedTimer?.invalidate()
+        fetchFeedTimer = nil
         
         // Cancel task
         realTimeReqTask?.cancel()

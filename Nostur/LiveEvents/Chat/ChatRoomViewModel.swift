@@ -35,7 +35,6 @@ class ChatRoomViewModel: ObservableObject {
     }()
     
     private var subscriptions = Set<AnyCancellable>()
-//    private var backlog = Backlog()
     
     @Published public var messages: [ChatRowContent] = []
     @Published public var topZaps: [NRChatConfirmedZap] = []
