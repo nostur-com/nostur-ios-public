@@ -300,6 +300,7 @@ class NotificationsViewModel: ObservableObject {
     // But only fetch and parse recent to show on screen.
     
     private func startTimer() {
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard AccountsState.shared.activeAccountPublicKey != "" else { return }
             bg().perform { [weak self] in

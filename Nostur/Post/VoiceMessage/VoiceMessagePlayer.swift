@@ -81,6 +81,7 @@ struct VoiceMessagePlayer: View {
     }
     
     private func startProgressTimer() {
+        guard progressTimer == nil else { return }
         progressTimer?.invalidate()
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             guard let p = player, !isScrubbing, duration > 0 else { return }

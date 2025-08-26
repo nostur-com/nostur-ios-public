@@ -169,6 +169,7 @@ let _ = Self._printChanges()
     }
     
     private func startTimer() { // Make sure real time sub for chat messages stays active
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 120, repeats: true) { _ in
             chatVM.updateLiveSubscription()
         }

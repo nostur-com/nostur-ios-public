@@ -179,6 +179,7 @@ class LiveKitVoiceSession: ObservableObject {
     private var timer: Timer?
     
     private func startTimer() {
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] timer in
             guard let self else { return }
             Task { @MainActor in

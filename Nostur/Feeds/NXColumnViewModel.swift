@@ -621,6 +621,7 @@ class NXColumnViewModel: ObservableObject {
     }
     
     private func startFetchFeedTimer() {
+        guard fetchFeedTimer == nil else { return }
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = Timer.scheduledTimer(withTimeInterval: FETCH_FEED_INTERVAL, repeats: true) { [weak self] _ in
             self?.fetchFeedTimerNextTick()

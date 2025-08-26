@@ -42,6 +42,7 @@ class FollowerNotifier {
             }
             .store(in: &subscriptions)
         
+        guard checkForNewTimer == nil else { return }
         checkForNewTimer = Timer.scheduledTimer(withTimeInterval: 14400, repeats: true, block: { [weak self] _ in
             guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { return }
             let pubkey = AccountsState.shared.activeAccountPublicKey

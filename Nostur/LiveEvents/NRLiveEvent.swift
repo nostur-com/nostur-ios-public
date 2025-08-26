@@ -482,6 +482,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     private var timer: Timer?
     
     private func startTimer() {
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             guard let self else { return }
             let ago = Int(Date().timeIntervalSince1970 - 120) // 2 min ago?

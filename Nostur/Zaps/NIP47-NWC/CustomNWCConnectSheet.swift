@@ -206,6 +206,7 @@ struct CustomNWCConnectSheet: View {
             }
         }
         
+        guard connectionTimeout == nil else { return }
         connectionTimeout?.invalidate()
         connectionTimeout = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: false, block: { _ in
             nwcErrorMessage = String(localized:"Could not fetch NWC info event from \(relay)", comment:"Error message during NWC setup")

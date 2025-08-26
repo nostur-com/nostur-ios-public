@@ -71,6 +71,7 @@ struct LazyFollowedBy: View {
     }
     
     private func load() {
+        guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
             withAnimation {
                 didLoad = true

@@ -212,6 +212,7 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
+        guard stayConnectedTimer == nil else { return }
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
             if NetworkMonitor.shared.isConnected {
@@ -231,6 +232,7 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
+        guard stayConnectedTimer == nil else { return }
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
             self?.stayConnectedPing()
