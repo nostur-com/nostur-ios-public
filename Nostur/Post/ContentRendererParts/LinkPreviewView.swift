@@ -21,7 +21,7 @@ struct LinkPreviewView: View {
     
     var body: some View {
         if autoload {
-            HStack(alignment: .center, spacing: 5) {
+            HStack(alignment: .center, spacing: 2) {
                 theme.background
                     .frame(width: DIMENSIONS.PREVIEW_HEIGHT * Self.aspect, height: DIMENSIONS.PREVIEW_HEIGHT)
                     .overlay {
@@ -64,7 +64,7 @@ struct LinkPreviewView: View {
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(5)
+                .padding(3)
             }
             .background(theme.background)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
