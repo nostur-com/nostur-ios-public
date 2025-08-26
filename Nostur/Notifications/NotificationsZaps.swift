@@ -15,7 +15,7 @@ struct NotificationsZaps: View {
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var model = ZapsFeedModel()
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "NotificationsZaps")
     @Binding private var navPath: NBNavigationPath
     
     private var selectedTab: String {

@@ -21,7 +21,7 @@ struct SelectedParticipantView: View {
     
     @ObservedObject private var npn: NewPostNotifier = .shared
 
-    @State private var backlog = Backlog(timeout: 5.0, auto: true)
+    @State private var backlog = Backlog(timeout: 5.0, auto: true, backlogDebugName: "SelectedParticipantView")
     @State private var lastSeen: String? = nil
     @State private var isFollowingYou = false
     @State private var fixedPfp: URL?

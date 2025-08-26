@@ -31,7 +31,7 @@ class NewPostsVM: ObservableObject {
     public init(pubkeys: Set<String>? = nil, since:Int64 = 0) {
         self.state = .initializing
         self.since = since > 0 ? since : Int64(Date.now.timeIntervalSince1970 - 1209600) // 2 weeks ago should be enough
-        self.backlog = Backlog(timeout: 1.5, auto: true)
+        self.backlog = Backlog(timeout: 1.5, auto: true, backlogDebugName: "NewPostsVM")
         self.pubkeys = pubkeys ?? NewPostNotifier.shared.enabledPubkeys
     }
     

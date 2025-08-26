@@ -17,7 +17,7 @@ struct NotificationsReposts: View {
     @StateObject private var model = RepostsFeedModel()
     @ObservedObject private var settings: SettingsStore = .shared
 
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "NotificationsReposts")
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }

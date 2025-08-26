@@ -11,7 +11,7 @@ import NostrEssentials
 class LastSeenViewModel: ObservableObject {
     @Published var lastSeen: String? = nil
     
-    private let backlog = Backlog(timeout: 4.0, auto: true)
+    private let backlog = Backlog(timeout: 4.0, auto: true, backlogDebugName: "LastSeenViewModel")
     
     @MainActor
     public func checkLastSeen(_ pubkey: String) {

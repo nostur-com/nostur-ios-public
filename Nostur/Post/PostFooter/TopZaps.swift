@@ -14,7 +14,7 @@ struct TopZaps: View {
     
     @StateObject private var model = PostZapsModel()
     @StateObject private var reverifier = ZapperPubkeyVerifier()
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "TopZaps")
     
     @State var actualSize: CGSize? = nil
     @Namespace private var animation

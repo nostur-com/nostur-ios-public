@@ -15,7 +15,7 @@ struct NotificationsFollowers: View {
     @Environment(\.theme) private var theme
     @ObservedObject private var settings:SettingsStore = .shared
     @StateObject private var fl = FastLoader()
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "NotificationsFollowers")
     @State private var didLoad = false
     @Binding private var navPath: NBNavigationPath
     

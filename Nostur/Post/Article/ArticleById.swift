@@ -13,7 +13,7 @@ struct ArticleById: View {
     public var navigationTitle:String? = nil
     public var navTitleHidden: Bool = false
     @State var article:NRPost? = nil
-    @State var backlog = Backlog(timeout: 15, auto: true)
+    @State var backlog = Backlog(timeout: 15, auto: true, backlogDebugName: "ArticleById")
     @State var error:String? = nil
     
     var body: some View {

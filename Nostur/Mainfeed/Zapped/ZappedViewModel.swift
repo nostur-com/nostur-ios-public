@@ -99,7 +99,7 @@ class ZappedViewModel: ObservableObject {
     public init() {
         self.state = .initializing
         self.posts = [PostID: ZapStats]()
-        self.backlog = Backlog(timeout: 5.0, auto: true)
+        self.backlog = Backlog(timeout: 5.0, auto: true, backlogDebugName: "ZappedViewModel")
         self.follows = Nostur.follows()
         
         receiveNotification(.blockListUpdated)

@@ -15,7 +15,7 @@ struct PostZaps: View {
     @Environment(\.theme) private var theme
     @StateObject private var model = PostZapsModel()
 
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "PostZaps")
     @Namespace private var top
     
     @StateObject private var reverifier = ZapperPubkeyVerifier()
@@ -205,7 +205,7 @@ import NostrEssentials
 class ZapperPubkeyVerifier: ObservableObject {
     @Published public var state: ZPVState = .idle
     
-    private var backlog = Backlog(timeout: 10.0, auto: true)
+    private var backlog = Backlog(timeout: 10.0, auto: true, backlogDebugName: "ZapperPubkeyVerifier")
     
     @MainActor
     public func run(_ pubkey: String) {

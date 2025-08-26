@@ -22,6 +22,9 @@ func relayReq(_ filter: NostrEssentials.Filters,
             debounceTime: debounceTime ?? 0.05,
             timeout: timeout,
             reqCommand: { taskId in
+#if DEBUG
+                L.og.debug("⏳⏳ Sending request with taskId: \(taskId)")
+#endif
                 nxReq(filter,
                       subscriptionId: taskId,
                       isActiveSubscription: isActiveSubscription,
@@ -32,9 +35,15 @@ func relayReq(_ filter: NostrEssentials.Filters,
                 )
             },
             processResponseCommand: { taskId, relayMessage, event in
+#if DEBUG
+                L.og.debug("⏳⏳ Received response for taskId: \(taskId), event: \(event?.id ?? "none")")
+#endif
                 continuation.resume(returning: ReqReturn(taskId: taskId, relayMessage: relayMessage, event: event))
             },
             timeoutCommand: { taskId in
+#if DEBUG
+                L.og.debug("⏳⏳ Timeout triggered for taskId: \(taskId)")
+#endif
                 continuation.resume(throwing: FetchError.timeout)
             })
         Backlog.shared.add(reqTask)

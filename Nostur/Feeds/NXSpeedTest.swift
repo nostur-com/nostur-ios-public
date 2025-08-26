@@ -34,7 +34,7 @@ class NXSpeedTest: ObservableObject {
             
             if !ConnectionPool.shared.anyConnected {
 #if DEBUG
-                print("🏁🏁 NXSpeedTest.start loadingBarViewState = .connecting")
+                L.og.debug("🏁🏁 NXSpeedTest.start Setting loadingBarViewState to: .connecting")
 #endif
                 loadingBarViewState = .connecting
             }
@@ -45,7 +45,7 @@ class NXSpeedTest: ObservableObject {
         if firstLoadRemoteStartedAt == nil {
             firstLoadRemoteStartedAt = Date()
 #if DEBUG
-            print("🏁🏁 NXSpeedTest.loadRemoteStarted loadingBarViewState = .fetching")
+            L.og.debug("🏁🏁 NXSpeedTest.loadRemoteStarted Setting loadingBarViewState to: .fetching")
 #endif
             loadingBarViewState = .fetching
         }
@@ -58,7 +58,7 @@ class NXSpeedTest: ObservableObject {
             if relaysFinishedAt.isEmpty {
                 relaysFinishedAt.append(currentTimestamp)
 #if DEBUG
-                print("🏁🏁 NXSpeedTest.relayFinished loadingBarViewState = .earlyLoad")
+                L.og.debug("🏁🏁 NXSpeedTest.relayFinished Setting loadingBarViewState to: .earlyLoad")
 #endif
                 loadingBarViewState = .earlyLoad
                 resultFirstFetch = currentTimestamp.timeIntervalSince(timestampStart)
@@ -69,7 +69,7 @@ class NXSpeedTest: ObservableObject {
                 
                 if loadingBarViewState == .earlyLoad {
 #if DEBUG
-                    print("🏁🏁 NXSpeedTest.relayFinished loadingBarViewState = .finalLoad")
+                    L.og.debug("🏁🏁 NXSpeedTest.relayFinished Setting loadingBarViewState to: .finalLoad")
 #endif
                     loadingBarViewState = .finalLoad
                 }
@@ -81,7 +81,7 @@ class NXSpeedTest: ObservableObject {
         Task { @MainActor in
             if loadingBarViewState == .fetching || loadingBarViewState == .earlyLoad  {
 #if DEBUG
-                print("🏁🏁 NXSpeedTest.relayTimedout loadingBarViewState = .finalLoad")
+                L.og.debug("🏁🏁 NXSpeedTest.relayTimedout Setting loadingBarViewState to: .finalLoad")
 #endif
                 loadingBarViewState = .finalLoad
             }

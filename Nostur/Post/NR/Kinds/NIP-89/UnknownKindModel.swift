@@ -22,7 +22,7 @@ class UnknownKindModel: ObservableObject {
         case timeout
     }
     
-    private let backlog = Backlog(timeout: 12.0, auto: true)
+    private let backlog = Backlog(timeout: 8.0, auto: true, backlogDebugName: "UnknownKindModel")
     private var didFinishFetchingHandlers = false
     private var didFinishFetchingRecommendations = false
     

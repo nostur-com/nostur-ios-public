@@ -36,7 +36,7 @@ class ProfileZapsViewModel: ObservableObject {
         self.pubkey = pubkey
         self.state = .initializing
         self.zappedEventIds = []
-        self.backlog = Backlog(timeout: 8.0, auto: true)
+        self.backlog = Backlog(timeout: 8.0, auto: true, backlogDebugName: "ProfileZapsViewModel")
         
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in

@@ -353,7 +353,7 @@ struct LazyPrivateNote: View {
                 }
             }
             else { // missing json, so fetch from relays
-                self.backlog = Backlog(timeout: 8.0, auto: true)
+                self.backlog = Backlog(timeout: 8.0, auto: true, backlogDebugName: "LazyPrivateNote")
                 let reqTask = ReqTask(
                     debounceTime: 1.0,
                     reqCommand: { taskId in

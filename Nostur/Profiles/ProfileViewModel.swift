@@ -19,7 +19,7 @@ class ProfileViewModel: ObservableObject {
     
     @Published var newPostsNotificationsEnabled: Bool = false
     
-    private let backlog = Backlog(timeout: 4.0, auto: true)
+    private let backlog = Backlog(timeout: 4.0, auto: true, backlogDebugName: "ProfileViewModel")
     private var pubkey: String?
     
     public init() {}

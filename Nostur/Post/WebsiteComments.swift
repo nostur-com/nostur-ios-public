@@ -12,7 +12,7 @@ class WebsiteCommentsViewModel: ObservableObject {
     
     @Published var state: State = .initializing
     
-    private var backlog: Backlog = Backlog(timeout: 8.0, auto: true)
+    private var backlog: Backlog = Backlog(timeout: 8.0, auto: true, backlogDebugName: "WebsiteCommentsViewModel")
     
     // STEP 1: FETCH ALL KIND:443's for this URL
     private func fetchKind443sFromRelays(url: String, onComplete: (() -> ())? = nil) {

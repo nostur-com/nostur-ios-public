@@ -60,7 +60,7 @@ struct MainFeedsScreen: View {
     @State private var pictureConfig: NXColumnConfig?
     @State private var exploreConfig: NXColumnConfig?
     
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "MainFeedsScreen")
     
     @AppStorage("feed_emoji_type") var emojiType: String = "😂"
     

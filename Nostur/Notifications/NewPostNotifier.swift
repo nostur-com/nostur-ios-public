@@ -30,7 +30,7 @@ class NewPostNotifier: ObservableObject {
     // Needed as fallback if account() doesn't resolve yet
     @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
 
-    private var backlog = Backlog(timeout: 10.0, auto: true)
+    private var backlog = Backlog(timeout: 10.0, auto: true, backlogDebugName: "NewPostNotifier")
     private var lastCheck: Date? = nil
     
     private init() {

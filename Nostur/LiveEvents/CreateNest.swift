@@ -22,7 +22,7 @@ struct CreateNest: View {
     @State private var selectedRelays: [String] = []
     
     @State private var creatingRoomState: CreateNestState = .initial
-    @State private var backlog = Backlog(auto: true)
+    @State private var backlog = Backlog(auto: true, backlogDebugName: "CreateNest")
     @State private var showScheduleSheet = false
     @State private var selectedDate = Date()
     
@@ -227,7 +227,7 @@ struct ScheduleNestSheet: View {
     public let title: String
 
     @Environment(\.dismiss) var dismiss
-    @State private var backlog = Backlog(auto: true)
+    @State private var backlog = Backlog(auto: true, backlogDebugName: "ScheduleNestSheet")
     @State private var creatingRoomState: CreateNestState = .initial
 
     var body: some View {

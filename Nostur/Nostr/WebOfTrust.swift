@@ -92,7 +92,7 @@ class WebOfTrust: ObservableObject {
     
     var didWoT = false
     
-    private var backlog = Backlog(timeout: 60, auto: true)
+    private var backlog = Backlog(timeout: 60, auto: true, backlogDebugName: "WebOfTrust")
     private var subscriptions = Set<AnyCancellable>()
     
     private init() {

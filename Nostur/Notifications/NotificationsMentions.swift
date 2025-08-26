@@ -16,7 +16,7 @@ struct NotificationsMentions: View {
     @StateObject private var model = MentionsFeedModel()
     @ObservedObject private var settings: SettingsStore = .shared
 
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(timeout: 12, backlogDebugName: "NotificationsMentions")
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }

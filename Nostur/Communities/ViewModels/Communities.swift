@@ -14,7 +14,7 @@ class Communities: ObservableObject {
     @Published var newCommunities:[Community] = []
     @Published var showNewCommunities = false
     
-    private var backlog = Backlog(timeout: 0.2, auto: true)
+    private var backlog = Backlog(timeout: 0.2, auto: true, backlogDebugName: "Communities")
     private var ctx = bg()
     
     public func fetchCommunities() {

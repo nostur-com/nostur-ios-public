@@ -43,7 +43,7 @@ class LiveEventsModel: ObservableObject {
     @Published var livePubkeys: Set<String> = []
     
     private init() {
-        self.backlog = Backlog(timeout: 5.0, auto: true)
+        self.backlog = Backlog(timeout: 5.0, auto: true, backlogDebugName: "LiveEventsModel")
         self.follows = Nostur.follows()
         
         self.listenForReplacableEventUpdates()

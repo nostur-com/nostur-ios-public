@@ -29,7 +29,7 @@ struct Search: View {
 
     @State private var searchText = ""
     @State var searchTask: Task<Void, Never>? = nil
-    @State var backlog = Backlog(timeout: 12)
+    @State var backlog = Backlog(timeout: 12, backlogDebugName: "Search")
     @ObservedObject var settings: SettingsStore = .shared
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass

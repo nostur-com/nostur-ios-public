@@ -41,7 +41,7 @@ class DiscoverListsViewModel: ObservableObject {
     public init() {
         self.state = .initializing
 
-        self.backlog = Backlog(timeout: 5.0, auto: true)
+        self.backlog = Backlog(timeout: 5.0, auto: true, backlogDebugName: "DiscoverListsViewModel")
         
         self.follows = resolveFollows()
         

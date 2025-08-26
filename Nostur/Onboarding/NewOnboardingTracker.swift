@@ -19,7 +19,7 @@ class NewOnboardingTracker {
     private var pubkey: String?
     
     // Tasks backlog
-    private var backlog = Backlog()
+    private var backlog = Backlog(backlogDebugName: "NewOnboardingTracker")
     private var subscriptions = Set<AnyCancellable>()
     
     // Completed tasks?
@@ -64,7 +64,7 @@ class NewOnboardingTracker {
         self.bg.performAndWait { [weak self] in
             self?.cancel()
         }
-        self.backlog = Backlog()
+        self.backlog = Backlog(backlogDebugName: "NewOnboardingTracker")
         self.pubkey = pubkey
         
         Importer.shared.importedMessagesFromSubscriptionIds
@@ -106,7 +106,7 @@ class NewOnboardingTracker {
     }
     
     public func abort() {
-        self.backlog = Backlog()
+        self.backlog = Backlog(backlogDebugName: "NewOnboardingTracker")
         self.account = nil
     }
     

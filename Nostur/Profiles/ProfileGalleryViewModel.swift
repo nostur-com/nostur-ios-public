@@ -14,7 +14,7 @@ import CoreData
 class ProfileGalleryViewModel: ObservableObject {
     
     @Published var state: GalleryState = .initializing
-    private var backlog = Backlog(timeout: 13.0, auto: true)
+    private var backlog = Backlog(timeout: 13.0, auto: true, backlogDebugName: "ProfileGalleryViewModel")
     private var pubkey: String = ""
     private var didLoad = false
 

@@ -86,7 +86,7 @@ class ArticlesFeedViewModel: ObservableObject {
     }
     
     public init() {
-        self.backlog = Backlog(timeout: 5.0, auto: true)
+        self.backlog = Backlog(timeout: 5.0, auto: true, backlogDebugName: "ArticlesFeedViewModel")
         self.follows = Nostur.follows()
         
         receiveNotification(.blockListUpdated)

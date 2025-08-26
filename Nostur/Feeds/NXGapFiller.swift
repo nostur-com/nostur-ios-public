@@ -34,7 +34,7 @@ class NXGapFiller {
         self.timeout = timeout
         self.currentGap = currentGap
         self.columnVM = columnVM
-        self.backlog = Backlog(timeout: timeout, auto: true)
+        self.backlog = Backlog(timeout: timeout, auto: true, backlogDebugName: "NXGapFiller")
     }
     
     @MainActor
@@ -72,14 +72,14 @@ class NXGapFiller {
             let reqTask = ReqTask(
                 timeout: 8.5,
                 subscriptionId: subId,
-                reqCommand: { [weak self] _ in
+                reqCommand: { [weak self] subId in
                     guard let self else { return }
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
+                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
 #endif
                     cmd()
                 },
-                processResponseCommand: { [weak self] _, _, _ in
+                processResponseCommand: { [weak self] subId, _, _ in
                     guard let self else { return }
                     self.columnVM?.refreshedAt = Int64(Date().timeIntervalSince1970)
 
@@ -96,7 +96,7 @@ class NXGapFiller {
                     
                     if self.windowStart < Int(Date().timeIntervalSince1970) {
 #if DEBUG
-                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
+                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") subId: \(subId) processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
 #endif
                         self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
                     }
@@ -106,7 +106,7 @@ class NXGapFiller {
                 },
                 timeoutCommand: { [weak self] subId in
 #if DEBUG
-                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") timeout in fetchGap \(subId)")
+                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchGap")
 #endif
                     Task { @MainActor in
 

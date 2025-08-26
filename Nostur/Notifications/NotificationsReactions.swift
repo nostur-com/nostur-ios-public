@@ -15,7 +15,7 @@ struct NotificationsReactions: View {
     @Binding public var navPath: NBNavigationPath
     @Environment(\.theme) private var theme
     @StateObject private var model = GroupedReactionsFeedModel()
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "NotificationsReactions")
     @ObservedObject private var settings: SettingsStore = .shared
     
     private var selectedTab: String {

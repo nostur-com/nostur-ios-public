@@ -26,7 +26,7 @@ class NSecBunkerManager: ObservableObject {
         return true
     }
     
-    var backlog = Backlog(timeout: 15, auto: true)
+    var backlog = Backlog(timeout: 15, auto: true, backlogDebugName: "NSecBunkerManager")
     let decoder = JSONDecoder()
     var account: CloudAccount? = nil
     var subscriptions = Set<AnyCancellable>()

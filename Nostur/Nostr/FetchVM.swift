@@ -20,7 +20,7 @@ class FetchVM<T: Equatable>: ObservableObject {
     init(timeout: Double = 4.0, debounceTime: Double = 0.25) {
         self.state = .initializing
         self.debounceTime = debounceTime
-        self.backlog = Backlog(timeout: timeout, auto: true)
+        self.backlog = Backlog(timeout: timeout, auto: true, backlogDebugName: "FetchVM")
     }
     
     public func setFetchParams(_ fetchParams: FetchParams) {

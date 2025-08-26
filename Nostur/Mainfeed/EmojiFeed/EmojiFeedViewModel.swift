@@ -115,7 +115,7 @@ class EmojiFeedViewModel: ObservableObject {
     public init() {
         self.state = .initializing
         self.posts = [PostID: RecommendedBy<Pubkey>]()
-        self.backlog = Backlog(timeout: 5.0, auto: true)
+        self.backlog = Backlog(timeout: 5.0, auto: true, backlogDebugName: "EmojiFeedViewModel")
         self.follows = Nostur.follows()
         
         receiveNotification(.blockListUpdated)

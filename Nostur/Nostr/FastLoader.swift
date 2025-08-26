@@ -185,19 +185,21 @@ struct ImportedPrioNotification {
 }
 
 class Backlog {
-    static let shared = Backlog(auto: true)
+    static let shared = Backlog(auto: true, backlogDebugName: "Shared")
     
     public var timeout = 60.0
     
     private var tasks = Set<ReqTask>()
     private var timer: Timer?
     private var subscriptions = Set<AnyCancellable>()
+    private var backlogDebugName: String
     
     // With auto: true we don't need receiveNotification(.importedMessagesFromSubscriptionIds) on a View's .onReceive
     // the Backlog itself will listen for .importedMessagesFromSubscriptionIds notifications and
     // trigger the task.process() commands
     // TODO: 25.00 ms    0.2%    0 s           closure #1 in Backlog.init(timeout:auto:)
-    init(timeout: Double = 60.0, auto: Bool = false) {
+    init(timeout: Double = 60.0, auto: Bool = false, backlogDebugName: String = "Default") {
+        self.backlogDebugName = backlogDebugName
         self.timeout = timeout
         if (auto) {
             Importer.shared.importedMessagesFromSubscriptionIds
@@ -243,7 +245,7 @@ class Backlog {
     
     private func startCleanUpTimer() {
         guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 0.27, repeats: true) { [weak self] timer in
+        timer = Timer.scheduledTimer(withTimeInterval: self.timeout/9, repeats: true) { [weak self] timer in
             bg().perform { [weak self] in
                 guard let self = self else { return }
                 guard !self.tasks.isEmpty else {
@@ -251,7 +253,7 @@ class Backlog {
                     return
                 } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
 #if DEBUG
-                L.og.debug("withTimeInterval: 0.27 --> tasks: \(self.tasks.count) -[LOG]-")
+                L.og.debug("⏳⏳ \(self.backlogDebugName) withTimeInterval: \((self.timeout/9).description) -> \(self.timeout) --> tasks: \(self.tasks.count) -[LOG]-")
 #endif
                 self.removeOldTasks()
             }
@@ -268,24 +270,41 @@ class Backlog {
             // else check against the Backlog timeout
             else if task.createdAt.timeIntervalSinceNow < -self.timeout {
                 task.onTimeout()
+#if DEBUG
+                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId)")
+#endif
                 self.tasks.remove(task)
+                removed += 1
             }
         }
+#if DEBUG
+        L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed: \(removed)/\(tasksCount)")
+#endif
     }
     
     public func clear() {
         bg().perform { [weak self] in
+#if DEBUG
+            L.og.debug("⏳⏳ \(self?.backlogDebugName ?? "") Backlog.clear()")
+#endif
             self?.tasks.removeAll()
         }
     }
     
     public func add(_ task: ReqTask) {
+#if DEBUG
+        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId))")
+#endif
+        self.startCleanUpTimer()
         bg().perform { [weak self] in
             self?.tasks.insert(task)
         }
     }
     
     public func remove(_ task: ReqTask) {
+#if DEBUG
+        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.remove(\(task.subscriptionId))")
+#endif
         bg().perform { [weak self] in
             self?.tasks.remove(task)
         }
@@ -397,9 +416,12 @@ class ReqTask: Identifiable, Hashable {
     }
     
     public func onTimeout() {
+#if DEBUG
+        L.og.debug("⏳⏳ ReqTask.onTimout: \(self.subscriptionId)")
+#endif
         guard !didProcess && !skipTimeout else { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
 #if DEBUG
-            L.og.debug("🟠🟠 ReqTask: didProcess or skipTimeout, timeout not needed \(self.subscriptionId)")
+            L.og.debug("⏳⏳ ReqTask: didProcess or skipTimeout, timeout not needed \(self.subscriptionId)")
 #endif
             return
         }

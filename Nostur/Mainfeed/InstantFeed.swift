@@ -11,7 +11,7 @@ import NostrEssentials
 
 class InstantFeed {
     typealias CompletionHandler = ([Event]) -> ()
-    public var backlog = Backlog(timeout: 8, auto: true)
+    public var backlog = Backlog(timeout: 8, auto: true, backlogDebugName: "InstantFeed")
     private var pongReceiver: AnyCancellable?
     private var pubkey: Pubkey?
     private var onComplete: CompletionHandler?

@@ -15,7 +15,7 @@ struct PostReactions: View {
     @EnvironmentObject private var dim: DIMENSIONS
     @StateObject private var model = PostReactionsModel()
 
-    @State private var backlog = Backlog()
+    @State private var backlog = Backlog(backlogDebugName: "PostReactions")
     @Namespace private var top
     
     var body: some View {
