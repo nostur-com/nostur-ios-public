@@ -22,27 +22,27 @@ struct FetchingTests {
         let accountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         
         // This local test relay should have some data or test will fail (TODO: setup proper mock test relay in tests)
-        ConnectionPool.shared.addConnection(RelayData.new(url: "ws://localhost:4736", read: true, write: true, search: true, auth: false, excludedPubkeys: []))
-        
-        // Fetch from relays
-        _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), accountPubkey: accountPubkey)
+        ConnectionPool.shared.addConnection(RelayData.new(url: "ws://192.168.11.110:10547", read: true, write: true, search: true, auth: false, excludedPubkeys: []))
+
+        try await awaitWithRunLoop(timeout: 7) {
+            _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), accountPubkey: accountPubkey)
+        }
         
         // Fetch from DB
         let postIds: [String] = await withBgContext { _ in
-            Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
+            return Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
         }
         
         // Fetch from relays
-        _ = try await relayReq(Filters(ids: Set(postIds)), accountPubkey: accountPubkey)
-        
+        try await awaitWithRunLoop(timeout: 7) {
+            _ = try await relayReq(Filters(ids: Set(postIds)), accountPubkey: accountPubkey)
+        }
         
         // Fetch from DB
         let nrPosts: [NRPost] = await withBgContext { bg in
             Event.fetchEvents(postIds).map { NRPost(event: $0) }
         }
-                
-        RunLoop.current.run(until: Date(timeIntervalSinceNow: 3.0))
-        
+                        
         #expect(nrPosts.count > 0, "Should have some post")
     }
     
@@ -53,14 +53,13 @@ struct FetchingTests {
         
         // This local test relay should have some data or test will fail (TODO: setup proper mock test relay in tests)
         ConnectionPool.shared.addConnection(RelayData.new(url: "ws://localhost:4736", read: true, write: true, search: true, auth: false, excludedPubkeys: []))
-        
-        Task {
-            await #expect(throws: FetchError.timeout) {
-                // Fetch from relays (should timeout)
-                _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), accountPubkey: accountPubkey)
+                
+        await #expect(throws: FetchError.timeout) {
+            try await awaitWithRunLoop(timeout: 7) {
+               // Fetch from relays (should timeout)
+               _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), accountPubkey: accountPubkey)
             }
         }
-        RunLoop.current.run(until: Date(timeIntervalSinceNow: 6.0))
     }
 }
 

@@ -43,6 +43,47 @@ func relayReq(_ filter: NostrEssentials.Filters,
 
 }
 
+/// Await an async operation while pumping the run loop so Timers or RunLoop-based APIs fire.
+/// - Parameters:
+///   - timeout: Maximum number of seconds to wait before throwing `CancellationError`.
+///   - operation: Async operation to execute.
+/// - Returns: The result of the async operation.
+/// - Throws: Any error thrown by the operation, or `CancellationError` if timeout is exceeded.
+func awaitWithRunLoop<T>(
+    timeout: TimeInterval = 5,
+    _ operation: @escaping () async throws -> T
+) async throws -> T {
+    var result: Result<T, Error>?
+    let semaphore = DispatchSemaphore(value: 0)
+
+    // Start the async operation in a Task
+    Task {
+        do {
+            let value = try await operation()
+            result = .success(value)
+        } catch {
+            result = .failure(error)
+        }
+        semaphore.signal()
+    }
+
+    // Compute deadline
+    let deadline = Date().addingTimeInterval(timeout)
+
+    // Pump the run loop until the async Task finishes or timeout occurs
+    while semaphore.wait(timeout: .now()) == .timedOut {
+        if Date() > deadline {
+            throw CancellationError()
+        }
+        RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.01))
+        // Yield to Swift concurrency so other async tasks can run
+        try? await Task.sleep(nanoseconds: 100_000)
+    }
+
+    // Return the result or rethrow the error
+    return try result!.get()
+}
+
 struct ReqReturn {
     let taskId: String
     var relayMessage: Nostur.RelayMessage?
