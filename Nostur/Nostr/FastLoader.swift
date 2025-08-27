@@ -187,7 +187,7 @@ struct ImportedPrioNotification {
 class Backlog {
     static let shared = Backlog(auto: true, backlogDebugName: "Shared")
     
-    public var timeout = 60.0
+    public var timeout: Double
     
     private var tasks = Set<ReqTask>()
     private var timer: Timer?
@@ -198,7 +198,7 @@ class Backlog {
     // the Backlog itself will listen for .importedMessagesFromSubscriptionIds notifications and
     // trigger the task.process() commands
     // TODO: 25.00 ms    0.2%    0 s           closure #1 in Backlog.init(timeout:auto:)
-    init(timeout: Double = 60.0, auto: Bool = false, backlogDebugName: String = "Default") {
+    init(timeout: Double = 12.0, auto: Bool = false, backlogDebugName: String = "Default") {
         self.backlogDebugName = backlogDebugName
         self.timeout = timeout
         if (auto) {

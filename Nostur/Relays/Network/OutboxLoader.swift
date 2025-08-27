@@ -26,7 +26,7 @@ public class OutboxLoader {
         self.pubkey = pubkey
         self.follows = follows
         self.cp = cp
-        self.backlog = Backlog(timeout: 60, auto: true, backlogDebugName: "OutboxLoader")
+        self.backlog = Backlog(timeout: 9, auto: true, backlogDebugName: "OutboxLoader")
         self.context = bg()
         
         fetchKind1002AfterNewFollowListener()
