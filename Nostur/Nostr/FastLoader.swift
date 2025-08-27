@@ -269,20 +269,21 @@ class Backlog {
             // Check timeoout if configured per task
             if let timeout = task.timeout, task.createdAt.timeIntervalSinceNow < -timeout {
                 task.onTimeout()
+                self.tasks.remove(task)
 #if DEBUG
                 L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId)")
-#endif
-                self.tasks.remove(task)
                 removed += 1
+#endif
             }
             // else check against the Backlog timeout
             else if task.createdAt.timeIntervalSinceNow < -self.timeout {
                 task.onTimeout()
+                self.tasks.remove(task)
 #if DEBUG
                 L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId)")
-#endif
-                self.tasks.remove(task)
                 removed += 1
+#endif
+                
             }
         }
 #if DEBUG
