@@ -171,6 +171,17 @@ extension AppView {
 #if DEBUG
     L.og.debug("handleUrl: \(url.absoluteString)")
 #endif
+        
+    // HANDLE ADD RELAY FEED
+    let nosturRelay = url.absoluteString.matchingStrings(regex: "^(nostur:add_relay:)(\\S+)$")
+    if nosturRelay.count == 1 && nosturRelay[0].count == 3 {
+#if DEBUG
+        L.og.info("nostur: add_relay: \(nosturRelay[0][2])")
+#endif
+        UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+//        AppSheetsModel.shared
+        return
+    }
     
     let nostrlogin = url.absoluteString.matchingStrings(regex: "^nostr\\+login:(.*):([a-zA-Z0-9\\-_\\.]+)$")
     if nostrlogin.count == 1 && nostrlogin[0].count >= 3 {

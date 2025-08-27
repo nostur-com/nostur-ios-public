@@ -54,9 +54,13 @@ class NRTextParser { // TEXT things
                 text: text
             )
         )
+        
+        // Handle URLS
+        newText = Self.replaceURLsWithMarkdownLinks(in: newText)
 
         // Handle #hashtags
         newText = Self.replaceHashtagsWithMarkdownLinks(in: newText)
+        
 
         // NIP-08, handle #[0] #[1] etc
         let textWithPs = parseTagIndexedMentions(fastTags: fastTags, event: event, text: newText)
@@ -277,12 +281,15 @@ class NRTextParser { // TEXT things
     // Takes a string and replaces any link with a markdown link. Also handles subdomains
     static func replaceURLsWithMarkdownLinks(in string: String) -> String {
         return string
-            .replacingOccurrences(of: #"(?!.*\.\.)(?<!https?:\/\/)(?<!\S)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
-                                  with: "[$0](https://$0)",
-                                  options: .regularExpression) // REPLACE ALL DOMAINS WITHOUT PROTOCOL, WITH MARKDOWN LINK AND ADD PROTOCOL
-            .replacingOccurrences(of: #"(?!.*\.\.)(?<!\S)([\w+]+\:\/\/)?[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"#,
-                                  with: "[$0]($0)",
-                                  options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
+//            .replacingOccurrences(of: #"(?!.*\.\.)(?<!(https?:\/\/|wss?:\/\/))(?<!\S)[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\.]\@?[\w-]+)*\/?"#,
+//                                  with: "[$0](https://$0)",
+//                                  options: .regularExpression) // REPLACE ALL DOMAINS WITHOUT PROTOCOL, WITH MARKDOWN LINK AND ADD PROTOCOL
+            .replacingOccurrences(of: #"(wss?:\/\/)([a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*)(?::\d+)?(?:\/[\w\-\/]*)*(?:\?[\w=&\-]*)?"#,
+                                  with: "[$0](nostur:add_relay:$0)",
+                                  options: .regularExpression)
+//            .replacingOccurrences(of: #"(?!.*\.\.)(?<!\S)([\w+]+\:\/\/)?[a-zA-Z0-9\-\.]+(?:\.[a-zA-Z]{2,999}+)+([\/\?\=\&\#\%\+\.]\@?[\S]+)*\/?"#,
+//                                  with: "[$0]($0)",
+//                                  options: .regularExpression) // REPLACE THE REMAINING URLS THAT HAVE PROTOCOL, BUT IGNORE ALREADY MARKDOWNED LINKS
     }
     
     static func replaceNaddrWithMarkdownLinks(in string: String) -> String {
