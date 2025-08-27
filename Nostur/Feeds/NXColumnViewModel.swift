@@ -29,7 +29,7 @@ class NXColumnViewModel: ObservableObject {
 
         if let speedTest, speedTest.loadingBarViewState != .finished, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
-            print("🏁🏁 NXColumnViewModel.didFinish loadingBarViewState = .finalLoad")
+            L.og.debug("🏁🏁 NXColumnViewModel.didFinish loadingBarViewState = .finalLoad")
 #endif
             speedTest.loadingBarViewState = .finalLoad
         }
@@ -1883,7 +1883,7 @@ extension NXColumnViewModel {
             Task { @MainActor in
                 if let speedTest, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
-                    print("🏁🏁 NXColumnViewModel.processToScreen loadingBarViewState = .finalLoad")
+                    L.og.debug("🏁🏁 NXColumnViewModel.processToScreen loadingBarViewState = .finalLoad")
 #endif
                     if speedTest.loadingBarViewState != .finished && speedTest.loadingBarViewState != .finalLoad {
                         speedTest.loadingBarViewState = .finalLoad
