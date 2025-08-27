@@ -586,6 +586,13 @@ extension NEvent {
         
         return tags.first(where: { $0.type == "a" && $0.tag[safe: 3] == "root" })
     }
+    
+    static public func fromString(_ jsonString: String) -> NEvent? {
+        guard let dataFromString = jsonString.data(using: .utf8, allowLossyConversion: false) else {
+            return nil
+        }
+        return try? JSONDecoder().decode(NEvent.self, from: dataFromString)
+    }
 }
 
 class TagSerializer {
