@@ -212,15 +212,17 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
-        guard stayConnectedTimer == nil else { return }
-        stayConnectedTimer?.invalidate()
-        stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
-            if NetworkMonitor.shared.isConnected {
-                if IS_CATALYST || !AppState.shared.appIsInBackground {
-                    self?.stayConnectedPing()
+        DispatchQueue.main.async { [weak self] in
+            guard let self, stayConnectedTimer == nil else { return }
+            self.stayConnectedTimer?.invalidate()
+            self.stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
+                if NetworkMonitor.shared.isConnected {
+                    if IS_CATALYST || !AppState.shared.appIsInBackground {
+                        self?.stayConnectedPing()
+                    }
                 }
-            }
-        })
+            })
+        }
     }
     
     public func connectAllWrite() {
@@ -232,11 +234,13 @@ public class ConnectionPool: ObservableObject {
             }
         }
         
-        guard stayConnectedTimer == nil else { return }
-        stayConnectedTimer?.invalidate()
-        stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
-            self?.stayConnectedPing()
-        })
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.stayConnectedTimer == nil else { return }
+            self.stayConnectedTimer?.invalidate()
+            self.stayConnectedTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true, block: { [weak self] _ in
+                self?.stayConnectedPing()
+            })
+        }
     }
     
     private func stayConnectedPing() {

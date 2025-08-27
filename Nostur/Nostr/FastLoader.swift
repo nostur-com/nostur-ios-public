@@ -244,18 +244,21 @@ class Backlog {
     }
     
     private func startCleanUpTimer() {
-        guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: self.timeout/9, repeats: true) { [weak self] timer in
-            bg().perform { [weak self] in
+        DispatchQueue.main.async { [weak self] in // timer needs to run on main
+            guard let self, self.timer == nil else { return }
+            timer = Timer.scheduledTimer(withTimeInterval: self.timeout/22, repeats: true) { [weak self] timer in
                 guard let self = self else { return }
-                guard !self.tasks.isEmpty else {
-                    self.cleanup()
-                    return
-                } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
-#if DEBUG
-                L.og.debug("⏳⏳ \(self.backlogDebugName) withTimeInterval: \((self.timeout/9).description) -> \(self.timeout) --> tasks: \(self.tasks.count) -[LOG]-")
-#endif
-                self.removeOldTasks()
+                bg().perform { [weak self] in
+                    guard let self = self else { return }
+                    guard !self.tasks.isEmpty else {
+                        self.cleanup()
+                        return
+                    } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
+    #if DEBUG
+                    L.og.debug("⏳⏳ \(self.backlogDebugName) withTimeInterval: \(self.timeout/22) -> \(self.timeout) --> tasks: \(self.tasks.count) -[LOG]-")
+    #endif
+                    self.removeOldTasks()
+                }
             }
         }
     }
@@ -301,13 +304,14 @@ class Backlog {
     }
     
     public func add(_ task: ReqTask) {
-#if DEBUG
-        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId))")
-#endif
-        self.startCleanUpTimer()
         bg().perform { [weak self] in
-            self?.tasks.insert(task)
+            guard let self else { return }
+#if DEBUG
+            L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId))")
+#endif
+            self.tasks.insert(task)
         }
+        self.startCleanUpTimer()
     }
     
     public func remove(_ task: ReqTask) {
@@ -345,8 +349,13 @@ class Backlog {
     }
     
     public func cleanup() {
-        timer?.invalidate()
-        timer = nil
+#if DEBUG
+        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.cleanup()")
+#endif
+        DispatchQueue.main.async { [weak self] in // needs to be from main
+            self?.timer?.invalidate()
+            self?.timer = nil
+        }
         subscriptions.removeAll()
         tasks.removeAll()
     }
