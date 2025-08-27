@@ -54,7 +54,7 @@ struct ArticleView: View {
                         Text(article.eventTitle ?? "")
                             .font(.custom("Charter-Black", size: 28))
                         Spacer()
-                        PostMenu(nrPost: article)
+                        PostMenuButton(nrPost: article)
                     }
                     .padding(.vertical, 10)
                     
