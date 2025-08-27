@@ -358,14 +358,18 @@ class NXColumnViewModel: ObservableObject {
                 self?.config = updatedConfig
                 self?.loadLocal(updatedConfig) { // <-- instant, and works offline
                     // callback to load remote
-                    self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
+                    Task {
+                        await self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
+                    }
                 }
             }
         }
         else { // Else we can start as normal with loadLocal
             loadLocal(config) { [weak self] in // <-- instant, and works offline
                 // callback to load remote
-                self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+                Task {
+                    await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+                }
             }
         }
     }
@@ -527,10 +531,20 @@ class NXColumnViewModel: ObservableObject {
     // Reload (after toggle replies enabled etc)
     @MainActor
     public func reload(_ config: NXColumnConfig) {
-        viewState = .loading
-        self.allIdsSeen = []
-        startFetchFeedTimer()
-        loadLocal(config)
+        if case .timeout = viewState {
+            viewState = .loading
+            firstLoad(config)
+        }
+        else if case .error = viewState {
+            viewState = .loading
+            firstLoad(config)
+        }
+        else {
+            viewState = .loading
+            self.allIdsSeen = []
+            startFetchFeedTimer()
+            loadLocal(config)
+        }
     }
     
     // for pausing fetching / loading
@@ -641,12 +655,10 @@ class NXColumnViewModel: ObservableObject {
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
         self.listenForNewPosts(config)
-//        L.og.debug("☘️☘️ \(config.name) resume().loadLocal()")
         self.loadLocal(config) { [weak self] in
-//            L.og.debug("☘️☘️ \(config.name) resume().loadRemote()")
-            self?.loadRemote(config)
-//            L.og.debug("☘️☘️ \(config.name) resume().fetchGap: since: \(self.refreshedAt.description) currentGap: 0")
-//            gapFiller?.fetchGap(since: self.refreshedAt, currentGap: 0)
+            Task {
+                await self?.loadRemote(config) 
+            }
         }
     }
     
@@ -1505,7 +1517,6 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     
-    private var instantFeed: InstantFeed?
     private var backlog = Backlog(auto: true)
     
     // prefix / .shortId only
@@ -2239,7 +2250,7 @@ extension NXColumnViewModel {
 extension NXColumnViewModel {
     
     @MainActor
-    private func loadRemote(_ config: NXColumnConfig) {
+    private func loadRemote(_ config: NXColumnConfig) async {
         speedTest?.loadRemoteStarted()
         
 #if DEBUG
@@ -2254,43 +2265,47 @@ extension NXColumnViewModel {
                 viewState = .error("No relays selected for this custom feed")
                 return
             }
-            let instantFeed = InstantFeed()
-            self.instantFeed = instantFeed
+
             let mostRecentCreatedAt = self.mostRecentCreatedAt ?? 0
             let wotEnabled = config.wotEnabled
             let repliesEnabled = config.repliesEnabled
             
-            bg().perform { [weak self] in
-                instantFeed.start(relays, since: mostRecentCreatedAt) { [weak self] events in
-                    guard let self, events.count > 0 else {
-                        self?.speedTest?.relayTimedout()
-                        Task { @MainActor in
-                            if case .loading = self?.viewState {
-                                self?.didFinish()
-                                self?.viewState = .timeout
-                            }
-                        }
-                        return
+            // Fetch from relays
+            _ = try? await relayReq(Filters(kinds: FETCH_GLOBAL_KINDS), timeout: 5.5, relays: relays)
+                              
+            // Fetch from DB
+            let postsByRelays: [Event] = await withBgContext { _ in
+                let fr = Event.postsByRelays(relays, lastAppearedCreatedAt: Int64(mostRecentCreatedAt), fetchLimit: 250, kinds: QUERY_FOLLOWING_KINDS)
+                return (try? bg().fetch(fr)) ?? []
+            }
+            
+            if postsByRelays.isEmpty && self.currentNRPostsOnScreen.count == 0 {
+                self.speedTest?.relayTimedout()
+                Task { @MainActor in
+                    if case .loading = self.viewState {
+                        self.didFinish()
+                        self.viewState = .timeout
                     }
-                    
-                    speedTest?.relayFinished()
-                    
-                    // TODO: Check if we still hit .fetchLimit problem here
+                }
+            }
+            else {
+                speedTest?.relayFinished()
+                
+                // TODO: Check if we still hit .fetchLimit problem here
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) loadRemoteRelays() instantFeed.onComplete events.count \(events.count.description)")
+                L.og.debug("☘️☘️ \(config.name) loadRemoteRelays() relayFinished events.count \(postsByRelays.count.description)")
 #endif
+                
+                // Need to go to main context again to get current screen state
+                Task { @MainActor in
+                    self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
+                    let allIdsSeen = self.allIdsSeen
+                    let currentIdsOnScreen = self.currentIdsOnScreen
+                    let since = (self.mostRecentCreatedAt ?? 0)
                     
-                    // Need to go to main context again to get current screen state
-                    Task { @MainActor in
-                        self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
-                        let allIdsSeen = self.allIdsSeen
-                        let currentIdsOnScreen = self.currentIdsOnScreen
-                        let since = (self.mostRecentCreatedAt ?? 0)
-                        
-                        // Then back to bg for processing
-                        bg().perform { [weak self] in
-                            self?.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
-                        }
+                    // Then back to bg for processing
+                    bg().perform { [weak self] in
+                        self?.processToScreen(postsByRelays, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                     }
                 }
             }

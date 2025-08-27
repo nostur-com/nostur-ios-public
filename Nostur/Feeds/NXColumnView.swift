@@ -49,16 +49,33 @@ struct NXColumnView<HeaderContent: View>: View {
             case .timeout:
                 ZStack(alignment: .center) {
                     theme.listBackground
-                    Text("Nothing here :(")
-                        .foregroundColor(theme.accent)
-                        .centered()
+                    VStack(spacing: 20) {
+                        Text("Nothing here :(")
+                        Button(action: {
+                            viewModel.reload(config)
+                        }) {
+                            Label("Retry", systemImage: "arrow.clockwise")
+                                .labelStyle(.iconOnly)
+                                .foregroundColor(theme.accent)
+                        }
+                    }
+                    
+                    .centered()
                 }
             case .error(let errorMessage):
                 ZStack(alignment: .center) {
                     theme.listBackground
-                    Text(errorMessage)
-                        .foregroundColor(theme.accent)
-                        .centered()
+                    VStack(spacing: 20) {
+                        Text(errorMessage)
+                        Button(action: {
+                            viewModel.reload(config)
+                        }) {
+                            Label("Retry", systemImage: "arrow.clockwise")
+                                .labelStyle(.iconOnly)
+                                .foregroundColor(theme.accent)
+                        }
+                    }
+                    .centered()
                 }
                 
             }
