@@ -74,6 +74,7 @@ class LiveKitVoiceSession: ObservableObject {
                try await room.localParticipant.setMicrophone(enabled: !self.isMuted)
                self.state = .connected
                completion?()
+               self.startTimer()
            } catch {
                L.nests.debug("Failed to connect: \(error)")
                self.state = .error(error.localizedDescription)
@@ -84,6 +85,7 @@ class LiveKitVoiceSession: ObservableObject {
     
     @MainActor
     func disconnect() {
+        self.stopTimer()
         self.state = .disconnected
         self.nrLiveEvent = nil
         self.accountType = nil
@@ -178,15 +180,24 @@ class LiveKitVoiceSession: ObservableObject {
     // Timer to refresh room presence (The presence event SHOULD be updated at regular intervals and clients SHOULD filter presence events older than a given time window.)
     private var timer: Timer?
     
-    private func startTimer() {
-        guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] timer in
-            guard let self else { return }
-            Task { @MainActor in
-                self.broadCastRoomPresence(raisedHand: self.raisedHand)
-            }
+    public func stopTimer() {
+        DispatchQueue.main.async { [weak self] in
+            self?.timer?.invalidate()
+            self?.timer = nil
         }
-        timer?.tolerance = 5.0
+    }
+    
+    private func startTimer() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.timer == nil else { return }
+            self.timer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { [weak self] timer in
+                guard let self else { return }
+                Task { @MainActor in
+                    self.broadCastRoomPresence(raisedHand: self.raisedHand)
+                }
+            }
+            self.timer?.tolerance = 5.0
+        }
     }
     
     
