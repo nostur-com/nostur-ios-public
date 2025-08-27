@@ -38,30 +38,33 @@ struct PostMenu: View {
         List {
             
             if isOwnPost {
-                // Delete button
-                Button(role: .destructive, action: {
-                    dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
-                        sendNotification(.requestDeletePost, nrPost.id)
+                Section {
+                    // Delete button
+                    Button(role: .destructive, action: {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
+                            sendNotification(.requestDeletePost, nrPost.id)
+                        }
+                    }) {
+                        Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
+                            .foregroundColor(theme.accent)
                     }
-                }) {
-                    Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
-                        .foregroundColor(theme.accent)
-                }
-                
-                Button(action: {
                     
-                }) {
-                    Label("Pin to your profile", systemImage: "pin")
-                        .foregroundColor(theme.accent)
-                }
-                
-                Button(action: {
+                    Button(action: {
+                        
+                    }) {
+                        Label("Pin to your profile", systemImage: "pin")
+                            .foregroundColor(theme.accent)
+                    }
                     
-                }) {
-                    Label("Add/remove from Highlights", systemImage: "star")
-                        .foregroundColor(theme.accent)
+                    Button(action: {
+                        
+                    }) {
+                        Label("Add/remove from Highlights", systemImage: "star")
+                            .foregroundColor(theme.accent)
+                    }
                 }
+                .listRowBackground(theme.background)
             }
             
             Section {
@@ -282,12 +285,13 @@ struct PostMenuBlockOptions: View {
                 .buttonStyle(.borderless)
                 .foregroundColor(theme.accent)
             }
-            .listRowBackground(theme.listBackground)
+            .listRowBackground(theme.background)
 
         }
         
         .scrollContentBackgroundHidden()
-        .background(theme.background)
+        .background(theme.listBackground)
+        
         .navigationTitle("Block \(nrContact.anyName)")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -309,10 +313,13 @@ struct PostMenuShareSheet: View {
                 CopyableTextView(text: postId, copyText: "nostr:\(postId)")
                     .lineLimit(1)
             }
+            .listRowBackground(theme.background)
+            
             Section(header: Text("Link")) {
                 CopyableTextView(text: url)
                     .lineLimit(1)
             }
+            .listRowBackground(theme.background)
             
             Section {
                 Button(action: {
@@ -335,10 +342,14 @@ struct PostMenuShareSheet: View {
                     }
                 }
             }
+            .listRowBackground(theme.background)
         }
         .onAppear {
             loadId()
         }
+        
+        .scrollContentBackgroundHidden()
+        .background(theme.listBackground)
         
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -394,10 +405,13 @@ struct PostDetailsMenuSheet: View {
                 CopyableTextView(text: postId, copyText: "nostr:\(postId)")
                     .lineLimit(1)
             }
+            .listRowBackground(theme.background)
+            
             Section(header: Text("Link")) {
                 CopyableTextView(text: url)
                     .lineLimit(1)
             }
+            .listRowBackground(theme.background)
             
             Section {
                 Button(action: {
@@ -420,6 +434,7 @@ struct PostDetailsMenuSheet: View {
                     }
                 }
             }
+            .listRowBackground(theme.background)
             
             if pubkeysInPost.count > 1 {
                 Section {
@@ -438,6 +453,7 @@ struct PostDetailsMenuSheet: View {
                         .font(.footnote)
                         .foregroundColor(.gray)
                 }
+                .listRowBackground(theme.background)
             }
             
             if !footerAttributes.relays.isEmpty {
@@ -460,6 +476,11 @@ struct PostDetailsMenuSheet: View {
                 .listRowBackground(theme.background)
             }
         }
+        
+        
+        .scrollContentBackgroundHidden()
+        .background(theme.listBackground)
+        
         .onAppear {
             loadId()
             loadRawSource()
