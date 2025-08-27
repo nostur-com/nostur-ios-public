@@ -130,9 +130,8 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     @Published public var volume: CGFloat = 0.0
     @Published public var isMuted: Bool = true
     
-    @MainActor
     private func configureFromProfileInfo(_ profileInfo: ProfileInfo, animate: Bool = false) {
-        if animate {
+        if animate && Thread.isMainThread {
             withAnimation {
                 self.anyName = profileInfo.anyName ?? String(pubkey.suffix(11))
                 self.pictureUrl = profileInfo.pfpUrl
@@ -164,9 +163,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     
     private func configureFromBgContact(_ bgContact: Contact, animate: Bool = false) {
         let profileInfo = profileInfo(bgContact)
-        Task { @MainActor in
-            self.configureFromProfileInfo(profileInfo, animate: animate)
-        }
+        self.configureFromProfileInfo(profileInfo, animate: animate)
     }
     
     private func configure(pubkey: String, contact: Contact? = nil) {

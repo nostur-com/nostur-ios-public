@@ -63,14 +63,18 @@ class QueuedFetcher {
     
     public func enqueue(pTags: [String]) {
         guard !pTags.isEmpty else { return }
+        let newPs = Set(pTags).subtracting(recentPs)
+        guard !newPs.isEmpty else { return }
         ctx.perform { [weak self] in
-            self?.pQueue.formUnion(pTags)
+            self?.pQueue.formUnion(newPs)
             self?.fetchSubject.send()
         }
     }
     
     public func enqueue(pTags: Set<String>) {
         guard !pTags.isEmpty else { return }
+        let newPs = pTags.subtracting(recentPs)
+        guard !newPs.isEmpty else { return }
         ctx.perform { [weak self] in
             self?.pQueue.formUnion(pTags)
             self?.fetchSubject.send()
@@ -107,8 +111,20 @@ class QueuedFetcher {
     
     public func enqueue(ids: [String]) {
         guard !ids.isEmpty else { return }
+        let newIds = Set(ids).subtracting(recentIds)
+        guard !newIds.isEmpty else { return }
         ctx.perform { [weak self] in
-            self?.idQueue.formUnion(Set(ids))
+            self?.idQueue.formUnion(Set(newIds))
+            self?.fetchSubject.send()
+        }
+    }
+    
+    public func enqueue(ids: Set<String>) {
+        guard !ids.isEmpty else { return }
+        let newIds = ids.subtracting(recentIds)
+        guard !newIds.isEmpty else { return }
+        ctx.perform { [weak self] in
+            self?.idQueue.formUnion(newIds)
             self?.fetchSubject.send()
         }
     }
