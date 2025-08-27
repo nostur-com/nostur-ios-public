@@ -23,7 +23,7 @@ func relayReq(_ filter: NostrEssentials.Filters,
             timeout: timeout,
             reqCommand: { taskId in
 #if DEBUG
-                L.og.debug("⏳⏳ Sending request with taskId: \(taskId)")
+                L.og.debug("⏳⏳ Sending request with taskId: \(taskId), timeout: \(timeout?.description ?? "")")
 #endif
                 nxReq(filter,
                       subscriptionId: taskId,

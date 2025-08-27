@@ -33,7 +33,9 @@ class FollowingGuardian: ObservableObject {
     
     func checkForUpdatedContactList() {
         guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { return }
+#if DEBUG
         L.og.info("FollowingGuardian: Checking for updated contact list")
+#endif
         req(RM.getAuthorContactsList(pubkey: AccountsState.shared.activeAccountPublicKey, subscriptionId: "RM.getAuthorContactsList"))
         req(RM.getUserMetadata(pubkey: AccountsState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
     }
@@ -44,6 +46,9 @@ class FollowingGuardian: ObservableObject {
             .sink { notification in
                 let account = notification.object as! CloudAccount
                 guard account.isFullAccount else { return }
+#if DEBUG
+                L.user.debug("Fetch kind 0 and 3, 7 seconds after .activeAccountChanged")
+#endif
                 req(RM.getAuthorContactsList(pubkey: account.publicKey, subscriptionId: "RM.getAuthorContactsList"))
                 req(RM.getUserMetadata(pubkey: AccountsState.shared.activeAccountPublicKey, subscriptionId: "RM.getUserMetadata"))
             }
