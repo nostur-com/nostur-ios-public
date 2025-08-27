@@ -24,7 +24,7 @@ struct FetchingTests {
         // This local test relay should have some data or test will fail (TODO: setup proper mock test relay in tests)
         ConnectionPool.shared.addConnection(RelayData.new(url: "ws://192.168.11.110:10547", read: true, write: true, search: true, auth: false, excludedPubkeys: []))
 
-        try await awaitWithRunLoop(timeout: 7) {
+        try await awaitWithRunLoop(timeout: 8) {
             _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), accountPubkey: accountPubkey)
         }
         
@@ -34,7 +34,7 @@ struct FetchingTests {
         }
         
         // Fetch from relays
-        try await awaitWithRunLoop(timeout: 7) {
+        try await awaitWithRunLoop(timeout: 8) {
             _ = try await relayReq(Filters(ids: Set(postIds)), accountPubkey: accountPubkey)
         }
         
@@ -55,11 +55,43 @@ struct FetchingTests {
         ConnectionPool.shared.addConnection(RelayData.new(url: "ws://localhost:4736", read: true, write: true, search: true, auth: false, excludedPubkeys: []))
                 
         await #expect(throws: FetchError.timeout) {
-            try await awaitWithRunLoop(timeout: 7) {
+            try await awaitWithRunLoop(timeout: 8) {
                // Fetch from relays (should timeout)
                _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), accountPubkey: accountPubkey)
             }
         }
+    }
+    
+    @Test func testSingleRelayFeed() async throws {
+        SettingsStore.shared.enableOutboxRelays = false
+        SettingsStore.shared.webOfTrustLevel = "WOT_OFF"
+        let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+        let accountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+        
+        // This local test relay should have some data or test will fail (TODO: setup proper mock test relay in tests)
+        let testRelay: RelayData = RelayData.new(url: "ws://192.168.11.217:23911", read: true, write: true, search: true, auth: false, excludedPubkeys: [])
+        ConnectionPool.shared.addConnection(testRelay)
+
+        await #expect(throws: FetchError.timeout) {
+            try await awaitWithRunLoop(timeout: 8) {
+                _ = try await relayReq(Filters(kinds: FETCH_GLOBAL_KINDS), timeout: 5.5, relays: [testRelay])
+            }
+        }
+        
+        // Fetch from DB
+        let postsByRelays: [Nostur.Event] = await withBgContext { _ in
+            let fr = Event.postsByRelays([testRelay], lastAppearedCreatedAt: 0, fetchLimit: 250, kinds: QUERY_FOLLOWING_KINDS)
+            return (try? bg().fetch(fr)) ?? []
+        }
+        
+        
+        
+//        // Fetch from DB
+//        let nrPosts: [NRPost] = await withBgContext { bg in
+//            Event.fetchEvents(postIds).map { NRPost(event: $0) }
+//        }
+//                        
+//        #expect(nrPosts.count > 0, "Should have some post")
     }
 }
 
