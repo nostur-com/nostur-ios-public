@@ -358,13 +358,12 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
             vmInner.unreadIds[nrPost.id] = 0
             vmInner.updateIsAtTopSubject.send()
             vm.markAsRead(nrPost.shortId)
+            if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+                vm.markAsRead(String(firstQuoteId.prefix(8)))
+            }
             
             if !nrPost.parentPosts.isEmpty {
                 vm.markAsRead(nrPost.parentPosts.map { $0.shortId })
-            }
-            
-            if nrPost.isRepost, let shortId = nrPost.firstQuote?.shortId {
-                vm.markAsRead(shortId)
             }
         }
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
@@ -382,12 +381,12 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
                     vmInner.updateIsAtTopSubject.send()
                     vm.markAsRead(posts[i].shortId)
                     
-                    if !posts[i].parentPosts.isEmpty {
-                        vm.markAsRead(posts[i].parentPosts.map { $0.shortId })
+                    if posts[i].isRepost, let firstQuoteId = posts[i].firstQuoteId {
+                        vm.markAsRead(String(firstQuoteId.prefix(8)))
                     }
                     
-                    if posts[i].isRepost, let shortId = posts[i].firstQuote?.shortId {
-                        vm.markAsRead(shortId)
+                    if !posts[i].parentPosts.isEmpty {
+                        vm.markAsRead(posts[i].parentPosts.map { $0.shortId })
                     }
                 }
             }
