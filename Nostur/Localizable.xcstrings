@@ -1589,6 +1589,7 @@
     },
     "Add/Remove from feeds" : {
       "comment" : "Menu action",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1603,6 +1604,9 @@
     },
     "Add/remove from Lists" : {
 
+    },
+    "Add/Remove from Lists" : {
+      "comment" : "Menu action"
     },
     "All" : {
       "comment" : "Menu choice to filter by All",

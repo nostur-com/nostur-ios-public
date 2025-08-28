@@ -197,14 +197,9 @@ struct ProfileView: View {
                                 Label(String(localized:"Copy npub", comment:"Menu action"), systemImage: "doc.on.clipboard")
                             }
                             Button {
-                                vm.copyProfileSource(nrContact)
-                            } label: {
-                                Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
-                            }
-                            Button {
                                 sendNotification(.addRemoveToListsheet, nrContact)
                             } label: {
-                                Label(String(localized:"Add/Remove from feeds", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
+                                Label(String(localized:"Add/Remove from Lists", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
                             }
                             Button {
                                 block(pubkey: nrContact.pubkey, name: nrContact.anyName)
@@ -216,6 +211,12 @@ struct ProfileView: View {
                                 sendNotification(.reportContact, ReportContact(nrContact: nrContact))
                             } label: {
                                 Label(String(localized:"Report \(nrContact.anyName)", comment:"Menu action"), systemImage: "flag")
+                            }
+                            
+                            Button {
+                                vm.copyProfileSource(nrContact)
+                            } label: {
+                                Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
                             }
                         } label: {
                             Image(systemName: "ellipsis")

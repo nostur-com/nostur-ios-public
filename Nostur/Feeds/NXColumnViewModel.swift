@@ -2292,7 +2292,7 @@ extension NXColumnViewModel {
                               
             // Fetch from DB
             let postsByRelays: [Event] = await withBgContext { _ in
-                let fr = Event.postsByRelays(relays, lastAppearedCreatedAt: Int64(mostRecentCreatedAt), fetchLimit: 250, kinds: QUERY_FOLLOWING_KINDS)
+                let fr = Event.postsByRelays(relays, lastAppearedCreatedAt: Int64(mostRecentCreatedAt), fetchLimit: 150, kinds: QUERY_FOLLOWING_KINDS)
                 return (try? bg().fetch(fr)) ?? []
             }
             
