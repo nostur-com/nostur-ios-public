@@ -250,10 +250,7 @@ class Backlog {
                 guard let self = self else { return }
                 bg().perform { [weak self] in
                     guard let self = self else { return }
-                    guard !self.tasks.isEmpty else {
-                        self.cleanup()
-                        return
-                    } // Swift access race in Nostur.Backlog.tasks.modify : Swift.Set<Nostur.ReqTask> at 0x10b7ffd20 - Thread 1
+                    guard !self.tasks.isEmpty else { return }
     #if DEBUG
                     L.og.debug("⏳⏳ \(self.backlogDebugName) withTimeInterval: \(self.timeout/22) -> \(self.timeout) --> tasks: \(self.tasks.count) -[LOG]-")
     #endif
@@ -264,6 +261,7 @@ class Backlog {
     }
     
     private func removeOldTasks() {
+        guard !tasks.isEmpty else { return }
 #if DEBUG
         let tasksCount = self.tasks.count
         var removed = 0
@@ -289,6 +287,13 @@ class Backlog {
                 
             }
         }
+        
+        if self.tasks.isEmpty {
+            DispatchQueue.main.async { [weak self] in // needs to be from main
+                self?.timer?.invalidate()
+                self?.timer = nil
+            }
+        }
 #if DEBUG
         L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed: \(removed)/\(tasksCount) timeout: \(self.timeout.description)")
 #endif
@@ -297,7 +302,7 @@ class Backlog {
     public func clear() {
         bg().perform { [weak self] in
 #if DEBUG
-            L.og.debug("⏳⏳ \(self?.backlogDebugName ?? "") Backlog.clear()")
+            L.og.debug("⏳⏳ \(self?.backlogDebugName ?? "") Backlog.clear() - \((self?.tasks.map { $0.subscriptionId })?.description ?? "")")
 #endif
             self?.tasks.removeAll()
         }
@@ -347,18 +352,6 @@ class Backlog {
         subscriptions.removeAll()
         tasks.removeAll()
     }
-    
-    public func cleanup() {
-#if DEBUG
-        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.cleanup()")
-#endif
-        DispatchQueue.main.async { [weak self] in // needs to be from main
-            self?.timer?.invalidate()
-            self?.timer = nil
-        }
-        subscriptions.removeAll()
-        tasks.removeAll()
-    }
 }
 
 class ReqTask: Identifiable, Hashable {
@@ -395,6 +388,9 @@ class ReqTask: Identifiable, Hashable {
     // Use full subscriptionId instead of prefix to have multiple listeners for a task
     // eg. Onboarding + InstantFeed, both having a task with exact subscriptionId: "pubkey-3"
     // So both can listen for "pubkey-3" notifications. (make sure prefix is nil, and subscriptionId is set on ReqTask
+    
+    // debounce  is for task.process() when waiting for latest event, fast relay might send older/wrong event earlier
+    // need to wait for all relays, but not too long, so debounce.
     init(prio: Bool = false, debounceTime: Double = 0.1, timeout: Double? = nil, prefix: String? = nil,
          subscriptionId: String? = nil,
          reqCommand: @escaping (_: String) -> Void,

@@ -23,7 +23,7 @@ func relayReq(_ filter: NostrEssentials.Filters,
             timeout: timeout,
             reqCommand: { taskId in
 #if DEBUG
-                L.og.debug("⏳⏳ Sending request with taskId: \(taskId), timeout: \(timeout?.description ?? "")")
+                L.og.debug("⏳⏳ Backlog.shared: Sending request with taskId: \(taskId), timeout: \(timeout?.description ?? "")")
 #endif
                 nxReq(filter,
                       subscriptionId: taskId,
@@ -36,13 +36,13 @@ func relayReq(_ filter: NostrEssentials.Filters,
             },
             processResponseCommand: { taskId, relayMessage, event in
 #if DEBUG
-                L.og.debug("⏳⏳ Received response for taskId: \(taskId), event: \(event?.id ?? "none")")
+                L.og.debug("⏳⏳ Backlog.shared: Received response for taskId: \(taskId), event: \(event?.id ?? "none")")
 #endif
                 continuation.resume(returning: ReqReturn(taskId: taskId, relayMessage: relayMessage, event: event))
             },
             timeoutCommand: { taskId in
 #if DEBUG
-                L.og.debug("⏳⏳ Timeout triggered for taskId: \(taskId)")
+                L.og.debug("⏳⏳ Backlog.shared: Timeout triggered for taskId: \(taskId)")
 #endif
                 continuation.resume(throwing: FetchError.timeout)
             })
