@@ -187,6 +187,7 @@ extension CloudFeed : Identifiable {
         return account
     }
     
+    // Short IDs (.prefix(8))
     public var lastRead: [String] {
         get {
             return lastRead_?.split(separator: " ").map { String($0) } ?? []

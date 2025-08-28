@@ -203,14 +203,14 @@ class NXColumnViewModel: ObservableObject {
                     guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
                     
                     // Only the keys of self.unreadIds where self.unreadIds[key] > 0
-                    let unreadIds: Set<String> = Set(
+                    let unreadShortIds: Set<String> = Set(
                         self.vmInner.unreadIds.filter({ $0.value > 0 })
                             .keys
                             .map { String($0.prefix(8)) } // just the prefix
                     )
                 
-                    // Only the unreadIds that are also in feedLastReadIds, using Set theory
-                    let lastReadIdsToRemove: Set<String> = unreadIds.intersection(Set(feed.lastRead))
+                    // Only the (short) unreadIds that are also in feedLastReadIds
+                    let lastReadIdsToRemove: Set<String> = unreadShortIds.intersection(Set(feed.lastRead))
                     
                     guard !lastReadIdsToRemove.isEmpty else { return }
                     
@@ -353,7 +353,7 @@ class NXColumnViewModel: ObservableObject {
         // For SomeoneElses feed we need to fetch kind 3 first, before we can do loadLocal/loadRemote
         if case .someoneElses(let pubkey) = config.columnType {
             // Reset all posts already seen for SomeoneElses Feed
-            allIdsSeen = []
+            allShortIdsSeen = []
             fetchKind3ForSomeoneElsesFeed(pubkey, config: config) { [weak self] updatedConfig in
                 self?.config = updatedConfig
                 self?.loadLocal(updatedConfig) { // <-- instant, and works offline
@@ -541,7 +541,7 @@ class NXColumnViewModel: ObservableObject {
         }
         else {
             viewState = .loading
-            self.allIdsSeen = []
+            self.allShortIdsSeen = []
             startFetchFeedTimer()
             loadLocal(config)
         }
@@ -694,7 +694,7 @@ class NXColumnViewModel: ObservableObject {
         let currentNRPostsOnScreen = self.currentNRPostsOnScreen
         
         if !currentNRPostsOnScreen.isEmpty, let feed = config.feed { // if we don't check if screen is empty we can have permanent spinner at first run
-            self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
+            self.allShortIdsSeen = self.allShortIdsSeen.union(Set(feed.lastRead))
         }
         
         let repliesEnabled = config.repliesEnabled
@@ -796,7 +796,7 @@ class NXColumnViewModel: ObservableObject {
 #endif
         }
         
-        let allIdsSeen = self.allIdsSeen
+        let allShortIdsSeen = self.allShortIdsSeen
         let currentIdsOnScreen = self.currentIdsOnScreen
         let wotEnabled = config.wotEnabled
   
@@ -853,7 +853,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .picture(let feed):
             
@@ -882,7 +882,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: [20])
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed): // The pubkeys are in the CloudFeed
             let pubkeys = feed.contactPubkeys
@@ -900,7 +900,7 @@ class NXColumnViewModel: ObservableObject {
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
 
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .someoneElses(_):
 #if DEBUG
@@ -917,7 +917,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkeysPreview(_): // The pubkeys are in the NXConfig
 #if DEBUG
@@ -932,7 +932,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByPubkeys(config.pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .relays(let feed):
 #if DEBUG
@@ -948,7 +948,7 @@ class NXColumnViewModel: ObservableObject {
                     Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
-                self.processToScreen(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkey:
             viewState = .error("Not supported yet")
@@ -1520,28 +1520,30 @@ class NXColumnViewModel: ObservableObject {
     private var backlog = Backlog(auto: true)
     
     // prefix / .shortId only
-    public var allIdsSeen: Set<String> {
+    public var allShortIdsSeen: Set<String> {
         get {
             if case .picture(_) = config?.columnType {
-                return _allIdsSeen
+                return _allShortIdsSeen
             }
             else {
-                return SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _allIdsSeen
+                return SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _allShortIdsSeen
             }
         }
         set {
             if case .picture(_) = config?.columnType {
-                _allIdsSeen = newValue
+                _allShortIdsSeen = newValue
             }
             else if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = newValue
             }
             else {
-                _allIdsSeen = newValue
+                _allShortIdsSeen = newValue
             }
         }
     }
-    private var _allIdsSeen: Set<String> = []
+    
+    // Only shortIds: String(id.prefix(8))
+    private var _allShortIdsSeen: Set<String> = []
     
     @MainActor // all ids, leaf ids, parent ids, reposted ids, but only what is on screen NOW
     private var currentIdsOnScreen: Set<String> {
@@ -1711,7 +1713,7 @@ class NXColumnViewModel: ObservableObject {
         
     }
     
-    private func fetchParents(_ danglers: [NRPost], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool = false) {
+    private func fetchParents(_ danglers: [NRPost], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool = false) {
         for nrPost in danglers {
             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "CVM.001")
         }
@@ -1749,7 +1751,7 @@ class NXColumnViewModel: ObservableObject {
                     // Need to go to main context again to get current screen state
                     Task { @MainActor [weak self] in
                         guard let self else { return }
-                        let allIdsSeen = self.allIdsSeen
+                        let allShortIdsSeen = self.allShortIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
@@ -1760,7 +1762,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen -[LOG]-")
 #endif
-                            self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
                     }
                 }
@@ -1775,7 +1777,7 @@ class NXColumnViewModel: ObservableObject {
                     // Need to go to main context again to get current screen state
                     Task { @MainActor [weak self] in
                         guard let self else { return }
-                        let allIdsSeen = self.allIdsSeen
+                        let allShortIdsSeen = self.allShortIdsSeen
                         let currentIdsOnScreen = self.currentIdsOnScreen
                         let wotEnabled = config.wotEnabled
                         let repliesEnabled = config.repliesEnabled
@@ -1786,7 +1788,7 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
                             L.og.debug("☘️☘️ \(config.name) fetchParents(.pubkeys)\(older ? "older" : "").processToScreen (timeoutCommand)")
 #endif
-                            self.processToScreen(danglingEvents, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                            self.processToScreen(danglingEvents, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                         }
                     }
 
@@ -1858,12 +1860,12 @@ extension NXColumnViewModel {
     
     // Primary function to put Events on screen
     // allIdsSeen must be prefix / .shortId format
-    private func processToScreen(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, completion: (() -> Void)? = nil) {
+    private func processToScreen(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, currentNRPostsOnScreen: [NRPost] = [], sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool, completion: (() -> Void)? = nil) {
 #if DEBUG
         L.og.debug("☘️☘️ \(config.name) processToScreen() -[LOG]-")
 #endif
         // Apply WoT filter, remove already on screen
-        let preparedEvents = prepareEvents(events, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+        let preparedEvents = prepareEvents(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: sinceOrUntil, older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
         
         // Transform from Event to NRPost (only not already on screen by prev statement)
         let nrPosts: [NRPost] = self.transformToNRPosts(preparedEvents, config: config, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, repliesEnabled: repliesEnabled)
@@ -1876,7 +1878,7 @@ extension NXColumnViewModel {
         let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
         if !newDanglers.isEmpty && repliesEnabled {
             danglingIds = danglingIds.union(newDanglers.map { $0.id })
-            fetchParents(newDanglers, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older)
+            fetchParents(newDanglers, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: sinceOrUntil, older: older)
         }
         
         guard !partialThreadsWithParent.isEmpty else {
@@ -1908,14 +1910,14 @@ extension NXColumnViewModel {
     // -- MARK: Subfunctions used by processToScreen():
     
     // Prepare events: apply WoT filter, remove already on screen, load .parentEvents
-    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
+    private func prepareEvents(_ events: [Event], config: NXColumnConfig, allShortIdsSeen: Set<String>, currentIdsOnScreen: Set<String>, sinceOrUntil: Int, older: Bool, wotEnabled: Bool, repliesEnabled: Bool) -> [Event] {
         shouldBeBg()
         let wotFilteredEvents: [Event] = (wotEnabled ? applyWoT(events, config: config) : events) // Apply WoT filter or not
             
         let seenFilteredEvents: [Event] = wotFilteredEvents
             .filter { // Apply (app wide) already-seen filter
-                if allIdsSeen.contains($0.shortId) { return false } // remove already seen normal posts
-                if $0.isRepost, let firstQuoteId = $0.firstQuoteId, allIdsSeen.contains(String(firstQuoteId.prefix(8))) { // remove already seen reposted posts
+                if allShortIdsSeen.contains($0.shortId) { return false } // remove already seen normal posts
+                if $0.isRepost, let firstQuoteId = $0.firstQuoteId, allShortIdsSeen.contains(String(firstQuoteId.prefix(8))) { // remove already seen reposted posts
                     return false
                 }
                 return true
@@ -2079,10 +2081,25 @@ extension NXColumnViewModel {
 
         if case .posts(let existingPosts) = viewState { // There are already posts on screen
             
+            
+            // Only the ids of self.unreadIds where unreadIds[key] > 0
+            let currentUnreadIdsOnScreen: Set<String> = Set(
+                self.vmInner.unreadIds.filter({ $0.value > 0 }).keys
+            )
+            
             // Somehow we still have duplicates here that should have been filtered in prev steps (bug?) so filter duplicates again here
-            let currentIdsOnScreen = existingPosts.map { $0.id }
+            let currentIdsOnScreen = Set(existingPosts.map { $0.id }).union(currentUnreadIdsOnScreen)
+            
+            
             let onlyNewAddedPosts = addedPosts
-                .filter { !currentIdsOnScreen.contains($0.id) }
+                .filter {
+                    // if it is a repost, check reposted-id also
+                    if $0.kind == 6, let firstQuoteId = $0.firstQuoteId, currentIdsOnScreen.contains(firstQuoteId) {
+                        return false
+                    }
+                    // else just check the normal id
+                    return !currentIdsOnScreen.contains($0.id)
+                }
                 .uniqued(on: { $0.id }) // <--- need last line?
             
             if !insertAtEnd { // add on top
@@ -2298,14 +2315,14 @@ extension NXColumnViewModel {
                 
                 // Need to go to main context again to get current screen state
                 Task { @MainActor in
-                    self.allIdsSeen = self.allIdsSeen.union(Set(feed.lastRead))
-                    let allIdsSeen = self.allIdsSeen
+                    self.allShortIdsSeen = self.allShortIdsSeen.union(Set(feed.lastRead))
+                    let allShortIdsSeen = self.allShortIdsSeen
                     let currentIdsOnScreen = self.currentIdsOnScreen
                     let since = (self.mostRecentCreatedAt ?? 0)
                     
                     // Then back to bg for processing
                     bg().perform { [weak self] in
-                        self?.processToScreen(postsByRelays, config: config, allIdsSeen: allIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                        self?.processToScreen(postsByRelays, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                     }
                 }
             }

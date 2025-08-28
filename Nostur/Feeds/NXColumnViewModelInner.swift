@@ -12,6 +12,7 @@ import Combine
 // So moved to separate NXColumnViewModelInner
 class NXColumnViewModelInner: ObservableObject {
     
+    // Full IDs (not shortIds)
     @Published public var unreadIds: [String: Int] = [:] {
         didSet {
             if #available(iOS 16.0, *) {

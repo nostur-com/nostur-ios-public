@@ -45,11 +45,14 @@ struct NXPostsFeed: View {
                         // SettingsStore.shared.fetchCounts should be true for below to work
                         vm.prefetch(nrPost)
                         if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
-                            vm.allIdsSeen.insert(nrPost.shortId)
+                            vm.allShortIdsSeen.insert(nrPost.shortId)
+                            if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+                                vm.allShortIdsSeen.insert(String(firstQuoteId.prefix(8)))
+                            }
                         }
                         else {
                             let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
-                            vm.allIdsSeen.formUnion(leafIds)
+                            vm.allShortIdsSeen.formUnion(leafIds)
                         }
                     }
                     .onAppear {
