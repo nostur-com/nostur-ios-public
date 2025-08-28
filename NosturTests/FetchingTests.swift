@@ -44,6 +44,9 @@ struct FetchingTests {
         }
                         
         #expect(nrPosts.count > 0, "Should have some post")
+        
+        // Clean up
+        await Maintenance.deleteAllEventsAndContacts(context: bg())
     }
     
     @available(iOS 16.0, *)
@@ -62,14 +65,12 @@ struct FetchingTests {
         }
     }
     
-    @Test func testSingleRelayFeed() async throws {
+    @Test func testSingleRelayFeedTimeout() async throws {
         SettingsStore.shared.enableOutboxRelays = false
         SettingsStore.shared.webOfTrustLevel = "WOT_OFF"
-        let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-        let accountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
         
         // This local test relay should have some data or test will fail (TODO: setup proper mock test relay in tests)
-        let testRelay: RelayData = RelayData.new(url: "ws://192.168.11.217:23911", read: true, write: true, search: true, auth: false, excludedPubkeys: [])
+        let testRelay: RelayData = RelayData.new(url: "ws://192.168.11.110:49201", read: true, write: true, search: true, auth: false, excludedPubkeys: [])
         ConnectionPool.shared.addConnection(testRelay)
 
         await #expect(throws: FetchError.timeout) {
@@ -92,6 +93,41 @@ struct FetchingTests {
 //        }
 //                        
 //        #expect(nrPosts.count > 0, "Should have some post")
+        
+        
+    }
+    
+    @Test func testSingleRelayFeed() async throws {
+        SettingsStore.shared.enableOutboxRelays = false
+        SettingsStore.shared.webOfTrustLevel = "WOT_OFF"
+        
+        // This local test relay should have some data or test will fail (TODO: setup proper mock test relay in tests)
+        let testRelay: RelayData = RelayData.new(url: "wss://nos.lol", read: true, write: true, search: true, auth: false, excludedPubkeys: [])
+        ConnectionPool.shared.addConnection(testRelay)
+
+        try await awaitWithRunLoop(timeout: 8) {
+            _ = try await relayReq(Filters(kinds: FETCH_GLOBAL_KINDS, limit: 5), timeout: 5.5, relays: [testRelay])
+        }
+        
+        // Fetch from DB
+        let postsByRelays: [Nostur.Event] = await withBgContext { _ in
+            let fr = Event.postsByRelays([testRelay], lastAppearedCreatedAt: 0, fetchLimit: 5, kinds: QUERY_FOLLOWING_KINDS)
+            return (try? bg().fetch(fr)) ?? []
+        }
+        #expect(postsByRelays.count > 0, "Should have some posts")
+                
+        
+        L.og.debug("postsByRelays.count = \(postsByRelays.count)")
+        
+        // Fetch from DB
+        let nrPosts: [NRPost] = await withBgContext { bg in
+            Event.fetchEvents(postsByRelays.map { $0.id }).map { NRPost(event: $0) }
+        }
+
+        #expect(nrPosts.count > 0, "Should have some post")
+        
+        // Clean up
+        await Maintenance.deleteAllEventsAndContacts(context: bg())
     }
 }
 
