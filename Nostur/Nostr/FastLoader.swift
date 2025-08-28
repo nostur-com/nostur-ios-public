@@ -206,7 +206,13 @@ class Backlog {
                 .sink { [weak self] subscriptionIds in
                     guard let self = self else { return }
                     let reqTasks = self.tasks(with: subscriptionIds)
+#if DEBUG
+                    L.og.debug("\(backlogDebugName) - subscriptionIds: \(subscriptionIds) tasks: \(self.tasks.count): \(self.tasks.map { $0.subscriptionId }) -[LOG]-")
+#endif
                     for task in reqTasks {
+#if DEBUG
+                        L.og.debug("\(backlogDebugName) - task.process(): \(task.subscriptionId)  -[LOG]-")
+#endif
                         task.process()
                     }
                 }
@@ -443,10 +449,6 @@ class ReqTask: Identifiable, Hashable {
     }
     
     deinit {
-        subscriptions.removeAll()
-    }
-    
-    public func cleanup() {
         subscriptions.removeAll()
     }
 }
