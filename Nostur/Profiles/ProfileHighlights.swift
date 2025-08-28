@@ -58,33 +58,27 @@ struct ProfileHighlights: View {
     }
     
     private func load() async {
-        do {
-            _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 5.5)
-            
-            let postIds: [String] = await withBgContext { _ in
-                Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
-            }
-            
-            guard !postIds.isEmpty else {
-                viewState = .error("Nothing found")
-                return
-            }
-            
-            _ = try await relayReq(Filters(ids: Set(postIds)), timeout: 2.5)
-            
-            let nrPosts: [NRPost] = await withBgContext { bg in
-                Event.fetchEvents(postIds).map { NRPost(event: $0) }
-            }
-            
-            Task { @MainActor in
-                viewState = .posts(nrPosts)
-            }
+        _ = try? await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 5.5)
+        
+        let postIds: [String] = await withBgContext { _ in
+            Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
         }
-        catch FetchError.timeout {
+        
+        guard !postIds.isEmpty else {
             viewState = .error("Nothing found")
+            return
         }
-        catch {
-            viewState = .error(error.localizedDescription)
+        
+        _ = try? await relayReq(Filters(ids: Set(postIds)), timeout: 2.5)
+        
+        let nrPosts: [NRPost] = await withBgContext { bg in
+            Event.fetchEvents(postIds)
+                .filter { $0.pubkey == pubkey } // make sure pubkey matches
+                .map { NRPost(event: $0) }
+        }
+        
+        Task { @MainActor in
+            viewState = .posts(nrPosts)
         }
     }
     
