@@ -267,6 +267,26 @@ struct ProfileView: View {
             Section(content: {
                 switch selectedSubTab {
                 case "Posts":
+                    if let pinnedPost = vm.pinnedPost {
+                        Box(nrPost: pinnedPost) {
+                            VStack(alignment: .leading) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "pin.fill")
+                                        .fontWeightBold()
+                                        .scaleEffect(0.6)
+                                        .layoutPriority(1)
+                                    
+                                    Text("Pinned")
+                                        .lineLimit(1)
+                                        .font(.subheadline)
+                                        .fontWeightBold()
+                                }
+                                .foregroundColor(.gray)
+                                .padding(.leading, 36)
+                                PostRowDeletable(nrPost: pinnedPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true)
+                            }
+                        }
+                    }
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .posts)
                         .background(theme.listBackground)
                 case "Replies":

@@ -18,6 +18,7 @@ class ProfileViewModel: ObservableObject {
     @Published var npub = ""
     
     @Published var newPostsNotificationsEnabled: Bool = false
+    @Published var pinnedPost: NRPost?
     
     private let backlog = Backlog(timeout: 4.0, auto: true, backlogDebugName: "ProfileViewModel")
     private var pubkey: String?
@@ -39,6 +40,9 @@ class ProfileViewModel: ObservableObject {
         }
         self.loadOldPFP(nrContact)
         self.loadArticles(nrContact)
+        Task.detached {
+            await self.loadPinned(nrContact)
+        }
         Task.detached {
             await self.loadHighlights(nrContact)
         }
@@ -172,33 +176,54 @@ class ProfileViewModel: ObservableObject {
         }
     }
     
+    public func loadPinned(_ nrContact: NRContact) async {
+        let pubkey = nrContact.pubkey
+        _ = try? await relayReq(Filters(authors: [pubkey], kinds: [10601]), timeout: 5.5)
+        
+        let pinnedPost: NRPost? = await withBgContext { bgContext in
+            let event = Event.fetchReplacableEvent(10601, pubkey: pubkey, context: bgContext)
+            if let firstE = event?.firstE(),
+               let pinnedEvent = Event.fetchEvent(id: firstE, context: bgContext),
+               pinnedEvent.pubkey == pubkey
+            {
+                return NRPost(event: pinnedEvent)
+            }
+            return nil
+        }
+        
+        guard let pinnedPost else { return }
+        Task { @MainActor [weak self] in
+            withAnimation {
+                self?.pinnedPost = pinnedPost
+            }
+        }
+    }
+    
     public func loadHighlights(_ nrContact: NRContact) async {
         let pubkey = nrContact.pubkey
-        do {
-            _ = try await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 4.5)
-            
-            let postIds: [String] = await withBgContext { _ in
-                Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
-            }
-            
-            guard !postIds.isEmpty else {
-                Task { @MainActor [weak self] in
-                    self?.showHighlightsTab = false
-                }
-                return
-            }
-            
-            Task { @MainActor [weak self] in
-                withAnimation {
-                    self?.showHighlightsTab = true
-                }
-            }
         
+        let postIds: [String] = await withBgContext { _ in
+            Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
         }
-        catch {
+        
+        if !postIds.isEmpty {
             Task { @MainActor [weak self] in
-                self?.showHighlightsTab = false
+                self?.showHighlightsTab = true
             }
+            return
+        }
+        
+        _ = try? await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 4.5)
+        
+        let postIdsAfter: [String] = await withBgContext { _ in
+            Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
+        }
+        
+        if !postIdsAfter.isEmpty {
+            Task { @MainActor [weak self] in
+                self?.showHighlightsTab = true
+            }
+            return
         }
     }
     
