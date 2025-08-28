@@ -6474,6 +6474,9 @@
         }
       }
     },
+    "Pin this post" : {
+
+    },
     "Pin to your profile" : {
 
     },
@@ -6486,6 +6489,9 @@
           }
         }
       }
+    },
+    "Pinned" : {
+
     },
     "Please read these Terms and Conditions (\"Terms\", \"Terms and Conditions\") carefully before using Nostur (the \"App\") operated by the independent developer (\"Developer\")." : {
       "comment" : "Terms and conditions paragraph",
@@ -9298,6 +9304,9 @@
           }
         }
       }
+    },
+    "This will appear at the top of your profile and replace any previously pinned post." : {
+
     },
     "Thread" : {
       "comment" : "Navigation title when viewing a Thread",

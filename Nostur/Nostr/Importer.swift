@@ -276,7 +276,14 @@ class Importer {
                             }
                         }
                         else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: bgContext) { 
+                            if !Event.eventExists(id: noteInNote.id, context: bgContext) {
+                                
+                                guard try noteInNote.verified() else {
+        #if DEBUG
+                                    L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
+        #endif
+                                    continue
+                                }
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
@@ -294,6 +301,15 @@ class Importer {
                         // if we don't already have the to be pinned post (in .content), we decode and save it
                         if !Event.eventExists(id: firstE, context: bgContext) && event.content.prefix(2) == #"{""# {
                             if let toBePinnedPost = try? Importer.shared.decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
+                                
+                                guard try toBePinnedPost.verified() else  {
+#if DEBUG
+                                    L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
+#endif
+                                    continue
+                                }
+                                
+                                
                                 let toBePinnedPostEvent = Event.saveEvent(event: toBePinnedPost, relays: message.relays, context: bgContext)
                                 NotificationsViewModel.shared.checkNeedsUpdate(toBePinnedPostEvent)
                                 Event.updateRelays(toBePinnedPost.id, relays: message.relays, context: bgContext)
