@@ -1,14 +1,14 @@
 //
-//  NXList.swift
+//  NXForm.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 29/08/2025.
 //
 import SwiftUI
 
-// List with boilerplate for reuse instead of default List. Sets correct list background, row background
-// with plain flag to use default SwiftUI spacing
-struct NXList<Content: View>: View {
+// Form with boilerplate for reuse instead of default Form. Sets correct form (list) background, row background
+// with plain flag to use default SwiftUI spacing or not
+struct NXForm<Content: View>: View {
     @Environment(\.theme) private var theme
     private var content: Content
     private var plain: Bool
@@ -29,7 +29,7 @@ struct NXList<Content: View>: View {
     
     @ViewBuilder
     var normalBody: some View {
-        List {
+        Form {
             Group {
                 content
             }
@@ -42,7 +42,7 @@ struct NXList<Content: View>: View {
     
     @ViewBuilder
     var plainBody: some View {
-        List {
+        Form {
             Group {
                 content
             }

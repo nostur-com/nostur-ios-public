@@ -438,7 +438,7 @@ struct ProfileView: View {
         }
         
         .nbNavigationDestination(isPresented: $showFollowing) {
-            NXList {
+            NXList(plain: true) {
                 ProfileFollowingList(pubkey: nrContact.pubkey)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
@@ -446,7 +446,7 @@ struct ProfileView: View {
             .background(theme.listBackground)
         }
         .nbNavigationDestination(isPresented: $showFollowers) {
-            NXList {
+            NXList(plain: true) {
                 FollowersList(pubkey: nrContact.pubkey)
             }
             .navigationTitle("Followers")
