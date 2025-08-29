@@ -9,7 +9,7 @@ import CoreData
 
 class DataProvider: ObservableObject {
     
-    public var bgStored:NSManagedObjectContext? // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
+    public var bgStored: NSManagedObjectContext? // IMPORTING, PREPARING, TRANSFORMING FOR VIEW
     
     /// A shared data provider for use within the main app bundle.
     static let live = DataProvider()

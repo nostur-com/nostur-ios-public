@@ -301,7 +301,7 @@ class Backlog {
             }
         }
 #if DEBUG
-        L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed: \(removed)/\(tasksCount) timeout: \(self.timeout.description)")
+        L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed: \(removed)/\(tasksCount) timeout: \(self.timeout.description) -[LOG]-")
 #endif
     }
     

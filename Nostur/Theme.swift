@@ -66,8 +66,10 @@ class Themes: ObservableObject {
     
     public func loadDefault() {
         selectedTheme = "default"
-        theme = Theme()
+        theme = Self.DEFAULT
     }
+    
+    static let DEFAULT = Theme()
     
     static let CLASSIC = Theme(
         id: "Classic",
@@ -120,7 +122,6 @@ class Themes: ObservableObject {
     
     public func loadPink() {
         selectedTheme = "pink"
-        
         theme = Self.PINK
     }
     
@@ -157,7 +158,6 @@ class Themes: ObservableObject {
     
     public func loadPurple() {
         selectedTheme = "purple"
-        
         theme = Self.PURPLE
     }
     

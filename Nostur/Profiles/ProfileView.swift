@@ -299,6 +299,7 @@ struct ProfileView: View {
                         .background(theme.listBackground)
                 case "Highlights":
                     ProfileHighlights(pubkey: nrContact.pubkey)
+                        .background(theme.listBackground)
                 case "Lists":
                     ProfilePostsView(pubkey: nrContact.pubkey, type: .lists)
                         .background(theme.listBackground)

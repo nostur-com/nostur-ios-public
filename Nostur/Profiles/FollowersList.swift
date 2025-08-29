@@ -54,27 +54,20 @@ struct FollowersList: View {
     @State private var rechecking = false
     
     var body: some View {
-        VStack {
-            Text("Followers", comment: "Heading")
-                .font(.headline)
-                .fontWeight(.heavy)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 10)
-            
-            HStack {
-                Spacer()
-                Text("Total: \(clEventsPerPubkey.count)")
-                if !rechecking {
-                    Image(systemName:"arrow.clockwise.circle.fill")
-                        .onTapGesture {
-                            req(RM.getFollowers(pubkey: pubkey))
-                            rechecking = true
-                        }
-                        .help("Recheck")
-                }
-                Spacer()
+        HStack {
+            Spacer()
+            Text("Total: \(clEventsPerPubkey.count)")
+            if !rechecking {
+                Image(systemName:"arrow.clockwise.circle.fill")
+                    .onTapGesture {
+                        req(RM.getFollowers(pubkey: pubkey))
+                        rechecking = true
+                    }
+                    .help("Recheck")
             }
+            Spacer()
         }
+        .padding(.vertical, 10)
         .onAppear {
             let missing = clEventsFollowingPubkeyMissingContact.map { $0.pubkey }
             guard !missing.isEmpty else { return }

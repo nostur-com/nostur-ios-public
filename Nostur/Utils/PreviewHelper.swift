@@ -809,6 +809,7 @@ struct PreviewContainer<Content: View>: View {
         VStack(spacing: 0) {
             if didSetup, let loggedInAccount = AccountsState.shared.loggedInAccount {
                 content()
+                    .environment(\.theme, Themes.GREEN)
                     .environment(\.managedObjectContext, pe.context)
                     .environmentObject(AppState.shared)
                     .environmentObject(AccountsState.shared)
@@ -824,15 +825,15 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.dm)
                     .environmentObject(NetworkMonitor.shared)
                     .environmentObject(NotificationsViewModel.shared)
-                    .buttonStyle(NRButtonStyle(theme: pe.themes.theme))
-                    .tint(pe.themes.theme.accent)
+                    .buttonStyle(NRButtonStyle(theme: Themes.GREEN))
+                    .tint(Themes.GREEN.accent)
             }
             else {
                 EmptyView()
             }
         }
         .onAppear {
-            pe.themes.loadDefault()
+            pe.themes.loadGreen()
             if pe.loadAccount() {
                 if let setup {
                     setup(pe)
