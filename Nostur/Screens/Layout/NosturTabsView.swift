@@ -11,16 +11,6 @@ import NavigationBackport
 
 struct NosturTabsView: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dm: DirectMessageViewModel
-    
-    @AppStorage("selected_tab") private var selectedTab = "Main"
-    
-    private var selectedNotificationsTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions" }
-    }
-
-    @State private var unread: Int = 0
-    
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     var body: some View {
@@ -30,79 +20,8 @@ struct NosturTabsView: View {
         Zoomable {
             HStack(spacing: GUTTER) {
                 AvailableWidthContainer {
-                    VStack {
-                        NoInternetConnectionBanner()
-                        TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
-                            tabTapped(newTab, oldTab: oldTab)
-                        }) {
-                            HomeTab()
-                                .environment(\.horizontalSizeClass, horizontalSizeClass)
-//                                .environmentObject(la)
-                                .tabItem {
-                                    Image(systemName: "house")
-//                                    Label("Home", systemImage: "house")
-//                                        .labelStyle(.iconOnly)
-                                }
-//                                .labelStyle(.iconOnly)
-                                .tag("Main")
-                                .nosturTabsCompat(theme: theme)
-                            
-        //                    DiscoverCommunities()
-        //                        .tabItem { Label("Communities", systemImage: "person.3.fill")}
-        //                        .tag("Communities")
-//                                .nosturTabsCompat(theme: theme)
-
-                            BookmarksTab()
-                                .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem {
-                                    Image(systemName: "bookmark")
-//                                    Label("Bookmarks", systemImage: "bookmark")
-//                                        .labelStyle(.iconOnly)
-                                }
-//                                .labelStyle(.iconOnly)
-                                .tag("Bookmarks")
-                                .nosturTabsCompat(theme: theme)
-                            
-                            
-                            Search()
-                                .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem {
-                                    Image(systemName: "magnifyingglass")
-//                                    Label("Search", systemImage: "magnifyingglass")
-//                                        .labelStyle(.iconOnly)
-                                }
-                                .labelStyle(.iconOnly)
-                                .tag("Search")
-                                .nosturTabsCompat(theme: theme)
-                            
-                            NotificationsContainer()
-                                .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem {
-                                    Image(systemName: "bell.fill")
-//                                    Label("Notifications", systemImage: "bell.fill")
-//                                        .labelStyle(.iconOnly)
-                                }
-                                .labelStyle(.iconOnly)
-                                .tag("Notifications")
-                                .badge(unread)
-                                .nosturTabsCompat(theme: theme)
-
-                            DMContainer()
-                                .environment(\.horizontalSizeClass, horizontalSizeClass)
-                                .tabItem {
-                                    Image(systemName: "envelope.fill")
-//                                    Label("Messages", systemImage: "envelope.fill")
-//                                        .labelStyle(.iconOnly)
-                                }
-//                                .labelStyle(.iconOnly)
-                                .tag("Messages")
-                                .badge((dm.unread + dm.newRequests))
-                                .nosturTabsCompat(theme: theme)
-                        }
+                    MainTabs()
                         .environment(\.horizontalSizeClass, .compact)
-                        .withSheets() // Move .sheets to each (NB)NavigationStack?
-                        .edgesIgnoringSafeArea(.all)
-                    }
                 }
                 .frame(maxWidth: 600)
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {
@@ -115,46 +34,13 @@ struct NosturTabsView: View {
             .contentShape(Rectangle())
             .background(theme.background) // GUTTER
             .withLightningEffect()
-            .onChange(of: selectedTab) { newValue in
-                if newValue == "Notifications" {
-                    
-                    // If there is only one tab with unread notifications, go to that tab
-                    if NotificationsViewModel.shared.unread > 0 {
-                        if NotificationsViewModel.shared.unreadMentions > 0 {
-                            UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
-                        }
-                        else if NotificationsViewModel.shared.unreadNewPosts > 0 {
-                            UserDefaults.standard.setValue("New Posts", forKey: "selected_notifications_tab")
-                        }
-                        else if NotificationsViewModel.shared.unreadReactions > 0 {
-                            UserDefaults.standard.setValue("Reactions", forKey: "selected_notifications_tab")
-                        }
-                        else if NotificationsViewModel.shared.unreadZaps > 0 {
-                            UserDefaults.standard.setValue("Zaps", forKey: "selected_notifications_tab")
-                        }
-                        else if NotificationsViewModel.shared.unreadReposts > 0 {
-                            UserDefaults.standard.setValue("Reposts", forKey: "selected_notifications_tab")
-                        }
-                        else if NotificationsViewModel.shared.unreadNewFollowers > 0 {
-                            UserDefaults.standard.setValue("Followers", forKey: "selected_notifications_tab")
-                        }
-                    }
-                    
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                        sendNotification(.notificationsTabAppeared) // use for resetting unread count
-                    }
-                }
-            }
+            
             .task {
                 if SettingsStore.shared.receiveLocalNotifications {
                     requestNotificationPermission()
                 }
             }
-            .onReceive(NotificationsViewModel.shared.unreadPublisher) { unread in
-                if unread != self.unread {
-                    self.unread = unread
-                }
-            }
+
             .overlay(alignment: .center) {
                 OverlayPlayer()
                     .edgesIgnoringSafeArea(.bottom)
@@ -162,18 +48,7 @@ struct NosturTabsView: View {
         }
     }
 
-    private func tabTapped(_ tabName:String, oldTab:String) {
-        
-        // Only do something if we are already on same the tab
-        guard oldTab == tabName else { return }
-
-        // For main, we scroll to first unread
-        // but depends on condition with values only known in FollowingAndExplore
-        sendNotification(.didTapTab, tabName)
-
-        // pop navigation stack back to root
-        sendNotification(.clearNavigation, tabName)
-    }
+    
 }
 
 #Preview {
@@ -181,3 +56,5 @@ struct NosturTabsView: View {
         NosturTabsView()
     }
 }
+
+
