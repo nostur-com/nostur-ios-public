@@ -32,6 +32,9 @@ struct ProfileView: View {
     
     @State private var scrollPosition = ScrollPosition()
     
+    @State private var showFollowing = false
+    @State private var showFollowers = false
+    
     var body: some View {
         #if DEBUG
         let _ = Self._printChanges()
@@ -245,10 +248,12 @@ struct ProfileView: View {
                     
                     HStack(alignment: .center, spacing: 10) {
                         ProfileFollowingCount(pubkey: nrContact.pubkey)
-                        
+                            .onTapGesture {
+                                showFollowing = true
+                            }
                         Text("**♾️** Followers", comment: "Label for followers count")
                             .onTapGesture {
-                                selectedSubTab = "Followers"
+                                showFollowers = true
                             }
                     }
                     .frame(height: 30)
@@ -303,9 +308,6 @@ struct ProfileView: View {
                 case "Interactions":
                     ProfileInteractionsView(nrContact: nrContact)
                         .background(theme.listBackground)
-                case "Following":
-                    ProfileFollowingList(pubkey: nrContact.pubkey)
-                        .background(theme.listBackground)
                 case "Media":
                     ProfileMediaView(pubkey: nrContact.pubkey)
                         .background(theme.listBackground)
@@ -317,9 +319,6 @@ struct ProfileView: View {
                         .background(theme.listBackground)
                 case "Relays":
                     ProfileRelays(pubkey: nrContact.pubkey, name: nrContact.anyName)
-                        .background(theme.listBackground)
-                case "Followers":
-                    FollowersList(pubkey: nrContact.pubkey)
                         .background(theme.listBackground)
                 default:
                     Text("🥪")
@@ -362,11 +361,6 @@ struct ProfileView: View {
                             action: { selectedSubTab = "Interactions" },
                             title: String(localized: "Interactions", comment:"Tab title"),
                             selected: selectedSubTab == "Interactions")
-                        Spacer()
-                        TabButton(
-                            action: { selectedSubTab = "Following" },
-                            title: String(localized: "Following", comment:"Tab title"),
-                            selected: selectedSubTab == "Following")
                         Spacer()
                         TabButton(
                             action: { selectedSubTab = "Media" },
@@ -442,6 +436,24 @@ struct ProfileView: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         }
+        
+        .nbNavigationDestination(isPresented: $showFollowing) {
+            NXList {
+                ProfileFollowingList(pubkey: nrContact.pubkey)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
+            .navigationTitle("Following")
+            .background(theme.listBackground)
+        }
+        .nbNavigationDestination(isPresented: $showFollowers) {
+            NXList {
+                FollowersList(pubkey: nrContact.pubkey)
+            }
+            .navigationTitle("Followers")
+            .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
+            .background(theme.listBackground)
+        }
+        
         .onAppear {
             if let tab = tab {
                 selectedSubTab = tab

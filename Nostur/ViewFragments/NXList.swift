@@ -4,7 +4,7 @@
 //
 //  Created by Fabian Lachman on 29/08/2025.
 //
-
+import SwiftUI
 
 // List with boilerplate for reuse instead of default List. Sets correct list background, row background
 struct NXList<Content: View>: View {
