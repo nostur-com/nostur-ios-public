@@ -1065,8 +1065,7 @@ struct Maintenance {
         
         if let likeIndex = footerButtons.firstIndex(of: "+") {
             footerButtons.insert("⚡️", at: footerButtons.index(after: likeIndex))
-        }
-        else {
+        } else if !footerButtons.isEmpty {
             let lastIndex = footerButtons.index(before: footerButtons.endIndex)
             footerButtons.insert("⚡️", at: lastIndex)
         }
