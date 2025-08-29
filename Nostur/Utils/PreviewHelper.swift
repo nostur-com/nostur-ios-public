@@ -72,10 +72,19 @@ public class PreviewEnvironment {
                 if event.kind == .setMetadata {
                     Contact.saveOrUpdateContact(event: event, context: context)
                 }
+            }
+        }
+    }
+    
+    
+    public func parseEventJSON(_ messages: [String]) {
+        context.performAndWait {
+            for text in messages {
+                guard let nEvent = NEvent.fromString(text) else { continue }
+                let savedEvent = Event.saveEvent(event: nEvent, context: context)
                 
-                // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                if event.kind == .zapNote {
-                    Event.updateZapTallyCache(savedEvent, context: context)
+                if nEvent.kind == .setMetadata {
+                    Contact.saveOrUpdateContact(event: nEvent, context: context)
                 }
             }
         }
@@ -963,4 +972,45 @@ struct PreviewFetcher {
         }
         return try! (context ?? PreviewFetcher.viewContext).fetch(request).first
     }
+}
+
+// Return a nEvent for testing, optionally from passed in json string
+func testNEvent(_ eventJsonString: String? = nil) -> NEvent {
+    if let eventJsonString, let nEvent = NEvent.fromString(eventJsonString) {
+        return nEvent
+    }
+    
+    return NEvent(content: "Test content", kind: .textNote, tags: [])
+}
+
+// Return a Event for testing, optionally from passed in NEvent or json string
+func testEvent(_ eventJsonString: String? = nil, nEvent: NEvent? = nil) -> Event {
+    let nEvent = nEvent ?? testNEvent(eventJsonString)
+    let savedEvent = Event(context: bg())
+    savedEvent.insertedAt = Date.now
+    savedEvent.id = nEvent.id
+    savedEvent.kind = Int64(nEvent.kind.id)
+    savedEvent.created_at = Int64(nEvent.createdAt.timestamp)
+    savedEvent.content = nEvent.content
+    savedEvent.sig = nEvent.signature
+    savedEvent.pubkey = nEvent.publicKey
+    savedEvent.likesCount = 0
+    savedEvent.isRepost = nEvent.kind == .repost
+    savedEvent.otherAtag = savedEvent.firstA()
+    savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: nEvent.tags) // TODO: why encode again, need to just store what we received before (performance)
+    return savedEvent
+}
+
+// Return a NRPost for testing, optionally from passed in NEvent, Event or json string
+func testNRPost(_ eventJsonString: String? = nil, event: Event? = nil, nEvent: NEvent? = nil) -> NRPost {
+    if let event {
+        return NRPost(event: event)
+    }
+    else if let nEvent {
+        return NRPost(event: testEvent(nEvent: nEvent))
+    }
+    else if let eventJsonString {
+        return NRPost(event: testEvent(eventJsonString))
+    }
+    return NRPost(event: testEvent())
 }
