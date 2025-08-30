@@ -44,7 +44,7 @@ struct RelayEditView: View {
     }
     
     var body: some View {
-        Form {
+        NXForm {
             Section(header: Text("Relay URL", comment: "Relay URL header") ) {
                 TextField(String(localized:"wss://nostr.relay.url.here", comment:"Placeholder for entering a relay URL"), text: $relayUrl)
                     .keyboardType(.URL)

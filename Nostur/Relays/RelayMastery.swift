@@ -125,7 +125,7 @@ struct AccountRelaySettings: View {
     @StateObject private var vm = FetchVM<[AccountRelayData]>(timeout: 1.5, debounceTime: 0.05)
     
     var body: some View {
-        Form {
+        NXForm {
             switch vm.state {
             case .initializing, .loading, .altLoading:
                 self.loadingView

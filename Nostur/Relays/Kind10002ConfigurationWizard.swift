@@ -57,7 +57,7 @@ struct Kind10002ConfigurationWizard: View {
         ZStack {
             switch step {
             case .intro:
-                Form {
+                NXForm {
                     Text("These steps help you let others know on which relays they can find \(account.anyName)'s posts and which relays others should use to reach \(account.anyName).")
                     
                 }
@@ -82,7 +82,7 @@ struct Kind10002ConfigurationWizard: View {
                                 removal: .move(edge: isBack ? .trailing : .leading))
                             )
             case .selectWrite:
-                Form {
+                NXForm {
                     Section("Relays you post to") {
                         
                         Text("Which relays should others use to find posts for account: \(account.anyName)? (choose 3 max)")
@@ -119,7 +119,7 @@ struct Kind10002ConfigurationWizard: View {
                                 removal: .move(edge: isBack ? .trailing : .leading))
                             )
             case .selectRead:
-                Form {
+                NXForm {
                     Section("Relays you read from") {
                         Text("Which relays should others use to reach account: \(account.anyName)? (choose 3 max)")
                             .font(.caption)
@@ -155,7 +155,7 @@ struct Kind10002ConfigurationWizard: View {
                                 removal: .move(edge: isBack ? .trailing : .leading))
                             )
             case .confirm:
-                Form {
+                NXForm {
                     Text("Based on your selection, the following relay set will be published so others can reach account: \(account.anyName).")
                         .font(.caption)
                         .foregroundColor(.secondary)

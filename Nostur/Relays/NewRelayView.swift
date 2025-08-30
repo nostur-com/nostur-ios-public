@@ -13,7 +13,7 @@ struct NewRelayView: View {
     @State private var url = "wss://"
     
     var body: some View {
-        Form {
+        NXForm {
             TextField("wss://relay...", text: $url)
                 .keyboardType(.URL)
                 .disableAutocorrection(true)

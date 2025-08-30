@@ -131,7 +131,7 @@ struct RelaysView: View {
     var relays: FetchedResults<CloudRelay>
 
     var body: some View {
-        Form {
+        NXForm {
             Text("These relays are used for all your accounts, and are not announced unless configured on the account specific tabs.")
             
             VStack(alignment: .leading) {

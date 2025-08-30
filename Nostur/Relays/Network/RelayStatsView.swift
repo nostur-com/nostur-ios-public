@@ -16,7 +16,7 @@ struct RelayStatsView: View {
     @State private var statsSorted: [RelayConnectionStats] = []
     
     var body: some View {
-        Form {
+        NXForm {
             if statsSorted.isEmpty {
                 Text("No stats collected yet.")
             }
@@ -146,7 +146,7 @@ struct RelayStatsDetails: View {
     @State private var foundAccountRows: [(pubkey: String, pfp: URL?, name: String)] = []
  
     var body: some View {
-        Form {
+        NXForm {
             if stats.receivedPubkeys.count > 0 {
                 Section {
                     ForEach(foundAccountRows.indices, id: \.self) { index in
