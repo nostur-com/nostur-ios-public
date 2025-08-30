@@ -47,7 +47,7 @@ public struct RelayData: Identifiable, Hashable, Equatable {
         self.excludedPubkeys = value
     }
     
-    static func new(url: String, read: Bool, write: Bool, search: Bool, auth: Bool, excludedPubkeys: Set<String>) -> RelayData {
+    static func new(url: String, read: Bool = false, write: Bool = false, search: Bool = false, auth: Bool = false, excludedPubkeys: Set<String> = []) -> RelayData {
         let url = normalizeRelayUrl(url)
 
         return RelayData(read: read,
