@@ -21,7 +21,6 @@ struct NosturTabsView: View {
             HStack(spacing: GUTTER) {
                 AvailableWidthContainer {
                     MainTabs()
-                        .environment(\.horizontalSizeClass, .compact)
                 }
                 .frame(maxWidth: 600)
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainTabs: View {
     @Environment(\.theme) private var theme
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var dm: DirectMessageViewModel
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @State private var unread: Int = 0
@@ -23,7 +24,7 @@ struct MainTabs: View {
                 tabTapped(newTab, oldTab: oldTab)
             }) {
                 HomeTab()
-//                    .environment(\.horizontalSizeClass, horizontalSizeClass)
+                    .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "house")
                     }
@@ -31,7 +32,7 @@ struct MainTabs: View {
                     .nosturTabsCompat(theme: theme)
 
                 BookmarksTab()
-//                    .environment(\.horizontalSizeClass, horizontalSizeClass)
+                    .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "bookmark")
                     }
@@ -40,7 +41,7 @@ struct MainTabs: View {
                 
                 
                 Search()
-//                    .environment(\.horizontalSizeClass, horizontalSizeClass)
+                    .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "magnifyingglass")
                     }
@@ -49,7 +50,7 @@ struct MainTabs: View {
                     .nosturTabsCompat(theme: theme)
                 
                 NotificationsContainer()
-//                    .environment(\.horizontalSizeClass, horizontalSizeClass)
+                    .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "bell.fill")
                     }
@@ -59,7 +60,7 @@ struct MainTabs: View {
                     .nosturTabsCompat(theme: theme)
 
                 DMContainer()
-//                    .environment(\.horizontalSizeClass, horizontalSizeClass)
+                    .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "envelope.fill")
                     }
@@ -67,7 +68,7 @@ struct MainTabs: View {
                     .badge((dm.unread + dm.newRequests))
                     .nosturTabsCompat(theme: theme)
             }
-            
+            .environment(\.horizontalSizeClass, .compact)
             .withSheets() // Move .sheets to each (NB)NavigationStack?
             .edgesIgnoringSafeArea(.all)
         }
