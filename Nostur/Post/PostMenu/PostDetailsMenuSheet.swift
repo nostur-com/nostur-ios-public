@@ -185,13 +185,15 @@ struct PostDetailsMenuSheet: View {
         let isNC = la.account.isNC
         bg().perform {
             if let event = nrPost.event {
-                
+                let isUnsigned = event.flags == "nsecbunker_unsigned"
                 let nEvent = event.toNEvent()
                 
-                if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey && event.flags == "nsecbunker_unsigned" && isNC {
-                    NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
-                        Unpublisher.shared.publishNow(signedEvent)
-                    })
+                if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey && isUnsigned && isNC {
+                    Task { @MainActor in
+                        NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
+                            Unpublisher.shared.publishNow(signedEvent)
+                        })
+                    }
                 }
                 else {
                     Unpublisher.shared.publishNow(nEvent)
