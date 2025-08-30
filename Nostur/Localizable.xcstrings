@@ -1534,6 +1534,9 @@
         }
       }
     },
+    "Add this feed to your tabs" : {
+
+    },
     "Add to existing list" : {
       "localizations" : {
         "nl" : {
@@ -3775,6 +3778,9 @@
         }
       }
     },
+    "Enter new relay address..." : {
+
+    },
     "Enter nsecBunker relay address" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4410,9 +4416,6 @@
           }
         }
       }
-    },
-    "Hello" : {
-
     },
     "Hello, World!" : {
 
@@ -6480,6 +6483,9 @@
         }
       }
     },
+    "Pin relay feed as tab" : {
+
+    },
     "Pin this post" : {
 
     },
@@ -7396,9 +7402,6 @@
         }
       }
     },
-    "Relay preview" : {
-
-    },
     "Relay selection" : {
       "comment" : "Header for a feed setting",
       "localizations" : {
@@ -7813,6 +7816,9 @@
     },
     "Republish post" : {
 
+    },
+    "Republish to" : {
+      "comment" : "Header for a feed setting"
     },
     "Republish to different relay(s)" : {
       "comment" : "Button to republish a post different relay(s)"
@@ -9175,6 +9181,7 @@
       }
     },
     "These relays are used for all accounts, and are not announced unless configured on the account specific settings." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -10177,6 +10184,9 @@
           }
         }
       }
+    },
+    "wss://" : {
+
     },
     "wss://nostr.relay.url.here" : {
       "comment" : "Placeholder for entering a relay URL",

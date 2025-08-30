@@ -37,6 +37,7 @@ struct RelayMastery: View {
                         }
                     }
                     .frame(minWidth: dim.listWidth)
+                    .background(theme.listBackground)
                 }
                
                 ZStack {
@@ -81,38 +82,38 @@ struct RelayMastery: View {
 }
 
 
-struct SharedRelaySettings: View {
-    @Environment(\.theme) private var theme
-    public var relays: [CloudRelay] = []
-    @State var editRelay: CloudRelay?
-    
-    var body: some View {
-        Form {
-            Text("These relays are used for all accounts, and are not announced unless configured on the account specific settings.")
-            
-            Section(header: Text("Relays", comment: "Relay settings heading")) {
-                ForEach(relays) { relay in
-                    RelayRowView(relay: relay)
-                        .onTapGesture {
-                            editRelay = relay
-                        }
-                }
-            }
-        }
-        .listStyle(.plain)
-        .lineSpacing(0)
-        .listRowInsets(.none)
-        .listSectionSeparator(.hidden)
-        .sheet(item: $editRelay, content: { relay in
-            NBNavigationStack {
-                RelayEditView(relay: relay)
-                    .environment(\.theme, theme)
-            }
-            .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(theme.listBackground)
-        })
-    }
-}
+//struct SharedRelaySettings: View {
+//    @Environment(\.theme) private var theme
+//    public var relays: [CloudRelay] = []
+//    @State var editRelay: CloudRelay?
+//    
+//    var body: some View {
+//        Form {
+//            Text("These relays are used for all accounts, and are not announced unless configured on the account specific settings.")
+//            
+//            Section(header: Text("Relays", comment: "Relay settings heading")) {
+//                ForEach(relays) { relay in
+//                    RelayRowView(relay: relay)
+//                        .onTapGesture {
+//                            editRelay = relay
+//                        }
+//                }
+//            }
+//        }
+//        .listStyle(.plain)
+//        .lineSpacing(0)
+//        .listRowInsets(.none)
+//        .listSectionSeparator(.hidden)
+//        .sheet(item: $editRelay, content: { relay in
+//            NBNavigationStack {
+//                RelayEditView(relay: relay)
+//                    .environment(\.theme, theme)
+//            }
+//            .nbUseNavigationStack(.never)
+//            .presentationBackgroundCompat(theme.listBackground)
+//        })
+//    }
+//}
 
 struct AccountRelaySettings: View {
     @Environment(\.theme) private var theme

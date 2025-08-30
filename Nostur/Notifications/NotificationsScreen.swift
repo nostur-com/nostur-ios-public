@@ -24,9 +24,9 @@ struct NotificationsContainer: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         NBNavigationStack(path: $navPath) {
             NotificationsScreen(account: la.account, navPath: $navPath)
                 .background(theme.listBackground)

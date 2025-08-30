@@ -758,11 +758,13 @@ struct FooterConfiguratorLink: View {
 }
 
 struct RelayMasteryLink: View {
+    @Environment(\.theme) private var theme
     @State private var relays: [CloudRelay] = []
     
     var body: some View {
         NavigationLink(destination: {
             RelayMastery(relays: relays)
+                .presentationBackgroundCompat(theme.listBackground)
                 .onAppear {
                     relays = CloudRelay.fetchAll()
                 }
@@ -779,9 +781,12 @@ struct RelayMasteryLink: View {
 
 
 struct RelaysLink: View {
+    @Environment(\.theme) private var theme
+    
     var body: some View {
         NavigationLink(destination: {
             RelaysView()
+                .presentationBackgroundCompat(theme.listBackground)
         }, label: {
             VStack(alignment: .leading) {
                 Text("Configure your relays...")
@@ -794,9 +799,11 @@ struct RelaysLink: View {
 }
 
 struct RelaysStatsLink: View {
+    @Environment(\.theme) private var theme
     var body: some View {
         NavigationLink(destination: {
             RelayStatsView(stats: ConnectionPool.shared.connectionStats)
+                .presentationBackgroundCompat(theme.listBackground)
         }, label: {
             VStack(alignment: .leading) {
                 Text("Relay connection stats")
