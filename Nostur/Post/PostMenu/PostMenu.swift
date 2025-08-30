@@ -25,6 +25,7 @@ struct PostMenu: View {
     @State private var showContactBlockSubMenu = false
     @State private var showPostDetailsSubMenu = false
     @State private var showPostShareSheet = false
+    @State private var showRepublishSheet = false
     
     @State private var isOwnPost = false
     @State private var isFullAccount = false
@@ -78,6 +79,14 @@ struct PostMenu: View {
                     }) {
                         Label("Add/remove from Highlights", systemImage: "star")
                             .foregroundColor(theme.accent)
+                    }
+                    
+                    if nrPost.isRestricted {
+                        Button {
+                           showRepublishSheet = true
+                        } label: {
+                            Label(String(localized: "Republish to different relay(s)", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                        }
                     }
                 }
                 .listRowBackground(theme.background)
@@ -223,6 +232,11 @@ struct PostMenu: View {
         }
         .nbNavigationDestination(isPresented: $showPostDetailsSubMenu) {
             PostDetailsMenuSheet(nrPost: nrPost, onDismiss: { dismiss() })
+                .environmentObject(la)
+        }
+        
+        .nbNavigationDestination(isPresented: $showRepublishSheet) {
+            RepublishRestrictedPostSheet(nrPost: nrPost, onDismiss: { dismiss() })
                 .environmentObject(la)
         }
         
