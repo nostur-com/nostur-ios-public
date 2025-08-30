@@ -130,9 +130,11 @@ struct FeedSettings: View {
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
                         
-                        Text("Shown in the tab bar (not public)")
-                            .font(.footnote)
-                            .foregroundColor(Color.secondary)
+                        if feed.type != "relays" {
+                            Text("Shown in the tab bar (not public)")
+                                .font(.footnote)
+                                .foregroundColor(Color.secondary)
+                        }
                     }
                 }
                 
