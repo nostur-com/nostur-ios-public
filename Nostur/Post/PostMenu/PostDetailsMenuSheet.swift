@@ -66,7 +66,7 @@ struct PostDetailsMenuSheet: View {
                         Label(String(localized:"Republish to different relay(s)", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
                     }
                 }
-                else {
+                else if !nrPost.isRestricted {
                     Button {
                        rebroadcast()
                     } label: {
