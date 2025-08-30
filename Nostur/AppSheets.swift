@@ -16,6 +16,7 @@ class AppSheetsModel: ObservableObject {
     
     @Published var readOnlySheetVisible: Bool = false
     @Published var askLoginInfo: AskLoginInfo? = nil
+    @Published var relayFeedPreviewSheetInfo: RelayFeedPreviewInfo? = nil
     @Published var feedPreviewSheetInfo: FeedPreviewInfo? = nil
     @Published var addContactsToListInfo: AddContactsToListInfo? = nil
     @Published var emojiRR: EmojiPickerFor? = nil
@@ -25,6 +26,7 @@ class AppSheetsModel: ObservableObject {
         readOnlySheetVisible = false
         askLoginInfo = nil
         feedPreviewSheetInfo = nil
+        relayFeedPreviewSheetInfo = nil
         addContactsToListInfo = nil
         emojiRR = nil
     }
@@ -70,6 +72,20 @@ struct WithAppSheets: ViewModifier {
                         }
                         AvailableWidthContainer {
                             FeedPreviewSheet(nrPost: feedPreviewSheetInfo.nrPost, config: feedPreviewSheetInfo.config)
+                        }
+                        .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
+                    }
+                }
+                .environmentObject(loggedInAccount)
+            }
+            .fullScreenCover(item: $asm.relayFeedPreviewSheetInfo) { relayFeedPreviewSheetInfo in
+                NRSheetNavigationStack {
+                    ZStack(alignment: .center) {
+                        if !IS_IPHONE {
+                            Color.black.opacity(0.5)
+                        }
+                        AvailableWidthContainer {
+                            RelayFeedPreviewSheet(config: relayFeedPreviewSheetInfo.config)
                         }
                         .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
                     }

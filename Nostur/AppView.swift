@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Nuke
+import NostrEssentials
 
 struct AppView: View {
     @Environment(\.scenePhase) private var scenePhase
@@ -179,7 +180,11 @@ extension AppView {
         L.og.info("nostur: add_relay: \(nosturRelay[0][2])")
 #endif
         UserDefaults.standard.setValue("Main", forKey: "selected_tab")
-//        AppSheetsModel.shared
+        
+        let relayData = RelayData.new(url: normalizeRelayUrl(nosturRelay[0][2]))
+        let config = NXColumnConfig(id: "RelayFeedPreview", columnType: .relayPreview(relayData), name: "Relay Preview")
+        
+        AppSheetsModel.shared.relayFeedPreviewSheetInfo = RelayFeedPreviewInfo(config: config)
         return
     }
     

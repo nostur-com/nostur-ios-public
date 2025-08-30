@@ -113,6 +113,7 @@ enum NXColumnType {
     
     
     case pubkey // input=single pubkey - stalker
+    case relayPreview(RelayData) // Preview of a relay feed
     case relays(CloudFeed)
     case hashtags(CloudFeed)
     case someoneElses(String) // pubkey of whose feed

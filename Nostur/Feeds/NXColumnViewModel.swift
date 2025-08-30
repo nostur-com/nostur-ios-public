@@ -950,6 +950,22 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
+        case .relayPreview(let relayData):
+#if DEBUG
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.relays)\(older ? "older" : "")")
+#endif
+            let relaysData: Set<RelayData> = [relayData]
+            bg().perform { [weak self] in
+                guard let self else { return }
+                let fr = if !older {
+                    Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
+                }
+                else {
+                    Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
+                }
+                guard let events: [Event] = try? bg().fetch(fr) else { return }
+                self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
+            }
         case .pubkey:
             viewState = .error("Not supported yet")
         case .hashtags:
@@ -1108,6 +1124,13 @@ class NXColumnViewModel: ObservableObject {
             guard !relaysData.isEmpty else { return }
             let now = NTimestamp(date: Date.now)
             req(RM.getGlobalFeedEvents(subscriptionId: config.id, since: now), activeSubscriptionId: config.id, relays: relaysData)
+            
+        case .relayPreview(let relayData):
+            let relaysData: Set<RelayData> = [relayData]
+            guard !relaysData.isEmpty else { return }
+            let now = NTimestamp(date: Date.now)
+            req(RM.getGlobalFeedEvents(subscriptionId: config.id, since: now), activeSubscriptionId: config.id, relays: relaysData)
+            
         case .hashtags:
             let _: String? = nil
         case .mentions:
@@ -1316,6 +1339,18 @@ class NXColumnViewModel: ObservableObject {
                 }, subId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"))
             }
             return nil
+        case .relayPreview(let relayData):
+            let relaysData: Set<RelayData> = [relayData]
+            guard !relaysData.isEmpty else { return nil }
+            
+            let filters = globalFeedReqFilters(since: since, until: until)
+            
+            if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
+                return (cmd: {
+                    req(message, activeSubscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), relays: relaysData)
+                }, subId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"))
+            }
+            return nil
         case .hashtags:
             return nil
         case .mentions:
@@ -1477,6 +1512,11 @@ class NXColumnViewModel: ObservableObject {
             let _: String? = nil
         case .relays(let feed):
             let relaysData = feed.relaysData
+            guard !relaysData.isEmpty else { return }
+            req(RM.getGlobalFeedEvents(limit: 100, subscriptionId: "G-PAGE-" + config.id, until: NTimestamp(timestamp: Int(until))), relays: relaysData)
+        
+        case .relayPreview(let relayData):
+            let relaysData: Set<RelayData> = [relayData]
             guard !relaysData.isEmpty else { return }
             req(RM.getGlobalFeedEvents(limit: 100, subscriptionId: "G-PAGE-" + config.id, until: NTimestamp(timestamp: Int(until))), relays: relaysData)
             
