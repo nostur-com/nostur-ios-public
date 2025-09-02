@@ -102,6 +102,9 @@ func createFeedFromRelayData(_ relayData: RelayData) {
     let newFeed = CloudFeed(context: DataProvider.shared().viewContext)
     newFeed.id = UUID()
     newFeed.name = relayData.url
+        .replacingOccurrences(of: "wss://", with: "") // remove wss:// from default title
+        .replacingOccurrences(of: "ws://", with: "")  // remove ws:// from default title
+    
     newFeed.relays = relayData.url
     
     if let cloudRelay = newFeed.relays_.first { // should be existing or added on the fly in CloudFeed.relays_ getter
