@@ -11,6 +11,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     private let url: URL
     private var webSocket: URLSessionWebSocketTask?
     private var session: URLSession!
+    private var listenTask: Task<Void, Never>?
     
     private var openErrorContinuation: CheckedContinuation<Void, Error>?
     
@@ -26,7 +27,10 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     private var authRequiredForEventId: String?
     public var eventsThatMayNeedAuth: [String: String] = [:] // [ post id : event message text string ]
     
-    init(_ urlString: String, signNEventHandler: @escaping (NEvent) async throws -> NEvent) {
+    private var allowAuth: Bool
+    
+    init(_ urlString: String, allowAuth: Bool = false, signNEventHandler: @escaping (NEvent) async throws -> NEvent) {
+        self.allowAuth = allowAuth
         self.url = URL(string: urlString)!
         self.signNEventHandler = signNEventHandler
         super.init()
@@ -42,27 +46,36 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
         task.resume()
         
         // Wait until didOpen fires with timeout
-        try await withThrowingTaskGroup(of: Void.self) { group in
-            // Add timeout task
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-                throw SendMessageError.timeout
-            }
-            
-            // Add connection waiting task
-            group.addTask {
-                try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-                    self.openErrorContinuation = cont
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                var continuation: CheckedContinuation<Void, Error>?
+                
+                // Add timeout task
+                group.addTask {
+                    try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                    throw SendMessageError.timeout
                 }
+                
+                // Add connection waiting task
+                group.addTask {
+                    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+                        continuation = cont
+                        self.openErrorContinuation = cont
+                    }
+                }
+                
+                // Return first result and cancel the other
+                try await group.next()
+                group.cancelAll()
             }
-            
-            // Return first result and cancel the other
-            try await group.next()
-            group.cancelAll()
+        } catch {
+            // If timeout or any other error occurred, cancel the WebSocket task and clean up
+            cleanup()
+            throw error
         }
         
         // Start listener
-        Task {
+        listenTask = Task {
             await self.listen()
         }
     }
@@ -71,8 +84,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession,
                     webSocketTask: URLSessionWebSocketTask,
                     didOpenWithProtocol protocol: String?) {
-        openErrorContinuation?.resume()
-        openErrorContinuation = nil
+        resumeThrowingContinuation(&openErrorContinuation, returning: ())
 #if DEBUG
         L.og.debug("WebSocket connected ✅")
 #endif
@@ -83,8 +95,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
                     didCloseWith closeCode: URLSessionWebSocketTask.CloseCode,
                     reason: Data?) {
         // Clean up any pending continuations on connection close
-        openErrorContinuation?.resume(throwing: SendMessageError.timeout)
-        openErrorContinuation = nil
+        resumeThrowingContinuation(&openErrorContinuation, throwing: SendMessageError.timeout)
         
         resumeContinuation(&sentEventFirstResponseContinuation, with: EventResponse.failReason("Connection closed"))
         resumeContinuation(&sentAuthResponseContinuation, with: EventResponse.failReason("Connection closed"))
@@ -94,8 +105,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         if let error = error {
             // Connection failed - throw the actual error
-            openErrorContinuation?.resume(throwing: error)
-            openErrorContinuation = nil
+            resumeThrowingContinuation(&openErrorContinuation, throwing: error)
             
             resumeContinuation(&sentEventFirstResponseContinuation, with: EventResponse.failReason("Connection error: \(error)"))
             resumeContinuation(&sentAuthResponseContinuation, with: EventResponse.failReason("Connection error: \(error)"))
@@ -106,7 +116,11 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     // MARK: - Listen
     private func listen() async {
         guard let ws = webSocket else { return }
-        while true {
+        
+        // Check if task is cancelled before starting the listen loop
+        guard !Task.isCancelled else { return }
+        
+        while !Task.isCancelled {
             do {
                 let message = try await ws.receive()
                 switch message {
@@ -131,6 +145,23 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
                 break
             }
         }
+    }
+    
+    // MARK: - Cleanup
+    private func cleanup() {
+        // Cancel the listen task
+        listenTask?.cancel()
+        listenTask = nil
+        
+        // Cancel and clean up WebSocket
+        webSocket?.cancel(with: .goingAway, reason: nil)
+        webSocket = nil
+        
+        // Clean up all pending continuations
+        resumeThrowingContinuation(&openErrorContinuation, throwing: SendMessageError.timeout)
+        resumeContinuation(&sentEventFirstResponseContinuation, with: EventResponse.timeout)
+        resumeContinuation(&sentAuthResponseContinuation, with: EventResponse.timeout)
+        resumeContinuation(&sentEventAfterAuthResponseContinuation, with: EventResponse.timeout)
     }
     
     private func handleIncomingMessage(_ text: String) async {
@@ -230,8 +261,10 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
 #endif
     }
     
-    private func waitForEventResponse(timeout: TimeInterval, setContinuation: @escaping (CheckedContinuation<EventResponse, Never>) -> Void) async throws -> EventResponse {
+    private func waitForEventResponse(timeout: TimeInterval, setContinuation: @escaping (CheckedContinuation<EventResponse, Never>) -> Void, clearContinuation: @escaping () -> Void) async throws -> EventResponse {
         return try await withThrowingTaskGroup(of: EventResponse.self) { group in
+            var continuation: CheckedContinuation<EventResponse, Never>?
+            
             // Add timeout task
             group.addTask {
                 try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
@@ -241,6 +274,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
             // Add response waiting task
             group.addTask {
                 await withCheckedContinuation { (cont: CheckedContinuation<EventResponse, Never>) in
+                    continuation = cont
                     setContinuation(cont)
                 }
             }
@@ -252,6 +286,10 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
             group.cancelAll()
             
             if case .timeout = result {
+                // Clear the instance variable continuation to prevent delegate methods from trying to resume it
+                clearContinuation()
+                // Resume the waiting continuation with timeout before throwing
+                continuation?.resume(returning: .timeout)
                 throw SendMessageError.timeout
             }
             
@@ -261,17 +299,45 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     
     // Helper to safely resume continuation only once
     private func resumeContinuation<T>(_ continuation: inout CheckedContinuation<T, Never>?, with value: T) {
-        continuation?.resume(returning: value)
+        guard let cont = continuation else { return }
         continuation = nil
+        cont.resume(returning: value)
+    }
+    
+    // Helper to safely resume throwing continuation only once
+    private func resumeThrowingContinuation<T>(_ continuation: inout CheckedContinuation<T, Error>?, throwing error: Error) {
+        guard let cont = continuation else { return }
+        continuation = nil
+        cont.resume(throwing: error)
+    }
+    
+    // Helper to safely resume throwing continuation with success only once
+    private func resumeThrowingContinuation<T>(_ continuation: inout CheckedContinuation<T, Error>?, returning value: T) {
+        guard let cont = continuation else { return }
+        continuation = nil
+        cont.resume(returning: value)
     }
     
     public func publish(_ nEvent: NEvent, timeout: TimeInterval = 10) async throws {
-        try await sendEvent(nEvent)
-        
-        // Wait for first OK response (true or auth-required:)
-        let response: EventResponse = try await waitForEventResponse(timeout: timeout) { continuation in
-            self.sentEventFirstResponseContinuation = continuation
+        do {
+            try await sendEvent(nEvent)
+            
+            // Wait for first OK response (true or auth-required:)
+            let response: EventResponse = try await waitForEventResponse(timeout: timeout, setContinuation: { continuation in
+                self.sentEventFirstResponseContinuation = continuation
+            }, clearContinuation: {
+                self.sentEventFirstResponseContinuation = nil
+            })
+            
+            try await handleEventResponse(response, nEvent: nEvent, timeout: timeout)
+        } catch {
+            // Clean up on any error including timeouts
+            cleanup()
+            throw error
         }
+    }
+    
+    private func handleEventResponse(_ response: EventResponse, nEvent: NEvent, timeout: TimeInterval) async throws {
         
         switch response {
         case .ok:
@@ -281,6 +347,9 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
             break
         case .authRequired(let eventId):
             authRequiredForEventId = eventId
+            guard allowAuth else {
+                throw SendMessageError.authRequired
+            }
 #if DEBUG
             L.og.debug("🔑 Auth required for event id: \(eventId) 🔑")
 #endif
@@ -288,9 +357,11 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
                 do {
                     try await sendAuthResponse()
                     
-                    let authResponse: EventResponse = try await waitForEventResponse(timeout: timeout) { continuation in
+                    let authResponse: EventResponse = try await waitForEventResponse(timeout: timeout, setContinuation: { continuation in
                         self.sentAuthResponseContinuation = continuation
-                    }
+                    }, clearContinuation: {
+                        self.sentAuthResponseContinuation = nil
+                    })
                     
                     switch authResponse {
                     case .ok:
@@ -299,9 +370,11 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
                         do {
                             try await sendEvent(nEvent)
                             
-                            let retryResponse: EventResponse = try await waitForEventResponse(timeout: timeout) { continuation in
+                            let retryResponse: EventResponse = try await waitForEventResponse(timeout: timeout, setContinuation: { continuation in
                                 self.sentEventAfterAuthResponseContinuation = continuation
-                            }
+                            }, clearContinuation: {
+                                self.sentEventAfterAuthResponseContinuation = nil
+                            })
                     
                             switch retryResponse {
                             case .ok:
@@ -313,12 +386,12 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
 #if DEBUG
                                 L.og.debug("❌ Still failing on retry (auth-required for: \(eventId)) ❌")
 #endif
-                                throw SendMessageError.sendFailed
+                                throw SendMessageError.sendFailed(nil)
                             case .failReason(let reason):
 #if DEBUG
                                 L.og.debug("❌ Still failing on retry - \(reason) ❌")
 #endif
-                                throw SendMessageError.sendFailed
+                                throw SendMessageError.sendFailed(nil)
                             case .timeout:
 #if DEBUG
                                 L.og.debug("❌ Timeout on retry ❌")
@@ -329,13 +402,13 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
 #if DEBUG
                             L.og.debug("❌ Failed to send retry event: \(error) ❌")
 #endif
-                            throw SendMessageError.sendFailed
+                            throw SendMessageError.sendFailed(nil)
                         }
                     case .failReason(let reason):
 #if DEBUG
                     L.og.debug("❌ Auth failed - \(reason) ❌")
 #endif
-                        throw SendMessageError.sendFailed
+                        throw SendMessageError.sendFailed("\(url.absoluteString): \(reason)")
                     case .timeout:
 #if DEBUG
                     L.og.debug("❌ Auth timeout ❌")
@@ -345,13 +418,13 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
 #if DEBUG
                     L.og.debug("❌ Auth still required ❌")
 #endif
-                        throw SendMessageError.sendFailed
+                        throw SendMessageError.sendFailed(nil)
                     }
                 } catch {
 #if DEBUG
                     L.og.debug("❌ Failed to send auth response: \(error) ❌")
 #endif
-                    throw SendMessageError.sendFailed
+                    throw SendMessageError.sendFailed(nil)
                 }
             }
             else { // already sent auth, try again
@@ -360,9 +433,11 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
                     try await sendEvent(nEvent)
                     
                     // Wait for OK response (After auth should have been sent)
-                    let response: EventResponse = try await waitForEventResponse(timeout: timeout) { continuation in
+                    let response: EventResponse = try await waitForEventResponse(timeout: timeout, setContinuation: { continuation in
                         self.sentEventAfterAuthResponseContinuation = continuation
-                    }
+                    }, clearContinuation: {
+                        self.sentEventAfterAuthResponseContinuation = nil
+                    })
                     switch response {
                     case .ok:
 #if DEBUG
@@ -373,23 +448,34 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
 #if DEBUG
                         L.og.debug("❌ Still failing on second attempt (auth-required for: \(eventId)) ❌")
 #endif
-                        throw SendMessageError.sendFailed
+                        throw SendMessageError.sendFailed(nil)
                     case .failReason(let reason):
 #if DEBUG
                         L.og.debug("❌ Still failing on second attempt - \(reason) ❌")
 #endif
-                        throw SendMessageError.sendFailed
+                        throw SendMessageError.sendFailed("\(url.absoluteString): \(reason)")
                     case .timeout:
 #if DEBUG
                         L.og.debug("❌ Timeout on second attempt ❌")
 #endif
                         throw SendMessageError.timeout
                     }
-                } catch {
+                }
+                catch let myError as SendMessageError {
+                    let failReason: String? = if case let .sendFailed(reason) = myError {
+                        reason
+                    } else { nil }
+                    throw SendMessageError.sendFailed(failReason)
+                }
+                catch {
 #if DEBUG
                     L.og.debug("❌ Failed to send second attempt event: \(error) ❌")
 #endif
-                    throw SendMessageError.sendFailed
+                    let failReason: String? = if case let .failReason(reason) = response {
+                        reason
+                    } else { nil }
+                    
+                    throw SendMessageError.sendFailed(failReason)
                 }
             }
             
@@ -397,7 +483,8 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
 #if DEBUG
             L.og.debug("❌ Failed \(reason)")
 #endif
-            throw SendMessageError.sendFailed
+            
+            throw SendMessageError.sendFailed("\(url.absoluteString): \(reason)")
         case .timeout:
 #if DEBUG
             L.og.debug("❌ Timeout waiting for initial response ❌")
@@ -422,7 +509,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
             L.og.debug("🔵 Sent: \(text)")
 #endif
         } catch {
-            throw SendMessageError.sendFailed
+            throw SendMessageError.sendFailed(nil)
         }
     }
     
@@ -453,6 +540,7 @@ enum EventResponse {
 
 enum SendMessageError: Error {
     case notConnected
-    case sendFailed
+    case sendFailed(String?)
+    case authRequired
     case timeout
 }
