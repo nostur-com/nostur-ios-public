@@ -23,7 +23,6 @@ struct WithSheets: ViewModifier {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.dismiss) private var dismiss
     
     
     // Sheet contents (item based)
@@ -304,7 +303,7 @@ struct WithSheets: ViewModifier {
             }
             .sheet(item: $addRemoveContactFromList) { nrContact in
                 NBNavigationStack {
-                    AddRemoveToListsheet(nrContact: nrContact, rootDismiss: dismiss)
+                    AddRemoveToListsheet(nrContact: nrContact, onDismiss: { addRemoveContactFromList = nil })
                         .environmentObject(la)
                         .environment(\.theme, theme)
                         .environment(\.managedObjectContext, viewContext())

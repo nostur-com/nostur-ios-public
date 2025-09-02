@@ -22,7 +22,7 @@ struct AddRemoveToListsheet: View {
     
     @Environment(\.dismiss) var dismiss
     @ObservedObject var nrContact: NRContact
-    public var rootDismiss: DismissAction
+    public var onDismiss: (() -> Void)?
     
     // only contact lists, not relay lists
     @FetchRequest(
@@ -78,7 +78,7 @@ struct AddRemoveToListsheet: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
-                    rootDismiss()
+                    onDismiss?()
                     DataProvider.shared().save()
                     for list in lists {
                         sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
@@ -149,16 +149,14 @@ struct EnterNewListNameSheet: View {
     }
 }
 
-@available(iOS 17.0, *)
 #Preview {
-    @Previewable @Environment(\.dismiss) var dismiss
     PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadCloudFeeds()
     }) {
         NBNavigationStack {
             if let nrContact = PreviewFetcher.fetchNRContact() {
-                AddRemoveToListsheet(nrContact: nrContact, rootDismiss: dismiss)
+                AddRemoveToListsheet(nrContact: nrContact)
                     .environment(\.theme, Themes.GREEN)
             }
         }

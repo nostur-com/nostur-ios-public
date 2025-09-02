@@ -96,7 +96,7 @@ struct PostMenu: View {
                 }
                 
                 NavigationLink {
-                    AddRemoveToListsheet(nrContact: nrContact, rootDismiss: dismiss)
+                    AddRemoveToListsheet(nrContact: nrContact, onDismiss: { dismiss() })
                         .environmentObject(la)
                         .environment(\.theme, theme)
                         .environment(\.managedObjectContext, viewContext())
