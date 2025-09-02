@@ -22,6 +22,7 @@ struct AddRemoveToListsheet: View {
     
     @Environment(\.dismiss) var dismiss
     @ObservedObject var nrContact: NRContact
+    public var rootDismiss: DismissAction
     
     // only contact lists, not relay lists
     @FetchRequest(
@@ -31,74 +32,53 @@ struct AddRemoveToListsheet: View {
     var lists: FetchedResults<CloudFeed>
     
     var body: some View {
-        ScrollView {
-            LazyVStack {
-                ForEach(lists) { list in
-                    HStack(spacing: 10) {
-                        if list.contactPubkeys.contains(nrContact.pubkey) {
-                            Button {
-                                list.contactPubkeys.remove(nrContact.pubkey)
-                                if list.sharedList {
-                                    updatedSharedLists.insert(list)
-                                }
-                            } label: {
-                                Image(systemName:  "checkmark.circle.fill")
-                                    .padding(.vertical, 10)
-                            }
-                        }
-                        else {
-                            Button {
-                                list.contactPubkeys.insert(nrContact.pubkey)
-                                if list.sharedList {
-                                    updatedSharedLists.insert(list)
-                                }
-                            } label: {
-                                Image(systemName:  "circle")
-                                    .foregroundColor(Color.secondary)
-                                    .padding(.vertical, 10)
-                            }
-                        }
-                        ListRow(list: list, showPin: false)
-                            .padding(.vertical, 10)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                if list.contactPubkeys.contains(nrContact.pubkey) {
-                                    list.contactPubkeys.remove(nrContact.pubkey)
-                                }
-                                else {
-                                    list.contactPubkeys.insert(nrContact.pubkey)
-                                }
-                                if list.sharedList {
-                                    updatedSharedLists.insert(list)
-                                }
-                            }
+        NXForm {
+            ForEach(lists) { list in
+                HStack {
+                    if list.contactPubkeys.contains(nrContact.pubkey) {
+                        Image(systemName:  "checkmark.circle.fill")
+                        
                     }
+                    else {
+                        Image(systemName:  "circle")
+                            .foregroundColor(Color.secondary)
+                    }
+                    ListRow(list: list, showPin: false)
+  
                 }
-                Divider()
-                
-                // Add to new list
-                HStack(spacing: 10) {
-                    Text("New list...")
-                    Spacer()
-                }
-                .padding(.vertical, 10)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { // Short delay freezes????
-                        AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: [nrContact.pubkey])
+                    if list.contactPubkeys.contains(nrContact.pubkey) {
+                        list.contactPubkeys.remove(nrContact.pubkey)
                     }
+                    else {
+                        list.contactPubkeys.insert(nrContact.pubkey)
+                    }
+                    if list.sharedList {
+                        updatedSharedLists.insert(list)
+                    }
+                }
+            }
+            
+            // Add to new list
+            NavigationLink {
+                EnterNewListNameSheet(onAdd: { newListName in
+                    addToNewList(newListName, pubkey: nrContact.pubkey)
+                })
+                                       
+            } label: {
+                HStack {
+                    Image(systemName: "plus.circle")
+                        .foregroundColor(Color.secondary)
+                    Text("New list...")
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
-        .padding(10)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
-                    dismiss()
+                    rootDismiss()
                     DataProvider.shared().save()
                     for list in lists {
                         sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
@@ -107,7 +87,7 @@ struct AddRemoveToListsheet: View {
                 }
             }
         }
-        .navigationTitle(String(localized:"Add/Remove from feed", comment: "Navigation title for screen to add or remove contacts to a feed"))
+        .navigationTitle(String(localized:"Add/remove from Lists", comment: "Navigation title for screen to add or remove contacts to a feed"))
         .navigationBarTitleDisplayMode(.inline)
     }
     
@@ -122,18 +102,64 @@ struct AddRemoveToListsheet: View {
             }
         }
     }
+    
+    private func addToNewList(_ listName: String, pubkey: String) {
+        let newList = CloudFeed(context: DataProvider.shared().viewContext)
+        newList.id = UUID()
+        newList.name = listName
+        newList.showAsTab = true
+        newList.createdAt = .now
+        newList.order = 0
+        newList.type = ListType.pubkeys.rawValue
+        newList.contactPubkeys.insert(pubkey)
+    }
 }
-struct AddRemoveToListsheet_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadCloudFeeds()
-        }) {
-            NBNavigationStack {
-                if let nrContact = PreviewFetcher.fetchNRContact() {
-                    AddRemoveToListsheet(nrContact: nrContact)
+
+
+struct EnterNewListNameSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var listName: String = ""
+
+    var onAdd: (String) -> Void
+    
+    var body: some View {
+        NXForm {
+            Section("Enter list name") {
+                TextField(text: $listName, prompt: Text("List name")) {
+                    Text("Enter list name")
                 }
+            }
+        }
+        
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Add") {
+                    guard isValid else { return }
+                    // TODO: add validation
+                    onAdd(listName.trimmingCharacters(in: .whitespaces))
+                    dismiss()
+                }
+                .disabled(!isValid)
+            }
+        }
+    }
+    
+    var isValid: Bool {
+        listName.trimmingCharacters(in: .whitespaces).count > 0
+    }
+}
+
+@available(iOS 17.0, *)
+#Preview {
+    @Previewable @Environment(\.dismiss) var dismiss
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadCloudFeeds()
+    }) {
+        NBNavigationStack {
+            if let nrContact = PreviewFetcher.fetchNRContact() {
+                AddRemoveToListsheet(nrContact: nrContact, rootDismiss: dismiss)
+                    .environment(\.theme, Themes.GREEN)
             }
         }
     }

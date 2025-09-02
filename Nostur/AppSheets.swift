@@ -35,6 +35,7 @@ class AppSheetsModel: ObservableObject {
 struct WithAppSheets: ViewModifier {
     
     @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @ObservedObject private var asm = AppSheetsModel.shared
     
@@ -42,7 +43,7 @@ struct WithAppSheets: ViewModifier {
         content
             .sheet(item: $asm.addContactsToListInfo, content: { info in
                 NRSheetNavigationStack {
-                    AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys)
+                    AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys, rootDismiss: dismiss)
                         .presentationDetentsLarge()
                 }
                 .environmentObject(loggedInAccount)

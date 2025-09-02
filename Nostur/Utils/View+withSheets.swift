@@ -304,7 +304,7 @@ struct WithSheets: ViewModifier {
             }
             .sheet(item: $addRemoveContactFromList) { nrContact in
                 NBNavigationStack {
-                    AddRemoveToListsheet(nrContact: nrContact)
+                    AddRemoveToListsheet(nrContact: nrContact, rootDismiss: dismiss)
                         .environmentObject(la)
                         .environment(\.theme, theme)
                         .environment(\.managedObjectContext, viewContext())

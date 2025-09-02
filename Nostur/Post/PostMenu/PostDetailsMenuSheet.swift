@@ -83,14 +83,12 @@ struct PostDetailsMenuSheet: View {
             
             if pubkeysInPost.count > 1 {
                 Section {
-                    
-                    Button {
-                        rootDismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY + 0.35) { // Short delay freezes????
-                            AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: pubkeysInPost)
-                        }
+                    NavigationLink {
+                        AddContactsToListSheet(preSelectedContactPubkeys: pubkeysInPost, rootDismiss: rootDismiss)
+                            .environment(\.managedObjectContext, viewContext())
                     } label: {
                         Label(String(localized:"Add \(pubkeysInPost.count) contacts to List", comment: "Post context menu button"), systemImage: "person.2.crop.square.stack")
+                            .foregroundColor(theme.accent)
                     }
                     
                 } footer: {
@@ -130,6 +128,7 @@ struct PostDetailsMenuSheet: View {
             isOwnPost = nrPost.pubkey == la.pubkey
             self.isFullAccount = la.account.isFullAccount
             loadId()
+            loadPubkeysInPost()
         }
         .task {
             await loadRawSource()

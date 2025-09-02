@@ -94,12 +94,13 @@ struct PostMenu: View {
                     self.followButton
                 }
                 
-                Button(action: {
-                    dismiss()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY + 0.35) { // Short delay freezes????
-                        sendNotification(.addRemoveToListsheet, nrPost.contact)
-                    }
-                }) {
+                NavigationLink {
+                    AddRemoveToListsheet(nrContact: nrContact, rootDismiss: dismiss)
+                        .environmentObject(la)
+                        .environment(\.theme, theme)
+                        .environment(\.managedObjectContext, viewContext())
+                        .presentationBackgroundCompat(theme.listBackground)
+                } label: {
                     Label("Add/remove from Lists", systemImage: "person.2.crop.square.stack")
                         .foregroundColor(theme.accent)
                 }
