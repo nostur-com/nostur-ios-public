@@ -1,5 +1,5 @@
 //
-//  AddRelayFeedSheet.swift
+//  RelayFeedPreviewSheet.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 26/08/2025.
@@ -47,6 +47,10 @@ struct RelayFeedPreviewSheet: View {
             ToolbarItem(placement: .principal) {
                 HStack {
                     Text(previewTitle)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    sendNotification(.shouldScrollToTop)
                 }
             }
 
