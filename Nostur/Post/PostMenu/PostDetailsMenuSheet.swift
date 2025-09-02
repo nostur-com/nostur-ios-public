@@ -12,14 +12,12 @@ import NostrEssentials
 struct PostDetailsMenuSheet: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @Environment(\.dismiss) private var dismiss
     
-    public let nrPost: NRPost
-    public var onDismiss: (() -> Void)?
+    private let nrPost: NRPost
+    private var rootDismiss: DismissAction
     
     @State private var isOwnPost = false
     @State private var isFullAccount = false
-    @State private var showRepublishSheet = false
     
     @State private var postId: String = ""
     @State private var url: String = ""
@@ -29,14 +27,14 @@ struct PostDetailsMenuSheet: View {
     
     @ObservedObject private var footerAttributes: FooterAttributes
     
-    init(nrPost: NRPost, onDismiss: (() -> Void)? = nil) {
+    init(nrPost: NRPost, rootDismiss: DismissAction) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
-        self.onDismiss = onDismiss
+        self.rootDismiss = rootDismiss
     }
     
     var body: some View {
-        List {
+        NXList {
             Section(header: Text("Nostr ID")) {
                 CopyableTextView(text: postId, copyText: "nostr:\(postId)")
                     .lineLimit(1)
@@ -54,24 +52,26 @@ struct PostDetailsMenuSheet: View {
                     if let rawSource {
                         UIPasteboard.general.string = rawSource
                     }
-                    onDismiss?()
+                    rootDismiss()
                 }) {
                     Label("Copy raw JSON", systemImage: "ellipsis.curlybraces")
                 }
                 
                 if nrPost.isRestricted && isOwnPost && isFullAccount {
-                    Button {
-                       showRepublishSheet = true
+                    NavigationLink {
+                        RepublishRestrictedPostSheet(nrPost: nrPost, rootDismiss: rootDismiss)
+                            .environmentObject(la)
                     } label: {
                         Label(String(localized:"Republish to different relay(s)", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
                     }
                 }
                 else if !nrPost.isRestricted {
-                    Button {
-                       rebroadcast()
+                    NavigationLink {
+                        RebroadcastPostSheet(nrPost: nrPost, rootDismiss: rootDismiss)
+                            .environmentObject(la)
                     } label: {
                         if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey {
-                            Label(String(localized:"Rebroadcast to relays (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
+                            Label(String(localized:"Broadcast to relays (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
                         }
                         else {
                             Label(String(localized:"Rebroadcast to relays", comment: "Button to rebroadcast a post"), systemImage: "dot.radiowaves.left.and.right")
@@ -85,7 +85,7 @@ struct PostDetailsMenuSheet: View {
                 Section {
                     
                     Button {
-                        onDismiss?()
+                        rootDismiss()
                         DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY + 0.35) { // Short delay freezes????
                             AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: pubkeysInPost)
                         }
@@ -126,11 +126,6 @@ struct PostDetailsMenuSheet: View {
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
         
-        .nbNavigationDestination(isPresented: $showRepublishSheet) {
-            RepublishRestrictedPostSheet(nrPost: nrPost, onDismiss: { dismiss() })
-                .environmentObject(la)
-        }
-        
         .onAppear {
             isOwnPost = nrPost.pubkey == la.pubkey
             self.isFullAccount = la.account.isFullAccount
@@ -142,7 +137,7 @@ struct PostDetailsMenuSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: { onDismiss?() }) {
+                Button(action: { rootDismiss() }) {
                     Text("Done")
                 }
             }
@@ -203,10 +198,12 @@ struct PostDetailsMenuSheet: View {
     }
 }
 
+@available(iOS 17.0, *)
 #Preview {
+    @Previewable @Environment(\.dismiss) var dismiss
     PreviewContainer {
         NBNavigationStack {
-            PostDetailsMenuSheet(nrPost: testNRPost())
+            PostDetailsMenuSheet(nrPost: testNRPost(), rootDismiss: dismiss)
         }
     }
 }

@@ -14,13 +14,13 @@ struct PostMenuShareSheet: View {
     @Environment(\.dismiss) private var dismiss
     
     public let nrPost: NRPost
-    public var onDismiss: (() -> Void)?
+    public var rootDismiss: DismissAction
     
     @State private var postId: String = ""
     @State private var url: String = ""
     
     var body: some View {
-        List {
+        NXList {
             Section(header: Text("Nostr ID")) {
                 CopyableTextView(text: postId, copyText: "nostr:\(postId)")
                     .lineLimit(1)
@@ -35,7 +35,7 @@ struct PostMenuShareSheet: View {
             
             Section {
                 Button(action: {
-                    onDismiss?()
+                    rootDismiss()
                     DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
                         sendNotification(.shareWeblink, nrPost)
                     }
@@ -45,7 +45,7 @@ struct PostMenuShareSheet: View {
                 
                 if #available(iOS 16, *), nrPost.kind != 30023 {
                     Button(action: {
-                        onDismiss?()
+                        rootDismiss()
                         DispatchQueue.main.asyncAfter(deadline: .now() + NEXT_SHEET_DELAY) {
                             sendNotification(.sharePostScreenshot, nrPost)
                         }
@@ -65,7 +65,7 @@ struct PostMenuShareSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: { onDismiss?() }) {
+                Button(action: { rootDismiss() }) {
                     Text("Done")
                 }
             }
@@ -90,13 +90,15 @@ struct PostMenuShareSheet: View {
     }
 }
 
+@available(iOS 17.0, *)
 #Preview {
+    @Previewable @Environment(\.dismiss) var dismiss
     PreviewContainer({ pe in
         pe.loadPosts()
     }) {
         NBNavigationStack {
             if let nrPost = PreviewFetcher.fetchNRPost() {
-                PostMenuShareSheet(nrPost: nrPost)
+                PostMenuShareSheet(nrPost: nrPost, rootDismiss: dismiss)
             }
         }
     }

@@ -21,11 +21,6 @@ struct PostMenu: View {
     @State private var pubkeysInPost: Set<String> = []
     
     @State private var showMultiFollowSheet = false
-    @State private var showContactSubMenu = false
-    @State private var showContactBlockSubMenu = false
-    @State private var showPostDetailsSubMenu = false
-    @State private var showPostShareSheet = false
-    @State private var showRepublishSheet = false
     
     @State private var isOwnPost = false
     @State private var isFullAccount = false
@@ -82,10 +77,12 @@ struct PostMenu: View {
                     }
                     
                     if nrPost.isRestricted {
-                        Button {
-                           showRepublishSheet = true
+                        NavigationLink {
+                            RepublishRestrictedPostSheet(nrPost: nrPost, rootDismiss: dismiss)
+                                .environmentObject(la)
                         } label: {
-                            Label(String(localized: "Republish to different relay(s)", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                            Label(String(localized:"Republish to different relay(s)", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                                .foregroundColor(theme.accent)
                         }
                     }
                 }
@@ -127,9 +124,11 @@ struct PostMenu: View {
             
             
             Section {
-                Button(action: {
-                    showContactBlockSubMenu = true
-                }) {
+                // TODO: Add unblock { .onAppear.. show time remaining etc blocked() }
+                NavigationLink {
+                    PostMenuBlockOptions(nrContact: nrPost.contact, rootDismiss: dismiss)
+                        .environment(\.theme, theme)
+                } label: {
                     Label("Block \(nrContact.anyName)", systemImage: "circle.slash")
                         .foregroundColor(theme.accent)
                 }
@@ -156,9 +155,9 @@ struct PostMenu: View {
             .listRowBackground(theme.background)
             
             
-            Button(action: {
-                showPostShareSheet = true
-            }) {
+            NavigationLink {
+                PostMenuShareSheet(nrPost: nrPost, rootDismiss: dismiss)
+            } label: {
                 Label("Share", systemImage: "square.and.arrow.up")
                     .foregroundColor(theme.accent)
             }
@@ -182,9 +181,10 @@ struct PostMenu: View {
             }
             .listRowBackground(theme.background)
 
-            Button(action: {
-                showPostDetailsSubMenu = true
-            }) {
+            NavigationLink {
+                PostDetailsMenuSheet(nrPost: nrPost, rootDismiss: dismiss)
+                    .environmentObject(la)
+            } label: {
                 Label("Post details", systemImage: "info.circle")
                     .foregroundColor(theme.accent)
                 
@@ -206,38 +206,6 @@ struct PostMenu: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
                 .background(theme.listBackground)
                 .environment(\.theme, theme)
-        }
-        .nbNavigationDestination(isPresented: $showContactBlockSubMenu) {
-            PostMenuBlockOptions(nrContact: nrPost.contact, onDismiss: { dismiss() })
-                .environment(\.theme, theme)
-        }
-        .nbNavigationDestination(isPresented: $showContactSubMenu) {
-            List {
-                Button(role: .destructive, action: {
-                    showContactBlockSubMenu = true
-                }) {
-                    Label("Block", systemImage: "square.and.arrow.up")
-                }
-                // Delete button
-                Button(role: .destructive, action: {
-                    
-                }) {
-                    Label("Follow", systemImage: "trash")
-                }
-            }
-            
-        }
-        .nbNavigationDestination(isPresented: $showPostShareSheet) {
-            PostMenuShareSheet(nrPost: nrPost, onDismiss: { dismiss() })
-        }
-        .nbNavigationDestination(isPresented: $showPostDetailsSubMenu) {
-            PostDetailsMenuSheet(nrPost: nrPost, onDismiss: { dismiss() })
-                .environmentObject(la)
-        }
-        
-        .nbNavigationDestination(isPresented: $showRepublishSheet) {
-            RepublishRestrictedPostSheet(nrPost: nrPost, onDismiss: { dismiss() })
-                .environmentObject(la)
         }
         
         .toolbar {
