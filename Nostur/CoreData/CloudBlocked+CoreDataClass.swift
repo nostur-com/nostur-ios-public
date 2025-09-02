@@ -46,6 +46,20 @@ func block(pubkey: String, name:String? = "", context: NSManagedObjectContext = 
     sendNotification(.blockListUpdated, AppState.shared.bgAppState.blockedPubkeys)
 }
 
+
+@MainActor
+func unblock(pubkey: String, context: NSManagedObjectContext = context()) {
+    // remove existing block if any
+    if let existing = CloudTask.fetchTask(byType: .blockUntil, andPubkey: pubkey, context: context) {
+        context.delete(existing)
+    }
+        
+    AppState.shared.bgAppState.blockedPubkeys.remove(pubkey)
+    viewContextSave()
+    sendNotification(.blockListUpdated, AppState.shared.bgAppState.blockedPubkeys)
+}
+
+
 @MainActor
 func mute(eventId: String, replyToRootId: String?, replyToId: String?) {
     CloudBlocked.addBlock(eventId: eventId, replyToRootId: replyToRootId, replyToId: replyToId)

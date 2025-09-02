@@ -23,6 +23,7 @@ struct PostMenu: View {
     @State private var showMultiFollowSheet = false
     
     @State private var isOwnPost = false
+    @State private var isBlocked = false
     @State private var isFullAccount = false
     @State private var isFollowing = false
     @State private var showPinThisPostConfirmation = false
@@ -126,12 +127,26 @@ struct PostMenu: View {
             
             Section {
                 // TODO: Add unblock { .onAppear.. show time remaining etc blocked() }
-                NavigationLink {
-                    PostMenuBlockOptions(nrContact: nrPost.contact, rootDismiss: dismiss)
-                        .environment(\.theme, theme)
-                } label: {
-                    Label("Block \(nrContact.anyName)", systemImage: "circle.slash")
-                        .foregroundColor(theme.accent)
+                if !isOwnPost {
+                    if !isBlocked {
+                        NavigationLink {
+                            PostMenuBlockOptions(nrContact: nrPost.contact, rootDismiss: dismiss)
+                                .environment(\.theme, theme)
+                        } label: {
+                            Label("Block \(nrContact.anyName)", systemImage: "circle.slash")
+                                .foregroundColor(theme.accent)
+                        }
+                    }
+                    else {
+                        Button(action: {
+                            dismiss()
+                            L.og.debug("Unblock")
+                            unblock(pubkey: nrContact.pubkey)
+                        }) {
+                            Label("Unblock", systemImage: "circle.slash")
+                                .foregroundColor(theme.accent)
+                        }
+                    }
                 }
                 
                 Button(action: {
@@ -199,6 +214,7 @@ struct PostMenu: View {
         
         .onAppear {
             isOwnPost = nrPost.pubkey == la.pubkey
+            isBlocked = blocks().contains(nrPost.pubkey)
             self.isFullAccount = la.account.isFullAccount
         }
         
