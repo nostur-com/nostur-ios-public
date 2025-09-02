@@ -81,7 +81,7 @@ struct PostMenu: View {
                             RepublishRestrictedPostSheet(nrPost: nrPost, rootDismiss: dismiss)
                                 .environmentObject(la)
                         } label: {
-                            Label(String(localized:"Republish to different relay(s)", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                            Label(String(localized: "Republish", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
                                 .foregroundColor(theme.accent)
                         }
                     }

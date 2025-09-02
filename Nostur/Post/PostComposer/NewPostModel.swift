@@ -471,7 +471,7 @@ public final class NewPostModel: ObservableObject {
             _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
         }
         
-        if let replyTo, !replyTo.nrPost.isRestricted { // Rebroadcast if not restricted
+        if let replyTo, !replyTo.nrPost.isRestricted { // Republish if not restricted
             bg().perform {
                 guard let bgEvent = replyTo.nrPost.event else { return }
                 let replyToNEvent = bgEvent.toNEvent()
@@ -483,7 +483,7 @@ public final class NewPostModel: ObservableObject {
                 }
             }
         }
-        if let quotePost, !quotePost.nrPost.isRestricted { // Rebroadcast if not restricted
+        if let quotePost, !quotePost.nrPost.isRestricted { // Republish if not restricted
             bg().perform {
                 guard let bgEvent = quotePost.nrPost.event else { return }
                 let quotingNEvent = bgEvent.toNEvent()

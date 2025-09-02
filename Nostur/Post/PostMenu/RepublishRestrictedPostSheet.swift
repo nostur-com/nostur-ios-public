@@ -10,7 +10,7 @@ import NavigationBackport
 import NostrEssentials
 
 // republish own restricted post - needs auth
-// similar to RebroadcastPostSheet, but starts with auth right away as restricted posts need that
+// similar to RepublishPostSheet, but starts with auth right away as restricted posts need that
 struct RepublishRestrictedPostSheet: View {
     @Environment(\.theme) private var theme
     
@@ -122,6 +122,7 @@ struct RepublishRestrictedPostSheet: View {
             }
         }
         
+        .navigationTitle("Republish to relays")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {

@@ -62,19 +62,19 @@ struct PostDetailsMenuSheet: View {
                         RepublishRestrictedPostSheet(nrPost: nrPost, rootDismiss: rootDismiss)
                             .environmentObject(la)
                     } label: {
-                        Label(String(localized:"Republish to different relay(s)", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                        Label(String(localized: "Republish", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
                     }
                 }
                 else if !nrPost.isRestricted {
                     NavigationLink {
-                        RebroadcastPostSheet(nrPost: nrPost, rootDismiss: rootDismiss)
+                        RepublishPostSheet(nrPost: nrPost, rootDismiss: rootDismiss)
                             .environmentObject(la)
                     } label: {
                         if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey {
-                            Label(String(localized:"Broadcast to relays (again)", comment: "Button to broadcast own post again"), systemImage: "dot.radiowaves.left.and.right")
+                            Label(String(localized: "Republish", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
                         }
                         else {
-                            Label(String(localized:"Rebroadcast to relays", comment: "Button to rebroadcast a post"), systemImage: "dot.radiowaves.left.and.right")
+                            Label(String(localized: "Republish", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
                         }
                     }
                 }
