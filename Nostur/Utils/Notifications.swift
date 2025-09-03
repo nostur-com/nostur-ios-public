@@ -398,4 +398,8 @@ extension Notification.Name {
     static var closeFullscreenGallery: Notification.Name {
         return Notification.Name("closeFullscreenGallery")
     }
+    
+    static var didPinPost: Notification.Name {
+        return Notification.Name("didPinPost")
+    }
 }

@@ -72,6 +72,26 @@ class ProfileViewModel: ObservableObject {
         }
         
         listenForDeletedPosts()
+        listenForDidPin()
+    }
+    
+    private func listenForDidPin() {
+        receiveNotification(.didPinPost)
+            .map { notification in
+                return (notification.object as! PinPostInfo)
+            }
+            .filter { $0.pinEvent.publicKey == self.pubkey }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] pinPostInfo in
+                guard let self = self else { return }
+                Task { @MainActor in
+                    withAnimation {
+                        self.pinEventId = pinPostInfo.pinEvent.id
+                        self.pinnedPost = pinPostInfo.pinnedPost
+                    }
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     private func listenForDeletedPosts() {

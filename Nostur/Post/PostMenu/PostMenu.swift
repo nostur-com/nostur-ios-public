@@ -70,6 +70,7 @@ struct PostMenu: View {
                                  Task {
                                      try await pinToProfile(nrPost)
                                      try await addToHighlights(nrPost)
+                                     dismiss()
                                  }
                              }
                          } message: {

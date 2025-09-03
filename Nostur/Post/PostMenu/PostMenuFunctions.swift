@@ -24,10 +24,18 @@ func pinToProfile(_ nrPost: NRPost) async throws {
         NostrTag(["k", nrPost.kind.description])
     ])
     
-    let signedEvent = try await sign(nEvent: latestPinned, accountPubkey: account.publicKey)
+    let latestPinnedSigned = try await sign(nEvent: latestPinned, accountPubkey: account.publicKey)
     DispatchQueue.main.async {
-        Unpublisher.shared.publishNow(signedEvent)
+        Unpublisher.shared.publishNow(latestPinnedSigned)
     }
+    
+    sendNotification(.didPinPost, PinPostInfo(pinEvent: latestPinnedSigned, pinnedPost: nrPost))
+}
+
+struct PinPostInfo: Identifiable {
+    var id: String { pinEvent.id + pinnedPost.id }
+    let pinEvent: NEvent
+    let pinnedPost: NRPost
 }
 
 @MainActor
