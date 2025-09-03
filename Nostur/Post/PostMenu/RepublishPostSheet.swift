@@ -16,7 +16,7 @@ struct RepublishPostSheet: View {
     @Environment(\.theme) private var theme
     
     @ObservedObject public var nrPost: NRPost // Should be non-restricted ["-"] post, use check in container, not this view
-    public var rootDismiss: DismissAction
+    public var rootDismiss: (() -> Void)? = nil
     
     @State private var relays: [RelayData] = []
     
@@ -138,7 +138,7 @@ struct RepublishPostSheet: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
-                    rootDismiss()
+                    rootDismiss?()
                 }
             }
         }
@@ -263,14 +263,10 @@ struct RepublishPostSheet: View {
     }
 }
 
-@available(iOS 17.0, *)
 #Preview {
-    @Previewable @Environment(\.dismiss) var dismiss
-    
     NBNavigationStack {
         RepublishPostSheet(
-            nrPost: testNRPost(###"{"sig":"9334ba6c53acf23dd83b27cd3ebdec333a7a9e11001884c3bc0a2e71114738621f2a0a87507fdf215fc1540e53626b3a90034e242e93a65414062204ae22b947","content":"https://media.utxo.nl/wp-content/uploads/nostr/d/f/dfbbd8dd736b31c32c6d26d24081c6984c0784d5ad43bd95050e97e2b6e0e83d.webp\nGM","id":"b1307ffcb88ffa28b2dacbf0bd1bcee88d24b64798a570851fb05c51fa46e327","tags":[["imeta","url https://media.utxo.nl/wp-content/uploads/nostr/d/f/dfbbd8dd736b31c32c6d26d24081c6984c0784d5ad43bd95050e97e2b6e0e83d.webp","dim 2338x2338","sha256 dfbbd8dd736b31c32c6d26d24081c6984c0784d5ad43bd95050e97e2b6e0e83d"],["k","20"],["client","Nostur","31990:9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33:1685868693432"]],"kind":1,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1756714070}"###),
-            rootDismiss: dismiss
+            nrPost: testNRPost(###"{"sig":"9334ba6c53acf23dd83b27cd3ebdec333a7a9e11001884c3bc0a2e71114738621f2a0a87507fdf215fc1540e53626b3a90034e242e93a65414062204ae22b947","content":"https://media.utxo.nl/wp-content/uploads/nostr/d/f/dfbbd8dd736b31c32c6d26d24081c6984c0784d5ad43bd95050e97e2b6e0e83d.webp\nGM","id":"b1307ffcb88ffa28b2dacbf0bd1bcee88d24b64798a570851fb05c51fa46e327","tags":[["imeta","url https://media.utxo.nl/wp-content/uploads/nostr/d/f/dfbbd8dd736b31c32c6d26d24081c6984c0784d5ad43bd95050e97e2b6e0e83d.webp","dim 2338x2338","sha256 dfbbd8dd736b31c32c6d26d24081c6984c0784d5ad43bd95050e97e2b6e0e83d"],["k","20"],["client","Nostur","31990:9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33:1685868693432"]],"kind":1,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1756714070}"###)
         )
         .environment(\.theme, Themes.GREEN)
     }

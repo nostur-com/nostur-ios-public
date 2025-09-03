@@ -14,7 +14,7 @@ struct PostDetailsMenuSheet: View {
     @Environment(\.theme) private var theme
     
     private let nrPost: NRPost
-    private var rootDismiss: DismissAction
+    private var rootDismiss: (() -> Void)?
     
     @State private var isOwnPost = false
     @State private var isFullAccount = false
@@ -27,7 +27,7 @@ struct PostDetailsMenuSheet: View {
     
     @ObservedObject private var footerAttributes: FooterAttributes
     
-    init(nrPost: NRPost, rootDismiss: DismissAction) {
+    init(nrPost: NRPost, rootDismiss: (() -> Void)? = nil) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
         self.rootDismiss = rootDismiss
@@ -52,7 +52,7 @@ struct PostDetailsMenuSheet: View {
                     if let rawSource {
                         UIPasteboard.general.string = rawSource
                     }
-                    rootDismiss()
+                    rootDismiss?()
                 }) {
                     Label("Copy raw JSON", systemImage: "ellipsis.curlybraces")
                 }
@@ -136,7 +136,7 @@ struct PostDetailsMenuSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button(action: { rootDismiss() }) {
+                Button(action: { rootDismiss?() }) {
                     Text("Done")
                 }
             }
@@ -197,12 +197,10 @@ struct PostDetailsMenuSheet: View {
     }
 }
 
-@available(iOS 17.0, *)
 #Preview {
-    @Previewable @Environment(\.dismiss) var dismiss
     PreviewContainer {
         NBNavigationStack {
-            PostDetailsMenuSheet(nrPost: testNRPost(), rootDismiss: dismiss)
+            PostDetailsMenuSheet(nrPost: testNRPost())
         }
     }
 }

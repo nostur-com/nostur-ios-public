@@ -43,7 +43,7 @@ struct WithAppSheets: ViewModifier {
         content
             .sheet(item: $asm.addContactsToListInfo, content: { info in
                 NRSheetNavigationStack {
-                    AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys, rootDismiss: dismiss)
+                    AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys, rootDismiss: { dismiss() })
                         .presentationDetentsLarge()
                 }
                 .environmentObject(loggedInAccount)

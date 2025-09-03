@@ -15,7 +15,7 @@ struct RepublishRestrictedPostSheet: View {
     @Environment(\.theme) private var theme
     
     @ObservedObject public var nrPost: NRPost // Should be restricted ["-"] post, use check in container, not this view
-    public var rootDismiss: DismissAction
+    public var rootDismiss: (() -> Void)? = nil
     
     @State private var relays: [RelayData] = []
     
@@ -126,7 +126,7 @@ struct RepublishRestrictedPostSheet: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
-                    rootDismiss()
+                    rootDismiss?()
                 }
             }
         }
@@ -297,14 +297,10 @@ struct EnterRelayAddressSheet: View {
     }
 }
 
-@available(iOS 17.0, *)
 #Preview {
-    @Previewable @Environment(\.dismiss) var dismiss
-    
     NBNavigationStack {
         RepublishRestrictedPostSheet(
-            nrPost: testNRPost(###"{"tags":[["-"],["client","Nostur","31990:9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33:1685868693432"]],"pubkey":"b55ca1f1aa95d5dc45877b8331a9598c53e38ef4a7bc436d765b11d660fc39c9","content":"Test","sig":"57ff038f6351ce6a38de306c38b0571b7dec6bc495e66503b07cd435852fa14aafc2b0c470a0366c859b87ffbe7e996f1caa5a43546c7aa84e577c8d4b2b4459","kind":1,"id":"10a6c4d9cf0baeda0a4195834fb6a99b8ed33378da5dc9fd3bba3a4f332b9f50","created_at":1756556200}"###),
-            rootDismiss: dismiss
+            nrPost: testNRPost(###"{"tags":[["-"],["client","Nostur","31990:9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33:1685868693432"]],"pubkey":"b55ca1f1aa95d5dc45877b8331a9598c53e38ef4a7bc436d765b11d660fc39c9","content":"Test","sig":"57ff038f6351ce6a38de306c38b0571b7dec6bc495e66503b07cd435852fa14aafc2b0c470a0366c859b87ffbe7e996f1caa5a43546c7aa84e577c8d4b2b4459","kind":1,"id":"10a6c4d9cf0baeda0a4195834fb6a99b8ed33378da5dc9fd3bba3a4f332b9f50","created_at":1756556200}"###)
         )
         .environment(\.theme, Themes.GREEN)
     }

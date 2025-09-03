@@ -14,7 +14,9 @@ struct PostMenu: View {
     @EnvironmentObject private var la: LoggedInAccount
     public let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
-    @Environment(\.dismiss) private var dismiss
+    private func dismiss() {
+        AppSheetsModel.shared.dismiss()
+    }
     private let NEXT_SHEET_DELAY = 0.05
     @State private var followToggles = false
     @State private var blockOptions = false
@@ -299,7 +301,7 @@ struct PostMenuButton: View {
             .highPriorityGesture(
                 TapGesture()
                     .onEnded { _ in
-                        sendNotification(.showNoteMenu, nrPost)
+                        AppSheetsModel.shared.postMenuContext = PostMenuContext(nrPost: nrPost, isPinnedPost: nrPost.id == pinnedPostId)
                     }
             )
     }
