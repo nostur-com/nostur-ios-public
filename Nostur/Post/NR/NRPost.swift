@@ -788,11 +788,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         guard postDeletedSubscription == nil else { return }
         let id = id
         postDeletedSubscription = ViewUpdates.shared.postDeleted
-            .filter { $0.toDelete == id }
+            .filter { $0.toDeleteId == id }
             .receive(on: RunLoop.main)
             .sink { [weak self] deletion in
                 guard let self = self else { return }
-                self.deletedById = deletion.deletedBy
+                self.deletedById = deletion.deletedById
             }
     }
     

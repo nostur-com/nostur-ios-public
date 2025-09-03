@@ -703,7 +703,7 @@ extension Event {
     
     static func fetchReplacableEvent(_ kind: Int64, pubkey: String, context: NSManagedObjectContext = bg()) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@", kind, pubkey)
+        request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND deletedById = nil", kind, pubkey)
         request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         request.fetchLimit = 1
         return try? context.fetch(request).first
@@ -1406,15 +1406,14 @@ extension Event {
             // TODO: Also do aTags
             
             let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
-            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,6,20,9802,30023,34235} AND id IN %@", eventIdsToDelete)
+            
+            // Only same author (pubkey) can delete
+            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,6,20,9802,10601,30023,34235} AND pubkey = %@ AND id IN %@ AND deletedById = nil", event.publicKey, eventIdsToDelete)
             eventIdsToDeleteReq.sortDescriptors = []
             if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
-                for d in eventsToDelete {
-                    if (d.pubkey == event.publicKey) {
-//                        d.objectWillChange.send()
-                        d.deletedById = event.id
-                        ViewUpdates.shared.postDeleted.send((d.id, event.id))
-                    }
+                for eventToDelete in eventsToDelete {
+                    eventToDelete.deletedById = event.id
+                    ViewUpdates.shared.postDeleted.send((toDeleteId: eventToDelete.id, deletedById: event.id))
                 }
             }
         }

@@ -16,6 +16,7 @@ class AppSheetsModel: ObservableObject {
     
     @Published var readOnlySheetVisible: Bool = false
     @Published var askLoginInfo: AskLoginInfo? = nil
+    @Published var postMenuContext: PostMenuContext? = nil
     @Published var relayFeedPreviewSheetInfo: RelayFeedPreviewInfo? = nil
     @Published var feedPreviewSheetInfo: FeedPreviewInfo? = nil
     @Published var addContactsToListInfo: AddContactsToListInfo? = nil
@@ -25,6 +26,7 @@ class AppSheetsModel: ObservableObject {
     @MainActor func dismiss() {
         readOnlySheetVisible = false
         askLoginInfo = nil
+        postMenuContext = nil
         feedPreviewSheetInfo = nil
         relayFeedPreviewSheetInfo = nil
         addContactsToListInfo = nil
@@ -65,6 +67,14 @@ struct WithAppSheets: ViewModifier {
                 .presentationDetents250medium()
                 .presentationBackgroundCompat(theme.listBackground)
             })
+        
+            .sheet(item: $asm.postMenuContext, content: { postMenuContext in
+                NRSheetNavigationStack {
+                    PostMenu(postMenuContext: postMenuContext)
+                }
+                .environmentObject(loggedInAccount)
+            })
+        
             .fullScreenCover(item: $asm.feedPreviewSheetInfo) { feedPreviewSheetInfo in
                 NRSheetNavigationStack {
                     ZStack(alignment: .center) {

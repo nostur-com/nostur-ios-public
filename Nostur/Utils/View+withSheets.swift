@@ -331,22 +331,6 @@ struct WithSheets: ViewModifier {
                 .nbUseNavigationStack(.never)
             }
         
-        // Lazy note context menu (because Menu() on every post is slow???)
-            .onReceive(receiveNotification(.showNoteMenu)) { notification in
-                let nrPost = notification.object as! NRPost
-                self.contextMenuNrPost = nrPost
-            }
-            .sheet(item: $contextMenuNrPost) { nrPost in
-                NBNavigationStack {
-                    PostMenu(nrPost: nrPost)
-                        .presentationDetentsMedium()
-                        .environmentObject(la)
-                        .environment(\.theme, theme)
-                        .presentationBackgroundCompat(theme.listBackground)
-                }
-                .nbUseNavigationStack(.never)
-            }
-        
         // Zap customizer sheet
             .onReceive(receiveNotification(.showZapCustomizerSheet)) { notification in
                 let zapCustomizerSheetInfo = notification.object as! ZapCustomizerSheetInfo

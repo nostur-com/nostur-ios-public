@@ -8,6 +8,7 @@
 import SwiftUI
 import NostrEssentials
 import CoreData
+import Combine
 
 class ProfileViewModel: ObservableObject {
     @Published var isFollowingYou = false
@@ -22,6 +23,8 @@ class ProfileViewModel: ObservableObject {
     
     private let backlog = Backlog(timeout: 4.0, auto: true, backlogDebugName: "ProfileViewModel")
     private var pubkey: String?
+    
+    private var subscriptions: Set<AnyCancellable> = []
     
     public init() {}
     
@@ -67,6 +70,22 @@ class ProfileViewModel: ObservableObject {
                 }
             }
         }
+        
+        listenForDeletedPosts()
+    }
+    
+    private func listenForDeletedPosts() {
+        ViewUpdates.shared.postDeleted
+            .receive(on: RunLoop.main)
+            .sink { [weak self] deletion in
+                guard let self = self else { return }
+                if let pinEventId = self.pinEventId, deletion.toDeleteId == pinEventId {
+                    withAnimation {
+                        self.pinnedPost = nil
+                    }
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     @MainActor
@@ -176,6 +195,10 @@ class ProfileViewModel: ObservableObject {
         }
     }
     
+    // Not the pinned post, but the event pinning the post
+    // Need to keep to remove pinned post on unpin from view
+    private var pinEventId: String?
+    
     public func loadPinned(_ nrContact: NRContact) async {
         let pubkey = nrContact.pubkey
         _ = try? await relayReq(Filters(authors: [pubkey], kinds: [10601]), timeout: 5.5)
@@ -186,6 +209,10 @@ class ProfileViewModel: ObservableObject {
                let pinnedEvent = Event.fetchEvent(id: firstE, context: bgContext),
                pinnedEvent.pubkey == pubkey
             {
+                let pinEventId = event?.id
+                Task { @MainActor in
+                    self.pinEventId = pinEventId
+                }
                 return NRPost(event: pinnedEvent)
             }
             return nil

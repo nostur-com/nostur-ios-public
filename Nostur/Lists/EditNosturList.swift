@@ -370,7 +370,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
                     let wipedEventId = wipedEvent.id
                     DataProvider.shared().bgSave()
                     Task { @MainActor in
-                        ViewUpdates.shared.postDeleted.send((wipedEventId, deletedById))
+                        ViewUpdates.shared.postDeleted.send((toDeleteId: wipedEventId, deletedById: deletedById))
                     }
                 }
                 Unpublisher.shared.publishNow(signedWipedEvent) // is published before delete req (Now)

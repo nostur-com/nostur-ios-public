@@ -137,3 +137,14 @@ extension EnvironmentValues {
         set { self[NetworkMonitorEnvironmentKey.self] = newValue }
     }
 }
+
+struct PinnedPostIdEnvironmentKey: EnvironmentKey {
+    static let defaultValue: String? = nil
+}
+
+extension EnvironmentValues {
+    var pinnedPostId: String? {
+        get { self[PinnedPostIdEnvironmentKey.self] }
+        set { self[PinnedPostIdEnvironmentKey.self] = newValue }
+    }
+}

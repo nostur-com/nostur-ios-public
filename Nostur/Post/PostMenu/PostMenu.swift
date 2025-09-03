@@ -12,7 +12,10 @@ import NostrEssentials
 struct PostMenu: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
-    public let nrPost: NRPost
+    public let postMenuContext: PostMenuContext
+    private var nrPost: NRPost {
+        postMenuContext.nrPost
+    }
     @ObservedObject private var nrContact: NRContact
     private func dismiss() {
         AppSheetsModel.shared.dismiss()
@@ -30,9 +33,9 @@ struct PostMenu: View {
     @State private var isFollowing = false
     @State private var showPinThisPostConfirmation = false
     
-    init(nrPost: NRPost) {
-        self.nrPost = nrPost
-        self.nrContact = nrPost.contact
+    init(postMenuContext: PostMenuContext) {
+        self.postMenuContext = postMenuContext
+        self.nrContact = postMenuContext.nrPost.contact
     }
     
     var body: some View {
@@ -51,26 +54,39 @@ struct PostMenu: View {
                             .foregroundColor(theme.accent)
                     }
                     
-                    Button(action: {
-                        showPinThisPostConfirmation = true
-                    }) {
-                        Label("Pin to your profile", systemImage: "pin")
-                            .foregroundColor(theme.accent)
-                    }
-                    .confirmationDialog(
-                         Text("Pin this post"),
-                         isPresented: $showPinThisPostConfirmation,
-                         titleVisibility: .visible
-                     ) {
-                         Button("Pin") {
-                             Task {
-                                 try await pinToProfile(nrPost)
-                                 try await addToHighlights(nrPost)
+                    if !postMenuContext.isPinnedPost {
+                        Button(action: {
+                            showPinThisPostConfirmation = true
+                        }) {
+                            Label("Pin to your profile", systemImage: "pin")
+                                .foregroundColor(theme.accent)
+                        }
+                        .confirmationDialog(
+                             Text("Pin this post"),
+                             isPresented: $showPinThisPostConfirmation,
+                             titleVisibility: .visible
+                         ) {
+                             Button("Pin") {
+                                 Task {
+                                     try await pinToProfile(nrPost)
+                                     try await addToHighlights(nrPost)
+                                 }
                              }
+                         } message: {
+                             Text("This will appear at the top of your profile and replace any previously pinned post.")
                          }
-                     } message: {
-                         Text("This will appear at the top of your profile and replace any previously pinned post.")
-                     }
+                    }
+                    else {
+                        Button(action: {
+                            Task {
+                                await unpinPost(nrPost)
+                            }
+                            dismiss()
+                        }) {
+                            Label("Unpin from your profile", systemImage: "pin.slash")
+                                .foregroundColor(theme.accent)
+                        }
+                    }
                     
                     Button(action: {
                         
@@ -284,8 +300,9 @@ struct PostMenu: View {
 let NEXT_SHEET_DELAY = 0.05
 
 struct PostMenuButton: View {
+    @Environment(\.pinnedPostId) var pinnedPostId
     @Environment(\.theme) private var theme
-    var nrPost: NRPost
+    public let nrPost: NRPost
     
     var body: some View {
         Image(systemName: "ellipsis")
@@ -307,10 +324,48 @@ struct PostMenuButton: View {
     }
 }
 
+struct PostMenuContext: Identifiable {
+    let id = UUID()
+    let nrPost: NRPost
+    var isPinnedPost: Bool = false
+}
+
+func unpinPost(_ pinnedPost: NRPost) async {
+    // find pin id(s) (only 1 should exist at a time so can request delete all we find)
+    let pinEventIds: [String] = await withBgContext { bgContext in
+        Event.fetchReplacableEvents(10601, pubkeys: [pinnedPost.pubkey], context: bgContext).map { $0.id }
+    }
+    
+    // Create delete event
+    var deleteRequestNEvent = NEvent(content: "")
+    deleteRequestNEvent.kind = .delete
+    deleteRequestNEvent.tags = pinEventIds.map { eventId in
+        NostrTag(["e", eventId])
+    }
+    
+    // sign delete event
+    guard let signedDeleteRequestNEvent = try? await Nostur.sign(nEvent: deleteRequestNEvent, accountPubkey: pinnedPost.pubkey)
+    else {
+#if DEBUG
+        L.og.error("Failed to sign unpin event")
+#endif
+        return
+    }
+        
+    // publish signed delete event
+    Unpublisher.shared.publishNow(signedDeleteRequestNEvent)
+    
+    // Handle in own DB
+    _ = await withBgContext { bgContext in
+        Event.saveEvent(event: signedDeleteRequestNEvent, context: bgContext)
+    }
+    
+}
+
 #Preview("Post Menu") {
     PreviewContainer {
         NBNavigationStack {
-            PostMenu(nrPost: testNRPost())
+            PostMenu(postMenuContext: PostMenuContext(nrPost: testNRPost()))
                 .environment(\.theme, Themes.GREEN)
         }
     }
