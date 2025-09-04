@@ -30,6 +30,7 @@ struct NosturMainView: View {
                 }
             }
         }
+        .withAppSheets()
     }
 }
 

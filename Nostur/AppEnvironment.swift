@@ -10,8 +10,7 @@ import SwiftUI
 // EnvironmentObjects get lost in SwiftUI when used in .sheets so
 // wrap in AppEnvironment { } to always have our EnvironmentObjects
 struct AppEnvironment<Content: View>: View {
-    
-    @ObservedObject private var themes: Themes = .default
+    @Environment(\.theme) private var theme
     public var la: LoggedInAccount
     
     @ViewBuilder
@@ -19,10 +18,9 @@ struct AppEnvironment<Content: View>: View {
         
     var body: some View {
         self.content
-            .environment(\.theme, themes.theme)
-            .tint(Themes.default.theme.accent)
-            .accentColor(Themes.default.theme.accent)
-            .environmentObject(Themes.default)
+            .environment(\.theme, theme)
+            .tint(theme.accent)
+            .accentColor(theme.accent)
             .environmentObject(AppState.shared)
             .environmentObject(AccountsState.shared)
             .environmentObject(NewPostNotifier.shared)

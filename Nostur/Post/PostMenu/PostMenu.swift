@@ -39,7 +39,7 @@ struct PostMenu: View {
     }
     
     var body: some View {
-        List {
+        NXForm {
             
             if isOwnPost && self.isFullAccount {
                 Section {
@@ -230,9 +230,9 @@ struct PostMenu: View {
             
         }
 
-        .scrollContentBackgroundHidden()
-        .background(theme.listBackground)
-        
+//        .scrollContentBackgroundHidden()
+//        .background(theme.listBackground)
+//        
         .onAppear {
             isOwnPost = nrPost.pubkey == la.pubkey
             isBlocked = blocks().contains(nrPost.pubkey)
@@ -379,6 +379,7 @@ func unpinPost(_ pinnedPost: NRPost) async {
         NBNavigationStack {
             PostMenuButton(nrPost: testNRPost())
                 .withSheets()
+                .withAppSheets()
                 .environment(\.theme, Themes.GREEN)
         }
     }

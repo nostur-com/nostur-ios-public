@@ -12,6 +12,7 @@ import NostrEssentials
 struct AppView: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var accountsState: AccountsState
+    @EnvironmentObject private var themes: Themes
     @State private var viewState: ViewState = .starting
 
     var body: some View {
@@ -24,7 +25,9 @@ struct AppView: View {
                 Onboarding()
             case .loggedIn(let loggedInAccount):
                 NosturMainView()
-                    .withAppSheets()
+                    .environment(\.theme, themes.theme)
+                    .tint(themes.theme.accent)
+                    .accentColor(themes.theme.accent)
                     .environmentObject(loggedInAccount)
                     .onAppear {
                         ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)

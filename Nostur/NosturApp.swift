@@ -70,9 +70,12 @@ struct iOSApp: App {
     
     private let regexes = NostrRegexes.default
     
+    private let themes: Themes = .default
+    
     var body: some Scene {
         WindowGroup {
             AppView()
+                .environmentObject(themes)
                 .environmentObject(accountsState)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
         }
