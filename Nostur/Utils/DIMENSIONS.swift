@@ -27,7 +27,7 @@ class DIMENSIONS: ObservableObject {
     static public let KIND1_TRAILING:CGFloat = 10.0
     static public var ROW_PFP_SPACE:CGFloat { get { Self.POST_ROW_PFP_WIDTH + (Self.POST_PFP_SPACE) }}
     
-    static public let PREVIEW_HEIGHT:CGFloat = 70.0
+    static public let PREVIEW_HEIGHT:CGFloat = 60.0
     
     static public let PFP_BIG:CGFloat = 75.0 // Bigger PFP on Profile View and Profile Cards
     

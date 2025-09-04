@@ -1581,6 +1581,7 @@
     },
     "Add/Remove from feed" : {
       "comment" : "Navigation title for screen to add or remove contacts to a feed",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -1606,7 +1607,7 @@
 
     },
     "Add/remove from Lists" : {
-
+      "comment" : "Navigation title for screen to add or remove contacts to a feed"
     },
     "Add/Remove from Lists" : {
       "comment" : "Menu action"
@@ -1775,6 +1776,12 @@
           }
         }
       }
+    },
+    "auth required" : {
+      "comment" : "Small label to indicate auth is required"
+    },
+    "Authenticating with account: %@" : {
+
     },
     "Auto scroll to new posts" : {
       "comment" : "Setting on settings screen",
@@ -2242,6 +2249,9 @@
           }
         }
       }
+    },
+    "Cannot find account to authenticate with" : {
+
     },
     "Cashu (Bitcoin) 🥜" : {
       "comment" : "Title of cashu redeem card",
@@ -3778,6 +3788,9 @@
         }
       }
     },
+    "Enter list name" : {
+
+    },
     "Enter new relay address..." : {
 
     },
@@ -5050,6 +5063,9 @@
           }
         }
       }
+    },
+    "List name" : {
+
     },
     "Listen anonymously" : {
       "localizations" : {
@@ -7197,12 +7213,6 @@
         }
       }
     },
-    "Rebroadcast to relays" : {
-      "comment" : "Button to rebroadcast a post"
-    },
-    "Rebroadcast to relays (again)" : {
-      "comment" : "Button to broadcast own post again"
-    },
     "REC" : {
       "localizations" : {
         "nl" : {
@@ -7266,6 +7276,9 @@
           }
         }
       }
+    },
+    "Recently pinned" : {
+
     },
     "Recheck" : {
       "localizations" : {
@@ -7812,7 +7825,7 @@
       }
     },
     "Republish" : {
-
+      "comment" : "Button to republish a post different relay(s)"
     },
     "Republish post" : {
 
@@ -7820,8 +7833,8 @@
     "Republish to" : {
       "comment" : "Header for a feed setting"
     },
-    "Republish to different relay(s)" : {
-      "comment" : "Button to republish a post different relay(s)"
+    "Republish to relays" : {
+
     },
     "Request delete" : {
       "localizations" : {
@@ -7955,6 +7968,9 @@
           }
         }
       }
+    },
+    "Retry with authentication" : {
+
     },
     "Reveal" : {
       "comment" : "Button to reveal a blocked a post",
@@ -9715,6 +9731,9 @@
         }
       }
     },
+    "Unblock" : {
+
+    },
     "Unchecked" : {
       "shouldTranslate" : false
     },
@@ -9782,6 +9801,9 @@
           }
         }
       }
+    },
+    "Unpin from your profile" : {
+
     },
     "Unsigned or invalid event" : {
       "comment" : "Error message",
@@ -9885,6 +9907,9 @@
           }
         }
       }
+    },
+    "Using account: %@" : {
+
     },
     "Verify again" : {
       "localizations" : {
