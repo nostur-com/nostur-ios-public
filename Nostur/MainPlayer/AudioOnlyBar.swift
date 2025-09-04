@@ -67,10 +67,16 @@ struct AudioOnlyBar: View {
                     VStack(alignment: .leading) {
                         Text(title)
                             .lineLimit(1)
-                        if subtitle != "" {
-                            Text(subtitle)
-                                .lineLimit(1)
-                                .font(.footnote)
+                        
+                        if let liveEvent = vm.nrLiveEvent {
+                            AudioOnlyBarLiveEventDescription(liveEvent: liveEvent)
+                        }
+                        else {
+                            if subtitle != "" {
+                                Text(subtitle)
+                                    .lineLimit(1)
+                                    .font(.footnote)
+                            }
                         }
                     }
                     .foregroundColor(Color.white)
@@ -116,6 +122,49 @@ struct AudioOnlyBar: View {
     }
 }
 
+struct AudioOnlyBarLiveEventDescription: View {
+    
+    @ObservedObject var liveEvent: NRLiveEvent
+    
+    private var title: String {
+        if let title = liveEvent.title, title != "" {
+            return title
+        }
+        else if liveEvent.participantsOrSpeakers.count > 0 {
+            return liveEvent.participantsOrSpeakers.map({ $0.anyName }).joined(separator: ", ")
+        }
+        return "Untitled"
+    }
+    
+    private var subtitle: String {
+        let summary = liveEvent.summary ?? ""
+        if summary != title {
+            return summary
+        }
+        return ""
+    }
+    
+    var body: some View {
+        HStack(spacing: 3) {
+            if liveEvent.totalParticipants > -1 {
+                Label("\(liveEvent.totalParticipants.description)", systemImage: "person.fill")
+                    .labelStyle(CompactLabelStyle())
+                    .font(.footnote)
+                    .fontWeightBold()
+                    .foregroundColor(Color.white)
+            }
+            
+            if subtitle != "" {
+                Text(subtitle)
+                    .lineLimit(1)
+                    .font(.footnote)
+            }
+            
+            Spacer()
+        }
+    }
+}
+
 #Preview {
     PreviewContainer({ pe in
         pe.loadContacts()
@@ -126,7 +175,8 @@ struct AudioOnlyBar: View {
         ])
     }) {
         if let nrPost = PreviewFetcher.fetchNRPost("7f0ddf8fb370af54a5e2a3c009bc437808a7cc69a4fdc7104d4f0ea2f6dd7f3f") {
-            let _ = AnyPlayerModel.shared.nrPost = nrPost
+//            let _ = AnyPlayerModel.shared.nrPost = nrPost
+            let _ = AnyPlayerModel.shared.nrLiveEvent = nrPost.nrLiveEvent
             AudioOnlyBar()
         }
     }
