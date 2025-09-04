@@ -626,9 +626,6 @@ extension Event {
             }
         #endif
         
-        // Get author
-        let author: NRContact = NRContact.instance(of: pubkey)
-        
         // Get participants, hosts, speakers
         var participantsOrSpeakers: [NRContact] = self.fastPs
             .filter { fastP in
@@ -641,8 +638,17 @@ extension Event {
                 return NRContact.instance(of: pubkey)
             }
         
-        if !participantsOrSpeakers.contains(where: { $0.pubkey == author.pubkey }) {
-            participantsOrSpeakers.append(author)
+        if
+            !participantsOrSpeakers.contains(where: { $0.pubkey == pubkey }) && // author is not already in p-tags
+            !self.fastPs.contains(where: { $0.3?.lowercased() == "host" }) // p-tag doesn't contain host
+        {
+            // Assume author is host (as host is not specified in p-tags)
+            let author: NRContact = NRContact.instance(of: pubkey)
+            participantsOrSpeakers.append(author) // add author as host
+        }
+        
+        if participantsOrSpeakers.isEmpty { // fallback if p-tags are empty
+            return [NRContact.instance(of: pubkey)]
         }
         
         return participantsOrSpeakers
@@ -658,6 +664,11 @@ extension Event {
             }
             .map { $0.1 }
         
-        return Set(pubkeys + [self.pubkey])
+//        return Set(pubkeys + [self.pubkey]) .pubkey should be in p-tags?
+        
+        if pubkeys.isEmpty { // fallback if p-tags are empty
+            return [self.pubkey]
+        }
+        return Set(pubkeys)
     }
 }

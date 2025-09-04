@@ -29,13 +29,20 @@ struct LiveEventCapsule: View {
                 ForEach(liveEvent.participantsOrSpeakers.indices, id: \.self) { index in
                     HStack(spacing: 0) {
                         Color.clear
-                            .frame(width: CGFloat(index) * 12)
+                            .frame(width: CGFloat(index) * 8)
                         PFP(pubkey: liveEvent.participantsOrSpeakers[index].pubkey, nrContact: liveEvent.participantsOrSpeakers[index], size: 20.0)
                     }
                     .id(liveEvent.participantsOrSpeakers[index].pubkey)
                 }
             }
             .frame(height: 34.0)
+            
+            if liveEvent.totalParticipants > 1 {
+                Label("\(liveEvent.totalParticipants.description)", systemImage: "person.fill")
+                    .labelStyle(CompactLabelStyle())
+                    .fontWeightBold()
+            }
+            
             Text((liveEvent.title ?? liveEvent.summary) ?? "Now live").lineLimit(1)
                 .fontWeightBold()
             Spacer()
@@ -114,3 +121,15 @@ struct LiveEventCapsule: View {
     }
 }
 
+
+
+struct CompactLabelStyle: LabelStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 1) { // Tighten spacing between icon and text
+            configuration.icon
+                .imageScale(.small)
+            configuration.title
+                .scaleEffect(0.9)
+        }
+    }
+}
