@@ -63,7 +63,7 @@ struct Search: View {
                                 VStack {
                                     NRContactSearchResultRow(nrContact: nrContact, onSelect: {
                                         navigateTo(NRContactPath(nrContact: nrContact), context: "Default")
-                                    })
+                                    }, showFollowButton: true)
                                         
                                     HStack {
                                         Spacer()

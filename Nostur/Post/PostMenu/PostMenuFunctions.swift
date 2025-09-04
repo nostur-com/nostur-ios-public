@@ -44,6 +44,7 @@ func addToHighlights(_ postToPin: NRPost) async throws {
     guard let account = account(), postToPin.pubkey == account.publicKey else { return }
     let accountPubkey = account.publicKey
     
+    // Check relays for existing highlights list (pinned list)
     _ = try? await relayReq(Filters(authors: [account.publicKey], kinds: [10001]), accountPubkey: accountPubkey)
     
     // Fetch from DB
@@ -70,8 +71,8 @@ func addToHighlights(_ postToPin: NRPost) async throws {
             L.sockets.debug("Highlights list already contains pinned post")
         }
     }
-    else { // Create
-        var newHighlightsList = NEvent(kind: .pinnedList,  tags: [NostrTag(["e", postToPin.id])])
+    else { // Create new highlights list if none was found
+        let newHighlightsList = NEvent(kind: .pinnedList,  tags: [NostrTag(["e", postToPin.id])])
 
         // sign
         let signedEvent = try await sign(nEvent: newHighlightsList, accountPubkey: accountPubkey)

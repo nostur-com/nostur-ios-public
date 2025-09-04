@@ -249,6 +249,7 @@ class ProfileViewModel: ObservableObject {
     public func loadHighlights(_ nrContact: NRContact) async {
         let pubkey = nrContact.pubkey
         
+        // Check local DB first
         let postIds: [String] = await withBgContext { _ in
             Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
         }
@@ -260,6 +261,7 @@ class ProfileViewModel: ObservableObject {
             return
         }
         
+        // Check on relays
         _ = try? await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 4.5)
         
         let postIdsAfter: [String] = await withBgContext { _ in
