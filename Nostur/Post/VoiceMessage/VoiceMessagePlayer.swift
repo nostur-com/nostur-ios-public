@@ -168,8 +168,19 @@ struct VoiceMessagePlayer: View {
                         let playerItem: AVPlayerItem
                         
                         if processedFileURL.pathExtension.isEmpty { // AVPlayer doesn't play files without extension, so just try appending .m4a and it works.
-                            // For files without extension, create a copy with .m4a extension
-                            let tempURL = processedFileURL.appendingPathExtension("m4a")
+                            
+                            
+                            // For files without extension, create a copy with guessed extension
+                            let tempURL = switch detectAudioFormat(processedFileURL) {
+                            case .opus:
+                                processedFileURL.appendingPathExtension("opus")
+                            case .flac:
+                                processedFileURL.appendingPathExtension("flac")
+                            case .mobile3GPP:
+                                processedFileURL.appendingPathExtension("3gp")
+                            default:
+                                processedFileURL.appendingPathExtension("m4a")
+                            }
                             
                             // Try to create a symbolic link or copy the file with the correct extension
                             do {
@@ -385,4 +396,9 @@ class AudioPlayerObserver: NSObject {
     deinit {
         removeObservers()
     }
+}
+
+func detectAudioFormat(_ url: URL) -> CMFormatDescription.MediaSubType? {
+    guard let audioFile = try? AVAudioFile(forReading: url) else { return nil }
+    return audioFile.fileFormat.formatDescription.mediaSubType
 }

@@ -8,6 +8,8 @@
 import Foundation
 import Testing
 @testable import Nostur
+import AVFoundation
+import CoreMedia
 
 struct VoiceMessagesTests {
 
@@ -35,6 +37,26 @@ struct VoiceMessagesTests {
 
         #expect(result == 0, "FFmpeg conversion should return 0")
         print("✅ Test completed - WebM to M4A conversion successful")
+    }
+    
+    @Test func testIdentifyFileType() async throws {
+        let bundle = Bundle(for: TestBundleLocator.self)
+        guard
+            let inputURL = bundle.url(
+                forResource: "b14f3c5d9a0f8ca838ea32c63b32e84a94b5b34235e51ba07476d8b3e5ddd569",
+                withExtension: nil
+            )
+        else {
+            Issue.record("Missing test resource")
+            return
+        }
+        
+        
+        let audioFile = try AVAudioFile(forReading: inputURL)
+        print("audioFile processingFormat:", audioFile.fileFormat.formatDescription.mediaSubType)
+
+        #expect(detectAudioFormat(inputURL) == .opus)
+
     }
 }
 
