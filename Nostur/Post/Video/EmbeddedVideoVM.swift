@@ -455,7 +455,7 @@ public enum StreamType {
 }
 
 func detectStreamType(_ content: String) -> StreamType {
-    let content = content.prefix(900)
+    let content = content.prefix(3000)
     if content.contains("RESOLUTION=") {
         return .video
     }
