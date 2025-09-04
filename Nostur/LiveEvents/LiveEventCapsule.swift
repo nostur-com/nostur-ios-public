@@ -30,7 +30,7 @@ struct LiveEventCapsule: View {
                     HStack(spacing: 0) {
                         Color.clear
                             .frame(width: CGFloat(index) * 8)
-                        PFP(pubkey: liveEvent.participantsOrSpeakers[index].pubkey, nrContact: liveEvent.participantsOrSpeakers[index], size: 20.0)
+                        PFP(pubkey: liveEvent.participantsOrSpeakers[index].pubkey, nrContact: liveEvent.participantsOrSpeakers[index], size: 30.0)
                     }
                     .id(liveEvent.participantsOrSpeakers[index].pubkey)
                 }
@@ -50,7 +50,8 @@ struct LiveEventCapsule: View {
                 .symbolEffectPulse()
         }
         .foregroundColor(.white)
-        .padding(.horizontal, 8)
+        .padding(.leading, 2)
+        .padding(.trailing, 8)
         .background(theme.accent)
         .frame(height: 34.0)
         .clipShape(.rect(cornerRadius: 30))

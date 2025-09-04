@@ -46,8 +46,8 @@ struct AudioOnlyBar: View {
                                         ForEach(liveEvent.participantsOrSpeakers.indices, id: \.self) { index in
                                             HStack(spacing: 0) {
                                                 Color.clear
-                                                    .frame(width: CGFloat(index) * 12)
-                                                PFP(pubkey: liveEvent.participantsOrSpeakers[index].pubkey, nrContact: liveEvent.participantsOrSpeakers[index], size: 20.0)
+                                                    .frame(width: CGFloat(index) * 8)
+                                                PFP(pubkey: liveEvent.participantsOrSpeakers[index].pubkey, nrContact: liveEvent.participantsOrSpeakers[index], size: 30.0)
                                             }
                                             .id(liveEvent.participantsOrSpeakers[index].pubkey)
                                         }
