@@ -11,6 +11,7 @@ struct ContactSearchResultRow: View {
     @Environment(\.theme) private var theme
     @ObservedObject var contact: Contact
     var onSelect: (() -> Void)?
+    var showFollowButton: Bool = false
     
     @State var similarToPubkey: String? = nil
     @State var isFollowing = false
@@ -27,10 +28,17 @@ struct ContactSearchResultRow: View {
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
-                        Text(contact.anyName)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
+                        HStack {
+                            Text(contact.anyName)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                            if showFollowButton && similarToPubkey == nil {
+                                FollowLink(pubkey: contact.pubkey)
+                                    .layoutPriority(2)
+                                    .lineLimit(1)
+                            }
+                        }
                         
                         if let similarToPubkey {
                             Text("possible imposter", comment: "Label shown on a profile").font(.system(size: 12.0))
@@ -106,6 +114,7 @@ struct NRContactSearchResultRow: View {
     @Environment(\.theme) private var theme
     @ObservedObject var nrContact: NRContact
     var onSelect: (() -> Void)?
+    var showFollowButton: Bool = false
 
     @State var isFollowing = false
     @State var fixedPfpURL: URL?
@@ -122,12 +131,21 @@ struct NRContactSearchResultRow: View {
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
-                        Text(nrContact.anyName)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
+                        HStack {
+                            Text(nrContact.anyName)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .lineLimit(1)
+                            
+                            if showFollowButton && nrContact.similarToPubkey == nil {
+                                FollowLink(pubkey: nrContact.pubkey)
+                                    .layoutPriority(2)
+                                    .lineLimit(1)
+                            }
+                        }
                         
                         PossibleImposterLabelView2(nrContact: nrContact)
+                        
                         if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
                             NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
                                 .layoutPriority(3)
