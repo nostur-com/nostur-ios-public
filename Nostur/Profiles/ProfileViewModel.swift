@@ -43,12 +43,14 @@ class ProfileViewModel: ObservableObject {
         }
         self.loadOldPFP(nrContact)
         self.loadArticles(nrContact)
+#if DEBUG
         Task.detached {
             await self.loadPinned(nrContact)
         }
         Task.detached {
             await self.loadHighlights(nrContact)
         }
+#endif
         self.loadLists(nrContact)
         
         bg().perform { [weak self] in

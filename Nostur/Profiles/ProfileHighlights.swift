@@ -9,6 +9,7 @@ import SwiftUI
 import NostrEssentials
 
 struct ProfileHighlights: View {
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     
     public let pubkey: String
@@ -33,9 +34,20 @@ struct ProfileHighlights: View {
                 }
         case .posts(let nrPosts):
             if nrPosts.isEmpty {
-                ProgressView()
-                    .padding(10)
-                    .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
+                ZStack(alignment: .center) {
+                    theme.listBackground
+                        .frame(maxWidth: .infinity, minHeight: 700.0, alignment: .center)
+                    VStack(spacing: 20) {
+                        Text("Nothing here :(")
+                        Button(action: {
+                            
+                        }) {
+                            Label("Retry", systemImage: "arrow.clockwise")
+                                .labelStyle(.iconOnly)
+                                .foregroundColor(theme.accent)
+                        }
+                    }
+                }
             }
             else {
                 ForEach(nrPosts) { nrPost in
@@ -57,9 +69,15 @@ struct ProfileHighlights: View {
         }
     }
     
+    private func reload() async {
+        
+    }
+    
     private func load() async {
+        // Fetch List from relays
         _ = try? await relayReq(Filters(authors: [pubkey], kinds: [10001]), timeout: 5.5)
         
+        // Get List from local DB
         let postIds: [String] = await withBgContext { _ in
             Event.fetchReplacableEvent(10001, pubkey: pubkey)?.fastEs.map { $0.1 } ?? []
         }
@@ -69,8 +87,10 @@ struct ProfileHighlights: View {
             return
         }
         
+        // Fetch posts in list from relays
         _ = try? await relayReq(Filters(ids: Set(postIds)), timeout: 2.5)
         
+        // Get posts in list from local DB
         let nrPosts: [NRPost] = await withBgContext { bg in
             Event.fetchEvents(postIds)
                 .filter { $0.pubkey == pubkey } // make sure pubkey matches

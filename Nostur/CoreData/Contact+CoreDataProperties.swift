@@ -41,6 +41,8 @@ extension Contact {
     @NSManaged public var couldBeImposter: Int16 // cache (-1 = unchecked, 1/0 = true/false checked)
     @NSManaged public var similarToPubkey: String? // If possible imposter, pubkey of similar profile already following
     
+    @NSManaged public var lastPinAt: Date? // Recently pinned should be compilation with content from multiple authors. 1 per auther every 48 hours. Store timestamp here to keep track per author
+    
     var pictureUrl:URL? {
         guard let picture = picture else { return nil }
         return URL(string: picture)
@@ -355,6 +357,12 @@ extension Contact : Identifiable {
         shouldBeBg()
         guard let contact = Self.fetchByPubkey(contactPubkey, context: bg()) else { return }
         contact.zapperPubkeys.insert(zapperPubkey)
+    }
+    
+    static func fetchEligableForPins(_ pubkeys: Set<String>, context: NSManagedObjectContext = context()) -> [Contact] {
+        let r = Contact.fetchRequest()
+        r.predicate = NSPredicate(format: "pubkey IN %@ AND (lastPinAt = nil OR lastPinAt < DATE(\"now\", \"-2 day\"))", pubkeys)
+        return (try? context.fetch(r)) ?? []
     }
 }
 

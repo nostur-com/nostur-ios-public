@@ -53,7 +53,8 @@ struct PostMenu: View {
                         Label(String(localized:"Delete", comment:"Post context menu action to Delete a post"), systemImage: "trash")
                             .foregroundColor(theme.accent)
                     }
-                    
+
+#if DEBUG
                     if !postMenuContext.isPinnedPost {
                         Button(action: {
                             showPinThisPostConfirmation = true
@@ -88,6 +89,7 @@ struct PostMenu: View {
                                 .foregroundColor(theme.accent)
                         }
                     }
+#endif
                     
                     Button(action: {
                         

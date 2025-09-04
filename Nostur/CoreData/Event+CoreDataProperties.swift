@@ -1408,7 +1408,7 @@ extension Event {
             let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
             
             // Only same author (pubkey) can delete
-            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,6,20,9802,10601,30023,34235} AND pubkey = %@ AND id IN %@ AND deletedById = nil", event.publicKey, eventIdsToDelete)
+            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,6,20,9802,10001,10601,30023,34235} AND pubkey = %@ AND id IN %@ AND deletedById = nil", event.publicKey, eventIdsToDelete)
             eventIdsToDeleteReq.sortDescriptors = []
             if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
                 for eventToDelete in eventsToDelete {
