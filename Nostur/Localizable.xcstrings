@@ -704,6 +704,9 @@
         }
       }
     },
+    "%lld contacts selected" : {
+
+    },
     "%lld conversation(s) hidden by you" : {
       "localizations" : {
         "en" : {
@@ -2770,6 +2773,9 @@
         }
       }
     },
+    "Connect using account" : {
+
+    },
     "Connect wallet" : {
       "comment" : "Button to connect a wallet to Nostur",
       "localizations" : {
@@ -3179,6 +3185,7 @@
     },
     "Create new feed" : {
       "comment" : "Button to create a new feed",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5848,6 +5855,9 @@
         }
       }
     },
+    "New contacts list feed" : {
+
+    },
     "New direct message" : {
       "comment" : "Navigation title for a new Direct Message",
       "localizations" : {
@@ -5869,6 +5879,9 @@
           }
         }
       }
+    },
+    "New feed from contacts" : {
+      "comment" : "Navigation title for screen to create a new feed"
     },
     "new followers" : {
       "localizations" : {
@@ -6003,6 +6016,9 @@
           }
         }
       }
+    },
+    "New relay feed" : {
+
     },
     "New reposts" : {
       "localizations" : {
@@ -7452,6 +7468,7 @@
       }
     },
     "Recently pinned" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8366,6 +8383,9 @@
           }
         }
       }
+    },
+    "Select contacts" : {
+      "comment" : "Section header for adding contacts to a feed"
     },
     "Select Date & Time" : {
       "localizations" : {

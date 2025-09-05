@@ -144,14 +144,14 @@ struct CustomFeedsListScreen: View {
             .presentationBackgroundCompat(theme.listBackground)
         }
         
-//        .sheet(isPresented: $newRelayFeedSheet) {
-//            NBNavigationStack {
-//                NewRelayFeedSheet()
-//                    .environment(\.theme, theme)
-//                    .environmentObject(la)
-//            }
-//            .presentationBackgroundCompat(theme.listBackground)
-//        }
+        .sheet(isPresented: $newRelayFeedSheet) {
+            NBNavigationStack {
+                NewRelayFeedSheet()
+                    .environment(\.theme, theme)
+                    .environmentObject(la)
+            }
+            .presentationBackgroundCompat(theme.listBackground)
+        }
         
          .nosturNavBgCompat(theme: theme)
     }

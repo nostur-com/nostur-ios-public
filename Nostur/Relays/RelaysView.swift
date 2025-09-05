@@ -133,6 +133,7 @@ struct RelaysView: View {
     var body: some View {
         NXForm {
             Text("These relays are used for all your accounts, and are not announced unless configured on the account specific tabs.")
+                .foregroundColor(Color.primary)
             
             VStack(alignment: .leading) {
                 ForEach(relays, id:\.objectID) { relay in
