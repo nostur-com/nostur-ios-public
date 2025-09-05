@@ -117,23 +117,23 @@ public struct RequestMessage {
 """
     }
     
-    // For fetching any "global" feed events on a relay
-    static func getGlobalFeedEvents(limit:Int = 5000, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
-        let sub = subscriptionId ?? ("G-"+UUID().uuidString)
-        if let since {
-            return """
-["REQ", "\(sub)", {"kinds": [1,5,6,20,9802,30023,34235], "since": \(since.timestamp)}]
-"""
-        }
-        else if let until {
-            return """
-["REQ", "\(sub)", {"kinds": [1,5,6,20,9802,30023,34235], "until": \(until.timestamp)}]
-"""
-        }
-        return """
-["REQ", "\(sub)", {"kinds": [1,5,6,20,9802,30023,34235], "limit": \(limit)}]
-"""
-    }
+//    // For fetching any "global" feed events on a relay
+//    static func getGlobalFeedEvents(limit: Int = 250, subscriptionId:String? = nil, since:NTimestamp? = nil, until:NTimestamp? = nil) -> String {
+//        let sub = subscriptionId ?? ("G-"+UUID().uuidString)
+//        if let since {
+//            return """
+//["REQ", "\(sub)", {"kinds": [1,6,20,9802,30023,34235], "since": \(since.timestamp)}]
+//"""
+//        }
+//        else if let until {
+//            return """
+//["REQ", "\(sub)", {"kinds": [1,6,20,9802,30023,34235], "until": \(until.timestamp)}]
+//"""
+//        }
+//        return """
+//["REQ", "\(sub)", {"kinds": [1,6,20,9802,30023,34235], "limit": \(limit)}]
+//"""
+//    }
     
     // Fetch anything that references given event ids in tags (1=REPLIES, 6=REPOSTS, 7=REACTIONS, 9735=ZAPS)
     // For when you have event(s) and you want to count replies, reposts, reactions, zaps.

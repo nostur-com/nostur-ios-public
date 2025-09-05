@@ -1153,14 +1153,12 @@ class NXColumnViewModel: ObservableObject {
         case .relays(let feed):
             let relaysData = feed.relaysData
             guard !relaysData.isEmpty else { return }
-            let now = NTimestamp(date: Date.now)
-            req(RM.getGlobalFeedEvents(subscriptionId: config.id, since: now), activeSubscriptionId: config.id, relays: relaysData)
+            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, since: Int(Date.now.timeIntervalSince1970), limit: 100), subscriptionId: config.id, isActiveSubscription: true, relays: relaysData)
             
         case .relayPreview(let relayData):
             let relaysData: Set<RelayData> = [relayData]
             guard !relaysData.isEmpty else { return }
-            let now = NTimestamp(date: Date.now)
-            req(RM.getGlobalFeedEvents(subscriptionId: config.id, since: now), activeSubscriptionId: config.id, relays: relaysData)
+            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, since: Int(Date.now.timeIntervalSince1970), limit: 100), subscriptionId: config.id, isActiveSubscription: true, relays: relaysData)
             
         case .hashtags:
             let _: String? = nil
@@ -1544,12 +1542,12 @@ class NXColumnViewModel: ObservableObject {
         case .relays(let feed):
             let relaysData = feed.relaysData
             guard !relaysData.isEmpty else { return }
-            req(RM.getGlobalFeedEvents(limit: 100, subscriptionId: "G-PAGE-" + config.id, until: NTimestamp(timestamp: Int(until))), relays: relaysData)
+            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, until: Int(until), limit: 100), subscriptionId: "G-PAGE-" + config.id, relays: relaysData)
         
         case .relayPreview(let relayData):
             let relaysData: Set<RelayData> = [relayData]
             guard !relaysData.isEmpty else { return }
-            req(RM.getGlobalFeedEvents(limit: 100, subscriptionId: "G-PAGE-" + config.id, until: NTimestamp(timestamp: Int(until))), relays: relaysData)
+            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, until: Int(until), limit: 100), subscriptionId: "G-PAGE-" + config.id, relays: relaysData)
             
         case .hashtags:
             let _: String? = nil
@@ -2359,7 +2357,7 @@ extension NXColumnViewModel {
             let repliesEnabled = config.repliesEnabled
             
             // Fetch from relays
-            _ = try? await relayReq(Filters(kinds: FETCH_GLOBAL_KINDS), timeout: 5.5, relays: relays)
+            _ = try? await relayReq(Filters(kinds: FETCH_GLOBAL_KINDS, limit: 250), timeout: 5.5, relays: relays)
                               
             // Fetch from DB
             let postsByRelays: [Event] = await withBgContext { _ in
@@ -2629,7 +2627,7 @@ func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, si
     return filters
 }
 
-func globalFeedReqFilters(since: Int? = nil, until: Int? = nil, limit: Int = 5000) -> [Filters] {
+func globalFeedReqFilters(since: Int? = nil, until: Int? = nil, limit: Int = 250) -> [Filters] {
     return [Filters(kinds: FETCH_GLOBAL_KINDS,
                     since: since, until: until, limit: limit )]
 }
@@ -2666,10 +2664,10 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
 
 typealias CM = NostrEssentials.ClientMessage
 
-let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,5,6,20,9802,30023,34235]
+let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 //let FETCH_GLOBAL_KINDS: Set<Int> = [1222]
 
-let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,5,6,20,9802,30023,34235]
+let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 //let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1222,1244]
 
 let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,1222,5,6,20,9802,30023,34235,30311]
