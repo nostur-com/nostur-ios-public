@@ -109,6 +109,19 @@ struct NXColumnView<HeaderContent: View>: View {
             didLoad = true
             viewModel.availableWidth = dim.availableNoteRowWidth
             if isVisible, let relaysData = config.feed?.relaysData {
+                
+                // prepare auth
+                for relayData in relaysData {
+                    // A) if .auth==true then relayData is from app relays and auth should be done with logged in account
+                    // B) if .auth==false then auth may be done if feed.accountPubkey is set (is set when adding relay-feed)
+                    if !relayData.auth, let accountPubkey = config.feed?.accountPubkey {
+                        // for B) we cache the pubkey to auth with
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            ConnectionPool.shared.relayFeedAuthPubkeyMap[relayData.id] = accountPubkey
+                        }
+                    }
+                }
+                
                 for relay in relaysData {
                     ConnectionPool.shared.addConnection(relay) { conn in
                         conn.connect()

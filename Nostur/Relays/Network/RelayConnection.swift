@@ -155,8 +155,19 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self?.sendAfterAuth()
             }
             .store(in: &subscriptions)
+        
+        authSubject
+            .throttle(for: .seconds(5.5), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] in
+                self?.sendAuthResponse()
+            }
+            .store(in: &subscriptions)
     }
     
+    // To throttle too many auths
+    public var authSubject = PassthroughSubject<Void, Never>()
+    
+    // To delay other messages until after auth
     private var sendAfterAuthSubject = PassthroughSubject<Void, Never>()
     
     public func connect(andSend: String? = nil, forceConnectionAttempt: Bool = false) {
@@ -680,19 +691,18 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             else { return }
 
             self.lastAuthChallenge = authMessage[1]
-            
-            guard relayData.auth else { return }
-            
-            self.sendAuthResponse()
+            self.authSubject.send()
         }
     }
 
     public func sendAuthResponse(usingAccount: CloudAccount? = nil, force: Bool = false) {
-        guard self.relayData.auth else { return }
-        
         DispatchQueue.main.async { [weak self] in
-            guard let self, let account = usingAccount ?? Nostur.account(), account.isFullAccount else { return }
-            guard !self.relayData.excludedPubkeys.contains(account.publicKey) else { return }
+            guard let self, let authAccount = resolveAuthAccount(relayData, usingAccount: usingAccount) else { return }
+            guard !self.relayData.excludedPubkeys.contains(authAccount.publicKey) else { return }
+            
+#if DEBUG
+            L.sockets.debug("🔑🔑 Auth resolved to account: \(authAccount.anyName) - \(self.relayData.id)")
+#endif
             
             self.queue.async { [weak self] in
                 guard let self else { return }
@@ -706,9 +716,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 authResponse.tags.append(NostrTag(["challenge", challenge]))
                 
                 DispatchQueue.main.async {
-                    if account.isNC {
+                    if authAccount.isNC {
                         authResponse = authResponse.withId()
-                        NSecBunkerManager.shared.requestSignature(forEvent: authResponse, usingAccount: account, whenSigned: { signedAuthResponse in
+                        NSecBunkerManager.shared.requestSignature(forEvent: authResponse, usingAccount: authAccount, whenSigned: { signedAuthResponse in
                             self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
                             self.queue.async(flags: .barrier) { [weak self] in
                                 guard let self else { return }
@@ -717,7 +727,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                             }
                         })
                     }
-                    else if let signedAuthResponse = try? account.signEvent(authResponse) {
+                    else if let signedAuthResponse = try? authAccount.signEvent(authResponse) {
                         self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
                         self.queue.async(flags: .barrier) { [weak self] in
                             guard let self else { return }
@@ -730,4 +740,31 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         }
     }
     
+}
+
+// Returns account to auth with, or nil if we should not auth.
+func resolveAuthAccount(_ relayData: RelayData, usingAccount: CloudAccount? = nil) -> CloudAccount? {
+    
+    // usingAccount: for Lock post to relay, ["-"] restricted post
+    // overrides relayData.auth: false
+    if let usingAccount, usingAccount.isFullAccount {
+        return usingAccount
+    }
+    
+    // Auth disabled, but relay + account is in relayFeedAuthPubkeyMap (added by NXColumnView / relay-feed)
+    if !relayData.auth, let accountPubkey = ConnectionPool.shared.relayFeedAuthPubkeyMap[relayData.id] {
+        if let signingAccount = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }),
+            signingAccount.isFullAccount {
+            return signingAccount
+        }
+    }
+    
+    // if auth toggle is enabled in app relay settings, auth with active logged in account
+    let activeAccountPubkey = AccountsState.shared.activeAccountPublicKey
+    if relayData.auth, let activeAccount = AccountsState.shared.accounts.first(where: { $0.publicKey == activeAccountPubkey }), activeAccount.isFullAccount {
+        return activeAccount
+    }
+    
+    // else don't auth
+    return nil
 }

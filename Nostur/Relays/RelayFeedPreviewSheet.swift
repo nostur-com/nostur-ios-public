@@ -71,10 +71,14 @@ struct RelayFeedPreviewSheet: View {
     private func addRelayConnection() {
         guard let relayData else { return }
         // Temporarily add relay connection to connection pool, or REQ will go nowhere
-        ConnectionPool.shared.addConnection(relayData) { conn in
-            conn.connect()
-            Task { @MainActor in
-                relayConnectionAdded = true
+        // Enable auth for relay preview
+        ConnectionPool.shared.queue.async(flags: .barrier) {
+            ConnectionPool.shared.relayFeedAuthPubkeyMap[relayData.id] = AccountsState.shared.activeAccountPublicKey
+            ConnectionPool.shared.addConnection(relayData) { conn in
+                conn.connect()
+                Task { @MainActor in
+                    relayConnectionAdded = true
+                }
             }
         }
     }

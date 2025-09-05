@@ -12,7 +12,7 @@ import NostrEssentials
 struct NewRelayFeedSheet: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
-    private var rootDismiss: (() -> Void)? = nil
+    public var rootDismiss: (() -> Void)? = nil
     @State private var wotEnabled = false
     @State private var didLoad = false
     
@@ -98,7 +98,14 @@ struct NewRelayFeedSheet: View {
                     newFeed.type = ListType.relays.rawValue
                     
                     // accountPubkey set means auth should be enabled
-                    newFeed.accountPubkey = authenticationAccount != nil ? authenticationAccount?.publicKey : nil
+                    if let authenticationAccount {
+                        let accountPubkey = authenticationAccount.publicKey
+                        newFeed.accountPubkey = accountPubkey
+                        
+                        ConnectionPool.shared.queue.async(flags: .barrier) {
+                            ConnectionPool.shared.relayFeedAuthPubkeyMap[normalizeRelayUrl(relayAddress)] = accountPubkey
+                        }
+                    }
                     
                     
                     newFeed.wotEnabled = wotEnabled

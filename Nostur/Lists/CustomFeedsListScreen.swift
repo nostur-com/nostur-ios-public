@@ -146,7 +146,7 @@ struct CustomFeedsListScreen: View {
         
         .sheet(isPresented: $newRelayFeedSheet) {
             NBNavigationStack {
-                NewRelayFeedSheet()
+                NewRelayFeedSheet(rootDismiss: { dismiss() })
                     .environment(\.theme, theme)
                     .environmentObject(la)
             }

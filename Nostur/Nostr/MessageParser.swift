@@ -104,7 +104,7 @@ class MessageParser {
                             return
                         }
                         
-                        client.sendAuthResponse()
+                        client.authSubject.send()
                     }
                     else if message.message.prefix(13) == "rate-limited:" {
                         ConnectionPool.shared.queue.async(flags: .barrier) {
