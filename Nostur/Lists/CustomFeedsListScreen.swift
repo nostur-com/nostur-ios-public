@@ -11,12 +11,14 @@ import NavigationBackport
 struct CustomFeedsListScreen: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     
     @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture"]))
     var lists: FetchedResults<CloudFeed>
 
-    @State var newListSheet = false
+    @State var newContactsFeedSheet = false
+    @State var newRelayFeedSheet = false
     @State private var didRemoveDuplicates = false
     
     @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
@@ -112,24 +114,45 @@ struct CustomFeedsListScreen: View {
                 EditButton()
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    newListSheet = true
-                }) {
+                Menu {
+                    Button(action: {
+                        newRelayFeedSheet = true
+                    }) {
+                        Label("New relay feed", systemImage: "server.rack")
+                    }
+                    
+                    Button(action: {
+                        newContactsFeedSheet = true
+                    }) {
+                        Label("New contacts list feed", systemImage: "person.3")
+                    }
+
+                } label: {
                     Image(systemName: "plus.circle.fill")
                 }
-                .accessibilityLabel(String(localized:"Create new feed", comment: "Button to create a new feed"))
             }
         }
         .navigationTitle(String(localized:"Feeds", comment: "Navigation title for Feeds screen"))
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $newListSheet) {
+        
+        .sheet(isPresented: $newContactsFeedSheet) {
             NBNavigationStack {
-                NewListSheet()
+                NewContactsFeedSheet(rootDismiss: { dismiss() })
                     .environment(\.theme, theme)
                     .environmentObject(la)
             }
             .presentationBackgroundCompat(theme.listBackground)
         }
+        
+//        .sheet(isPresented: $newRelayFeedSheet) {
+//            NBNavigationStack {
+//                NewRelayFeedSheet()
+//                    .environment(\.theme, theme)
+//                    .environmentObject(la)
+//            }
+//            .presentationBackgroundCompat(theme.listBackground)
+//        }
+        
          .nosturNavBgCompat(theme: theme)
     }
     
