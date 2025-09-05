@@ -365,12 +365,43 @@ class NXColumnViewModel: ObservableObject {
             }
         }
         else { // Else we can start as normal with loadLocal
-            loadLocal(config) { [weak self] in // <-- instant, and works offline
-                // callback to load remote
-                Task {
-                    await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+            
+            // if relay feed, make sure relay is added to ConnectionPool
+            if case .relays(let feed) = config.columnType {
+                for relayData in feed.relaysData {
+                    ConnectionPool.shared.addConnection(relayData) { [weak self] conn in
+                        conn.connect()
+                        
+                        self?.loadLocal(config) { [weak self] in // <-- instant, and works offline
+                            // callback to load remote
+                            Task {
+                                await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+                            }
+                        }
+                    }
                 }
             }
+            else if case .relayPreview(let relayData) = config.columnType {
+                ConnectionPool.shared.addConnection(relayData) { [weak self] conn in
+                    conn.connect()
+                    
+                    self?.loadLocal(config) { [weak self] in // <-- instant, and works offline
+                        // callback to load remote
+                        Task {
+                            await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+                        }
+                    }
+                }
+            }
+            else {
+                loadLocal(config) { [weak self] in // <-- instant, and works offline
+                    // callback to load remote
+                    Task {
+                        await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+                    }
+                }
+            }
+            
         }
     }
     

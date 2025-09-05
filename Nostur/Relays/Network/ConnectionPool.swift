@@ -106,12 +106,12 @@ public class ConnectionPool: ObservableObject {
     }
     
     public func addConnection(_ relayData: RelayData, completion: ((RelayConnection) -> Void )? = nil) {
-        let newConnection = RelayConnection(relayData, queue: queue)
         self.queue.async(flags: .barrier) { [unowned self] in
             if let conn = self.connections[relayData.id] {
                 completion?(conn)
             }
             else {
+                let newConnection = RelayConnection(relayData, queue: queue)
                 self.connections[relayData.id] = newConnection
                 completion?(newConnection)
             }
