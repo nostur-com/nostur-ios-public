@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CopyableTextView: View {
+    @Environment(\.theme) private var theme
     let text: String
     var copyText: String? = nil
     
@@ -18,6 +19,7 @@ struct CopyableTextView: View {
             Text(text)
             Image(systemName: tapped1 ? "doc.on.doc.fill" : "doc.on.doc")
                 .font(.footnote)
+                .foregroundColor(theme.accent)
         }
         .opacity(text == "" ? 0.0 : 1.0)
         .contentShape(Rectangle())

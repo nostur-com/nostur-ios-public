@@ -37,12 +37,14 @@ struct PostDetailsMenuSheet: View {
         NXList {
             Section(header: Text("Nostr ID")) {
                 CopyableTextView(text: postId, copyText: "nostr:\(postId)")
+                    .foregroundColor(theme.accent)
                     .lineLimit(1)
             }
             .listRowBackground(theme.background)
             
             Section(header: Text("Link")) {
                 CopyableTextView(text: url)
+                    .foregroundColor(theme.accent)
                     .lineLimit(1)
             }
             .listRowBackground(theme.background)
@@ -63,6 +65,7 @@ struct PostDetailsMenuSheet: View {
                             .environmentObject(la)
                     } label: {
                         Label(String(localized: "Republish", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                            .foregroundColor(theme.accent)
                     }
                 }
                 else if !nrPost.isRestricted {
@@ -72,9 +75,11 @@ struct PostDetailsMenuSheet: View {
                     } label: {
                         if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey {
                             Label(String(localized: "Republish", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                                .foregroundColor(theme.accent)
                         }
                         else {
                             Label(String(localized: "Republish", comment: "Button to republish a post different relay(s)"), systemImage: "dot.radiowaves.left.and.right")
+                                .foregroundColor(theme.accent)
                         }
                     }
                 }

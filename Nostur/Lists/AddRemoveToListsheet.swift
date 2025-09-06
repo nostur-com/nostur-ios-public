@@ -20,6 +20,7 @@ enum ListType: String, Identifiable, Hashable {
 
 struct AddRemoveToListsheet: View {
     
+    @Environment(\.theme) var theme
     @Environment(\.dismiss) var dismiss
     @ObservedObject var nrContact: NRContact
     public var onDismiss: (() -> Void)?
@@ -37,14 +38,14 @@ struct AddRemoveToListsheet: View {
                 HStack {
                     if list.contactPubkeys.contains(nrContact.pubkey) {
                         Image(systemName:  "checkmark.circle.fill")
-                        
+                            .foregroundColor(theme.accent)
                     }
                     else {
                         Image(systemName:  "circle")
                             .foregroundColor(Color.secondary)
                     }
                     ListRow(list: list, showPin: false)
-  
+                        .foregroundColor(theme.accent)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -69,10 +70,10 @@ struct AddRemoveToListsheet: View {
             } label: {
                 HStack {
                     Image(systemName: "plus.circle")
-                        .foregroundColor(Color.secondary)
                     Text("New list...")
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .foregroundColor(theme.accent)
             }
         }
         .toolbar {
@@ -119,6 +120,7 @@ struct AddRemoveToListsheet: View {
 struct EnterNewListNameSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var listName: String = ""
+    @FocusState private var isFocused: Bool
 
     var onAdd: (String) -> Void
     
@@ -128,7 +130,12 @@ struct EnterNewListNameSheet: View {
                 TextField(text: $listName, prompt: Text("List name")) {
                     Text("Enter list name")
                 }
+                .focused($isFocused)
             }
+        }
+        
+        .onAppear {
+            isFocused = true
         }
         
         .toolbar {

@@ -23,12 +23,14 @@ struct PostMenuShareSheet: View {
         NXList {
             Section(header: Text("Nostr ID")) {
                 CopyableTextView(text: postId, copyText: "nostr:\(postId)")
+                    .foregroundColor(theme.accent)
                     .lineLimit(1)
             }
             .listRowBackground(theme.background)
             
             Section(header: Text("Link")) {
                 CopyableTextView(text: url)
+                    .foregroundColor(theme.accent)
                     .lineLimit(1)
             }
             .listRowBackground(theme.background)

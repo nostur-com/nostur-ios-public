@@ -243,6 +243,7 @@ enum RelayState {
 }
 
 struct RelayStateCheckbox: View {
+    @Environment(\.theme) private var theme
     
     let relayState: RelayState
     
@@ -253,7 +254,7 @@ struct RelayStateCheckbox: View {
                 .foregroundColor(Color.secondary)
         case .selected:
             Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(Color.primary)
+                .foregroundColor(theme.accent)
         case .publishing:
             ProgressView()
         case .published:

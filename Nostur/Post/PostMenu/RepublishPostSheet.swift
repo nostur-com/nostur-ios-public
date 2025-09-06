@@ -82,10 +82,10 @@ struct RepublishPostSheet: View {
                 } label: {
                     HStack {
                         Image(systemName: "plus.circle")
-                            .foregroundColor(Color.secondary)
                         Text("Enter new relay address...")
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .foregroundColor(theme.accent)
                 }
             }
             

@@ -26,12 +26,15 @@ struct NewRelayFeedSheet: View {
     @State private var accounts: [CloudAccount] = []
     @State private var authenticationAccount: CloudAccount? = nil
     
+    @FocusState private var relayAddressIsFocused: Bool
+    
     var body: some View {
         NXForm {
             Section {
                 TextField(text: $relayAddress, prompt: Text("wss://")) {
                     Text("Enter relay address")
                 }
+                .focused($relayAddressIsFocused)
                 
                 Picker(selection: $authenticationAccount) {
                     ForEach(accounts) { account in
@@ -74,6 +77,7 @@ struct NewRelayFeedSheet: View {
         .onAppear {
             guard !didLoad else { return }
             didLoad = true
+            relayAddressIsFocused = true
             accounts = AccountsState.shared.accounts.filter { $0.isFullAccount }
                 .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
             authenticationAccount = accounts.first

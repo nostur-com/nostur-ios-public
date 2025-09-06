@@ -72,16 +72,19 @@ struct NewContactsFeedSheet: View {
     @State private var contactFilter = "All"
     @State private var followingPubkeys = Set<String>()
     
+    @FocusState private var titleIsFocused: Bool
+    
     var body: some View {
         NXForm {
             Section(header: Text("Title", comment: "Header for entering title of a feed")) {
                 TextField(String(localized:"Title of your feed", comment:"Placeholder for input field to enter title of a feed"), text: $title)
+                    .focused($titleIsFocused)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
             }
             
             Section {
-                SearchBox(prompt: "Search contacts to add", text: $searchContext.query)
+                SearchBox(prompt: "Search contacts to add", text: $searchContext.query, autoFocus: false)
                 if (followingPubkeys.count > 1 || 1 == 1) {
                     Picker(String(localized:"Filter contacts", comment: "Label to filter contacts"), selection: $contactFilter) {
                         Text("Following", comment: "Menu choice to filter by Following").tag("Following")
@@ -137,6 +140,7 @@ struct NewContactsFeedSheet: View {
 
         .onAppear {
             followingPubkeys = follows()
+            titleIsFocused = true
         }
         
         .onChange(of: searchContext.debouncedQuery) { [oldValue = searchContext.debouncedQuery] newValue in
