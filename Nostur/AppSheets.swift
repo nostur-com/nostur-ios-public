@@ -96,9 +96,10 @@ struct WithAppSheets: ViewModifier {
             .fullScreenCover(item: $asm.relayFeedPreviewSheetInfo) { relayFeedPreviewSheetInfo in
                 NRSheetNavigationStack {
                     RelayPreviewFeedSheet(prefillAddress: relayFeedPreviewSheetInfo.relayUrl)
-                        .environment(\.theme, theme)
-                        .environmentObject(loggedInAccount)
+                     
                 }
+                .environment(\.theme, theme)
+                .environmentObject(loggedInAccount)
             }
         
             .background {
