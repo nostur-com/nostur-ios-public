@@ -127,6 +127,134 @@ struct NewRelayFeedSheet: View {
     }
 }
 
+// Almost copy pastge of NewRelayFeedSheet, but needed a bit different as quick configuration step for auth before relay preview
+struct RelayPreviewFeedSheet: View {
+    @EnvironmentObject private var loggedInAccount: LoggedInAccount
+    @Environment(\.theme) private var theme
+    public var prefillAddress: String
+    @State private var wotEnabled = false
+    @State private var didLoad = false
+    
+    private var formIsValid: Bool {
+        if relayAddress.isEmpty && relayAddress != "ws://" && relayAddress != "wss://" { return false }
+        return true
+    }
+    
+    @State private var relayAddress: String = "wss://"
+    
+    @State private var accounts: [CloudAccount] = []
+    @State private var authenticationAccount: CloudAccount? = nil
+    
+    @State private var showRelayPreview = false
+    @State private var relayPreviewConfig: NXColumnConfig? = nil
+    
+    var body: some View {
+        NXForm {
+            Section {
+                TextField(text: $relayAddress, prompt: Text("wss://")) {
+                    Text("Enter relay address")
+                }
+                
+                Picker(selection: $authenticationAccount) {
+                    ForEach(accounts) { account in
+                        HStack {
+                            PFP(pubkey: account.publicKey, account: account, size: 20.0)
+                            Text(account.anyName)
+                        }
+                        .tag(account)
+                        .foregroundColor(theme.primary)
+                    }
+                    Text("None")
+                        .tag(nil as CloudAccount?)
+                    
+                } label: {
+                    Text("Authenticate with")
+                }
+                .pickerStyleCompatNavigationLink()
+                
+            } header: {
+                Text("Connection")
+            } footer: {
+                if authenticationAccount == nil {
+                    Text("Some relays may require authentication")
+                        .font(.footnote)
+                        .foregroundColor(Color.gray)
+                }
+            }
+            
+            Section(header: Text("Web of Trust spam filter", comment: "Header for a feed setting")) {
+                Toggle(isOn: $wotEnabled) {
+                    Text("Only show content from your follows or follows-follows")
+                }
+            }
+        }
+        
+        .onAppear {
+            guard !didLoad else { return }
+            didLoad = true
+            relayAddress = prefillAddress
+            accounts = AccountsState.shared.accounts.filter { $0.isFullAccount }
+                .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
+            authenticationAccount = accounts.first
+        }
+        
+        .navigationTitle(String(localized: "Configure", comment:"Navigation title for screen to create a new feed"))
+        .navigationBarTitleDisplayMode(.inline)
+        
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    AppSheetsModel.shared.dismiss()
+                }
+            }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Show preview") {
+                   showPreview()
+                }
+                .disabled(!formIsValid)
+            }
+        }
+        
+        .nbNavigationDestination(isPresented: $showRelayPreview) {
+            ZStack(alignment: .center) {
+                if let relayPreviewConfig {
+                    if !IS_IPHONE {
+                        Color.black.opacity(0.5)
+                    }
+                    AvailableWidthContainer {
+                        RelayFeedPreviewSheet(config: relayPreviewConfig)
+                    }
+                    .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
+                }
+            }
+            .environment(\.theme, theme)
+            .environmentObject(loggedInAccount)
+        }
+    }
+    
+    func showPreview() {
+        let relayData = RelayData.new(url: normalizeRelayUrl(relayAddress))
+        let config = NXColumnConfig(id: "RelayFeedPreview", columnType: .relayPreview(relayData), name: "Relay Preview")
+        
+        if let authenticationAccount { // Enable auth for relay preview
+            let accountPubkey = authenticationAccount.publicKey
+            ConnectionPool.shared.queue.async(flags: .barrier) {
+                ConnectionPool.shared.relayFeedAuthPubkeyMap[normalizeRelayUrl(relayAddress)] = accountPubkey
+            }
+        }
+        
+        // Temporarily add relay connection to connection pool, or REQ will go nowhere
+        ConnectionPool.shared.addConnection(relayData) { conn in
+            conn.connect()
+            
+            Task { @MainActor in
+                relayPreviewConfig = config
+                showRelayPreview = true
+            }
+        }
+    }
+}
+
 #Preview {
     PreviewContainer({ pe in
         pe.loadAccounts()

@@ -75,6 +75,8 @@ struct WithAppSheets: ViewModifier {
                 .environmentObject(loggedInAccount)
             })
         
+        
+            // List/Follow Pack feed preview
             .fullScreenCover(item: $asm.feedPreviewSheetInfo) { feedPreviewSheetInfo in
                 NRSheetNavigationStack {
                     ZStack(alignment: .center) {
@@ -89,19 +91,14 @@ struct WithAppSheets: ViewModifier {
                 }
                 .environmentObject(loggedInAccount)
             }
+        
+            // New relay feed configure connection and preview
             .fullScreenCover(item: $asm.relayFeedPreviewSheetInfo) { relayFeedPreviewSheetInfo in
                 NRSheetNavigationStack {
-                    ZStack(alignment: .center) {
-                        if !IS_IPHONE {
-                            Color.black.opacity(0.5)
-                        }
-                        AvailableWidthContainer {
-                            RelayFeedPreviewSheet(config: relayFeedPreviewSheetInfo.config)
-                        }
-                        .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
-                    }
+                    RelayPreviewFeedSheet(prefillAddress: relayFeedPreviewSheetInfo.relayUrl)
+                        .environment(\.theme, theme)
+                        .environmentObject(loggedInAccount)
                 }
-                .environmentObject(loggedInAccount)
             }
         
             .background {

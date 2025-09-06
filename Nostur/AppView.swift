@@ -181,13 +181,8 @@ extension AppView {
     if nosturRelay.count == 1 && nosturRelay[0].count == 3 {
 #if DEBUG
         L.og.info("nostur: add_relay: \(nosturRelay[0][2])")
-#endif
-//        UserDefaults.standard.setValue("Main", forKey: "selected_tab")
-        
-        let relayData = RelayData.new(url: normalizeRelayUrl(nosturRelay[0][2]))
-        let config = NXColumnConfig(id: "RelayFeedPreview", columnType: .relayPreview(relayData), name: "Relay Preview")
-        
-        AppSheetsModel.shared.relayFeedPreviewSheetInfo = RelayFeedPreviewInfo(config: config)
+#endif  
+        AppSheetsModel.shared.relayFeedPreviewSheetInfo = RelayFeedPreviewInfo(relayUrl: normalizeRelayUrl(nosturRelay[0][2]))
         return
     }
     

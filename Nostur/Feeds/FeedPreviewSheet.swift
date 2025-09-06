@@ -8,6 +8,7 @@
 import SwiftUI
 import NostrEssentials
 
+// For follow pack or contact lists
 struct FeedPreviewSheet: View {
     
     private var nrPost: NRPost // The kind:30000 list (from naddr or nevent)

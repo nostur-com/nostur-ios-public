@@ -1837,6 +1837,9 @@
         }
       }
     },
+    "Authenticate with" : {
+
+    },
     "Authenticating with account: %@" : {
       "localizations" : {
         "nl" : {
@@ -2614,6 +2617,9 @@
         }
       }
     },
+    "Configure" : {
+      "comment" : "Navigation title for screen to create a new feed"
+    },
     "Configure announced relays" : {
       "localizations" : {
         "nl" : {
@@ -2773,9 +2779,6 @@
         }
       }
     },
-    "Connect using account" : {
-
-    },
     "Connect wallet" : {
       "comment" : "Button to connect a wallet to Nostur",
       "localizations" : {
@@ -2820,6 +2823,9 @@
     },
     "connecting" : {
       "shouldTranslate" : false
+    },
+    "Connection" : {
+
     },
     "contact" : {
       "comment" : "The word \"contact\" when used as contact #1, contact #2 and contact #3.",
@@ -6018,7 +6024,7 @@
       }
     },
     "New relay feed" : {
-
+      "comment" : "Navigation title for screen to create a new feed"
     },
     "New reposts" : {
       "localizations" : {
@@ -6112,6 +6118,9 @@
           }
         }
       }
+    },
+    "None" : {
+
     },
     "Nostr address (NIP-05)" : {
       "comment" : "Label for entering a NIP-05 username on Edit Profile screen",
@@ -8914,6 +8923,9 @@
         }
       }
     },
+    "Some relays may require authentication" : {
+
+    },
     "Something about yourself" : {
       "comment" : "Placeholder on input field for Bio on Edit Profile screen",
       "localizations" : {
@@ -10291,6 +10303,9 @@
           }
         }
       }
+    },
+    "Web of Trust spam filter" : {
+      "comment" : "Header for a feed setting"
     },
     "Week" : {
       "localizations" : {

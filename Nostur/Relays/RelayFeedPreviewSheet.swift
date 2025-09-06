@@ -8,11 +8,11 @@
 import SwiftUI
 import NavigationBackport
 
+// For relay feeds
 struct RelayFeedPreviewSheet: View {
     
-    var config: NXColumnConfig
-    
-    @State private var relayConnectionAdded = false
+    public var config: NXColumnConfig
+
     @State private var previewTitle = "Relay Preview"
     
     private var relayData: RelayData? {
@@ -23,27 +23,14 @@ struct RelayFeedPreviewSheet: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            if relayConnectionAdded {
-                NXColumnView(config: config, isVisible: true, header: {
-                    Button("Add this feed to your tabs") {
-                        createFeed()
-                    }
-                    .frame(height: 40)
-                })
+        NXColumnView(config: config, isVisible: true, header: {
+            Button("Add this feed to your tabs") {
+                createFeed()
             }
-            else {
-                CenteredProgressView()
-            }
-        }
+            .frame(height: 40)
+        })
         .environment(\.nxViewingContext, [.feedPreview])
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                CloseButton(action: {
-                    AppSheetsModel.shared.dismiss() // Normal @Environment(\.dismiss) is broken with NavigationBackport
-                })
-            }
-
             ToolbarItem(placement: .principal) {
                 HStack {
                     Text(previewTitle)
@@ -55,7 +42,14 @@ struct RelayFeedPreviewSheet: View {
             }
 
             ToolbarItem(placement: .primaryAction) {
-                previewFeedActionsMenu
+                HStack {
+                    Button("Close", systemImage: "multiply") {
+                        AppSheetsModel.shared.dismiss()
+                    }
+                    .labelStyle(.iconOnly)
+                    
+                    previewFeedActionsMenu
+                }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
@@ -63,22 +57,6 @@ struct RelayFeedPreviewSheet: View {
         .onAppear {
             if let relayData {
                 previewTitle = relayData.url
-            }
-            addRelayConnection()
-        }
-    }
-    
-    private func addRelayConnection() {
-        guard let relayData else { return }
-        // Temporarily add relay connection to connection pool, or REQ will go nowhere
-        // Enable auth for relay preview
-        ConnectionPool.shared.queue.async(flags: .barrier) {
-            ConnectionPool.shared.relayFeedAuthPubkeyMap[relayData.id] = AccountsState.shared.activeAccountPublicKey
-            ConnectionPool.shared.addConnection(relayData) { conn in
-                conn.connect()
-                Task { @MainActor in
-                    relayConnectionAdded = true
-                }
             }
         }
     }
@@ -135,7 +113,7 @@ func createFeedFromRelayData(_ relayData: RelayData) {
 
 struct RelayFeedPreviewInfo: Identifiable, Equatable {
     let id = UUID()
-    let config: NXColumnConfig
+    let relayUrl: String
 }
 
 #Preview {
