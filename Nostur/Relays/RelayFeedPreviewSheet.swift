@@ -10,7 +10,7 @@ import NavigationBackport
 
 // For relay feeds
 struct RelayFeedPreviewSheet: View {
-    
+    @Environment(\.theme) private var theme
     public var config: NXColumnConfig
 
     @State private var previewTitle = "Relay Preview"
@@ -28,6 +28,8 @@ struct RelayFeedPreviewSheet: View {
                 createFeed()
             }
             .frame(height: 40)
+            .frame(maxWidth: .infinity, alignment: .center) // Make toolbar background fill full width
+            .background(theme.listBackground)
         })
         .environment(\.nxViewingContext, [.feedPreview])
         .toolbar {
