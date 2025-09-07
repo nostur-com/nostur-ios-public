@@ -388,7 +388,7 @@ struct EditList_Previews: PreviewProvider {
             pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
-                if let list = PreviewFetcher.fetchList() {
+                if let list = PreviewFetcher.fetchCloudFeed() {
                     EditNosturList(list: list)
                         .withNavigationDestinations()
                 }

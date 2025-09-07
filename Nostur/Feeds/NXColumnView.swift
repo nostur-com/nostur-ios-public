@@ -227,7 +227,7 @@ struct NXColumnView<HeaderContent: View>: View {
         Themes.default.loadOrange()
     }) {
         
-        if let list = PreviewFetcher.fetchList() {
+        if let list = PreviewFetcher.fetchCloudFeed() {
             let config = NXColumnConfig(id: list.id?.uuidString ?? "?", columnType: .pubkeys(list), accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Following")
             NXColumnView(config: config, isVisible: true)
         }

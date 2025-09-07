@@ -952,7 +952,7 @@ struct PreviewFetcher {
         return nil
     }
     
-    static func fetchList(context:NSManagedObjectContext? = nil) -> CloudFeed? {
+    static func fetchCloudFeed(context:NSManagedObjectContext? = nil) -> CloudFeed? {
         let request = CloudFeed.fetchRequest()
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement()
     }

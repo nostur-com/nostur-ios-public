@@ -1837,6 +1837,9 @@
         }
       }
     },
+    "Authenticate as" : {
+
+    },
     "Authenticate with" : {
 
     },
@@ -7611,6 +7614,9 @@
         }
       }
     },
+    "Relay feed" : {
+
+    },
     "Relay Mastery" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8405,6 +8411,12 @@
           }
         }
       }
+    },
+    "Select relay(s)" : {
+
+    },
+    "Select relays..." : {
+
     },
     "Self-hosted nsecBunker" : {
       "extractionState" : "manual",

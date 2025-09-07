@@ -17,6 +17,7 @@ struct FeedSettings: View {
         feed.accountPubkey != nil && (feed.type == "pubkeys" || feed.type == nil) && feed.listId != nil
     }
     
+    @State var selectedRelays: Set<CloudRelay> = []
     @State private var authenticationAccount: CloudAccount?
     
     var body: some View {
@@ -53,13 +54,16 @@ struct FeedSettings: View {
                                     authenticationAccount = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == feedAccountPubkey })
                                 }
                             }
-                        NavigationLink(destination: EditRelaysNosturList(list: feed)) {
-                            Text("Configure relays...")
+                        NavigationLink(destination: FeedRelaysPicker(selectedRelays: $feed.relays_)) {
+                            Text("Select relays...")
                         }
                     } header: {
                         Text("Relay feed")
                     }
                 }
+//                .onAppear {
+//                    selectedRelays =
+//                }
             
             case "pubkeys", nil, "30000", "39089":
                 // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000"/"39089")
@@ -132,10 +136,6 @@ struct FeedSettings: View {
     private var feedSettingsSection: some View {
         Section(header: Text("Feed settings", comment: "Header for entering title of a feed")) {
             Group {
-                if feed.accountPubkey != la.pubkey { // Don't show if it is our own main following feed
-                    Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
-                }
-                
                 if feed.showAsTab {
                     VStack(alignment: .leading) {
                         TextField(String(localized:"Tab title", comment:"Placeholder for input field to enter title of a feed"), text: $feed.name_)
@@ -148,6 +148,10 @@ struct FeedSettings: View {
                                 .foregroundColor(Color.secondary)
                         }
                     }
+                }
+                
+                if feed.accountPubkey != la.pubkey { // Don't show if it is our own main following feed
+                    Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
                 }
                 
                 Toggle(isOn: Binding(get: {
@@ -164,7 +168,8 @@ struct FeedSettings: View {
                     }, set: { newValue in
                         feed.wotEnabled = newValue
                     })) {
-                        Text("Web of Trust filter")
+                        Text("Web of Trust spam filter")
+                        Text("Only show content from your follows or follows-follows")
                     }
                 }
             }
@@ -181,7 +186,7 @@ struct FeedSettingsTester: View {
     var body: some View {
         NBNavigationStack {
             VStack {
-                if let feed = PreviewFetcher.fetchList() {
+                if let feed = PreviewFetcher.fetchCloudFeed() {
                     FeedSettings(feed: feed)
                         .environmentObject(Themes.default)
                 }

@@ -62,7 +62,7 @@ struct EditListTitleSheet_Previews: PreviewProvider {
             pe.loadCloudFeeds()
         }) {
             NBNavigationStack {
-                if let list = PreviewFetcher.fetchList() {
+                if let list = PreviewFetcher.fetchCloudFeed() {
                     EditListTitleSheet(list: list)
                         .withNavigationDestinations()
                 }
