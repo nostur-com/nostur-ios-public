@@ -36,9 +36,9 @@ class AppSheetsModel: ObservableObject {
 
 struct WithAppSheets: ViewModifier {
     
+    public var la: LoggedInAccount
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @ObservedObject private var asm = AppSheetsModel.shared
     
     func body(content: Content) -> some View {
@@ -48,19 +48,19 @@ struct WithAppSheets: ViewModifier {
                     AddContactsToListSheet(preSelectedContactPubkeys: info.pubkeys, rootDismiss: { dismiss() })
                         .presentationDetentsLarge()
                 }
-                .environmentObject(loggedInAccount)
+                .environmentObject(la)
             })
             .sheet(isPresented: $asm.readOnlySheetVisible) {
                 NRSheetNavigationStack {
                     ReadOnlyAccountInformationSheet()
                         .presentationDetentsLarge()
                 }
-                .environmentObject(loggedInAccount)
+                .environmentObject(la)
             }
             .sheet(item: $asm.askLoginInfo, content: { askLoginInfo in
                 NBNavigationStack { // Note: Can't use NRSheetNavigationStack here but forgot why
-                    AppEnvironment(la: loggedInAccount) {
-                        AskLoginSheet(askLoginInfo: askLoginInfo, account: loggedInAccount.account)
+                    AppEnvironment(la: la) {
+                        AskLoginSheet(askLoginInfo: askLoginInfo, account: la.account)
                     }
                 }
                 .nbUseNavigationStack(.never)
@@ -72,7 +72,7 @@ struct WithAppSheets: ViewModifier {
                 NRSheetNavigationStack {
                     PostMenu(postMenuContext: postMenuContext)
                 }
-                .environmentObject(loggedInAccount)
+                .environmentObject(la)
             })
         
         
@@ -89,17 +89,23 @@ struct WithAppSheets: ViewModifier {
                         .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
                     }
                 }
-                .environmentObject(loggedInAccount)
+                .environmentObject(la)
             }
         
             // New relay feed configure connection and preview
             .fullScreenCover(item: $asm.relayFeedPreviewSheetInfo) { relayFeedPreviewSheetInfo in
                 NRSheetNavigationStack {
-                    RelayPreviewFeedSheet(prefillAddress: relayFeedPreviewSheetInfo.relayUrl)
-                     
+                    
+                    ZStack(alignment: .center) {
+                        if !IS_IPHONE {
+                            Color.black.opacity(0.5)
+                        }
+                        RelayPreviewFeedSheet(prefillAddress: relayFeedPreviewSheetInfo.relayUrl)
+                            .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
+                    }
                 }
                 .environment(\.theme, theme)
-                .environmentObject(loggedInAccount)
+                .environmentObject(la)
             }
         
             .background {
@@ -125,8 +131,8 @@ struct WithAppSheets: ViewModifier {
 }
 
 extension View {
-    func withAppSheets() -> some View {
-        modifier(WithAppSheets())
+    func withAppSheets(la: LoggedInAccount) -> some View {
+        modifier(WithAppSheets(la: la))
     }
 }
 

@@ -373,14 +373,3 @@ func unpinPost(_ pinnedPost: NRPost) async {
         }
     }
 }
-
-#Preview("Post Menu Button") {
-    PreviewContainer {
-        NBNavigationStack {
-            PostMenuButton(nrPost: testNRPost())
-                .withSheets()
-                .withAppSheets()
-                .environment(\.theme, Themes.GREEN)
-        }
-    }
-}

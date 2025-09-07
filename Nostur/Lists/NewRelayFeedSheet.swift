@@ -216,19 +216,16 @@ struct RelayPreviewFeedSheet: View {
         }
         
         .nbNavigationDestination(isPresented: $showRelayPreview) {
-            ZStack(alignment: .center) {
+            AvailableWidthContainer {
                 if let relayPreviewConfig {
-                    if !IS_IPHONE {
-                        Color.black.opacity(0.5)
-                    }
-                    AvailableWidthContainer {
-                        RelayFeedPreviewSheet(config: relayPreviewConfig)
-                    }
-                    .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
+                    RelayFeedPreviewSheet(config: relayPreviewConfig)
+                        .environment(\.theme, theme)
+                        .environmentObject(loggedInAccount)
+                }
+                else {
+                    ProgressView()
                 }
             }
-            .environment(\.theme, theme)
-            .environmentObject(loggedInAccount)
         }
     }
     
