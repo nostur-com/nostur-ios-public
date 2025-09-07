@@ -39,7 +39,6 @@ struct FullAccountPicker: View {
         .onAppear {
             accounts = AccountsState.shared.accounts.filter { $0.isFullAccount }
                 .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
-            selectedAccount = accounts.first
         }
         
     }

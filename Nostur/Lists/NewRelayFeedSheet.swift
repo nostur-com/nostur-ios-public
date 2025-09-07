@@ -177,6 +177,8 @@ struct RelayPreviewFeedSheet: View {
             guard !didLoad else { return }
             didLoad = true
             relayAddress = prefillAddress
+            // Preselect default auth account
+            authenticationAccount = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == AccountsState.shared.activeAccountPublicKey })
         }
         
         .navigationTitle(String(localized: "Configure", comment:"Navigation title for screen to create a new feed"))

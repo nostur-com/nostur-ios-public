@@ -102,6 +102,7 @@ extension CloudFeed : Identifiable {
             var relays: [CloudRelay] = []
             var didAddNew = false
             for url in relayUrls {
+                if url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { continue }
                 if let relay = allRelays.first(where: { $0.url_ == url || (($0.url_ ?? "") + "/") == url || $0.url_ == (url + "/") }) {
                     relays.append(relay)
                 }

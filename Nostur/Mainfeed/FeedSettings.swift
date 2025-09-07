@@ -16,10 +16,7 @@ struct FeedSettings: View {
     private var isOwnManagedList: Bool {
         feed.accountPubkey != nil && (feed.type == "pubkeys" || feed.type == nil) && feed.listId != nil
     }
-    
-    @State var selectedRelays: Set<CloudRelay> = []
-    @State private var authenticationAccount: CloudAccount?
-    
+
     var body: some View {
 
 #if DEBUG
@@ -48,22 +45,21 @@ struct FeedSettings: View {
                     feedSettingsSection
                     
                     Section {
-                        FullAccountPicker(selectedAccount: $authenticationAccount, label: "Authenticate as")
-                            .onAppear {
-                                if let feedAccountPubkey = feed.accountPubkey {
-                                    authenticationAccount = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == feedAccountPubkey })
-                                }
-                            }
+                        
+                        FullAccountPicker(selectedAccount: Binding(get: {
+                            AccountsState.shared.fullAccounts.first(where: { $0.publicKey == feed.accountPubkey })
+                        }, set: { selectedAccount in
+                            feed.accountPubkey = selectedAccount?.publicKey
+                        }), label: "Authenticate as")
+                        
                         NavigationLink(destination: FeedRelaysPicker(selectedRelays: $feed.relays_)) {
-                            Text("Select relays...")
+                            Text("Select relay(s)")
                         }
+                        
                     } header: {
                         Text("Relay feed")
                     }
                 }
-//                .onAppear {
-//                    selectedRelays =
-//                }
             
             case "pubkeys", nil, "30000", "39089":
                 // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000"/"39089")
@@ -124,7 +120,10 @@ struct FeedSettings: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
-                    
+                    if feed.type == ListType.relays.rawValue {
+                        DataProvider.shared().save()
+                        sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: feed.subscriptionId, relays: feed.relaysData, wotEnabled: feed.wotEnabled))
+                    }
                     dismiss()
                 }
             }
