@@ -43,6 +43,7 @@ struct PostMenuShareSheet: View {
                     }
                 }) {
                     Label("Share link", systemImage: "link")
+                        .foregroundColor(theme.accent)
                 }
                 
                 if #available(iOS 16, *), nrPost.kind != 30023 {
@@ -53,6 +54,7 @@ struct PostMenuShareSheet: View {
                         }
                     }) {
                         Label("Share screenshot", systemImage: "photo")
+                            .foregroundColor(theme.accent)
                     }
                 }
             }

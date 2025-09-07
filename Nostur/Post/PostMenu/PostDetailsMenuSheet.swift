@@ -57,6 +57,7 @@ struct PostDetailsMenuSheet: View {
                     rootDismiss?()
                 }) {
                     Label("Copy raw JSON", systemImage: "ellipsis.curlybraces")
+                        .foregroundColor(theme.accent)
                 }
                 
                 if nrPost.isRestricted && isOwnPost && isFullAccount {
