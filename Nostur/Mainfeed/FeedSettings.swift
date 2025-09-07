@@ -17,6 +17,8 @@ struct FeedSettings: View {
         feed.accountPubkey != nil && (feed.type == "pubkeys" || feed.type == nil) && feed.listId != nil
     }
     
+    @State private var authenticationAccount: CloudAccount?
+    
     var body: some View {
 
 #if DEBUG
@@ -25,7 +27,7 @@ struct FeedSettings: View {
         Group {
             switch feed.type {
             case "following":
-                Form {
+                NXForm {
                     
                     feedSettingsSection
                     
@@ -41,21 +43,28 @@ struct FeedSettings: View {
                 }
                 
             case "relays":
-                Form {
+                NXForm {
                     feedSettingsSection
                     
                     Section {
+                        FullAccountPicker(selectedAccount: $authenticationAccount, label: "Authenticate as")
+                            .onAppear {
+                                if let feedAccountPubkey = feed.accountPubkey {
+                                    authenticationAccount = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == feedAccountPubkey })
+                                }
+                            }
                         NavigationLink(destination: EditRelaysNosturList(list: feed)) {
                             Text("Configure relays...")
                         }
+                    } header: {
+                        Text("Relay feed")
                     }
-                    .listRowBackground(theme.background)
                 }
             
             case "pubkeys", nil, "30000", "39089":
                 // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000"/"39089")
                 if !isOwnManagedList, let aTagString = feed.listId, let aTag = try? ATag(aTagString) {
-                    Form {
+                    NXForm {
                         feedSettingsSection
                         
                         // Even if we change from 30000 to own pubkeys sheet, still show where the list came from, also makes easy to toggle on off subscribe updates again.
@@ -95,7 +104,7 @@ struct FeedSettings: View {
                 }
 
             default:
-                Form {
+                NXForm {
                     if #available(iOS 16, *) {
                        Section("App theme") {
                            AppThemeSwitcher()
@@ -110,7 +119,10 @@ struct FeedSettings: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Done") { dismiss() }
+                Button("Done") {
+                    
+                    dismiss()
+                }
             }
         }
     }
@@ -225,7 +237,7 @@ struct SendSatsToSupportView: View {
         VStack(alignment: .leading) {
             if let listName {
                 Text(listName)
-                    .font(.title)
+                    .font(.title2)
             }
             HStack {
                 Text("Maintained by ")
