@@ -37,6 +37,10 @@ class AccountsState: ObservableObject {
     private var _activeAccountPublicKey: String
     public var accounts: [CloudAccount] = []
     
+    public var fullAccounts: [CloudAccount] {
+        accounts.filter { $0.isFullAccount }
+    }
+    
     // bgContext
     public var bgAccountPubkeys: Set<String> = []
     public var bgFullAccountPubkeys: Set<String> = []
