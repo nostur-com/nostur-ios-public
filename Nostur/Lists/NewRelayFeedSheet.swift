@@ -142,7 +142,6 @@ struct RelayPreviewFeedSheet: View {
     
     @State private var relayAddress: String = "wss://"
     
-    @State private var accounts: [CloudAccount] = []
     @State private var authenticationAccount: CloudAccount? = nil
     
     @State private var showRelayPreview = false
@@ -155,22 +154,7 @@ struct RelayPreviewFeedSheet: View {
                     Text("Enter relay address")
                 }
                 
-                Picker(selection: $authenticationAccount) {
-                    ForEach(accounts) { account in
-                        HStack {
-                            PFP(pubkey: account.publicKey, account: account, size: 20.0)
-                            Text(account.anyName)
-                        }
-                        .tag(account)
-                        .foregroundColor(theme.primary)
-                    }
-                    Text("None")
-                        .tag(nil as CloudAccount?)
-                    
-                } label: {
-                    Text("Authenticate with")
-                }
-                .pickerStyleCompatNavigationLink()
+                FullAccountPicker(selectedAccount: $authenticationAccount, label: "Authenticate as")
                 
             } header: {
                 Text("Connection")
@@ -193,9 +177,6 @@ struct RelayPreviewFeedSheet: View {
             guard !didLoad else { return }
             didLoad = true
             relayAddress = prefillAddress
-            accounts = AccountsState.shared.accounts.filter { $0.isFullAccount }
-                .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
-            authenticationAccount = accounts.first
         }
         
         .navigationTitle(String(localized: "Configure", comment:"Navigation title for screen to create a new feed"))
