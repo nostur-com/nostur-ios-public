@@ -62,7 +62,7 @@ struct Settings: View {
     #if DEBUG
     let _ = Self._printChanges()
     #endif
-        Form {
+        NXForm {
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {
                     #if DEBUG
@@ -675,8 +675,8 @@ struct Settings: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         }
-        .scrollContentBackgroundHidden()
-        .background(theme.listBackground)
+//        .scrollContentBackgroundHidden()
+//        .background(theme.listBackground)
          .nosturNavBgCompat(theme: theme)
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
