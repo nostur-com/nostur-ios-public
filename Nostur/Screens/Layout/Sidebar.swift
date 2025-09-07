@@ -115,10 +115,6 @@ struct SideBar: View {
                         )
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
-                        .overlay(alignment: .bottom) {
-                            theme.lineColor
-                                .frame(height: 1)
-                        }
                     }
                     Button {
                         if selectedTab != "Main" { 
@@ -137,10 +133,6 @@ struct SideBar: View {
                         )
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
-                        .overlay(alignment: .bottom) {
-                            theme.lineColor
-                                .frame(height: 1)
-                        }
                     }
                     Button {
                         UserDefaults.standard.setValue("Bookmarks", forKey: "selected_tab")
@@ -156,10 +148,6 @@ struct SideBar: View {
                         )
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
-                        .overlay(alignment: .bottom) {
-                            theme.lineColor
-                                .frame(height: 1)
-                        }
                     }
                     if !account.isNC {
                         Button {
@@ -187,10 +175,6 @@ struct SideBar: View {
                             )
                             .padding(.vertical, Self.BUTTON_VPADDING)
                             .contentShape(Rectangle())
-                            .overlay(alignment: .bottom) {
-                                theme.lineColor
-                                    .frame(height: 1)
-                            }
                         }
                     }
                     Button {
@@ -210,10 +194,6 @@ struct SideBar: View {
                         )
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
-                        .overlay(alignment: .bottom) {
-                            theme.lineColor
-                                .frame(height: 1)
-                        }
                     }
                     Button {
                         if selectedTab != "Main" {
@@ -232,10 +212,6 @@ struct SideBar: View {
                         )
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
-                        .overlay(alignment: .bottom) {
-                            theme.lineColor
-                                .frame(height: 1)
-                        }
                     }
                     if !account.isNC {
                         Button {
@@ -251,10 +227,6 @@ struct SideBar: View {
                             )
                             .padding(.vertical, Self.BUTTON_VPADDING)
                             .contentShape(Rectangle())
-                            .overlay(alignment: .bottom) {
-                                theme.lineColor
-                                    .frame(height: 1)
-                            }
                         }
                     }
                     Button {
