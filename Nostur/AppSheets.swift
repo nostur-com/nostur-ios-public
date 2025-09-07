@@ -86,8 +86,8 @@ struct WithAppSheets: ViewModifier {
                         AvailableWidthContainer {
                             FeedPreviewSheet(nrPost: feedPreviewSheetInfo.nrPost, config: feedPreviewSheetInfo.config)
                         }
+                        .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
                     }
-                    .frame(maxWidth: !IS_IPHONE ? 560 : .infinity) // Don't make very wide feed on Desktop
                 }
                 .environmentObject(la)
             }

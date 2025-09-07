@@ -10,7 +10,7 @@ import NostrEssentials
 
 // For follow pack or contact lists
 struct FeedPreviewSheet: View {
-    
+    @Environment(\.theme) private var theme
     private var nrPost: NRPost // The kind:30000 list (from naddr or nevent)
     private let config: NXColumnConfig
     
@@ -33,6 +33,8 @@ struct FeedPreviewSheet: View {
                         didFollow = true
                     }
                     .frame(height: 40)
+                    .frame(maxWidth: .infinity, alignment: .center) // Make toolbar background fill full width
+                    .background(theme.listBackground)
                 }
             })
         }
