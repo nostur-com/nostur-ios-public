@@ -151,13 +151,13 @@ extension View {
             .nbNavigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)
             }
-            .nbNavigationDestination(for: CloudFeed.self) { list in
-                if list.type == ListType.relays.rawValue {
-                    EditRelaysNosturList(list: list)
+            .nbNavigationDestination(for: CloudFeed.self) { feed in
+                if feed.type == ListType.relays.rawValue {
+                    FeedSettings(feed: feed)
                 }
                 else {
 //                    EditNosturList(list: list)
-                    FeedSettings(feed: list)
+                    FeedSettings(feed: feed)
                 }
             }
             .nbNavigationDestination(for: ViewPath.self) { path in
