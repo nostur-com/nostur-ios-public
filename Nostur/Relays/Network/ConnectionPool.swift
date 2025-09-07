@@ -37,7 +37,7 @@ public class ConnectionPool: ObservableObject {
     static public let shared = ConnectionPool()
     public var queue = DispatchQueue(label: "connection-pool", qos: .utility, attributes: .concurrent)
     
-    // Needed by resolveAuthPubkey() to figure out which account to do auth with
+    // Needed by resolveAuthAccount() to figure out which account to do auth with
     public var relayFeedAuthPubkeyMap: [CanonicalRelayUrl: String] = [:]
     
     // .connections should be read/mutated from connection context
