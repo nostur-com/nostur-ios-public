@@ -2696,6 +2696,7 @@
       }
     },
     "Configure relays..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3756,6 +3757,7 @@
       }
     },
     "Edit relays feed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3829,6 +3831,7 @@
       }
     },
     "Enable Web of Trust filter" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8413,9 +8416,6 @@
       }
     },
     "Select relay(s)" : {
-
-    },
-    "Select relays..." : {
 
     },
     "Self-hosted nsecBunker" : {

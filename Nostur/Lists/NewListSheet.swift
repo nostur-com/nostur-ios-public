@@ -76,7 +76,7 @@ struct NewListSheet: View {
                     
                     Section(header: Text("Spam filter", comment: "Header for a feed setting")) {
                         Toggle(isOn: $wotEnabled) {
-                            Text("Enable Web of Trust filter")
+                            Text("Web of Trust filter")
                             Text("Only show content from your follows or follows-follows")
                         }
                     }
