@@ -86,6 +86,9 @@ struct NewRelayFeedSheet: View {
                     newFeed.relays = normalizeRelayUrl(relayAddress)
                     newFeed.type = CloudFeedType.relays.rawValue
                     
+                    // Resume Where Left: Default on for contact-based. Default off for relay-based
+                    newFeed.continue = false
+                    
                     // accountPubkey set means auth should be enabled
                     if let authenticationAccount {
                         let accountPubkey = authenticationAccount.publicKey

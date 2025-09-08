@@ -1468,6 +1468,7 @@
     },
     "Add contacts to feed" : {
       "comment" : "Navigation title for screen where you can add contacts to a feed",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2347,6 +2348,9 @@
           }
         }
       }
+    },
+    "Catch up on missed posts since the last time you opened the feed" : {
+
     },
     "Checked" : {
       "shouldTranslate" : false
@@ -3768,6 +3772,7 @@
       }
     },
     "Edit title" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4165,6 +4170,7 @@
       }
     },
     "Feed content" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4185,7 +4191,7 @@
       }
     },
     "Feed settings" : {
-      "comment" : "Header for a feed setting\nHeader for entering title of a feed",
+      "comment" : "Header for entering title of a feed\nHeader for feed settings",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6938,6 +6944,7 @@
       }
     },
     "Posts from contacts" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6969,6 +6976,7 @@
       }
     },
     "Posts from relays" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8195,6 +8203,9 @@
         }
       }
     },
+    "Resume Where Left" : {
+
+    },
     "Retake" : {
       "localizations" : {
         "nl" : {
@@ -8839,6 +8850,9 @@
         }
       }
     },
+    "Shown in the tab bar" : {
+
+    },
     "Shown in the tab bar (not public)" : {
       "localizations" : {
         "nl" : {
@@ -9005,6 +9019,7 @@
     },
     "Spam filter" : {
       "comment" : "Header for a feed setting",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9803,7 +9818,7 @@
       }
     },
     "Title of your feed" : {
-      "comment" : "Placeholder for input field to enter title of a List\nPlaceholder for input field to enter title of a feed",
+      "comment" : "Placeholder for input field to enter title of a feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

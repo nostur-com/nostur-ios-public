@@ -237,6 +237,8 @@ struct AddContactsToListSheet: View {
             list.type = CloudFeedType.pubkeys.rawValue
             list.contactPubkeys = selectedContactPubkeys
             list.order = 0
+            // Resume Where Left: Default on for contact-based. Default off for relay-based
+            list.continue = true
             
             viewContextSave()
         }

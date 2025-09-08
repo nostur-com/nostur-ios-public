@@ -102,6 +102,9 @@ func createFeedFromRelayData(_ relayData: RelayData) {
     newFeed.wotEnabled = false
     newFeed.order = 0
     
+    // Resume Where Left: Default on for contact-based. Default off for relay-based
+    newFeed.continue = false
+    
     DataProvider.shared().save()
     
     // Close sheet

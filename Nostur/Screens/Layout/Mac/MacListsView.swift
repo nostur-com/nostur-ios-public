@@ -210,6 +210,9 @@ struct PhoneViewIsh: View {
             newFollowingFeed.type = CloudFeedType.following.rawValue
             newFollowingFeed.order = 0
             
+            // Resume Where Left: Default on for contact-based. Default off for relay-based
+            newFollowingFeed.continue = true
+            
             DataProvider.shared().save() { // callback after save:
                 followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
             }

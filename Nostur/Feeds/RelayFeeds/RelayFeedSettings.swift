@@ -44,6 +44,16 @@ struct RelayFeedSettings: View {
                     Text("Show replies")
                 }
                 
+                // CONTINUE WHERE LEFT OFF
+                Toggle(isOn: Binding(get: {
+                    feed.continue
+                }, set: { newValue in
+                    feed.continue = newValue
+                })) {
+                    Text("Resume where left")
+                    Text("Catch up on missed posts since the last time you opened the feed")
+                }
+                
                 // WEB OF TRUST SPAMFILTER
                 Toggle(isOn: Binding(get: {
                     feed.wotEnabled

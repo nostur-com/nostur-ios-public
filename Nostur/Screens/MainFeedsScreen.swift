@@ -604,6 +604,10 @@ struct MainFeedsScreen: View {
             newFollowingFeed.accountPubkey = account.publicKey
             newFollowingFeed.type = CloudFeedType.following.rawValue
             newFollowingFeed.order = 0
+            
+            // Resume Where Left: Default on for contact-based. Default off for relay-based
+            newFollowingFeed.continue = true
+            
             DataProvider.shared().save() { // callback after save:
                 followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
             }
@@ -641,6 +645,10 @@ struct MainFeedsScreen: View {
             newFeed.type = CloudFeedType.picture.rawValue
             newFeed.repliesEnabled = false
             newFeed.order = 0
+                        
+            // Resume Where Left: Default on for contact-based. Default off for relay-based
+            newFeed.continue = true
+            
             DataProvider.shared().save() { // callback after save:
                 pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: "Picture")
             }
@@ -688,6 +696,9 @@ struct MainFeedsScreen: View {
             newExploreFeed.type = CloudFeedType.following.rawValue
             newExploreFeed.repliesEnabled = false
             newExploreFeed.order = 0
+            
+            // Resume Where Left: Default on for contact-based. Default off for relay-based
+            newExploreFeed.continue = true
             
             DataProvider.shared().save() { // callback after save:
                 exploreConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")

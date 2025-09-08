@@ -78,6 +78,41 @@ struct ContactFeedSettings: View {
                      Text("Updates refer to people added or removed from this list, not posts or content.")
                          .font(.footnote)
                  }
+                
+                // TOGLE PIN ON TAB BAR
+                Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                
+                // TAB TITLE TEXTFIELD
+                if feed.showAsTab {
+                    VStack(alignment: .leading) {
+                        TextField(String(localized:"Tab title", comment:"Placeholder for input field to enter title of a feed"), text: $feed.name_)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                        
+                        Text("Shown in the tab bar")
+                            .font(.footnote)
+                            .foregroundColor(Color.secondary)
+                    }
+                }
+                
+                // TOGGLE REPLIES
+                Toggle(isOn: Binding(get: {
+                    feed.repliesEnabled
+                }, set: { newValue in
+                    feed.repliesEnabled = newValue
+                })) {
+                    Text("Show replies")
+                }
+                
+                // CONTINUE WHERE LEFT OFF
+                Toggle(isOn: Binding(get: {
+                    feed.continue
+                }, set: { newValue in
+                    feed.continue = newValue
+                })) {
+                    Text("Resume where left")
+                    Text("Catch up on missed posts since the last time you opened the feed")
+                }
             }
             else {
                 
@@ -106,6 +141,16 @@ struct ContactFeedSettings: View {
                         feed.repliesEnabled = newValue
                     })) {
                         Text("Show replies")
+                    }
+                    
+                    // CONTINUE WHERE LEFT OFF
+                    Toggle(isOn: Binding(get: {
+                        feed.continue
+                    }, set: { newValue in
+                        feed.continue = newValue
+                    })) {
+                        Text("Resume Where Left")
+                        Text("Catch up on missed posts since the last time you opened the feed")
                     }
                 }
                 

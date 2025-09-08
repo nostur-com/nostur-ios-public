@@ -210,6 +210,9 @@ private func getFollowingFeed(_ accountPubkey: String, accountName: String? = ni
         newFollowingFeed.type = CloudFeedType.following.rawValue
         newFollowingFeed.order = 0
         
+        // Resume Where Left: Default on for contact-based. Default off for relay-based
+        newFollowingFeed.continue = true
+        
         DataProvider.shared().save()
         
         return newFollowingFeed

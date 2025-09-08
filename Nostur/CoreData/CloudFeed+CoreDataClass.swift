@@ -26,6 +26,8 @@ public class CloudFeed: NSManagedObject, IdentifiableDestination {
         followingFeed.showAsTab = true
         followingFeed.wotEnabled = false
         followingFeed.order = 0
+        // Resume Where Left: Default on for contact-based. Default off for relay-based
+        followingFeed.continue = true
         
         // generate relay feed
         let relayfeed = CloudFeed(context: context)
@@ -33,6 +35,8 @@ public class CloudFeed: NSManagedObject, IdentifiableDestination {
         relayfeed.type = CloudFeedType.relays.rawValue
         relayfeed.createdAt = .now
         relayfeed.name = "wss://localhost"
+        // Resume Where Left: Default on for contact-based. Default off for relay-based
+        relayfeed.continue = false
         
         // auth to relay with
         relayfeed.accountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
@@ -54,6 +58,8 @@ public class CloudFeed: NSManagedObject, IdentifiableDestination {
             feed.wotEnabled = false
             feed.order = 0
             feed.accountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e" // own managed list
+            // Resume Where Left: Default on for contact-based. Default off for relay-based
+            feed.continue = true
         }
     }
 }

@@ -16,12 +16,24 @@ struct FollowingFeedSettings: View {
     var body: some View {
         NXForm {
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {
+                
+                // TOGGLE REPLIES
                 Toggle(isOn: Binding(get: {
                     feed.repliesEnabled
                 }, set: { newValue in
                     feed.repliesEnabled = newValue
                 })) {
                     Text("Show replies")
+                }
+                
+                // CONTINUE WHERE LEFT OFF
+                Toggle(isOn: Binding(get: {
+                    feed.continue
+                }, set: { newValue in
+                    feed.continue = newValue
+                })) {
+                    Text("Resume where left")
+                    Text("Catch up on missed posts since the last time you opened the feed")
                 }
             }
             

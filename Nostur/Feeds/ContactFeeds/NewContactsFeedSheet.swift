@@ -165,6 +165,10 @@ struct NewContactsFeedSheet: View {
                     newFeed.order = 0
                     newFeed.contactPubkeys = Set(selectedContacts.map { $0.pubkey })
                     newFeed.type = CloudFeedType.pubkeys.rawValue
+                    
+                    // Resume Where Left: Default on for contact-based. Default off for relay-based
+                    newFeed.continue = true
+                    
                     viewContextSave()
                     rootDismiss?()
                     

@@ -104,6 +104,10 @@ struct AddRemoveToListsheet: View {
         newList.order = 0
         newList.type = CloudFeedType.pubkeys.rawValue
         newList.contactPubkeys.insert(pubkey)
+        
+        
+        // Resume Where Left: Default on for contact-based. Default off for relay-based
+        newList.continue = true
     }
 }
 

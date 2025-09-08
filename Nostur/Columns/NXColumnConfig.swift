@@ -37,6 +37,15 @@ struct NXColumnConfig: Identifiable, Equatable {
         }
     }
     
+    @MainActor
+    var `continue`: Bool {
+        get { (feed?.`continue` ?? true) }
+        set {
+            feed?.`continue` = newValue
+            DataProvider.shared().save()
+        }
+    }
+    
     // helper to get feed (in enum)
     var feed: CloudFeed? {
         switch columnType {
