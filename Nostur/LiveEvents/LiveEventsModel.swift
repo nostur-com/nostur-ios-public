@@ -86,6 +86,7 @@ class LiveEventsModel: ObservableObject {
                 .sorted(by: { $0.created_at > $1.created_at })
                 .uniqued(on: { $0.aTag })
                 .map { NRLiveEvent(event: $0) }
+                .filter { !blockedPubkeys.contains($0.hostPubkey) } // also catch "host" in p-tags blocked
             
             DispatchQueue.main.async { [weak self] in
                 onComplete?()
@@ -314,7 +315,8 @@ class LiveEventsModel: ObservableObject {
             .sink { [weak self] notification in
                 guard let self else { return }
                 let blockedPubkeys = notification.object as! Set<String>
-                self.nrLiveEvents = self.nrLiveEvents.filter { !blockedPubkeys.contains($0.pubkey)  }
+                self.nrLiveEvents = self.nrLiveEvents
+                    .filter { !blockedPubkeys.contains($0.pubkey) && !blockedPubkeys.contains($0.hostPubkey)  }
             }
             .store(in: &self.subscriptions)
     }

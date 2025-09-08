@@ -22,6 +22,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
     
     public var id: String // aTag
     public let pubkey: String
+    public var hostPubkey: String // participant with "host" p-tag or fallback to .pubkey
     public let dTag: String
     
     @Published public var participantsOrSpeakers: [NRContact]
@@ -82,6 +83,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         
         self.id = event.aTag
         self.pubkey = event.pubkey
+        self.hostPubkey = event.fastPs.first(where: { $0.3?.lowercased() == "host" })?.1 ?? event.pubkey
         self.dTag = event.dTag
 
         self.participantsOrSpeakers = event.participantsOrSpeakers().reversed()
@@ -188,6 +190,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         self.recordingUrl = params.recordingUrl
         self.liveKitConnectUrl = params.liveKitConnectUrl
         self.scheduledAt = params.scheduledAt
+        self.hostPubkey = fastPs.first(where: { $0.3?.lowercased() == "host" })?.1 ?? params.nEvent.publicKey
     }
     
     func role(forPubkey pubkey: String) -> String? {
