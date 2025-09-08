@@ -536,6 +536,10 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
 
 extension Event {
     
+    func hostPubkey() -> String {
+        self.fastPs.first(where: { $0.3?.lowercased() == "host" })?.1 ?? self.pubkey
+    }
+    
     func webUrl() -> String? {
         guard self.isLiveKit() else { return nil }
         guard let service = self.fastTags.first(where: { $0.0 == "service" })?.1 else { return nil }
