@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FeedSettings_Hashtags: View {
+struct FollowingFeedSettings_Hashtags: View {
     @Environment(\.theme) private var theme
     @State public var hashtags: [String]
     public var onChange: (([String]) -> ())?
@@ -16,7 +16,7 @@ struct FeedSettings_Hashtags: View {
             ForEach(hashtags.indices, id:\.self) { index in
                 VStack(alignment: .leading) {
                     HStack {
-                        Text(String(format:"#%@", hashtags[index]))
+                        Text(String(format: "#%@", hashtags[index]))
                         Spacer()
                         Image(systemName: "trash.fill")
                             .foregroundColor(.red)
@@ -36,12 +36,9 @@ struct FeedSettings_Hashtags: View {
     }
 }
 
-struct FeedSettings_Hashtags_Previews: PreviewProvider {
-    static var previews: some View {
-        Form {
-            FeedSettings_Hashtags(hashtags:["apple", "banana", "cherry"])
-        }
-            .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+#Preview {
+    Form {
+        FollowingFeedSettings_Hashtags(hashtags: ["apple", "banana", "cherry"])
     }
 }
 

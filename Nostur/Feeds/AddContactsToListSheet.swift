@@ -17,7 +17,7 @@ struct AddContactsToListSheet: View {
     // only contact lists, not relay lists
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudFeed.createdAt, ascending: false)],
-        predicate: NSPredicate(format: "type == %@ OR type == nil", ListType.pubkeys.rawValue),
+        predicate: NSPredicate(format: "type == %@ OR type == nil", CloudFeedType.pubkeys.rawValue),
         animation: .none)
     var lists: FetchedResults<CloudFeed>
     
@@ -234,7 +234,7 @@ struct AddContactsToListSheet: View {
             list.showAsTab = true
             list.createdAt = .now
             list.wotEnabled = false
-            list.type = ListType.pubkeys.rawValue
+            list.type = CloudFeedType.pubkeys.rawValue
             list.contactPubkeys = selectedContactPubkeys
             list.order = 0
             

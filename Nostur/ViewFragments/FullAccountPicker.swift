@@ -37,7 +37,7 @@ struct FullAccountPicker: View {
         .pickerStyleCompatNavigationLink()
         
         .onAppear {
-            accounts = AccountsState.shared.accounts.filter { $0.isFullAccount }
+            accounts = AccountsState.shared.fullAccounts
                 .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
         }
         

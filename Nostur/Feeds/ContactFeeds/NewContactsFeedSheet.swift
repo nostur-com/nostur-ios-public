@@ -32,7 +32,7 @@ struct NewContactsFeedSheet: View {
     @State private var wotEnabled = true
     @State private var selectedContacts: Set<Contact> = []
     
-    @State private var feedType: ListType = .pubkeys
+    @State private var feedType: CloudFeedType = .pubkeys
 
     @FetchRequest
     private var contacts: FetchedResults<Contact>
@@ -164,7 +164,7 @@ struct NewContactsFeedSheet: View {
                     newFeed.createdAt = .now
                     newFeed.order = 0
                     newFeed.contactPubkeys = Set(selectedContacts.map { $0.pubkey })
-                    newFeed.type = ListType.pubkeys.rawValue
+                    newFeed.type = CloudFeedType.pubkeys.rawValue
                     viewContextSave()
                     rootDismiss?()
                     

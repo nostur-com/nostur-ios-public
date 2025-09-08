@@ -1,5 +1,5 @@
 //
-//  NosturListsView.swift
+//  ListsAndFeedsScreen.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 15/04/2023.
@@ -8,7 +8,7 @@
 import SwiftUI
 import NavigationBackport
 
-struct CustomFeedsListScreen: View {
+struct ListsAndFeedsScreen: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
@@ -32,14 +32,15 @@ struct CustomFeedsListScreen: View {
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
         
     var body: some View {
-        List {
+        NXForm {
             if !lists.isEmpty {
-                Section {
+                Section("Custom Feeds") {
                     ForEach(lists) { list in
-                        NBNavigationLink(value: list) {
+                        NavigationLink {
+                            FeedSettings(feed: list)
+                        } label: {
                             ListRow(list: list)
                         }
-                        .listRowBackground(theme.background)
                     }
                     .onDelete { indexSet in
                         deleteList(section: Array(lists), offsets: indexSet)
@@ -52,63 +53,76 @@ struct CustomFeedsListScreen: View {
                             }
                             viewContextSave()
                      })
-                } header: {
-                    Text("Custom Feeds")
                 }
-                .listRowBackground(theme.listBackground)
             }
             
             Section {
-                Group {
-                    Toggle(isOn: $enablePictureFeed, label: {
-                        Text("Pictures")
-                        Text("Pictures-only feed from people you follow")
-                    })
-                    Toggle(isOn: $enableZappedFeed, label: {
-                        Text("Zapped")
-                        Text("Posts from anyone which are most zapped by people you follow")
-                    })
-                    Toggle(isOn: $enableHotFeed, label: {
-                        Text("Hot")
-                        Text("Posts from anyone which are most liked or reposted by people you follow")
-                    })
+                Toggle(isOn: $enablePictureFeed, label: {
+                    Text("Pictures")
+                    Text("Pictures-only feed from people you follow")
+                })
+                Toggle(isOn: $enableZappedFeed, label: {
+                    Text("Zapped")
+                    Text("Posts from anyone which are most zapped by people you follow")
+                })
+                Toggle(isOn: $enableHotFeed, label: {
+                    Text("Hot")
+                    Text("Posts from anyone which are most liked or reposted by people you follow")
+                })
 //                    Toggle(isOn: $enableDiscoverFeed, label: {
 //                        Text("Discover")
 //                        Text("Posts from people you don't follow which are most liked or reposted by people you follow")
 //                    })
-                    Toggle(isOn: $enableDiscoverListsFeed, label: {
-                        Text("Discover")
-                        Text("Lists from people you follow")
-                    })
-                    Toggle(isOn: $enableEmojiFeed, label: {
-                        Text("Emoji Feed")
-                        Text("Posts from anyone which are reacted to with several specific emojis by people you follow")
-                    })
-                    Toggle(isOn: $enableGalleryFeed, label: {
-                        Text("Gallery")
-                        Text("Media from posts from anyone which are most liked or reposted by people you follow")
-                    })
-                    Toggle(isOn: $enableArticleFeed, label: {
-                        Text("Articles")
-                        Text("Long-form articles from people you follow")
-                    })
-                    Toggle(isOn: $enableExploreFeed, label: {
-                        Text("Explore")
-                        Text("Posts from people followed by the [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account")
-                    })
-                }
-                .listRowBackground(theme.background)
+                Toggle(isOn: $enableDiscoverListsFeed, label: {
+                    Text("Discover")
+                    Text("Lists from people you follow")
+                })
+                Toggle(isOn: $enableEmojiFeed, label: {
+                    Text("Emoji Feed")
+                    Text("Posts from anyone which are reacted to with several specific emojis by people you follow")
+                })
+                Toggle(isOn: $enableGalleryFeed, label: {
+                    Text("Gallery")
+                    Text("Media from posts from anyone which are most liked or reposted by people you follow")
+                })
+                Toggle(isOn: $enableArticleFeed, label: {
+                    Text("Articles")
+                    Text("Long-form articles from people you follow")
+                })
+                Toggle(isOn: $enableExploreFeed, label: {
+                    Text("Explore")
+                    Text("Posts from people followed by the [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account")
+                })
             } header: {
                 Text("Default feeds")
             } footer: {
                 Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
                     .font(.footnote)
             }
-            .listRowBackground(theme.listBackground)
         }
-        .scrollContentBackgroundCompat(.hidden)
-        .background(theme.listBackground)
-        .listStyle(.plain)
+//        .scrollContentBackgroundCompat(.hidden)
+        
+        .navigationTitle(String(localized:"Feeds", comment: "Navigation title for Feeds screen"))
+        .navigationBarTitleDisplayMode(.inline)
+        
+        .sheet(isPresented: $newContactsFeedSheet) {
+            NBNavigationStack {
+                NewContactsFeedSheet(rootDismiss: { dismiss() })
+                    .environment(\.theme, theme)
+                    .environmentObject(la)
+            }
+            .presentationBackgroundCompat(theme.listBackground)
+        }
+        
+        .sheet(isPresented: $newRelayFeedSheet) {
+            NBNavigationStack {
+                NewRelayFeedSheet(rootDismiss: { dismiss() })
+                    .environment(\.theme, theme)
+                    .environmentObject(la)
+            }
+            .presentationBackgroundCompat(theme.listBackground)
+        }
+        
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 EditButton()
@@ -132,28 +146,8 @@ struct CustomFeedsListScreen: View {
                 }
             }
         }
-        .navigationTitle(String(localized:"Feeds", comment: "Navigation title for Feeds screen"))
-        .navigationBarTitleDisplayMode(.inline)
         
-        .sheet(isPresented: $newContactsFeedSheet) {
-            NBNavigationStack {
-                NewContactsFeedSheet(rootDismiss: { dismiss() })
-                    .environment(\.theme, theme)
-                    .environmentObject(la)
-            }
-            .presentationBackgroundCompat(theme.listBackground)
-        }
-        
-        .sheet(isPresented: $newRelayFeedSheet) {
-            NBNavigationStack {
-                NewRelayFeedSheet(rootDismiss: { dismiss() })
-                    .environment(\.theme, theme)
-                    .environmentObject(la)
-            }
-            .presentationBackgroundCompat(theme.listBackground)
-        }
-        
-         .nosturNavBgCompat(theme: theme)
+//         .nosturNavBgCompat(theme: theme)
     }
     
     private func deleteList(section: [CloudFeed], offsets: IndexSet) {
@@ -164,7 +158,7 @@ struct CustomFeedsListScreen: View {
         viewContextSave()
     }
     
-    func removeDuplicateLists() {
+    private func removeDuplicateLists() {
         var uniqueLists = Set<String>()
         let sortedLists = lists.sorted {
             if ($0.showAsTab && !$1.showAsTab) { return true }
@@ -210,16 +204,13 @@ struct ListRow: View {
     }
 }
 
-struct NosturListsView_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadCloudFeeds()
-        }) {
-            NBNavigationStack {
-                CustomFeedsListScreen()
-                    .withNavigationDestinations()
-            }
+#Preview {
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadCloudFeeds()
+    }) {
+        NBNavigationStack {
+            ListsAndFeedsScreen()
         }
     }
 }

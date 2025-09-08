@@ -33,7 +33,6 @@ struct NXForm<Content: View>: View {
             Group {
                 content
             }
-//            .foregroundColor(theme.accent)
             .listRowBackground(theme.background)
         }
         .scrollContentBackgroundHidden()

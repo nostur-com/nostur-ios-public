@@ -152,13 +152,7 @@ extension View {
                 BadgeDetailView(badge: badge.badge)
             }
             .nbNavigationDestination(for: CloudFeed.self) { feed in
-                if feed.type == ListType.relays.rawValue {
-                    FeedSettings(feed: feed)
-                }
-                else {
-//                    EditNosturList(list: list)
-                    FeedSettings(feed: feed)
-                }
+                FeedSettings(feed: feed)
             }
             .nbNavigationDestination(for: ViewPath.self) { path in
                 switch (path) {
@@ -177,7 +171,7 @@ extension View {
                     case .Settings:
                         Settings()
                     case .Lists:
-                        CustomFeedsListScreen()
+                        ListsAndFeedsScreen()
                     case .Relays:
                         RelaysView()    
                     case .Badges:

@@ -381,6 +381,7 @@ extension PreviewEnvironment {
                                         "a3eb29554bd27fca7f53f66272e4bb59d066f2f31708cf341540cb4729fbd841",
                                         "c7dccba4fe4426a7b1ea239a5637ba40fab9862c8c86b3330fe65e9f667435f6",
                                         "7bdef7be22dd8e59f4600e044aa53a1cf975a9dc7d27df5833bc77db784a5805"]
+            account.followingHashtags = ["bitcoin","nostr"]
             AccountsState.shared.changeAccount(account)
             WebOfTrust.shared.webOfTrustLevel = SettingsStore.WebOfTrustLevel.off.rawValue
 //            return account
@@ -399,6 +400,7 @@ extension PreviewEnvironment {
             account.about = "Creatur of Nostur"
             account.picture = "https://profilepics.nostur.com/profilepic_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/profilepic.jpg?1682440972"
             account.banner = "https://profilepics.nostur.com/banner_v1/e358d89477e2303af113a2c0023f6e77bd5b73d502cf1dbdb432ec59a25bfc0f/banner.jpg?1682440972"
+            account.followingHashtags = ["bitcoin","nostr"]
             
             let account2 = CloudAccount(context: self.context)
             account2.createdAt = Date()
@@ -952,12 +954,19 @@ struct PreviewFetcher {
         return nil
     }
     
-    static func fetchCloudFeed(context:NSManagedObjectContext? = nil) -> CloudFeed? {
+    static func fetchCloudFeed(context: NSManagedObjectContext? = nil, type: String? = nil) -> CloudFeed? {
+        if let type {
+            let request = CloudFeed.fetchRequest()
+            request.predicate = NSPredicate(format: "type == %@", type)
+            request.fetchLimit = 1
+            return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.first
+        }
+        
         let request = CloudFeed.fetchRequest()
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request))?.randomElement()
     }
     
-    static func fetchLists(context:NSManagedObjectContext? = nil) -> [CloudFeed] {
+    static func fetchLists(context: NSManagedObjectContext? = nil) -> [CloudFeed] {
         let request = CloudFeed.fetchRequest()
         return (try? (context ?? PreviewFetcher.viewContext).fetch(request)) ?? []
     }

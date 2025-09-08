@@ -9,15 +9,6 @@ import SwiftUI
 import Combine
 import NavigationBackport
 
-enum ListType: String, Identifiable, Hashable {
-    case pubkeys = "pubkeys"
-    case relays = "relays"
-
-    var id: String {
-        String(self.rawValue)
-    }
-}
-
 struct AddRemoveToListsheet: View {
     
     @Environment(\.theme) var theme
@@ -28,7 +19,7 @@ struct AddRemoveToListsheet: View {
     // only contact lists, not relay lists
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \CloudFeed.createdAt, ascending: false)],
-        predicate: NSPredicate(format: "type == %@ OR type == nil", ListType.pubkeys.rawValue),
+        predicate: NSPredicate(format: "type == %@ OR type == nil", CloudFeedType.pubkeys.rawValue),
         animation: .none)
     var lists: FetchedResults<CloudFeed>
     
@@ -111,7 +102,7 @@ struct AddRemoveToListsheet: View {
         newList.showAsTab = true
         newList.createdAt = .now
         newList.order = 0
-        newList.type = ListType.pubkeys.rawValue
+        newList.type = CloudFeedType.pubkeys.rawValue
         newList.contactPubkeys.insert(pubkey)
     }
 }

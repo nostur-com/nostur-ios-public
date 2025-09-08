@@ -36,22 +36,7 @@ struct NewRelayFeedSheet: View {
                 }
                 .focused($relayAddressIsFocused)
                 
-                Picker(selection: $authenticationAccount) {
-                    ForEach(accounts) { account in
-                        HStack {
-                            PFP(pubkey: account.publicKey, account: account, size: 20.0)
-                            Text(account.anyName)
-                        }
-                        .tag(account)
-                        .foregroundColor(theme.primary)
-                    }
-                    Text("None")
-                        .tag(nil as CloudAccount?)
-                    
-                } label: {
-                    Text("Authenticate with")
-                }
-                .pickerStyleCompatNavigationLink()
+                FullAccountPicker(selectedAccount: $authenticationAccount, label: "Authenticate as")
                 
             } header: {
                 Text("Enter relay address")
@@ -78,9 +63,9 @@ struct NewRelayFeedSheet: View {
             guard !didLoad else { return }
             didLoad = true
             relayAddressIsFocused = true
-            accounts = AccountsState.shared.accounts.filter { $0.isFullAccount }
+            authenticationAccount = AccountsState.shared.fullAccounts
                 .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
-            authenticationAccount = accounts.first
+                .first
         }
         
         .toolbar {
@@ -99,7 +84,7 @@ struct NewRelayFeedSheet: View {
                     newFeed.order = 0
                     
                     newFeed.relays = normalizeRelayUrl(relayAddress)
-                    newFeed.type = ListType.relays.rawValue
+                    newFeed.type = CloudFeedType.relays.rawValue
                     
                     // accountPubkey set means auth should be enabled
                     if let authenticationAccount {

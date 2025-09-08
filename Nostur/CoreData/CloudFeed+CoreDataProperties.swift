@@ -199,15 +199,19 @@ extension CloudFeed : Identifiable {
     }
 }
 
-enum CloudFeedType: String {
-    case following = "following"
-    case picture = "picture"
+public enum CloudFeedType: String, Identifiable, Hashable {
     case pubkeys = "pubkeys"
     case relays = "relays"
+    case following = "following"
+    case picture = "picture"
     case mentions = "mentions"
     case hashtags = "hashtags"
     
     // nostr native lists
     case followSet = "30000" // a "subscribed" follow set
     case followPack = "39089" // a "subscribed" follow pack
+
+    public var id: String {
+        String(self.rawValue)
+    }
 }

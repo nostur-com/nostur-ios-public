@@ -1,69 +1,122 @@
 //
-//  EditList.swift
+//  ContactFeedSettings.swift
 //  Nostur
 //
-//  Created by Fabian Lachman on 08/04/2023.
+//  Created by Fabian Lachman on 08/09/2025.
 //
 
 import SwiftUI
-import NavigationBackport
 import NostrEssentials
+import NavigationBackport
 
-struct EditNosturList: View {
-    @EnvironmentObject private var la: LoggedInAccount
-    @ObservedObject public var list: CloudFeed
+// Settings for a local private list or public nip-51 list
+struct ContactFeedSettings: View {
+    @ObservedObject public var feed: CloudFeed
     
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var la: LoggedInAccount
     
-    @State private var confirmDeleteShown = false
-    @State private var contactToRemove: Contact? = nil
-    @State private var addContactsSheetShown = false
-    @State private var editList: CloudFeed? = nil
-    @State private var selectedContacts: Set<Contact> = []
-    @State private var listNRContacts: [NRContact] = []
-    @State private var wasShared: Bool = false
+    @State private var accounts: [CloudAccount] = []
     @State private var listNaddr: String? = nil
+    @State private var wasShared: Bool = false
+    @State private var listNRContacts: [NRContact] = []
+    @State private var addContactsSheetShown = false
     
-    // Only full accounts
-    @State var accounts: [CloudAccount] = []
+    private var isPublicNIP51List: Bool {
+        feed.sharedList
+    }
+    private var isOwnManagedList: Bool {
+        feed.accountPubkey != nil && (feed.type == "pubkeys" || feed.type == nil) && feed.listId != nil
+    }
+    
+    private var isOwnList: Bool {
+        if ((feed.type == "pubkeys" || feed.type == nil) && feed.listId == nil) {
+            return true
+        }
+        
+        if (feed.type == CloudFeedType.followPack.rawValue || feed.type == CloudFeedType.followSet.rawValue),
+           let aTag = feed.aTag,
+           AccountsState.shared.fullAccounts.contains(where: { $0.publicKey == aTag.pubkey }) {
+               return true
+        }
+        
+        return false
+    }
     
     var body: some View {
-        List {
-            Section(header: Text("Feed settings", comment: "Header for entering title of a feed")) {
-                Group {
-                    Toggle(isOn: $list.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+        NXForm {
+            // Managed by someone else, with toggle subscribe on/off (switchs between "pubkeys" and "30000"/"39089")
+            if !isOwnList, let aTag = feed.aTag {
+                // feedSettingsSection
+                 
+                 // Even if we change from 30000 to own pubkeys sheet, still show where the list came from, also makes easy to toggle on off subscribe updates again.
+             
+                 // Feed managed by... zap author...
+                 Section {
+                     ListManagedByView(feed: feed, aTag: aTag, parentDismiss: dismiss)
+                         .padding(.vertical, 10)
+                         .listRowInsets(EdgeInsets())
+                         .padding(.horizontal, 20)
+                 }
+                 
+                 Section {
+                     // Copy to own feed. No longer managed
+                     Toggle(isOn: Binding(get: {
+                         feed.type == "30000" || feed.type == "39089"
+                     }, set: { newValue in
+                         if newValue {
+                             feed.type = aTag.kind == 30000 ? "30000" : "39089"
+                         }
+                         else {
+                             feed.type = "pubkeys"
+                         }
+                     })) {
+                         Text("Subscribe to list updates")
+                     }
+                 } footer: {
+                     Text("Updates refer to people added or removed from this list, not posts or content.")
+                         .font(.footnote)
+                 }
+            }
+            else {
+                
+                Section(header: Text("Feed settings", comment: "Header for entering title of a feed")) {
                     
-                    if list.showAsTab {
+                    // TAB TITLE TEXTFIELD
+                    if feed.showAsTab {
                         VStack(alignment: .leading) {
-                            TextField(String(localized:"Tab title", comment:"Placeholder for input field to enter title of a feed"), text: $list.name_)
+                            TextField(String(localized:"Tab title", comment:"Placeholder for input field to enter title of a feed"), text: $feed.name_)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
                             
-                            Text("Shown in the tab bar (not public)")
+                            Text("Shown in the tab bar")
                                 .font(.footnote)
                                 .foregroundColor(Color.secondary)
                         }
                     }
                     
+                    // TOGLE PIN ON TAB BAR
+                    Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                    
+                    // TOGGLE REPLIES
                     Toggle(isOn: Binding(get: {
-                        list.repliesEnabled
+                        feed.repliesEnabled
                     }, set: { newValue in
-                        list.repliesEnabled = newValue
+                        feed.repliesEnabled = newValue
                     })) {
                         Text("Show replies")
                     }
                 }
-                .listRowBackground(theme.listBackground)
-            }
-            
-            if !accounts.isEmpty { // Only show if we have full accounts
-                Section(header: Text("Share list", comment: "Header of Feed/List sharing settings")) {
-                    Group {
+                
+                // SHARE LIST
+                if !accounts.isEmpty { // Only show if we have full accounts
+                    Section(header: Text("Share list", comment: "Header of Feed/List sharing settings")) {
+                        
                         VStack(alignment: .leading) {
-                            Toggle(isOn: $list.sharedList, label: { Text("Make list public", comment: "Toggle to make list public")})
-                                .disabled(!list.sharedList && list.contactPubkeys.isEmpty)
-                            if list.aTag != nil, let listNaddr = listNaddr {
+                            Toggle(isOn: $feed.sharedList, label: { Text("Make list public", comment: "Toggle to make list public")})
+                                .disabled(!feed.sharedList && feed.contactPubkeys.isEmpty)
+                            if feed.aTag != nil, let listNaddr = listNaddr {
                                 CopyableTextView(text: "Public list address: \(listNaddr)", copyText: "nostr:\(listNaddr)")
                                     .lineLimit(1)
                                     .truncationMode(.middle)
@@ -78,14 +131,14 @@ struct EditNosturList: View {
                             }
                         }
                         
-                        if list.sharedList {
+                        if feed.sharedList {
                             VStack(alignment: .leading) {
-                                TextField(String(localized: "Title", comment:"Placeholder for input field to enter title of a shared list"), text: $list.sharedTitle_)
+                                TextField(String(localized: "Title", comment:"Placeholder for input field to enter title of a shared list"), text: $feed.sharedTitle_)
                                     .textInputAutocapitalization(.never)
                                     .disableAutocorrection(true)
                                     .onAppear {
-                                        if list.sharedTitle_.isEmpty {
-                                            list.sharedTitle_ = list.name_
+                                        if feed.sharedTitle_.isEmpty {
+                                            feed.sharedTitle_ = feed.name_
                                         }
                                     }
                                 Text("Share this list with a different title")
@@ -93,70 +146,121 @@ struct EditNosturList: View {
                                     .foregroundColor(Color.secondary)
                             }
                             
-                            ListAccountPicker(accountPubkey: $list.accountPubkey, accounts: accounts)
-                                .disabled(list.aTag != nil)
+                            FullAccountPicker(selectedAccount: Binding(get: {
+                                AccountsState.shared.fullAccounts.first(where: { $0.publicKey == feed.accountPubkey })
+                            }, set: { selectedAccount in
+                                feed.accountPubkey = selectedAccount?.publicKey
+                            }), label: "Account")
+                            .disabled(feed.aTag != nil)
                         }
                     }
-                    .listRowBackground(theme.listBackground)
+                    .listRowBackground(theme.background)
+                }
+                
+                // CONTACTS IN THIS LIST
+                Section {
+                    ForEach(listNRContacts) { nrContact in
+                        NRContactSearchResultRow(nrContact: nrContact)
+                            .padding()
+                            .onTapGesture { navigateTo(NRContactPath(nrContact: nrContact), context: "Default") }
+                            .listRowInsets(EdgeInsets())
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    feed.contactPubkeys.remove(nrContact.pubkey)
+                                    listNRContacts.removeAll(where: { $0.pubkey == nrContact.pubkey })
+                                    DataProvider.shared().save()
+                                    sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: feed.subscriptionId, pubkeys: feed.contactPubkeys))
+                                } label: {
+                                    Label("Remove", systemImage: "trash")
+                                }
+    
+                            }
+                    }
+                } header: {
+                    Text("Contacts in list")
+                }
+                
+                .onAppear {
+                    accounts = AccountsState.shared.fullAccounts
+                    
+                    let feedContactPubkeys = feed.contactPubkeys
+                    wasShared = feed.sharedList
+                    let aTag = feed.aTag
+                    bg().perform {
+                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(feedContactPubkeys)
+                            .map { NRContact.instance(of: $0.pubkey, contact: $0) }
+                        
+                        Task { @MainActor in
+                            self.listNRContacts = listNRContacts
+                        }
+                        
+                        if let aTag {
+                            let relaysForHint: Set<String> = resolveRelayHint(forPubkey: aTag.pubkey)
+                            if let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: Int(aTag.kind), pubkey: aTag.pubkey, dTag: aTag.definition, relays: Array(relaysForHint)) {
+                                Task { @MainActor in
+                                    listNaddr = si.identifier
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                .onDisappear {
+                    // if list is public, publish....
+                    
+                    if feed.sharedList,
+                       let accountPubkey = feed.accountPubkey,
+                       let fullAccount = AccountsState.shared.accounts.first(where: { $0.publicKey ==  accountPubkey })
+                    {
+                        publishList(feed, account: fullAccount)
+                    }
+                    else if let accountPubkey = feed.accountPubkey, feed.aTag != nil && !feed.sharedList && wasShared, let fullAccount = AccountsState.shared.accounts.first(where: { $0.publicKey ==  accountPubkey }) {
+                        // No longer shared
+                        
+                        // set 0 p tags and send delete request
+                        clearAndDeleteList(feed, account: fullAccount)
+                    }
+                }
+            }
+        }
+        .toolbar { // .toolbar MUST be ON (NX)Form. Cannot use parent/NavigationLink Form, or in Section or SwifUI will duplicate buttons
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if isOwnList {
+                    Button("Add contact", systemImage: "plus") {
+                        addContactsSheetShown = true
+                    }
+                    .labelStyle(.iconOnly)
                 }
             }
             
-            Section {
-                ForEach(listNRContacts) { nrContact in
-                    NRContactSearchResultRow(nrContact: nrContact)
-                        .padding()
-                        .onTapGesture { navigateTo(NRContactPath(nrContact: nrContact), context: "Default") }
-                        .listRowInsets(EdgeInsets())
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                list.contactPubkeys.remove(nrContact.pubkey)
-                                listNRContacts.removeAll(where: { $0.pubkey == nrContact.pubkey })
-                                DataProvider.shared().save()
-                                sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
-                            } label: {
-                                Label("Remove", systemImage: "trash")
-                            }
-                            
-                        }
-                        .listRowBackground(theme.listBackground)
-                }
-            } header: {
-                Text("Contacts in list")
-            }
-        }
-        .scrollContentBackgroundCompat(.hidden)
-        .background(theme.background)
-         .nosturNavBgCompat(theme: theme)
-        .navigationTitle("\(list.name ?? "feed")")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(verbatim: "\(list.name ?? "feed")")
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Add contact", systemImage: "plus") {
-                    addContactsSheetShown = true
+                Button("Done") {
+                    dismiss()
                 }
-                .labelStyle(.iconOnly)
-
             }
         }
+        
+        
+        .navigationTitle("Feed settings")
+        .navigationBarTitleDisplayMode(.inline)
+        
         .sheet(isPresented: $addContactsSheetShown) {
             NBNavigationStack {
                 ContactsSearch(followingPubkeys: follows(),
                                prompt: "Search", onSelectContacts: { selectedContacts in
-                    list.contactPubkeys.formUnion(Set(selectedContacts.map { $0.pubkey }))
+                    feed.contactPubkeys.formUnion(Set(selectedContacts.map { $0.pubkey }))
                     addContactsSheetShown = false
-                    let listContactPubkeys = list.contactPubkeys
+                    let feedContactPubkeys = feed.contactPubkeys
                     bg().perform {
-                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(listContactPubkeys)
+                        let listNRContacts: [NRContact] = Contact.fetchByPubkeys(feedContactPubkeys)
                             .map { NRContact.instance(of: $0.pubkey, contact: $0) }
                         Task { @MainActor in
                             self.listNRContacts = listNRContacts
                         }
                     }
                     DataProvider.shared().save()
-                    sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
+                    sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: feed.subscriptionId, pubkeys: feed.contactPubkeys))
                 })
                 .equatable()
                 .navigationTitle(String(localized:"Add contacts", comment:"Navigation title of sheet to add contacts to feed"))
@@ -174,52 +278,19 @@ struct EditNosturList: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         }
-        .onAppear {
-            accounts = AccountsState.shared.accounts
-                .filter { $0.isFullAccount }
-            
-            
-            let listContactPubkeys = list.contactPubkeys
-            wasShared = list.sharedList
-            let aTag = list.aTag
-            bg().perform {
-                let listNRContacts: [NRContact] = Contact.fetchByPubkeys(listContactPubkeys)
-                    .map { NRContact.instance(of: $0.pubkey, contact: $0) }
-                
-                Task { @MainActor in
-                    self.listNRContacts = listNRContacts
-                }
-                
-                if let aTag {
-                    let relaysForHint: Set<String> = resolveRelayHint(forPubkey: aTag.pubkey)
-                    if let si = try? NostrEssentials.ShareableIdentifier("naddr", kind: Int(aTag.kind), pubkey: aTag.pubkey, dTag: aTag.definition, relays: Array(relaysForHint)) {
-                        Task { @MainActor in
-                            listNaddr = si.identifier
-                        }
-                    }
-                }
-            }
-        }
-        
-        .onDisappear {
-            // if list is public, publish....
-            
-            if list.sharedList,
-               let accountPubkey = list.accountPubkey,
-               let fullAccount = AccountsState.shared.accounts.first(where: { $0.publicKey ==  accountPubkey })
-            {
-                publishList(list, account: fullAccount)
-            }
-            else if let accountPubkey = list.accountPubkey, list.aTag != nil && !list.sharedList && wasShared, let fullAccount = AccountsState.shared.accounts.first(where: { $0.publicKey ==  accountPubkey }) {
-                // No longer shared
-                
-                // set 0 p tags and send delete request
-                clearAndDeleteList(list, account: fullAccount)
-            }
-        }
-        
     }
 }
+
+#Preview {
+    PreviewContainer({ pe in pe.loadCloudFeeds() }) {
+        if let feed = PreviewFetcher.fetchCloudFeed(type: "pubkeys") {
+            FeedSettings(feed: feed)
+        }
+    }
+}
+
+
+// Helpers
 
 func publishList(_ feed: CloudFeed, account: CloudAccount) {
     var nEvent = NEvent(content: "")
@@ -379,64 +450,4 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
         }
     }
     
-}
-
-struct EditList_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadCloudFeeds()
-        }) {
-            NBNavigationStack {
-                if let list = PreviewFetcher.fetchCloudFeed() {
-                    EditNosturList(list: list)
-                        .withNavigationDestinations()
-                }
-            }
-        }
-    }
-}
-
-
-struct ListAccountPicker: View {
-    @Environment(\.theme) private var theme
-    @Binding var accountPubkey: String?
-    var accounts: [CloudAccount]
-    
-
-    var body: some View {
-        Picker(selection: $accountPubkey) {
-            ForEach(accounts) { account in
-                HStack {
-                    PFP(pubkey: account.publicKey, account: account, size: 20.0)
-                    Text(account.anyName)
-                }
-                .tag(account.publicKey)
-                .foregroundColor(theme.primary)
-            }
-            
-        } label: {
-            Text("Account")
-        }
-        .pickerStyleCompatNavigationLink()
-        .task {
-            if accountPubkey == nil {
-                accountPubkey = AccountsState.shared.activeAccountPublicKey
-            }
-        }
-    }
-}
-
-import NavigationBackport
-
-#Preview {
-    PreviewContainer({ pe in pe.loadAccounts() }) {
-        NBNavigationStack {
-            Form {
-                Section(header: Text("Main WoT", comment:"Setting heading on settings screen")) {
-                    MainWoTaccountPicker()
-                }
-            }
-        }
-    }
 }
