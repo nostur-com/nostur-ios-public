@@ -81,6 +81,14 @@ struct RelayFeedSettings: View {
             }
         }
         
+        .onChange(of: feed.showAsTab) { newValue in
+            if !newValue {
+                // Switch to main tab
+                UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
+            }
+        }
+        
         .navigationTitle("Feed settings")
         .navigationBarTitleDisplayMode(.inline)
         
