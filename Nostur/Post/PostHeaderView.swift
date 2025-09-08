@@ -86,6 +86,7 @@ struct PostHeaderView: View {
             
             if restricted {
                 RestrictedLabel()
+                    .lineLimit(1)
                     .infoText("The author has marked this post as restricted.\n\nA restricted post is intended to be sent only to specific relays and should not be rebroadcasted to other relays.")
             }
 
