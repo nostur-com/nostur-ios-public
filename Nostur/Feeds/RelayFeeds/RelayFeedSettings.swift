@@ -51,7 +51,7 @@ struct RelayFeedSettings: View {
                     feed.continue = newValue
                 })) {
                     Text("Resume where left")
-                    Text("Catch up on missed posts since the last time you opened the feed")
+                    Text("Restore feed as before the next time you open the app")
                 }
                 
                 // WEB OF TRUST SPAMFILTER

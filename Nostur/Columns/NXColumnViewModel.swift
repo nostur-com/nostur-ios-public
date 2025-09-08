@@ -758,7 +758,7 @@ class NXColumnViewModel: ObservableObject {
         
         let repliesEnabled = config.repliesEnabled
         
-        if !didLoadFirstLocalState && currentNRPostsOnScreen.isEmpty, let feedId = config.feed?.id?.uuidString { // very first load from local saved state
+        if config.continue && !didLoadFirstLocalState && currentNRPostsOnScreen.isEmpty, let feedId = config.feed?.id?.uuidString { // very first load from local saved state
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) - First load from local state")
 #endif
