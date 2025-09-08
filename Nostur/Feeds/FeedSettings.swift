@@ -21,6 +21,9 @@ struct FeedSettings: View {
         case "following":
             FollowingFeedSettings(feed: feed)
             
+        case "picture":
+            PictureFeedSettings(feed: feed)
+            
         case "relays":
             RelayFeedSettings(feed: feed)
             
@@ -28,7 +31,15 @@ struct FeedSettings: View {
             ContactFeedSettings(feed: feed)
 
         default:
-            EmptyView()
+            Rectangle()
+                .frame(width: 100, height: 100)
+                .toolbar {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
         }
     }
 }

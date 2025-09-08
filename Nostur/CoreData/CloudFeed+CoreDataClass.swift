@@ -29,6 +29,20 @@ public class CloudFeed: NSManagedObject, IdentifiableDestination {
         // Resume Where Left: Default on for contact-based. Default off for relay-based
         followingFeed.continue = true
         
+        // generate following feed
+        let picturefeed = CloudFeed(context: context)
+        picturefeed.id = UUID()
+        picturefeed.type = "picture"
+        picturefeed.createdAt = .now
+        picturefeed.name = "📸"
+        picturefeed.accountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+        picturefeed.contactPubkeys = []
+        picturefeed.showAsTab = true
+        picturefeed.wotEnabled = false
+        picturefeed.order = 0
+        // Resume Where Left: Default on for contact-based. Default off for relay-based
+        picturefeed.continue = true
+        
         // generate relay feed
         let relayfeed = CloudFeed(context: context)
         relayfeed.id = UUID()

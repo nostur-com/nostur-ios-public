@@ -646,8 +646,7 @@ struct MainFeedsScreen: View {
             newFeed.repliesEnabled = false
             newFeed.order = 0
                         
-            // Resume Where Left: Default on for contact-based. Default off for relay-based
-            newFeed.continue = true
+            newFeed.continue = false // kind 20 feed needs more pics so false
             
             DataProvider.shared().save() { // callback after save:
                 pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: "Picture")
