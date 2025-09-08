@@ -347,6 +347,7 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     private func firstLoad(_ config: NXColumnConfig) {
+        let resumeWhereLeftOff = config.continue
         isViewPaused = false
         speedTest?.start()
         
@@ -356,11 +357,8 @@ class NXColumnViewModel: ObservableObject {
             allShortIdsSeen = []
             fetchKind3ForSomeoneElsesFeed(pubkey, config: config) { [weak self] updatedConfig in
                 self?.config = updatedConfig
-                self?.loadLocal(updatedConfig) { // <-- instant, and works offline
-                    // callback to load remote
-                    Task {
-                        await self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
-                    }
+                Task {
+                    await self?.loadRemote(updatedConfig) // <--- fetch new posts (with gap filler)
                 }
             }
         }
@@ -369,14 +367,22 @@ class NXColumnViewModel: ObservableObject {
             // if relay feed, make sure relay is added to ConnectionPool
             if case .relays(let feed) = config.columnType {
                 for relayData in feed.relaysData {
-                    ConnectionPool.shared.addConnection(relayData) { [weak self] conn in
+                    ConnectionPool.shared.addConnection(relayData) { conn in
                         conn.connect()
-                        
+                    }
+                }
+                ConnectionPool.shared.queue.async(flags: .barrier) { [weak self] in
+                    if resumeWhereLeftOff {
                         self?.loadLocal(config) { [weak self] in // <-- instant, and works offline
                             // callback to load remote
                             Task {
                                 await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
                             }
+                        }
+                    }
+                    else {
+                        Task {
+                            await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
                         }
                     }
                 }
@@ -385,19 +391,25 @@ class NXColumnViewModel: ObservableObject {
                 ConnectionPool.shared.addConnection(relayData) { [weak self] conn in
                     conn.connect()
                     
-                    self?.loadLocal(config) { [weak self] in // <-- instant, and works offline
+                    // Relay Preview without Resume-Where-Left
+                    Task {
+                        await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+                    }
+                }
+            }
+            else {
+                if resumeWhereLeftOff {
+                    loadLocal(config) { [weak self] in // <-- instant, and works offline
                         // callback to load remote
                         Task {
                             await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
                         }
                     }
                 }
-            }
-            else {
-                loadLocal(config) { [weak self] in // <-- instant, and works offline
+                else {
                     // callback to load remote
                     Task {
-                        await self?.loadRemote(config) // <--- fetch new posts (with gap filler)
+                        await self.loadRemote(config) // <--- fetch new posts (with gap filler)
                     }
                 }
             }
@@ -574,7 +586,14 @@ class NXColumnViewModel: ObservableObject {
             viewState = .loading
             self.allShortIdsSeen = []
             startFetchFeedTimer()
-            loadLocal(config)
+            if config.continue {
+                loadLocal(config)
+            }
+            else {
+                Task { [weak self] in
+                    await self?.loadRemote(config)
+                }
+            }
         }
     }
     
@@ -636,18 +655,20 @@ class NXColumnViewModel: ObservableObject {
         guard let config else { return }
         guard let feedId = config.feed?.id?.uuidString else { return }
 
-        let onScreenIds: [String] = self.currentNRPostsOnScreen.map { $0.id }
-        let parentIds: Set<String> = Set(currentNRPostsOnScreen.flatMap { $0.parentPosts.map {  $0.id } })
+        let onScreenIds: [String] = config.continue ? self.currentNRPostsOnScreen.map { $0.id } : []
+        let parentIds: Set<String> = config.continue ? Set(currentNRPostsOnScreen.flatMap { $0.parentPosts.map {  $0.id } }) : []
         var scrollToId: String? = nil
         
-        for post in self.currentNRPostsOnScreen {
-            if vmInner.unreadIds[post.id] == nil {
-                scrollToId = post.id
-                break
-            }
-            else if let unreadCount = vmInner.unreadIds[post.id], unreadCount == 0 {
-                scrollToId = post.id
-                break
+        if config.continue {
+            for post in self.currentNRPostsOnScreen {
+                if vmInner.unreadIds[post.id] == nil {
+                    scrollToId = post.id
+                    break
+                }
+                else if let unreadCount = vmInner.unreadIds[post.id], unreadCount == 0 {
+                    scrollToId = post.id
+                    break
+                }
             }
         }
         
@@ -686,9 +707,16 @@ class NXColumnViewModel: ObservableObject {
         self.startFetchFeedTimer()
         self.fetchFeedTimerNextTick()
         self.listenForNewPosts(config)
-        self.loadLocal(config) { [weak self] in
-            Task {
-                await self?.loadRemote(config) 
+        if config.continue {
+            self.loadLocal(config) { [weak self] in
+                Task {
+                    await self?.loadRemote(config)
+                }
+            }
+        }
+        else {
+            Task { [weak self] in
+                await self?.loadRemote(config)
             }
         }
     }
@@ -983,7 +1011,7 @@ class NXColumnViewModel: ObservableObject {
             }
         case .relayPreview(let relayData):
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal(.relays)\(older ? "older" : "")")
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.relayPreview)\(older ? "older" : "")")
 #endif
             let relaysData: Set<RelayData> = [relayData]
             bg().perform { [weak self] in
@@ -994,7 +1022,16 @@ class NXColumnViewModel: ObservableObject {
                 else {
                     Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
                 }
-                guard let events: [Event] = try? bg().fetch(fr) else { return }
+                guard let events: [Event] = try? bg().fetch(fr) else {
+                    completion?()
+#if DEBUG
+                    L.og.debug("🏁🏁 NXColumnViewModel.Event.postsByRelays() empty -> loadingBarViewState = .finalLoad")
+#endif
+                    if self.speedTest?.loadingBarViewState != .finished && self.speedTest?.loadingBarViewState != .finalLoad {
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                    }
+                    return
+                }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
         case .pubkey:
@@ -1199,8 +1236,8 @@ class NXColumnViewModel: ObservableObject {
     
     @MainActor
     public func getFillGapReqStatement(_ config: NXColumnConfig, since: Int, until: Int? = nil) -> (cmd: () -> Void, subId: String)? {
-        let until: Int? = self.loadAnyFlag ? nil : until
-        let since: Int? = self.loadAnyFlag ? nil : since
+        let until: Int? = self.loadAnyFlag || !config.continue ? nil : until
+        let since: Int? = self.loadAnyFlag || !config.continue ? nil : since
         switch config.columnType {
         case .following(let feed):
             
@@ -1235,7 +1272,7 @@ class NXColumnViewModel: ObservableObject {
                 FETCH_FOLLOWING_FEED_KINDS
             }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: kinds)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: kinds)
              
             return (cmd: {
                 guard pubkeys.count > 0 || hashtags.count > 0 else {
@@ -1282,7 +1319,7 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: [20,5])
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: [20,5])
             
             let compatFilters = [
                 Filters(
@@ -1291,7 +1328,7 @@ class NXColumnViewModel: ObservableObject {
                     tagFilter: TagFilter(tag: "k", values: ["20"]),
                     since: since,
                     until: until,
-                    limit: 5000
+                    limit: !config.continue ? 75 : 300
                 )
             ]
              
@@ -1313,7 +1350,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
@@ -1330,7 +1367,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, limit: 150, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
@@ -1346,7 +1383,7 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], since: since, until: until, kinds: FETCH_FOLLOWING_FEED_KINDS)
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], limit: 150, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
@@ -1599,7 +1636,13 @@ class NXColumnViewModel: ObservableObject {
             }
         }
         set {
-            if case .picture(_) = config?.columnType {
+            if case .pubkeysPreview(_) = config?.columnType {
+                return
+            }
+            else if case .relayPreview(_) = config?.columnType {
+                return
+            }
+            else if case .picture(_) = config?.columnType {
                 _allShortIdsSeen = newValue
             }
             else if SettingsStore.shared.appWideSeenTracker {
@@ -1943,6 +1986,10 @@ extension NXColumnViewModel {
         let partialThreads: [NRPost] = self.transformToPartialThreads(nrPosts, currentIdsOnScreen: currentIdsOnScreen)
         
         let (danglers, partialThreadsWithParent) = extractDanglingReplies(partialThreads)
+        
+#if DEBUG
+        L.og.debug("☘️☘️ \(config.name) processToScreen() danglers: \(danglers.count) partialThreadsWithParent: \(partialThreadsWithParent.count) -[LOG]-")
+#endif
         
         let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
         if !newDanglers.isEmpty && repliesEnabled {
@@ -2403,13 +2450,16 @@ extension NXColumnViewModel {
             else { // or if empty screen: refreshedAt (since)
                 self.refreshedAt
             }
-#if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadRemote.fetchGap: since: \(sinceTimestamp) currentGap: 0 -[LOG]-")
-#endif
             // Don't go older than 24 hrs ago
             let maxAgo = Int64(Date().addingTimeInterval(-86_400).timeIntervalSince1970)
             
-            self.gapFiller?.fetchGap(since: max(sinceTimestamp, maxAgo), currentGap: 0)
+            
+            if config.continue {
+                self.gapFiller?.fetchGap(since: max(sinceTimestamp, maxAgo), currentGap: 0)
+            }
+            else {
+                self.gapFiller?.fetchSimple(limit: 75)
+            }
             
             fetchProfiles(config)
         }

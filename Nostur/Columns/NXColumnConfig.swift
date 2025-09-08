@@ -39,7 +39,18 @@ struct NXColumnConfig: Identifiable, Equatable {
     
     @MainActor
     var `continue`: Bool {
-        get { (feed?.`continue` ?? true) }
+        get {
+            switch columnType {
+            case .pubkeysPreview(_):
+                return false
+            case .someoneElses(_):
+                return false
+            case .relayPreview(_):
+                return false
+            default:
+                return (feed?.`continue` ?? true)
+            }
+        }
         set {
             feed?.`continue` = newValue
             DataProvider.shared().save()
