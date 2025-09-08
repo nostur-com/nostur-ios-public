@@ -83,6 +83,9 @@ struct ContactFeedSettings: View {
                 
                 Section(header: Text("Feed settings", comment: "Header for entering title of a feed")) {
                     
+                    // TOGLE PIN ON TAB BAR
+                    Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                    
                     // TAB TITLE TEXTFIELD
                     if feed.showAsTab {
                         VStack(alignment: .leading) {
@@ -95,9 +98,6 @@ struct ContactFeedSettings: View {
                                 .foregroundColor(Color.secondary)
                         }
                     }
-                    
-                    // TOGLE PIN ON TAB BAR
-                    Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
                     
                     // TOGGLE REPLIES
                     Toggle(isOn: Binding(get: {

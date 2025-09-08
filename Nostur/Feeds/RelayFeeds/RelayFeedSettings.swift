@@ -17,6 +17,9 @@ struct RelayFeedSettings: View {
         NXForm {
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {
                 
+                // PIN ON TAB BAR
+                Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
+                
                 // TAB TITLE
                 if feed.showAsTab {
                     VStack(alignment: .leading) {
@@ -31,9 +34,6 @@ struct RelayFeedSettings: View {
                         }
                     }
                 }
-                
-                // PIN ON TAB BAR
-                Toggle(isOn: $feed.showAsTab, label: { Text("Pin on tab bar", comment: "Toggle to pin/unpin a feed on tab bar")})
                 
                 // SHOW REPLIES
                 Toggle(isOn: Binding(get: {
