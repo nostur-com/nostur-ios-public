@@ -12,6 +12,7 @@ import NavigationBackport
 struct RelayFeedPreviewSheet: View {
     @Environment(\.theme) private var theme
     public var config: NXColumnConfig
+    public var authPubkey: String? = nil
 
     @State private var previewTitle = "Relay Preview"
     
@@ -75,13 +76,13 @@ struct RelayFeedPreviewSheet: View {
     
     private func createFeed() {
         if let relayData {
-            createFeedFromRelayData(relayData)
+            createFeedFromRelayData(relayData, authPubkey: authPubkey)
         }
     }
 }
 
 @MainActor
-func createFeedFromRelayData(_ relayData: RelayData) {
+func createFeedFromRelayData(_ relayData: RelayData, authPubkey: String? = nil) {
     // Create CloudFeed
     let newFeed = CloudFeed(context: DataProvider.shared().viewContext)
     newFeed.id = UUID()
@@ -101,6 +102,7 @@ func createFeedFromRelayData(_ relayData: RelayData) {
     newFeed.type = CloudFeedType.relays.rawValue
     newFeed.wotEnabled = false
     newFeed.order = 0
+    newFeed.accountPubkey = authPubkey
     
     // Resume Where Left: Default on for contact-based. Default off for relay-based
     newFeed.continue = false

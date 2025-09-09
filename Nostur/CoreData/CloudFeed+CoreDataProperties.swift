@@ -41,7 +41,9 @@ extension CloudFeed {
     @NSManaged public var updatedAt: Date?
     @NSManaged public var listId: String? // We can use this to store aTag for now
     @NSManaged public var repliesEnabled: Bool
-    @NSManaged public var accountPubkey: String?
+    
+    @NSManaged public var accountPubkey: String? // Feed "relays" type + accountPubkey = auth enabled
+    
     @NSManaged public var profilesFetchedAt: Date? // use as "since" for checking new profiles for this feed
     
     @NSManaged public var lastRead_: String? // same as on CloudAccount

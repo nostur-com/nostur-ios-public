@@ -193,7 +193,7 @@ struct RelayPreviewFeedSheet: View {
                 }
                 AvailableWidthContainer {
                     if let relayPreviewConfig {
-                        RelayFeedPreviewSheet(config: relayPreviewConfig)
+                        RelayFeedPreviewSheet(config: relayPreviewConfig, authPubkey: authenticationAccount?.publicKey)
                             .environment(\.theme, theme)
                             .environmentObject(loggedInAccount)
                     }
