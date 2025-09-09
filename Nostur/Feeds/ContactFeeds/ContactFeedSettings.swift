@@ -281,6 +281,7 @@ struct ContactFeedSettings: View {
             
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Done") {
+                    DataProvider.shared().save()
                     dismiss()
                 }
             }

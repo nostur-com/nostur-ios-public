@@ -35,6 +35,7 @@ struct PictureFeedSettings: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
+                    DataProvider.shared().save()
                     dismiss()
                 }
             }
