@@ -154,8 +154,9 @@ struct RelayPreviewFeedSheet: View {
                 }
             }
             
-            Section(header: Text("Web of Trust spam filter", comment: "Header for a feed setting")) {
+            Section {
                 Toggle(isOn: $wotEnabled) {
+                    Text("Web of Trust spam filter")
                     Text("Only show content from your follows or follows-follows")
                 }
             }
