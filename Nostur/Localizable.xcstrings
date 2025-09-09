@@ -7762,6 +7762,9 @@
         }
       }
     },
+    "Remember feed" : {
+
+    },
     "Remember this amount for all zaps" : {
       "comment" : "Toggle on zap screen to set selected amount as default for all zaps",
       "localizations" : {
@@ -8200,7 +8203,7 @@
         }
       }
     },
-    "Resume Where Left" : {
+    "Resume feed from where you left off when you reopen the app" : {
 
     },
     "Retake" : {
