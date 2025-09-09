@@ -110,8 +110,8 @@ struct ContactFeedSettings: View {
                 }, set: { newValue in
                     feed.continue = newValue
                 })) {
-                    Text("Resume where left")
-                    Text("Restore feed as before the next time you open the app")
+                    Text("Remember feed")
+                    Text("Resume feed from where you left off when you reopen the app")
                 }
             }
             else {
@@ -149,8 +149,8 @@ struct ContactFeedSettings: View {
                     }, set: { newValue in
                         feed.continue = newValue
                     })) {
-                        Text("Resume Where Left")
-                        Text("Restore feed as before the next time you open the app")
+                        Text("Remember feed")
+                        Text("Resume feed from where you left off when you reopen the app")
                     }
                 }
                 
