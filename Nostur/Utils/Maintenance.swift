@@ -585,7 +585,7 @@ struct Maintenance {
         }
         
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.useDtagForReplacableEvents.rawValue
+        migration.migrationCode = migrationCode.addKtag.rawValue
     }
     
     // Run once to fill dTag and delete old replacable events
