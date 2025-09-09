@@ -172,7 +172,9 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         if Thread.isMainThread {
             bg().perform { [weak self] in
                 if let bgContact = (contact ?? Contact.fetchByPubkey(pubkey, context: bg())) {
-                    self?.configureFromBgContact(bgContact)
+                    Task { @MainActor [weak self] in
+                        self?.configureFromBgContact(bgContact)
+                    }
                 }
             }
         }
