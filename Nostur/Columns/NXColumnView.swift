@@ -31,9 +31,6 @@ struct NXColumnView<HeaderContent: View>: View {
     @State private var didLoad = false
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
         ZStack {
             switch(viewModel.viewState) {
             case .loading:

@@ -45,7 +45,7 @@ class NXSpeedTest: ObservableObject {
         if firstLoadRemoteStartedAt == nil {
             firstLoadRemoteStartedAt = Date()
 #if DEBUG
-            L.og.debug("🏁🏁 NXSpeedTest.loadRemoteStarted Setting loadingBarViewState to: .fetching")
+            L.og.debug("🏁🏁 NXSpeedTest.loadRemoteStarted Setting loadingBarViewState to: .fetching -[LOG]-")
 #endif
             loadingBarViewState = .fetching
         }
@@ -58,7 +58,7 @@ class NXSpeedTest: ObservableObject {
             if relaysFinishedAt.isEmpty {
                 relaysFinishedAt.append(currentTimestamp)
 #if DEBUG
-                L.og.debug("🏁🏁 NXSpeedTest.relayFinished Setting loadingBarViewState to: .earlyLoad")
+                L.og.debug("🏁🏁 NXSpeedTest.relayFinished Setting loadingBarViewState to: .earlyLoad -[LOG]-")
 #endif
                 loadingBarViewState = .earlyLoad
                 resultFirstFetch = currentTimestamp.timeIntervalSince(timestampStart)

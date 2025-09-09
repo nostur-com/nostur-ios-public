@@ -398,7 +398,7 @@ public class ConnectionPool: ObservableObject {
             for (_, connection) in self.connections {
                 if connection.nreqSubscriptions.contains(subscriptionId) {
 #if DEBUG
-                    L.lvm.debug("Closing subscriptionId: \(subscriptionId) on \(connection.url)");
+                    L.lvm.debug("Closing subscriptionId: \(subscriptionId) on \(connection.url) -[LOG]-");
 #endif
                     let closeSubscription = ClientMessage(type: .CLOSE, message: ClientMessage.close(subscriptionId: subscriptionId), relayType: .READ)
                     connection.sendMessage(closeSubscription.message)

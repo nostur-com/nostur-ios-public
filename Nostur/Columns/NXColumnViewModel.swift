@@ -627,7 +627,7 @@ class NXColumnViewModel: ObservableObject {
         }
         
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) pause()")
+        L.og.debug("☘️☘️ \(config.name) pause() -[LOG]-")
 #endif
         self.fetchFeedTimer?.invalidate()
         self.fetchFeedTimer = nil
@@ -2518,7 +2518,7 @@ extension NXColumnViewModel {
         }
         
 #if DEBUG
-        L.fetching.debug("checking profiles since: \(since?.description ?? "")")
+        L.fetching.debug("checking profiles since: \(since?.description ?? "") -[LOG]-")
 #endif
         
         let subscriptionId = "Profiles-" + feed.subscriptionId

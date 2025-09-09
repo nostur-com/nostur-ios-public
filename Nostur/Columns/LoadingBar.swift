@@ -100,7 +100,7 @@ struct LoadingBar: View {
                     self.opacity = 1.0
                     withAnimation(.snappy(duration: duration)) {
 #if DEBUG
-                        L.og.debug("🏁🏁 LoadingBar.onChange(of:loadingBarViewState) Setting viewState to: \(newViewState.rawValue)")
+                        L.og.debug("🏁🏁 LoadingBar.onChange(of:loadingBarViewState) Setting viewState to: \(newViewState.rawValue) -[LOG]-")
 #endif
                         self.viewState = newViewState
                     }
@@ -115,7 +115,7 @@ struct LoadingBar: View {
             if opacity != 0.0 {
                 withAnimation(.snappy(duration: duration)) {
 #if DEBUG
-                    L.og.debug("🏁🏁 LoadingBar.onChange(of:loadingBarViewState) Setting viewState to: \(newViewState.rawValue)")
+                    L.og.debug("🏁🏁 LoadingBar.onChange(of:loadingBarViewState) Setting viewState to: \(newViewState.rawValue) -[LOG]-")
 #endif
                     self.viewState = newViewState
                 }

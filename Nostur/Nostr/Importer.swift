@@ -80,7 +80,7 @@ class Importer {
                         do {
                             try bgContext.save()
 #if DEBUG
-                            L.og.debug("💾💾 saveToDisk finished")
+                            L.og.debug("💾💾 saveToDisk finished -[LOG]-")
 #endif
                         }
                         catch {

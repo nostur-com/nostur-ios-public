@@ -139,7 +139,7 @@ class DataProvider: ObservableObject {
     
     func save(_ completion: (() -> Void)? = nil) { // TODO: replace all viewContext.save() with this save
 #if DEBUG
-        L.og.debug("💾💾 DataProvider.shared().save()")
+        L.og.debug("💾💾 DataProvider.shared().save() -[LOG]-")
 #endif
         
         let bg = self.bgStored ?? self.bg
@@ -159,12 +159,12 @@ class DataProvider: ObservableObject {
             }
             self.container.viewContext.perform {
 #if DEBUG
-                L.og.debug("💾💾 VIEWCONTEXT: Registered objects: \(self.container.viewContext.registeredObjects.count)")
+                L.og.debug("💾💾 VIEWCONTEXT: Registered objects: \(self.container.viewContext.registeredObjects.count) -[LOG]-")
 #endif
                 if self.container.viewContext.hasChanges {
                     try? self.container.viewContext.save()
 #if DEBUG
-                    L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+                    L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾 -[LOG]-")
 #endif
                 }
                 completion?()
@@ -178,7 +178,7 @@ class DataProvider: ObservableObject {
         if Thread.isMainThread {
             bg.perform {
 #if DEBUG
-                L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count)")
+                L.og.debug("💾💾 BG: Registered objects: \(bg.registeredObjects.count) -[LOG]-")
 #endif
                 if bg.hasChanges {
                     do {
@@ -234,7 +234,7 @@ func viewContextSave() { // TODO make this always debounce + throttle latest
         do {
             try DataProvider.shared().viewContext.save()
 #if DEBUG
-            L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+            L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾 -[LOG]-")
 #endif
         }
         catch {
@@ -255,7 +255,7 @@ func save(context: NSManagedObjectContext = context()) {
             try context.save()
             if Thread.isMainThread {
 #if DEBUG
-                L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾")
+                L.og.debug("💾💾💾💾 Saved to disk / iCloud 💾💾💾💾 -[LOG]-")
 #endif
             }
         }

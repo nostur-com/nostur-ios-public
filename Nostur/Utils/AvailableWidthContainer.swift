@@ -23,9 +23,6 @@ struct AvailableWidthContainer<Content: View>: View {
     }
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
         GeometryReader { geo in
             if ready {
                 content
