@@ -17,24 +17,28 @@ struct FullAccountPicker: View {
     @State private var accounts: [CloudAccount] = []
     
     var body: some View {
-        Picker(selection: $selectedAccount) {
-            ForEach(accounts) { account in
-                HStack {
-                    PFP(pubkey: account.publicKey, account: account, size: 20.0)
-                    Text(account.anyName)
+        ZStack {
+            if !accounts.isEmpty { // .accounts needs to be set or "(CloudAccount) is invalid and does not have an associated tag, this will give undefined results."
+                Picker(selection: $selectedAccount) {
+                    ForEach(accounts) { account in
+                        HStack {
+                            PFP(pubkey: account.publicKey, account: account, size: 20.0)
+                            Text(account.anyName)
+                        }
+                        .tag(account)
+                        .foregroundColor(theme.primary)
+                    }
+                    if !required {
+                        Text("None")
+                            .tag(nil as CloudAccount?)
+                    }
+                    
+                } label: {
+                    Text(label)
                 }
-                .tag(account)
-                .foregroundColor(theme.primary)
+                .pickerStyleCompatNavigationLink()
             }
-            if !required {
-                Text("None")
-                    .tag(nil as CloudAccount?)
-            }
-            
-        } label: {
-            Text(label)
         }
-        .pickerStyleCompatNavigationLink()
         
         .onAppear {
             accounts = AccountsState.shared.fullAccounts
