@@ -19,8 +19,7 @@ struct AppView: View {
         ZStack {
             switch viewState {
             case .starting:
-                Color.clear
-                    .wowBackground()
+                themes.theme.listBackground
             case .onboarding:
                 Onboarding()
             case .loggedIn(let loggedInAccount):
