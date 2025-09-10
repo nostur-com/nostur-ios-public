@@ -75,6 +75,7 @@ struct Kind30000: View {
     var body: some View {
         if isEmbedded {
             self.embeddedView
+                .onAppear(perform: self.onAppear)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
                     navigateTo(nrPost, context: dim.id)
