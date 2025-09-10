@@ -1038,6 +1038,11 @@ extension Event {
         
         if (event.kind == .textNote) {
             
+            // backwards compatible tag (used for kind 20 for now)
+            if let kTag = event.fastTags.first(where: { $0.0 == "k" })?.1, let kTagInt = Int64(kTag) {
+                savedEvent.kTag = kTagInt
+            }
+            
             EventCache.shared.setObject(for: event.id, value: savedEvent)
 #if DEBUG
             L.og.debug("Saved \(event.id) in cache -[LOG]-")

@@ -44,7 +44,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     let id: NRPostID
     let shortId: String
     let kind: Int64
-    var kTag: String?
+    var kTag: String? // Note that this is string and Event.kTag is Int64
     
     let pubkey: String
     

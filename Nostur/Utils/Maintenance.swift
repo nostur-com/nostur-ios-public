@@ -1131,7 +1131,7 @@ struct Maintenance {
         case deleteEventsWithoutId = "deleteEventsWithoutId"
         
         // Run once to add k tag
-        case addKtag = "addKtag"
+        case addKtag = "addKtag2" // Needed to run again because forgot to add kTag in .saveEvent()
         
         // Run once to fill dTag and delete old replacable events
         case useDtagForReplacableEvents = "useDtagForReplacableEvents"
