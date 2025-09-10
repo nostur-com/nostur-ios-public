@@ -165,6 +165,12 @@ struct ImposterLabelToggle: View {
                     }
                     nrContact.similarToPubkey = nil
                 }
+                bg().perform {
+                    let contact = Contact.instance(of: nrContact.pubkey)
+                    contact.couldBeImposter = 0
+                    contact.similarToPubkey = nil
+                    DataProvider.shared().saveToDisk(.bgContext)
+                }
             } label: {
                 Text("Remove imposter label", comment: "Button to remove 'possible imposter' label from a contact")
                     .font(.caption)
@@ -176,6 +182,12 @@ struct ImposterLabelToggle: View {
                 withAnimation {
                     nrContact.couldBeImposter = 1
                     nrContact.similarToPubkey = addBackSimilarToPubkey
+                }
+                bg().perform {
+                    let contact = Contact.instance(of: nrContact.pubkey)
+                    contact.couldBeImposter = 1
+                    contact.similarToPubkey = addBackSimilarToPubkey
+                    DataProvider.shared().saveToDisk(.bgContext)
                 }
             } label: {
                 Text("Add back", comment: "Button to add back 'possible imposter' label from a contact (only visible right after removing)")
