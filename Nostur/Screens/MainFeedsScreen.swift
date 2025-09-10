@@ -586,6 +586,8 @@ struct MainFeedsScreen: View {
         
         if let followingFeed = followingFeedsNewest.first {
             followingConfig = NXColumnConfig(id: followingFeed.subscriptionId, columnType: .following(followingFeed), accountPubkey: account.publicKey, name: "Following")
+            
+            guard followingFeeds.count > 1 else { return }
             for f in followingFeedsNewest.dropFirst(1) {
                 context.delete(f)
             }
@@ -626,6 +628,8 @@ struct MainFeedsScreen: View {
         
         if let feed = feedsNewest.first {
             pictureConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .picture(feed), accountPubkey: account.publicKey, name: "Picture")
+            
+            guard feeds.count > 1 else { return }
             for f in feedsNewest.dropFirst(1) {
                 context.delete(f)
             }
@@ -676,6 +680,8 @@ struct MainFeedsScreen: View {
         
         if let exploreFeed = exploreFeedsNewest.first {
             exploreConfig = NXColumnConfig(id: exploreFeed.subscriptionId, columnType: .following(exploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
+            
+            guard exploreFeeds.count > 1 else { return }
             for e in exploreFeedsNewest.dropFirst(1) {
                 context.delete(e)
             }
