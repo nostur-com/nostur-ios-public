@@ -163,7 +163,9 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
     
     private func configureFromBgContact(_ bgContact: Contact, animate: Bool = false) {
         let profileInfo = profileInfo(bgContact)
-        self.configureFromProfileInfo(profileInfo, animate: animate)
+        Task { @MainActor in
+            self.configureFromProfileInfo(profileInfo, animate: animate)
+        }
     }
     
     private func configure(pubkey: String, contact: Contact? = nil) {
@@ -172,9 +174,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         if Thread.isMainThread {
             bg().perform { [weak self] in
                 if let bgContact = (contact ?? Contact.fetchByPubkey(pubkey, context: bg())) {
-                    Task { @MainActor [weak self] in
-                        self?.configureFromBgContact(bgContact)
-                    }
+                    self?.configureFromBgContact(bgContact)
                 }
             }
         }
