@@ -85,7 +85,7 @@ struct CreateNewBadgeSheet: View {
             let bgContext = bg()
             bgContext.perform {
                 _ = Event.saveEvent(event: newBadgeSigned, context: bgContext)
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
             }
             Unpublisher.shared.publishNow(newBadgeSigned)
         }

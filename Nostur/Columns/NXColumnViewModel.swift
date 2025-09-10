@@ -193,7 +193,7 @@ class NXColumnViewModel: ObservableObject {
                     }
                     
                     self.markAsReadSyncQueue.removeAll()
-                    viewContextSave()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                 }
                 .store(in: &subscriptions)
                 

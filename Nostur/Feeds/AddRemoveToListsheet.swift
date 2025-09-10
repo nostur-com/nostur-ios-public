@@ -71,7 +71,7 @@ struct AddRemoveToListsheet: View {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
                     onDismiss?()
-                    DataProvider.shared().save()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                     for list in lists {
                         sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: list.subscriptionId, pubkeys: list.contactPubkeys))
                     }

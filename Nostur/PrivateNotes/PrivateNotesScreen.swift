@@ -47,7 +47,7 @@ struct PrivateNotesScreen: View {
                         Button(role: .destructive, action: {
                             viewContext.delete(pn)
                             viewContext.transactionAuthor = "removeCloudPrivateNote"
-                            DataProvider.shared().save()
+                            DataProvider.shared().saveToDiskNow(.viewContext)
                             viewContext.transactionAuthor = nil
                         }) {
                         Label("Remove", systemImage: "trash")
@@ -134,7 +134,7 @@ struct PrivateNotesScreen: View {
             DataProvider.shared().viewContext.delete($0)
         }
         if !duplicates.isEmpty {
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
         
         let pnEventIds = privateNotes.compactMap { $0.eventId }

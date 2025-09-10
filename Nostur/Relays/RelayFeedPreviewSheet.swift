@@ -107,7 +107,7 @@ func createFeedFromRelayData(_ relayData: RelayData, authPubkey: String? = nil) 
     // Resume Where Left: Default on for contact-based. Default off for relay-based
     newFeed.continue = false
     
-    DataProvider.shared().save()
+    DataProvider.shared().saveToDiskNow(.viewContext)
     
     // Close sheet
     AppSheetsModel.shared.dismiss()

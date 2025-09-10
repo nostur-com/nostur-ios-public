@@ -330,7 +330,7 @@ func initializeGuestAccount() async {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             bg().perform {
                 _ = GuestAccountManager.shared.createGuestAccount()
-                DataProvider.shared().save()
+                DataProvider.shared().saveToDiskNow()
                 do {
                     try NewOnboardingTracker.shared.start(pubkey: GUEST_ACCOUNT_PUBKEY)
                 }

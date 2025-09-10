@@ -28,7 +28,7 @@ class AccountManager {
         account.publicKey = newKeys.publicKeyHex
         account.flagsSet = ["nostur_created", "full_account"] // need this to know if we can enable to follow button, normally we wait after we received contact list
         
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         return account
     }
     
@@ -304,7 +304,7 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
                 bgContext.perform {
                     _ = Event.saveEvent(event: signedEvent, context: bgContext)
                     Contact.saveOrUpdateContact(event: signedEvent, context: bgContext)
-                    DataProvider.shared().bgSave()
+                    DataProvider.shared().saveToDiskNow(.bgContext)
                 }
                 // broadcast to relays
                 Unpublisher.shared.publishNow(signedEvent)
@@ -320,7 +320,7 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
             bgContext.perform {
                 _ = Event.saveEvent(event: signedEvent, context: bgContext)
                 Contact.saveOrUpdateContact(event: signedEvent, context: bgContext)
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
             }
             // broadcast to relays
             Unpublisher.shared.publishNow(signedEvent)

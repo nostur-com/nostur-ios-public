@@ -135,7 +135,7 @@ struct NotificationsReactions: View {
         if let account = account() {
             if account.lastSeenReactionCreatedAt < mostCreatedAt {
                 account.lastSeenReactionCreatedAt = mostCreatedAt
-                viewContextSave() // Account is from main context
+                DataProvider.shared().saveToDiskNow(.viewContext) // Account is from main context
             }
         }
     }

@@ -141,7 +141,7 @@ struct BlockedContactsView: View {
             DataProvider.shared().viewContext.delete($0)
         }
         if !duplicates.isEmpty {
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
     
@@ -151,7 +151,7 @@ struct BlockedContactsView: View {
             viewContext.delete(block)
             AppState.shared.bgAppState.blockedPubkeys.remove(block.pubkey)
         }
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         sendNotification(.blockListUpdated, AppState.shared.bgAppState.blockedPubkeys)
     }
 }
@@ -217,7 +217,7 @@ struct MutedConversationsView: View {
             viewContext.delete(mute)
             AppState.shared.bgAppState.mutedRootIds.remove(mute.eventId)
         }
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         sendNotification(.muteListUpdated, AppState.shared.bgAppState.mutedRootIds)
     }
     
@@ -238,7 +238,7 @@ struct MutedConversationsView: View {
             DataProvider.shared().viewContext.delete($0)
         }
         if !duplicates.isEmpty {
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
 }

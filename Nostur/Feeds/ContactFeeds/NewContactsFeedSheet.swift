@@ -169,7 +169,7 @@ struct NewContactsFeedSheet: View {
                     // Resume Where Left: Default on for contact-based. Default off for relay-based
                     newFeed.continue = true
                     
-                    viewContextSave()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                     rootDismiss?()
                     
                     // Change active tab to this new feed

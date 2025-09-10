@@ -201,7 +201,7 @@ class FollowerNotifier {
 #endif
             QueuedFetcher.shared.enqueue(pTags: Array(self.newFollowerPubkeys.prefix(10)))
             self.newFollowerPubkeys.removeAll()
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDisk(.bgContext)
         }
     }
 }

@@ -141,7 +141,7 @@ struct NotificationsMentions: View {
         if let account = account() {
             if account.lastSeenPostCreatedAt < mostCreatedAt {
                 account.lastSeenPostCreatedAt = mostCreatedAt
-                viewContextSave() // Account is from main context
+                DataProvider.shared().saveToDiskNow(.viewContext)
             }
         }
     }

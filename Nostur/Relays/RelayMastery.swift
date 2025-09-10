@@ -216,7 +216,7 @@ struct AccountRelaySettings: View {
                                         DispatchQueue.main.async { [weak account] in
                                             guard let account else { return }
                                             account.accountRelays = Set(relays)
-                                            DataProvider.shared().save()
+                                            DataProvider.shared().saveToDiskNow(.viewContext)
                                         }
                                     }
                                     else { req(RM.getRelays(pubkeys: [accountPubkey])) }
@@ -245,7 +245,7 @@ struct AccountRelaySettings: View {
                                         DispatchQueue.main.async { [weak account] in
                                             guard let account else { return }
                                             account.accountRelays = Set(relays)
-                                            DataProvider.shared().save()
+                                            DataProvider.shared().saveToDiskNow(.viewContext)
                                         }
                                     }
                                     else { vm.timeout() }

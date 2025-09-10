@@ -155,12 +155,12 @@ extension AppView {
                         await Importer.shared.preloadExistingIdsCache()
                     }
                     else {
-                        viewContextSave() // need to save to sync cloud for feed.lastRead
+                        DataProvider.shared().saveToDiskNow(.viewContext) // need to save to sync cloud for feed.lastRead
                     }
                 }
             }
             else {
-                viewContextSave() // need to save to sync cloud for feed.lastRead
+                DataProvider.shared().saveToDiskNow(.viewContext) // need to save to sync cloud for feed.lastRead
             }
         case .inactive:
             break

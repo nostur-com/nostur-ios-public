@@ -169,7 +169,7 @@ struct AlbyNWCConnectSheet: View {
                     ss.activeNWCconnectionId = connectionId
                     nwcConnectSuccess = true
                 }
-                bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
             }
             
             if account.lud06.isEmpty && account.lud16.isEmpty {

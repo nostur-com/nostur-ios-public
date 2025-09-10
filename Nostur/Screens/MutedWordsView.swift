@@ -27,7 +27,7 @@ struct MutedWordsView: View {
             }
             .onDelete { offsets in
                 offsets.forEach { viewContext.delete(mutedWords[$0]) }
-                DataProvider.shared().save()
+                DataProvider.shared().saveToDiskNow(.viewContext)
                 AppState.shared.loadMutedWords()
             }
         }
@@ -79,7 +79,7 @@ struct MutedWordsView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Save") {
                             mutedWords.words = text
-                            DataProvider.shared().save()
+                            DataProvider.shared().saveToDiskNow(.viewContext)
                             AppState.shared.loadMutedWords()
                             dismiss()
                         }

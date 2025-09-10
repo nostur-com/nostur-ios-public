@@ -115,9 +115,9 @@ class Unpublisher {
         
         // lets also save context here...
 #if DEBUG
-        L.og.debug("DataProvider.shared().save() from Unpublisher.appMovedToBackground ")
+        L.og.debug("DataProvider.shared().saveToDisk() from Unpublisher.appMovedToBackground ")
 #endif
-        DataProvider.shared().save()
+        DataProvider.shared().saveToDisk()
     }
     
     private func sendToRelays(_ nEvent: NEvent, skipDB: Bool = false, lockToThisRelay: RelayData? = nil) {
@@ -195,7 +195,7 @@ class Unpublisher {
                     }
                 }
                 
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
                 if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let singleRelay = lockToThisRelay {

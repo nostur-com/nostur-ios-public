@@ -95,7 +95,7 @@ extension LoggedInAccount {
         }
         account.publishNewContactList() // Should always publish  so if unfollow (1) -> follow (2) -> private follow (3),  .publishLast() will publish (3) and not (2) if we don't publish on private follow action.
                 
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         
         let viewFollowingPublicKeys = viewFollowingPublicKeys
         
@@ -134,7 +134,7 @@ extension LoggedInAccount {
         viewFollowingPublicKeys = viewFollowingPublicKeys.union(pubkeys)
         account.followingPubkeys = account.followingPubkeys.union(pubkeys)
         account.publishNewContactList()
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         
         let viewFollowingPublicKeys = viewFollowingPublicKeys
         
@@ -177,7 +177,7 @@ extension LoggedInAccount {
         account.followingPubkeys.remove(pubkey)
         account.privateFollowingPubkeys.remove(pubkey)
         account.publishNewContactList()
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         
         let viewFollowingPublicKeys = viewFollowingPublicKeys
         

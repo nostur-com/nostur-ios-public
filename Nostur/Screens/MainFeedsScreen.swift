@@ -484,7 +484,7 @@ struct MainFeedsScreen: View {
         }
         if !duplicates.isEmpty {
             L.cloud.debug("Deleting: \(duplicates.count) duplicate feeds")
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
     
@@ -591,7 +591,7 @@ struct MainFeedsScreen: View {
             for f in followingFeedsNewest.dropFirst(1) {
                 context.delete(f)
             }
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
         else {
             let newFollowingFeed = CloudFeed(context: context)
@@ -607,7 +607,7 @@ struct MainFeedsScreen: View {
             // Resume Where Left: Default on for contact-based. Default off for relay-based
             newFollowingFeed.continue = true
             
-            DataProvider.shared().save() { // callback after save:
+            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
                 followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
             }
         }
@@ -633,7 +633,7 @@ struct MainFeedsScreen: View {
             for f in feedsNewest.dropFirst(1) {
                 context.delete(f)
             }
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
         else {
             let newFeed = CloudFeed(context: context)
@@ -649,7 +649,7 @@ struct MainFeedsScreen: View {
                         
             newFeed.continue = false // kind 20 feed needs more pics so false
             
-            DataProvider.shared().save() { // callback after save:
+            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
                 pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: "Picture")
             }
         }
@@ -685,7 +685,7 @@ struct MainFeedsScreen: View {
             for e in exploreFeedsNewest.dropFirst(1) {
                 context.delete(e)
             }
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
         else {
             let newExploreFeed = CloudFeed(context: context)
@@ -702,7 +702,7 @@ struct MainFeedsScreen: View {
             // Resume Where Left: Default on for contact-based. Default off for relay-based
             newExploreFeed.continue = true
             
-            DataProvider.shared().save() { // callback after save:
+            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
                 exploreConfig = NXColumnConfig(id: newExploreFeed.subscriptionId, columnType: .following(newExploreFeed), accountPubkey: EXPLORER_PUBKEY, name: "Explore")
             }
         }

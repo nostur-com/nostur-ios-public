@@ -88,7 +88,7 @@ struct NotificationsFollowers: View {
                         account.lastFollowerCreatedAt = Int64(firstCreatedAt.timeIntervalSince1970)
                     }
                 }
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
             }
         }
     }

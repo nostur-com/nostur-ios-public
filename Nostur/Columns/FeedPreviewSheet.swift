@@ -105,7 +105,7 @@ struct FeedPreviewSheet: View {
         // Resume Where Left: Default on for contact-based. Default off for relay-based
         newFeed.continue = true
         
-        DataProvider.shared().save()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         
         // Close sheet
         AppSheetsModel.shared.dismiss()

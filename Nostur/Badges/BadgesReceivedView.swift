@@ -99,7 +99,7 @@ struct BadgesReceivedView: View {
             let bgContext = bg()
             bgContext.perform {
                 _ = Event.saveEvent(event: newProfileBadgesSigned, context: bgContext)
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
             }
             Unpublisher.shared.publishNow(newProfileBadgesSigned)
             self.selection.removeAll()

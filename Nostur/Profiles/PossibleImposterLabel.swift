@@ -165,7 +165,6 @@ struct ImposterLabelToggle: View {
                     }
                     nrContact.similarToPubkey = nil
                 }
-                save()
             } label: {
                 Text("Remove imposter label", comment: "Button to remove 'possible imposter' label from a contact")
                     .font(.caption)
@@ -178,7 +177,6 @@ struct ImposterLabelToggle: View {
                     nrContact.couldBeImposter = 1
                     nrContact.similarToPubkey = addBackSimilarToPubkey
                 }
-                save()
             } label: {
                 Text("Add back", comment: "Button to add back 'possible imposter' label from a contact (only visible right after removing)")
                     .font(.caption)

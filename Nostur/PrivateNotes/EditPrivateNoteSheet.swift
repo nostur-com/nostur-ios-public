@@ -86,7 +86,7 @@ struct EditPrivateNoteSheet: View {
                         }
                         
                         viewContext.delete(privateNote)
-                        DataProvider.shared().save()
+                        DataProvider.shared().saveToDiskNow(.viewContext)
                     }),
                     .cancel(Text("Cancel"))
                 ])

@@ -213,7 +213,7 @@ struct ContactFeedSettings: View {
                                 Button(role: .destructive) {
                                     feed.contactPubkeys.remove(nrContact.pubkey)
                                     listNRContacts.removeAll(where: { $0.pubkey == nrContact.pubkey })
-                                    DataProvider.shared().save()
+                                    DataProvider.shared().saveToDiskNow(.viewContext)
                                     sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: feed.subscriptionId, pubkeys: feed.contactPubkeys))
                                 } label: {
                                     Label("Remove", systemImage: "trash")
@@ -281,7 +281,7 @@ struct ContactFeedSettings: View {
             
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Done") {
-                    DataProvider.shared().save()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                     dismiss()
                 }
             }
@@ -312,7 +312,7 @@ struct ContactFeedSettings: View {
                             self.listNRContacts = listNRContacts
                         }
                     }
-                    DataProvider.shared().save()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                     sendNotification(.listPubkeysChanged, NewPubkeysForList(subscriptionId: feed.subscriptionId, pubkeys: feed.contactPubkeys))
                 })
                 .equatable()
@@ -365,7 +365,7 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
         // Brand new onces should be kind 39089, no longer kind 30000
         let aTag = ATag(kind: 39089, pubkey: account.publicKey, definition: feed.id?.uuidString ?? UUID().uuidString)
         feed.listId = aTag.aTag
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         nEvent.tags.append(NostrTag(["d", aTag.definition]))
     }
     
@@ -386,7 +386,7 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
         let bgContext = bg()
         bgContext.perform {
             let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned", context: bgContext)
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             
             DispatchQueue.main.async {
                 NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
@@ -405,7 +405,7 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
         let bgContext = bg()
         bgContext.perform {
             _ = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
         _ = Unpublisher.shared.publish(signedEvent)
     }
@@ -452,7 +452,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
             let savedEvent = Event.saveEvent(event: nEvent, flags: "nsecbunker_unsigned", context: bgContext)
             let savedEvent2 = Event.saveEvent(event: deleteReq, flags: "nsecbunker_unsigned", context: bgContext)
             savedEvent.deletedById = savedEvent2.id
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             
             DispatchQueue.main.async {
                 NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
@@ -482,7 +482,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
             let bgContext = bg()
             bgContext.perform {
                 _ = Event.saveEvent(event: signedDeleteEvent, flags: "awaiting_send", context: bgContext)
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
             }
             _ = Unpublisher.shared.publish(signedDeleteEvent) // is published after wipe event (timer)
             
@@ -492,7 +492,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
                     let wipedEvent = Event.saveEvent(event: signedWipedEvent, flags: "awaiting_send", context: bgContext)
                     wipedEvent.deletedById = deletedById
                     let wipedEventId = wipedEvent.id
-                    DataProvider.shared().bgSave()
+                    DataProvider.shared().saveToDiskNow(.bgContext)
                     Task { @MainActor in
                         ViewUpdates.shared.postDeleted.send((toDeleteId: wipedEventId, deletedById: deletedById))
                     }

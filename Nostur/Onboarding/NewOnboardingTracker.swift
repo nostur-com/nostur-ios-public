@@ -25,24 +25,24 @@ class NewOnboardingTracker {
     // Completed tasks?
     private var fetchedOwnProfileTask = false { // Fetched own profile (KIND 0)
         didSet {
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }
     private var fetchedFollowsTask = false { // Fetched follows (Ps in KIND 3)
         didSet {
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }
     
     private var fetchedOutboxRelaysTask = false { // Fetched relay metadata (kind 10002)
         didSet {
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }
     
     private var fetchedProfilesOfFollowsTask = false { // Fetched profiles of follows (KIND 0 of Ps in OWN KIND 3)
         didSet {
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             if fetchedProfilesOfFollowsTask {
                 self.stopAfterDelay() // If we reached here we have completed the onboarding.
             }
@@ -196,7 +196,7 @@ class NewOnboardingTracker {
                 account.followingHashtags.insert(tag.lowercased().trimmingCharacters(in: .whitespacesAndNewlines))
             }
             
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             AccountsState.shared.loggedInAccount?.reloadFollows()
             
             DispatchQueue.main.async {
@@ -359,7 +359,7 @@ class NewOnboardingTracker {
                 newRelay.write = relayTag.2 == nil || relayTag.2 == "write"
                 newRelay.createdAt = Date()
             }
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
         
     }

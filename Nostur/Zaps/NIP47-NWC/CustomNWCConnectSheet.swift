@@ -144,7 +144,7 @@ struct CustomNWCConnectSheet: View {
                         L.og.error("⚡️ NWC custom connection, does not support pay_invoice")
                         nwcErrorMessage = String(localized:"This NWC connection does not support payments", comment: "Error message during NWC setup")
                     }
-                    bgSave()
+                    DataProvider.shared().saveToDiskNow(.bgContext)
                 }
                 else {
                     L.og.error("⚡️ NWC connection missing")

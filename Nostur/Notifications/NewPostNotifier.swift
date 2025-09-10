@@ -144,7 +144,7 @@ class NewPostNotifier: ObservableObject {
         let accountPubkey = account()?.publicKey ?? activeAccountPublicKey
         let task = CloudTask.new(ofType: .notifyOnPosts, andValue: pubkey, date: .now)
         task.accountPubkey_ = accountPubkey
-        save()
+        DataProvider.shared().saveToDiskNow(.viewContext)
     }
     
     private func disable(_ pubkey: String) {
@@ -152,7 +152,7 @@ class NewPostNotifier: ObservableObject {
         let accountPubkey = account()?.publicKey ?? activeAccountPublicKey
         if let task = CloudTask.fetchTask(byType: .notifyOnPosts, andPubkey: pubkey, andAccountPubkey: accountPubkey) {
             context().delete(task)
-            save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
     
@@ -179,7 +179,7 @@ class NewPostNotifier: ObservableObject {
         let newPostNotification = PersistentNotification.createNewPostsNotification(pubkey: accountPubkey, contacts: Array(Set(allContacts)), since: since)
         NotificationsViewModel.shared.checkNeedsUpdate(newPostNotification)
         Task { @MainActor in
-            viewContextSave() // <-- need this or @FetchRequest in NotificationsNewPosts doesn't update realtime
+            DataProvider.shared().saveToDiskNow(.viewContext) // <-- need this or @FetchRequest in NotificationsNewPosts doesn't update realtime
         }
         
         if SettingsStore.shared.receiveLocalNotifications && AppState.shared.appIsInBackground { // only when app is in background

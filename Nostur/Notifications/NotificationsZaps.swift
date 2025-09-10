@@ -179,7 +179,7 @@ struct NotificationsZaps: View {
         if let account = account() {
             if account.lastSeenZapCreatedAt < mostCreatedAt {
                 account.lastSeenZapCreatedAt = mostCreatedAt
-                viewContextSave() // Account is from main context
+                DataProvider.shared().saveToDiskNow(.viewContext) // Account is from main context
             }
         }
     }

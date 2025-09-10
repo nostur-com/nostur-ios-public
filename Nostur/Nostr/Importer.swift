@@ -34,7 +34,6 @@ class Importer {
     var delayProcessingSub = PassthroughSubject<Void, Never>()
     var callbackSubscriptionIds = Set<String>()
     var sendReceivedNotification = PassthroughSubject<Void, Never>()
-    var saveToDiskSubject = PassthroughSubject<Void, Never>()
     
     public var importedMessagesFromSubscriptionIds = PassthroughSubject<Set<String>, Never>()
     public var importedPrioMessagesFromSubscriptionId = PassthroughSubject<ImportedPrioNotification, Never>()
@@ -71,33 +70,9 @@ class Importer {
                 self?.addedRelayMessage.send()
             }
             .store(in: &subscriptions)
-        
-        saveToDiskSubject
-            .debounce(for: .seconds(8.0), scheduler: RunLoop.main)
-            .sink { [unowned self] in
-                self.bgContext.perform { [unowned self] in
-                    if (bgContext.hasChanges) {
-                        do {
-                            try bgContext.save()
-#if DEBUG
-                            L.og.debug("💾💾 saveToDisk finished -[LOG]-")
-#endif
-                        }
-                        catch {
-                            L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
-                        }
-                    }
-                }
-            }
-            .store(in: &subscriptions)
     }
     
-    public func saveToDisk() {
-#if DEBUG
-        L.og.debug("💾💾 saveToDisk requested -[LOG]-")
-#endif
-        self.saveToDiskSubject.send()
-    }
+
     
     
     func sendReceivedNotifications() {
@@ -469,7 +444,7 @@ class Importer {
                 self.importEvents()
             }
             else {
-                self.saveToDisk()
+                DataProvider.shared().saveToDisk()
             }
         }
     }
@@ -645,7 +620,7 @@ class Importer {
                 L.importing.error("🏎️🏎️🔴🔴🔴🔴 Failed to import because: \(error)")
             }
 
-            self.saveToDisk()
+            DataProvider.shared().saveToDisk()
         }
     }
 }

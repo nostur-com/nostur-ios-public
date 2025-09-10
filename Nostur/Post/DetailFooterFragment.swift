@@ -135,7 +135,7 @@ func reverifyZaps(eventId: String, expectedZpks: Set<String>) {
                 zap.flags = "zpk_verified"
             }
         }
-        bgSave()
+        DataProvider.shared().saveToDiskNow(.bgContext)
     }
 }
 

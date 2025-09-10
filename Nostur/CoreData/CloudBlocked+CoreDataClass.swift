@@ -24,7 +24,7 @@ func temporaryBlock(pubkey: String, forHours hours:Int, name:String = "", contex
     // add blockUntil task, until date X hours in the future
     if let unblockDate = Calendar.current.date(byAdding: .hour, value: hours, to: .now) {
         _ = CloudTask.new(ofType: .blockUntil, andValue: pubkey, date: unblockDate, context: context)
-        save(context: context)
+        DataProvider.shared().saveToDiskNow(.viewContext)
         AppState.shared.createTimer(fireDate: unblockDate, pubkey: pubkey)
     }
         
@@ -42,7 +42,7 @@ func block(pubkey: String, name:String? = "", context: NSManagedObjectContext = 
         
     CloudBlocked.addBlock(pubkey: pubkey, fixedName: name)
     AppState.shared.bgAppState.blockedPubkeys.insert(pubkey)
-    viewContextSave()
+    DataProvider.shared().saveToDiskNow(.viewContext)
     sendNotification(.blockListUpdated, AppState.shared.bgAppState.blockedPubkeys)
 }
 
@@ -55,7 +55,7 @@ func unblock(pubkey: String, context: NSManagedObjectContext = context()) {
     }
         
     AppState.shared.bgAppState.blockedPubkeys.remove(pubkey)
-    viewContextSave()
+    DataProvider.shared().saveToDiskNow(.viewContext)
     sendNotification(.blockListUpdated, AppState.shared.bgAppState.blockedPubkeys)
 }
 
@@ -64,6 +64,6 @@ func unblock(pubkey: String, context: NSManagedObjectContext = context()) {
 func mute(eventId: String, replyToRootId: String?, replyToId: String?) {
     CloudBlocked.addBlock(eventId: eventId, replyToRootId: replyToRootId, replyToId: replyToId)
     AppState.shared.bgAppState.mutedRootIds.formUnion(Set([eventId, replyToRootId ?? eventId, replyToId ?? eventId]))
-    viewContextSave()
+    DataProvider.shared().saveToDiskNow(.viewContext)
     sendNotification(.muteListUpdated, AppState.shared.bgAppState.mutedRootIds)
 }

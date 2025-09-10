@@ -124,7 +124,7 @@ struct BadgeDetailView: View {
                         let bgContext = bg()
                         bgContext.perform {
                             _ = Event.saveEvent(event: newBadgeAwardsSigned, context: bgContext)
-                            DataProvider.shared().bgSave()
+                            DataProvider.shared().saveToDiskNow(.bgContext)
                         }
                         Unpublisher.shared.publishNow(newBadgeAwardsSigned)
                     }

@@ -63,7 +63,7 @@ class CloudRelayBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             bg().delete(duplicateRelay)
         })
         if !duplicates.isEmpty {
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }
 }

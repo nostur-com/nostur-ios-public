@@ -311,7 +311,7 @@ struct DMConversationView: View {
                                     conv.accepted = true
                                     conv.dmState.accepted = true
                                     conv.dmState.didUpdate.send()
-                                    DataProvider.shared().save()
+                                    DataProvider.shared().saveToDiskNow(.viewContext)
                                     DirectMessageViewModel.default.reloadAccepted()
                                     
                                 }
@@ -342,7 +342,7 @@ struct DMConversationView: View {
                         root.objectWillChange.send()
                         root.lastSeenDMCreatedAt = allMessagesSorted.last!.created_at
                         // Save context here? or on go to background
-                        DataProvider.shared().save()
+                        DataProvider.shared().saveToDiskNow(.viewContext)
                     }
                 }
                 .toolbarNavigationBackgroundVisible()

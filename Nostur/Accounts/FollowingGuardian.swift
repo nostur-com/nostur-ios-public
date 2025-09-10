@@ -121,7 +121,7 @@ class FollowingGuardian: ObservableObject {
             }
             
             Task { @MainActor in
-                DataProvider.shared().save()
+                DataProvider.shared().saveToDiskNow()
                 AccountsState.shared.loggedInAccount?.reloadFollows()
             }
         }
@@ -169,6 +169,6 @@ class FollowingGuardian: ObservableObject {
         guard let account = account() else { return }
         account.followingPubkeys.subtract(pubkeys)
         AccountsState.shared.loggedInAccount?.reloadFollows()
-        DataProvider.shared().save()
+        DataProvider.shared().saveToDiskNow()
     }
 }

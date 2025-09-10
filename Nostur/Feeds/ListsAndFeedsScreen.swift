@@ -51,7 +51,7 @@ struct ListsAndFeedsScreen: View {
                             for (index, item) in s.enumerated() {
                                 item.order = Int16(index)
                             }
-                            viewContextSave()
+                            DataProvider.shared().saveToDiskNow(.viewContext)
                      })
                 }
             }
@@ -155,7 +155,7 @@ struct ListsAndFeedsScreen: View {
             let item = section[index]
             viewContext.delete(item)
         }
-        viewContextSave()
+        DataProvider.shared().saveToDiskNow(.viewContext)
     }
     
     private func removeDuplicateLists() {
@@ -178,7 +178,7 @@ struct ListsAndFeedsScreen: View {
         }
         if !duplicates.isEmpty {
             L.cloud.debug("Deleting: \(duplicates.count) duplicate feeds")
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
             didRemoveDuplicates = true
         }
     }

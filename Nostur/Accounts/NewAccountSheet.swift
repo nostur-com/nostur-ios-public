@@ -89,7 +89,7 @@ struct NewAccountSheet: View {
             // create relays kind:10002
             _ = Event.saveEvent(event: newKind10002Eventsigned, context: bgContext)
             
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             
             // Publish kind:0 and kind:10002
             Unpublisher.shared.publishNow(newKind0EventSigned)

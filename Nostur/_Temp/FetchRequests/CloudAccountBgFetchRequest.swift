@@ -88,7 +88,7 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
             bg().delete(duplicateAccount)
         })
         if !duplicates.isEmpty {
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
         
         let accountsCount = accounts.count

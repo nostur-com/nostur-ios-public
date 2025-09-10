@@ -49,7 +49,7 @@ struct RelayRowView: View {
                     if relay.search && !isConnected {
                         connection?.connect(forceConnectionAttempt: true)
                     }
-                    DataProvider.shared().save()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                 }
             
             Image(systemName:"arrow.down.circle.fill").foregroundColor(relay.read ? .green : .gray)
@@ -61,7 +61,7 @@ struct RelayRowView: View {
                     if relay.read && !isConnected {
                         connection?.connect(forceConnectionAttempt: true)
                     }
-                    DataProvider.shared().save()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                 }
             
             Image(systemName:"arrow.up.circle.fill").foregroundColor(relay.write ? .green : .gray)
@@ -70,7 +70,7 @@ struct RelayRowView: View {
                     relay.write.toggle()
                     relay.updatedAt = .now
                     connection?.relayData.setWrite(relay.write)
-                    DataProvider.shared().save()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                 }
         }
         .task {

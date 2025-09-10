@@ -671,7 +671,7 @@ class NotificationsViewModel: ObservableObject {
                     account.lastSeenPostCreatedAt = twoDaysAgoOrNewer
                 }
             }
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
                 self?.unreadMentions_ = 0
             }
@@ -694,7 +694,7 @@ class NotificationsViewModel: ObservableObject {
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
 
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
                 self?.unreadNewPosts_ = 0
             }
@@ -725,7 +725,7 @@ class NotificationsViewModel: ObservableObject {
                     account.lastSeenRepostCreatedAt = twoDaysAgoOrNewer
                 }
             }
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
                 self?.unreadReposts_ = 0
             }
@@ -756,7 +756,7 @@ class NotificationsViewModel: ObservableObject {
                     account.lastSeenReactionCreatedAt = twoDaysAgoOrNewer
                 }
             }
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
                 self?.unreadReactions_ = 0
             }
@@ -800,7 +800,7 @@ class NotificationsViewModel: ObservableObject {
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
 
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
                 self?.unreadZaps_ = 0
                 self?.unreadFailedZaps_ = 0
@@ -824,7 +824,7 @@ class NotificationsViewModel: ObservableObject {
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
 
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
                 self?.unreadNewFollowers_ = 0
             }

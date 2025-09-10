@@ -240,7 +240,7 @@ struct AddContactsToListSheet: View {
             // Resume Where Left: Default on for contact-based. Default off for relay-based
             list.continue = true
             
-            viewContextSave()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
 }

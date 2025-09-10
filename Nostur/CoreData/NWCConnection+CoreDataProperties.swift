@@ -76,7 +76,7 @@ extension NWCConnection : Identifiable {
         ctx.perform {
             NIP47SecretManager.shared.deleteSecret(connectionId: self.connectionId)
             ctx.delete(self)
-            DataProvider.shared().bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }
     

@@ -304,7 +304,7 @@ extension Contact : Identifiable {
         account.lud16 = contact.lud16 ?? ""
         account.lud06 = contact.lud06 ?? ""
         
-        bgSave()
+        DataProvider.shared().saveToDiskNow(.bgContext)
 #if DEBUG
         L.og.debug("Updated account from new kind 0 from relay. pubkey: \(contact.pubkey)")
 #endif

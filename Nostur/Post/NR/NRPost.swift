@@ -1015,7 +1015,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         bg().perform { [weak self] in
             guard let self, let event = self.event else { return }
             bg().delete(event)
-            bgSave()
+            DataProvider.shared().saveToDiskNow(.bgContext)
             DispatchQueue.main.async {
                 sendNotification(.unpublishedNRPost, self)
             }

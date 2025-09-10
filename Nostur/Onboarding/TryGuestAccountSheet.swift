@@ -46,7 +46,7 @@ struct TryGuestAccountSheet: View {
             let countBefore = AccountsState.shared.accounts.count
             if !AccountsState.shared.accounts.contains(where: { $0.publicKey == GUEST_ACCOUNT_PUBKEY }) {
                 _ = GuestAccountManager.shared.createGuestAccount()
-                viewContextSave() // save guest account, so its available in bg context
+                DataProvider.shared().saveToDiskNow(.viewContext) // save guest account, so its available in bg context
                 if AccountsState.shared.accounts.count > countBefore {
                     didCreate = true
                 }

@@ -428,7 +428,7 @@ public final class NewPostModel: ObservableObject {
                         }
                     }
                 }
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
                 
                 DispatchQueue.main.async {
                     NSecBunkerManager.shared.requestSignature(forEvent: finalEvent, usingAccount: account, whenSigned: { signedEvent in
@@ -456,7 +456,7 @@ public final class NewPostModel: ObservableObject {
                     Event.updateReactionTo(savedEvent, context: bg()) // TODO: Revert this on 'undo'
                 }
                 
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
                 if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                     DispatchQueue.main.async {
                         if let lockToThisRelay = lockToThisRelay, self.lockToSingleRelay {

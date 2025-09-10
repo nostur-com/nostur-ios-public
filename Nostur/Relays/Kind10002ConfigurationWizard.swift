@@ -221,7 +221,7 @@ struct Kind10002ConfigurationWizard: View {
             let bgContext = bg()
             bgContext.perform {
                 let savedEvent = Event.saveEvent(event: kind10002, flags: "nsecbunker_unsigned", context: bgContext)
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
                 onDismiss()
                 dismiss()
                 DispatchQueue.main.async {
@@ -241,7 +241,7 @@ struct Kind10002ConfigurationWizard: View {
             let bgContext = bg()
             bgContext.perform {
                 _ = Event.saveEvent(event: signedEvent, context: bgContext)
-                DataProvider.shared().bgSave()
+                DataProvider.shared().saveToDiskNow(.bgContext)
                 onDismiss()
                 dismiss()
                 DispatchQueue.main.async {

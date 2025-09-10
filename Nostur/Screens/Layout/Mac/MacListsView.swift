@@ -197,7 +197,7 @@ struct PhoneViewIsh: View {
             for f in followingFeedsNewest.dropFirst(1) {
                 context.delete(f)
             }
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
         else {
             let newFollowingFeed = CloudFeed(context: context)
@@ -213,7 +213,7 @@ struct PhoneViewIsh: View {
             // Resume Where Left: Default on for contact-based. Default off for relay-based
             newFollowingFeed.continue = true
             
-            DataProvider.shared().save() { // callback after save:
+            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
                 followingConfig = NXColumnConfig(id: newFollowingFeed.subscriptionId, columnType: .following(newFollowingFeed), accountPubkey: account.publicKey, name: "Following")
             }
         }

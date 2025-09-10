@@ -187,7 +187,7 @@ struct MultiFollowSheet: View {
                     AccountsState.shared.loggedInAccount?.reloadFollows()
                     sendNotification(.followingAdded, pubkey) // For WoT
                 }
-                DataProvider.shared().save()
+                DataProvider.shared().saveToDiskNow()
             }
         }
     }
@@ -198,7 +198,8 @@ struct MultiFollowSheet: View {
         if account == Nostur.account() {
             AccountsState.shared.loggedInAccount?.reloadFollows()
         }
-        account.publishNewContactList()
-        DataProvider.shared().save()
+        DataProvider.shared().saveToDisk {
+            account.publishNewContactList()
+        }
     }
 }

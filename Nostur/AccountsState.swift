@@ -81,7 +81,7 @@ class AccountsState: ObservableObject {
     @MainActor public func logout(_ account: CloudAccount) {
         let logoutAccountPubkey = account.publicKey
         DataProvider.shared().viewContext.delete(account)
-        DataProvider.shared().save()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         
         guard logoutAccountPubkey == self.activeAccountPublicKey else { return }
         

@@ -53,7 +53,7 @@ class CoreDataRelationFixer {
             // Optionally clear the queue after executing tasks
             self.taskQueue.removeAll()
             
-            Importer.shared.saveToDisk()
+            DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }
     

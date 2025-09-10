@@ -149,7 +149,7 @@ struct NotificationsReposts: View {
         if let account = account() {
             if account.lastSeenRepostCreatedAt < mostCreatedAt {
                 account.lastSeenRepostCreatedAt = mostCreatedAt
-                viewContextSave() // Account is from main context
+                DataProvider.shared().saveToDiskNow(.viewContext) // Account is from main context
             }
         }
     }

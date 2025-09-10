@@ -62,7 +62,7 @@ extension Bookmark {
             bookmark.createdAt = .now
             bookmark.color = color
             bg().transactionAuthor = "addBookmark"
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow()
             bg().transactionAuthor = nil
         }
     }
@@ -72,7 +72,7 @@ extension Bookmark {
         bg().perform {
             Bookmark.removeBookmark(eventId: nrPost.id, context: bg())
             bg().transactionAuthor = "removeBookmark"
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow()
             bg().transactionAuthor = nil
         }
     }
@@ -86,7 +86,7 @@ extension Bookmark {
             if let bookmark = try? bg().fetch(fr).first {
                 bookmark.color = color
                 bg().transactionAuthor = "updateColor"
-                DataProvider.shared().save()
+                DataProvider.shared().saveToDiskNow()
                 bg().transactionAuthor = nil
             }
         }

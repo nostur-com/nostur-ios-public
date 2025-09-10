@@ -38,7 +38,7 @@ struct QuoteOrRepostChoiceSheet: View {
                         DispatchQueue.main.async {
                             sendNotification(.newPostSaved, savedEvent)
                         }
-                        DataProvider.shared().bgSave()
+                        DataProvider.shared().saveToDiskNow(.bgContext)
                         dismiss()
                         
                         DispatchQueue.main.async {
@@ -75,7 +75,7 @@ struct QuoteOrRepostChoiceSheet: View {
                                     let savedEvent = Event.saveEvent(event: signedEvent, flags: "awaiting_send", context: bgContext)
                                     savedEvent.cancellationId = cancellationId
                                     
-                                    DataProvider.shared().bgSave()
+                                    DataProvider.shared().saveToDiskNow(.bgContext)
                                     dismiss()
                                     if ([1,1111,1222,1244,6,20,9802,30023,34235].contains(savedEvent.kind)) {
                                         DispatchQueue.main.async {

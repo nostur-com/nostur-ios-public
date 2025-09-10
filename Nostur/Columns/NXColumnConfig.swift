@@ -24,7 +24,7 @@ struct NXColumnConfig: Identifiable, Equatable {
         get { feed?.wotEnabled ?? false }
         set { 
             feed?.wotEnabled = newValue
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
     
@@ -33,7 +33,7 @@ struct NXColumnConfig: Identifiable, Equatable {
         get { (feed?.repliesEnabled ?? false) }
         set {
             feed?.repliesEnabled = newValue
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
     
@@ -53,7 +53,7 @@ struct NXColumnConfig: Identifiable, Equatable {
         }
         set {
             feed?.`continue` = newValue
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
     

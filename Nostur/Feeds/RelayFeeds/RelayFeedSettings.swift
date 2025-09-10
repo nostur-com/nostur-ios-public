@@ -95,7 +95,7 @@ struct RelayFeedSettings: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Done") {
-                    DataProvider.shared().save()
+                    DataProvider.shared().saveToDiskNow(.viewContext)
                     sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: feed.subscriptionId, relays: feed.relaysData, wotEnabled: feed.wotEnabled))
                     dismiss()
                 }

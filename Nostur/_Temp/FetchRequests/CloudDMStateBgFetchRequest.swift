@@ -59,7 +59,7 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             viewContext().delete(duplicateDMState)
         })
         if !duplicates.isEmpty {
-            viewContextSave()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
 }

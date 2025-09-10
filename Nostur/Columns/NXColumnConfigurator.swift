@@ -122,7 +122,7 @@ struct NXColumnConfigurator: View {
                 nil
             }
             
-            DataProvider.shared().save()
+            DataProvider.shared().saveToDiskNow(.viewContext)
         }
         
         // Create NXColumnConfig
@@ -194,7 +194,7 @@ private func getFollowingFeed(_ accountPubkey: String, accountName: String? = ni
         for f in followingFeedsNewest.dropFirst(1) {
             context.delete(f)
         }
-        DataProvider.shared().save()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         // Return most recent existing
         return followingFeed
     }
@@ -213,7 +213,7 @@ private func getFollowingFeed(_ accountPubkey: String, accountName: String? = ni
         // Resume Where Left: Default on for contact-based. Default off for relay-based
         newFollowingFeed.continue = true
         
-        DataProvider.shared().save()
+        DataProvider.shared().saveToDiskNow(.viewContext)
         
         return newFollowingFeed
     }

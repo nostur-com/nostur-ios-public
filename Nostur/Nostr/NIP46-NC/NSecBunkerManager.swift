@@ -176,7 +176,7 @@ class NSecBunkerManager: ObservableObject {
                                 feed.accountPubkey = newAccountPubkey
                             }
                             
-                            viewContextSave()
+                            DataProvider.shared().saveToDiskNow(.viewContext)
                             
                             if AccountsState.shared.activeAccountPublicKey == oldAccountPubkey {
                                 AccountsState.shared.activeAccountPublicKey = newAccountPubkey
