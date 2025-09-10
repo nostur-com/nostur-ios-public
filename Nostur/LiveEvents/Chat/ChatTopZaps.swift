@@ -37,7 +37,7 @@ struct ChatZapPill: View {
                 .animation(.easeIn, value: nrContact.pictureUrl)
             
 //                .frame(width: 20.0, height: 20.0)
-            Text(zap.amount.satsFormatted)
+            Text(zap.amount, format: .number.notation((.compactName)))
                 .fontWeightBold()
                 .foregroundColor(theme.accent)
                 .padding(.trailing, 5)

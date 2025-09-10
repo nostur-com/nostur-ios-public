@@ -31,7 +31,9 @@ struct ChatPendingZapRow: View {
             HStack {
                 HStack(spacing: 3) {
                     Image(systemName: "bolt.badge.clock.fill").foregroundColor(.yellow.opacity(0.75))
-                    Text(pendingZap.amount.satsFormatted + " sats")
+                    Text(pendingZap.amount, format: .number.notation((.compactName)))
+                        .fontWeightBold()
+                    Text("sats")
                         .fontWeightBold()
                 }
                 .padding(.leading, 7)

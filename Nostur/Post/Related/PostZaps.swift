@@ -167,7 +167,7 @@ struct NxZapReceipt: View {
             VStack(alignment: .center) {
                 Image(systemName: "bolt.fill")
                     .foregroundColor(theme.accent)
-                Text(sats.satsFormatted)
+                Text(sats, format: .number.notation((.compactName)))
                     .font(.title3)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
                     let fiatPrice = String(format: "$%.02f",(Double(sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))

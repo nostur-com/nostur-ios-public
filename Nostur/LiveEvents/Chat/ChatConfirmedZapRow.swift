@@ -33,7 +33,7 @@ struct ChatConfirmedZapRow: View {
                     
                     HStack(spacing: 3) {
                         Image(systemName: "bolt.fill").foregroundColor(.yellow)
-                        Text(confirmedZap.amount.satsFormatted)
+                        Text(confirmedZap.amount, format: .number.notation((.compactName)))
                             .fontWeightBold()
                     }
                     .padding(.leading, 7)

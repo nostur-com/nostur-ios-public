@@ -36,7 +36,7 @@ struct ZapAmountButton: View {
                             .fontWeight(.bold)
                     }
                     else {
-                        Text(amount.satsFormatted)
+                        Text(amount, format: .number.notation((.compactName)))
                             .foregroundColor(Color.white)
                             .fontWeight(.bold)
                         if let fiatPrice {

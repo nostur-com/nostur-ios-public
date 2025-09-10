@@ -202,7 +202,7 @@ struct PostZapsView: View {
                     .foregroundColor(theme.accent)
 //                Text(Double(footerAttributes.zapTally).satsFormatted)
 //                    .font(.title2)
-                Text(postZaps.zaps.reduce(0, { $0 + $1.sats }).satsFormatted)
+                Text(postZaps.zaps.reduce(0, { $0 + $1.sats }), format: .number.notation((.compactName)))
                     .font(.title2)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
                     let fiatPrice = String(format: "$%.02f",(Double(footerAttributes.zapTally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
@@ -236,7 +236,7 @@ struct ProfileZap: View {
             VStack {
                 Image(systemName: "bolt.fill")
                     .foregroundColor(theme.accent)
-                Text(zap.sats.satsFormatted)
+                Text(zap.sats, format: .number.notation((.compactName)))
                     .font(.title2)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
                     let fiatPrice = String(format: "$%.02f",(Double(zap.sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
@@ -313,7 +313,7 @@ struct ZapsForThisNote: View {
                             .id(zaps[index].id)
                             .zIndex(-Double(index))
                         
-                        Text("\(zaps[index].sats.satsFormatted)")
+                        Text(zaps[index].sats, format: .number.notation((.compactName)))
                             .font(.caption)
                             .padding(3)
                             .foregroundColor(.white)

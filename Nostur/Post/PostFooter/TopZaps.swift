@@ -114,7 +114,7 @@ struct ZapPill: View {
     var body: some View {
         HStack(spacing: 5) {
             ObservedPFP(pubkey: nxZap.fromPubkey, size: 20.0, forceFlat: false)
-            Text(nxZap.sats.satsFormatted)
+            Text(nxZap.sats, format: .number.notation((.compactName)))
                 .foregroundColor(theme.accent)
                 .padding(.trailing, 5)
             if index < 3, let content = nxZap.nrZapFrom.content {

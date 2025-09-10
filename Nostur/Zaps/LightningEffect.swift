@@ -176,7 +176,8 @@ private struct WithLightningEffect: ViewModifier {
                     Image("BoltIconActive").foregroundColor(.yellow)
                         .padding(.horizontal, 40)
                         .overlay(alignment: .topLeading) {
-                            Text(amount.satsFormatted).foregroundColor(.yellow)
+                            Text(amount, format: .number.notation((.compactName)))
+                                .foregroundColor(.yellow)
                                 .shadow(color: .black, radius: 1)
                         }
                         .scaleEffect(boltScale)
