@@ -80,8 +80,13 @@ struct Settings: View {
                         ThemePicker()
                     }
 
-                    Toggle(isOn: $settings.fullWidthImages) {
-                        Text("Enable full width pictures", comment:"Setting on settings screen")
+                    if #available(iOS 26.0, *) {
+                        
+                    }
+                    else {
+                        Toggle(isOn: $settings.fullWidthImages) {
+                            Text("Enable full width pictures", comment:"Setting on settings screen")
+                        }
                     }
                     
                     Toggle(isOn: $settings.enableLiveEvents) {

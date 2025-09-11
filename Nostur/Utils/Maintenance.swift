@@ -91,6 +91,7 @@ struct Maintenance {
         L.maintenance.info("Starting version based maintenance")
 #endif
         await context.perform {
+            Self.upgradeToFullWidth(context: context)
             Self.runAddKtag(context: context)
             Self.runRestoreFooterButtons(context: context)
             Self.runDeleteEventsWithoutId(context: context)
@@ -586,6 +587,18 @@ struct Maintenance {
         
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.addKtag.rawValue
+    }
+    
+    // Run once to apply full width on iOS 26 (remove toggle)
+    static func upgradeToFullWidth(context: NSManagedObjectContext) {
+        if #available(iOS 26.0, *) {
+            guard !Self.didRun(migrationCode: migrationCode.upgradeToFullWidth, context: context) else { return }
+            
+            SettingsStore.shared.fullWidthImages = true
+            
+            let migration = Migration(context: context)
+            migration.migrationCode = migrationCode.upgradeToFullWidth.rawValue
+        }
     }
     
     // Run once to fill dTag and delete old replacable events
@@ -1132,6 +1145,9 @@ struct Maintenance {
         
         // Run once to add k tag
         case addKtag = "addKtag2" // Needed to run again because forgot to add kTag in .saveEvent()
+        
+        // Run once to upgrade to full width on iOS 26
+        case upgradeToFullWidth = "upgradeToFullWidth"
         
         // Run once to fill dTag and delete old replacable events
         case useDtagForReplacableEvents = "useDtagForReplacableEvents"
