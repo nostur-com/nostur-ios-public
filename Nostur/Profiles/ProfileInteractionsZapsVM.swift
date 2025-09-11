@@ -15,7 +15,7 @@ class ProfileInteractionsZapsVM: ObservableObject {
     private var accountPubkey: String?
     private var pubkey: String
     private var zappedEventIds: Set<String>
-    public var zapsMap: [String: (String, String?)] = [:] // post id: (amount, content)
+    public var zapsMap: [String: (Double, String?)] = [:] // post id: (amount, content)
     private var backlog: Backlog
     private static let POSTS_LIMIT = 250 // TODO: ADD PAGINATION
     private static let REQ_IDS_LIMIT = 500 // (strfry default)
@@ -102,7 +102,7 @@ class ProfileInteractionsZapsVM: ObservableObject {
                 guard !zappedEventId.contains(":") else { continue } // no easy way to query article aTags like kind:1 ids, so skip
                 
                 self.zappedEventIds.insert(zappedEventId)
-                let zapInfo: (String, String?) = (zap.naiveSats.satsFormatted, zap.zapFromRequest?.content)
+                let zapInfo: (Double, String?) = (zap.naiveSats, zap.zapFromRequest?.content)
                 Task { @MainActor in
                     self.zapsMap[zappedEventId] = zapInfo
                 }

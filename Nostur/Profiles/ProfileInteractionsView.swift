@@ -214,7 +214,7 @@ struct ProfileInteractionsView: View {
                                     Image(systemName: "bolt.fill")
                                         .foregroundColor(.yellow)
                                     
-                                    Text(zap.0)
+                                    Text(zap.0, format: .number.notation((.compactName)))
                                         .foregroundColor(.white)
                                         .fontWeightBold()
                                     
