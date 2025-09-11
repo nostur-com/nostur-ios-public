@@ -19,12 +19,7 @@ struct NotificationSettings: View {
     @AppStorage("notifications_mute_new_posts") var muteNewPosts: Bool = false
     
     var body: some View {
-        Form {
-            if #available(iOS 16, *) {
-                Section("App theme") {
-                    AppThemeSwitcher()
-                }
-            }
+        NXForm {
             
             Section("Show unread count badge") {
                 Toggle(isOn: $muteFollows.not) {
@@ -74,8 +69,10 @@ struct NotificationSettings: View {
         .navigationTitle("Notification settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") { dismiss() }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                  dismiss()
+                }
             }
         }
     }

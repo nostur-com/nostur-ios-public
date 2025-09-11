@@ -11,7 +11,7 @@ import NostrEssentials
 struct PostPreview: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var dim: DIMENSIONS // previewDIM from ComposePost
-    @Environment(\.dismiss) private var dismissPostPreview
+
     public let nrPost: NRPost
     public let kind: NEventKind
     public let replyTo: ReplyTo?
@@ -70,13 +70,7 @@ struct PostPreview: View {
                 .background(theme.listBackground)
         }
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button(String(localized:"Back", comment:"Button to go back")) {
-                    dismissPostPreview()
-                }
-            }
-            
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .confirmationAction) {
                 Button {
                     typingTextModel.sending = true
                     
@@ -91,7 +85,6 @@ struct PostPreview: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
                         Task {
                             await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: {
-                                dismissPostPreview()
                                 onDismiss()
                             })
                         }
@@ -101,16 +94,15 @@ struct PostPreview: View {
                         ProgressView().colorInvert()
                     }
                     else {
-                        Text("Post.verb", comment: "Button to post (publish) a post")
+                        Label(String(localized: "Post.verb", comment: "Button to post (publish) a post"), systemImage: "paperplane.fill")
                     }
                 }
-                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
-                .cornerRadius(20)
+                .buttonStyleGlassProminent()
                 .disabled(shouldDisablePostButton)
                 .opacity(shouldDisablePostButton ? 0.25 : 1.0)
             }
         }
-        .navigationTitle(String(localized: "Post preview", comment: "Navigation title for Post Preview screen"))
+        .navigationTitle(String(localized: "Preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
         .background(theme.listBackground)
         .frame(width: dim.listWidth)

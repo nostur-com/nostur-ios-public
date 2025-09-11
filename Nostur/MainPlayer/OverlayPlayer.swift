@@ -110,14 +110,14 @@ struct OverlayPlayer: View {
                                     // CLOSE BUTTON
                                     ToolbarItem(placement: .topBarLeading) {
                                         if vm.viewMode != .overlay {
-                                            Button("Close", systemImage: "multiply") {
+                                            Button("Close", systemImage: "xmark") {
                                                 withAnimation {
                                                     vm.close()
                                                 }
                                             }
-                                            .font(.title2)
+//                                            .font(.title2)
                                             .buttonStyle(.borderless)
-                                            .foregroundColor(Color.white)
+                                            .foregroundStyle(Color.white)
                                         }
                                     }
                                     
@@ -127,9 +127,8 @@ struct OverlayPlayer: View {
                                             Button("Bookmark", systemImage: bookmarkState ? "bookmark.fill" : "bookmark") {
                                                 bookmarkState.toggle()
                                             }
-                                            .font(.title2)
                                             .buttonStyle(.borderless)
-                                            .foregroundColor(Color.white)
+                                            .foregroundStyle(Color.white)
                                         }
                                     }
                                     
@@ -137,10 +136,10 @@ struct OverlayPlayer: View {
                                     ToolbarItem(placement: .topBarTrailing) {
                                         if !vm.isStream && vm.viewMode != .overlay {
                                             Menu(content: {
-                                                Button("Save to Photo Library") {
+                                                Button("Save to Photo Library", systemImage: "square.and.arrow.down") {
                                                     saveAVAssetToPhotos()
                                                 }
-                                                Button("Copy video URL") {
+                                                Button("Copy video URL", systemImage: "document.on.document") {
                                                     if let url = vm.currentlyPlayingUrl {
                                                         UIPasteboard.general.string = url
                                                         sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
@@ -274,7 +273,7 @@ struct OverlayPlayer: View {
                                     }
                                     .overlay(alignment: .topLeading) {
                                         if vm.viewMode == .overlay {
-                                            Image(systemName: "multiply")
+                                            Image(systemName: "xmark")
                                                 .font(.title2)
                                                 .foregroundColor(Color.white)
                                                 .opacity(0.8)
@@ -342,7 +341,7 @@ struct OverlayPlayer: View {
                                 // CLOSE BUTTON
                                 ToolbarItem(placement: .topBarLeading) {
                                     if vm.viewMode == .detailstream {
-                                        Button("Close", systemImage: "multiply") {
+                                        Button("Close", systemImage: "xmark") {
                                             withAnimation {
                                                 vm.close()
                                             }
@@ -357,13 +356,13 @@ struct OverlayPlayer: View {
                                 ToolbarItem(placement: .topBarTrailing) {
                                     if !vm.isStream && vm.viewMode == .detailstream {
                                         Menu(content: {
-                                            Button("Save to Photo Library") {
+                                            Button("Save to Photo Library", systemImage: "square.and.arrow.down") {
                                                 saveAVAssetToPhotos()
                                             }
                                             .tint(Color.white)
                                             .foregroundColor(theme.accent)
                                             
-                                            Button("Copy video URL") {
+                                            Button("Copy video URL", systemImage: "document.on.document") {
                                                 if let url = vm.currentlyPlayingUrl {
                                                     UIPasteboard.general.string = url
                                                     sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))

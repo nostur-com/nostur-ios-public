@@ -103,7 +103,7 @@ struct BadgeDetailView: View {
             
             
             Button { awardToPeopleIsShown = true } label: { Text("Award to people", comment: "Button to award a badge to people") }
-                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(style: .borderedProminent))
             // award to people
             
             // lazy vstack foreach award p

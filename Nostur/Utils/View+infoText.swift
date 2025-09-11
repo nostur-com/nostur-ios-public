@@ -45,8 +45,8 @@ private struct InfoText: ViewModifier {
                     .environment(\.theme, theme)
                     .presentationBackgroundCompat(theme.listBackground)
                     .toolbar {
-                        ToolbarItem(placement: .primaryAction) {
-                            Button("OK") {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close", systemImage: "xmark") {
                                 showInfoSheet = false
                             }
                         }

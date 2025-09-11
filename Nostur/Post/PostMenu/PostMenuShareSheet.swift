@@ -68,9 +68,9 @@ struct PostMenuShareSheet: View {
         .background(theme.listBackground)
         
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { rootDismiss?() }) {
-                    Text("Done")
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                    rootDismiss?()
                 }
             }
         }

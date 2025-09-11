@@ -1434,6 +1434,9 @@
         }
       }
     },
+    "Add Blossom server" : {
+
+    },
     "Add comment" : {
       "comment" : "Placeholder text for adding a comment",
       "localizations" : {
@@ -2525,6 +2528,12 @@
           }
         }
       }
+    },
+    "Close all tabs" : {
+
+    },
+    "Close All Tabs" : {
+
     },
     "Close room" : {
       "localizations" : {
@@ -4177,6 +4186,9 @@
         }
       }
     },
+    "Feed options" : {
+
+    },
     "Feed preview" : {
       "localizations" : {
         "nl" : {
@@ -4197,6 +4209,9 @@
           }
         }
       }
+    },
+    "Feed Settings" : {
+      "comment" : "Menu item for toggling feed settings"
     },
     "Feeds" : {
       "comment" : "Navigation title for Feeds screen",
@@ -4554,6 +4569,9 @@
           }
         }
       }
+    },
+    "Hello World" : {
+
     },
     "Hello, World!" : {
 
@@ -5401,6 +5419,9 @@
         }
       }
     },
+    "Low Data Mode" : {
+      "comment" : "Menu item"
+    },
     "m" : {
       "comment" : "short for minutes (ago), appended to number. Example: 3m",
       "localizations" : {
@@ -5894,6 +5915,9 @@
           }
         }
       }
+    },
+    "New Feed" : {
+
     },
     "New feed from contacts" : {
       "comment" : "Navigation title for screen to create a new feed"
@@ -6458,6 +6482,9 @@
         }
       }
     },
+    "Open Detail Window" : {
+
+    },
     "Open in %@" : {
       "localizations" : {
         "nl" : {
@@ -6582,6 +6609,12 @@
           }
         }
       }
+    },
+    "Pick Photo" : {
+
+    },
+    "Pick Video" : {
+
     },
     "Picture-in-picture" : {
       "shouldTranslate" : false
@@ -6814,6 +6847,7 @@
     },
     "Post preview" : {
       "comment" : "Navigation title for Post Preview screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7005,7 +7039,7 @@
       }
     },
     "Preview" : {
-      "comment" : "Heading when entering Report details\nPreview button when creating a new post",
+      "comment" : "Heading when entering Report details\nNavigation title for Post Preview screen\nPreview button when creating a new post",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8258,6 +8292,9 @@
         }
       }
     },
+    "sats" : {
+
+    },
     "Sats" : {
       "comment" : "Heading (short for Satoshis)",
       "extractionState" : "stale",
@@ -9006,6 +9043,9 @@
         }
       }
     },
+    "Sowwy, this app doesn't work on macOS" : {
+
+    },
     "Spam" : {
       "comment" : "Menu item in choice list",
       "localizations" : {
@@ -9087,6 +9127,9 @@
           }
         }
       }
+    },
+    "Start Nest" : {
+
     },
     "Start now" : {
       "localizations" : {
@@ -9216,6 +9259,9 @@
           }
         }
       }
+    },
+    "Take Photo" : {
+
     },
     "Tap account to exclude" : {
       "localizations" : {
@@ -9553,6 +9599,12 @@
           }
         }
       }
+    },
+    "This is the DETAIL window" : {
+
+    },
+    "This is the MAIN window" : {
+
     },
     "This list is public" : {
       "localizations" : {
@@ -10268,6 +10320,12 @@
         }
       }
     },
+    "viewState: %@" : {
+
+    },
+    "Voice" : {
+
+    },
     "VPN detected" : {
       "localizations" : {
         "nl" : {
@@ -10366,6 +10424,7 @@
       }
     },
     "What" : {
+      "comment" : "Tab title for feed of people you follow",
       "extractionState" : "stale",
       "localizations" : {
         "nl" : {

@@ -58,7 +58,7 @@ struct LiveEventsBanner: View {
                     CreateNest(account: account)
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("Cancel") { showCreateNestsSheetWithAccount = nil }
+                                Button("Cancel", systemImage: "xmark") { showCreateNestsSheetWithAccount = nil }
                             }
                         }
                         .padding()
@@ -70,13 +70,13 @@ struct LiveEventsBanner: View {
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
                                 if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
-                                    Button("Leave") {
+                                    Button("Leave", systemImage: "xmark") {
                                         LiveKitVoiceSession.shared.activeNest = nil
                                         LiveKitVoiceSession.shared.visibleNest = nil
                                     }
                                 }
                                 else {
-                                    Button("Close") {
+                                    Button("Close", systemImage: "xmark") {
                                         LiveKitVoiceSession.shared.activeNest = nil
                                         LiveKitVoiceSession.shared.visibleNest = nil
                                     }
@@ -85,7 +85,7 @@ struct LiveEventsBanner: View {
                             
                             ToolbarItem(placement: .primaryAction) {
                                 if visibleNest == LiveKitVoiceSession.shared.activeNest, case .connected = liveKitVoiceSession.state {
-                                    Button("Minimize") {
+                                    Button("Minimize", systemImage: "rectangle.portrait.topthird.inset.filled") {
                                         LiveKitVoiceSession.shared.visibleNest = nil
                                     }
                                 }

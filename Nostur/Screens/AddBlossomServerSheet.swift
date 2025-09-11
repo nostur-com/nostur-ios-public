@@ -16,15 +16,17 @@ struct AddBlossomServerSheet: View {
     @State private var server = ""
     @State private var error: String?
     @State private var checking = false
+    @FocusState private var isFocused
     
     public var onAdd: ((String) -> Void)
     
     var body: some View {
-        List {
+        NXForm {
             Section {
                 TextField(String(localized:"Server address", comment:"Placeholder for input field to enter blossom server address"), text: $server)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
+                    .focused($isFocused)
             } header: { Text("Blossom server", comment: "Header for entering blossom server address") } footer: {
                 if let error {
                     Text(error)
@@ -34,21 +36,24 @@ struct AddBlossomServerSheet: View {
             }
             .listRowBackground(theme.background)
         }
-        .scrollContentBackgroundCompat(.hidden)
-        .background(theme.listBackground)
+
+        .onAppear {
+            isFocused = true
+        }
+
         .navigationTitle(String(localized:"Add blossom server", comment:"Navigation title for screen to create a new feed"))
         .navigationBarTitleDisplayMode(.inline)
         
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if checking {
                     ProgressView()
                 }
                 else {
-                    Button("Add") {
+                    Button("Add", systemImage: "checkmark") {
                         if let urlObj = URL(string: server),
                            let components = URLComponents(url: urlObj, resolvingAgainstBaseURL: false),
                            let host = components.host
@@ -77,6 +82,8 @@ struct AddBlossomServerSheet: View {
                             await checkBlossomServer()
                         }
                     }
+                        .buttonStyleGlassProminent()
+                        .disabled(server.isEmpty)
                 }
             }
         }

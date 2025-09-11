@@ -66,7 +66,7 @@ struct NewDMComposer: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button(role: .cancel) {
+                Button("Cancel", systemImage: "xmark") {
                     if preloaded {
                         showingNewDM = false
                     }
@@ -74,10 +74,7 @@ struct NewDMComposer: View {
                         toPubkey = nil
                         toContact = nil
                     }
-                } label: {
-                    Text("Cancel")
                 }
-                
             }
         }
     }

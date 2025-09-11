@@ -141,9 +141,9 @@ struct PostDetailsMenuSheet: View {
         }
         
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: { rootDismiss?() }) {
-                    Text("Done")
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                    rootDismiss?()
                 }
             }
         }

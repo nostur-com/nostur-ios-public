@@ -49,7 +49,7 @@ struct GifSearcher: View {
 //                                autocompleteResults = []
 //                                suggestionResults = []
                             }
-                            .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                            .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         }
                     }
                 }
@@ -113,7 +113,7 @@ struct GifSearcher: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
         }
         .padding()

@@ -70,10 +70,11 @@ struct NewRelayFeedSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
+            
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done", systemImage: "checkmark") {
                     let newFeed = CloudFeed(context: DataProvider.shared().viewContext)
                     newFeed.id = UUID()
                     newFeed.name = relayAddress
@@ -109,6 +110,7 @@ struct NewRelayFeedSheet: View {
                     
                     rootDismiss?()
                 }
+                .buttonStyleGlassProminent()
                 .disabled(!formIsValid)
             }
         }

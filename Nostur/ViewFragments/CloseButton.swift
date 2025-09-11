@@ -14,7 +14,7 @@ struct CloseButton: View {
     var body: some View {
         // Close button
         Button(action: action) {
-            Image(systemName: "multiply")
+            Image(systemName: "xmark")
                 .font(.title2)
                 .padding()
         }

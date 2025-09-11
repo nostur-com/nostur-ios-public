@@ -32,7 +32,7 @@ struct FollowHashtagTile: View {
                     }
                 }
             }
-            .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+            .buttonStyle(NRButtonStyle(style: .borderedProminent))
         }
         .padding(10)
     }

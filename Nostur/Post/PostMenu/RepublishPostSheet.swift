@@ -136,8 +136,8 @@ struct RepublishPostSheet: View {
         
         .navigationTitle("Republish to relays")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
                     rootDismiss?()
                 }
             }

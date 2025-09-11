@@ -85,7 +85,7 @@ struct CustomNWCConnectSheet: View {
                 else {
                     if !tryingConnection {
                         Button(String(localized:"Connect wallet", comment: "Button to connect a wallet to Nostur")) { startNWC() }
-                            .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                            .buttonStyle(NRButtonStyle(style: .borderedProminent))
                             .disabled(!validUri)
                     }
                     else {
@@ -101,13 +101,14 @@ struct CustomNWCConnectSheet: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if nwcConnectSuccess {
-                    Button("Done") { dismiss() }
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                        .buttonStyleGlassProminent()
                 }
             }
         
             ToolbarItem(placement: .cancellationAction) {
                 if !nwcConnectSuccess {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel", systemImage: "xmark") { dismiss() }
                 }
             }
         }

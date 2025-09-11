@@ -28,7 +28,7 @@ struct BlossomServerList: View {
     @State private var serverList: [String] = []
     
     var body: some View {
-        Form {
+        NXForm {
             Section {
                 if checkingRelays {
                     Text("Checking relays for your blossom server list...")
@@ -46,7 +46,14 @@ struct BlossomServerList: View {
                         serverList.remove(atOffsets: indexSet)
                     }
                     
-                    Button("Add blossom server") {
+                    HStack {
+                        Image(systemName: "plus.circle")
+                            .foregroundColor(Color.secondary)
+                        Text("Add Blossom server")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
                         newServerSheet = true
                     }
                 }
@@ -57,7 +64,7 @@ struct BlossomServerList: View {
                     Text("Servers higher on the list will be used first")
                 }
             }
-            .listRowBackground(theme.listBackground)
+            .listRowBackground(theme.background)
             
             if let account, !serverList.isEmpty {
                 Section {
@@ -84,8 +91,7 @@ struct BlossomServerList: View {
                 }
             }
         }
-        .scrollContentBackgroundCompat(.hidden)
-        .background(theme.background)
+
         .toolbar {
             
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -94,12 +100,10 @@ struct BlossomServerList: View {
                 }
             }
             
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
                     SettingsStore.shared.blossomServerList = serverList
                     dismiss()
-                }) {
-                    Text("Close")
                 }
                 .accessibilityLabel(String(localized:"Add media server", comment: "Button to add a new media server"))
             }

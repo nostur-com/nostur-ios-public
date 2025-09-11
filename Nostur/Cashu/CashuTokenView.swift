@@ -39,7 +39,7 @@ struct CashuTokenView: View {
                 } label: {
                     Text("Redeem", comment:"Button to redeem a Cashu token").frame(minWidth: 150)
                 }
-                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(style: .borderedProminent))
                 .cornerRadius(20)
 
                 Group {

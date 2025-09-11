@@ -87,7 +87,7 @@ struct Entry: View {
                             Image(systemName: "camera")
                         }
                         .accessibilityHint(Text("Take a photo"))
-                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         
                         .padding()
                         
@@ -97,7 +97,7 @@ struct Entry: View {
                             Image(systemName: "photo")
                         }
                         .accessibilityHint(Text("Choose a photo"))
-                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         .padding()
                         
                         Spacer()
@@ -174,7 +174,13 @@ struct Entry: View {
             .background(alignment: .topLeading) {
                 Text(self.PLACEHOLDER).foregroundColor(.gray)
                     .opacity(typingTextModel.text == "" ? 1 : 1)
-                    .offset(x: 5.0, y: 8.0)
+                    .modifier {
+                        if #available(iOS 26.0, *) {
+                            $0.offset(x: 4.0, y: 5.0)
+                        } else {
+                            $0.offset(x: 5.0, y: 8.0)
+                        }
+                    }
             }
             .frame(minHeight: 100)
             .sheet(isPresented: $gifSheetShown) {
@@ -218,139 +224,12 @@ struct Entry: View {
                     .padding(.horizontal, -10)
             }
         }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button { onDismiss() } label: { Text("Cancel") }
+        .modifier {
+            if #available(iOS 26.0, *) {
+                $0.toolbar(content: self.toolbar26)
             }
-            
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
-                        if showVoiceRecorderButton {
-                            Button {
-                                showAudioRecorder = true
-                            } label: {
-                                Image(systemName: "mic")
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(typingTextModel.uploading)
-                        }
-                        
-                        if kind != .picture && kind != .highlight {
-                            Button {
-                                showVoiceRecorderButton = false
-                                if IS_CATALYST { // MacOS can reuse same weird sheet
-                                    sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                                }
-                                else { // IPAD needs to dismiss first
-                                    onDismiss()
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                                        sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                                    }
-                                }
-                            } label: {
-                                Image(systemName: "dot.radiowaves.left.and.right")
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(typingTextModel.uploading)
-                        }
-                        
-                        Button {
-                            showVoiceRecorderButton = false
-                            cameraSheetShown = true
-                        } label: {
-                            Image(systemName: "camera")
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(typingTextModel.uploading)
-                        
-                        if #available(iOS 16, *) {
-                            Button {
-                                showVoiceRecorderButton = false
-                                photoPickerShown = true
-                            } label: {
-                                Image(systemName: "photo")
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(typingTextModel.uploading)
-                            
-                            if kind != .picture && kind != .highlight {
-                                Button {
-                                    showVoiceRecorderButton = false
-                                    videoPickerShown = true
-                                } label: {
-                                    Image(systemName: "video")
-                                }
-                                .buttonStyle(.borderless)
-                                .disabled(typingTextModel.uploading)
-                            }
-                        }
-                        
-                        if kind != .picture {
-                            Button {
-                                showVoiceRecorderButton = false
-                                gifSheetShown = true
-                            } label: {
-                                Image("GifButton")
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(typingTextModel.uploading)
-                        }
-                    }
-                    
-                    if kind != .highlight {
-                        Button(String(localized: "Preview", comment:"Preview button when creating a new post")) {
-                            vm.showPreview(quotePost: quotePost, replyTo: replyTo)
-                        }
-                        .disabled(shouldDisablePostButton)
-                        .opacity(shouldDisablePostButton ? 0.25 : 1.0)
-                    }
-                    
-                    if kind == .highlight {
-                        if selectedAuthor != nil {
-                            Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight")) { selectedAuthor = nil }
-                        }
-                        else {
-                            Button(String(localized:"Include author", comment: "Button to include author in Highlight")) { isAuthorSelectionShown = true }
-                        }
-                    }
-                    
-                    Button {
-                        typingTextModel.sending = true
-            
-                        // Need to do these here in main thread
-                        guard let account = vm.activeAccount, account.isFullAccount else {
-                            sendNotification(.anyStatus, ("Problem with account", "NewPost"))
-                            return
-                        }
-                        let isNC = account.isNC
-                        let pubkey = account.publicKey
-                      
-                        
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
-                            Task {
-                                await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
-                            }
-                        }
-                    } label: {
-                        if (typingTextModel.uploading || typingTextModel.sending) {
-                            ProgressView().colorInvert()
-                        }
-                        else {
-                            Text("Post.verb", comment: "Button to post (publish) a post")
-                        }
-                    }
-                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
-                    .cornerRadius(20)
-                    .disabled(shouldDisablePostButton)
-                    .opacity(shouldDisablePostButton ? 0.25 : 1.0)
-                }
-            }
-            
-            ToolbarItem(placement: .principal) {
-                if let uploadError = vm.uploadError {
-                    Text(uploadError).foregroundColor(.red)
-                }
+            else {
+                $0.toolbar(content: self.toolbar)
             }
         }
         .sheet(isPresented: $isAuthorSelectionShown) {
@@ -366,7 +245,7 @@ struct Entry: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
+                        Button("Cancel", systemImage: "xmark") {
                             isAuthorSelectionShown = false
                         }
                     }
@@ -394,5 +273,233 @@ struct Entry: View {
                 showVoiceRecorderButton = false
             }
         }
+    }
+    
+    @ToolbarContentBuilder
+    func toolbar() -> some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel", systemImage: "xmark") { onDismiss() }
+        }
+        
+        ToolbarItem(placement: .confirmationAction) {
+            HStack {
+                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+                    if showVoiceRecorderButton {
+                        Button("Voice", systemImage: "mic") {
+                            showAudioRecorder = true
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(typingTextModel.uploading)
+                    }
+                    
+                    if kind != .picture && kind != .highlight {
+                        Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
+                            showVoiceRecorderButton = false
+                            if IS_CATALYST { // MacOS can reuse same weird sheet
+                                sendNotification(.showCreateNestsSheet, vm.activeAccount)
+                            }
+                            else { // IPAD needs to dismiss first
+                                onDismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                                    sendNotification(.showCreateNestsSheet, vm.activeAccount)
+                                }
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(typingTextModel.uploading)
+                    }
+                    
+                    Button("Take Photo", systemImage: "camera") {
+                        showVoiceRecorderButton = false
+                        cameraSheetShown = true
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(typingTextModel.uploading)
+                    
+                    if #available(iOS 16, *) {
+                        Button("Pick Photo", systemImage: "photo") {
+                            showVoiceRecorderButton = false
+                            photoPickerShown = true
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(typingTextModel.uploading)
+                        
+                        if kind != .picture && kind != .highlight {
+                            Button("Pick Video", systemImage: "video") {
+                                showVoiceRecorderButton = false
+                                videoPickerShown = true
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(typingTextModel.uploading)
+                        }
+                    }
+                    
+                    if kind != .picture {
+                        Button {
+                            showVoiceRecorderButton = false
+                            gifSheetShown = true
+                        } label: {
+                            Image("GifButton")
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(typingTextModel.uploading)
+                    }
+                }
+                
+                if kind == .highlight {
+                    self.highlightAddRemoveAuthorButton
+                }
+                
+                self.previewButton
+                
+                self.sendButton
+            }
+        }
+    }
+    
+    @available(iOS 26.0, *)
+    @ToolbarContentBuilder
+    func toolbar26() -> some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel", systemImage: "xmark") { onDismiss() }
+        }
+        
+        if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+            ToolbarItemGroup(placement: .primaryAction) {
+                if showVoiceRecorderButton {
+                    Button("Voice", systemImage: "mic") {
+                        showAudioRecorder = true
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(typingTextModel.uploading)
+                }
+                
+                if kind != .picture && kind != .highlight {
+                    Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
+                        showVoiceRecorderButton = false
+                        if IS_CATALYST { // MacOS can reuse same weird sheet
+                            sendNotification(.showCreateNestsSheet, vm.activeAccount)
+                        }
+                        else { // IPAD needs to dismiss first
+                            onDismiss()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                                sendNotification(.showCreateNestsSheet, vm.activeAccount)
+                            }
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(typingTextModel.uploading)
+                }
+                
+                Button("Take Photo", systemImage: "camera") {
+                    showVoiceRecorderButton = false
+                    cameraSheetShown = true
+                }
+                .buttonStyle(.borderless)
+                .disabled(typingTextModel.uploading)
+                
+                Button("Pick Photo", systemImage: "photo") {
+                    showVoiceRecorderButton = false
+                    photoPickerShown = true
+                }
+                .buttonStyle(.borderless)
+                .disabled(typingTextModel.uploading)
+                
+                if kind != .picture && kind != .highlight {
+                    Button("Pick Video", systemImage: "video") {
+                        showVoiceRecorderButton = false
+                        videoPickerShown = true
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(typingTextModel.uploading)
+                }
+                
+                if kind != .picture {
+                    Button {
+                        showVoiceRecorderButton = false
+                        gifSheetShown = true
+                    } label: {
+                        Image("GifButton")
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(typingTextModel.uploading)
+                }
+            }
+        }
+        
+        if kind == .highlight {
+            ToolbarItem(placement: .primaryAction) {
+                self.highlightAddRemoveAuthorButton
+            }
+        }
+        
+        if kind != .highlight {
+            ToolbarItem(placement: .primaryAction) {
+                self.previewButton
+            }
+        }
+        
+        ToolbarSpacer(.fixed)
+
+        ToolbarItem(placement: .primaryAction) {
+            self.sendButton
+        }
+         
+        ToolbarItem(placement: .principal) {
+            if let uploadError = vm.uploadError {
+                Text(uploadError).foregroundColor(.red)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var highlightAddRemoveAuthorButton: some View {
+        if selectedAuthor != nil {
+            Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight"), systemImage: "person.crop.circle.badge.minus.fill") { selectedAuthor = nil }
+        }
+        else {
+            Button(String(localized:"Include author", comment: "Button to include author in Highlight"), systemImage: "person.crop.circle.badge.plus") { isAuthorSelectionShown = true }
+        }
+    }
+    
+    @ViewBuilder
+    var previewButton: some View {
+        Button(String(localized: "Preview", comment:"Preview button when creating a new post"), systemImage: "mail.and.text.magnifyingglass.rtl") {
+            vm.showPreview(quotePost: quotePost, replyTo: replyTo)
+        }
+        .disabled(shouldDisablePostButton)
+        .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+    }
+    
+    @ViewBuilder
+    var sendButton: some View {
+        Button {
+            typingTextModel.sending = true
+
+            // Need to do these here in main thread
+            guard let account = vm.activeAccount, account.isFullAccount else {
+                sendNotification(.anyStatus, ("Problem with account", "NewPost"))
+                return
+            }
+            let isNC = account.isNC
+            let pubkey = account.publicKey
+          
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
+                Task {
+                    await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
+                }
+            }
+        } label: {
+            if (typingTextModel.uploading || typingTextModel.sending) {
+                ProgressView().colorInvert()
+            }
+            else {
+                Label(String(localized: "Post.verb", comment: "Button to post (publish) a post"), systemImage: "paperplane.fill")
+            }
+        }
+        .buttonStyleGlassProminent()
+        .disabled(shouldDisablePostButton)
+        .opacity(shouldDisablePostButton ? 0.25 : 1.0)
     }
 }

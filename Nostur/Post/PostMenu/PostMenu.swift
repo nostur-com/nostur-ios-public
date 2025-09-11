@@ -247,9 +247,9 @@ struct PostMenu: View {
         }
         
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { dismiss() }) {
-                    Text("Done")
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                    dismiss()
                 }
             }
         }

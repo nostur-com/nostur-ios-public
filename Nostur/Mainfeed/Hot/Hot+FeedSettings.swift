@@ -32,8 +32,10 @@ struct HotFeedSettings: View {
             })
         }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") { dismiss() }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                  dismiss()
+                }
             }
         }
     }

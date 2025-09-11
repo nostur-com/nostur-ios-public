@@ -73,7 +73,7 @@ struct AccountsSheet: View {
         .toolbar(content: {
             ToolbarItem(placement: .cancellationAction) {
                 if (withDismissButton) {
-                    Button(String(localized: "Close", comment: "Button to close this screen")) {
+                    Button(String(localized: "Close", comment: "Button to close this screen"), systemImage: "xmark") {
                         dismiss()
                         showSidebar = false
                         onDismiss?()

@@ -101,8 +101,8 @@ struct ComposePost: View {
                         AudioRecorderContentView(vm: vm, replyTo: replyTo, onDismiss: { onDismiss() })
                             .frame(maxWidth: .infinity, alignment: .center)
                             .toolbar {
-                                ToolbarItem(placement: .navigationBarLeading) {
-                                    Button { onDismiss() } label: { Text("Cancel") }
+                                ToolbarItem(placement: .cancellationAction) {
+                                    Button("Cancel", systemImage: "xmark") { onDismiss() }
                                 }
                             }
                     }
@@ -196,7 +196,7 @@ struct ComposePost: View {
                                                     .navigationBarTitleDisplayMode(.inline)
                                                     .toolbar {
                                                         ToolbarItem(placement: .cancellationAction) {
-                                                            Button("Cancel") {
+                                                            Button("Cancel", systemImage: "xmark") {
                                                                 isAuthorSelectionShown = false
                                                             }
                                                         }
@@ -316,39 +316,18 @@ struct ComposePost: View {
                                 .frame(height: geo.size.height * 0.60)
                                 .background(theme.listBackground)
                         }
-                        .sheet(item: $vm.previewNRPost) { nrPost in
-                            if #available(iOS 16, *) {
-                                NavigationStack {
-                                    VStack(alignment: .leading) {
-                                        PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
-                                            .environment(\.theme, theme)
-                                            .environmentObject(la)
-                                            .environmentObject(previewDIM)
-                                        
-                                        if let nEvent = vm.previewNEvent, showAutoPilotPreview {
-                                            AutoPilotSendPreview(nEvent: nEvent)
-                                        }
-                                    }
+                        .nbNavigationDestination(item: $vm.previewNRPost, destination: { nrPost in
+                            VStack(alignment: .leading) {
+                                PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
+                                    .environment(\.theme, theme)
+                                    .environmentObject(la)
+                                    .environmentObject(previewDIM)
+                                
+                                if let nEvent = vm.previewNEvent, showAutoPilotPreview {
+                                    AutoPilotSendPreview(nEvent: nEvent)
                                 }
-                                .presentationBackgroundCompat(theme.listBackground)
-                            }
-                            else {
-                                NBNavigationStack {
-                                    VStack(alignment: .leading) {
-                                        PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
-                                            .environment(\.theme, theme)
-                                            .environmentObject(la)
-                                            .environmentObject(previewDIM)
-                                        
-                                        if let nEvent = vm.previewNEvent, showAutoPilotPreview {
-                                            AutoPilotSendPreview(nEvent: nEvent)
-                                        }
-                                    }
-                                }
-                                .nbUseNavigationStack(.never)
-                                .presentationBackgroundCompat(theme.listBackground)
-                            }
-                        }
+                            }                            
+                        })
                         .sheet(isPresented: $videoPickerShown) {
                             VideoPickerView(selectedVideoURL: $selectedVideoURL)
                         }

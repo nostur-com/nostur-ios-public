@@ -69,7 +69,7 @@ struct AddRemoveToListsheet: View {
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+                Button("Done", systemImage: "checkmark") {
                     onDismiss?()
                     DataProvider.shared().saveToDiskNow(.viewContext)
                     for list in lists {
@@ -77,6 +77,7 @@ struct AddRemoveToListsheet: View {
                     }
                     broadcastUpdatedSharedLists()
                 }
+                .buttonStyleGlassProminent()
             }
         }
         .navigationTitle(String(localized:"Add/remove from Lists", comment: "Navigation title for screen to add or remove contacts to a feed"))
@@ -135,12 +136,13 @@ struct EnterNewListNameSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Add") {
+                Button("Add", systemImage: "checkmark") {
                     guard isValid else { return }
                     // TODO: add validation
                     onAdd(listName.trimmingCharacters(in: .whitespaces))
                     dismiss()
                 }
+                .buttonStyleGlassProminent()
                 .disabled(!isValid)
             }
         }

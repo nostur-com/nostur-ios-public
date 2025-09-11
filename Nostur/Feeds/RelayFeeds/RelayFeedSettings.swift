@@ -93,8 +93,8 @@ struct RelayFeedSettings: View {
         .navigationBarTitleDisplayMode(.inline)
         
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
                     DataProvider.shared().saveToDiskNow(.viewContext)
                     sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: feed.subscriptionId, relays: feed.relaysData, wotEnabled: feed.wotEnabled))
                     dismiss()
@@ -104,10 +104,14 @@ struct RelayFeedSettings: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
-        if let feed = PreviewFetcher.fetchCloudFeed(type: CloudFeedType.relays.rawValue) {
-            FeedSettings(feed: feed)
+        NBNavigationStack {
+            if let feed = PreviewFetcher.fetchCloudFeed(type: CloudFeedType.relays.rawValue) {
+                FeedSettings(feed: feed)
+            }
         }
     }
 }

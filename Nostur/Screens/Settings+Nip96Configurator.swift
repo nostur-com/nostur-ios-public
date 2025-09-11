@@ -76,7 +76,7 @@ struct Nip96Configurator: View {
 
                 if state != .checking {
                     Button(String(localized:"Activate", comment: "Button to check if a file storage server is compatible")) { startCheck() }
-                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         .disabled(!validUri)
                         .opacity(validUri ? 1.0 : 0.5)
                         .padding()
@@ -91,14 +91,15 @@ struct Nip96Configurator: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle((String(localized:"Custom File Storage", comment:"Navigation title for setting up a custom File Storage Server")))
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .confirmationAction) {
                 if state == .success {
-                    Button("Done") { dismiss() }
+                    Button("Done", systemImage: "checkmark") { dismiss() }
+                        .buttonStyleGlassProminent()
                 }
             }
             ToolbarItem(placement: .cancellationAction) {
                 if state != .success {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel", systemImage: "xmark") { dismiss() }
                 }
             }
         }

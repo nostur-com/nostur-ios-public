@@ -62,7 +62,7 @@ struct DeleteAccountSheet: View {
                     } label: {
                         Label(String(localized: "Copy private key", comment: "Button to copy your private key to clipboard"), systemImage: "doc.on.doc")
                     }
-                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
                     
                     Button(role: .destructive) {
                         self.cancel = timer.connect()
@@ -71,7 +71,7 @@ struct DeleteAccountSheet: View {
                         Label("Delete", systemImage: "trash")
                         //                        Image(systemName: "trash")
                     }
-                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
                 }
             }
             else {
@@ -81,7 +81,7 @@ struct DeleteAccountSheet: View {
                 } label: {
                     Text("Cancel")
                 }
-                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(style: .borderedProminent))
             }
         }
         .onReceive(timer, perform: { _ in

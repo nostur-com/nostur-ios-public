@@ -32,8 +32,10 @@ struct ArticleFeedSettings: View {
         .navigationTitle("Article feed settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") { dismiss() }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                  dismiss()
+                }
             }
         }
     }

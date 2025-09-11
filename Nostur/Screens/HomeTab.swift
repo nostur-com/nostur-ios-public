@@ -41,14 +41,14 @@ struct HomeTab: View {
         NBNavigationStack(path: $navPath) {
             MainFeedsScreen(showingOtherContact: $showingOtherContact)
                 .background(theme.listBackground)
-                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
+                .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
                 .overlay(alignment: .bottom) {
                     VStack {
                         AnyStatus(filter: "APP_NOTICE")
-                        #if DEBUG
+#if DEBUG
                         AnyStatus(filter: "RELAY_NOTICE")
-                        #endif
+#endif
                         if settings.statusBubble {
                             ProcessingStatus()
                                 .opacity(0.85)
@@ -56,73 +56,156 @@ struct HomeTab: View {
                         }
                     }
                 }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        HStack(spacing: 10) {
-                            PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
-                                .onTapGesture {
-                                    showSidebar = true
+                .modifier {
+                    if #available(iOS 26.0, *) {
+                        $0.toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                HStack(spacing: 10) {
+                                    PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
+                                        .onTapGesture {
+                                            showSidebar = true
+                                        }
+                                        .accessibilityLabel("Account menu")
+                                    
+                                    if let showingOtherContact = showingOtherContact {
+                                        HStack(spacing: 6) {
+                                            PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
+                                                .frame(height:30)
+                                                .clipShape(Circle())
+                                                .onTapGesture {
+                                                    showSidebar = true
+                                                }
+                                            
+                                            Image(systemName: "multiply.circle.fill")
+                                                .frame(height:30)
+                                                .contentShape(Rectangle())
+                                                .onTapGesture {
+                                                    self.showingOtherContact = nil
+                                                    sendNotification(.revertToOwnFeed)
+                                                }
+                                        }
+                                        .offset(x: -25)
+                                    }
+                                    
+                                    // Shortcut to open a new just posted post
+                                    if newPost != nil {
+                                        Image(systemName: "ellipsis.bubble")
+                                            .frame(height: 30)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                self.goToNewPost()
+                                            }
+                                    }
                                 }
-                                .accessibilityLabel("Account menu")
+                            }
                             
-                            // Shortcut to open a new just posted post
-                            if newPost != nil {
-                                Image(systemName: "ellipsis.bubble")
-                                    .frame(height: 30)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        self.goToNewPost()
-                                    }
-                            }
-                        }
-                    }
-                    
-                    ToolbarItem(placement: .principal) {
-                        if let showingOtherContact = showingOtherContact {
-                            HStack(spacing: 6) {
-                                PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
-                                    .frame(height:30)
-                                    .clipShape(Circle())
-                                    .onTapGesture {
-                                        sendNotification(.shouldScrollToTop)
-                                    }
-                                
-                                Image(systemName: "multiply.circle.fill")
-                                    .frame(height:30)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        self.showingOtherContact = nil
-                                        sendNotification(.revertToOwnFeed)
-                                    }
-                            }
-                        }
-                        else {
-                            Image("NosturLogo")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height:30)
-                                .clipShape(Circle())
-                                .onTapGesture {
-                                    sendNotification(.shouldScrollToTop)
+                         
+                            
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                if settings.lowDataMode {
+                                    Image(systemName: "tortoise")
+                                        .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                                        .onTapGesture {
+                                            settings.lowDataMode.toggle()
+                                            sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                        }
                                 }
+                            }
+                            
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Menu {
+                                    Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                                        sendNotification(.showFeedToggles)
+                                    }
+                                    Button(String(localized: "Low Data Mode", comment: "Menu item"), systemImage: "tortoise") {
+                                        settings.lowDataMode.toggle()
+                                        sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                    }
+                                } label: {
+                                    Label("Feed options", systemImage: "ellipsis")
+                                        .labelStyle(.iconOnly)
+                                        .foregroundColor(theme.accent)
+                                    
+//                                    Image(systemName: "elipsis")
+//                                        .foregroundColor(theme.accent)
+//                                        .onTapGesture {
+//                                            sendNotification(.showFeedToggles)
+//                                        }
+                                }
+
+                            }
                         }
                     }
-                    
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Image(systemName: "tortoise")
-                            .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
-                            .onTapGesture {
-                                settings.lowDataMode.toggle()
-                                sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                    else {
+                        $0.toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                HStack(spacing: 10) {
+                                    PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
+                                        .onTapGesture {
+                                            showSidebar = true
+                                        }
+                                        .accessibilityLabel("Account menu")
+                                    
+                                    // Shortcut to open a new just posted post
+                                    if newPost != nil {
+                                        Image(systemName: "ellipsis.bubble")
+                                            .frame(height: 30)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                self.goToNewPost()
+                                            }
+                                    }
+                                }
                             }
-                    }
-                    
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Image(systemName: "gearshape")
-                            .foregroundColor(theme.accent)
-                            .onTapGesture {
-                                sendNotification(.showFeedToggles)
+                            
+                            ToolbarItem(placement: .principal) {
+                                if let showingOtherContact = showingOtherContact {
+                                    HStack(spacing: 6) {
+                                        PFP(pubkey: showingOtherContact.pubkey, nrContact: showingOtherContact, size: 30)
+                                            .frame(height:30)
+                                            .clipShape(Circle())
+                                            .onTapGesture {
+                                                sendNotification(.shouldScrollToTop)
+                                            }
+                                        
+                                        Image(systemName: "multiply.circle.fill")
+                                            .frame(height:30)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                self.showingOtherContact = nil
+                                                sendNotification(.revertToOwnFeed)
+                                            }
+                                    }
+                                }
+                                else {
+                                    Image("NosturLogo")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(height:30)
+                                        .clipShape(Circle())
+                                        .onTapGesture {
+                                            sendNotification(.shouldScrollToTop)
+                                        }
+                                }
                             }
+                            
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Image(systemName: "tortoise")
+                                    .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                                    .onTapGesture {
+                                        settings.lowDataMode.toggle()
+                                        sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                    }
+                            }
+                            
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Image(systemName: "gearshape")
+                                    .foregroundColor(theme.accent)
+                                    .onTapGesture {
+                                        sendNotification(.showFeedToggles)
+                                    }
+                            }
+                        }
                     }
                 }
         }

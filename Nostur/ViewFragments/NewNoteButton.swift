@@ -12,17 +12,20 @@ struct NewNoteButton: View {
     @Binding var showingNewNote:Bool
     
     var body: some View {
+        
         Button {
             guard isFullAccount() else { showReadOnlyMessage(); return }
             showingNewNote = true
         } label: {
-            Image(systemName: "plus.circle.fill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(Color.white, theme.accent)
-                .frame(width: 45, height: 45)
+            Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
+                .font(.title)
+                .fontWeightBold()
+                .labelStyle(.iconOnly)
+                .padding(.vertical, 5)
         }
-        .accessibilityLabel(String(localized:"New post", comment: "Button to create a new post"))
+        .buttonStyleGlass()
+        .tint(theme.accent)
+        .buttonBorderShape(.roundedRectangle(radius: 45))
     }
 }
 
@@ -32,11 +35,49 @@ struct NewNoteButton_Previews: PreviewProvider {
     
     static var previews: some View {
         PreviewContainer {
-            NewNoteButton(showingNewNote: $showingNewNote)
-                .sheet(isPresented: $showingNewNote) {
-                    ComposePost(onDismiss: { })
+            ScrollView {
+                VStack {
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color(.secondaryLabel))
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color(.secondaryLabel))
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.red)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.red)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.random)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.random)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.random)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color(.secondaryLabel))
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color(.secondaryLabel))
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.red)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.red)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.random)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.random)
+                    Text("Testing liquid glass, testing\nTesting liquid glass, testing\n")
+                        .foregroundStyle(Color.random)
+                    Spacer()
                 }
-                .buttonStyleGlassProminent()
+                .font(.title2)
+            }
+            .overlay {
+                NewNoteButton(showingNewNote: $showingNewNote)
+                    .sheet(isPresented: $showingNewNote) {
+                        ComposePost(onDismiss: { })
+                    }
+                    .buttonStyleGlass()
+                    .padding(30)
+            }
         }
     }
 }
+

@@ -18,7 +18,7 @@ struct MutedWordsView: View {
     @State var selected:MutedWords?
     
     var body: some View {
-        List {
+        NXForm {
             ForEach(mutedWords) { mutedWord in
                 Text(mutedWord.words == "" ? "Tap to edit..." : mutedWord.words ?? "Tap to edit...")
                     .onTapGesture {
@@ -36,14 +36,11 @@ struct MutedWordsView: View {
                 .presentationBackgroundCompat(theme.listBackground)
         }
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(role: .none) {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Add", systemImage: "plus") {
                     let m = MutedWords(context: viewContext)
                     m.words = ""
-                } label: {
-                    Label("Add", systemImage: "plus")
                 }
-
             }
         }
     }
@@ -59,9 +56,11 @@ struct MutedWordsView: View {
         
         var body: some View {
             NBNavigationStack {
-                Form {
+                NXForm {
                     Section(header: Text("Specific word or sentence", comment: "Heading for entering a word or sentence to mute"), footer: Text("Posts containing this will be filtered from your feed")) {
                         TextField("Specific word or sentence", text: $text, prompt: Text(verbatim: "nft"))
+                            .disableAutocorrection(true)
+                            .textInputAutocapitalization(.never)
                         
                         Toggle(isOn: $mutedWords.enabled) {
                             Text("Activate this filter", comment: "Toggle to activate filter")
@@ -72,17 +71,18 @@ struct MutedWordsView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
+                        Button("Cancel", systemImage: "xmark") {
                             dismiss()
                         }
                     }
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Save") {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save", systemImage: "checkmark") {
                             mutedWords.words = text
                             DataProvider.shared().saveToDiskNow(.viewContext)
                             AppState.shared.loadMutedWords()
                             dismiss()
                         }
+                        .buttonStyleGlassProminent()
                     }
                 }
             }

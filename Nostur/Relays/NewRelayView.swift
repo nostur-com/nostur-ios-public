@@ -22,14 +22,15 @@ struct NewRelayView: View {
         .navigationTitle(String(localized:"Add relay", comment:"Navigation title for Add relay screen"))
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button("Cancel", systemImage: "xmark") {
                     dismiss()
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Add") {
+                Button("Add", systemImage: "checkmark") {
                     add()
                 }
+                .buttonStyleGlassProminent()
             }
         }
     }
@@ -53,12 +54,8 @@ struct NewRelayView: View {
     }
 }
 
-struct NewRelayView_Previews: PreviewProvider {
-    static var previews: some View {
-        NBNavigationStack {
-            NewRelayView()
-                .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-                .environmentObject(Themes.default)
-        }
+#Preview {
+    NBNavigationStack {
+        NewRelayView()
     }
 }

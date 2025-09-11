@@ -76,12 +76,12 @@ struct NXColumnConfigurator: View {
             account = accounts.first(where: { $0.publicKey == pubkey })
         }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done", systemImage: "checkmark") {
                     guard formIsValid else { return }
                     saveColumn()
                 }
-                .buttonStyle(.borderless)
+                .buttonStyleGlassProminent()
                 .disabled(!formIsValid)
             }
         }

@@ -62,8 +62,8 @@ struct BookmarkFilters: View {
                 .foregroundColor(.gray)
         }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
                     dismiss()
                 }
             }
@@ -80,6 +80,10 @@ struct BookmarkFilters: View {
     }
 }
 
+import NavigationBackport
+
 #Preview {
-    BookmarkFilters(onlyShow: .constant([]))
+    NBNavigationStack {
+        BookmarkFilters(onlyShow: .constant([]))
+    }
 }

@@ -49,15 +49,6 @@ struct FollowingFeedSettings: View {
         
         .navigationTitle("Feed settings")
         .navigationBarTitleDisplayMode(.inline)
-        
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
-                    DataProvider.shared().saveToDiskNow(.viewContext)
-                    dismiss()
-                }
-            }
-        }
     }
 }
 

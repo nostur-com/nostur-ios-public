@@ -76,7 +76,7 @@ struct AlbyNWCConnectSheet: View {
             }
             else {
                 Button(String(localized:"Connect Alby wallet", comment:"Button to connect to Alby wallet")) { startNWC() }
-                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
             }
             
             if !nwcErrorMessage.isEmpty {
@@ -88,17 +88,18 @@ struct AlbyNWCConnectSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle((String(localized:"Nostr Wallet Connect", comment:"Navigation title for setting up Nostr Wallet Connect (NWC)")))
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .confirmationAction) {
                 if nwcConnectSuccess {
-                    Button("Done") {
+                    Button("Done", systemImage: "checkmark") {
                         dismiss()
                     }
+                    .buttonStyleGlassProminent()
                 }
             }
             
             ToolbarItem(placement: .cancellationAction) {
                 if !nwcConnectSuccess {
-                    Button("Cancel") {
+                    Button("Cancel", systemImage: "xmark") {
                         dismiss()
                     }
                 }

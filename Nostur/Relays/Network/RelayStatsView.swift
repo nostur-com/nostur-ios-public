@@ -56,7 +56,7 @@ struct RelayStatsView: View {
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button("Done") {
+                            Button("Close", systemImage: "xmark") {
                                 showingStats = nil
                             }
                         }

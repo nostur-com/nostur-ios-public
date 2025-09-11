@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct NRButtonStyle: ButtonStyle {
-    var theme:Theme
-    var style:Style = .default
+    @Environment(\.theme) var theme
+    
+    var style: Style = .default
     
     enum Style {
         case `default`
@@ -21,12 +22,28 @@ struct NRButtonStyle: ButtonStyle {
         case .default:
             configuration.label
                 .foregroundColor(theme.accent)
+//                .modifier {
+//                    if let theme {
+//                        $0.foregroundColor(theme.accent)
+//                    }
+//                    else {
+//                        $0
+//                    }
+//                }
         case .borderedProminent:
             configuration.label
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(theme.accent)
-                .cornerRadius(5)
+//                .modifier {
+//                    if let theme {
+//                        $0.background(theme.accent)
+//                    }
+//                    else {
+//                        $0
+//                    }
+//                }
+                .cornerRadius(25)
                 .foregroundColor(Color.white)
         }
     }
@@ -40,12 +57,11 @@ struct NRButton_Previews: PreviewProvider {
                     .buttonStyle(.borderedProminent)
                 
                 Button("Example") { }
-                    .buttonStyle(NRButtonStyle(theme: Themes.default.theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
             }
                 
                 
         }
-        .buttonStyle(NRButtonStyle(theme: Themes.default.theme))
-        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+        .buttonStyle(NRButtonStyle())
     }
 }

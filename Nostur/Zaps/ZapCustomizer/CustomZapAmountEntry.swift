@@ -49,23 +49,29 @@ struct CustomZapAmountEntry: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button("Cancel", systemImage: "xmark") {
                     dismiss()
                 }
             }
+            
             ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+                Button("Done", systemImage: "checkmark") {
                     if let d = Double(enteredAmount), d > 0 {
                         customAmount = Double(d)
                         dismiss()
                     }
                 }
+                .buttonStyleGlassProminent()
                 .disabled(!isValidAmount)
             }
         }
     }
 }
 
+import NavigationBackport
+
 #Preview("CustomZapAmountEntry") {
-    CustomZapAmountEntry(customAmount: .constant(400.0))
+    NBNavigationStack {
+        CustomZapAmountEntry(customAmount: .constant(400.0))
+    }
 }

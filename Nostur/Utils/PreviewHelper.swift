@@ -827,7 +827,7 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.dm)
                     .environmentObject(NetworkMonitor.shared)
                     .environmentObject(NotificationsViewModel.shared)
-                    .buttonStyle(NRButtonStyle(theme: Themes.GREEN))
+                    .buttonStyle(NRButtonStyle())
                     .tint(Themes.GREEN.accent)
             }
             else {

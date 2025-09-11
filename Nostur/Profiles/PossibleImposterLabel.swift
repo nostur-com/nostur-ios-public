@@ -136,8 +136,8 @@ struct PossibleImposterDetail: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(String(localized: "Possible imposter", comment: "Navigation title"))
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Close") { dismiss() }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") { dismiss() }
             }
         }
         .task {

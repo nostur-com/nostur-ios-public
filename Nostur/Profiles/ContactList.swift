@@ -71,7 +71,7 @@ struct ContactList: View {
             Button("Add all to custom list") {
                 AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: Set(pubkeys))
             }
-            .buttonStyle(NRButtonStyle(theme: theme))
+            .buttonStyle(NRButtonStyle())
             .frame(height: 120)
             .background(theme.listBackground)
             .hCentered()

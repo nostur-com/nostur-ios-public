@@ -120,7 +120,7 @@ struct MainFeedsScreen: View {
                 ZStack {
                     if !shouldHideTabBar {
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing:0) {
+                            HStack(spacing: 0) {
                                 TabButton(
                                     action: { selectedSubTab = "Following" },
                                     title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
@@ -240,22 +240,6 @@ struct MainFeedsScreen: View {
                     }
                 }
                 .onAppear {
-                    ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
-                    if selectedSubTab == "List" {
-                        if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
-                            selectedList = list
-                        }
-                        else {
-                            selectedList = lists.first
-                        }
-                    }
-                    
-                    guard !didCreate else { return }
-                    didCreate = true
-                    loadColumnConfigs()
-                    createFollowingFeed(la.account)
-                    createPictureFeed(la.account)
-                    createExploreFeed() // Also create Explore Feed
                     
                     // Make sure selected tab is visible at launch
                     if selectedSubTab == "List" {
@@ -289,7 +273,7 @@ struct MainFeedsScreen: View {
                         } label: {
                             Text("Explore", comment: "Button to go to the Explore tab")
                         }
-                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         Spacer()
                     }
                     .onReceive(receiveNotification(.didSend)) { _ in
@@ -378,6 +362,27 @@ struct MainFeedsScreen: View {
             
             AudioOnlyBarSpace()
         }
+        
+        .onAppear {
+            ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
+            if selectedSubTab == "List" {
+                if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
+                    selectedList = list
+                }
+                else {
+                    selectedList = lists.first
+                }
+            }
+            
+            guard !didCreate else { return }
+            didCreate = true
+            loadColumnConfigs()
+            createFollowingFeed(la.account)
+            createPictureFeed(la.account)
+            createExploreFeed() // Also create Explore Feed
+  
+        }
+        
         .onChange(of: selectedListId) { newListId in
             if !columnConfigs.contains(where: { $0.id == newListId }) {
                 loadColumnConfigs()
@@ -395,7 +400,8 @@ struct MainFeedsScreen: View {
             createFollowingFeed(newAccount)
             createPictureFeed(newAccount)
         }
-        .navigationTitle(navigationTitle)
+        .navigationTitle("")
+//        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onReceive(lists.publisher.collect()) { lists in
             guard didCreate else { return } // Only update here after .onAppear { } has ran.

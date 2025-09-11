@@ -134,13 +134,10 @@ struct ProfileBadgesView: View {
                 .padding(20)
                 .presentationDetents250medium()
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button(role: .cancel) {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close", systemImage: "xmark") {
                             badgeInfoIsShown = false
-                        } label: {
-                            Text("Close")
                         }
-                        
                     }
                 }
                 .environment(\.theme, theme)

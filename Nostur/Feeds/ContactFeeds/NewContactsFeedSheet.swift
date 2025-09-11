@@ -153,10 +153,10 @@ struct NewContactsFeedSheet: View {
 
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+                Button("Done", systemImage: "checkmark") {
                     let newFeed = CloudFeed(context: DataProvider.shared().viewContext)
                     newFeed.id = UUID()
                     newFeed.name = title
@@ -177,6 +177,7 @@ struct NewContactsFeedSheet: View {
                     UserDefaults.standard.setValue("List", forKey: "selected_subtab") // Select List
                     UserDefaults.standard.setValue(newFeed.subscriptionId, forKey: "selected_listId") // Which list
                 }
+                .buttonStyleGlassProminent()
                 .disabled(!formIsValid)
             }
         }

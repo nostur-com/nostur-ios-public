@@ -12,6 +12,7 @@ struct NXColumnView<HeaderContent: View>: View {
     
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var dim: DIMENSIONS
+    @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
     
     @StateObject private var viewModel = NXColumnViewModel()
@@ -188,7 +189,16 @@ struct NXColumnView<HeaderContent: View>: View {
         .sheet(item: $feedSettingsFeed, content: { feed in
             NBNavigationStack {
                 FeedSettings(feed: feed)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close", systemImage: "xmark") {
+                                DataProvider.shared().saveToDiskNow(.viewContext)
+                                feedSettingsFeed = nil
+                            }
+                        }
+                    }
                     .environment(\.theme, theme)
+                    .environmentObject(la)
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)

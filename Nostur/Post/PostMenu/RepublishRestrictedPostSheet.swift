@@ -96,6 +96,7 @@ struct RepublishRestrictedPostSheet: View {
                         Text("Republish")
                     }
                 })
+                .buttonStyleGlassProminent()
                 .disabled(signingAccount == nil || viewState == .publishing || (relayStates.count(where: { $0.value == .selected }) == 0))
                 .frame(maxWidth: .infinity, alignment: .center)
             } footer: {
@@ -124,8 +125,8 @@ struct RepublishRestrictedPostSheet: View {
         
         .navigationTitle("Republish to relays")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
                     rootDismiss?()
                 }
             }

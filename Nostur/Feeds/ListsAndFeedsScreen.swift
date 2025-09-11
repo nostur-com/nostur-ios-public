@@ -142,7 +142,7 @@ struct ListsAndFeedsScreen: View {
                     }
 
                 } label: {
-                    Image(systemName: "plus.circle.fill")
+                    Label("New Feed", systemImage: "plus")
                 }
             }
         }

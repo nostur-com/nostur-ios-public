@@ -46,7 +46,7 @@ struct RelayFeedPreviewSheet: View {
 
             ToolbarItem(placement: .primaryAction) {
                 HStack {
-                    Button("Close", systemImage: "multiply") {
+                    Button("Close", systemImage: "xmark") {
                         AppSheetsModel.shared.dismiss()
                     }
                     .labelStyle(.iconOnly)

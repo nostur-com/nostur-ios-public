@@ -315,7 +315,7 @@ struct DMConversationView: View {
                                     DirectMessageViewModel.default.reloadAccepted()
                                     
                                 }
-                                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                                .buttonStyle(NRButtonStyle(style: .borderedProminent))
                             }
                         }
                         .padding(.vertical, 5)

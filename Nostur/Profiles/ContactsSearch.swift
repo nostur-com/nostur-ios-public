@@ -153,10 +153,11 @@ struct ContactsSearch: View, Equatable {
                         }
                     }
                     else {
-                        Button("Done") {
+                        Button("Done", systemImage: "checkmark") {
                             guard let onSelectContacts = onSelectContacts else { return }
                             onSelectContacts(selectedContacts)
                         }
+                        .buttonStyleGlassProminent()
                     }
                 }
                 else {
@@ -177,8 +178,11 @@ struct ContactsSearch_Previews: PreviewProvider {
             pe.loadContacts()
         }) {
             NBNavigationStack {
-                ContactsSearch(followingPubkeys: follows(),
-                               prompt: "Search")
+                ContactsSearch(
+                    followingPubkeys: follows(),
+                    prompt: "Search",
+                    onSelectContacts: { _ in }
+                )
             }
         }
     }

@@ -102,7 +102,7 @@ struct OwnPostFooter: View {
                             }
                             
                         }
-                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         .foregroundColor(Color.white)
                         .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
                     }

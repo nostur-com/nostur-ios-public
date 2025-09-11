@@ -164,8 +164,9 @@ struct MultiFollowSheet: View {
             )
         }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
+
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
                     onDismiss?()
                 }
             }

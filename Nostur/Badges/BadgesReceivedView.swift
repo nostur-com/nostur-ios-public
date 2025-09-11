@@ -64,7 +64,7 @@ struct BadgesReceivedView: View {
                 guard isFullAccount() else { showReadOnlyMessage(); return }
                 publishSelection(Array(selection))
             } label: { Text("Publish selected badges on profile") }
-                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(style: .borderedProminent))
                 .disabled(selection.isEmpty)
             
             Spacer()

@@ -33,8 +33,8 @@ struct PictureFeedSettings: View {
         .navigationBarTitleDisplayMode(.inline)
         
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("Done") {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
                     DataProvider.shared().saveToDiskNow(.viewContext)
                     dismiss()
                 }

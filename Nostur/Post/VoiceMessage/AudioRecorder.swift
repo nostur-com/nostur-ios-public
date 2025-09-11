@@ -476,7 +476,7 @@ struct AudioRecorderContentView: View {
                         recorder.resetRecording()
                         isTooLong = false
                     }) {
-                        Image(systemName: "multiply")
+                        Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
                             .frame(width: 50, height: 50)
@@ -546,41 +546,38 @@ struct AudioRecorderContentView: View {
         }
         
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                HStack {
-                    Button {
-                        typingTextModel.sending = true
-            
-                        // Need to do these here in main thread
-                        guard let account = vm.activeAccount, account.isFullAccount else {
-                            sendNotification(.anyStatus, ("Problem with account", "NewPost"))
-                            return
-                        }
-                        let isNC = account.isNC
-                        let pubkey = account.publicKey
-                      
-                        guard let localFileURL = recorder.recordingURL else { return }
-                        
-                        typingTextModel.voiceRecording = VoiceRecording(localFileURL: localFileURL, samples: recorder.samples, duration: Int(recorder.duration))
-                        
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
-                            Task {
-                                await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, onDismiss: { onDismiss() })
-                            }
-                        }
-                    } label: {
-                        if (typingTextModel.uploading || typingTextModel.sending) {
-                            ProgressView().colorInvert()
-                        }
-                        else {
-                            Text("Post.verb", comment: "Button to post (publish) a post")
+            ToolbarItem(placement: .confirmationAction) {
+                Button {
+                    typingTextModel.sending = true
+        
+                    // Need to do these here in main thread
+                    guard let account = vm.activeAccount, account.isFullAccount else {
+                        sendNotification(.anyStatus, ("Problem with account", "NewPost"))
+                        return
+                    }
+                    let isNC = account.isNC
+                    let pubkey = account.publicKey
+                  
+                    guard let localFileURL = recorder.recordingURL else { return }
+                    
+                    typingTextModel.voiceRecording = VoiceRecording(localFileURL: localFileURL, samples: recorder.samples, duration: Int(recorder.duration))
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
+                        Task {
+                            await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, onDismiss: { onDismiss() })
                         }
                     }
-                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
-                    .cornerRadius(20)
-                    .disabled(shouldDisablePostButton)
-                    .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+                } label: {
+                    if (typingTextModel.uploading || typingTextModel.sending) {
+                        ProgressView().colorInvert()
+                    }
+                    else {
+                        Label(String(localized: "Post.verb", comment: "Button to post (publish) a post"), systemImage: "paperplane.fill")
+                    }
                 }
+                .buttonStyleGlassProminent()
+                .disabled(shouldDisablePostButton)
+                .opacity(shouldDisablePostButton ? 0.25 : 1.0)
             }
             
             ToolbarItem(placement: .principal) {

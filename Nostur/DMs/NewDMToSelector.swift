@@ -44,12 +44,9 @@ struct NewDMToSelector: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button(role: .cancel) {
+                Button("Cancel", systemImage: "xmark") {
                     dismiss()
-                } label: {
-                    Text("Cancel")
                 }
-                
             }
         }
         .onChange(of: debounceObject.debouncedText) { searchString in

@@ -23,7 +23,7 @@ struct ReadOnlyAccountInformationSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(content: {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Close") {
+                Button("Close", systemImage: "xmark") {
                     AppSheetsModel.shared.readOnlySheetVisible = false
                     dismiss()
                 }

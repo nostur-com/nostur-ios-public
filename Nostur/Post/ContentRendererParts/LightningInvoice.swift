@@ -44,7 +44,7 @@ struct LightningInvoice: View {
                             }
                             self.cancellationId = nil
                         } label: { Text(isExpired ? "Expired" : "Payment attempted").frame(minWidth: 150) }
-                        .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         .cornerRadius(20)
                         .disabled(isExpired)
                     }
@@ -93,7 +93,7 @@ struct LightningInvoice: View {
                             Text("Pay", comment:"Button to pay a lightning invoice").frame(minWidth: 150)
                         }
                     }
-                    .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
                     .cornerRadius(20)
                     .disabled(isExpired)
                 }

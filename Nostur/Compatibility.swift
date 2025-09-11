@@ -360,7 +360,12 @@ extension View {
     
     @ViewBuilder
     func nosturTabsCompat(theme: Theme) -> some View {
-        if #available(iOS 16.0, *) {
+        if #available(iOS 26.0, *) {
+            self
+//                .toolbarBackground(theme.listBackground, for: .tabBar)
+//                .toolbarBackground(.visible, for: .tabBar)
+        }
+        else if #available(iOS 16.0, *) {
             self
                 .toolbarBackground(theme.listBackground, for: .tabBar)
                 .toolbarBackground(.visible, for: .tabBar)
@@ -372,7 +377,10 @@ extension View {
     
     @ViewBuilder
     func nosturNavBgCompat(theme: Theme) -> some View {
-        if #available(iOS 16.0, *) {
+        if #available(iOS 26.0, *) {
+            self
+        }
+        else if #available(iOS 16.0, *) {
             self
                 .toolbarBackground(theme.listBackground, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
@@ -390,8 +398,17 @@ extension View {
     @ViewBuilder
     func buttonStyleGlassProminent() -> some View {
         if #available(iOS 26.0, *) {
-            self
-//            self.buttonStyle(.glassProminent)
+            self.buttonStyle(.glassProminent)
+        }
+        else {
+            self.buttonStyle(NRButtonStyle(style: .borderedProminent))
+        }
+    }
+    
+    @ViewBuilder
+    func buttonStyleGlass() -> some View {
+        if #available(iOS 26.0, *) {
+            self.buttonStyle(.glass)
         }
         else {
             self
@@ -399,14 +416,42 @@ extension View {
     }
     
     @ViewBuilder
-    func buttonStyleGlass() -> some View {
+    func glassEffectCompat() -> some View {
         if #available(iOS 26.0, *) {
             self
-//            self.buttonStyle(.glass)
+                .glassEffect()
+        }
+        else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    func scrollClipDisabledCompat() -> some View {
+        if #available(iOS 17.0, *) {
+            self
+                .scrollClipDisabled()
         }
         else {
             self
         }
     }
    
+}
+
+public extension View {
+    
+//    Useful for example:
+//        SomeView.modifier {
+//            #if available(iOS 26.0, *) {
+//                $0.glassEffect()
+//            }
+//            else {
+//                $0
+//            }
+//        }
+
+    func modifier<ModifiedContent: View>(@ViewBuilder body: (_ content: Self) -> ModifiedContent) -> ModifiedContent {
+            body(self)
+    }
 }

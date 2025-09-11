@@ -277,14 +277,7 @@ struct ContactFeedSettings: View {
                     }
                     .labelStyle(.iconOnly)
                 }
-            }
-            
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    DataProvider.shared().saveToDiskNow(.viewContext)
-                    dismiss()
-                }
-            }
+            }            
         }
         
         .onChange(of: feed.showAsTab) { newValue in
@@ -320,7 +313,7 @@ struct ContactFeedSettings: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
+                        Button("Cancel", systemImage: "xmark") {
                             addContactsSheetShown = false
                         }
                     }
@@ -336,8 +329,10 @@ struct ContactFeedSettings: View {
 
 #Preview {
     PreviewContainer({ pe in pe.loadCloudFeeds() }) {
-        if let feed = PreviewFetcher.fetchCloudFeed(type: "pubkeys") {
-            FeedSettings(feed: feed)
+        NBNavigationStack {
+            if let feed = PreviewFetcher.fetchCloudFeed(type: "pubkeys") {
+                FeedSettings(feed: feed)
+            }
         }
     }
 }

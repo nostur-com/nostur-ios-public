@@ -17,7 +17,7 @@ struct OpenLatestUpdateMessage: View {
             Text("This article has been updated", comment: "Message shown when there is a newer version available of an article")
         
             Button(String(localized: "Open latest", comment: "Button go to latest version of article")) { action?() }
-                .buttonStyle(NRButtonStyle(theme: theme, style: .borderedProminent))
+                .buttonStyle(NRButtonStyle(style: .borderedProminent))
             
         }
         .padding(.leading, 8)

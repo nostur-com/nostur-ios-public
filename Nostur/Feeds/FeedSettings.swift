@@ -34,9 +34,9 @@ struct FeedSettings: View {
             Rectangle()
                 .frame(width: 100, height: 100)
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("Done") {
-                            dismiss()
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Close", systemImage: "xmark") {
+                          dismiss()
                         }
                     }
                 }

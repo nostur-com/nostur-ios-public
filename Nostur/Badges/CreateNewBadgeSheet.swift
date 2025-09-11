@@ -64,13 +64,14 @@ struct CreateNewBadgeSheet: View {
                     Text("Cancel")
                 })
             }
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: {
+            
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done", systemImage: "checkmark") {
                     createBadge()
                     dismiss()
-                }, label: {
-                    Text("Done")
-                }).disabled(name == "" || description == "" || badgeCode == "")
+                }
+                .buttonStyleGlassProminent()
+                .disabled(name == "" || description == "" || badgeCode == "")
             }
         }
         .navigationTitle(String(localized:"Create new badge", comment:"Navigation title for Badge creation screen"))
