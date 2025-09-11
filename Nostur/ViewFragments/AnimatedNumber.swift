@@ -17,12 +17,32 @@ struct AnimatedNumber: View {
     }
     
     var body: some View {
-        if #available(iOS 16.0, *) {
+        if #available(iOS 26.0, *) {
+            AnimatedNumber26(number: number)
+        }
+        else if #available(iOS 16.0, *) {
             AnimatedNumber16(number: number)
         }
         else {
             AnimatedNumber15(number: number)
         }
+    }
+}
+
+@available(iOS 26, *)
+struct AnimatedNumber26: View {
+    
+    private let number: Int
+    
+    init<T: BinaryInteger>(number: T) {
+        self.number = Int(number)
+    }
+    
+    var body: some View {
+        Text(number, format: .number.notation((.compactName)))
+            .multilineTextAlignment(.center)
+            .animation(.snappy, value: number)
+            .contentTransition(.numericText(countsDown: false))
     }
 }
 

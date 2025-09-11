@@ -64,7 +64,7 @@ class NWCRequestQueue: ObservableObject {
         }
     }
     
-    public var balanceString:String? {
+    public var balanceString: String? {
         guard let balance = balance else { return nil }
         return String(balance.satsFormatted)
     }

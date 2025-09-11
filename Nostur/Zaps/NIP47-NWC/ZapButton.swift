@@ -69,10 +69,21 @@ struct ZapButtonInner: View {
 //#endif
         Image(systemName: icon)
             .overlay(alignment: .leading) {
-                AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)
-                    .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
-                    .frame(width: 34)
-                    .offset(x: 14)
+                if #available(iOS 26.0, *) {
+                    Text(footerAttributes.zapTally, format: .number.notation((.compactName)))
+                        .multilineTextAlignment(.center)
+                        .animation(.snappy, value: footerAttributes.zapTally)
+                        .contentTransition(.numericText(countsDown: false))
+                        .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
+                        .frame(width: 34)
+                        .offset(x: 14)
+                }
+                else {
+                    AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)
+                        .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
+                        .frame(width: 34)
+                        .offset(x: 14)
+                }
             }
             .padding(.trailing, 34)
             .foregroundColor(isZapped ? .yellow : theme.footerButtons)
