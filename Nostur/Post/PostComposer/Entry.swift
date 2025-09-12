@@ -229,7 +229,7 @@ struct Entry: View {
                 $0.toolbar(content: self.toolbar26)
             }
             else {
-                $0.toolbar(content: self.toolbar)
+                $0.toolbar(content: self.toolbar15)
             }
         }
         .sheet(isPresented: $isAuthorSelectionShown) {
@@ -276,83 +276,50 @@ struct Entry: View {
     }
     
     @ToolbarContentBuilder
-    func toolbar() -> some ToolbarContent {
+    func toolbar15() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel", systemImage: "xmark") { onDismiss() }
         }
         
-        ToolbarItem(placement: .confirmationAction) {
-            HStack {
-                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
-                    if showVoiceRecorderButton {
-                        Button("Voice", systemImage: "mic") {
-                            showAudioRecorder = true
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(typingTextModel.uploading)
-                    }
-                    
+        ToolbarItemGroup(placement: .primaryAction) {
+            if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+                if showVoiceRecorderButton {
+                    self.voiceRecordingButton
+                }
+
+                if kind != .picture && kind != .highlight {
+                    self.startNestButton
+                }
+
+                self.takePhotoButton
+
+                if #available(iOS 16, *) {
+                    self.pickPhotoButton
+
                     if kind != .picture && kind != .highlight {
-                        Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
-                            showVoiceRecorderButton = false
-                            if IS_CATALYST { // MacOS can reuse same weird sheet
-                                sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                            }
-                            else { // IPAD needs to dismiss first
-                                onDismiss()
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                                    sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                                }
-                            }
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(typingTextModel.uploading)
-                    }
-                    
-                    Button("Take Photo", systemImage: "camera") {
-                        showVoiceRecorderButton = false
-                        cameraSheetShown = true
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(typingTextModel.uploading)
-                    
-                    if #available(iOS 16, *) {
-                        Button("Pick Photo", systemImage: "photo") {
-                            showVoiceRecorderButton = false
-                            photoPickerShown = true
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(typingTextModel.uploading)
-                        
-                        if kind != .picture && kind != .highlight {
-                            Button("Pick Video", systemImage: "video") {
-                                showVoiceRecorderButton = false
-                                videoPickerShown = true
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(typingTextModel.uploading)
-                        }
-                    }
-                    
-                    if kind != .picture {
-                        Button {
-                            showVoiceRecorderButton = false
-                            gifSheetShown = true
-                        } label: {
-                            Image("GifButton")
-                        }
-                        .buttonStyle(.borderless)
-                        .disabled(typingTextModel.uploading)
+                        self.pickVideoButton
                     }
                 }
-                
-                if kind == .highlight {
-                    self.highlightAddRemoveAuthorButton
+
+                if kind != .picture {
+                    self.gifButton
                 }
-                
+            }
+            
+            if kind == .highlight {
+                self.highlightAddRemoveAuthorButton
+            }
+            
+            if kind != .highlight {
                 self.previewButton
-                
-                self.sendButton
+            }
+            
+            self.sendButton
+        }
+        
+        ToolbarItem(placement: .principal) {
+            if let uploadError = vm.uploadError {
+                Text(uploadError).foregroundColor(.red)
             }
         }
     }
@@ -367,62 +334,23 @@ struct Entry: View {
         if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
             ToolbarItemGroup(placement: .primaryAction) {
                 if showVoiceRecorderButton {
-                    Button("Voice", systemImage: "mic") {
-                        showAudioRecorder = true
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(typingTextModel.uploading)
+                    self.voiceRecordingButton
                 }
                 
                 if kind != .picture && kind != .highlight {
-                    Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
-                        showVoiceRecorderButton = false
-                        if IS_CATALYST { // MacOS can reuse same weird sheet
-                            sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                        }
-                        else { // IPAD needs to dismiss first
-                            onDismiss()
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
-                                sendNotification(.showCreateNestsSheet, vm.activeAccount)
-                            }
-                        }
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(typingTextModel.uploading)
+                    self.startNestButton
                 }
                 
-                Button("Take Photo", systemImage: "camera") {
-                    showVoiceRecorderButton = false
-                    cameraSheetShown = true
-                }
-                .buttonStyle(.borderless)
-                .disabled(typingTextModel.uploading)
+                self.takePhotoButton
                 
-                Button("Pick Photo", systemImage: "photo") {
-                    showVoiceRecorderButton = false
-                    photoPickerShown = true
-                }
-                .buttonStyle(.borderless)
-                .disabled(typingTextModel.uploading)
+                self.pickPhotoButton
                 
                 if kind != .picture && kind != .highlight {
-                    Button("Pick Video", systemImage: "video") {
-                        showVoiceRecorderButton = false
-                        videoPickerShown = true
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(typingTextModel.uploading)
+                    self.pickVideoButton
                 }
                 
                 if kind != .picture {
-                    Button {
-                        showVoiceRecorderButton = false
-                        gifSheetShown = true
-                    } label: {
-                        Image("GifButton")
-                    }
-                    .buttonStyle(.borderless)
-                    .disabled(typingTextModel.uploading)
+                    self.gifButton
                 }
             }
         }
@@ -463,7 +391,76 @@ struct Entry: View {
     }
     
     @ViewBuilder
-    var previewButton: some View {
+    private var takePhotoButton: some View {
+        Button("Take Photo", systemImage: "camera") {
+            showVoiceRecorderButton = false
+            cameraSheetShown = true
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading)
+    }
+    
+    @ViewBuilder
+    private var pickPhotoButton: some View {
+        Button("Pick Photo", systemImage: "photo") {
+            showVoiceRecorderButton = false
+            photoPickerShown = true
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading)
+    }
+    
+    @ViewBuilder
+    private var pickVideoButton: some View {
+        Button("Pick Video", systemImage: "video") {
+            showVoiceRecorderButton = false
+            videoPickerShown = true
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading)
+    }
+    
+    @ViewBuilder
+    private var gifButton: some View {
+        Button {
+            showVoiceRecorderButton = false
+            gifSheetShown = true
+        } label: {
+            Image("GifButton")
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading)
+    }
+    
+    @ViewBuilder
+    private var startNestButton: some View {
+        Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
+            showVoiceRecorderButton = false
+            if IS_CATALYST { // MacOS can reuse same weird sheet
+                sendNotification(.showCreateNestsSheet, vm.activeAccount)
+            }
+            else { // IPAD needs to dismiss first
+                onDismiss()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                    sendNotification(.showCreateNestsSheet, vm.activeAccount)
+                }
+            }
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading)
+    }
+    
+    @ViewBuilder
+    private var voiceRecordingButton: some View {
+        Button("Voice", systemImage: "mic") {
+            showAudioRecorder = true
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading)
+    }
+    
+    @ViewBuilder
+    private var previewButton: some View {
         Button(String(localized: "Preview", comment:"Preview button when creating a new post"), systemImage: "mail.and.text.magnifyingglass.rtl") {
             vm.showPreview(quotePost: quotePost, replyTo: replyTo)
         }
@@ -472,24 +469,9 @@ struct Entry: View {
     }
     
     @ViewBuilder
-    var sendButton: some View {
+    private var sendButton: some View {
         Button {
-            typingTextModel.sending = true
-
-            // Need to do these here in main thread
-            guard let account = vm.activeAccount, account.isFullAccount else {
-                sendNotification(.anyStatus, ("Problem with account", "NewPost"))
-                return
-            }
-            let isNC = account.isNC
-            let pubkey = account.publicKey
-          
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
-                Task {
-                    await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
-                }
-            }
+            self.sendNow()
         } label: {
             if (typingTextModel.uploading || typingTextModel.sending) {
                 ProgressView().colorInvert()
@@ -501,5 +483,24 @@ struct Entry: View {
         .buttonStyleGlassProminent()
         .disabled(shouldDisablePostButton)
         .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+    }
+    
+    private func sendNow() {
+        typingTextModel.sending = true
+
+        // Need to do these here in main thread
+        guard let account = vm.activeAccount, account.isFullAccount else {
+            sendNotification(.anyStatus, ("Problem with account", "NewPost"))
+            return
+        }
+        let isNC = account.isNC
+        let pubkey = account.publicKey
+      
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { // crash if we don't delay
+            Task {
+                await self.vm.sendNow(isNC: isNC, pubkey: pubkey, account: account, replyTo: replyTo, quotePost: quotePost, onDismiss: { onDismiss() })
+            }
+        }
     }
 }

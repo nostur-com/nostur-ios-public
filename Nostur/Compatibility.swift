@@ -406,6 +406,22 @@ extension View {
     }
     
     @ViewBuilder
+    func buttonStyleGlassProminentCircle() -> some View {
+        if #available(iOS 26.0, *) {
+            self.buttonStyle(.glassProminent)
+        }
+        else if #available(iOS 17.0, *) {
+            self
+                .buttonBorderShape(.circle) // needs minimum 17.0
+                .buttonStyle(.borderedProminent)
+                .buttonStyle(NRButtonStyle(style: .theme))
+        }
+        else {
+            self.buttonStyle(NRButtonStyle(style: .borderedProminent))
+        }
+    }
+    
+    @ViewBuilder
     func buttonStyleGlass() -> some View {
         if #available(iOS 26.0, *) {
             self.buttonStyle(.glass)

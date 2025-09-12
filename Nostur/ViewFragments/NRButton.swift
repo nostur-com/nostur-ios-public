@@ -15,6 +15,7 @@ struct NRButtonStyle: ButtonStyle {
     enum Style {
         case `default`
         case borderedProminent
+        case theme
     }
     
     func makeBody(configuration: Configuration) -> some View {
@@ -22,46 +23,57 @@ struct NRButtonStyle: ButtonStyle {
         case .default:
             configuration.label
                 .foregroundColor(theme.accent)
-//                .modifier {
-//                    if let theme {
-//                        $0.foregroundColor(theme.accent)
-//                    }
-//                    else {
-//                        $0
-//                    }
-//                }
+
         case .borderedProminent:
             configuration.label
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(theme.accent)
-//                .modifier {
-//                    if let theme {
-//                        $0.background(theme.accent)
-//                    }
-//                    else {
-//                        $0
-//                    }
-//                }
                 .cornerRadius(25)
+                .foregroundColor(Color.white)
+            
+        case .theme:
+            configuration.label
+                .background(theme.accent)
                 .foregroundColor(Color.white)
         }
     }
 }
 
-struct NRButton_Previews: PreviewProvider {
-    static var previews: some View {
-        VStack {
-            HStack {
-                Button("Example") { }
-                    .buttonStyle(.borderedProminent)
-                
-                Button("Example") { }
-                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
+#Preview {
+    VStack {
+        HStack {
+            Button("Example") { }
+                .buttonStyle(.borderedProminent)
+            
+            Button("Example") { }
+                .buttonStyle(NRButtonStyle(style: .borderedProminent))
+            
+            Button { } label: {
+                ProgressView().colorInvert()
             }
-                
-                
+            .buttonStyleGlassProminent()
+            
+            Button { } label: {
+                Label(String(localized: "Post.verb", comment: "Button to post (publish) a post"), systemImage: "paperplane.fill")
+            }
+            .buttonStyleGlassProminent()
         }
-        .buttonStyle(NRButtonStyle())
+        
+        HStack {
+            Button { } label: {
+                ProgressView().colorInvert()
+            }
+            .buttonStyleGlassProminentCircle()
+            
+            Button { } label: {
+                Label(String(localized: "Post.verb", comment: "Button to post (publish) a post"), systemImage: "paperplane.fill")
+                    .labelStyle(.iconOnly)
+            }
+            .buttonStyleGlassProminentCircle()
+        }
+            
+            
     }
+    .buttonStyle(NRButtonStyle())
 }
