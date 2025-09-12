@@ -194,6 +194,10 @@ struct NXColumnView<HeaderContent: View>: View {
                             Button("Close", systemImage: "xmark") {
                                 DataProvider.shared().saveToDiskNow(.viewContext)
                                 feedSettingsFeed = nil
+                                
+                                if feed.type == CloudFeedType.relays.rawValue {
+                                    sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: feed.subscriptionId, relays: feed.relaysData, wotEnabled: feed.wotEnabled))
+                                }
                             }
                         }
                     }

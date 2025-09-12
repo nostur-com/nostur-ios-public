@@ -91,16 +91,6 @@ struct RelayFeedSettings: View {
         
         .navigationTitle("Feed settings")
         .navigationBarTitleDisplayMode(.inline)
-        
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                    DataProvider.shared().saveToDiskNow(.viewContext)
-                    sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: feed.subscriptionId, relays: feed.relaysData, wotEnabled: feed.wotEnabled))
-                    dismiss()
-                }
-            }
-        }
     }
 }
 
