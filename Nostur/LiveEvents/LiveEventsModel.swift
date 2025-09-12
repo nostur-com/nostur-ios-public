@@ -98,7 +98,11 @@ class LiveEventsModel: ObservableObject {
     private func hasSpeakerOrHostInFollows(_ event: Event) -> Bool {
         if (self.follows.contains(event.pubkey)) { return true }
         
+        // event.pubkey can be ANY since REQ was on p-tags not .pubkey, so need to apply WoT filter
+        if event.inWoT == false { return false }
+
         let speakerOrHostPubkeys: Set<String> = Set(event.fastPs
+            // Check for "speaker" or "host" on p-tags
             .filter { fastP in
                 if !isValidPubkey(fastP.1) {
                     return false
