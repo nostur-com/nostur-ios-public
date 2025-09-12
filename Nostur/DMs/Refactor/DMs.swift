@@ -231,7 +231,7 @@ struct DMs: View {
                 }
             }
             .background(theme.listBackground)
-             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
+            .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
         }
         .nbUseNavigationStack(.never)
     }

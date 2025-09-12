@@ -140,7 +140,7 @@ struct DMConversationView: View {
                                     }
                                 }
                                 .id(date)
-                                .scaleEffect(x: 1, y: -1, anchor: .center)
+                                .scaleEffect(y: -1, anchor: .center)
                             }
                         }
                         .listRowInsets(.init())
@@ -269,7 +269,7 @@ struct DMConversationView: View {
                     .scrollContentBackgroundCompat(.hidden)
                     .listStyle(.plain)
                     .padding(.top, 55)
-                    .scaleEffect(x: 1, y: -1, anchor: .center)
+                    .scaleEffect(y: -0.99, anchor: .center) // On iOS 26 y: -1 becomes blurry for no reason, so use -0.99 ¯\_(ツ)_/¯
                     .onTapGesture {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                             to: nil, from: nil, for: nil)
@@ -358,7 +358,7 @@ struct DMConversationView: View {
                 }
                 .background(theme.listBackground)
             }
-             .nosturNavBgCompat(theme: theme)
+            .nosturNavBgCompat(theme: theme)
             .task {
                 // TODO: CHANGE TO REALTIME DM SUBSCRIPTION
                 guard let theirPubkey = self.theirPubkey else {
@@ -391,7 +391,7 @@ struct DMConversationView: View {
         else {
             Text("Error: could not find contact pubkey", comment: "Error shown on DM conversation screen")
                 .centered()
-                 .nosturNavBgCompat(theme: theme)
+                .nosturNavBgCompat(theme: theme)
         }
     }
 }
