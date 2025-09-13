@@ -41,9 +41,9 @@ struct FeedPreviewSheet: View {
             .environment(\.nxViewingContext, [.feedPreview])
             .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                CloseButton(action: {
+                Button("Close", systemImage: "xmark") {
                     AppSheetsModel.shared.dismiss() // Normal @Environment(\.dismiss) is broken with NavigationBackport
-                })
+                }
             }
             
             ToolbarItem(placement: .principal) {
