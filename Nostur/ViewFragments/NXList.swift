@@ -12,10 +12,12 @@ struct NXList<Content: View>: View {
     @Environment(\.theme) private var theme
     private var content: Content
     private var plain: Bool
+    private var showListRowSeparator: Bool
     
-    init(plain: Bool = false, @ViewBuilder content: () -> Content) {
+    init(plain: Bool = false, showListRowSeparator: Bool = false, @ViewBuilder content: () -> Content) {
         self.content = content()
         self.plain = plain
+        self.showListRowSeparator = showListRowSeparator
     }
     
     var body: some View {
@@ -33,7 +35,6 @@ struct NXList<Content: View>: View {
             Group {
                 content
             }
-//            .foregroundColor(theme.accent)
             .listRowBackground(theme.background)
         }
         .scrollContentBackgroundHidden()
@@ -47,10 +48,19 @@ struct NXList<Content: View>: View {
                 content
             }
             .foregroundColor(theme.accent)
-            .listRowBackground(theme.background)
+            .listRowBackground(theme.listBackground)
             .listRowInsets(EdgeInsets())
-            .listSectionSeparator(.hidden)
-            .listRowSeparator(.hidden)
+            .modifier {
+                if showListRowSeparator, #available(iOS 16, *) {
+                    $0.listRowSeparator(.visible)
+                       .alignmentGuide(.listRowSeparatorLeading) { _ in
+                            return 10
+                       }
+                }
+                else {
+                    $0.listRowSeparator(.hidden)
+                }
+            }
         }
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)

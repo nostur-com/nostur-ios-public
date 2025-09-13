@@ -701,6 +701,14 @@ extension Event {
         Self.fetchEvents(Array(ids), context: context)
     }
     
+    static func fetchReposts(id: String, context: NSManagedObjectContext = bg()) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+//        fr.predicate = NSPredicate(format: "(kind = 6 AND firstQuoteId == %@) OR (firstQuoteId = %@ AND kind = 1 AND content = \"#[0]\")", id, id)
+        fr.predicate = NSPredicate(format: "kind = 6 AND firstQuoteId == %@", id)
+        return (try? context.fetch(fr)) ?? []
+    }
+    
     static func fetchReplacableEvent(_ kind: Int64, pubkey: String, context: NSManagedObjectContext = bg()) -> Event? {
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.predicate = NSPredicate(format: "kind == %d AND pubkey == %@ AND deletedById = nil", kind, pubkey)

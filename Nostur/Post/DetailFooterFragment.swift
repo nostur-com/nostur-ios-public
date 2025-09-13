@@ -33,7 +33,7 @@ struct DetailFooterFragment: View {
                         .lineLimit(1)
                 }
             }
-            NBNavigationLink(value: ViewPath.NoteReposts(id: nrPost.id)) {
+            NBNavigationLink(value: ViewPath.PostReposts(id: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.repostsCount)
                     Text("reposts", comment: "Label for reposts count, example: (7) reposts")

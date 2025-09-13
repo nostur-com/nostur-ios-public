@@ -126,6 +126,12 @@ func withBgContext<T>(transform: @escaping (NSManagedObjectContext) -> T) async 
 
 }
 
+func fetchMissingPs(_ nrContacts: [NRContact]) {
+    let missingPs = nrContacts
+        .filter { $0.metadata_created_at == 0 }
+        .map(\.pubkey)
+    QueuedFetcher.shared.enqueue(pTags: missingPs)
+}
 
 func fetchProfiles(pubkeys: Set<String>, subscriptionId: String? = nil) {
     // Normally we use "Profiles" sub, and track the timestamp since last fetch
