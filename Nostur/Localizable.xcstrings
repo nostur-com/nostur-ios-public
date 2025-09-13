@@ -2529,12 +2529,6 @@
         }
       }
     },
-    "Close all tabs" : {
-
-    },
-    "Close All Tabs" : {
-
-    },
     "Close room" : {
       "localizations" : {
         "nl" : {
@@ -3617,6 +3611,7 @@
     },
     "Discover Lists" : {
       "comment" : "Tab title for the Discover Lists feed",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4394,6 +4389,9 @@
         }
       }
     },
+    "Follow Packs & Lists" : {
+      "comment" : "Tab title for the Discover Lists feed"
+    },
     "Follow relay hints" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -4467,6 +4465,9 @@
           }
         }
       }
+    },
+    "Funny" : {
+
     },
     "Gallery" : {
       "comment" : "Tab title for gallery feed\nTab title for the Gallery feed",
@@ -4569,9 +4570,6 @@
           }
         }
       }
-    },
-    "Hello World" : {
-
     },
     "Hello, World!" : {
 
@@ -6482,9 +6480,6 @@
         }
       }
     },
-    "Open Detail Window" : {
-
-    },
     "Open in %@" : {
       "localizations" : {
         "nl" : {
@@ -6609,6 +6604,9 @@
           }
         }
       }
+    },
+    "Photos" : {
+
     },
     "Pick Photo" : {
 
@@ -7422,6 +7420,9 @@
         }
       }
     },
+    "Reads" : {
+
+    },
     "Reason" : {
       "comment" : "Label for the reason of a report",
       "localizations" : {
@@ -8060,6 +8061,9 @@
           }
         }
       }
+    },
+    "Reposted by" : {
+
     },
     "reposts" : {
       "comment" : "Label for reposts count, example: (7) reposts",
@@ -9043,9 +9047,6 @@
         }
       }
     },
-    "Sowwy, this app doesn't work on macOS" : {
-
-    },
     "Spam" : {
       "comment" : "Menu item in choice list",
       "localizations" : {
@@ -9599,12 +9600,6 @@
           }
         }
       }
-    },
-    "This is the DETAIL window" : {
-
-    },
-    "This is the MAIN window" : {
-
     },
     "This list is public" : {
       "localizations" : {
