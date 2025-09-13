@@ -16,6 +16,8 @@ struct PostReposts: View {
     
     @MainActor
     @State private var viewState: ViewState = .loading
+    @State private var showNotWoT = false
+    @State private var showBlocked = false
     
     var body: some View {
         Container {
@@ -25,9 +27,9 @@ struct PostReposts: View {
                     .task(id: "reposts") {
                         viewState = await loadReposts(id: id)
                     }
-            case .ready(let nrContacts):
+            case .ready(let contactsTuple):
                 NXList(plain: true, showListRowSeparator: true) {
-                    if nrContacts.isEmpty {
+                    if contactsTuple.inWoT.isEmpty && contactsTuple.notWoT.isEmpty && contactsTuple.blocked.isEmpty {
                         ZStack(alignment: .center) {
                             theme.listBackground
                             VStack(spacing: 20) {
@@ -43,13 +45,51 @@ struct PostReposts: View {
                         }
                     }
                     else {
-                        ForEach(nrContacts) { nrContact in
+                        ForEach(contactsTuple.inWoT) { nrContact in
                             NRProfileRow(nrContact: nrContact)
+                        }
+                        
+                        if WOT_FILTER_ENABLED() && !contactsTuple.notWoT.isEmpty && !showNotWoT {
+                            Button {
+                                showNotWoT = true
+                                Task { fetchMissingPs(contactsTuple.notWoT) }
+                            } label: {
+                                Text("Show more (\(contactsTuple.notWoT.count))")
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(10)
+                                    .contentShape(Rectangle())
+                            }
+                            .padding(.bottom, 10)
+                        }
+                        if showNotWoT {
+                            ForEach(contactsTuple.notWoT) { nrContact in
+                                NRProfileRow(nrContact: nrContact)
+                            }
+                        }
+                        
+                        if !contactsTuple.blocked.isEmpty && !showBlocked {
+                            Button {
+                                showBlocked = true
+                                Task { fetchMissingPs(contactsTuple.blocked) }
+                            } label: {
+                                Text("Show blocked (\(contactsTuple.blocked.count))")
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(10)
+                                    .contentShape(Rectangle())
+                            }
+                            .padding(.bottom, 10)
+                        }
+                        
+                        if showBlocked {
+                            ForEach(contactsTuple.blocked) { nrContact in
+                                NRProfileRow(nrContact: nrContact)
+                            }
                         }
                     }
                 }
             case .error(let message):
                 Text(message ?? "Error")
+                    .centered()
             }
         }
 
@@ -68,12 +108,20 @@ struct PostReposts: View {
         _ = try? await relayReq(Filters(kinds: [6], tagFilter: TagFilter(tag: "e", values: [id])), timeout: 5.5)
         
         // Get reposts, return related contact
-        let nrContacts: [NRContact] = await withBgContext { bg in
-            Event.fetchReposts(id: id)
-                .map { NRContact.instance(of: $0.pubkey )}
+        let nrContacts: ([NRContact], [NRContact], [NRContact]) = await withBgContext { bg in
+            let blocked = blocks()
+            let reposts = Event.fetchReposts(id: id)
+            return (
+                reposts.filter { $0.inWoT && !blocked.contains($0.pubkey) }
+                    .map { NRContact.instance(of: $0.pubkey ) },
+                reposts.filter { !$0.inWoT && !blocked.contains($0.pubkey) }
+                    .map { NRContact.instance(of: $0.pubkey ) },
+                reposts.filter { blocked.contains($0.pubkey) }
+                    .map { NRContact.instance(of: $0.pubkey ) }
+            )
         }
         
-        Task { fetchMissingPs(nrContacts) }
+        Task { fetchMissingPs(nrContacts.0) }
         
         return ViewState.ready(nrContacts)
     }
@@ -82,7 +130,7 @@ struct PostReposts: View {
 extension PostReposts {
     enum ViewState {
         case loading
-        case ready([NRContact])
+        case ready((inWoT: [NRContact], notWoT: [NRContact], blocked: [NRContact])) // inWoT, notInWoT, blocked
         case error(String?)
     }
 }
