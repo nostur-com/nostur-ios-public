@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct LiveEventsBanner: View {
+    @Binding var showLiveEventsBanner: Bool
     @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var npn: NewPostNotifier
@@ -31,6 +32,14 @@ struct LiveEventsBanner: View {
                                 .fixedSize(horizontal: true, vertical: false)
                         }
                     }
+                    .onAppear {
+                        guard !showLiveEventsBanner else { return }
+                        showLiveEventsBanner = true
+                    }
+                    .onDisappear {
+                        guard showLiveEventsBanner else { return }
+                        showLiveEventsBanner = false
+                    }
                 }
                 else {
                     EmptyView()
@@ -38,7 +47,7 @@ struct LiveEventsBanner: View {
             }
             .scrollTargetBehaviorViewAligned()
             .safeAreaPadding()
-            .frame(height: liveEventsModel.nrLiveEvents.isEmpty ? 0 : 50)
+            .frame(height: 50)
             .animation(.interactiveSpring, value: liveEventsModel.nrLiveEvents)
             .animation(.easeIn, value: enableLiveEvents)
             .onAppear {
@@ -124,7 +133,7 @@ struct LiveEventsBanner: View {
         pe.loadContactLists()
         pe.loadFollows()
     }){
-        LiveEventsBanner()
+        LiveEventsBanner(showLiveEventsBanner: .constant(true))
     }
 }
 
@@ -159,7 +168,7 @@ struct LiveEventsBanner: View {
                 }
             }
             .overlay(alignment: .topLeading) {
-                LiveEventsBanner()
+                LiveEventsBanner(showLiveEventsBanner: .constant(true))
             }
         }
     }

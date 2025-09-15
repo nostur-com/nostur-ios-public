@@ -114,6 +114,8 @@ struct MainFeedsScreen: View {
         return true
     }
     
+    @State private var showLiveEventsBanner = false
+    
     var body: some View {
         VStack(spacing: 0) {
             if #available(iOS 26.0, *) {
@@ -257,8 +259,11 @@ struct MainFeedsScreen: View {
                     }
                 }
             }
-          
-            LiveEventsBanner()
+            
+//            if showLiveEventsBanner {
+//                Color.clear
+//                    .frame(height: 50)
+//            }
             
             ZStack {
                 theme.listBackground // needed to give this ZStack and parents size, else everything becomes weird small
@@ -360,10 +365,16 @@ struct MainFeedsScreen: View {
                     .padding([.trailing], 25)
                     .buttonStyleGlassProminent()
             }
-            
+                   
             AudioOnlyBarSpace()
         }
         
+        .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
+            LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
+                .opacity(showLiveEventsBanner ? 1.0 : 0)
+                .frame(height: showLiveEventsBanner ? 50 : 0)
+        }
+
         .onAppear {
             ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
             if selectedSubTab == "List" {

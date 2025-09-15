@@ -121,6 +121,7 @@ struct NXPostsFeed: View {
             }
         }
         .scrollContentBackgroundHidden()
+        .background(theme.listBackground)
         .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
             guard let scrollToIndex else { return }
             guard !vmInner.isPerformingScroll else { return } // Prevent re-entrancy

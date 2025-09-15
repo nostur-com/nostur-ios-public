@@ -78,9 +78,17 @@ struct NXColumnView<HeaderContent: View>: View {
                 
             }
         }
-        .overlay(alignment: .top) {
+        
+        .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
+//            LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
+//                .opacity(showLiveEventsBanner ? 1.0 : 0)
+//                .frame(height: showLiveEventsBanner ? 50 : 0)
         }
+        
+//        .overlay(alignment: .top) {
+//            LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
+//        }
 //#if DEBUG
 //        .overlay(alignment: .bottom) {
 //            speedTestView

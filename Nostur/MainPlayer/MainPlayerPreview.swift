@@ -49,7 +49,7 @@ import NavigationBackport
                             // Spacer for OverlayVideo here
                         }
                         else if enableLiveEvents {
-                            LiveEventsBanner()
+                            LiveEventsBanner(showLiveEventsBanner: .constant(true))
                                 .animation(.easeIn, value: enableLiveEvents)
                                 .opacity(apm.viewMode == .audioOnlyBar ? 0 : 1.0)
                         }

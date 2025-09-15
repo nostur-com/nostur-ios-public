@@ -49,7 +49,7 @@ struct LiveEventCapsule: View {
             Image(systemName: icon)
                 .symbolEffectPulse()
         }
-        .foregroundColor(.white)
+        .foregroundColor(Color.primary)
         .padding(.leading, 2)
         .padding(.trailing, 8)
         .modifier {
