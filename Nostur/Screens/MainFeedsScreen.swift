@@ -488,14 +488,14 @@ struct MainFeedsScreen: View {
             if #available(iOS 26.0, *) {
                 $0.toolbar {
                       ToolbarTitleMenu {
-                          Button("Following", systemImage: "") { selectedSubTab = "Following" }
+                          Button("Following", systemImage: "person.circle") { selectedSubTab = "Following" }
                           
                           if la.viewFollowingPublicKeys.count > 10 && enablePictureFeed {
                               Button("Photos", systemImage: "photo") { selectedSubTab = "Picture" }
                           }
                           
                           ForEach(lists) { list in
-                              Button(list.name ?? "(no title)") {  
+                              Button(list.name ?? "(no title)", systemImage: "star") {
                                   selectedSubTab = "List"
                                   selectedList = list
                                   selectedListId = list.subscriptionId }
