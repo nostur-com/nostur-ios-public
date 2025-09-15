@@ -94,17 +94,13 @@ class NXSpeedTest: ObservableObject {
     
     public func otherTimeout() {
         Task { @MainActor in
-            print("WHAT 3")
             if STATES_CAN_TIMEOUT.contains(loadingBarViewState) {
-                print("WHAT 4")
 #if DEBUG
                 L.og.debug("🏁🏁 NXSpeedTest.otherTimeout Setting loadingBarViewState to: .timeout")
 #endif
                 if loadingBarViewState != .timeout {
-                    print("WHAT 5")
                     loadingBarViewState = .timeout
                 }
-                print("WHAT 6")
             }
         }
     }
@@ -115,11 +111,9 @@ class NXSpeedTest: ObservableObject {
         L.og.debug("🏁🏁 NXSpeedTest.setTimerForTimeout, now: \(self.loadingBarViewState.rawValue.description) -[LOG]-")
 #endif
         DispatchQueue.main.asyncAfter(deadline: .now() + 12.0) { [weak self] in
-            print("WHAT 1")
             guard let self else { return }
             L.og.debug("🏁🏁 NXSpeedTest.setTimerForTimeout??? now: \(self.loadingBarViewState.rawValue.description) -[LOG]-")
             guard STATES_CAN_TIMEOUT.contains(loadingBarViewState) else { return }
-            print("WHAT 2")
             self.otherTimeout()
         }
     }
