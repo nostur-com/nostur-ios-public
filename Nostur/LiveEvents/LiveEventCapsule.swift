@@ -49,16 +49,17 @@ struct LiveEventCapsule: View {
             Image(systemName: icon)
                 .symbolEffectPulse()
         }
-        .foregroundColor(Color.primary)
         .padding(.leading, 2)
         .padding(.trailing, 8)
         .modifier {
             if #available(iOS 26.0, *) {
                 $0
+                    .foregroundColor(Color.primary) // .primary so it handles light/dark-appearance properly
                     .glassEffect(.clear.interactive())
             }
             else {
                 $0
+                    .foregroundColor(Color.white) // Always .white on .accent for pre glass
                     .background(theme.accent)
                     .frame(height: 34.0)
                     .clipShape(.rect(cornerRadius: 30))
