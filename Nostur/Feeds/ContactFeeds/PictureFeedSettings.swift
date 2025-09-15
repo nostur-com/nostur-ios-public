@@ -29,17 +29,8 @@ struct PictureFeedSettings: View {
             }
         }
         
-        .navigationTitle("Feed settings")
+        .navigationTitle("Photos Feed settings")
         .navigationBarTitleDisplayMode(.inline)
-        
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                    DataProvider.shared().saveToDiskNow(.viewContext)
-                    dismiss()
-                }
-            }
-        }
     }
 }
 

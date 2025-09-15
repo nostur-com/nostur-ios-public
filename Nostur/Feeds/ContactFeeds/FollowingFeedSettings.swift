@@ -47,7 +47,7 @@ struct FollowingFeedSettings: View {
             }
         }
         
-        .navigationTitle("Feed settings")
+        .navigationTitle("Following Feed settings")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
