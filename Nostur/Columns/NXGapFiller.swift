@@ -50,9 +50,9 @@ class NXGapFiller {
 #endif
             if let speedTest = columnVM.speedTest, speedTest.timestampStart != nil {
 #if DEBUG
-                print("🏁🏁 NXGapFiller.fetchGap loadingBarViewState = .connecting")
+                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted()")
 #endif
-                speedTest.loadingBarViewState = .connecting
+                speedTest.loadRemoteStarted()
             }
             columnVM.watchForFirstConnection = true
             return
@@ -132,9 +132,9 @@ class NXGapFiller {
 #endif
             if let speedTest = columnVM.speedTest, speedTest.timestampStart != nil {
 #if DEBUG
-                print("🏁🏁 NXGapFiller.fetchGap loadingBarViewState = .connecting")
+                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted()")
 #endif
-                speedTest.loadingBarViewState = .connecting
+                speedTest.loadRemoteStarted()
             }
             columnVM.watchForFirstConnection = true
             return
