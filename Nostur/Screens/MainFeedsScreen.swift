@@ -71,6 +71,10 @@ struct MainFeedsScreen: View {
         if selectedSubTab == "Following" {
             return String(localized: "Following", comment: "Tab title for feed of people you follow")
         }
+        if selectedSubTab == "Picture" {
+            return String(localized: "Photos", comment: "Tab title for photos feed of people you follow")
+        }
+        
         if selectedSubTab == "Explore" {
             return String(localized: "Explore", comment: "Tab title for the Explore feed")
         }

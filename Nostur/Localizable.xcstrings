@@ -6606,7 +6606,7 @@
       }
     },
     "Photos" : {
-
+      "comment" : "Tab title for photos feed of people you follow"
     },
     "Pick Photo" : {
 
