@@ -258,7 +258,6 @@ struct MainFeedsScreen: View {
                 }
             }
           
-            
             LiveEventsBanner()
             
             ZStack {
@@ -286,12 +285,10 @@ struct MainFeedsScreen: View {
                     }
                 }
                 else {
-//                    AudioRecorderContentView()
                     if let followingConfig {
                         AvailableWidthContainer {
                             NXColumnView(config: followingConfig, isVisible: selectedSubTab == "Following")
                         }
-//                        .id(followingConfig.id)
                         .opacity(selectedSubTab == "Following" ? 1.0 : 0)
                     }
                 }
@@ -300,7 +297,6 @@ struct MainFeedsScreen: View {
                     AvailableWidthContainer {
                         NXColumnView(config: pictureConfig, isVisible: selectedSubTab == "Picture")
                     }
-//                        .id(pictureConfig.id)
                     .opacity(selectedSubTab == "Picture" ? 1.0 : 0)
                 }
                 
@@ -358,12 +354,12 @@ struct MainFeedsScreen: View {
                     }
                 }
             }
-                .overlay(alignment: .bottomTrailing) {
-                    NewNoteButton(showingNewNote: $showingNewNote)
-                        .padding([.top, .leading, .bottom], 10)
-                        .padding([.trailing], 25)
-                        .buttonStyleGlassProminent()
-                }
+            .overlay(alignment: .bottomTrailing) {
+                NewNoteButton(showingNewNote: $showingNewNote)
+                    .padding([.top, .leading, .bottom], 10)
+                    .padding([.trailing], 25)
+                    .buttonStyleGlassProminent()
+            }
             
             AudioOnlyBarSpace()
         }
