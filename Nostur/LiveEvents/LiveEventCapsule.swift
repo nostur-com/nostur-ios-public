@@ -52,10 +52,19 @@ struct LiveEventCapsule: View {
         .foregroundColor(.white)
         .padding(.leading, 2)
         .padding(.trailing, 8)
-        .background(theme.accent)
-        .frame(height: 34.0)
-        .clipShape(.rect(cornerRadius: 30))
-        .frame(height: 44.0)
+        .modifier {
+            if #available(iOS 26.0, *) {
+                $0
+                    .glassEffect(.clear.interactive())
+            }
+            else {
+                $0
+                    .background(theme.accent)
+                    .frame(height: 34.0)
+                    .clipShape(.rect(cornerRadius: 30))
+                    .frame(height: 44.0)
+            }
+        }
         .contentShape(Rectangle())
         .offset(y: dragOffset.height)
         .simultaneousGesture(
