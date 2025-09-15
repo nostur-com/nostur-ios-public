@@ -170,7 +170,7 @@ final class SettingsStore: ObservableObject {
             Keys.rowFooterEnabled: true,
             Keys.enableLiveEvents: true,
             Keys.autoScroll: false,
-            Keys.fullWidthImages: false,
+            Keys.fullWidthImages: true,
             Keys.defaultMediaUploadService: "nostr.build",
             Keys.statusBubble: false,
             Keys.activeNWCconnectionId: "",
@@ -499,13 +499,19 @@ final class SettingsStore: ObservableObject {
     
     private var _autoDownloadFrom:String = AutodownloadLevel.onlyWoT.rawValue
     
+    // Starting iOS 26, full width is always on
     public var fullWidthImages: Bool {
         set {
             objectWillChange.send()
             _fullWidthImages = newValue
             defaults.set(newValue, forKey: Keys.fullWidthImages);
         }
-        get { _fullWidthImages }
+        get {
+            if #available(iOS 26.0, *) {
+                return true
+            }
+            return _fullWidthImages
+        }
     }
     
     private var _fullWidthImages:Bool = false
