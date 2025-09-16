@@ -34,23 +34,25 @@ struct ChatInputField: View {
                     }
                 }
             
-            Button(action: {
+            Button("Send", systemImage: "arrow.up") {
                 if let onSubmit {
                     onSubmit()
                 }
                 focusedField = nil
-            }) {
-                Image(systemName: "paperplane.fill")
-                    .font(.system(size: 20))
-                    .padding(.trailing, 10)
             }
+            .buttonStyleGlassProminent()
+            .labelStyle(.iconOnly)
+            .tint(theme.accent)
+            .fontWeightBold()
             .keyboardShortcut(.defaultAction)
             .onSubmit {
                 if let onSubmit {
                     onSubmit()
                 }
             }
-            .accentColor(theme.accent)
+            .padding(.trailing, 8)
+            .padding(.bottom, 5)
+            
         }
         .background(theme.listBackground)
         .cornerRadius(25)
