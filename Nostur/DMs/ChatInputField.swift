@@ -13,8 +13,7 @@ struct ChatInputField: View {
     @Binding var message: String
     var startWithFocus: Bool = true
     var onSubmit: (() -> Void)?
-    
-    
+        
     enum FocusedField {
         case message
     }
@@ -22,8 +21,8 @@ struct ChatInputField: View {
     @FocusState private var focusedField: FocusedField?
     
     var body: some View {
-        HStack {
-            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
+        HStack(alignment: .bottom) {
+            self.textField
                 .textInputAutocapitalization(.never)
                 .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
                 .background(Color.clear)
@@ -76,6 +75,12 @@ struct ChatInputField_ContentView: View {
             Spacer()
             ChatInputField(message: $text)
                 .padding(.bottom, 10)
+    @ViewBuilder
+    private var textField: some View {
+        if #available(iOS 16.0, *) {
+            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message, axis: .vertical)
+        } else {
+            TextField(String(localized:"Type your message...", comment:"Placeholder for input field for new direct message"), text: $message)
         }
     }
 }
