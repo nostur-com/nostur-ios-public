@@ -67,16 +67,7 @@ struct ChatInputField: View {
             }
         }
     }
-}
-
-
-struct ChatInputField_ContentView: View {
-    @State var text = ""
-    var body: some View {
-        VStack {
-            Spacer()
-            ChatInputField(message: $text)
-                .padding(.bottom, 10)
+    
     @ViewBuilder
     private var textField: some View {
         if #available(iOS 16.0, *) {
@@ -87,9 +78,13 @@ struct ChatInputField_ContentView: View {
     }
 }
 
-struct ChatInputField_Previews: PreviewProvider {
-    static var previews: some View {
-        ChatInputField_ContentView()
-            .environmentObject(Themes.default)
+@available(iOS 17.0, *)
+#Preview {
+    @Previewable @State var text = ""
+    VStack {
+        Spacer()
+        ChatInputField(message: $text)
+            .padding(.bottom, 10)
     }
+    .environment(\.theme, Themes.DEFAULT)
 }
