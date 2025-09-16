@@ -140,6 +140,14 @@ struct PostMenu: View {
                             ObservedPFP(nrContact: nrContact, size: 20)
                         }
                     }
+                    
+                    Button(action: {
+                        navigateTo(ViewPath.ProfileReactionList(pubkey: nrPost.pubkey), context: "Default")
+                        dismiss()
+                    }) {
+                        Label("Show \(nrContact.anyName)'s reactions", systemImage: "heart")
+                            .foregroundColor(theme.accent)
+                    }
                 }
             }
             .listRowBackground(theme.background)

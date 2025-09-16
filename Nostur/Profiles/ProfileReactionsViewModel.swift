@@ -36,7 +36,7 @@ class ProfileReactionsViewModel: ObservableObject {
         self.pubkey = pubkey
         self.state = .initializing
         self.reactedIds = []
-        self.backlog = Backlog(timeout: 8.0, auto: true)
+        self.backlog = Backlog(timeout: 8.0, auto: true, backlogDebugName: "ProfileReactionsViewModel")
         
         receiveNotification(.blockListUpdated)
             .sink { [weak self] notification in

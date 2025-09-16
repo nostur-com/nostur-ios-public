@@ -691,6 +691,9 @@
         }
       }
     },
+    "%@'s reactions" : {
+
+    },
     "%lf" : {
       "shouldTranslate" : false
     },
@@ -8487,6 +8490,9 @@
         }
       }
     },
+    "Send" : {
+
+    },
     "Send %@ sats %@" : {
       "localizations" : {
         "nl" : {
@@ -8747,6 +8753,9 @@
           }
         }
       }
+    },
+    "Show %@'s reactions" : {
+
     },
     "Show anyway" : {
       "comment" : "Button to show the blocked content anyway",

@@ -97,6 +97,7 @@ enum ViewPath: IdentifiableDestination {
     case Relays
     case Badges
     case Gallery(vm: GalleryViewModel)
+    case ProfileReactionList(pubkey: String)
 }
 
 extension View {
@@ -176,6 +177,8 @@ extension View {
                         RelaysView()    
                     case .Badges:
                         BadgesView()
+                case .ProfileReactionList(let pubkey):
+                        ProfileReactionList(pubkey: pubkey)
                     default:
                         EmptyView()
                 }

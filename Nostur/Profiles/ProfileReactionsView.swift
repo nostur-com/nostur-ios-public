@@ -7,6 +7,7 @@
 
 import SwiftUI
 import CoreData
+import NavigationBackport
 
 struct ProfileReactionsView: View {
     @ObservedObject private var settings: SettingsStore = .shared
@@ -43,8 +44,9 @@ struct ProfileReactionsView: View {
                     .overlay(alignment: .topLeading) {
                         if let reaction = vm.reactionsMap[nrPost.id] {
                             Text(reaction == "+" ? "❤️" : reaction)
-                                .padding(.top, 5)
-                                .padding(.leading, 5)
+                                .font(.title)
+                                .padding(.top, 2)
+                                .padding(.leading, 2)
                         }
                     }
                 }
@@ -66,6 +68,27 @@ struct ProfileReactionsView: View {
     }
 }
 
+struct ProfileReactionList: View {
+    private let pubkey: String
+    @State private var nrContact: NRContact
+    
+    init(pubkey: String) {
+        self.pubkey = pubkey
+        _nrContact = State(wrappedValue: NRContact.instance(of: pubkey))
+    }
+    
+    var body: some View {
+        NXList(plain: true) {
+            ProfileReactionsView(pubkey: pubkey)
+        }
+        .toolbar {
+            ToolbarItem(placement: .title) {
+                Text("\(nrContact.anyName)'s reactions")
+            }
+        }
+    }
+}
+
 #Preview {
     let pubkey = "84dee6e676e5bb67b4ad4e042cf70cbd8681155db535942fcc6a0533858a7240"
     
@@ -75,8 +98,8 @@ struct ProfileReactionsView: View {
         pe.parseMessages(testSnowden())
         pe.loadRepliesAndReactions()
     }) {
-        ScrollView {
-            ProfileReactionsView(pubkey: pubkey)
+        NBNavigationStack {
+            ProfileReactionList(pubkey: pubkey)
         }
     }
 }
