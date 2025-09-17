@@ -185,7 +185,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         textView.delegate = context.coordinator
         textView.pastedMediaDelegate = context.coordinator
         
-        makeToolbar(textView, context: context)
+        if #available(iOS 26.0, *) {
+            makeToolbar26(textView, context: context)
+        }
+        else {
+            makeToolbar(textView, context: context)
+        }
         textView.font = UIFont.systemFont(ofSize: UIFont.systemFontSize + 4.0)
         
         updateTextViewModifiers(textView)
@@ -203,7 +208,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         // Only turn off, never turn on
         if !showVoiceRecorderButton && context.coordinator.isShowingVoiceRecorderButton {
-            makeToolbar(uiView, context: context)
+            if #available(iOS 26.0, *) {
+                makeToolbar26(uiView, context: context)
+            }
+            else {
+                makeToolbar(uiView, context: context)
+            }
             context.coordinator.isShowingVoiceRecorderButton = false
             
             // Force the text view to reload its input accessory view or button doesn't go away
@@ -237,6 +247,77 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         // BUGFIX #19: https://stackoverflow.com/questions/60537039/change-prompt-color-for-uitextfield-on-mac-catalyst
         let textInputTraits = textView.value(forKey: "textInputTraits") as? NSObject
         textInputTraits?.setValue(textView.tintColor, forKey: "insertionPointColor")
+    }
+    
+    @available(iOS 26.0, *)
+    private func makeToolbar26(_ uiView: UITextView, context: Context) {
+        let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        flexibleSpace.hidesSharedBackground = false
+        
+        var barButtons: [UIBarButtonItem] = []
+        
+        if showVoiceRecorderButton {
+            let voiceRecordingButton = UIButton(type: .system)
+            voiceRecordingButton.setImage(UIImage(systemName: "mic"), for: .normal)
+            voiceRecordingButton.tintColor = UIColor(Themes.default.theme.accent)
+            voiceRecordingButton.addTarget(self, action: #selector(textView.voiceMessageTapped), for: .touchUpInside)
+            let voiceRecording = UIBarButtonItem(customView: voiceRecordingButton)
+            barButtons.append(voiceRecording)
+        }
+        
+        if kind != .picture && kind != .highlight {
+            let nestsButton = UIButton(type: .system)
+            nestsButton.setImage(UIImage(systemName: "dot.radiowaves.left.and.right"), for: .normal)
+            nestsButton.tintColor = UIColor(Themes.default.theme.accent)
+            nestsButton.addTarget(self, action: #selector(textView.nestsTapped), for: .touchUpInside)
+            let nests = UIBarButtonItem(customView: nestsButton)
+            barButtons.append(nests)
+        }
+        
+        let cameraButton = UIButton(type: .system)
+        cameraButton.setImage(UIImage(systemName: "camera"), for: .normal)
+        cameraButton.tintColor = UIColor(Themes.default.theme.accent)
+        cameraButton.addTarget(self, action: #selector(textView.cameraTapped), for: .touchUpInside)
+        let camera = UIBarButtonItem(customView: cameraButton)
+        barButtons.append(camera)
+        
+        let photoButton = UIButton(type: .system)
+        photoButton.setImage(UIImage(systemName: "photo"), for: .normal)
+        photoButton.tintColor = UIColor(Themes.default.theme.accent)
+        photoButton.addTarget(self, action: #selector(textView.photoPickerTapped), for: .touchUpInside)
+        let photos = UIBarButtonItem(customView: photoButton)
+        barButtons.append(photos)
+        
+        if kind != .picture {
+            let videoButton = UIButton(type: .system)
+            videoButton.setImage(UIImage(systemName: "video"), for: .normal)
+            videoButton.tintColor = UIColor(Themes.default.theme.accent)
+            videoButton.addTarget(self, action: #selector(textView.videoTapped), for: .touchUpInside)
+            let videos = UIBarButtonItem(customView: videoButton)
+            barButtons.append(videos)
+            
+            
+            let gifButton = UIButton(type: .system)
+            gifButton.setImage(UIImage(named: "GifButton"), for: .normal)
+            gifButton.tintColor = UIColor(Themes.default.theme.accent)
+        
+            gifButton.imageView?.contentMode = .scaleAspectFit
+            gifButton.sizeToFit()
+            
+            gifButton.addTarget(self, action: #selector(textView.gifsTapped), for: .touchUpInside)
+            let gifs = UIBarButtonItem(customView: gifButton)
+            barButtons.append(gifs)
+        }
+        
+        
+        let doneToolbar: UIToolbar = UIToolbar(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 50))
+        doneToolbar.barStyle = .default
+        
+        barButtons.append(flexibleSpace) // last
+        
+        doneToolbar.setItems(barButtons, animated: false)
+        
+        uiView.inputAccessoryView = doneToolbar
     }
     
     private func makeToolbar(_ uiView: UITextView, context: Context) {
