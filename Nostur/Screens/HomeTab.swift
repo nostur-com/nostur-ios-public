@@ -289,7 +289,7 @@ struct HomeTab: View {
                 newPost = nil // Also remove the shortcut from toolbar
                 
                 // Pop last from stack if the lastPathPostId is the undo post
-                guard let lastPathPostId, lastPathPostId == nrPost.id else { return }
+                guard navPath.count > 0, let lastPathPostId, lastPathPostId == nrPost.id else { return }
                 navPath.pop()
             }
         }
