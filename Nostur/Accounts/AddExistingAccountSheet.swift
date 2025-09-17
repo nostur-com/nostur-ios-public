@@ -89,6 +89,9 @@ struct AddExistingAccountSheet: View {
                                     return
                                 }
                                 addExistingBunkerAccount(pubkey: bunkerURL.pubkey, token: bunkerURL.secret)
+                                showSidebar = false
+                                dismiss()
+                                onDismiss?()
                             }
                             else {
                                 guard key.split(separator: "#").count >= 2 else { return }
@@ -100,6 +103,9 @@ struct AddExistingAccountSheet: View {
                                     return
                                 }
                                 addExistingBunkerAccount(pubkey: nip19.hexString, token: token)
+                                showSidebar = false
+                                dismiss()
+                                onDismiss?()
                             }
                         }
                         else {
@@ -110,6 +116,10 @@ struct AddExistingAccountSheet: View {
                                     return
                                 }
                                 addExistingReadOnlyAccount(pubkey: nip19.hexString)
+                                
+                                showSidebar = false
+                                dismiss()
+                                onDismiss?()
                             }
                             else if (key.prefix(5) == "nsec1") {
                                 guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
@@ -118,6 +128,10 @@ struct AddExistingAccountSheet: View {
                                     return
                                 }
                                 addExistingAccount(privkey: nip19.hexString)
+                                
+                                showSidebar = false
+                                dismiss()
+                                onDismiss?()
                             }
                             else if (key.contains("@")) {
                                 guard let nip05parts = try? NostrEssentials.parseNip05Address(key) else {
@@ -129,15 +143,17 @@ struct AddExistingAccountSheet: View {
                                     do {
                                         let pubkey = try await NostrEssentials.fetchPubkey(from: nip05parts)
                                         addExistingReadOnlyAccount(pubkey: pubkey)
+                                        showSidebar = false
+                                        dismiss()
+                                        onDismiss?()
                                     } catch {
                                         invalidKey = true
                                     }
                                 }
                             }
-                            
-                            showSidebar = false
-                            dismiss()
-                            onDismiss?()
+                            else {
+                                invalidKey = true
+                            }
                         }
                         
                     } label: {
