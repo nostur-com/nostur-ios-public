@@ -503,7 +503,12 @@ struct MainFeedsScreen: View {
                           
                           if la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed {
                               Button { selectedSubTab = "Emoji" } label: {
-                                  Label("Funny", image: "LaughterIcon")
+                                  Label {
+                                      Text("Funny")
+                                  } icon: {
+                                      Image("LaughterIcon")
+                                          .renderingMode(.template)
+                                  }
                               }
                           }
                           

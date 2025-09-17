@@ -4475,6 +4475,9 @@
     "Funny" : {
 
     },
+    "Funny Feed" : {
+
+    },
     "Gallery" : {
       "comment" : "Tab title for gallery feed\nTab title for the Gallery feed",
       "localizations" : {
@@ -6951,6 +6954,9 @@
         }
       }
     },
+    "Posts from anyone reacted to by people you follow" : {
+
+    },
     "Posts from anyone which are most liked or reposted by people you follow" : {
       "localizations" : {
         "nl" : {
@@ -6972,6 +6978,7 @@
       }
     },
     "Posts from anyone which are reacted to with several specific emojis by people you follow" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

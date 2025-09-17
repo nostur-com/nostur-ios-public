@@ -78,8 +78,8 @@ struct ListsAndFeedsScreen: View {
                     Text("Lists from people you follow")
                 })
                 Toggle(isOn: $enableEmojiFeed, label: {
-                    Text("Emoji Feed")
-                    Text("Posts from anyone which are reacted to with several specific emojis by people you follow")
+                    Text("Funny Feed")
+                    Text("Posts from anyone reacted to by people you follow")
                 })
                 Toggle(isOn: $enableGalleryFeed, label: {
                     Text("Gallery")

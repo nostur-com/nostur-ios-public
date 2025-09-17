@@ -14,16 +14,7 @@ struct EmojiFeedSettings: View {
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     
     var body: some View {
-        Form {
-            Section {
-                Picker("Configure feed type", selection: $vm.emojiType) {
-                    Text("😂").tag("😂")
-                    Text("😡").tag("😡")
-                }
-                .pickerStyle(.segmented)
-            } header: { Text("Configure feed") } footer: { Text("Outrage feed may or may not be available in a future release") }
-            .disabled(true)
-            
+        NXForm {
             Section {
                 Picker("Time frame", selection: $vm.ago) {
                     Text("48h").tag(48)
