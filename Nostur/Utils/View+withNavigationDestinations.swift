@@ -163,22 +163,27 @@ extension View {
 //                            .debugDimensions("nbNavigationDestination2.PostDetailView", alignment: .topLeading)
                     case .Blocklist:
                         BlockListScreen()
+                            .tabBarSpaceCompat()
                     case .PostReactions(let eventId):
                         PostReactions(eventId: eventId)
                     case .PostReposts(let id):
-                        PostReposts(id: id)
+                            PostReposts(id: id)
                     case .PostZaps(let nrPost):
                         PostZaps(nrPost: nrPost)
                     case .Settings:
                         Settings()
+                            .tabBarSpaceCompat()
                     case .Lists:
                         ListsAndFeedsScreen()
+                            .tabBarSpaceCompat()
                     case .Relays:
                         RelaysView()    
                     case .Badges:
                         BadgesView()
-                case .ProfileReactionList(let pubkey):
+                            .tabBarSpaceCompat()
+                    case .ProfileReactionList(let pubkey):
                         ProfileReactionList(pubkey: pubkey)
+                            .tabBarSpaceCompat()
                     default:
                         EmptyView()
                 }
