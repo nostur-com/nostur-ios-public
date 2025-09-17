@@ -20,7 +20,12 @@ struct NosturTabsView: View {
         Zoomable {
             HStack(spacing: GUTTER) {
                 AvailableWidthContainer {
-                    MainTabs()
+                    if #available(iOS 26.0, *), IS_CATALYST {
+                        MainTabs26()
+                    }
+                    else {
+                        MainTabs()
+                    }
                 }
                 .frame(maxWidth: 600)
                 if UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular {

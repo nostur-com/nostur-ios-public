@@ -103,6 +103,8 @@ struct BookmarksTab: View {
                 .presentationBackgroundCompat(theme.background)
                 .presentationDetents200()
             })
+            
+            .tabBarSpaceCompat()
         }
         .nbUseNavigationStack(.never)
     }

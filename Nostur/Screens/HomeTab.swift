@@ -208,6 +208,8 @@ struct HomeTab: View {
                         }
                     }
                 }
+            
+                .tabBarSpaceCompat()
         }
         .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.showingSomeoneElsesFeed)) { notification in

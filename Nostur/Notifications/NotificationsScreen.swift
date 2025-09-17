@@ -32,6 +32,8 @@ struct NotificationsContainer: View {
                 .background(theme.listBackground)
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
+            
+                .tabBarSpaceCompat()
         }
         .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.navigateTo)) { notification in

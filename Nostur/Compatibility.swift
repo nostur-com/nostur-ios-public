@@ -452,6 +452,22 @@ extension View {
             self
         }
     }
+       
+    @ViewBuilder
+    func tabBarSpaceCompat() -> some View {
+        if #available(iOS 26.0, *) {
+            self
+                .safeAreaInset(edge: .bottom) { // Need this space for tab bar, needs to be INSIDE NBNavigationStack. But tabbar is outside, so just empty space here to get same effect.
+                    if IS_CATALYST {
+                        Color.clear
+                            .frame(width: 40, height: 70)
+                    }
+                }
+        }
+        else {
+            self
+        }
+    }
    
 }
 
@@ -469,5 +485,48 @@ public extension View {
 
     func modifier<ModifiedContent: View>(@ViewBuilder body: (_ content: Self) -> ModifiedContent) -> ModifiedContent {
             body(self)
+    }
+}
+
+
+
+// MARK: - Badge Compatibility Modifier
+struct BadgeCompatModifier: ViewModifier {
+    let count: Int
+    let backgroundColor: Color
+    let textColor: Color
+    
+    init(count: Int, backgroundColor: Color = .red, textColor: Color = .white) {
+        self.count = count
+        self.backgroundColor = backgroundColor
+        self.textColor = textColor
+    }
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .topTrailing) {
+                if count > 0 {
+                    Text("\(count)")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundColor(textColor)
+                        .padding(.horizontal, count > 99 ? 4 : 6)
+                        .padding(.vertical, 2)
+                        .background(backgroundColor)
+                        .clipShape(Capsule())
+                        .offset(x: -4, y: 0)
+                }
+            }
+    }
+}
+
+extension View {
+    /// Adds a badge with the specified count that works on any View, including Buttons
+    /// - Parameters:
+    ///   - count: The number to display in the badge
+    ///   - backgroundColor: The background color of the badge (default: red)
+    ///   - textColor: The text color of the badge (default: white)
+    func badgeCompat(_ count: Int, backgroundColor: Color = .red, textColor: Color = .white) -> some View {
+        modifier(BadgeCompatModifier(count: count, backgroundColor: backgroundColor, textColor: textColor))
     }
 }

@@ -210,6 +210,8 @@ struct Search: View {
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)
             }
+            
+            .tabBarSpaceCompat()
         }
         .nbUseNavigationStack(.never)
     }
