@@ -682,7 +682,7 @@ struct Settings: View {
         }
 //        .scrollContentBackgroundHidden()
 //        .background(theme.listBackground)
-         .nosturNavBgCompat(theme: theme)
+        .nosturNavBgCompat(theme: theme)
         .navigationTitle("Settings")
         .sheet(isPresented: $deleteAccountIsShown) {
             NRNavigationStack {
