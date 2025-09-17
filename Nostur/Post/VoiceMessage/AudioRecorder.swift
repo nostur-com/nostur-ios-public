@@ -547,6 +547,7 @@ struct AudioRecorderContentView: View {
         
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
+                
                 Button {
                     typingTextModel.sending = true
         

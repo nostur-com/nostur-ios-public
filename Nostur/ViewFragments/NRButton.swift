@@ -27,7 +27,7 @@ struct NRButtonStyle: ButtonStyle {
         case .borderedProminent:
             configuration.label
                 .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.vertical, 3)
                 .background(theme.accent)
                 .cornerRadius(25)
                 .foregroundColor(Color.white)

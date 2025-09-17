@@ -397,7 +397,7 @@ extension View {
     
     @ViewBuilder
     func buttonStyleGlassProminent() -> some View {
-        if #available(iOS 26.0, *) {
+        if #available(iOS 26.0, *), !IS_CATALYST {
             self.buttonStyle(.glassProminent)
         }
         else {
