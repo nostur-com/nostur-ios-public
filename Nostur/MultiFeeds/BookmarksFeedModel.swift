@@ -62,7 +62,7 @@ class BookmarksFeedModel: ObservableObject {
     private var subscriptions: Set<AnyCancellable> = []
     
     public init() {
-        bookmarkFilters = Set<String>((UserDefaults.standard.array(forKey: "bookmark_filters") as? [String] ?? ["red", "blue", "purple", "green", "orange"]))
+        bookmarkFilters = Set<String>((UserDefaults.standard.array(forKey: "bookmark_filters") as? [String] ?? ["red", "blue", "purple", "green", "orange", "brown"]))
         
         searchSubscription = $searchText
                     .removeDuplicates()
