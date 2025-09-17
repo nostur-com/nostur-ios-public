@@ -521,7 +521,7 @@ struct MainFeedsScreen: View {
                           }
                           
                           if enableDiscoverListsFeed {
-                              Button("Follow Packs & Lists", systemImage: "person.3.sequence") { selectedSubTab = "DiscoverLists" }
+                              Button("Follow Packs & Lists", systemImage: "person.2.crop.square.stack") { selectedSubTab = "DiscoverLists" }
                           }
                           
                           if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {
