@@ -55,7 +55,7 @@ struct LiveEventCapsule: View {
         .modifier {
             if #available(iOS 26.0, *) {
                 $0
-                    .glassEffect(.clear.tint(Color.black.opacity(0.25)).interactive())
+                    .glassEffect(.clear.tint(Color.black.opacity(0.35)).interactive())
             }
             else {
                 $0
