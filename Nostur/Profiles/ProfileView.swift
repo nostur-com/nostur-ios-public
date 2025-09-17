@@ -400,8 +400,23 @@ struct ProfileView: View {
         .background(theme.listBackground)
         .listRowInsets(EdgeInsets())
         .listStyle(.plain)
-        .toolbar {
-            ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount)
+        .modifier {
+            if #available(iOS 26.0, *) {
+                $0.overlay(alignment: .top) {
+                    ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount)
+                        .frame(height: 51)
+                        .padding(.leading, 70)
+                        .padding(.trailing, 10)
+                        .clipped()
+                        .padding(.top, 55)
+                        .edgesIgnoringSafeArea(.top)
+                }
+            }
+            else {
+                $0.toolbar {
+                    ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount)
+                }
+            }
         }
         .overlay(alignment: .bottomTrailing) {
             NewNoteButton(showingNewNote: $showingNewNote)

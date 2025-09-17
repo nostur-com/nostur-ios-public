@@ -48,8 +48,17 @@ struct ProfileToolbar: View {
             }
             
         }
+        .modifier {
+            if #available(iOS 26.0, *) {
+                $0.padding(8)
+                  .glassEffect(.clear.tint(Color.white.opacity(0.15)))
+            }
+            else {
+                $0
+            }
+        }
         .offset(y: max(2, scrollPosition.position.y))
-        .frame(height: 40)
+        .frame(height: 55)
         .clipped()
     }
 }
