@@ -106,9 +106,9 @@ struct AddBlossomServerSheet: View {
             checking = false
             return
         }
-        let testSuccess = (try? await NostrEssentials.testBlossomServer(URL(string: server)!, keys: keys)) ?? false
+        let testSuccess: SupportedBlossomType = (try? await NostrEssentials.testBlossomServer(URL(string: server)!, keys: keys)) ?? .none
         
-        if testSuccess {
+        if testSuccess == .media || testSuccess == .upload {
             onAdd(server)
             dismiss()
             error = nil
