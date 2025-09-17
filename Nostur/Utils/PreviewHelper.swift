@@ -30,7 +30,6 @@ public class PreviewEnvironment {
         d.set(true, forKey: "devToggle")
         d.set("Following", forKey: "selected_subtab")
         d.set("Main", forKey: "selected_tab")
-        d.set(false, forKey: "full_width_images")
         d.set(FOOTER_BUTTONS_PREVIEW, forKey: "footer_buttons")
         return d
     }()

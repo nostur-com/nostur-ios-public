@@ -46,9 +46,9 @@ struct DMs: View {
                                 Text("Accepted", comment: "Tab title for accepted DMs (Direct Messages)").lineLimit(1)
                                     .font(.subheadline)
                                     .foregroundColor(theme.accent)
-//                                    .frame(maxWidth: .infinity)
-//                                    .padding(.top, 8)
-//                                    .padding(.bottom, 5)
+                                //                                    .frame(maxWidth: .infinity)
+                                //                                    .padding(.top, 8)
+                                //                                    .padding(.bottom, 5)
                                 if vm.unread > 0 {
                                     Menu {
                                         Button {
@@ -87,9 +87,9 @@ struct DMs: View {
                                 Text("Requests", comment: "Tab title for DM (Direct Message) requests").lineLimit(1)
                                     .font(.subheadline)
                                     .foregroundColor(theme.accent)
-//                                    .frame(maxWidth: .infinity)
-//                                    .padding(.top, 8)
-//                                    .padding(.bottom, 5)
+                                //                                    .frame(maxWidth: .infinity)
+                                //                                    .padding(.top, 8)
+                                //                                    .padding(.bottom, 5)
                                 if vm.newRequests > 0 {
                                     Menu {
                                         Button {
@@ -172,7 +172,7 @@ struct DMs: View {
             .sheet(isPresented: $showingNewDM) {
                 NBNavigationStack {
                     NewDM(showingNewDM: $showingNewDM, tab: $tab)
-                         .nosturNavBgCompat(theme: theme)
+                        .nosturNavBgCompat(theme: theme)
                         .onAppear {
                             if let preloadNewDMInfo {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
@@ -203,7 +203,7 @@ struct DMs: View {
             
             .navigationTitle(String(localized: "Messages", comment: "Navigation title for DMs (Direct Messages)"))
             .navigationBarTitleDisplayMode(.inline)
-
+            
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Image(systemName: "gearshape")
@@ -232,6 +232,7 @@ struct DMs: View {
             }
             .background(theme.listBackground)
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
+            .tabBarSpaceCompat()
         }
         .nbUseNavigationStack(.never)
     }

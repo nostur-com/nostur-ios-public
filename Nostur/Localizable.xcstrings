@@ -120,6 +120,9 @@
         }
       }
     },
+    "!" : {
+
+    },
     "·" : {
       "localizations" : {
         "nl" : {
@@ -850,6 +853,9 @@
           }
         }
       }
+    },
+    "+" : {
+
     },
     "+%lld" : {
       "localizations" : {
@@ -2672,6 +2678,7 @@
       }
     },
     "Configure feed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2682,6 +2689,7 @@
       }
     },
     "Configure feed type" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3787,6 +3795,7 @@
       }
     },
     "Emoji Feed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4605,6 +4614,9 @@
         }
       }
     },
+    "Hey" : {
+
+    },
     "Hide" : {
       "localizations" : {
         "nl" : {
@@ -4670,6 +4682,9 @@
           }
         }
       }
+    },
+    "Home" : {
+
     },
     "Home/Lock screen notifications" : {
       "localizations" : {
@@ -6563,6 +6578,7 @@
       }
     },
     "Outrage feed may or may not be available in a future release" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
