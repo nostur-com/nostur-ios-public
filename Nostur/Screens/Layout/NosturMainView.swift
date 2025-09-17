@@ -51,12 +51,20 @@ extension EnvironmentValues {
     }
 }
 
-#Preview("with Posts") {
+#Preview("with Posts and Audio Only Bar") {
     PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadPosts()
         pe.loadFollows()
     }) {
         NosturMainView()
+        
+            .task {
+                await AnyPlayerModel
+                    .shared
+                    .loadVideo(
+                        url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
+                        availableViewModes: [.audioOnlyBar])
+            }
     }
 }

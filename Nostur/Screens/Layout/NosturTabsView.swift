@@ -48,6 +48,15 @@ struct NosturTabsView: View {
             .overlay(alignment: .center) {
                 OverlayPlayer()
                     .edgesIgnoringSafeArea(.bottom)
+                    .modifier {
+                        if #available(iOS 26.0, *), IS_CATALYST { // With our custom tabbar the position is a bit different
+                            $0
+                                .offset(y: -28)
+                        }
+                        else {
+                            $0
+                        }
+                    }
             }
         }
     }
