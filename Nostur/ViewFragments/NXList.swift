@@ -36,9 +36,28 @@ struct NXList<Content: View>: View {
                 content
             }
             .listRowBackground(theme.background)
+            
+            .modifier {
+                if #available(iOS 26.0, *), IS_CATALYST {
+                    $0.listRowBackground(theme.background)
+                      .listRowInsets(.init(top: 10, leading: 20, bottom: 8, trailing: 10))
+                }
+                else {
+                    $0
+                }
+            }
         }
         .scrollContentBackgroundHidden()
         .background(theme.listBackground)
+        
+        .modifier {
+            if #available(iOS 26.0, *), IS_CATALYST {
+                $0.listSectionSpacing(.compact)
+            }
+            else {
+                $0
+            }
+        }
     }
     
     @ViewBuilder
