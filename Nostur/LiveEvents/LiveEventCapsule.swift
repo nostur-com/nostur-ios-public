@@ -51,15 +51,14 @@ struct LiveEventCapsule: View {
         }
         .padding(.leading, 2)
         .padding(.trailing, 8)
+        .foregroundColor(Color.white)
         .modifier {
             if #available(iOS 26.0, *) {
                 $0
-                    .foregroundColor(Color.primary) // .primary so it handles light/dark-appearance properly
-                    .glassEffect(.clear.interactive())
+                    .glassEffect(.clear.tint(Color.black.opacity(0.25)).interactive())
             }
             else {
                 $0
-                    .foregroundColor(Color.white) // Always .white on .accent for pre glass
                     .background(theme.accent)
                     .frame(height: 34.0)
                     .clipShape(.rect(cornerRadius: 30))
