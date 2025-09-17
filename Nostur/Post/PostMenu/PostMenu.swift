@@ -142,7 +142,7 @@ struct PostMenu: View {
                     }
                     
                     Button(action: {
-                        navigateTo(ViewPath.ProfileReactionList(pubkey: nrPost.pubkey), context: "Default")
+                        navigateToOnMain(ViewPath.ProfileReactionList(pubkey: nrPost.pubkey))
                         dismiss()
                     }) {
                         Label("Show \(nrContact.anyName)'s reactions", systemImage: "heart")
