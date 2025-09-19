@@ -193,8 +193,10 @@ public final class NewPostModel: ObservableObject {
                 batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
                     Task {
                         guard let testItem = uploadItems.first, let signedEvent = signedEventsDict[testItem.4.id], let testAuthHeader = toHttpAuthHeader(signedEvent) else {
-                            self.uploadError = "Error 153"
-                            sendNotification(.anyStatus, ("Error 153", "NewPost"))
+                            Task { @MainActor in
+                                self.uploadError = "Error 153"
+                                sendNotification(.anyStatus, ("Error 153", "NewPost"))
+                            }
                             return
                         }
                         
@@ -202,15 +204,19 @@ public final class NewPostModel: ObservableObject {
                         
                         if blossomType == .none {
                             L.og.error("Error: blossomType .none")
-                            self.uploadError = "Blossom server not compatible"
-                            sendNotification(.anyStatus, ("Upload error: Blossom server not compatible", "NewPost"))
+                            Task { @MainActor in
+                                self.uploadError = "Blossom server not compatible"
+                                sendNotification(.anyStatus, ("Upload error: Blossom server not compatible", "NewPost"))
+                            }
                             return
                         }
                         
                         if blossomType == .unauthorized {
                             L.og.error("Error: blossomType .unauthorized")
-                            self.uploadError = "Blossom: Unauthorized"
-                            sendNotification(.anyStatus, ("Blossom error: Unauthorized", "NewPost"))
+                            Task { @MainActor in
+                                self.uploadError = "Blossom: Unauthorized"
+                                sendNotification(.anyStatus, ("Blossom error: Unauthorized", "NewPost"))
+                            }
                             return
                         }
                          
@@ -278,12 +284,16 @@ public final class NewPostModel: ObservableObject {
                                 switch result {
                                 case .failure(let error as URLError) where error.code == .userAuthenticationRequired:
                                     L.og.error("Error uploading images (401): \(error.localizedDescription)")
-                                    self.uploadError = "Media upload authorization error"
-                                    sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+                                    Task { @MainActor in
+                                        self.uploadError = "Media upload authorization error"
+                                        sendNotification(.anyStatus, ("Media upload authorization error", "NewPost"))
+                                    }
                                 case .failure(let error):
                                     L.og.error("Error uploading images: \(error.localizedDescription)")
-                                    self.uploadError = "Image upload error"
-                                    sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                                    Task { @MainActor in
+                                        self.uploadError = "Image upload error"
+                                        sendNotification(.anyStatus, ("Upload error: \(error.localizedDescription)", "NewPost"))
+                                    }
                                 case .finished:
     #if DEBUG
                                     L.og.debug("All images uploaded successfully")
