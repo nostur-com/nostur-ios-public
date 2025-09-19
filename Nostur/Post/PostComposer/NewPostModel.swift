@@ -192,7 +192,11 @@ public final class NewPostModel: ObservableObject {
                 
                 batchSignEvents(unsignedAuthHeaderEvents, account: account) { signedEventsDict in
                     Task {
-                        guard let testItem = uploadItems.first, let signedEvent = signedEventsDict[testItem.4.id], let testAuthHeader = toHttpAuthHeader(signedEvent) else {
+                        guard let testItem = uploadItems.first,
+                              let signedEvent = signedEventsDict[testItem.4.id],
+                              let testAuthHeader = toHttpAuthHeader(signedEvent),
+                              let testHash = signedEvent.tags.first(where: { $0.type == "x" })?.value
+                        else {
                             Task { @MainActor in
                                 self.uploadError = "Error 153"
                                 sendNotification(.anyStatus, ("Error 153", "NewPost"))
@@ -200,7 +204,7 @@ public final class NewPostModel: ObservableObject {
                             return
                         }
                         
-                        let blossomType = (try? await NostrEssentials.testBlossomServer(blossomServerURL, authorization: testAuthHeader)) ?? .none
+                        let blossomType = (try? await NostrEssentials.testBlossomServer(blossomServerURL, authorization: testAuthHeader, sha256: testHash)) ?? .none
                         
                         if blossomType == .none {
                             L.og.error("Error: blossomType .none")
