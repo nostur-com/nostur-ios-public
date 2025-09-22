@@ -45,9 +45,11 @@ struct DetailFooterFragment: View {
                     AnimatedNumber(number: footerAttributes.zapsCount)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
                         .lineLimit(1)
+                        .layoutPriority(3)
                     
                     AnimatedNumberString(number: tallyString)
                         .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
+                        .layoutPriority(4)
                 }
             }
             
@@ -55,6 +57,7 @@ struct DetailFooterFragment: View {
             
             Text(nrPost.createdAt.formatted())
                 .lineLimit(1)
+                .layoutPriority(5)
         }
         .onAppear {
             guard !viewingContext.contains(.preview) else { return }
