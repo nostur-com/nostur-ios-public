@@ -1264,7 +1264,8 @@
       }
     },
     "Account: @%@ / %@" : {
-      "comment" : "Informational text during logout action, showing Account name/handle\ninformational message showing account name(s)",
+      "comment" : "Informational text during logout action, showing Account name/handle",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2743,7 +2744,7 @@
       }
     },
     "Confirm log out" : {
-      "comment" : "Action sheet title\nTitle of sheet that asks the user to confirm logout action",
+      "comment" : "Sheet title for log out",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5397,7 +5398,7 @@
       }
     },
     "Log out" : {
-      "comment" : "Button to log out\nLog out button\nSide bar navigation button",
+      "comment" : "Log out button\nSide bar navigation button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5416,6 +5417,9 @@
           }
         }
       }
+    },
+    "Logout" : {
+
     },
     "Long-form articles from people you follow" : {
       "localizations" : {
@@ -5507,7 +5511,8 @@
       }
     },
     "Make sure you have a back-up of your private key (nsec)\nNostur cannot recover your account without it" : {
-      "comment" : "Informational text during logout action\ninformational message",
+      "comment" : "Informational text during logout action",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5516,6 +5521,9 @@
           }
         }
       }
+    },
+    "Make sure you have a back-up of your private key (nsec). Nostur cannot recover your account without it." : {
+      "comment" : "informational message"
     },
     "Mark all as read" : {
       "comment" : "Menu action to mark all dm requests as read\nMenu action to mark all messages as read",

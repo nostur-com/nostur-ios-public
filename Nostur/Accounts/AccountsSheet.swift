@@ -81,41 +81,14 @@ struct AccountsSheet: View {
                 }
             }
         })
-        .actionSheet(item: $logoutAccount) { account in
-            ActionSheet(
-                title: Text("Confirm log out", comment: "Title of sheet that asks the user to confirm logout action"),
-                message: !account.isNC && account.privateKey != nil
-                ? Text("""
-                                 Make sure you have a back-up of your private key (nsec)
-                                 Nostur cannot recover your account without it
-                                 """, comment: "Informational text during logout action")
-                : Text("""
-                                 Account: @\(account.name) / \(account.display_name)
-                                 """, comment: "Informational text during logout action, showing Account name/handle")
-                ,
-                buttons: !account.isNC && account.privateKey != nil
-                ? [
-                    .destructive(Text("Log out", comment: "Button to log out"), action: {
-                        AccountsState.shared.logout(account)
-                    }),
-                    .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
-                        if let pk = account.privateKey {
-                            UIPasteboard.general.string = nsec(pk)
-                        }
-                    }),
-                    .cancel(Text("Cancel"))
-                ] : [
-                    .destructive(Text("Log out", comment: "Button to log out"), action: {
-                        AccountsState.shared.logout(account)
-                        
-//                            if (AccountsState.shared.accounts.isEmpty) { // TODO: inside .logout is async so rewire this?
-//                                sendNotification(.hideSideBar)
-//                            }
-                        
-                    }),
-                    .cancel(Text("Cancel"))
-                ])
-        }
+        .sheet(item: $logoutAccount, content: { account in
+            NBNavigationStack {
+                LogoutAccountSheet(account: $logoutAccount, showSidebar: .constant(false))
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(theme.listBackground)
+            .presentationDetents350l()
+        })
         .background(theme.listBackground)
     }
 }

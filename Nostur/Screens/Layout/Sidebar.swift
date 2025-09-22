@@ -286,37 +286,14 @@ struct SideBar: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         }
-        .actionSheet(item: $logoutAccount) { account in
-            ActionSheet(
-                title: Text("Confirm log out", comment: "Action sheet title"),
-                message: !account.isNC && account.privateKey != nil
-                ? Text("""
-                                 Make sure you have a back-up of your private key (nsec)
-                                 Nostur cannot recover your account without it
-                                 """, comment: "informational message")
-                : Text("""
-                                 Account: @\(account.name) / \(account.display_name)
-                                 """, comment: "informational message showing account name(s)")
-                ,
-                buttons: !account.isNC && account.privateKey != nil ? [
-                    .destructive(Text("Log out", comment: "Log out button"), action: {
-                        AccountsState.shared.logout(account)
-                        showSidebar = false
-                    }),
-                    .default(Text("Copy private key (nsec) to clipboard", comment: "Button to copy private key to clipboard"), action: {
-                        if let pk = account.privateKey {
-                            UIPasteboard.general.string = nsec(pk)
-                        }
-                    }),
-                    .cancel(Text("Cancel"))
-                ] : [
-                    .destructive(Text("Log out", comment:"Log out button"), action: {
-                        AccountsState.shared.logout(account)
-                        showSidebar = false
-                    }),
-                    .cancel(Text("Cancel"))
-                ])
-        }
+        .sheet(item: $logoutAccount, content: { _ in
+            NBNavigationStack {
+                LogoutAccountSheet(account: $logoutAccount, showSidebar: $showSidebar)
+            }
+            .nbUseNavigationStack(.never)
+            .presentationBackgroundCompat(theme.listBackground)
+            .presentationDetents350l()
+        })
         .background(theme.listBackground)
         .compositingGroup()
         .opacity(showSidebar ? 1.0 : 0)
