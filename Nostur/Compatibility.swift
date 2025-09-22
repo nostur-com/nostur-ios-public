@@ -396,12 +396,20 @@ extension View {
 extension View {
     
     @ViewBuilder
-    func buttonStyleGlassProminent() -> some View {
+    func buttonStyleGlassProminent(tint: Color? = nil) -> some View {
         if #available(iOS 26.0, *), !IS_CATALYST {
-            self.buttonStyle(.glassProminent)
+            self.modifier {
+                if let tint {
+                    $0.buttonStyle(.glassProminent)
+                        .tint(tint)
+                }
+                else {
+                    $0.buttonStyle(.glassProminent)
+                }
+            }
         }
         else {
-            self.buttonStyle(NRButtonStyle(style: .borderedProminent))
+            self.buttonStyle(NRButtonStyle(style: .borderedProminent, tint: tint))
         }
     }
     

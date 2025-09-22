@@ -11,6 +11,7 @@ struct NRButtonStyle: ButtonStyle {
     @Environment(\.theme) var theme
     
     var style: Style = .default
+    var tint: Color? = nil
     
     enum Style {
         case `default`
@@ -22,19 +23,19 @@ struct NRButtonStyle: ButtonStyle {
         switch style {
         case .default:
             configuration.label
-                .foregroundColor(theme.accent)
+                .foregroundColor(tint ?? theme.accent)
 
         case .borderedProminent:
             configuration.label
                 .padding(.horizontal, 12)
                 .padding(.vertical, 3)
-                .background(theme.accent)
+                .background(tint ?? theme.accent)
                 .cornerRadius(25)
                 .foregroundColor(Color.white)
             
         case .theme:
             configuration.label
-                .background(theme.accent)
+                .background(tint ?? theme.accent)
                 .foregroundColor(Color.white)
         }
     }
