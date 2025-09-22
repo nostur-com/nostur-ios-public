@@ -75,14 +75,14 @@ class AnyPlayerModel: ObservableObject {
         player
             .publisher(for: \.timeControlStatus)
             .receive(on: DispatchQueue.main)
-            .sink { newStatus in
-                self.timeControlStatus = newStatus
+            .sink { [weak self] newStatus in
+                self?.timeControlStatus = newStatus
             }
             .store(in: &cancellables)
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
-            .sink { [self] _ in
-                didFinishPlaying = true
+            .sink { [weak self] _ in
+                self?.didFinishPlaying = true
             }
             .store(in: &cancellables)
     }

@@ -8,10 +8,10 @@ import Combine
 
 public struct GIFImage: View {
     private let source: GIFSource
-    @Binding var isPlaying:Bool
+    @Binding var isPlaying: Bool
 
      /// Initializes the view with the given GIF image data.
-    public init(data: Data, isPlaying:Binding<Bool>) {
+    public init(data: Data, isPlaying: Binding<Bool>) {
          self.source = .data(data)
         _isPlaying = isPlaying
      }
@@ -24,8 +24,7 @@ public struct GIFImage: View {
  @available(iOS 13, tvOS 13, *)
  private struct _GIFImage: UIViewRepresentable {
      let source: GIFSource
-     @Binding var isPlaying:Bool
-     var subscriptions = Set<AnyCancellable>()
+     @Binding var isPlaying: Bool
 
      func makeUIView(context: Context) -> GIFImageView {
          let imageView = GIFImageView()
@@ -68,8 +67,9 @@ public struct GIFImage: View {
          }
      }
 
-     static func dismantleUIView(_ imageView: GIFImageView, coordinator: ()) {
+     static func dismantleUIView(_ imageView: GIFImageView, coordinator: Coordinator) {
          imageView.prepareForReuse()
+         coordinator.subscriptions.removeAll()
      }
      
      class Coordinator: NSObject {

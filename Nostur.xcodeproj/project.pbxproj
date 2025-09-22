@@ -893,7 +893,7 @@
 			repositoryURL = "https://github.com/kaishin/Gifu.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 3.4.1;
+				minimumVersion = 3.4.0;
 			};
 		};
 		1F3C8B732D22D175008231A9 /* XCRemoteSwiftPackageReference "secp256k1" */ = {
