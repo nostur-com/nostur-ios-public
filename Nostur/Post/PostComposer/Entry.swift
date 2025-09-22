@@ -228,6 +228,9 @@ struct Entry: View {
             if #available(iOS 26.0, *) {
                 $0.toolbar(content: self.toolbar26)
             }
+            else if #available(iOS 16.0, *) {
+                $0.toolbar(content: self.toolbar16)
+            }
             else {
                 $0.toolbar(content: self.toolbar15)
             }
@@ -277,6 +280,58 @@ struct Entry: View {
     
     @ToolbarContentBuilder
     func toolbar15() -> some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel", systemImage: "xmark") { onDismiss() }
+        }
+        
+        ToolbarItem(placement: .primaryAction) {
+            HStack {
+                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+                    if showVoiceRecorderButton {
+                        self.voiceRecordingButton
+                    }
+
+                    if kind != .picture && kind != .highlight {
+                        self.startNestButton
+                    }
+
+                    self.takePhotoButton
+
+                    if #available(iOS 16, *) {
+                        self.pickPhotoButton
+
+                        if kind != .picture && kind != .highlight {
+                            self.pickVideoButton
+                        }
+                    }
+
+                    if kind != .picture {
+                        self.gifButton
+                    }
+                }
+                
+                if kind == .highlight {
+                    self.highlightAddRemoveAuthorButton
+                }
+                
+                if kind != .highlight {
+                    self.previewButton
+                }
+                
+                self.sendButton
+            }
+        }
+        
+        ToolbarItem(placement: .principal) {
+            if let uploadError = vm.uploadError {
+                Text(uploadError).foregroundColor(.red)
+            }
+        }
+    }
+    
+    @available(iOS 16.0, *)
+    @ToolbarContentBuilder
+    func toolbar16() -> some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button("Cancel", systemImage: "xmark") { onDismiss() }
         }
