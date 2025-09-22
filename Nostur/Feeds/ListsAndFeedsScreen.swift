@@ -86,7 +86,7 @@ struct ListsAndFeedsScreen: View {
                     Text("Media from posts from anyone which are most liked or reposted by people you follow")
                 })
                 Toggle(isOn: $enableArticleFeed, label: {
-                    Text("Articles")
+                    Text("Reads")
                     Text("Long-form articles from people you follow")
                 })
                 Toggle(isOn: $enableExploreFeed, label: {

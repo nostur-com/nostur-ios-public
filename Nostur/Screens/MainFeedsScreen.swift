@@ -97,7 +97,7 @@ struct MainFeedsScreen: View {
             return String(localized: "Gallery", comment: "Tab title for the Gallery feed")
         }
         if selectedSubTab == "Articles" {
-            return String(localized: "Articles", comment: "Tab title for the Articles feed")
+            return String(localized: "Reads", comment: "Tab title for the Reads (Articles) feed")
         }
         return String(localized: "Feed", comment: "Tab title for a feed")
     }
