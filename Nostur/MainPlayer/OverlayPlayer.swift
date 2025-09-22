@@ -115,7 +115,6 @@ struct OverlayPlayer: View {
                                                     vm.close()
                                                 }
                                             }
-//                                            .font(.title2)
                                             .buttonStyle(.borderless)
                                             .foregroundStyle(Color.white)
                                         }
@@ -129,6 +128,7 @@ struct OverlayPlayer: View {
                                             }
                                             .buttonStyle(.borderless)
                                             .foregroundStyle(Color.white)
+                                            .offset(y: -2)
                                         }
                                     }
                                     
@@ -164,12 +164,12 @@ struct OverlayPlayer: View {
                                                 else {
                                                     Image(systemName: "square.and.arrow.down")
                                                         .foregroundColor(Color.white)
-                                                        .padding(5)
-                                                        .offset(y: -6)
+//                                                        .padding(5)
+                                                        .offset(y: -3)
                                                 }
                                             })
                                             .disabled(isSaving)
-                                            .font(.title2)
+//                                            .font(.title2)
                                             .foregroundColor(Color.white)
                                         }
                                     }
@@ -182,7 +182,7 @@ struct OverlayPlayer: View {
                                                     vm.toggleViewMode()
                                                 }
                                             }
-                                            .font(.title2)
+//                                            .font(.title2)
                                             .buttonStyle(.borderless)
                                             .foregroundColor(Color.white)
                                         }
@@ -350,7 +350,6 @@ struct OverlayPlayer: View {
                                                 vm.close()
                                             }
                                         }
-                                        .font(.title2)
                                         .buttonStyle(.borderless)
                                         .foregroundColor(theme.accent)
                                     }
@@ -413,7 +412,7 @@ struct OverlayPlayer: View {
                                                 vm.toggleViewMode()
                                             }
                                         }
-                                        .font(.title2)
+//                                        .font(.title2)
                                         .buttonStyle(.borderless)
                                         .foregroundColor(theme.accent)
                                     }

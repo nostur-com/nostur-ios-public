@@ -245,8 +245,8 @@ struct StreamDetail: View {
                         }
                         .buttonStyle(.borderless)
                         .foregroundColor(theme.accent)
-                        .font(.title2)
-                        .offset(y: -5)
+//                        .font(.title2)
+//                        .offset(y: -5)
                     }
                 }
             }

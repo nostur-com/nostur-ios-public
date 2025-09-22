@@ -72,8 +72,8 @@ import NavigationBackport
                                         .shared
                                         .loadVideo(
                                             url: "https://data.zap.stream/stream/537a365c-f1ec-44ac-af10-22d14a7319fb.m3u8",
-            //                                availableViewModes: [.fullscreen, .overlay, .detailstream])
-                                            availableViewModes: [.audioOnlyBar])
+                                            availableViewModes: [.fullscreen, .overlay, .detailstream, .audioOnlyBar])
+//                                            availableViewModes: [.audioOnlyBar])
 //                                            availableViewModes: [.detailstream, .overlay, .audioOnlyPill])
                                 }
                             }
