@@ -44,9 +44,21 @@ struct ChatZapPill: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(theme.listBackground.opacity(0.85))
         .foregroundColor(theme.primary)
         .font(.footnote)
+        .modifier {
+            if #available(iOS 26.0, *) {
+                $0
+                    .glassEffect(.clear.tint(theme.listBackground.opacity(0.35)))
+            }
+            else {
+                $0
+                    .background(theme.listBackground.opacity(0.85))
+                    .frame(height: 34.0)
+                    .clipShape(.rect(cornerRadius: 30))
+                    .frame(height: 44.0)
+            }
+        }
         .clipShape(Capsule())
         .onTapGesture {
             if AnyPlayerModel.shared.viewMode == .detailstream {
