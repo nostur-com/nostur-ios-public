@@ -31,9 +31,8 @@ struct AccountsSheet: View {
     @State private var logoutAccount: CloudAccount? = nil
     
     var body: some View {
-//        let _ = Self._printChanges()
         VStack(spacing: 15) {
-            List {
+            NXList(plain: true, showListRowSeparator: true) {
                 ForEach(accountsSorted) { account in
                     AccountRow(account: account)
                         .contentShape(Rectangle())
@@ -52,7 +51,6 @@ struct AccountsSheet: View {
                 }
             }
             .scrollContentBackgroundHidden()
-            .listStyle(.plain)
             
             NavigationLink {
                 NewAccountSheet()
