@@ -15,10 +15,6 @@ struct SideBar: View {
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
     @Binding var showSidebar: Bool
     
-    private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
-    }
-    
     @State private var accountsSheetIsShown = false
     @State private var logoutAccount: CloudAccount? = nil
     @State private var showAnySigner = false
@@ -34,9 +30,9 @@ struct SideBar: View {
     }
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         VStack(alignment: .leading) {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH)
                 .overlay(alignment: .bottomLeading, content: {
@@ -117,7 +113,7 @@ struct SideBar: View {
                         .contentShape(Rectangle())
                     }
                     Button {
-                        if selectedTab != "Main" { 
+                        if selectedTab() != "Main" {
                             UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                         }
                         navigateToOnMain(ViewPath.Lists)
@@ -151,7 +147,7 @@ struct SideBar: View {
                     }
                     if !account.isNC {
                         Button {
-                            if selectedTab != "Main" {
+                            if selectedTab() != "Main" {
                                 UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                             }
                             navigateToOnMain(ViewPath.Badges)
@@ -178,7 +174,7 @@ struct SideBar: View {
                         }
                     }
                     Button {
-                        if selectedTab != "Main" {
+                        if selectedTab() != "Main" {
                             UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                         }
                         navigateToOnMain(ViewPath.Settings)
@@ -196,7 +192,7 @@ struct SideBar: View {
                         .contentShape(Rectangle())
                     }
                     Button {
-                        if selectedTab != "Main" {
+                        if selectedTab() != "Main" {
                             UserDefaults.standard.setValue("Main", forKey: "selected_tab")
                         }
                         navigateToOnMain(ViewPath.Blocklist)
