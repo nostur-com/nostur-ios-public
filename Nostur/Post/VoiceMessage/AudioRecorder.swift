@@ -597,6 +597,11 @@ struct AudioRecorderContentView: View {
                 }
             }
         }
+        .onDisappear {
+            if recorder.isRecording {
+                recorder.stopRecording()
+            }
+        }
     }
     
     
