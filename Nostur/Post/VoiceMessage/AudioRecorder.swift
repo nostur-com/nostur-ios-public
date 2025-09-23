@@ -451,19 +451,22 @@ struct AudioRecorderContentView: View {
     private var vm: NewPostModel
     @ObservedObject var typingTextModel: TypingTextModel
     @State var isTooLong = false
+    @State var showSwitchBackButton = true
     let timer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
     private var onDismiss: () -> Void
     private var replyTo: ReplyTo? = nil
+    private var onSwitchBack: () -> Void
     
     private var shouldDisablePostButton: Bool {
         (typingTextModel.sending || typingTextModel.uploading || recorder.isRecording || recorder.waitingForSamples || recorder.recordingURL == nil)
     }
     
-    init(vm: NewPostModel, replyTo: ReplyTo? = nil, onDismiss: @escaping () -> Void) {
+    init(vm: NewPostModel, replyTo: ReplyTo? = nil, onDismiss: @escaping () -> Void, onSwitchBack: @escaping () -> Void) {
         self.vm = vm
         self.onDismiss = onDismiss
         self.typingTextModel = vm.typingTextModel
         self.replyTo = replyTo
+        self.onSwitchBack = onSwitchBack
     }
     
     var body: some View {
@@ -521,6 +524,7 @@ struct AudioRecorderContentView: View {
                     
                     // RECORD BUTTON
                     RecordButton {
+                        showSwitchBackButton = false
                         isTooLong = false
                         recorder.startRecording()
                     } stopAction: {
@@ -546,8 +550,14 @@ struct AudioRecorderContentView: View {
         }
         
         .toolbar {
+            
             ToolbarItem(placement: .confirmationAction) {
-                
+                if showSwitchBackButton {
+                    self.switchBackToTextButton
+                }
+            }
+            
+            ToolbarItem(placement: .confirmationAction) {
                 Button {
                     typingTextModel.sending = true
         
@@ -587,6 +597,16 @@ struct AudioRecorderContentView: View {
                 }
             }
         }
+    }
+    
+    
+    @ViewBuilder
+    private var switchBackToTextButton: some View {
+        Button("Text Post", systemImage: "text.cursor") {
+            onSwitchBack()
+        }
+        .buttonStyle(.borderless)
+        .disabled(vm.typingTextModel.uploading)
     }
 }
 

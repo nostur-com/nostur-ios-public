@@ -123,7 +123,7 @@ func createPreviewEvent(_ event: NEvent) -> Event {
     previewEvent.isRepost = event.kind == .repost
     previewEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
             
-    if (event.kind == .textNote) {
+    if (event.kind == .textNote || event.kind == .comment) {
         // THIS EVENT REPLYING TO SOMETHING
         // CACHE THE REPLY "E" IN replyToId
         if let replyToEtag = event.replyToEtag() {

@@ -44,6 +44,7 @@ struct ComposePost: View {
     @ObservedObject var settings: SettingsStore = .shared
     
     @State private var showAudioRecorder: Bool = false
+    @State private var showSwitchBackButton: Bool = true
     
     private var showAutoPilotPreview: Bool {
         guard !SettingsStore.shared.lowDataMode, SettingsStore.shared.enableOutboxPreview else { return false } // Don't continue with additional outbox relays on low data mode, or settings toggle
@@ -98,7 +99,10 @@ struct ComposePost: View {
                         
                         Spacer()
                         
-                        AudioRecorderContentView(vm: vm, replyTo: replyTo, onDismiss: { onDismiss() })
+                        AudioRecorderContentView(vm: vm, replyTo: replyTo, onDismiss: { onDismiss() }, onSwitchBack: {
+                            showAudioRecorder = false
+                            vm.nEvent?.kind = .comment
+                        } )
                             .frame(maxWidth: .infinity, alignment: .center)
                             .toolbar {
                                 ToolbarItem(placement: .cancellationAction) {
@@ -113,9 +117,11 @@ struct ComposePost: View {
                             .background(theme.listBackground)
                     }
                     .onAppear {
+                        if vm.nEvent?.kind == .comment { // Don't init voice if we toggled voice reply to comment reply
+                            return
+                        }
+                        
                         // Only ROOT voice message here. (reply voice message is created when .loadReplyTo() is called)
-                        
-                        
                         if replyTo == nil {
                             var voiceMessageEvent = NEvent(content: "")
                             voiceMessageEvent.kind = .shortVoiceMessage
@@ -535,6 +541,23 @@ struct ComposePost: View {
                 .sheet(isPresented: .constant(true)) {
                     NBNavigationStack {
                         if let nrReplyTo = PreviewFetcher.fetchNRPost("da3f7863d634b2020f84f38bd3dac5980794715702e85c3f164e49ebe5dc98cc") {
+                            ComposePost(replyTo: ReplyTo(nrPost: nrReplyTo), onDismiss: { })
+                        }
+                    }
+                }
+        }
+    }
+}
+
+#Preview("New Voice Reply") {
+    PreviewContainer({ pe in
+        pe.parseEventJSON([###"{"content":"https://npub1cgcwm56v5hyrrzl5ty4vq4kdud63n5u4czgycdl2r3jshzk55ufqe52ndy.blossom.band/a8218854acc7785f8d5d2000bf95a480ec7ef81ed34ff1dc47c4630d457b83a6.mp4","sig":"40b81ce263c429c06d88de6c3a33fa548578eb52c882051c9b254560c7397c1947a7c2e125d782864dbe2eed07e81f378ac84e24c73be11ee9e11baf5f860b43","tags":[["imeta","url https://npub1cgcwm56v5hyrrzl5ty4vq4kdud63n5u4czgycdl2r3jshzk55ufqe52ndy.blossom.band/a8218854acc7785f8d5d2000bf95a480ec7ef81ed34ff1dc47c4630d457b83a6.mp4","duration 51","waveform 0.004201829437995552 0.1142103350430057 0.43174654727233186 0.5229314294197938 0.22569140008715555 0.09033115518699292 0.01114486257703379 0.19737698956074196 0.37434808042017376 0.27857154055066596 0.2218687310839273 0.2955642206981163 0.25441732695684854 0.000032908529798580295 0.18291360154973546 0.0013525079821871233 0 0 0 0.0039864314885253 0.2941087787653154 0.4064170888166966 0.34966808423353063 0.33292546613934215 0.2835916501853135 0.28782210814401454 0.2366818006710173 0.16079851586851754 0.032515611962715844 0.004588162264495497 0 0.38998164514033273 0.2382420438480493 0.22954782313546251 0.28334960071989357 0.24979438011774774 0.17414680177442102 0.37924803832637916 0.07394749645688055 0.0001329989366899501 0.28938743804200506 0.5395710889950673 0.3804477135290114 0.22625714375036632 0.35535009767379877 0.22741313549757497 0.23497218415788504 0.2762070197639018 0.19636850273456075 0.20290360747672803 0.05496752364349224 0.48481011225347803 0.33057541168174065 0.13496673872917467 0.5527362047645379 0.29108917468254847 0.16955781280193924 0.19810807450578308 0.24205374942718033 0.1582141257896855 0.4902229339651341 0.2310274273904644 0.3001810061785608 0.003698714219486976 0.5653072929945436 0.4192506063698652 0.21833678610413854 0.3855482052759224 0.29801634869746885 0.19863830178977776 0.21971105836831 0.22677287527101533 0.21357531122109952 0.1818311185112476 0.013571013494789038 0.1690159390881684 0.04426054269752572 0 0.20823331012177831 0.3851604826893852 0.2633158295196734 0.5202343058038011 0.36049045305817873 0.4019926456689473 0.3638399417895293 0.05879440985299944 0.09939506282636562 0.0020920428019922696 0.4635555085582592 0.40576531822620265 0.44135523423865053 0.00025527147073964887 0.24865015989276124 0.2621184951267706 0.3940824018014514 0.20158430161177668 0.06890933334487073 0.25973563542509115 0.36016571451355484 0.004624447456050344"]],"pubkey":"c230edd34ca5c8318bf4592ac056cde37519d395c0904c37ea1c650b8ad4a712","kind":1222,"id":"44983b6fe368b39e5c1fe90b2e53b34273ee41968c1bf13d17dd7e60324ac4ad","created_at":1758414549}"###])
+    }) {
+        VStack {
+            Button("New Voice Reply") { }
+                .sheet(isPresented: .constant(true)) {
+                    NBNavigationStack {
+                        if let nrReplyTo = PreviewFetcher.fetchNRPost("44983b6fe368b39e5c1fe90b2e53b34273ee41968c1bf13d17dd7e60324ac4ad") {
                             ComposePost(replyTo: ReplyTo(nrPost: nrReplyTo), onDismiss: { })
                         }
                     }
