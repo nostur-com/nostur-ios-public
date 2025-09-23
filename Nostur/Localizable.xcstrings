@@ -6021,6 +6021,7 @@
       }
     },
     "New Post" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

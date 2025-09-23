@@ -72,12 +72,6 @@ struct MainTabs15: View {
             .modifier {
                 if #available(iOS 26.0, *), selectedTab == "Main" {
                     $0.tabBarMinimizeBehavior(.onScrollDown)
-                      .tabViewBottomAccessory {
-                          Button("New Post", systemImage: "plus") {
-                              
-                          }
-                          .frame(width: 50)
-                      }
                 }
                 else {
                     $0
