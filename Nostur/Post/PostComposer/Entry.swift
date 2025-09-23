@@ -348,12 +348,10 @@ struct Entry: View {
 
                 self.takePhotoButton
 
-                if #available(iOS 16, *) {
-                    self.pickPhotoButton
+                self.pickPhotoButton
 
-                    if kind != .picture && kind != .highlight {
-                        self.pickVideoButton
-                    }
+                if kind != .picture && kind != .highlight {
+                    self.pickVideoButton
                 }
 
                 if kind != .picture {
