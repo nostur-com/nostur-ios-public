@@ -69,6 +69,11 @@ struct GalleryFullScreenSwiper: View {
             }
             .scrollTargetLayout()
         }
+        
+        .simultaneousGesture(dismissDragGesture)
+        .simultaneousGesture(zoomGesture)
+        .simultaneousGesture(panGesture)
+        
         .scrollTargetBehavior(.paging)
         .scrollPosition(id: $activeIndex)
         .frame(width: fullScreenSize.width, height: fullScreenSize.height)
@@ -160,9 +165,6 @@ struct GalleryFullScreenSwiper: View {
                 self.newPosition = .zero
             }
         }
-        .simultaneousGesture(dismissDragGesture)
-        .simultaneousGesture(zoomGesture)
-        .simultaneousGesture(panGesture)
         .id(index)
     }
     
