@@ -20,11 +20,16 @@ struct NosturTabsView: View {
         Zoomable {
             HStack(spacing: GUTTER) {
                 AvailableWidthContainer {
-                    if #available(iOS 26.0, *), IS_CATALYST {
-                        MainTabs26()
+                    if #available(iOS 26.0, *) {
+                        if IS_CATALYST {
+                            MainTabsDesktop()
+                        }
+                        else { // Has tab placement var
+                            MainTabs26()
+                        }
                     }
                     else {
-                        MainTabs()
+                        MainTabs15()
                     }
                 }
                 .frame(maxWidth: 600)

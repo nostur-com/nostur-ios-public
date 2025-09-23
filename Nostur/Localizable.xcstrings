@@ -1830,7 +1830,7 @@
       }
     },
     "Articles" : {
-      "comment" : "Tab title\nTab title for feed of articles\nTab title for the Articles feed",
+      "comment" : "Tab title\nTab title for feed of articles",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4138,6 +4138,9 @@
         }
       }
     },
+    "Extra layout here" : {
+
+    },
     "Failed to generate QR Code" : {
       "shouldTranslate" : false
     },
@@ -5222,6 +5225,9 @@
         }
       }
     },
+    "Limited space" : {
+
+    },
     "Link" : {
       "localizations" : {
         "nl" : {
@@ -5430,6 +5436,9 @@
           }
         }
       }
+    },
+    "Lots of space" : {
+
     },
     "Low Data mode" : {
       "comment" : "Setting on settings screen",
@@ -6012,7 +6021,6 @@
       }
     },
     "New Post" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7458,7 +7466,7 @@
       }
     },
     "Reads" : {
-
+      "comment" : "Tab title for the Reads (Articles) feed"
     },
     "Reason" : {
       "comment" : "Label for the reason of a report",
