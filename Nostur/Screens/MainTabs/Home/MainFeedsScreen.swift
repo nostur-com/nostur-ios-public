@@ -465,13 +465,13 @@ struct MainFeedsScreen: View {
             NRNavigationStack {
                 if la.account.isNC {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                        ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : .textNote)
+                        ComposePost(onDismiss: { showingNewNote = false }, kind: self.postType)
                             .environmentObject(dim)
                     }
                     .environment(\.theme, theme)
                 }
                 else {
-                    ComposePost(onDismiss: { showingNewNote = false }, kind: selectedTab == "Main" && selectedSubTab == "Picture" ? .picture : .textNote)
+                    ComposePost(onDismiss: { showingNewNote = false }, kind: self.postType)
                         .environmentObject(dim)
                         .environment(\.theme, theme)
                 }
@@ -549,6 +549,13 @@ struct MainFeedsScreen: View {
                 $0
             }
         }
+    }
+    
+    private var postType: NEventKind {
+        if #available(iOS 16.0,* ), selectedTab == "Main" && selectedSubTab == "Picture" {
+            return .picture
+        }
+        return .textNote
     }
     
     private func removeDuplicateLists() {

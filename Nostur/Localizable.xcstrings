@@ -4138,9 +4138,6 @@
         }
       }
     },
-    "Extra layout here" : {
-
-    },
     "Failed to generate QR Code" : {
       "shouldTranslate" : false
     },
@@ -5225,9 +5222,6 @@
         }
       }
     },
-    "Limited space" : {
-
-    },
     "Link" : {
       "localizations" : {
         "nl" : {
@@ -5436,9 +5430,6 @@
           }
         }
       }
-    },
-    "Lots of space" : {
-
     },
     "Low Data mode" : {
       "comment" : "Setting on settings screen",

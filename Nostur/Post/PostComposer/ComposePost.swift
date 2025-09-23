@@ -413,7 +413,7 @@ struct ComposePost: View {
             Importer.shared.delayProcessing()
             vm.activeAccount = account()
             
-            if kind == .picture {
+            if #available(iOS 16.0, *), kind == .picture {
                 var pictureEvent = NEvent(content: "")
                 pictureEvent.kind = .picture
                 vm.nEvent = pictureEvent
