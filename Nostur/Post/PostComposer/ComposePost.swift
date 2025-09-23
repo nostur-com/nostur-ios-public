@@ -57,6 +57,8 @@ struct ComposePost: View {
     // No need to refresh previewDIM, just pass to PostPreview to fix random width bug
     @State private var previewDIM = DIMENSIONS()
     
+    @State private var didLoad = false
+    
     var body: some View {
 #if DEBUG
         let _ = Self._printChanges()
@@ -328,6 +330,9 @@ struct ComposePost: View {
                                     .environment(\.theme, theme)
                                     .environmentObject(la)
                                     .environmentObject(previewDIM)
+                                    .onDisappear {
+                                        vm.previewNRPost = nil
+                                    }
                                 
                                 if let nEvent = vm.previewNEvent, showAutoPilotPreview {
                                     AutoPilotSendPreview(nEvent: nEvent)
@@ -417,6 +422,8 @@ struct ComposePost: View {
         }
         .onAppear {
             Importer.shared.delayProcessing()
+            guard !didLoad else { return }
+            didLoad = true
             vm.activeAccount = account()
             
             if #available(iOS 16.0, *), kind == .picture {
