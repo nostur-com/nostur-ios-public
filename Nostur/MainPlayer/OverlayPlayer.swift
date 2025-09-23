@@ -328,6 +328,9 @@ struct OverlayPlayer: View {
                                     .onDisappear {
                                         // Restore normal idle behavior
                                         UIApplication.shared.isIdleTimerDisabled = false
+                                        
+                                        // Cancel any ongoing tasks when view disappears
+                                        AnyPlayerModel.shared.nowPlayingThumbTask?.cancel()
                                     }
                                 
                                 if vm.viewMode == .detailstream {

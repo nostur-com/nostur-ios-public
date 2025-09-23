@@ -94,6 +94,17 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         }
     }
     
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        // Clean up the AVPlayerViewController properly
+        if let avpc = coordinator.avpc {
+            avpc.delegate = nil
+            avpc.player?.pause()
+            avpc.player = nil
+            avpc.view.gestureRecognizers?.removeAll()
+        }
+        coordinator.avpc = nil
+    }
+    
     // Helper to apply audio-only settings
     private func applyAudioOnlySettings(to avpc: AVPlayerViewController) {
         let isHidden = viewMode == .audioOnlyBar
@@ -126,6 +137,12 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         init(parent: AVPlayerViewControllerRepresentable) {
             self.parent = parent
             super.init()
+        }
+        
+        deinit {
+            // Clean up any remaining references
+            avpc?.delegate = nil
+            avpc = nil
         }
         
         @objc func respondToSwipeGesture(_ swipe: UISwipeGestureRecognizer) {

@@ -423,16 +423,31 @@ class AnyPlayerModel: ObservableObject {
         if let currentlyPlayingUrl {
             sendNotification(.didEndPIP, (currentlyPlayingUrl, self.cachedFirstFrame))
         }
-        self.currentlyPlayingUrl = nil
+        
+        // Pause first to stop any ongoing playback
         self.player.pause()
-        self.player.replaceCurrentItem(with: nil)
+        
+        // Set flags to indicate we're closing
+        isPlaying = false
+        isShown = false
+        isLoading = false
+        
+        // Clean up properties
+        self.currentlyPlayingUrl = nil
         self.nrLiveEvent = nil
         self.nrPost = nil
         self.aspect = 16/9 // reset
         self.didFinishPlaying = false
-        isPlaying = false
-        isShown = false
-        isLoading = false
+        
+        // Delay the player item replacement to allow AVPlayerViewController to clean up properly
+        Task {
+            // Small delay to ensure UI updates are processed
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            await MainActor.run {
+                self.player.replaceCurrentItem(with: nil)
+            }
+        }
+        
 #if os(macOS)
         MPNowPlayingInfoCenter.default().playbackState = .stopped
 #endif
@@ -501,8 +516,23 @@ class AnyPlayerModel: ObservableObject {
     }
     
     deinit {
+        // Cancel all Combine cancellables first
         cancellables.forEach { $0.cancel() }
         cancellables.removeAll()
+        
+        // Clean up player and its item to avoid KVO issues
+        player.pause()
+        player.replaceCurrentItem(with: nil)
+        
+        // Cancel any ongoing tasks
+        downloadTask?.cancel()
+        nowPlayingThumbTask?.cancel()
+        
+        // Clean up remote control
+        let commandCenter = MPRemoteCommandCenter.shared()
+        commandCenter.playCommand.removeTarget(nil)
+        commandCenter.pauseCommand.removeTarget(nil)
+        commandCenter.togglePlayPauseCommand.removeTarget(nil)
     }
 }
 
