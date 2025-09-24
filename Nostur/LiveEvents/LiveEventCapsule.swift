@@ -9,6 +9,7 @@ import SwiftUI
 
 struct LiveEventCapsule: View {
     @Environment(\.theme) private var theme
+    @Environment(\.colorScheme) var colorScheme
     @ObservedObject public var liveEvent: NRLiveEvent
     public var onRemove: (String) -> ()
     
@@ -54,8 +55,21 @@ struct LiveEventCapsule: View {
         .foregroundColor(Color.white)
         .modifier {
             if #available(iOS 26.0, *) {
-                $0
-                    .glassEffect(.clear.tint(theme.accent.opacity(0.35)).interactive())
+                if colorScheme == .dark {
+                    $0
+                        .glassEffect(.clear.tint(theme.accent.opacity(0.35)).interactive())
+                }
+                else { // .accent colors on .clear look too bright on light mode for liquid glass tint, so mix with black to make darker
+                    $0
+                        .glassEffect(
+                            .clear.tint(
+                                theme.accent
+                                    .mix(with: .black, by: 0.1)
+                                    .opacity(0.6)
+                            )
+                            .interactive()
+                        )
+                }
             }
             else {
                 $0
