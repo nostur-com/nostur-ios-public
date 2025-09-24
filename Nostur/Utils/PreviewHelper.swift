@@ -989,7 +989,7 @@ func testNEvent(_ eventJsonString: String? = nil) -> NEvent {
         return nEvent
     }
     
-    return NEvent(content: "Test content", kind: .textNote, tags: [])
+    return NEvent(content: "Test content, this is test content.\nThis is a test. Hello!\n\nTest.", kind: .textNote, tags: [])
 }
 
 // Return a Event for testing, optionally from passed in NEvent or json string
