@@ -74,7 +74,7 @@ struct ListsAndFeedsScreen: View {
 //                        Text("Posts from people you don't follow which are most liked or reposted by people you follow")
 //                    })
                 Toggle(isOn: $enableDiscoverListsFeed, label: {
-                    Text("Discover")
+                    Text("Follow Packs & Lists")
                     Text("Lists from people you follow")
                 })
                 Toggle(isOn: $enableEmojiFeed, label: {

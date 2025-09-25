@@ -30,7 +30,7 @@ struct ProfileView: View {
     @State private var editingAccount: CloudAccount?
     @State private var showingNewNote = false
     
-    @State private var scrollPosition = ScrollPosition()
+    @State private var scrollPosition = NXScrollPosition()
     
     @State private var showFollowing = false
     @State private var showFollowers = false
@@ -519,7 +519,7 @@ struct ProfileView: View {
     }
 }
 
-class ScrollPosition: ObservableObject {
+class NXScrollPosition: ObservableObject {
     @Published var position: CGPoint = .zero
 }
 

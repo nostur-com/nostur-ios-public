@@ -12,7 +12,7 @@ struct ProfileToolbar: View {
     @Environment(\.theme) private var theme
     public let pubkey: String
     public let nrContact: NRContact
-    @ObservedObject var scrollPosition: ScrollPosition
+    @ObservedObject var scrollPosition: NXScrollPosition
     @Binding var editingAccount: CloudAccount?
     
     var body: some View {

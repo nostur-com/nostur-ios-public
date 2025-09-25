@@ -233,7 +233,7 @@ class ChatRoomViewModel: ObservableObject {
                 // TODO: check zapRequest.pubkey for blocks(), or maybe "P" (not "p")
                 
 #if DEBUG
-                L.og.debug("Chat message/zap received \(event.kind == .zapNote ? "ZAP" : "MESSAGE"): \(event.content)")
+                L.og.debug("Chat message/zap received \(event.kind == .zapNote ? "ZAP" : "MESSAGE"): \(event.content) -[LOG]-")
 #endif
 
                 bg().perform {

@@ -1830,7 +1830,7 @@
       }
     },
     "Articles" : {
-      "comment" : "Tab title\nTab title for feed of articles",
+      "comment" : "Tab title",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4483,7 +4483,7 @@
       }
     },
     "Funny" : {
-
+      "comment" : "Tab title for the Funny feed"
     },
     "Funny Feed" : {
 
@@ -7458,7 +7458,7 @@
       }
     },
     "Reads" : {
-      "comment" : "Tab title for the Reads (Articles) feed"
+      "comment" : "Tab title for feed of articles\nTab title for the Reads (Articles) feed"
     },
     "Reason" : {
       "comment" : "Label for the reason of a report",
