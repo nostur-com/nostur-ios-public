@@ -95,14 +95,19 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     }
     
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
-        // Clean up the AVPlayerViewController properly
-        if let avpc = coordinator.avpc {
-            avpc.delegate = nil
-            avpc.player?.pause()
-            avpc.player = nil
-            avpc.view.gestureRecognizers?.removeAll()
+        if #available(iOS 16.0, *) {
+            
         }
-        coordinator.avpc = nil
+        else { // crash if we dont do this on iOS 15. But breaks toggle on 16+, so do only on 15
+            // Clean up the AVPlayerViewController properly
+            if let avpc = coordinator.avpc {
+                avpc.delegate = nil
+                avpc.player?.pause()
+                avpc.player = nil
+                avpc.view.gestureRecognizers?.removeAll()
+            }
+            coordinator.avpc = nil
+        }
     }
     
     // Helper to apply audio-only settings
@@ -140,9 +145,13 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         }
         
         deinit {
-            // Clean up any remaining references
-            avpc?.delegate = nil
-            avpc = nil
+            if #available(iOS 16.0, *) {
+                
+            } else { // crash if we dont do this on iOS 15. But breaks toggle on 16+, so do only on 15
+                // Clean up any remaining references
+                avpc?.delegate = nil
+                avpc = nil
+            }
         }
         
         @objc func respondToSwipeGesture(_ swipe: UISwipeGestureRecognizer) {
