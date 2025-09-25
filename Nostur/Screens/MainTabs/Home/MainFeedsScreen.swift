@@ -237,7 +237,7 @@ struct MainFeedsScreen: View {
                                         Spacer()
                                         TabButton(
                                             action: { selectedSubTab = "Articles" },
-                                            title: String(localized:"Articles", comment:"Tab title for feed of articles"),
+                                            title: String(localized: "Reads", comment:"Tab title for feed of articles"),
                 //                            secondaryText: articlesVM.agoText,
                                             selected: selectedSubTab == "Articles"
                                         )
