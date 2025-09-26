@@ -438,7 +438,7 @@ extension Event {
         }
         else if let firstQuoteId = repost.firstQuoteId {
             guard let firstQuote = Event.fetchEvent(id: firstQuoteId, context: context) else { return }
-            CoreDataRelationFixer.shared.addTask ({
+            CoreDataRelationFixer.shared.addTask({
                 firstQuote.repostsCount = (firstQuote.repostsCount + 1)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
             })
@@ -812,6 +812,43 @@ extension Event {
         return zapRequest
     }
     
+    static func safeUpdateRelays(for event: Event, relays: String) {
+        // Verify context is still valid
+        guard let eventContext = event.managedObjectContext,
+              eventContext.persistentStoreCoordinator != nil
+        else {
+            return
+        }
+        
+        // Ensure event still exists in context
+        guard !event.isDeleted,
+              (try? eventContext.existingObject(with: event.objectID)) != nil else {
+            return
+        }
+        
+        CoreDataRelationFixer.shared.addTask({
+            do {
+                // Refetch event to ensure fresh state
+                guard let freshEvent = try eventContext.existingObject(with: event.objectID) as? Event else {
+                    return
+                }
+                
+                let existingRelays = freshEvent.relays.split(separator: " ").map { String($0) }
+                let newRelays = relays.split(separator: " ").map { String($0) }
+                let uniqueRelays = Set(existingRelays + newRelays)
+                
+                if uniqueRelays.count > existingRelays.count {
+                    freshEvent.relays = uniqueRelays.joined(separator: " ")
+                }
+                if freshEvent.flags == "awaiting_send" && uniqueRelays.count > 0  {
+                    freshEvent.flags = ""
+                }
+            } catch {
+                print("Failed to update relays: \(error)")
+            }
+        })
+    }
+    
     // TODO: 115.00 ms    1.0%    0 s          closure #1 in static Event.updateRelays(_:relays:)
     static func updateRelays(_ id: String, relays: String, context: NSManagedObjectContext) {
         #if DEBUG
@@ -820,51 +857,14 @@ extension Event {
             }
         #endif
         
-        func safeUpdateRelays(for event: Event) {
-            // Verify context is still valid
-            guard let eventContext = event.managedObjectContext,
-                  eventContext.persistentStoreCoordinator != nil
-            else {
-                return
-            }
-            
-            // Ensure event still exists in context
-            guard !event.isDeleted,
-                  (try? eventContext.existingObject(with: event.objectID)) != nil else {
-                return
-            }
-            
-            CoreDataRelationFixer.shared.addTask {
-                do {
-                    // Refetch event to ensure fresh state
-                    guard let freshEvent = try eventContext.existingObject(with: event.objectID) as? Event else {
-                        return
-                    }
-                    
-                    let existingRelays = freshEvent.relays.split(separator: " ").map { String($0) }
-                    let newRelays = relays.split(separator: " ").map { String($0) }
-                    let uniqueRelays = Set(existingRelays + newRelays)
-                    
-                    if uniqueRelays.count > existingRelays.count {
-                        freshEvent.relays = uniqueRelays.joined(separator: " ")
-                    }
-                    if freshEvent.flags == "awaiting_send" && uniqueRelays.count > 0  {
-                        freshEvent.flags = ""
-                    }
-                } catch {
-                    print("Failed to update relays: \(error)")
-                }
-            }
-        }
-        
         // Try getting event from queue first
         if let event = EventRelationsQueue.shared.getAwaitingBgEvent(byId: id),
            event.managedObjectContext != nil {
-            safeUpdateRelays(for: event)
+            safeUpdateRelays(for: event, relays: relays)
         }
         // Fallback to fetching from context
         else if let event = Event.fetchEvent(id: id, context: context) {
-            safeUpdateRelays(for: event)
+            safeUpdateRelays(for: event, relays: relays)
         }
     }
     

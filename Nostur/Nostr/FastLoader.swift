@@ -207,7 +207,9 @@ class Backlog {
                     guard let self = self else { return }
                     let reqTasks = self.tasks(with: subscriptionIds)
 #if DEBUG
-                    L.og.debug("\(backlogDebugName) - subscriptionIds: \(subscriptionIds) tasks: \(self.tasks.count): \(self.tasks.map { $0.subscriptionId }) -[LOG]-")
+                    if self.tasks.count > 0 {
+                        L.og.debug("\(backlogDebugName) - subscriptionIds: \(subscriptionIds) tasks: \(self.tasks.count): \(self.tasks.map { $0.subscriptionId }) -[LOG]-")
+                    }
 #endif
                     for task in reqTasks {
 #if DEBUG
@@ -257,9 +259,9 @@ class Backlog {
                 bg().perform { [weak self] in
                     guard let self = self else { return }
                     guard !self.tasks.isEmpty else { return }
-    #if DEBUG
-                    L.og.debug("⏳⏳ \(self.backlogDebugName) withTimeInterval: \(self.timeout/22) -> \(self.timeout) --> tasks: \(self.tasks.count) -[LOG]-")
-    #endif
+//    #if DEBUG
+//                    L.og.debug("⏳⏳ \(self.backlogDebugName) withTimeInterval: \(self.timeout/22) -> \(self.timeout) --> tasks: \(self.tasks.count) -[LOG]-")
+//    #endif
                     self.removeOldTasks()
                 }
             }
@@ -301,7 +303,9 @@ class Backlog {
             }
         }
 #if DEBUG
-        L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed: \(removed)/\(tasksCount) timeout: \(self.timeout.description) -[LOG]-")
+        if removed > 0 {
+            L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed: \(removed)/\(tasksCount) timeout: \(self.timeout.description) -[LOG]-")
+        }
 #endif
     }
     
