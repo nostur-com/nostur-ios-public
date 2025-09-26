@@ -421,9 +421,10 @@ extension Event {
             guard let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) else { break }
             
             
-            CoreDataRelationFixer.shared.addTask ({
+            CoreDataRelationFixer.shared.addTask({
                 reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+                guard contextWontCrash([reaction, reactingToEvent], debugInfo: "updateLikeCountCache") else { return }
                 reaction.reactionTo = reactingToEvent
                 reaction.reactionToId = reactingToEvent.id
             })
