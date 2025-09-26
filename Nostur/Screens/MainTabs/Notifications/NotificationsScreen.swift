@@ -12,13 +12,6 @@ import NavigationBackport
 struct NotificationsContainer: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject var la: LoggedInAccount
-
-    // Not observed so manual UserDefaults
-    private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
-    }
-    
     @State private var navPath = NBNavigationPath()
     
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -39,7 +32,7 @@ struct NotificationsContainer: View {
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             guard !IS_IPAD || horizontalSizeClass == .compact else { return }
-            guard selectedTab == "Notifications" else { return }
+            guard selectedTab() == "Notifications" else { return }
             navPath.append(destination.destination)
         }
         .onReceive(receiveNotification(.clearNavigation)) { notification in

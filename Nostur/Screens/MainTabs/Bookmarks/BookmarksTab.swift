@@ -13,11 +13,6 @@ struct BookmarksTab: View {
     @EnvironmentObject private var fa: LoggedInAccount
     @Environment(\.theme) private var theme
     @State private var navPath = NBNavigationPath()
-
-    private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Bookmarks" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
-    }
     
     @AppStorage("selected_bookmarkssubtab") private var selectedSubTab = "Bookmarks"
     
@@ -80,7 +75,7 @@ struct BookmarksTab: View {
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard !IS_IPAD || horizontalSizeClass == .compact else { return }
-                guard selectedTab == "Bookmarks" else { return }
+                guard selectedTab() == "Bookmarks" else { return }
                 navPath.append(destination.destination)
             }
             .onReceive(receiveNotification(.clearNavigation)) { notification in

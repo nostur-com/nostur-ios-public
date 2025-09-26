@@ -18,11 +18,6 @@ struct HomeTab: View {
     @State private var fn: FollowerNotifier = .shared
     @State private var newPost: NRPost? // Setting this will show shortcut to open a new just posted post in toolbar
     
-    private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
-    }
-    
     private var selectedSubTab: String {
         get { UserDefaults.standard.string(forKey: "selected_subtab") ?? "Following" }
     }
@@ -225,7 +220,7 @@ struct HomeTab: View {
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             guard !IS_IPAD || horizontalSizeClass == .compact else { return }
-            guard selectedTab == "Main" else { return }
+            guard selectedTab() == "Main" else { return }
             navPath.append(destination.destination)
             
             // We need to know which .id is last added the stack (for undo), but we can't get from .navPath (private / internal)
