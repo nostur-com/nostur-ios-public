@@ -40,11 +40,15 @@ struct PaymentAmountSelector: View {
         
         if (paymentInfo.supportsZap) {
             do {
-                let zapRequestNote = if let aTag {
+                var zapRequestNote = if let aTag {
                     zapRequest(forPubkey: pubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
                 }
                 else {
                     zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
+                }
+                
+                if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
+                    zapRequestNote.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
                 }
                 
                 if isNC {

@@ -258,11 +258,15 @@ class Zap {
                 guard let self = self else { return }
                 
                 if isNC {
-                    let zapRequestNote = if let aTag = self.aTag {
+                    var zapRequestNote = if let aTag = self.aTag {
                         zapRequest(forPubkey: self.contactPubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
                     }
                     else {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
+                    }
+                    
+                    if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
+                        zapRequestNote.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
                     }
                     
                     let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0
@@ -315,11 +319,15 @@ class Zap {
                 }
                 else {
                     
-                    let zapRequestNote = if let aTag = self.aTag {
+                    var zapRequestNote = if let aTag = self.aTag {
                         zapRequest(forPubkey: self.contactPubkey, andATag: aTag, withMessage: zapMessage, relays: relays)
                     }
                     else {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
+                    }
+                    
+                    if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
+                        zapRequestNote.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
                     }
                     
                     let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0

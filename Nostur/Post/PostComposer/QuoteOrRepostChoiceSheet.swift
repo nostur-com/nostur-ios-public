@@ -31,6 +31,11 @@ struct QuoteOrRepostChoiceSheet: View {
                         // 1. create repost
                         var repost = EventMessageBuilder.makeRepost(original: bgEvent, embedOriginal: true)
                         repost.publicKey = accountPublicKey
+                        
+                        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(repost.publicKey)) {
+                            repost.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                        }
+                        
                         repost = repost.withId()
                         
                         let savedEvent = Event.saveEvent(event: repost, flags: "nsecbunker_unsigned", context: bgContext)
@@ -66,6 +71,11 @@ struct QuoteOrRepostChoiceSheet: View {
                         guard let bgEvent = quoteOrRepost.nrPost.event else { return }
                         var repost = EventMessageBuilder.makeRepost(original: bgEvent, embedOriginal: true)
                         repost.publicKey = accountPublicKey
+                        
+                        if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(repost.publicKey)) {
+                            repost.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                        }
+                        
                         repost = repost.withId()
                         
                         Task { @MainActor in
