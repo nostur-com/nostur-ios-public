@@ -78,8 +78,15 @@ struct iOSApp: App {
                 .environmentObject(themes)
                 .environmentObject(accountsState)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
+                .onAppear { hideTitleBarOnCatalyst() }
         }
     }
+}
+
+func hideTitleBarOnCatalyst() {
+#if targetEnvironment(macCatalyst)
+    (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.titlebar?.titleVisibility = .hidden
+#endif
 }
 
 struct TestApp: App {
