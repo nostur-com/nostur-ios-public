@@ -197,14 +197,7 @@ struct MainTabs26: View {
                     .badge((dm.unread + dm.newRequests))
                     .nosturTabsCompat(theme: theme)
             }
-            .modifier {
-                if #available(iOS 26.0, *), selectedTab == "Main" {
-                    $0.tabBarMinimizeBehavior(.onScrollDown)
-                }
-                else {
-                    $0
-                }
-            }
+            .tabBarMinimizeBehavior(.onScrollDown)
             .environment(\.horizontalSizeClass, .compact)
             .withSheets() // Move .sheets to each (NB)NavigationStack?
             .edgesIgnoringSafeArea(.all)
