@@ -362,11 +362,26 @@ struct MainFeedsScreen: View {
                     }
                 }
             }
-            .overlay(alignment: .bottomTrailing) {
-                NewNoteButton(showingNewNote: $showingNewNote)
-                    .padding([.top, .leading, .bottom], 10)
-                    .padding([.trailing], 25)
-                    .buttonStyleGlassProminent()
+            .modifier {
+                if IS_CATALYST {
+                    $0.overlay(alignment: .bottomTrailing) {
+                        NewNoteButton(showingNewNote: $showingNewNote)
+                            .padding([.top, .leading, .bottom], 10)
+                            .padding([.trailing], 25)
+                            .buttonStyleGlassProminent()
+                    }
+                }
+                else if #available(iOS 26.0, *) {
+                    $0
+                }
+                else {
+                    $0.overlay(alignment: .bottomTrailing) {
+                        NewNoteButton(showingNewNote: $showingNewNote)
+                            .padding([.top, .leading, .bottom], 10)
+                            .padding([.trailing], 25)
+                            .buttonStyleGlassProminent()
+                    }
+                }
             }
                    
             AudioOnlyBarSpace()
@@ -479,7 +494,9 @@ struct MainFeedsScreen: View {
             .presentationBackgroundCompat(theme.listBackground)
             .environmentObject(la)
         }
-        
+        .onReceive(receiveNotification(.newPost)) { _ in
+            showingNewNote = true
+        }
         .onReceive(receiveNotification(.newTemplatePost)) { _ in
             // Note: use  Drafts.shared.draft = ...
             showingNewNote = true

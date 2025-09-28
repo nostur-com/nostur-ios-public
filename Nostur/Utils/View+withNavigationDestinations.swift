@@ -96,6 +96,7 @@ enum ViewPath: IdentifiableDestination {
     case Lists
     case Relays
     case Badges
+    case DMs
     case Gallery(vm: GalleryViewModel)
     case ProfileReactionList(pubkey: String)
 }
@@ -181,6 +182,8 @@ extension View {
                     case .Badges:
                         BadgesView()
                             .tabBarSpaceCompat()
+                    case .DMs:
+                        DMContainer()
                     case .ProfileReactionList(let pubkey):
                         ProfileReactionList(pubkey: pubkey)
                             .tabBarSpaceCompat()

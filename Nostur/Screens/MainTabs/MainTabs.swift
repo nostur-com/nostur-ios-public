@@ -60,7 +60,9 @@ struct MainTabs15: View {
                     .badge(unread)
                     .nosturTabsCompat(theme: theme)
 
-                DMContainer()
+                DMNavigationStack {
+                    DMContainer()
+                }
                     .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "envelope.fill")
@@ -139,7 +141,6 @@ struct MainTabs26: View {
     @Environment(\.tabViewBottomAccessoryPlacement) var placement
     @Environment(\.theme) private var theme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var dm: DirectMessageViewModel
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @State private var unread: Int = 0
     
@@ -152,50 +153,53 @@ struct MainTabs26: View {
             TabView(selection: $selectedTab.onUpdate { oldTab, newTab in
                 tabTapped(newTab, oldTab: oldTab)
             }) {
-                HomeTab()
-                    .environment(\.horizontalSizeClass, horizontalSizeClass)
-                    .tabItem {
-                        Image(systemName: "house")
-                    }
-                    .tag("Main")
-                    .nosturTabsCompat(theme: theme)
+                Tab(value: "Main") {
+                    HomeTab()
+                        .environment(\.horizontalSizeClass, horizontalSizeClass)
+                } label: {
+                    Label("Home", systemImage: "house")
+                        .labelStyle(.iconOnly)
+                }
+                
+                Tab(value: "Bookmarks") {
+                    BookmarksTab()
+                        .environment(\.horizontalSizeClass, horizontalSizeClass)
+                } label: {
+                    Label("Bookmarks", systemImage: "bookmark")
+                        .labelStyle(.iconOnly)
+                        .controlSize(.small)
+                }
+                
+                Tab(value: "Search") {
+                    Search()
+                        .environment(\.horizontalSizeClass, horizontalSizeClass)
+                } label: {
+                    Label("Search", systemImage: "magnifyingglass")
+                        .labelStyle(.iconOnly)
+                }
+                Tab(value: "Notifications") {
+                    NotificationsContainer()
+                        .environment(\.horizontalSizeClass, horizontalSizeClass)
+                } label: {
+                    Label("Notifications", systemImage: "bell.fill")
+                        .labelStyle(.iconOnly)
+                }
+                .badge(unread)
+                
+                Tab(value: "New Post", role: .search) {
+                    Spacer()
+                        .onAppear { selectedTab = "Main" }
+                } label: {
+                    Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
+//                        .font(.title)
+                        .fontWeightBold()
+                        .labelStyle(.iconOnly)
+//                        .padding(.vertical, 5)
+                        .foregroundStyle(theme.accent)
+                        .tint(theme.accent)
+                }
+                .hidden(selectedTab != "Main")
 
-                BookmarksTab()
-                    .environment(\.horizontalSizeClass, horizontalSizeClass)
-                    .tabItem {
-                        Image(systemName: "bookmark")
-                    }
-                    .tag("Bookmarks")
-                    .nosturTabsCompat(theme: theme)
-                
-                
-                Search()
-                    .environment(\.horizontalSizeClass, horizontalSizeClass)
-                    .tabItem {
-                        Image(systemName: "magnifyingglass")
-                    }
-                    .labelStyle(.iconOnly)
-                    .tag("Search")
-                    .nosturTabsCompat(theme: theme)
-                
-                NotificationsContainer()
-                    .environment(\.horizontalSizeClass, horizontalSizeClass)
-                    .tabItem {
-                        Image(systemName: "bell.fill")
-                    }
-                    .labelStyle(.iconOnly)
-                    .tag("Notifications")
-                    .badge(unread)
-                    .nosturTabsCompat(theme: theme)
-
-                DMContainer()
-                    .environment(\.horizontalSizeClass, horizontalSizeClass)
-                    .tabItem {
-                        Image(systemName: "envelope.fill")
-                    }
-                    .tag("Messages")
-                    .badge((dm.unread + dm.newRequests))
-                    .nosturTabsCompat(theme: theme)
             }
             .tabBarMinimizeBehavior(.onScrollDown)
             .environment(\.horizontalSizeClass, .compact)
@@ -243,6 +247,12 @@ struct MainTabs26: View {
     }
     
     private func tabTapped(_ tabName: String, oldTab: String) {
+        if tabName == "New Post" {
+            selectedTab = oldTab
+            guard isFullAccount() else { showReadOnlyMessage(); return }
+            sendNotification(.newPost)
+            return
+        }
         
         // Only do something if we are already on same the tab
         guard oldTab == tabName else { return }

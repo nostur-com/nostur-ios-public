@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct HomeTab: View {
+    @EnvironmentObject private var dm: DirectMessageViewModel
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dim: DIMENSIONS
@@ -61,6 +62,19 @@ struct HomeTab: View {
                                             showSidebar = true
                                         }
                                         .accessibilityLabel("Account menu")
+                                        .overlay(alignment: .topTrailing) {
+                                            if !IS_CATALYST && (dm.unread + dm.newRequests) > 0 {
+                                                Text("\((dm.unread + dm.newRequests))")
+                                                    .font(.caption2)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 7 > 99 ? 4 : 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(.red)
+                                                    .clipShape(Capsule())
+                                                    .offset(x: 3, y: -3)
+                                            }
+                                        }
                                     
                                     if let showingOtherContact = showingOtherContact {
                                         HStack(spacing: 6) {
@@ -93,6 +107,7 @@ struct HomeTab: View {
                                     }
                                 }
                             }
+                            .sharedBackgroundVisibility(.hidden)
                             
                          
                             

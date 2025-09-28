@@ -13,6 +13,7 @@ let NOSTUR_SIDEBAR_WIDTH = 310.0
 struct SideBar: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
+    @EnvironmentObject private var dm: DirectMessageViewModel
     @Binding var showSidebar: Bool
     
     @State private var accountsSheetIsShown = false
@@ -145,6 +146,44 @@ struct SideBar: View {
                         .padding(.vertical, Self.BUTTON_VPADDING)
                         .contentShape(Rectangle())
                     }
+                    
+                    if #available(iOS 26.0, *), !IS_CATALYST {
+                        Button {
+                            if selectedTab() != "Main" {
+                                UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                            }
+                            navigateToOnMain(ViewPath.DMs)
+                            showSidebar = false
+                        } label: {
+                            Label(
+                                title: {
+                                    Text("Messages", comment: "Side bar navigation button")
+                                        .frame(width: Self.MENU_TEXT_WIDTH, alignment: .leading)
+                                },
+                                icon: {
+                                    Image(systemName: "envelope")
+                                        .frame(width: Self.ICON_WIDTH)
+                                        .overlay(alignment: .topTrailing) {
+                                            if (dm.unread + dm.newRequests) > 0 {
+                                                Text("\((dm.unread + dm.newRequests))")
+                                                    .font(.caption2)
+                                                    .fontWeight(.semibold)
+                                                    .foregroundColor(.white)
+                                                    .padding(.horizontal, 7 > 99 ? 4 : 6)
+                                                    .padding(.vertical, 2)
+                                                    .background(.red)
+                                                    .clipShape(Capsule())
+                                                    .offset(x: 5, y: -6)
+                                            }
+                                        }
+                                    
+                                }
+                            )
+                            .padding(.vertical, Self.BUTTON_VPADDING)
+                            .contentShape(Rectangle())
+                        }
+                    }
+                    
                     if !account.isNC {
                         Button {
                             if selectedTab() != "Main" {
