@@ -142,14 +142,14 @@ struct MainTabsDesktop: View {
                 .badgeCompat((dm.unread + dm.newRequests))
             }
             .foregroundStyle(Color.white)
-            .padding(5)
+            .padding(3)
             .background(
                 theme.listBackground
                     .glassEffect(.clear)
                     .clipShape(Capsule())
                     .shadow(color: theme.accent.opacity(0.5), radius: 10)
             )
-            .padding(.bottom, 10)
+            .padding(.bottom, 4)
         }
     }
     
@@ -183,9 +183,9 @@ struct DesktopTabButton: View {
         }, label: {
             Label(title, systemImage: systemImage)
                 .labelStyle(.iconOnly)
-                .font(.title)
+                .font(.title2)
                 .frame(width: 44, alignment: .center)
-                .padding(8)
+                .padding(4)
                 .glassEffect(isActive ? .regular.tint(theme.accent) : .clear, in: .capsule(style: .continuous))
                 .foregroundStyle(isActive ? Color.white : theme.accent)
         })
