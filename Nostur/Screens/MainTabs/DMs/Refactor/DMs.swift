@@ -149,13 +149,16 @@ struct DMs: View {
                 }
                 Spacer()
                 Text("Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public.", comment:"Informational message on the DM screen")
+                    .font(.footnote)
                     .foregroundColor(.gray)
                     .padding(.horizontal, 20)
+                    .padding(.trailing, 80)
+                    .padding(.bottom, 5)
             }
             .overlay(alignment: .bottomTrailing) {
                 NewDMButton(showingNewDM: $showingNewDM)
-                    .padding([.top, .leading, .bottom], 10)
-                    .padding([.trailing], 25)
+//                    .padding([.top, .leading, .bottom], 10)
+//                    .padding([.trailing], 5)
             }
             .nbNavigationDestination(for: Conversation.self) { conv in
                 if let event = conv.mostRecentEvent.toMain() {
