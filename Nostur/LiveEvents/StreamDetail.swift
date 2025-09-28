@@ -71,7 +71,7 @@ struct StreamDetail: View {
                         ChatRoom(aTag: liveEvent.id, anonymous: false, chatVM: liveEvent.chatVM, selectedContact: $selectedContact)
                             .frame(minHeight: UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular ? 250 : 150, maxHeight: .infinity)
                             .padding(.horizontal, 5)
-                            .padding(.bottom, 15)
+                            .padding(.bottom, 5)
                             .environmentObject(vc)
                             .overlay {
                                 if sendSatsToWhoShown {
@@ -210,6 +210,7 @@ struct StreamDetail: View {
                     vc = ViewingContext(availableWidth: min(600, dim.listWidth - 10), fullWidthImages: false, viewType: .row)
                 }
             }
+            .edgesIgnoringSafeArea(.bottom)
             .toolbar {
                 // VIEWERS / PARTICIPANTS / ...
                 ToolbarItem(placement: .principal) {

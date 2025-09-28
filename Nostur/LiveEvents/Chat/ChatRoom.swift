@@ -24,7 +24,7 @@ struct ChatRoom: View {
     
     var body: some View {
 #if DEBUG
-let _ = Self._printChanges()
+        let _ = Self._printChanges()
 #endif
         ScrollViewReader { proxy in
             if let account {
@@ -110,12 +110,10 @@ let _ = Self._printChanges()
                             MiniPFP(pictureUrl: account.pictureUrl, size: 40.0)
                             ChatInputField(message: $message, startWithFocus: false, onSubmit: submitMessage)
                         }
-                        .padding(.bottom, 15)
                     }
                 }
             }
         }
-
         .onAppear {
             account = Nostur.account()
             startTimer()

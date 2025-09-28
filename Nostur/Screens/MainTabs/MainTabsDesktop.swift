@@ -71,7 +71,6 @@ struct MainTabsDesktop: View {
             
             
             .withSheets() // Move .sheets to each (NB)NavigationStack?
-            .edgesIgnoringSafeArea(.all)
         }
         
         .onChange(of: selectedTab) { newValue in
