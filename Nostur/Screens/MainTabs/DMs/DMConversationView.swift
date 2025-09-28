@@ -268,15 +268,13 @@ struct DMConversationView: View {
                     }
                     .scrollContentBackgroundCompat(.hidden)
                     .listStyle(.plain)
-                    .padding(.top, 55)
+//                    .padding(.top, 55)
                     .scaleEffect(y: -0.99, anchor: .center) // On iOS 26 y: -1 becomes blurry for no reason, so use -0.99 ¯\_(ツ)_/¯
                     .onTapGesture {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                             to: nil, from: nil, for: nil)
                     }
-                    
-                    VStack(spacing: 0) {
-                        Spacer()
+                    .safeAreaInset(edge: .bottom) {
                         Group {
                             if isAccepted {
                                 ChatInputField(message: $text) {
@@ -319,8 +317,63 @@ struct DMConversationView: View {
                             }
                         }
                         .padding(.vertical, 5)
+                        .modifier {
+                            if #available(iOS 26.0, *), IS_CATALYST {
+                                $0.padding(.bottom, 50)
+                            }
+                            else {
+                                $0
+                            }
+                        }
                         .background(theme.listBackground)
                     }
+                    
+//                    VStack(spacing: 0) {
+//                        Spacer()
+//                        Group {
+//                            if isAccepted {
+//                                ChatInputField(message: $text) {
+//                                    // Create and send DM (via unpublisher?)
+//                                    guard let pk = la.account.privateKey else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
+//                                    guard let theirPubkey = self.theirPubkey else { return }
+//                                    var nEvent = NEvent(content: text)
+//                                    if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+//                                        nEvent.content = replaceNsecWithHunter2(nEvent.content)
+//                                    }
+//                                    nEvent.kind = .directMessage
+//                                    guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
+//                                        L.og.error("🔴🔴 Could encrypt content")
+//                                        return
+//                                    }
+//                                    
+//                                    nEvent.content = encrypted
+//                                    nEvent.tags.append(NostrTag(["p", theirPubkey]))
+//                                    
+//                                    
+//                                    if let signedEvent = try? la.account.signEvent(nEvent) {
+//                                        //                        print(signedEvent.wrappedEventJson())
+//                                        Unpublisher.shared.publishNow(signedEvent)
+//                                        //                        noteCancellationId = up.publish(signedEvent)
+//                                        text = ""
+//                                    }
+//                                }
+//                            }
+//                            else if rootDM != nil {
+//                                Divider()
+//                                Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
+//                                    conv.accepted = true
+//                                    conv.dmState.accepted = true
+//                                    conv.dmState.didUpdate.send()
+//                                    DataProvider.shared().saveToDiskNow(.viewContext)
+//                                    DirectMessageViewModel.default.reloadAccepted()
+//                                    
+//                                }
+//                                .buttonStyle(NRButtonStyle(style: .borderedProminent))
+//                            }
+//                        }
+//                        .padding(.vertical, 5)
+//                        .background(theme.listBackground)
+//                    }
                 }
                 .onAppear {
                     guard !didLoad else { return }
