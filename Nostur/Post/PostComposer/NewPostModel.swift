@@ -556,7 +556,7 @@ public final class NewPostModel: ObservableObject {
         
         // Handle voice message
         if (nEvent.kind == .shortVoiceMessage || nEvent.kind == .shortVoiceMessageComment), let imeta = imetas.first {
-            content += imeta.url
+            content = imeta.url
             
             var imetaParts: [String] = ["imeta", "url \(imeta.url)"]
             if let duration = typingTextModel.voiceRecording?.duration {

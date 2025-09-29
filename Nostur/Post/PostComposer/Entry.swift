@@ -136,19 +136,19 @@ struct Entry: View {
                 highlightRules: NewPostModel.rules,
                 photoPickerTapped: {
                     photoPickerShown = true
-                    showVoiceRecorderButton = false
+//                    showVoiceRecorderButton = false
                 },
                 videoPickerTapped: {
                     videoPickerShown = true
-                    showVoiceRecorderButton = false
+//                    showVoiceRecorderButton = false
                 },
                 gifsTapped: {
                     gifSheetShown = true
-                    showVoiceRecorderButton = false
+//                    showVoiceRecorderButton = false
                 },
                 cameraTapped: {
                     cameraSheetShown = true
-                    showVoiceRecorderButton = false
+//                    showVoiceRecorderButton = false
                 },
                 nestsTapped: {
                     onDismiss()
@@ -266,16 +266,16 @@ struct Entry: View {
             else if quotePost != nil {
                 showVoiceRecorderButton = false
             }
-            else if typingTextModel.text != "" {
-                showVoiceRecorderButton = false
-            }
+//            else if typingTextModel.text != "" {
+//                showVoiceRecorderButton = false
+//            }
         }
-        .onChange(of: typingTextModel.text) { newText in
-            guard showVoiceRecorderButton else { return }
-            if !newText.isEmpty {
-                showVoiceRecorderButton = false
-            }
-        }
+//        .onChange(of: typingTextModel.text) { newText in
+//            guard showVoiceRecorderButton else { return }
+//            if !newText.isEmpty {
+//                showVoiceRecorderButton = false
+//            }
+//        }
     }
     
     @ToolbarContentBuilder
@@ -446,7 +446,7 @@ struct Entry: View {
     @ViewBuilder
     private var takePhotoButton: some View {
         Button("Take Photo", systemImage: "camera") {
-            showVoiceRecorderButton = false
+//            showVoiceRecorderButton = false
             cameraSheetShown = true
         }
         .buttonStyle(.borderless)
@@ -456,7 +456,7 @@ struct Entry: View {
     @ViewBuilder
     private var pickPhotoButton: some View {
         Button("Pick Photo", systemImage: "photo") {
-            showVoiceRecorderButton = false
+//            showVoiceRecorderButton = false
             photoPickerShown = true
         }
         .buttonStyle(.borderless)
@@ -466,7 +466,7 @@ struct Entry: View {
     @ViewBuilder
     private var pickVideoButton: some View {
         Button("Pick Video", systemImage: "video") {
-            showVoiceRecorderButton = false
+//            showVoiceRecorderButton = false
             videoPickerShown = true
         }
         .buttonStyle(.borderless)
@@ -476,7 +476,7 @@ struct Entry: View {
     @ViewBuilder
     private var gifButton: some View {
         Button {
-            showVoiceRecorderButton = false
+//            showVoiceRecorderButton = false
             gifSheetShown = true
         } label: {
             Image("GifButton")
@@ -488,7 +488,7 @@ struct Entry: View {
     @ViewBuilder
     private var startNestButton: some View {
         Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
-            showVoiceRecorderButton = false
+//            showVoiceRecorderButton = false
             if IS_CATALYST { // MacOS can reuse same weird sheet
                 sendNotification(.showCreateNestsSheet, vm.activeAccount)
             }
