@@ -70,13 +70,13 @@ struct NXPostsFeed: View {
         .listStyle(.plain)
         .introspect(.list, on: .iOS(.v15)) { view in
             DispatchQueue.main.async {
-              self.tableView = view
-            }
-            if tablePrefetcher == nil {
-                tablePrefetcher = NXPostsFeedTablePrefetcher()
-                tablePrefetcher?.columnViewModel = vm
-                view.isPrefetchingEnabled = true
-                view.prefetchDataSource = tablePrefetcher
+              self.tableView = view    
+                if tablePrefetcher == nil {
+                    tablePrefetcher = NXPostsFeedTablePrefetcher()
+                    tablePrefetcher?.columnViewModel = vm
+                    view.isPrefetchingEnabled = true
+                    view.prefetchDataSource = tablePrefetcher
+                }
             }
             
             // Special handling for the anti-flicker approach
@@ -97,12 +97,13 @@ struct NXPostsFeed: View {
         .introspect(.list, on: .iOS(.v16...)) { view in
             DispatchQueue.main.async {
               self.collectionView = view
-            }
-            if collectionPrefetcher == nil {
-                collectionPrefetcher = NXPostsFeedPrefetcher()
-                collectionPrefetcher?.columnViewModel = vm
-                view.isPrefetchingEnabled = true
-                view.prefetchDataSource = collectionPrefetcher
+                
+                if collectionPrefetcher == nil {
+                    collectionPrefetcher = NXPostsFeedPrefetcher()
+                    collectionPrefetcher?.columnViewModel = vm
+                    view.isPrefetchingEnabled = true
+                    view.prefetchDataSource = collectionPrefetcher
+                }
             }
             
             // Special handling for the anti-flicker approach
