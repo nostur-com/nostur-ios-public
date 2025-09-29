@@ -80,10 +80,7 @@ struct Settings: View {
                         ThemePicker()
                     }
 
-                    if #available(iOS 26.0, *) {
-                        
-                    }
-                    else {
+                    if !AVAILABLE_26 { // Starting 26.0, full width is always on
                         Toggle(isOn: $settings.fullWidthImages) {
                             Text("Enable full width pictures", comment:"Setting on settings screen")
                         }

@@ -507,7 +507,7 @@ final class SettingsStore: ObservableObject {
             defaults.set(newValue, forKey: Keys.fullWidthImages);
         }
         get {
-            if #available(iOS 26.0, *) {
+            if AVAILABLE_26 {
                 return true
             }
             return _fullWidthImages

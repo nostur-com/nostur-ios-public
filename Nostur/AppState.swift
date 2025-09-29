@@ -467,3 +467,7 @@ let LESS_CACHE = false // For testing, deletes all events and contacts at start 
     let IS_SIMULATOR = false
 #endif
 
+let AVAILABLE_26 = if #available(iOS 26.0, *) { true } else { false }
+let AVAILABLE_18 = if #available(iOS 18.0, *) { true } else { false }
+let AVAILABLE_17 = if #available(iOS 17.0, *) { true } else { false }
+let AVAILABLE_16 = if #available(iOS 16.0, *) { true } else { false }

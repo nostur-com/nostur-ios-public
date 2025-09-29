@@ -95,10 +95,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
     }
     
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
-        if #available(iOS 16.0, *) {
-            
-        }
-        else { // crash if we dont do this on iOS 15. But breaks toggle on 16+, so do only on 15
+        if !AVAILABLE_16 { // crash if we dont do this on iOS 15. But breaks toggle on 16+, so do only on 15
             // Clean up the AVPlayerViewController properly
             if let avpc = coordinator.avpc {
                 avpc.delegate = nil
@@ -145,9 +142,7 @@ struct AVPlayerViewControllerRepresentable: UIViewRepresentable {
         }
         
         deinit {
-            if #available(iOS 16.0, *) {
-                
-            } else { // crash if we dont do this on iOS 15. But breaks toggle on 16+, so do only on 15
+            if !AVAILABLE_16 { // crash if we dont do this on iOS 15. But breaks toggle on 16+, so do only on 15
                 // Clean up any remaining references
                 avpc?.delegate = nil
                 avpc = nil

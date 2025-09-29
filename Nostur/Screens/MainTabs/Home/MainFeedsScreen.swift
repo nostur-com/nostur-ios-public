@@ -363,24 +363,19 @@ struct MainFeedsScreen: View {
                 }
             }
             .modifier {
-                if IS_CATALYST {
+    
+                // On 26.0 the new post button is integrated in the new tab bar
+                // But not on macOS 26.0, which has the custom tab bar
+                if IS_CATALYST || !AVAILABLE_26 {
                     $0.overlay(alignment: .bottomTrailing) {
                         NewNoteButton(showingNewNote: $showingNewNote)
                             .padding([.top, .leading, .bottom], 10)
                             .padding([.trailing], 25)
                             .buttonStyleGlassProminent()
                     }
-                }
-                else if #available(iOS 26.0, *) {
-                    $0
                 }
                 else {
-                    $0.overlay(alignment: .bottomTrailing) {
-                        NewNoteButton(showingNewNote: $showingNewNote)
-                            .padding([.top, .leading, .bottom], 10)
-                            .padding([.trailing], 25)
-                            .buttonStyleGlassProminent()
-                    }
+                    $0
                 }
             }
                    

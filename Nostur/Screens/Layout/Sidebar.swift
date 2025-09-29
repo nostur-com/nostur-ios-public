@@ -147,6 +147,9 @@ struct SideBar: View {
                         .contentShape(Rectangle())
                     }
                     
+                    // Only on iPhone/iPad 26.0, never on macOS
+                    // (macOS 26 has own custom tabbar with DM button still)
+                    // (pre-26.0 has old tabbar with DM button still)
                     if #available(iOS 26.0, *), !IS_CATALYST {
                         Button {
                             if selectedTab() != "Main" {
