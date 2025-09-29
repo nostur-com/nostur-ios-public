@@ -140,6 +140,31 @@ struct Kind1: View {
                                 })                            
                         }
                     }
+//                    .overlay(alignment: .topLeading) {
+//                        Button("WW") {
+//                            print("previewWeights.posts: \(String(describing: nrPost.previewWeights?.posts))")
+//                            print("previewWeights.videos: \(String(describing: nrPost.previewWeights?.videos))")
+//                            print("previewWeights.pictures: \(String(describing: nrPost.previewWeights?.pictures))")
+//                            print("previewWeights.linkPreviews: \(String(describing: nrPost.previewWeights?.linkPreviews))")
+//                            print("previewWeights.text: \(String(describing: nrPost.previewWeights?.text))")
+//                            print("previewWeights.other: \(String(describing: nrPost.previewWeights?.other))")
+//                            
+//                            print("previewWeights.morePosts: \(String(describing: nrPost.previewWeights?.morePosts))")
+//                            print("previewWeights.moreVideos: \(String(describing: nrPost.previewWeights?.moreVideos))")
+//                            print("previewWeights.morePictures: \(String(describing: nrPost.previewWeights?.morePictures))")
+//                            print("previewWeights.linkPreviews: \(String(describing: nrPost.previewWeights?.linkPreviews))")
+//                            print("previewWeights.moreText: \(String(describing: nrPost.previewWeights?.moreText))")
+//                            print("previewWeights.moreOther: \(String(describing: nrPost.previewWeights?.moreOther))")
+//                            
+//                            
+//                            print("previewWeights.morePosts: \(String(describing: nrPost.previewWeights?.morePosts))")
+//                            print("previewWeights.weight: \(String(describing: nrPost.previewWeights?.weight))")
+//                            
+//                            print("nrPost.sizeEstimate.rawValue: \(String(describing: nrPost.sizeEstimate.rawValue))")
+//                            print("previewWeights.textOnly: \(String(describing: nrPost.previewWeights?.textOnly))")
+//                        }
+//                        .background(Color.red)
+//                    }
             }
         }
     }

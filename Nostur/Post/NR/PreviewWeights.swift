@@ -27,11 +27,11 @@ class PreviewWeights {
     }
     
     var moreItems: Bool {
-        (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther) > 0
+        (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther + moreText) > 0
     }
     
     var moreItemsCount: Int {
-        (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther)
+        (morePosts + moreVideos + morePictures + moreLinkPreviews + moreOther + moreText)
     }
     
     var morePosts = 0
@@ -46,7 +46,7 @@ class PreviewWeights {
     var sizeEstimate: RowSizeEstimate = .small
     
     public var textOnly: Bool {
-        return (posts + videos + pictures + linkPreviews + other) == 0
+        return (posts + videos + pictures + other) == 0
     }
     
     public var hasLargeItem: Bool {

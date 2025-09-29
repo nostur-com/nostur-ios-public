@@ -237,3 +237,21 @@ func fetchDetailStuff(kind: Int, pTags: Set<String> = [], rootE: String? = nil, 
         }
     }
 }
+
+
+
+#Preview("Debug more text button missing") {
+    PreviewContainer({ pe in
+        pe.parseEventJSON([
+            ###"{"content":"The latest https://github.com/fiatjaf/nak release (v0.16.2) comes with an --outbox flag to \"nak req\", which means you don't have to specify relays in your filter and relays from specific authors will be used (filters will be smartly split).\n\nWhich means you can, for example, get all pubkeys who have published to wss://lang.relays.land/es then go to each of their own outbox relay, fetch their new notes live and publish those to wss://lang.relays.land/es.\n\nnak req -l 10000 lang.relays.land/es | jq --slurp 'map(.pubkey) | unique | {authors: .}' | nak req --since '1 hour ago' -k 1 --outbox -n 3 --stream | nak event lang.relays.land/es","created_at":1757341689,"tags":[["client","jumble"]],"kind":1,"sig":"331866685cfdb505d1bd51c2601272f3c88d87174f723a4714e603cee56de0fbf7944b8db853d7599c323844c49128d100716e8cbadbe87d8068d7a4dbe56930","id":"66a7dacb40f4892b9f70b931588f38143a55c42c36c1547c894c83a828f750e5","pubkey":"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"}"###,
+            ###"{"sig":"a2d3516795fc6aea14f9481032ebdde6e4ea9faea3708f21f45afbb79bf5b293605a21d3811e3d0730c63b2c21b072baa1d878adc00f6e5b628dfaebe4e848a4","id":"a9d1686e1c1663fc077a3be3c0f608fd68ebc11f827f350e286908593f8899fe","pubkey":"d0a1ffb8761b974cec4a3be8cbcb2e96a7090dcf465ffeac839aa4ca20c9a59e","content":"Very cool. Is this the first time you have implemented the outbox model yourself?","tags":[["e","66a7dacb40f4892b9f70b931588f38143a55c42c36c1547c894c83a828f750e5","wss://relay.damus.io/","root","3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"],["e","66a7dacb40f4892b9f70b931588f38143a55c42c36c1547c894c83a828f750e5","wss://relay.damus.io/","reply","3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"],["p","3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"]],"kind":1,"created_at":1757350228}"###,
+            ###"{"id":"c51120aef05ebfb4422afbb2a54a37f3e07564279c7be29d9c8ed5a802f3d611","created_at":1757359520,"tags":[["e","66a7dacb40f4892b9f70b931588f38143a55c42c36c1547c894c83a828f750e5","wss://relay.damus.io/","root","3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"],["e","a9d1686e1c1663fc077a3be3c0f608fd68ebc11f827f350e286908593f8899fe","wss://relay.damus.io/","reply","d0a1ffb8761b974cec4a3be8cbcb2e96a7090dcf465ffeac839aa4ca20c9a59e"],["p","d0a1ffb8761b974cec4a3be8cbcb2e96a7090dcf465ffeac839aa4ca20c9a59e"],["client","jumble"]],"pubkey":"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d","kind":1,"content":"I am not sure what it means to \"implement the outbox model\", but if you're talking about whatever code that talks directly to people's relays I've implemented it a bunch of different ways in different places, and this is really just a few lines based on code that already existed in the Go library.","sig":"550440667a284966e075659505d6b105ce689cf60e9fac77787f3d146a7ed77d207678eca42fa2b090a5970235d150369519cb0f58f971c22051221170ee2e47"}"###
+        ])
+    }) {
+        if let post1 = PreviewFetcher.fetchNRPost("c51120aef05ebfb4422afbb2a54a37f3e07564279c7be29d9c8ed5a802f3d611") {
+            
+            PostDetailView(nrPost: post1)
+            
+        }
+    }
+}
