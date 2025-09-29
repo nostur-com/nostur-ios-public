@@ -2456,6 +2456,7 @@
       }
     },
     "Choose feed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4232,9 +4233,6 @@
         }
       }
     },
-    "feeds...." : {
-      "shouldTranslate" : false
-    },
     "Fetch counts on timeline" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -5665,7 +5663,7 @@
       }
     },
     "Messages" : {
-      "comment" : "Navigation title for DMs (Direct Messages)",
+      "comment" : "Navigation title for DMs (Direct Messages)\nSide bar navigation button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6012,7 +6010,6 @@
       }
     },
     "New Post" : {
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6305,6 +6302,7 @@
       }
     },
     "Not yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
