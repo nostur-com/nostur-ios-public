@@ -476,23 +476,52 @@ extension Event {
         // Repair things afterwards
         
         // Missing contact
-        if zap.zappedContact == nil {
-            if let zappedPubkey = zap.otherPubkey {
+        if zap.zappedContact == nil, let zappedPubkey = zap.otherPubkey {
+            // but have in DB
+            if let zappedContact = Contact.fetchByPubkey(zappedPubkey, context: context) {
+                CoreDataRelationFixer.shared.addTask({
+                    guard contextWontCrash([zap, zappedContact], debugInfo: "-- zap.zappedContact = zappedContact") else { return }
+                    zap.zappedContact = zappedContact
+                })
+                
+                if zappedContact.metadata_created_at == 0 { // no data yet
 #if DEBUG
-                L.fetching.debug("⚡️⏳ updateZapTallyCache: missing contact for zap. fetching: \(zappedPubkey), and queueing zap \(zap.id)")
+                    L.fetching.debug("⚡️⏳ updateZapTallyCache: missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id) (A)")
+#endif
+                    QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
+                    ZapperPubkeyVerificationQueue.shared.addZap(zap)
+                }
+                
+                // Check if zapper pubkey matches contacts published zapper pubkey
+                else if zappedContact.zapperPubkeys.contains(zap.pubkey) {
+                    zap.flags = "zpk_verified" // zapper pubkey is correct
+                }
+            }
+            
+            // don't have contact at all
+            else {
+#if DEBUG
+                L.og.debug("⚡️🔴🔴 updateZapTallyCache: no contact for zap.otherPubkey: \(zappedPubkey)")
 #endif
                 QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
                 ZapperPubkeyVerificationQueue.shared.addZap(zap)
             }
         }
+
         
-        // Missing kind-0 metadata
-        else if let zappedContact = zap.zappedContact, zappedContact.metadata_created_at == 0 {
+        else if let zappedContact = zap.zappedContact {
+            
+            if zappedContact.metadata_created_at == 0 { // Missing kind-0 metadata
 #if DEBUG
-            L.fetching.debug("⚡️⏳ updateZapTallyCache: missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
+                L.fetching.debug("⚡️⏳ updateZapTallyCache: missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
 #endif
-            QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
-            ZapperPubkeyVerificationQueue.shared.addZap(zap)
+                QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
+                ZapperPubkeyVerificationQueue.shared.addZap(zap)
+            }
+            else if zappedContact.zapperPubkeys.contains(zap.pubkey) {
+                // Check if zapper pubkey matches contacts published zapper pubkey
+                zap.flags = "zpk_verified" // zapper pubkey is correct
+            }
         }
         
         
@@ -504,11 +533,6 @@ extension Event {
 #endif
                 zap.flags = "zpk_mismatch_event"
             }
-        }
-        
-        // Check if zapper pubkey matches contacts published zapper pubkey
-        if let zappedContact = zap.zappedContact, zappedContact.zapperPubkeys.contains(zap.pubkey) {
-            zap.flags = "zpk_verified" // zapper pubkey is correct
         }
     }
     
