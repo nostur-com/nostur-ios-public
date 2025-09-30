@@ -62,10 +62,10 @@ struct NXPostsFeed: View {
                         onPostDisappear(nrPost)
                     }
             }
-//                .id(nrPost.id) // <-- must use .id or can't .scrollTo
             .listRowSeparator(.hidden)
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
+        .scrollOffsetID(vm.scrollOffsetID)
         .environment(\.defaultMinListRowHeight, 50)
         .listStyle(.plain)
         .introspect(.list, on: .iOS(.v15)) { view in
@@ -142,17 +142,18 @@ struct NXPostsFeed: View {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 UIView.setAnimationsEnabled(false)
+                let proxy = ScrollOffset.proxy(.top, id: vm.scrollOffsetID)
                 
                 if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
                     if let collectionView,
                        let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
                        rows > scrollToIndex
                     {
-#if DEBUG
-                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y) -[LOG]-")
-#endif
                         
-                        if collectionView.contentOffset.y == 0 {
+#if DEBUG
+                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") proxy.offset: \(proxy.offset) -[LOG]-")
+#endif
+                        if proxy.offset >= 0 {
                             // Perform the scroll with all animations disabled
                             collectionView.layer.removeAllAnimations()
                             collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
@@ -168,7 +169,7 @@ struct NXPostsFeed: View {
                        let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
                        rows > scrollToIndex
                     {
-                        if tableView.contentOffset.y == 0 {
+                        if proxy.offset >= 0 {
                             // Perform the scroll with all animations disabled
                             tableView.layer.removeAllAnimations()
                             tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0),
@@ -345,6 +346,17 @@ struct NXPostsFeed: View {
     }
     
     private func onPostAppear(_ nrPost: NRPost) {
+        // The first post can already partially "onAppear" behind the toolbar, so we need to avoid marking as read to early.
+        // Post needs to be actually visible in offset > 0, not visible partially behind toolbar.
+        
+        // So don't continue for first post
+        if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }), appearedIndex == 0 {
+#if DEBUG
+            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() -> first post, maybe behind toolbar -[LOG]-")
+#endif
+            return
+        }
+        
 #if DEBUG
 L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
@@ -356,6 +368,8 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
         // Only update if it is actual user based scroll
         guard !vmInner.isPerformingScroll else { return }
         
+        
+        // Remove this post from unread count, and mark as read
         if vmInner.unreadIds[nrPost.id] != 0 {
             vmInner.unreadIds[nrPost.id] = 0
             vmInner.updateIsAtTopSubject.send()
@@ -368,16 +382,14 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
                 vm.markAsRead(nrPost.parentPosts.map { $0.shortId })
             }
         }
+        
+        
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
-            if vmInner.isAtTop && appearedIndex == 0 && !vmInner.unreadIds.isEmpty {
-#if DEBUG
-                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() .isAtTop \(vmInner.isAtTop) appearedIndex == 0 --> vmInner.unreadIds = [:] -[LOG]-")
-#endif
-                vmInner.unreadIds = [:]
-                vmInner.updateIsAtTopSubject.send()
-            }
             
+            // Current post index, until last post. (So all remaining posts further below in feed
             for i in appearedIndex..<posts.count {
+                
+                // Remove them from unread count, and mark them as read
                 if vmInner.unreadIds[posts[i].id] != 0 {
                     vmInner.unreadIds[posts[i].id] = 0
                     vmInner.updateIsAtTopSubject.send()
@@ -400,18 +412,21 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
     }
     
     private func _updateIsAtTop() {
+        let proxy = ScrollOffset.proxy(.top, id: vm.scrollOffsetID)
+        
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
-            if let collectionView {
+            if collectionView != nil {
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") collectionView.contentOffset.y: \(collectionView.contentOffset.y) -[LOG]-")
+                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") proxy.offset: \(proxy.offset) -[LOG]-")
 #endif
                 
-                if collectionView.contentOffset.y <= 3 {
+                if proxy.offset >= -5 {
                     if !vmInner.isAtTop {
                         vmInner.isAtTop = true
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true -[LOG]-")
+                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true -[LOG]-")
 #endif
+                        self.markAllAsRead()
                     }
                 }
                 else {
@@ -422,10 +437,11 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true -
             }
         }
         else { // iOS 15 UITableView
-            if let tableView {
-                if tableView.contentOffset.y <= 3 {
+            if tableView != nil {
+                if proxy.offset >= -5 {
                     if !vmInner.isAtTop {
                         vmInner.isAtTop = true
+                        self.markAllAsRead()
                     }
                 }
                 else {
@@ -463,5 +479,14 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true -
 L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostDisappear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
         updateIsAtTop()
+    }
+    
+    private func markAllAsRead() {
+        if !vmInner.unreadIds.isEmpty {
+#if DEBUG
+            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.markAllAsRead() -[LOG]-")
+#endif
+            vmInner.unreadIds = [:]
+        }
     }
 }

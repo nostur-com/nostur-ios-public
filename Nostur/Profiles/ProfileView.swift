@@ -54,10 +54,10 @@ struct ProfileView: View {
                                     .background {
                                         GeometryReader { geometry in
                                             Color.clear
-                                                .preference(key: ScrollOffset.self, value: geometry.frame(in: .global).origin)
+                                                .preference(key: NXScrollOffset.self, value: geometry.frame(in: .global).origin)
                                         }
                                     }
-                                    .onPreferenceChange(ScrollOffset.self) { position in
+                                    .onPreferenceChange(NXScrollOffset.self) { position in
                                         self.scrollPosition.position = position
                                     }
                             }, frameSize: CGSize(width: DIMENSIONS.PFP_BIG, height: DIMENSIONS.PFP_BIG)) {
@@ -523,7 +523,7 @@ class NXScrollPosition: ObservableObject {
     @Published var position: CGPoint = .zero
 }
 
-struct ScrollOffset: PreferenceKey {
+struct NXScrollOffset: PreferenceKey {
     static let defaultValue: CGPoint = .zero
     static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) { }
 }

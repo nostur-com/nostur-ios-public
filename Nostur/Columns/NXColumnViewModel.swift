@@ -10,7 +10,8 @@ import Combine
 import NostrEssentials
 
 class NXColumnViewModel: ObservableObject {
-
+    public let scrollOffsetID = UUID()
+    
     public var speedTest: NXSpeedTest?
 
     // "Following-..." / "List-56D5EE90-17CB-4925" / ...
@@ -1988,7 +1989,8 @@ extension NXColumnViewModel {
         let (danglers, partialThreadsWithParent) = extractDanglingReplies(partialThreads)
         
 #if DEBUG
-        L.og.debug("☘️☘️ \(config.name) processToScreen() danglers: \(danglers.count) partialThreadsWithParent: \(partialThreadsWithParent.count) -[LOG]-")
+        let proxy = ScrollOffset.proxy(.top, id: self.scrollOffsetID)
+        L.og.debug("☘️☘️ \(config.name) processToScreen() danglers: \(danglers.count) partialThreadsWithParent: \(partialThreadsWithParent.count) offset: \(proxy.offset) -[LOG]-")
 #endif
         
         let newDanglers = danglers.filter { !self.danglingIds.contains($0.id) }
