@@ -364,9 +364,8 @@ struct MainFeedsScreen: View {
             }
             .modifier {
     
-                // On 26.0 the new post button is integrated in the new tab bar
-                // But not on macOS 26.0, which has the custom tab bar
-                if IS_CATALYST || !AVAILABLE_26 {
+                // On 26.0 the new post button is integrated in the new tab bar (or in the custom tabbar on Tahoe)
+                if !AVAILABLE_26 {
                     $0.overlay(alignment: .bottomTrailing) {
                         NewNoteButton(showingNewNote: $showingNewNote)
                             .padding([.top, .leading, .bottom], 10)

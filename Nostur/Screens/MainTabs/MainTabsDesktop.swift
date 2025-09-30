@@ -11,6 +11,7 @@ import NavigationBackport
 // Old style tabbar doesn't work anymore on Tahoe / macOS 26. So we recreate our own
 @available(iOS 26.0, *)
 struct MainTabsDesktop: View {
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.theme) private var theme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var dm: DirectMessageViewModel
@@ -59,7 +60,9 @@ struct MainTabsDesktop: View {
                     .tag("Notifications")
                     .opacity(selectedTab == "Notifications" ? 1 : 0)
 
-                DMContainer()
+                DMNavigationStack {
+                    DMContainer()
+                }
                     .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "envelope.fill")
@@ -112,43 +115,85 @@ struct MainTabsDesktop: View {
         
         .safeAreaInset(edge: .bottom) {
             HStack {
-                DesktopTabButton(action: {
-                    tabTapped("Main", oldTab: selectedTab)
-                    selectedTab = "Main"
-                }, title: "Home", systemImage: "house.fill", isActive: selectedTab == "Main")
+                HStack {
+                    DesktopTabButton(action: {
+                        tabTapped("Main", oldTab: selectedTab)
+                        selectedTab = "Main"
+                    }, title: "Home", systemImage: "house.fill", isActive: selectedTab == "Main")
 
+                    
+                    DesktopTabButton(action: {
+                        tabTapped("Bookmarks", oldTab: selectedTab)
+                        selectedTab = "Bookmarks"
+                    }, title: "Bookmarks", systemImage: "bookmark.fill", isActive: selectedTab == "Bookmarks")
+                    
+                    DesktopTabButton(action: {
+                        tabTapped("Search", oldTab: selectedTab)
+                        selectedTab = "Search"
+                    }, title: "Search", systemImage: "magnifyingglass", isActive: selectedTab == "Search")
+                  
+                    DesktopTabButton(action: {
+                        tabTapped("Notifications", oldTab: selectedTab)
+                        selectedTab = "Notifications"
+                    }, title: "Notifications", systemImage: "bell.fill", isActive: selectedTab == "Notifications")
+                    .badgeCompat(unread)
+                    
+                    DesktopTabButton(action: {
+                        tabTapped("Messages", oldTab: selectedTab)
+                        selectedTab = "Messages"
+                    }, title: "Messages", systemImage: "envelope.fill", isActive: selectedTab == "Messages")
+                    .badgeCompat((dm.unread + dm.newRequests))
+                }
+                .foregroundStyle(Color.white)
+                .padding(3)
+                .background(
+                    theme.listBackground
+                        .glassEffect(.clear)
+                        .clipShape(Capsule())
+                        .shadow(color: theme.accent.opacity(0.5), radius: 10)
+                )
+                .padding(.bottom, 4)
                 
-                DesktopTabButton(action: {
-                    tabTapped("Bookmarks", oldTab: selectedTab)
-                    selectedTab = "Bookmarks"
-                }, title: "Bookmarks", systemImage: "bookmark.fill", isActive: selectedTab == "Bookmarks")
-                
-                DesktopTabButton(action: {
-                    tabTapped("Search", oldTab: selectedTab)
-                    selectedTab = "Search"
-                }, title: "Search", systemImage: "magnifyingglass", isActive: selectedTab == "Search")
-              
-                DesktopTabButton(action: {
-                    tabTapped("Notifications", oldTab: selectedTab)
-                    selectedTab = "Notifications"
-                }, title: "Notifications", systemImage: "bell.fill", isActive: selectedTab == "Notifications")
-                .badgeCompat(unread)
-                
-                DesktopTabButton(action: {
-                    tabTapped("Messages", oldTab: selectedTab)
-                    selectedTab = "Messages"
-                }, title: "Messages", systemImage: "envelope.fill", isActive: selectedTab == "Messages")
-                .badgeCompat((dm.unread + dm.newRequests))
+                Button(action: {
+                    sendNotification(.newPost)
+                }, label: {
+                    Label("New Post", systemImage: "plus")
+                        .labelStyle(.iconOnly)
+                        .font(.title2)
+                        .fontWeightBold()
+                        .frame(width: 44, alignment: .center)
+                        .padding(4)
+                        .foregroundStyle(Color.white)
+                })
+                .padding(3)
+                .modifier {
+                    if #available(iOS 26.0, *) {
+                        if colorScheme == .dark {
+                            $0
+                                .glassEffect(.clear.tint(theme.accent.opacity(0.35)).interactive())
+                        }
+                        else { // .accent colors on .clear look too bright on light mode for liquid glass tint, so mix with black to make darker
+                            $0
+                                .glassEffect(
+                                    .clear.tint(
+                                        theme.accent
+                                            .mix(with: .black, by: 0.1)
+                                            .opacity(0.6)
+                                    )
+                                    .interactive()
+                                )
+                        }
+                    }
+                    else {
+                        $0
+                            .background(theme.accent)
+                            .frame(height: 34.0)
+                            .clipShape(.rect(cornerRadius: 30))
+                            .frame(height: 44.0)
+                    }
+                }
+                .padding(.bottom, 4)
             }
-            .foregroundStyle(Color.white)
-            .padding(3)
-            .background(
-                theme.listBackground
-                    .glassEffect(.clear)
-                    .clipShape(Capsule())
-                    .shadow(color: theme.accent.opacity(0.5), radius: 10)
-            )
-            .padding(.bottom, 4)
         }
     }
     
