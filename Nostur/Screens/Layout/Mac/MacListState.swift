@@ -13,7 +13,7 @@ public typealias ListID = String
 class MacListState: ObservableObject {
     
     @AppStorage("mac_list_state_serialized") var macListstateSerialized = ""
-    @AppStorage("mac_selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_tab") var selectedTab = "Main"
     
     static let shared = MacListState()
     

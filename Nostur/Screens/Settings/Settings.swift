@@ -66,12 +66,14 @@ struct Settings: View {
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {
                     #if DEBUG
-                    Toggle(isOn: $settings.proMode) {
-                        VStack(alignment: .leading) {
-                            Text("Nostur Pro", comment:"Setting on settings screen")
-                            Text("Multi-columns and more")
-                                .font(.footnote)
-                                .foregroundColor(.secondary)
+                    if #available(iOS 18.0, *), IS_CATALYST {
+                        Toggle(isOn: $settings.proMode) {
+                            VStack(alignment: .leading) {
+                                Text("Nostur Pro", comment:"Setting on settings screen")
+                                Text("Multi-columns and more")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                     }
                     #endif

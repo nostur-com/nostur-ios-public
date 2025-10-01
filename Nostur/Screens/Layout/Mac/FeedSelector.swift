@@ -6,40 +6,55 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
-struct FeedSelector: View {
+@available(iOS 17.0, *)
+#Preview {
+    @Previewable @State var feeds: [CloudFeed] = []
+    @Previewable @State var selected: CloudFeed? = nil
+    
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadCloudFeeds()
+    }) {
+        NBNavigationStack {
+            Color.red
+                .frame(width: 300, height: 600)
+                .withFeedSelectorToolbarMenu(feeds: feeds, selectedFeed: $selected)
+                .onAppear {
+                    feeds = PreviewFetcher.fetchLists()
+                    print("feeds: \(feeds.count)")
+                }
+        }
+    }
+}
+
+
+@available(iOS 16.0, *)
+struct FeedSelectorToolbarMenu: ViewModifier {
     let feeds: [CloudFeed]
-    @Binding var selected: CloudFeed?
+    @Binding var selectedFeed: CloudFeed?
     
-    var body: some View {
-        Picker("Feed", selection: $selected) {
-            Text("Choose feed")
-            ForEach(feeds) { feed in
-                Text(feed.name_)
-                    .tag(Optional(feed))
-            }
-        }
-        .pickerStyle(.menu)
+    func body(content: Content) -> some View {
+        content
+            .navigationTitle(selectedFeed?.name_ ?? "Select Feed")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+              ToolbarTitleMenu {
+                  ForEach(feeds) { feed in
+                      Button(feed.name_) {
+                          selectedFeed = feed
+                      }
+                  }
+              }
+          }
     }
 }
 
-struct FeedSelectorTestur: View {
-    @State var feeds = PreviewFetcher.fetchLists()
-    @State var selected:CloudFeed? = nil
-    
-    var body: some View {
-        FeedSelector(feeds: feeds, selected: $selected)
-    }
-}
 
-struct FeedSelector_Previews: PreviewProvider {
-    static var previews: some View {
-        PreviewContainer({ pe in
-            pe.loadContacts()
-            pe.loadCloudFeeds()
-//            pe.loadRelayNosturLists()
-        }) {
-            FeedSelectorTestur()
-        }
+extension View {
+    @available(iOS 16.0, *)
+    func withFeedSelectorToolbarMenu(feeds: [CloudFeed], selectedFeed: Binding<CloudFeed?>) -> some View {
+        modifier(FeedSelectorToolbarMenu(feeds: feeds, selectedFeed: selectedFeed))
     }
 }

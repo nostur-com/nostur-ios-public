@@ -14,14 +14,9 @@ struct NosturMainView: View {
     
     var body: some View {
         AppEnvironment(la: la) {
-            if IS_CATALYST && ss.proMode {
-                if #available(iOS 16.0, *) {
-                    Zoomable {
-                        MacListsView()
-                    }
-                } else {
-                    // Fallback on earlier versions
-                    Text("Not yet")
+            if #available(iOS 18.0, *), IS_CATALYST && ss.proMode {
+                WithSidebar {
+                    MacListsView()
                 }
             }
             else {

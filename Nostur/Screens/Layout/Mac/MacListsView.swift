@@ -29,81 +29,97 @@ struct MacListsView: View {
 #if DEBUG
         let _ = Self._printChanges()
 #endif
-        GeometryReader { geo in
-            HStack(spacing: COLUMN_SPACING) {
-                // Tabs on the side
-                SideTabs(columnsCount: $vm.columnsCount, selectedTab: $vm.selectedTab)
-                    .frame(width: SIDEBAR_WIDTH)
-                
-                // Main list (following/notifications/bookmarks)
-                TabView(selection: $vm.selectedTab) {
-                        PhoneViewIsh()
-                            .environment(\.horizontalSizeClass, .compact)
-                            .environmentObject(childDM)
-                            .tag("Main")
-                            .toolbar(.hidden, for: .tabBar)
-                        
-                        NotificationsContainer()
-                            .environment(\.horizontalSizeClass, .compact)
-                            .environmentObject(childDM)
-                            .tag("Notifications")
-                            .toolbar(.hidden, for: .tabBar)
-
-                        Search()
-                            .environment(\.horizontalSizeClass, .compact)
-                            .environmentObject(childDM)
-                            .tag("Search")
-                            .toolbar(.hidden, for: .tabBar)
-                        
-                        BookmarksTab()
-                            .environment(\.horizontalSizeClass, .compact)
-                            .environmentObject(childDM)
-                            .tag("Bookmarks")
-                            .toolbar(.hidden, for: .tabBar)
+        Zoomable {
+            GeometryReader { geo in
+                HStack(spacing: COLUMN_SPACING) {
+                    // Tabs on the side
+                    SideTabs(columnsCount: $vm.columnsCount, selectedTab: $vm.selectedTab)
+                        .frame(width: SIDEBAR_WIDTH)
                     
-                        DMContainer()
-                            .environment(\.horizontalSizeClass, .compact)
-                            .environmentObject(childDM)
-                            .tag("Messages")
-                            .toolbar(.hidden, for: .tabBar)
+                    // Main list (following/notifications/bookmarks)
+                    TabView(selection: $vm.selectedTab) {
+                            PhoneViewIsh()
+                                .environment(\.horizontalSizeClass, .compact)
+                                .environmentObject(childDM)
+                                .tag("Main")
+                                .toolbar(.hidden, for: .tabBar)
+                            
+                            NotificationsContainer()
+                                .environment(\.horizontalSizeClass, .compact)
+                                .environmentObject(childDM)
+                                .tag("Notifications")
+                                .toolbar(.hidden, for: .tabBar)
+
+                            Search()
+                                .environment(\.horizontalSizeClass, .compact)
+                                .environmentObject(childDM)
+                                .tag("Search")
+                                .toolbar(.hidden, for: .tabBar)
+                            
+                            BookmarksTab()
+                                .environment(\.horizontalSizeClass, .compact)
+                                .environmentObject(childDM)
+                                .tag("Bookmarks")
+                                .toolbar(.hidden, for: .tabBar)
+                        
+                            DMContainer()
+                                .environment(\.horizontalSizeClass, .compact)
+                                .environmentObject(childDM)
+                                .tag("Messages")
+                                .toolbar(.hidden, for: .tabBar)
+                        }
+                        .frame(width: columnWidth)
+                        .debugDimensions()
+                    
+                    // Extra lists (+ -)
+                    ForEach(0..<max(1,vm.columnsCount), id:\.self) { columnIndex in
+                        MacList(availableWidth: columnSize(geo.size.width)) {
+                            ColumnViewWrapper(availableFeeds: availableFeeds)
+                        }
+                        .id(columnIndex)
+                        .frame(width: columnWidth)
+                        .debugDimensions()
                     }
-                    .frame(width: columnWidth)
-                    .debugDimensions()
-                
-                // Extra lists (+ -)
-                ForEach(0..<max(1,vm.columnsCount), id:\.self) { columnIndex in
-                    MacList(availableWidth: columnSize(geo.size.width)) {
-                        ColumnViewWrapper(availableFeeds: availableFeeds)
-                    }
-                    .id(columnIndex)
-                    .frame(width: columnWidth)
-                    .debugDimensions()
                 }
-            }
-            .onAppear {
-                columnWidth = columnSize(geo.size.width)
-                childDM.listWidth = columnWidth
-            }
-            .onChange(of: geo.size.width) { newValue in
-                if newValue != columnWidth {
+                .onAppear {
                     columnWidth = columnSize(geo.size.width)
                     childDM.listWidth = columnWidth
                 }
-            }
-            .onChange(of: vm.columnsCount) { _ in
-                let newColumnSize = columnSize(geo.size.width)
-                if columnWidth != newColumnSize {
-                    columnWidth = newColumnSize
-                    childDM.listWidth = newColumnSize
+                .onChange(of: geo.size.width) { newValue in
+                    if newValue != columnWidth {
+                        columnWidth = columnSize(geo.size.width)
+                        childDM.listWidth = columnWidth
+                    }
+                }
+                .onChange(of: vm.columnsCount) { _ in
+                    let newColumnSize = columnSize(geo.size.width)
+                    if columnWidth != newColumnSize {
+                        columnWidth = newColumnSize
+                        childDM.listWidth = newColumnSize
+                    }
                 }
             }
+            .onAppear {
+                availableFeeds = CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
+                    .filter {
+                        switch $0.feedType {
+                            case .picture(_):
+                                return false
+                            case .pubkeys(_):
+                                return true
+                            case .relays(_):
+                                return true
+                            case .followSet(_), .followPack(_):
+                                return true
+                            default:
+                                return false
+                        }
+                    }
+            }
+            .withSheets()
+            .environmentObject(dim)
+            .withLightningEffect()
         }
-        .onAppear {
-            availableFeeds = CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
-        }
-        .withSheets()
-        .environmentObject(dim)
-        .withLightningEffect()
     }
     
     func columnSize(_ availableWidth: CGFloat) -> CGFloat {
@@ -116,11 +132,11 @@ struct MacListsView: View {
 
 
 
+@available(iOS 16.0, *)
 struct ColumnViewWrapper: View {
     let availableFeeds:[CloudFeed]
     @State private var selectedFeed: CloudFeed? = nil
     @State private var navPath = NBNavigationPath()
-//    @State private var lvm:LVM? = nil
     
     var body: some View {
 //        Text("uuuh")
@@ -129,25 +145,20 @@ struct ColumnViewWrapper: View {
     }
 }
 
+@available(iOS 16.0, *)
 struct ColumnView: View {
     @Environment(\.theme) private var theme
     let availableFeeds: [CloudFeed]
     @Binding var selectedFeed: CloudFeed?
     @Binding var navPath: NBNavigationPath
-//    @Binding var lvm:LVM?
+    @State private var columnConfig: NXColumnConfig?
     
     var body: some View {
         NBNavigationStack(path: $navPath) {
             ZStack {
                 theme.listBackground
-                VStack {
-                    Button("feeds....") {
-                        navPath.append(ViewPath.Lists)
-                    }
-                    FeedSelector(feeds: availableFeeds, selected: $selectedFeed)
-                        .padding(.top, 10)
-                    Spacer()
-                }
+
+                
                 if selectedFeed == nil {
                     VStack(alignment:.leading) {
                         
@@ -186,8 +197,24 @@ struct ColumnView: View {
                         .buttonStyle(.bordered)
                     }
                 }
+                else if let columnConfig {
+                    AvailableWidthContainer {
+                        NXColumnView(config: columnConfig, isVisible: true)
+                    }
+                }
             }
+            .withFeedSelectorToolbarMenu(feeds: availableFeeds, selectedFeed: $selectedFeed)
             .withNavigationDestinations()
+            
+            .onAppear {
+                if let selectedFeed {
+                    columnConfig = NXColumnConfig(id: selectedFeed.subscriptionId, columnType: selectedFeed.feedType, accountPubkey: selectedFeed.accountPubkey, name: selectedFeed.name_)
+                }
+            }
+            .onChange(of: selectedFeed) { newValue in
+                guard let newValue else { return }
+                columnConfig = NXColumnConfig(id: newValue.subscriptionId, columnType: newValue.feedType, accountPubkey: newValue.accountPubkey, name: newValue.name_)
+            }
         }
     }
 }

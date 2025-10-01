@@ -43,7 +43,8 @@ struct PhoneViewIsh: View {
                     }
                 }
             }
-//            .navigationBarHidden(true)
+            .navigationTitle("Following")
+            .navigationBarTitleDisplayMode(.inline)
             .withNavigationDestinations()
             .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
                 if #available(iOS 26.0, *) {
