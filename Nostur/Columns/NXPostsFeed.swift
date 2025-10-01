@@ -396,6 +396,8 @@ struct NXPostsFeed: View {
                 }
             }
         }
+        
+        vm.saveLocalFeedState()
     }
     
     private func updateIsAtTop() {

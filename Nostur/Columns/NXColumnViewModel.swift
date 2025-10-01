@@ -90,6 +90,7 @@ class NXColumnViewModel: ObservableObject {
     private var lastDisconnectionSub: AnyCancellable?
     private var onAppearSubjectSub: AnyCancellable?
     public var watchForFirstConnection = false
+    public var saveLocalStateSub: AnyCancellable?
     private var subscriptions = Set<AnyCancellable>()
     public var onAppearSubject = PassthroughSubject<Int64,Never>()
     
@@ -324,6 +325,10 @@ class NXColumnViewModel: ObservableObject {
         saveFeedStateSub?.cancel()
         saveFeedStateSub = nil
         listenForSaveFeedStates(config)
+        
+        saveLocalStateSub?.cancel()
+        saveLocalStateSub = nil
+        listenForSaveLocalFeedState(config)
         
         
         // if config.columnType is .following OR .picture
@@ -1713,6 +1718,28 @@ class NXColumnViewModel: ObservableObject {
             .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.pause()
+            }
+    }
+    
+    @MainActor
+    public func saveLocalFeedState() {
+        saveLocalFeedStateSubject.send()
+    }
+    
+    private var saveLocalFeedStateSubject = PassthroughSubject<Void, Never>()
+    
+    @MainActor
+    private func listenForSaveLocalFeedState(_ config: NXColumnConfig) {
+        guard saveLocalStateSub == nil else { return }
+        saveLocalStateSub = saveLocalFeedStateSubject
+            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: true)
+            .debounce(for: .seconds(5), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                // Normally this is triggered via FeedsCoordinator to save all feed states and then also to disk
+                // But here we just request to save this (not all) states and then we need to save manually here also
+                self?.saveFeedState()
+                // so save manually here
+                LocalFeedStateManager.shared.saveToDisk()
             }
     }
     
