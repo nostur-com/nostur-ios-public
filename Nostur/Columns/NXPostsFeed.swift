@@ -39,32 +39,34 @@ struct NXPostsFeed: View {
     
     var body: some View {
         List(posts) { nrPost in
-            ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
+            NXListRow {
                 PostOrThread(nrPost: nrPost)
-                    .onBecomingVisible {
-                        // SettingsStore.shared.fetchCounts should be true for below to work
-                        vm.prefetch(nrPost)
-                        if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
-                            vm.allShortIdsSeen.insert(nrPost.shortId)
-                            if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
-                                vm.allShortIdsSeen.insert(String(firstQuoteId.prefix(8)))
-                            }
-                        }
-                        else {
-                            let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
-                            vm.allShortIdsSeen.formUnion(leafIds)
-                        }
+            } onAppearOnce: {
+                guard !vmInner.isPerformingScroll else { return false }
+                onPostAppearOnce(nrPost)
+                
+                // SettingsStore.shared.fetchCounts should be true for below to work
+                vm.prefetch(nrPost)
+                if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
+                    vm.allShortIdsSeen.insert(nrPost.shortId)
+                    if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+                        vm.allShortIdsSeen.insert(String(firstQuoteId.prefix(8)))
                     }
-                    .onAppear {
-                        onPostAppear(nrPost)
-                    }
-                    .onDisappear {
-                        onPostDisappear(nrPost)
-                    }
+                }
+                else {
+                    let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
+                    vm.allShortIdsSeen.formUnion(leafIds)
+                }
+                
+                return true
+            }
+            .onDisappear {
+                onPostDisappear(nrPost)
             }
             .listRowSeparator(.hidden)
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
+        .withContainerTopOffsetEnvironmentKey()
         .scrollOffsetID(vm.scrollOffsetID)
         .environment(\.defaultMinListRowHeight, 50)
         .listStyle(.plain)
@@ -132,8 +134,8 @@ struct NXPostsFeed: View {
             L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
 #endif
   
-            // While we scroll to previous index here, we are triggering onPostAppear(), which updates markAsRead
-            // But it wasn't a real onPostAppear, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
+            // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
+            // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
             vmInner.isPerformingScroll = true
             
             // Anti-flicker approach
@@ -280,15 +282,15 @@ struct NXPostsFeed: View {
                 if let firstUnreadPostIndex = posts.firstIndex(where: { $0.id == post.id }) {
                     scrollToIndex(firstUnreadPostIndex)
 
-                    // Regular updateIsAtTop() in onPostAppear { } doesn't catch the first row appearing to set isAtTop to 0, probably because
-                    // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
-                    // so force update here after small delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                        #if DEBUG
-                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
-                        #endif
-                        updateIsAtTop()
-                    }
+//                    // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
+//                    // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
+//                    // so force update here after small delay
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+//                        #if DEBUG
+//                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
+//                        #endif
+//                        updateIsAtTop()
+//                    }
                 }
                 break
             }
@@ -298,16 +300,16 @@ struct NXPostsFeed: View {
     private func scrollToTop() {
         scrollToIndex(0)
         vmInner.isAtTop = true
-        
-        // Regular updateIsAtTop() in onPostAppear { } doesn't catch the first row appearing to set isAtTop to 0, probably because
-        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
-        // so force update here after small delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-            #if DEBUG
-            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
-            #endif
-            updateIsAtTop()
-        }
+//        
+//        // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
+//        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
+//        // so force update here after small delay
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+//            #if DEBUG
+//            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
+//            #endif
+//            updateIsAtTop()
+//        }
     }
     
     private func scrollToIndex(_ scrollToIndex: Int) {
@@ -345,26 +347,15 @@ struct NXPostsFeed: View {
         }
     }
     
-    private func onPostAppear(_ nrPost: NRPost) {
-        // The first post can already partially "onAppear" behind the toolbar, so we need to avoid marking as read to early.
-        // Post needs to be actually visible in offset > 0, not visible partially behind toolbar.
-        
-        // So don't continue for first post
-        if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }), appearedIndex == 0 {
+    private func onPostAppearOnce(_ nrPost: NRPost) {
 #if DEBUG
-            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() -> first post, maybe behind toolbar -[LOG]-")
-#endif
-            return
-        }
-        
-#if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
+        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppearOnce() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
         updateIsAtTop()
         loadMoreIfNeeded()
 //        vm.haltProcessing() // will stop new updates on screen for 5.0 seconds
         
-        // Don't update markAsRead if the onPostAppear is happening because of scrollToIndex (hidden scroll to keep scroll position)
+        // Don't update markAsRead if the onPostAppearOnce is happening because of scrollToIndex (hidden scroll to keep scroll position)
         // Only update if it is actual user based scroll
         guard !vmInner.isPerformingScroll else { return }
         
@@ -420,7 +411,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
                 L.og.debug("☘️☘️ \(vm.config?.name ?? "?") proxy.offset: \(proxy.offset) -[LOG]-")
 #endif
                 
-                if proxy.offset >= -5 {
+                if proxy.offset >= -5 { // or should we use >= 0?
                     if !vmInner.isAtTop {
                         vmInner.isAtTop = true
 #if DEBUG
@@ -438,7 +429,7 @@ L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppear() ->
         }
         else { // iOS 15 UITableView
             if tableView != nil {
-                if proxy.offset >= -5 {
+                if proxy.offset >= -5 { // or should we use >= 0?
                     if !vmInner.isAtTop {
                         vmInner.isAtTop = true
                         self.markAllAsRead()

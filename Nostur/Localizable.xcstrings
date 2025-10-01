@@ -8409,6 +8409,9 @@
         }
       }
     },
+    "Scroll to Bottom" : {
+
+    },
     "Search" : {
       "comment" : "Navigation title for Search screen",
       "localizations" : {
@@ -10470,7 +10473,6 @@
     },
     "What" : {
       "comment" : "Tab title for feed of people you follow",
-      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
