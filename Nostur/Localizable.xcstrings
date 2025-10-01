@@ -6467,6 +6467,9 @@
         }
       }
     },
+    "onAppearOnce!" : {
+
+    },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
         "nl" : {
@@ -8408,9 +8411,6 @@
           }
         }
       }
-    },
-    "Scroll to Bottom" : {
-
     },
     "Search" : {
       "comment" : "Navigation title for Search screen",
