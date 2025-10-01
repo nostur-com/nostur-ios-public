@@ -797,19 +797,19 @@ struct PreviewContainer<Content: View>: View {
     @State private var pe = PreviewEnvironment.shared
     private var setup: PreviewSetup? = nil
     private let previewDevice: PreviewDevice
-    private var content: () -> Content
+    private var content: Content
     @State private var didSetup = false
     
     init(_ setup: PreviewSetup? = nil, previewDevice: PreviewDevice? = nil, @ViewBuilder content: @escaping () -> Content) {
         self.setup = setup
         self.previewDevice = previewDevice ?? PreviewDevice(rawValue: PREVIEW_DEVICE)
-        self.content = content
+        self.content = content()
     }
     
     var body: some View {
         VStack(spacing: 0) {
             if didSetup, let loggedInAccount = AccountsState.shared.loggedInAccount {
-                content()
+                content
                     .environment(\.theme, Themes.GREEN)
                     .environment(\.managedObjectContext, pe.context)
                     .environmentObject(AppState.shared)
