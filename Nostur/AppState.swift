@@ -363,6 +363,7 @@ func initializeNWCConnection() async {
 
 let APP_VERSION = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
 let CI_BUILD_NUMBER = Bundle.main.infoDictionary?["CI_BUILD_NUMBER"] as? String ?? "?"
+let NIP89_APP_NAME = Bundle.main.infoDictionary?["NIP89_APP_NAME"] as? String ?? "Nostur"
 let NIP89_APP_REFERENCE = Bundle.main.infoDictionary?["NIP89_APP_REFERENCE"] as? String ?? ""
 let IS_IPAD = UIDevice.current.userInterfaceIdiom == .pad
 let IS_CATALYST = ProcessInfo.processInfo.isMacCatalystApp
