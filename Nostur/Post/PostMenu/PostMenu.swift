@@ -89,14 +89,14 @@ struct PostMenu: View {
                                 .foregroundColor(theme.accent)
                         }
                     }
-#endif
-                    
+              
                     Button(action: {
                         
                     }) {
                         Label("Add/remove from Highlights", systemImage: "star")
                             .foregroundColor(theme.accent)
                     }
+#endif
                     
                     if nrPost.isRestricted {
                         NavigationLink {
