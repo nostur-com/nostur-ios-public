@@ -162,6 +162,8 @@ extension CloudFeed : Identifiable {
         switch type {
         case "following":
             .following(self)
+        case "picture":
+            .picture(self)
         case "pubkeys":
             .pubkeys(self)
         case "relays":

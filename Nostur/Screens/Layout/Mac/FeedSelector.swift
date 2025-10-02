@@ -37,12 +37,12 @@ struct FeedSelectorToolbarMenu: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .navigationTitle(selectedFeed?.name_ ?? "Select Feed")
+            .navigationTitle(selectedFeed?.feedTitle() ?? "Select Feed")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
               ToolbarTitleMenu {
                   ForEach(feeds) { feed in
-                      Button(feed.name_) {
+                      Button(feed.feedTitle()) {
                           selectedFeed = feed
                       }
                   }
@@ -51,6 +51,25 @@ struct FeedSelectorToolbarMenu: ViewModifier {
     }
 }
 
+extension CloudFeed {
+    func feedTitle() -> String {
+        switch self.feedType {
+            case .following(_):
+                return self.name_
+            case .picture(_):
+                let accountName = self.account?.anyName ?? "?"
+                return "Photos (\(accountName))"
+            case .pubkeys(_):
+                return self.name_
+            case .relays(_):
+                return self.name_
+            case .followSet(_), .followPack(_):
+                return self.name_
+            default:
+                return self.name_
+        }
+    }
+}
 
 extension View {
     @available(iOS 16.0, *)

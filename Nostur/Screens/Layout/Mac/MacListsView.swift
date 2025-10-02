@@ -104,7 +104,7 @@ struct MacListsView: View {
                     .filter {
                         switch $0.feedType {
                             case .picture(_):
-                                return false
+                                return true
                             case .pubkeys(_):
                                 return true
                             case .relays(_):
