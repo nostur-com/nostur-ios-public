@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import NostrEssentials
 
 struct ProfileByPubkey: View {
     @Environment(\.theme) private var theme
@@ -15,7 +16,7 @@ struct ProfileByPubkey: View {
     public var tab: String?
         
     @State private var editingAccount: CloudAccount? = nil
-    @StateObject private var vm = FetchVM<NRContact>()
+    @StateObject private var vm = FetchVM<NRContact>(timeout: 1.5, debounceTime: 0.05)
 
     var body: some View {
         switch vm.state {
@@ -23,22 +24,24 @@ struct ProfileByPubkey: View {
             ProgressView()
                 .frame(alignment: .center)
                 .onAppear { [weak vm] in
-                    
+                    // Always fetch latest kind 0
+                    nxReq(Filters(authors: [pubkey], kinds: [0]), subscriptionId: UUID().uuidString)
                     if let cachedNRContact = NRContactCache.shared.retrieveObject(at: pubkey) {
                         vm?.ready(cachedNRContact)
                         return
                     }
                     
-                    
                     vm?.setFetchParams((
                         prio: false,
-                        req: { _ in
+                        req: { taskId in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
                                 if let nrContact = NRContact.fetch(pubkey) {
                                     vm.ready(nrContact) // 2A. DONE
                                 }
-                                else { req(RM.getUserMetadata(pubkey: pubkey)) } // 2B. FETCH IF WE DONT HAVE
+                                else { // Check .SEARCH relays
+                                    nxReq(Filters(authors: [pubkey], kinds: [0]), subscriptionId: taskId, relayType: .SEARCH)
+                                }
                             }
                         }, 
                         onComplete: { relayMessage, _ in

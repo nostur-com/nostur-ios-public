@@ -9,6 +9,7 @@ import SwiftUI
 import Nuke
 import NukeUI
 import NavigationBackport
+import NostrEssentials
 
 struct ProfileView: View {
     @StateObject private var vm = ProfileViewModel()
@@ -478,6 +479,13 @@ struct ProfileView: View {
             vm.load(nrContact)
             lastSeenVM.checkLastSeen(nrContact.pubkey)
 //            imposterVM.runCheck(nrContact)
+        }
+        
+        .task {
+            try? await Task.sleep(nanoseconds: 5_100_000_000) // Try .SEARCH relays if we don't have info
+            if nrContact.metadata_created_at == 0 {
+                nxReq(Filters(authors: [nrContact.pubkey], kinds: [0]), subscriptionId: UUID().uuidString, relayType: .SEARCH)
+            }
         }
     }
 }
