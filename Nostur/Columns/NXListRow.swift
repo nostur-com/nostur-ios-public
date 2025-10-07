@@ -23,28 +23,11 @@ struct NXListRow<Content: View>: View {
     
     var body: some View {
         self.content
-            .overlay {
-                if onAppearOnce != nil {
-                    GeometryReader { proxy in
-                        Color.clear
-                            .preference(key: ListRowTopOffsetKey.self, value: proxy.frame(in: .global).minY - topOffset)
-                    }
-                    .onPreferenceChange(ListRowTopOffsetKey.self) { offset in
-                        if offset >= -25 {
-#if DEBUG
-                            L.og.debug("☘️☘️ offest >= -25 \(offset.description)")
-#endif
-                            if onAppearOnce?() ?? false {
-                                onAppearOnce = nil
-                            }
-                        }
-                    }
-                }
-            }
+        
 #if DEBUG
             .overlay(alignment: .bottomLeading) {
                 if onAppearOnce == nil {
-                    Text("onAppearOnce!")
+                    Text("onAppearOnce()")
                         .foregroundStyle(Color.white)
                         .background {
                             Color.red.opacity(0.7)
@@ -52,6 +35,39 @@ struct NXListRow<Content: View>: View {
                 }
             }
 #endif
+        
+            .modifier { // From iOS 16+ onGeometryChange should be more performant than the old GeometryReader method
+                if #available(iOS 16.0, *) {
+                    $0.onGeometryChange(for: Bool.self) { proxy in
+                        guard onAppearOnce != nil else { return false }
+                        let frame = proxy.frame(in: .global)
+                        return (frame.minY - topOffset) > -25
+                        
+                    } action: { isVisible in
+                        guard onAppearOnce != nil && isVisible else { return }
+                        if onAppearOnce?() ?? false { // Set to nil ONLY if it actually ran (based on return value) (true means it ran)
+                            onAppearOnce = nil
+                        }
+                    }
+                }
+                else {
+                    $0.overlay { // Old GeometryReader method
+                        if onAppearOnce != nil {
+                            GeometryReader { proxy in
+                                Color.clear
+                                    .preference(key: ListRowTopOffsetKey.self, value: proxy.frame(in: .global).minY - topOffset)
+                            }
+                            .onPreferenceChange(ListRowTopOffsetKey.self) { offset in
+                                if offset >= -25 {
+                                    if onAppearOnce?() ?? false { // Set to nil ONLY if it actually ran (based on return value) (true means it ran)
+                                        onAppearOnce = nil
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
     }
 }
 
