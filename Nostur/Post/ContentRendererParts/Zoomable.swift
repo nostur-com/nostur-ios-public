@@ -14,7 +14,7 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
     private let content: Content
     private let detailContent: DetailContent
     private var frameSize: CGSize? = nil
-    @State private var contentSize: CGSize = CGSize(width: 50, height: 50)
+    @State private var contentSize: CGSize = CGSize(width: 350, height: 350)
     @State private var viewPosition: CGPoint = .zero
     
     init(id: String = "Default", @ViewBuilder _ content: () -> Content, frameSize: CGSize? = nil, @ViewBuilder detailContent: () -> DetailContent) {
@@ -25,31 +25,48 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
     }
     
     var body: some View {
-        if let frameSize, #available(iOS 16.0, *) {
-            GeometryReader { geometry in
-                content
-                    .onTapGesture(coordinateSpace: .global) { _ in
-                        guard !nxViewingContext.contains(.preview) else { return }
-                        let frame = geometry.frame(in: .global)
-                        triggerZoom(origin: CGPoint(x: frame.minX + (contentSize.width/2), y: frame.minY + (contentSize.height/2)))
+        if #available(iOS 16.0, *) {
+            content
+                .onTapGesture(coordinateSpace: .global) { location in
+                    guard !nxViewingContext.contains(.preview) else { return }
+                    triggerZoom(origin: CGPoint(x: location.x - 30, y: location.y - 30))
+                }
+                .modifier {
+                    if let frameSize {
+                        $0.frame(width: frameSize.width, height: frameSize.height)
                     }
-            }
-            .frame(width: frameSize.width, height: frameSize.height)
+                    else {
+                        $0
+                    }
+                }
         }
-        else if #available(iOS 16.0, *) {
-            GeometryReader { geometry in
-                content
-                    .readSize(onChange: { size in
-                        guard contentSize != size else { return }
-                        contentSize = size
-                    })
-                    .onTapGesture(coordinateSpace: .global) { _ in
-                        guard !nxViewingContext.contains(.preview) else { return }
-                        let frame = geometry.frame(in: .global)
-                        triggerZoom(origin: CGPoint(x: frame.minX + (contentSize.width/2), y: frame.minY + (contentSize.height/2)))
-                    }
-            }
-        } else {
+//        else if #available(iOS 16.0, *) {
+//            GeometryReader { geometry in
+//                content
+//                    .onTapGesture(coordinateSpace: .global) { location in
+//                        guard !nxViewingContext.contains(.preview) else { return }
+//                        let frame = geometry.frame(in: .global)
+//                        let frameSize_ = self.frameSize ?? contentSize
+//                        
+//                        print("Tapped location: \(location)")
+//                        print("Tapped frame: \(frame.minX + (frameSize_.width/2)) \(frame.minY + (frameSize_.height/2))")
+//                        
+//                        triggerZoom(origin: CGPoint(x: frame.minX + (frameSize_.width/2), y: frame.minY + (frameSize_.height/2)))
+//                    }
+//            }
+//            .modifier {
+//                if let frameSize {
+//                    $0.frame(width: frameSize.width, height: frameSize.height)
+//                }
+//                else {
+//                    $0.readSize(onChange: { size in
+//                        guard contentSize != size else { return }
+//                        contentSize = size
+//                    })
+//                }
+//            }
+//        }
+        else {
             // Fallback on earlier versions
             content
                 .onTapGesture {

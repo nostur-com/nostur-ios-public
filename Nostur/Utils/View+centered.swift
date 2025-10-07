@@ -51,13 +51,21 @@ struct SizePreferenceKey: PreferenceKey {
 
 extension View {
   func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
-    overlay(
-      GeometryReader { geometryProxy in
-        Color.clear
-          .preference(key: SizePreferenceKey.self, value: geometryProxy.size)
+    if #available(iOS 16.0, *) {
+      return onGeometryChange(for: CGSize.self) { geometry in
+        geometry.size
+      } action: { size in
+        onChange(size)
       }
-    )
-    .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
+    } else {
+      return overlay(
+        GeometryReader { geometryProxy in
+          Color.clear
+            .preference(key: SizePreferenceKey.self, value: geometryProxy.size)
+        }
+      )
+      .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
+    }
   }
 }
 
@@ -117,14 +125,19 @@ struct DebugDimensions: ViewModifier {
 
 
 struct SizeModifier: ViewModifier {
-    private var sizeView: some View {
-        GeometryReader { geometry in
-            Color.clear.preference(key: SizePreferenceKey.self, value: geometry.size)
-        }
+    let onChange: ((CGSize) -> Void)?
+    
+    init(onChange: ((CGSize) -> Void)? = nil) {
+        self.onChange = onChange
     }
-
+    
     func body(content: Content) -> some View {
-        content.overlay(sizeView) // .background does not always work (gives 0,0), but overlay does work??)
+        if let onChange {
+            content.readSize(onChange: onChange)
+        } else {
+            // If no callback is provided, just return the content as-is
+            content
+        }
     }
 }
 
