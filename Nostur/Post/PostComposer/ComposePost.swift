@@ -323,6 +323,7 @@ struct ComposePost: View {
                             VStack(alignment: .leading) {
                                 PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                     .environment(\.theme, theme)
+                                    .environment(\.availableWidth, geo.size.width)
                                     .environmentObject(la)
                                     .onDisappear {
                                         vm.previewNRPost = nil
