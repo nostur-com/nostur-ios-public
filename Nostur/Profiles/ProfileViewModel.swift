@@ -17,6 +17,7 @@ class ProfileViewModel: ObservableObject {
     @Published var showListsTab = false
     @Published var fixedPfp: URL?
     @Published var npub = ""
+    @Published var isBlocked = false
     
     @Published var newPostsNotificationsEnabled: Bool = false
     @Published var pinnedPost: NRPost?
@@ -31,6 +32,9 @@ class ProfileViewModel: ObservableObject {
     public func load(_ nrContact: NRContact) {
         let pubkey = nrContact.pubkey
         self.pubkey = pubkey
+        
+        self.isBlocked = blocks().contains(pubkey)
+        
         Task { @MainActor in
             newPostsNotificationsEnabled = NewPostNotifier.shared.isEnabled(for: nrContact.pubkey)
         }

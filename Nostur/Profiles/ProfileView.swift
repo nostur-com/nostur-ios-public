@@ -205,11 +205,23 @@ struct ProfileView: View {
                             } label: {
                                 Label(String(localized:"Add/Remove from Lists", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
                             }
-                            Button {
-                                block(pubkey: nrContact.pubkey, name: nrContact.anyName)
-                            } label: {
-                                Label(
-                                    String(localized:"Block \(nrContact.anyName)", comment:"Menu action"), systemImage: "slash.circle")
+                            
+                            if vm.isBlocked {
+                                Button(action: {
+                                    unblock(pubkey: nrContact.pubkey)
+                                    vm.isBlocked = false // TODO: Add listener on vm instead of this
+                                }) {
+                                    Label("Unblock", systemImage: "circle.slash")
+                                }
+                            }
+                            else {
+                                Button {
+                                    block(pubkey: nrContact.pubkey, name: nrContact.anyName)
+                                    vm.isBlocked = true // TODO: Add listener on vm instead of this
+                                } label: {
+                                    Label(
+                                        String(localized:"Block \(nrContact.anyName)", comment: "Menu action"), systemImage: "circle.slash")
+                                }
                             }
                             Button {
                                 sendNotification(.reportContact, ReportContact(nrContact: nrContact))
