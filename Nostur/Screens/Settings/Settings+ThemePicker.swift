@@ -89,33 +89,6 @@ struct ThemePicker: View {
     }
 }
 
-//struct ThemePreview: View {
-//    @EnvironmentObject var dim:DIMENSIONS
-//
-//    var body: some View {
-//        VStack(spacing:0) {
-//            ScrollView(.horizontal, showsIndicators: false) {
-//                HStack(spacing:0) {
-//                    TabButton(
-//                        action: { },
-//                        title: String(localized:"Following", comment:"Tab title for feed of people you follow"),
-//                        selected: true)
-//                    Spacer()
-//                    TabButton(
-//                        action: {  },
-//                        title: String(localized:"Explore", comment:"Tab title for the Explore feed"),
-//                        selected: false )
-//                }
-//            }
-//
-//            SmoothListMock {
-//                Text("test")
-//            }
-//
-//        }
-//    }
-//}
-
 import NavigationBackport
 
 struct Settings_ThemePicker_Previews: PreviewProvider {

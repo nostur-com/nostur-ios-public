@@ -187,7 +187,7 @@ struct ZapButtonInner: View {
         }
     }
     
-    private func cancelZap(_ cancellationId:UUID) {
+    private func cancelZap(_ cancellationId: UUID) {
         self.cancellationId = nil
         footerAttributes.cancelZap(cancellationId)
         isZapped = false
