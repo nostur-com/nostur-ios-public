@@ -9,7 +9,6 @@ import SwiftUI
 
 struct EmbedById: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     public let id: String
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false

@@ -11,8 +11,9 @@ import SwiftUI
 struct OtherKnownKinds: View {
     @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
     @ObservedObject private var settings: SettingsStore = .shared
-    @EnvironmentObject private var dim: DIMENSIONS
+    
     private let nrPost: NRPost
     @ObservedObject var nrContact: NRContact
     private let hideFooter: Bool
@@ -39,7 +40,7 @@ struct OtherKnownKinds: View {
                 Spacer()
                 ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                     .onTapGesture {
-                        navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
+                        navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                     }
                 
                 Text(nrContact.anyName)
@@ -49,7 +50,7 @@ struct OtherKnownKinds: View {
                     .layoutPriority(2)
                     .onTapGesture {
                         guard !nxViewingContext.contains(.preview) else { return }
-                        navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
+                        navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                     }
                     .onAppear {
                         // TODO: Check .missingPs instead of .contact?

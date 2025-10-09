@@ -9,8 +9,8 @@ import SwiftUI
 import NavigationBackport
 
 struct RelayMastery: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
     
     public var relays: [CloudRelay]
     
@@ -36,7 +36,7 @@ struct RelayMastery: View {
                             Spacer()
                         }
                     }
-                    .frame(minWidth: dim.listWidth)
+                    .frame(minWidth: availableWidth)
                     .background(theme.listBackground)
                 }
                

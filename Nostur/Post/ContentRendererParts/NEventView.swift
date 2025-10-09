@@ -10,7 +10,6 @@ import SwiftUI
 struct NEventView: View {
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
-    @EnvironmentObject private var dim: DIMENSIONS
     
     public let identifier: ShareableIdentifier
     public var fullWidth: Bool = false

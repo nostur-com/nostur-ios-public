@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ChatConfirmedZapRow: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var vc: ViewingContext
     private var confirmedZap: NRChatConfirmedZap
     @ObservedObject private var nrContact: NRContact

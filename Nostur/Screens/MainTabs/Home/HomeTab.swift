@@ -12,7 +12,6 @@ struct HomeTab: View {
     @EnvironmentObject private var dm: DirectMessageViewModel
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.theme) private var theme
     
     @State private var fg: FollowingGuardian = .shared // If we put this on NosturApp the preview environment keeps loading it

@@ -16,7 +16,7 @@ struct MainFeedsScreen: View {
     
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @Binding var showingOtherContact: NRContact?
     @ObservedObject private var ss: SettingsStore = .shared
     private var selectedTab: String {
@@ -206,9 +206,9 @@ struct MainFeedsScreen: View {
                                         .id("Articles")
                                     }
                                 }
-                                .frame(minWidth: dim.listWidth)
+                                .frame(minWidth: availableWidth)
                             }
-                            .frame(width: dim.listWidth, height: MAINFEEDS_TABS_HEIGHT)
+                            .frame(width: availableWidth, height: MAINFEEDS_TABS_HEIGHT)
                         }
                     }
                     .onAppear {
@@ -352,7 +352,7 @@ struct MainFeedsScreen: View {
         }
 
         .onAppear {
-            ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
+            ScreenSpace.shared.mainTabSize = CGSize(width: availableWidth, height: ScreenSpace.shared.screenSize.height)
             if selectedSubTab == "List" {
                 if let list = lists.first(where: { $0.subscriptionId == selectedListId }) {
                     selectedList = list
@@ -437,13 +437,11 @@ struct MainFeedsScreen: View {
                 if la.account.isNC {
                     WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                         ComposePost(onDismiss: { showingNewNote = false }, kind: self.postType)
-                            .environmentObject(dim)
                     }
                     .environment(\.theme, theme)
                 }
                 else {
                     ComposePost(onDismiss: { showingNewNote = false }, kind: self.postType)
-                        .environmentObject(dim)
                         .environment(\.theme, theme)
                 }
             }

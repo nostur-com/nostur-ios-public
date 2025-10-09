@@ -12,7 +12,7 @@ import HTMLEntities
 
 struct BigLinkPreview: View {
     @Environment(\.theme) private var theme
-    @Environment(\.dim) private var dim
+    @Environment(\.availableWidth) private var availableWidth
     
     public let url: URL
     public var autoload: Bool = false
@@ -29,7 +29,7 @@ struct BigLinkPreview: View {
                     if let image = tags["image"], image.prefix(7) != "http://", let imageUrl = URL(string: image) {
                         MediaContentView(
                             galleryItem: GalleryItem(url: imageUrl),
-                            availableWidth: dim.listWidth,
+                            availableWidth: availableWidth,
                             placeholderAspect: 16/9,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,

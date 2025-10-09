@@ -9,8 +9,8 @@ import SwiftUI
 
 struct NRPostHeaderContainer: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
     private let nrPost: NRPost
-    @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject var settings: SettingsStore = .shared
     @ObservedObject var nrContact: NRContact
     private var singleLine: Bool = true
@@ -34,7 +34,7 @@ struct NRPostHeaderContainer: View {
     
     private func nameTapped() {
         guard !nxViewingContext.contains(.preview) else { return }
-        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
+        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
     }
 }
 

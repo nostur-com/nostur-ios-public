@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReadMoreButton: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     var nrPost:NRPost
     
@@ -25,7 +25,7 @@ struct ReadMoreButton: View {
             }
             Button(String(localized: "Show", comment: "Button to show more items in a post")) {
                 guard !nxViewingContext.contains(.preview) else { return }
-                navigateTo(nrPost, context: dim.id)
+                navigateTo(nrPost, context: containerID)
             }
                 .buttonStyle(.bordered)
         }
@@ -36,7 +36,7 @@ struct ReadMoreButton: View {
         )
         .onTapGesture {
             guard !nxViewingContext.contains(.preview) else { return }
-            navigateTo(nrPost, context: dim.id)
+            navigateTo(nrPost, context: containerID)
         }
     }
 }

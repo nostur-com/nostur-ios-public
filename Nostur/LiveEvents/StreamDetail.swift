@@ -16,7 +16,7 @@ struct StreamDetail: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @Environment(\.theme) private var theme
     @ObservedObject public var liveEvent: NRLiveEvent
 
@@ -25,7 +25,7 @@ struct StreamDetail: View {
     @State private var rows = [GridItem(.fixed(80)), GridItem(.fixed(80))]
     
     private var videoWidth: CGFloat {
-        dim.listWidth + (DIMENSIONS.BOX_PADDING*2)
+        availableWidth + (DIMENSIONS.BOX_PADDING*2)
     }
     
     // Zap sheet NON-NWC
@@ -207,7 +207,7 @@ struct StreamDetail: View {
                 }
                 .frame(minHeight: geo.size.height)
                 .onAppear {
-                    vc = ViewingContext(availableWidth: min(600, dim.listWidth - 10), fullWidthImages: false, viewType: .row)
+                    vc = ViewingContext(availableWidth: min(600, availableWidth - 10), fullWidthImages: false, viewType: .row)
                 }
             }
             .edgesIgnoringSafeArea(.bottom)

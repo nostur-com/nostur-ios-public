@@ -20,10 +20,10 @@ struct MediaUploadProgress: View {
     }
 }
 
-struct Bar:View {
+struct Bar: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim:DIMENSIONS
-    @ObservedObject public var bag:MediaRequestBag
+    @Environment(\.availableWidth) private var availableWidth
+    @ObservedObject public var bag: MediaRequestBag
     
     var body: some View {
         Group {
@@ -32,7 +32,7 @@ struct Bar:View {
                 theme.secondaryBackground
                     .overlay(alignment: .leading) {
                         theme.accent
-                            .frame(width: ((dim.listWidth * Double(percentage ?? 0) / 100) * 0.7)) // to max 70%
+                            .frame(width: ((availableWidth * Double(percentage ?? 0) / 100) * 0.7)) // to max 70%
                             .animation(.easeInOut, value: percentage)
                     }
                     .overlay {
@@ -42,7 +42,7 @@ struct Bar:View {
                 theme.secondaryBackground
                     .overlay(alignment: .leading) {
                         theme.accent
-                            .frame(width: (dim.listWidth * 0.7) + ((dim.listWidth * Double(percentage ?? 0) / 100) * 0.3)) // the remaining 30%
+                            .frame(width: (availableWidth * 0.7) + ((availableWidth * Double(percentage ?? 0) / 100) * 0.3)) // the remaining 30%
                             .animation(.easeInOut, value: percentage)
                     }
                     .overlay {
@@ -124,5 +124,4 @@ struct Bar:View {
     }
     return MediaUploadProgressPreview()
         .environmentObject(Themes.default)
-        .environmentObject(DIMENSIONS())
 }

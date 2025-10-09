@@ -9,7 +9,6 @@ import SwiftUI
 import NavigationBackport
 
 struct DirectMessageRows: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     let pubkey: String
@@ -22,7 +21,6 @@ struct DirectMessageRows: View {
                 NBNavigationLink(value: conv) {
                     AppEnvironment(la: la) {
                         ConversationRowView(conv)
-                            .environmentObject(dim)
                     }
                 }
                 .nbUseNavigationStack(.never)

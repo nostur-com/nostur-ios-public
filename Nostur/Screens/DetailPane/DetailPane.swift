@@ -12,7 +12,6 @@ import NostrEssentials
 
 struct DetailPane: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     @StateObject private var tm = DetailTabsModel()
     @State private var offsetX = 200.0
 
@@ -23,12 +22,6 @@ struct DetailPane: View {
     var body: some View {
         
         VStack(spacing:0) {
-            Color.clear.frame(height: 0)
-                .modifier(SizeModifier())
-                .onPreferenceChange(SizePreferenceKey.self) { size in
-                    guard size.width > 0 else { return }
-                    dim.listWidth = size.width
-                }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing:0) {
@@ -350,6 +343,11 @@ struct DetailPane: View {
                                 }
                                 .opacity(index == tm.tabs.count-1 ? 0 : 1)
                         }
+                        
+//                        if tm.tabs.count > 8 {
+//                            Button("Close all tabs", systemImage: "rectangle.stack.badge.minus", action: closeAllTabs)
+//                                .labelStyle(.iconOnly)
+//                        }
                         Spacer()
                     }
                 }
@@ -473,7 +471,6 @@ struct DetailPane: View {
                 ForEach(tm.tabs) { tab in
                     if !tab.suspended {
                         DetailTab(tab: tab)
-                            .environmentObject(dim)
                             .environmentObject(tm)
                             .opacity(tm.selected == tab ? 1 : 0)
                             .id(tab.id)
@@ -584,6 +581,10 @@ struct DetailPane: View {
             }
         }
     }
+    
+    private func closeAllTabs() {
+        
+    }
 }
 
 struct DetailPane_Previews: PreviewProvider {
@@ -676,3 +677,71 @@ struct DuplicateRepliesTest_Previews: PreviewProvider {
 
 
 
+@available(iOS 17.0, *)
+#Preview("DetailPane with tabs") {
+    @Previewable @State var tabs: [TabModel] = []
+    @Previewable @State var selected: TabModel? = nil
+    
+    ScrollViewReader { proxy in
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                ForEach(tabs.indices, id:\.self) { index in
+                    // TODO: Clean up / Refactor below:
+                    NosturTabButton(
+                        isSelected: selected == tabs[index],
+                        onSelect: {
+                            
+                        },
+                        onClose: {
+                            
+                        },
+                        tab: tabs[index]
+                    )
+                    .padding(.leading, index == 0 ? 30 : 0)
+                    .id(tabs[index].id)
+                }
+                
+                if tabs.count > 8 {
+                    Button {
+                        // TODO: prompot. close all 49 tabs?
+                        tabs = []
+                    } label: {
+                        Label("Close All Tabs", systemImage: "xmark.app.fill") // ✅ clear "close everything" vibe
+                    }
+                    .labelStyle(.iconOnly)
+                }
+                
+                Spacer()
+            }
+        }
+    }
+    .onAppear {
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e732c", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7321", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7322", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7323", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7324", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7325", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7326", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7327", navigationTitle: "Testing"), navId: "Default"))
+        tabs.append(TabModel(notePath: NotePath(id: "f91bfc37fe82df51397d84a6443c0a6f94c8bfdf73f9a09db161f88f075e7328", navigationTitle: "Testing"), navId: "Default"))
+    }
+}
+
+
+struct CloseAllTabs: View {
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+                        Image(systemName: "square.stack.fill")
+                            .resizable()
+                            .scaledToFit()
+                        
+                        Image(systemName: "xmark.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .scaleEffect(0.4) // Proportional scaling for xmark
+                            .offset(x: 0.15, y: -0.15) // Relative offset for balance
+                    }
+       .accessibilityLabel("Close all tabs")
+   }
+}

@@ -10,7 +10,6 @@ import NukeUI
 import NavigationBackport
 
 struct AppRow: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.theme) private var theme
     @Environment(\.openURL) private var openURL
     public var app: SuggestedApp
@@ -75,7 +74,6 @@ struct AppRow: View {
                     })
                     .padding()
                     .environment(\.theme, theme)
-                    .environmentObject(dim)
                 }
             }
             .nbUseNavigationStack(.never)
@@ -117,6 +115,5 @@ struct AppRow: View {
             )
         ]))
             .padding(10)
-            .environmentObject(DIMENSIONS.shared)
     }
 }

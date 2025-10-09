@@ -14,27 +14,25 @@ import Combine
 struct ContentRenderer: View { // VIEW things
     @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
+    
     private let nrPost: NRPost
     private let isDetail: Bool
     private let fullWidth: Bool
-    private let availableWidth: CGFloat
     private let forceAutoload: Bool
     private var zoomableId: String
-    @StateObject private var childDIM: DIMENSIONS
     @Binding var showMore: Bool
     @State private var contentElements: [ContentElement]
     
-    init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, availableWidth: CGFloat, forceAutoload: Bool = false, zoomableId: String = "Default") {
+    init(nrPost: NRPost, showMore: Binding<Bool>, isDetail: Bool = false, fullWidth: Bool = false, forceAutoload: Bool = false, zoomableId: String = "Default") {
         self.isDetail = isDetail
         self.nrPost = nrPost
         self.fullWidth = fullWidth
-        self.availableWidth = availableWidth
         _contentElements = State(wrappedValue: isDetail ? nrPost.contentElementsDetail : nrPost.contentElements)
         _showMore = showMore
         self.forceAutoload = forceAutoload
         self.zoomableId = zoomableId
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
     }
     
     private var shouldAutoload: Bool {
@@ -47,12 +45,10 @@ struct ContentRenderer: View { // VIEW things
                 switch element {
                 case .nrPost(let nrPost):
                     KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
-                        .environmentObject(childDIM)
                         .padding(.vertical, 10)
 
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, fullWidth: fullWidth, forceAutoload: shouldAutoload)
-                        .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
@@ -61,7 +57,6 @@ struct ContentRenderer: View { // VIEW things
                 case .naddr1(let identifier):
                     NaddrView(naddr1: identifier.bech32string, fullWidth: fullWidth)
 //                        .frame(minHeight: 75)
-                        .environmentObject(childDIM)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
@@ -85,7 +80,6 @@ struct ContentRenderer: View { // VIEW things
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
 //                            .frame(minHeight: 75)
-                            .environmentObject(childDIM)
 //                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
 //                            .withoutAnimation()
@@ -93,7 +87,7 @@ struct ContentRenderer: View { // VIEW things
                             .onTapGesture {
                                 guard !nxViewingContext.contains(.preview) else { return }
                                 guard !isDetail else { return }
-                                navigateTo(nrPost, context: childDIM.id)
+                                navigateTo(nrPost, context: containerID)
                             }
                     }
                     else {
@@ -103,7 +97,6 @@ struct ContentRenderer: View { // VIEW things
                 case .noteHex(let hex):
                     EmbedById(id: hex, fullWidth: fullWidth, forceAutoload: shouldAutoload)
 //                        .frame(minHeight: 75)
-                        .environmentObject(childDIM)
 //                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
@@ -111,7 +104,7 @@ struct ContentRenderer: View { // VIEW things
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
-                            navigateTo(nrPost, context: childDIM.id)
+                            navigateTo(nrPost, context: containerID)
                         }
                     
                 case .code(let code): // For text notes
@@ -120,7 +113,7 @@ struct ContentRenderer: View { // VIEW things
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
-                            navigateTo(nrPost, context: childDIM.id)
+                            navigateTo(nrPost, context: containerID)
                         }
                     
                 case .text(let attributedStringWithPs): // For text notes
@@ -136,7 +129,7 @@ struct ContentRenderer: View { // VIEW things
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: $showMore, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
-                            navigateTo(nrPost, context: childDIM.id)
+                            navigateTo(nrPost, context: containerID)
                     })
                     .equatable()
                     
@@ -145,7 +138,7 @@ struct ContentRenderer: View { // VIEW things
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
-                            navigateTo(nrPost, context: childDIM.id)
+                            navigateTo(nrPost, context: containerID)
                         }
                     
                 case .lnbc(let text):
@@ -161,9 +154,9 @@ struct ContentRenderer: View { // VIEW things
                         url: mediaContent.url,
                         pubkey: nrPost.pubkey,
                         nrPost: nrPost,
-                        availableWidth: availableWidth + (fullWidth ? 20 : 0),
                         autoload: shouldAutoload
                     )
+                    .environment(\.availableWidth, availableWidth + (fullWidth ? 20 : 0))
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     
@@ -245,7 +238,7 @@ struct ContentRenderer: View { // VIEW things
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
-                            navigateTo(nrPost, context: childDIM.id)
+                            navigateTo(nrPost, context: containerID)
                         }
                 }
             }
@@ -256,9 +249,6 @@ struct ContentRenderer: View { // VIEW things
                     self.contentElements = self.nrPost.contentElementsDetail
                 }
             }
-        }
-        .onAppear {
-            childDIM.id = dim.id
         }
     }
 }
@@ -275,7 +265,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("473f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true))
                 }
             }
         }
@@ -294,7 +284,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true))
                 }
             }
         }
@@ -313,7 +303,7 @@ struct ContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true))
                 }
             }
         }

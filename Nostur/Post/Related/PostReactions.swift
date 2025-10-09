@@ -12,7 +12,7 @@ import NavigationBackport
 struct PostReactions: View {
     public var eventId: String
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
     @StateObject private var model = PostReactionsModel()
 
     @State private var backlog = Backlog(backlogDebugName: "PostReactions")
@@ -32,7 +32,7 @@ struct PostReactions: View {
                             HStack(alignment: .top) {
                                 ObservedPFP(nrContact: nrPost.contact)
                                     .onTapGesture {
-                                        navigateTo(ContactPath(key: nrPost.pubkey), context: dim.id)
+                                        navigateTo(ContactPath(key: nrPost.pubkey), context: containerID)
                                     }
                                 VStack(alignment: .leading) {
                                     NRPostHeaderContainer(nrPost: nrPost)
@@ -47,7 +47,7 @@ struct PostReactions: View {
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                navigateTo(ContactPath(key: nrPost.pubkey), context: dim.id)
+                                navigateTo(ContactPath(key: nrPost.pubkey), context: containerID)
                             }
                             .id(nrPost.id)
                         }

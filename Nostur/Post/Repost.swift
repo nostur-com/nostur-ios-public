@@ -166,7 +166,7 @@ struct Repost: View {
 }
 
 struct RepostHeader: View {
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
 
     @ObservedObject public var nrContact: NRContact
     
@@ -184,7 +184,7 @@ struct RepostHeader: View {
                 .font(.subheadline)
                 .fontWeightBold()
                 .onTapGesture {
-                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                 }
 
             
@@ -193,7 +193,7 @@ struct RepostHeader: View {
         }
         .foregroundColor(.gray)
         .onTapGesture {
-            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
         }
         .padding(.leading, 30)
     }

@@ -9,9 +9,8 @@ import SwiftUI
 
 // MEDIA ON USER PROFILE SCREEN
 struct ProfileMediaView: View {
+    @Environment(\.availableWidth) private var availableWidth
     public let pubkey: String
-    
-    @EnvironmentObject private var dim: DIMENSIONS
     @StateObject private var vm = ProfileGalleryViewModel()
     
     private static let initialColumns = 3
@@ -44,20 +43,20 @@ struct ProfileMediaView: View {
                 ForEach(Array(stride(from: 0, to: vm.items.count, by: 3)), id: \.self) { index in
                     HStack(spacing: GUTTER) {
                         Group {
-                            GalleryGridItemView(size: ((dim.listWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index)
+                            GalleryGridItemView(size: ((availableWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index)
                                 .onBecomingVisible {
                                     vm.fetchMoreIfNeeded(index)
                                 }
                             
                             if (index+1) < vm.items.count {
-                                GalleryGridItemView(size: ((dim.listWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 1)
+                                GalleryGridItemView(size: ((availableWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 1)
                             }
                             if (index+2) < vm.items.count {
-                                GalleryGridItemView(size: ((dim.listWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 2)
+                                GalleryGridItemView(size: ((availableWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index + 2)
                             }
                         }
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: ((dim.listWidth - GUTTER*2) / 3.0), height: ((dim.listWidth - GUTTER*2) / 3.0))
+                        .frame(width: ((availableWidth - GUTTER*2) / 3.0), height: ((availableWidth - GUTTER*2) / 3.0))
                         .clipped()
                         .aspectRatio(1, contentMode: .fit)
                         .padding(.bottom, GUTTER)

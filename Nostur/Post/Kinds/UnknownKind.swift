@@ -10,7 +10,6 @@ import SwiftUI
 struct UnknownKind: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact

@@ -70,8 +70,8 @@ struct ProfileCardByPubkey: View {
 }
 
 struct ProfileRow: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject private var fg: FollowingGuardian = .shared
      
@@ -157,7 +157,7 @@ struct ProfileRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             guard tapEnabled else { return }
-            navigateTo(ContactPath(key: contact.pubkey), context: dim.id)
+            navigateTo(ContactPath(key: contact.pubkey), context: containerID)
         }
         .task { [weak contact] in
             guard let contact else { return }
@@ -188,8 +188,8 @@ struct ProfileRow: View {
 }
 
 struct NRProfileRow: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var la: LoggedInAccount
     @ObservedObject private var fg: FollowingGuardian = .shared
      
@@ -276,7 +276,7 @@ struct NRProfileRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             guard tapEnabled else { return }
-            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
         }
         .onAppear {
             nrContact.runImposterCheck()

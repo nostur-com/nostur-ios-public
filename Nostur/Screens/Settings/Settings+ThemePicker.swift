@@ -128,7 +128,5 @@ struct Settings_ThemePicker_Previews: PreviewProvider {
             }
         }
         .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
-        .environmentObject(DIMENSIONS.shared)
-        .environmentObject(Themes.default)
     }
 }

@@ -15,7 +15,7 @@ struct LiveEventDetail: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @Environment(\.theme) private var theme
     @ObservedObject public var liveEvent: NRLiveEvent
     @ObservedObject public var liveKitVoiceSession: LiveKitVoiceSession = .shared
@@ -132,7 +132,7 @@ struct LiveEventDetail: View {
                     }
                 }
                 
-                vc = ViewingContext(availableWidth: min(600, dim.listWidth - 20), fullWidthImages: false, viewType: .row)
+                vc = ViewingContext(availableWidth: min(600, availableWidth - 20), fullWidthImages: false, viewType: .row)
                 liveEvent.fetchPresenceFromRelays()
                 if liveEvent.liveKitConnectUrl != nil && !liveKitVoiceSession.listenAnonymously {
                     account = Nostur.account()
@@ -520,14 +520,14 @@ struct LiveEventDetail: View {
     @ViewBuilder
     private var videoStreamView: some View {
         if liveEvent.streamHasEnded, let recordingUrl = liveEvent.recordingUrl, let url = URL(string: recordingUrl) {
-            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, thumbnail: liveEvent.thumbUrl)
+            EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, autoload: true, thumbnail: liveEvent.thumbUrl)
         }
         else if liveEvent.streamHasEnded {
             EmptyView()
         }
         else if let url = liveEvent.url {
             if url.absoluteString.suffix(5) == ".m3u8" {
-                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, availableWidth: dim.listWidth, autoload: true, thumbnail: liveEvent.thumbUrl)
+                EmbeddedVideoView(url: url, pubkey: liveEvent.pubkey, autoload: true, thumbnail: liveEvent.thumbUrl)
             }
             else if liveEvent.liveKitConnectUrl == nil {
                 Button {

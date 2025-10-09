@@ -10,8 +10,8 @@ import NukeUI
 
 struct AppDetail: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.openURL) private var openURL
+    @Environment(\.containerID) private var containerID
     public var app: SuggestedApp
     private var appName: String { app.name }
     private var appDescription: String? { app.description }
@@ -76,7 +76,7 @@ struct AppDetail: View {
                     ForEach(recommendedByPFPs.prefix(4).indices, id:\.self) { index in
                         MiniPFP(pictureUrl: recommendedByPFPs[index].1, size: 30.0)
                             .onTapGesture {
-                                navigateTo(ContactPath(key: recommendedByPFPs[index].0), context: dim.id)
+                                navigateTo(ContactPath(key: recommendedByPFPs[index].0), context: containerID)
                             }
                             .id(index)
                             .offset(x: CGFloat(index) * -10 + (recommendedByPFPs.count > 4 ? 20 : 10))
@@ -228,5 +228,4 @@ struct AppDetail: View {
     }
     .padding()
     .background(Color.red)
-    .environmentObject(DIMENSIONS.shared)
 }

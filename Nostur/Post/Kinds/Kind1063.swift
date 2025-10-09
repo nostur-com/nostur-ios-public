@@ -10,7 +10,7 @@ import SwiftUI
 struct Kind1063: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -31,13 +31,13 @@ struct Kind1063: View {
         // FULL WIDTH IS OFF
         
         // LIST OR LIST PARENT
-        if !isDetail { return fullWidth ? (dim.listWidth - 20) : dim.availableNoteRowWidth }
+        if !isDetail { return fullWidth ? (availableWidth - 20) : DIMENSIONS.availableNoteRowWidth(availableWidth) }
         
         // DETAIL
-        if isDetail && !isReply { return fullWidth ? dim.availablePostDetailRowImageWidth() : dim.availablePostDetailImageWidth() }
+        if isDetail && !isReply { return fullWidth ? DIMENSIONS.availablePostDetailRowImageWidth(availableWidth) : availableWidth }
         
         // DETAIL PARENT OR REPLY
-        return dim.availablePostDetailRowImageWidth()
+        return DIMENSIONS.availablePostDetailRowImageWidth(availableWidth)
     }
     
     private var fileMetadata: KindFileMetadata
@@ -59,12 +59,12 @@ struct Kind1063: View {
         self.fileMetadata = fileMetadata
     }
     
-    private var availableWidth: CGFloat {
+    private var availableWidth_: CGFloat {
         if isDetail || fullWidth || isEmbedded {
-            return dim.listWidth - 20
+            return availableWidth - 20
         }
         
-        return dim.availableNoteRowImageWidth()
+        return DIMENSIONS.availableNoteRowImageWidth(availableWidth)
     }
     
     var body: some View {
@@ -105,7 +105,8 @@ struct Kind1063: View {
                     
             }
             if is1063Video(nrPost) {
-                EmbeddedVideoView(url: URL(string: fileMetadata.url)!, pubkey: nrPost.pubkey, nrPost: nrPost, availableWidth: availableWidth + (fullWidth ? +20 : 0), autoload: shouldAutoload)
+                EmbeddedVideoView(url: URL(string: fileMetadata.url)!, pubkey: nrPost.pubkey, nrPost: nrPost, autoload: shouldAutoload)
+                    .environment(\.availableWidth, availableWidth_ + (fullWidth ? +20 : 0))
                     .padding(.horizontal, fullWidth ? -10 : 0)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -120,14 +121,14 @@ struct Kind1063: View {
                         dimensions: fileMetadata.size,
                         blurhash: fileMetadata.blurhash
                     ),
-                    availableWidth: availableWidth + (fullWidth ? +20 : 0),
+                    availableWidth: availableWidth_ + (fullWidth ? +20 : 0),
                     maxHeight: 800,
                     contentMode: .fit,
                     autoload: shouldAutoload,
                     isNSFW: nrPost.isNSFW
                 )
                 .padding(.horizontal, fullWidth ? -10 : 0)
-//                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth, fullWidth: fullWidth, autoload: shouldAutoload)
+//                SingleMediaViewer(url: URL(string: url)!, pubkey: nrPost.pubkey, imageWidth: availableWidth_, fullWidth: fullWidth, autoload: shouldAutoload)
 //                    .padding(.horizontal, fullWidth ? -10 : 0)
 ////                    .padding(.horizontal, -10)
 ////                    .fixedSize(horizontal: false, vertical: true)

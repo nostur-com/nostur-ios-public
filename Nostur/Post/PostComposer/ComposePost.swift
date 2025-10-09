@@ -25,7 +25,7 @@ struct ComposePost: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     
     @StateObject private var vm = NewPostModel()
     
@@ -53,9 +53,6 @@ struct ComposePost: View {
         
         return true
     }
-    
-    // No need to refresh previewDIM, just pass to PostPreview to fix random width bug
-    @State private var previewDIM = DIMENSIONS()
     
     @State private var didLoad = false
     
@@ -289,9 +286,7 @@ struct ComposePost: View {
                                                 .environment(\.nxViewingContext, [.preview, .selectableText, .postEmbedded])
                                                 .fixedSize(horizontal: false, vertical: true)
                                                 .onTapGesture { }
-                                                .environmentObject(
-                                                    DIMENSIONS.embeddedDim(availableWidth: geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20))
-                                                )
+                                                .environment(\.availableWidth, geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20))
                                                 .padding(.leading, SettingsStore.shared.fullWidthImages ? 0 : DIMENSIONS.ROW_PFP_SPACE)
                                         }
                                         
@@ -329,7 +324,6 @@ struct ComposePost: View {
                                 PostPreview(nrPost: nrPost, kind: kind, replyTo: replyTo, quotePost: quotePost, vm: vm, onDismiss: { onDismiss() })
                                     .environment(\.theme, theme)
                                     .environmentObject(la)
-                                    .environmentObject(previewDIM)
                                     .onDisappear {
                                         vm.previewNRPost = nil
                                     }
@@ -349,9 +343,6 @@ struct ComposePost: View {
                                 selectedVideoURL = nil
                             }
                         })
-                        .onAppear {
-                            previewDIM.listWidth = geo.size.width != 0 ? geo.size.width : dim.listWidth
-                        }
                     }
                     .overlay {
                         ZStack {

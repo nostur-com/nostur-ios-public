@@ -10,7 +10,7 @@ import SwiftUI
 struct LiveEventRowView: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     private var nrPost: NRPost
     @ObservedObject private var liveEvent: NRLiveEvent
     private var fullWidth: Bool = false
@@ -20,10 +20,6 @@ struct LiveEventRowView: View {
     
     private var shouldAutoload: Bool {
         return !liveEvent.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(liveEvent) || nxViewingContext.contains(.screenshot))
-    }
-    
-    private var availableWidth: CGFloat {
-        dim.listWidth - 40
     }
     
     init(nrPost: NRPost, liveEvent: NRLiveEvent, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false) {
@@ -73,7 +69,7 @@ struct LiveEventRowView: View {
             if let image = liveEvent.thumbUrl {
                 MediaContentView(
                     galleryItem: GalleryItem(url: image, pubkey: nrPost.pubkey, eventId: nrPost.id),
-                    availableWidth: availableWidth + (fullWidth ? 40 : 20),
+                    availableWidth: (availableWidth - 40) + (fullWidth ? 40 : 20),
                     placeholderAspect: 16/9,
                     maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                     contentMode: .fit,

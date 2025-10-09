@@ -10,7 +10,7 @@ import SwiftUI
 struct Kind20: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -31,13 +31,13 @@ struct Kind20: View {
         // FULL WIDTH IS OFF
         
         // LIST OR LIST PARENT
-        if !isDetail { return fullWidth ? (dim.listWidth - 20) : dim.availableNoteRowWidth }
+        if !isDetail { return fullWidth ? (availableWidth - 20) : DIMENSIONS.availableNoteRowWidth(availableWidth) }
         
         // DETAIL
-        if isDetail && !isReply { return fullWidth ? dim.availablePostDetailRowImageWidth() : dim.availablePostDetailImageWidth() }
+        if isDetail && !isReply { return fullWidth ? DIMENSIONS.availablePostDetailRowImageWidth(availableWidth) : availableWidth }
         
         // DETAIL PARENT OR REPLY
-        return dim.availablePostDetailRowImageWidth()
+        return DIMENSIONS.availablePostDetailRowImageWidth(availableWidth)
     }
     
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
@@ -98,7 +98,7 @@ struct Kind20: View {
             VStack {
                     MediaContentView(
                         galleryItem: galleryItem,
-                        availableWidth: dim.listWidth,
+                        availableWidth: availableWidth,
                         placeholderAspect: 1.0,
                         maxHeight: 800,
                         contentMode: .fit,
@@ -119,7 +119,8 @@ struct Kind20: View {
                     }
                 
                 
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: true, availableWidth: dim.availableNoteRowImageWidth(), forceAutoload: shouldAutoload)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: true, forceAutoload: shouldAutoload)
+                    .environment(\.availableWidth, DIMENSIONS.availableNoteRowImageWidth(availableWidth))
                     .padding(.vertical, 10)
             }
         }
@@ -133,13 +134,14 @@ struct Kind20: View {
     private var detailContent: some View {
         VStack {
             if nrPost.galleryItems.count > 1 {
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages)
+                    .environment(\.availableWidth, availableWidth - 20)
                     .padding(.top, 10)
             }
             ForEach(nrPost.galleryItems) { galleryItem in
                 MediaContentView(
                     galleryItem: galleryItem,
-                    availableWidth: dim.listWidth,
+                    availableWidth: availableWidth,
                     placeholderAspect: 1.0,
                     contentMode: .fit,
                     galleryItems: nrPost.galleryItems,
@@ -150,7 +152,8 @@ struct Kind20: View {
             }
             
             if nrPost.galleryItems.count < 2 {
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages, availableWidth: dim.listWidth - 20)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: settings.fullWidthImages)
+                    .environment(\.availableWidth, availableWidth - 20)
                     .padding(.vertical, 10)
             }
         }

@@ -10,7 +10,7 @@ import SwiftUI
 // Zap button uses NWC if available, else just falls back to the old LightningButton
 struct ProfileZapButton: View {
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     private let er: ExchangeRateModel = .shared // Not Observed for performance
     
     @ObservedObject var nrContact: NRContact
@@ -131,7 +131,7 @@ struct ProfileZapButton: View {
         let impactMed = UIImpactFeedbackGenerator(style: .medium)
         impactMed.impactOccurred()
         let selectedAmount = amount ?? ss.defaultZapAmount
-        sendNotification(.lightningStrike, LightningStrike(location:strikeLocation, amount:selectedAmount, sideStrikeWidth: (dim.listWidth - (DIMENSIONS.PFP_BIG + 20.0))))
+        sendNotification(.lightningStrike, LightningStrike(location:strikeLocation, amount:selectedAmount, sideStrikeWidth: (availableWidth - (DIMENSIONS.PFP_BIG + 20.0))))
         withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
             activeColor = .yellow
         }

@@ -9,16 +9,14 @@ import SwiftUI
 
 struct AvailableWidthContainer<Content: View>: View {
     
-    @StateObject private var dim = DIMENSIONS()
+    @State private var availableWidth: CGFloat = UIScreen.main.bounds.width
     
-    // Need this or .listWidth won't be set until next resize
+    // Need this or .availableWidth won't be set until next resize
     @State private var ready = false
-    
-    private let id: String // id is passed to DIMENSIONS so we can do different things based in which id ("context") we are (if dim.id == ....)
+
     private let content: Content
     
-    init(id: String = "Default", @ViewBuilder content: () -> Content) {
-        self.id = id
+    init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
     
@@ -26,10 +24,10 @@ struct AvailableWidthContainer<Content: View>: View {
         GeometryReader { geo in
             if ready {
                 content
-                    .environmentObject(dim)
+                    .environment(\.availableWidth, availableWidth)
                     .onChange(of: geo.size.width) { newWidth in
-                        if dim.listWidth != newWidth {
-                            dim.listWidth = newWidth
+                        if availableWidth != newWidth {
+                            availableWidth = newWidth
                         }
                     }
             }
@@ -38,8 +36,7 @@ struct AvailableWidthContainer<Content: View>: View {
                     .frame(height: 1)
                     .onAppear(perform: {
                         ready = true
-                        dim.id = self.id
-                        dim.listWidth = geo.size.width
+                        availableWidth = geo.size.width
                     })
             }
         }

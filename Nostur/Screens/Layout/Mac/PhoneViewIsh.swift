@@ -11,9 +11,9 @@ import NavigationBackport
 // Copy pasta from MainFeedsScreen, removed "Explore" and other stuff, just keep "Following" feed
 struct PhoneViewIsh: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.availableWidth) private var availableWidth
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     @ObservedObject private var ss: SettingsStore = .shared
     
     @State private var didCreate = false
@@ -56,7 +56,7 @@ struct PhoneViewIsh: View {
         }
         .nbUseNavigationStack(.never)
         .onAppear {
-            ScreenSpace.shared.mainTabSize = CGSize(width: dim.listWidth, height: ScreenSpace.shared.screenSize.height)
+            ScreenSpace.shared.mainTabSize = CGSize(width: availableWidth, height: ScreenSpace.shared.screenSize.height)
             guard !didCreate else { return }
             didCreate = true
             createFollowingFeed(la.account)

@@ -10,7 +10,7 @@ import SwiftUI
 struct Kind1: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth // was dim (for dim.listWidth)
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -29,12 +29,12 @@ struct Kind1: View {
     private let THREAD_LINE_OFFSET = 24.0
     
     
-    private var availableWidth: CGFloat {
+    private var availableWidth_: CGFloat { // dim.listWidth is now .availableWidth, so now this one is .availableWidth_
         if isDetail || fullWidth || isEmbedded {
-            return dim.listWidth - 20
+            return availableWidth - 20
         }
         
-        return dim.availableNoteRowImageWidth()
+        return DIMENSIONS.availableNoteRowImageWidth(availableWidth)
     }
     
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
@@ -87,16 +87,17 @@ struct Kind1: View {
                         .fontWeight(.bold)
                         .lineLimit(3)
                 }
-                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                     Image(systemName: "exclamationmark.triangle.fill")
                 }
                 
 //                Color.purple
 //                    .frame(height: 30)
-//                    .overlay { Text(availableWidth.description) }
+//                    .overlay { Text(availableWidth_.description) }
 //                    .debugDimensions("Kind1.normalView")
                 
-                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload)
+                    .environment(\.availableWidth, availableWidth_)
                     .frame(maxWidth: .infinity, alignment:.leading)
             }
             else {
@@ -109,16 +110,17 @@ struct Kind1: View {
                         .fontWeight(.bold)
                         .lineLimit(3)
                 }
-                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                     Image(systemName: "exclamationmark.triangle.fill")
                 }
                 
 //                Color.purple
 //                    .frame(height: 30)
-//                    .overlay { Text(availableWidth.description) }
+//                    .overlay { Text(availableWidth_.description) }
 //                    .debugDimensions("Kind1.normalView2")
                 
-                ContentRenderer(nrPost: nrPost, showMore: $showMore, isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload)
+                ContentRenderer(nrPost: nrPost, showMore: $showMore, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload)
+                    .environment(\.availableWidth, availableWidth_)
 //                    .fixedSize(horizontal: false, vertical: true) // <-- this or child .fixedSizes will try to render outside frame and cutoff (because clipped() below)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
@@ -181,11 +183,12 @@ struct Kind1: View {
                     .fontWeight(.bold)
                     .lineLimit(3)
             }
-            if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+            if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             
-            ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: shouldAutoload)
+            ContentRenderer(nrPost: nrPost, showMore: $showMore,  isDetail: false, fullWidth: fullWidth, forceAutoload: shouldAutoload)
+                .environment(\.availableWidth, availableWidth_)
                 .frame(minHeight: nrPost.sizeEstimate.rawValue, maxHeight: clipBottomHeight, alignment: .top)
                 .clipBottom(height: clipBottomHeight)
                 .overlay(alignment: .bottomTrailing) {

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ChatPendingZapRow: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var vc: ViewingContext
     private var pendingZap: NRChatPendingZap
     @ObservedObject private var nrContact: NRContact

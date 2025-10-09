@@ -9,8 +9,9 @@ import SwiftUI
 
 struct PostLayout<Content: View, TitleContent: View>: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -30,13 +31,13 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         // FULL WIDTH IS OFF
         
         // LIST OR LIST PARENT
-        if !isDetail { return fullWidth ? (dim.listWidth - 20) : dim.availableNoteRowWidth }
+        if !isDetail { return fullWidth ? (availableWidth - 20) : DIMENSIONS.availableNoteRowWidth(availableWidth) }
         
         // DETAIL
-        if isDetail && !isReply { return fullWidth ? dim.availablePostDetailRowImageWidth() : dim.availablePostDetailImageWidth() }
+        if isDetail && !isReply { return fullWidth ? DIMENSIONS.availablePostDetailRowImageWidth(availableWidth) : availableWidth }
         
         // DETAIL PARENT OR REPLY
-        return dim.availablePostDetailRowImageWidth()
+        return DIMENSIONS.availablePostDetailRowImageWidth(availableWidth)
     }
     
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
@@ -176,10 +177,10 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     guard !nxViewingContext.contains(.preview) else { return }
                     if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
                         if let status = liveEvent.status, status == "planned" {
-                            navigateTo(liveEvent, context: dim.id)
+                            navigateTo(liveEvent, context: containerID)
                         }
                         else if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
-                            navigateTo(liveEvent, context: dim.id)
+                            navigateTo(liveEvent, context: containerID)
                         }
                         else {
                             // LOAD NEST
@@ -212,7 +213,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
-                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost,  context: dim.id)
+                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost,  context: containerID)
                 }
         }
     }
@@ -222,7 +223,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         ZappablePFP(pubkey: nrPost.pubkey, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
             .frame(width: 20.0, height: 20.0)
             .onTapGesture {
-                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, context: dim.id)
+                navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, context: containerID)
             }
     }
     
@@ -246,7 +247,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 .layoutPriority(2)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
-                    navigateTo(nrPost, context: dim.id)
+                    navigateTo(nrPost, context: containerID)
                 }
                 .onAppear {
                     guard !nrPost.missingPs.isEmpty else { return }

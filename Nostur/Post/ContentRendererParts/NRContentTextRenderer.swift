@@ -21,17 +21,16 @@ struct NRContentTextRenderer: View, Equatable {
     
     public let attributedStringWithPs: AttributedStringWithPs
     @Binding public var showMore: Bool
-    public var availableWidth: CGFloat? = nil
+    public var availableWidth: CGFloat
     public var isDetail = false
     public var primaryColor: Color? = nil
     public var accentColor: Color? = nil
     public var onTap: (() -> Void)? = nil
     
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @EnvironmentObject private var dim: DIMENSIONS
     
     var body: some View {
-        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth ?? dim.availableNoteRowWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
+        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
     }
 }
 
@@ -55,8 +54,6 @@ struct NRContentTextRendererInner: View {
     @State private var shouldShowMoreButton: Bool
     @State private var reparsedOutput: NSAttributedString? = nil
     @State private var reparsedNxOutput: AttributedString? = nil
-    
-    @EnvironmentObject private var dim: DIMENSIONS
     
     init(nxViewingContext: Set<NXViewingContextOptions>, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
         self.attributedStringWithPs = attributedStringWithPs

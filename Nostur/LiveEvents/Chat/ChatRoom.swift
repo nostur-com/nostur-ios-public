@@ -186,7 +186,7 @@ struct ChatRoom: View {
     PreviewContainer {
         Box {
             ChatRoom(aTag: "30311:5b0183ab6c3e322bf4d41c6b3aef98562a144847b7499543727c5539a114563e:f65e7db0-8072-4073-9280-ecf15ae9fd52", anonymous: false, chatVM: chatVM, selectedContact: .constant(nil))
-                .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, viewType: .row))
+                .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
         }
     }
 }
@@ -202,7 +202,7 @@ struct ChatRoom: View {
         Box {
             ChatRoom(aTag: "30311:cf45a6ba1363ad7ed213a078e710d24115ae721c9b47bd1ebf4458eaefb4c2a5:537a365c-f1ec-44ac-af10-22d14a7319fb", anonymous: false, chatVM: chatVM, selectedContact: .constant(nil))
 //                .padding(10)
-                .environmentObject(ViewingContext(availableWidth: DIMENSIONS.shared.articleRowImageWidth(), fullWidthImages: false, viewType: .row))
+                .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
         }
     }
 }

@@ -83,7 +83,6 @@ struct MediaPlaceholder: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @StateObject private var vm = MediaViewVM()
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     
     public let galleryItem: GalleryItem
     public var blurHash: String?

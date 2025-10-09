@@ -21,7 +21,6 @@ extension View {
 struct WithSheets: ViewModifier {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.colorScheme) private var colorScheme
     
     
@@ -68,8 +67,6 @@ struct WithSheets: ViewModifier {
     @State private var mediaPostPreview = true
     @State private var sharableImage: UIImage? = nil
     @State private var sharableGif: Data? = nil
-    
-    @StateObject private var screenshotDIM = DIMENSIONS.embeddedDim(availableWidth: min(402, UIScreen.main.bounds.width))
     
     func body(content: Content) -> some View {
         content
@@ -123,7 +120,6 @@ struct WithSheets: ViewModifier {
                 NBNavigationStack {
                     ReportPostSheet(nrPost: reportPost.nrPost)
                         .environmentObject(la)
-                        .environmentObject(dim)
                         .environment(\.theme, theme)
                         .presentationBackgroundCompat(theme.listBackground)
                 }
@@ -220,7 +216,6 @@ struct WithSheets: ViewModifier {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                                 .environmentObject(la)
-                                .environmentObject(dim)
                                 .environment(\.theme, theme)
                                 .presentationBackgroundCompat(theme.listBackground)
                         }
@@ -228,7 +223,6 @@ struct WithSheets: ViewModifier {
                     else {
                         ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                             .environmentObject(la)
-                            .environmentObject(dim)
                             .environment(\.theme, theme)
                             .presentationBackgroundCompat(theme.listBackground)
                     }
@@ -237,25 +231,25 @@ struct WithSheets: ViewModifier {
             }
         
             .sheet(item: $quoteOrRepost) { quoteOrRepost in
-                if let account = account(), account.isNC {
-                    WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                NBNavigationStack {
+                    if let account = account(), account.isNC {
+                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                            QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
+                                .environmentObject(la)
+                                .presentationDetents200()
+                                .presentationDragIndicatorVisible()
+                                .presentationBackgroundCompat(theme.listBackground)
+                        }
+                        .environment(\.theme, theme)
+                    }
+                    else {
                         QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
                             .environmentObject(la)
-                            .environmentObject(dim)
                             .presentationDetents200()
                             .presentationDragIndicatorVisible()
+                            .environment(\.theme, theme)
                             .presentationBackgroundCompat(theme.listBackground)
                     }
-                    .environment(\.theme, theme)
-                }
-                else {
-                    QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
-                        .environmentObject(la)
-                        .environmentObject(dim)
-                        .presentationDetents200()
-                        .presentationDragIndicatorVisible()
-                        .environment(\.theme, theme)
-                        .presentationBackgroundCompat(theme.listBackground)
                 }
             }
         
@@ -265,7 +259,6 @@ struct WithSheets: ViewModifier {
                         WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
                             ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                                 .environmentObject(la)
-                                .environmentObject(dim)
                                 .presentationBackgroundCompat(theme.listBackground)
                         }
                         .environment(\.theme, theme)
@@ -273,7 +266,6 @@ struct WithSheets: ViewModifier {
                     else {
                         ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                             .environmentObject(la)
-                            .environmentObject(dim)
                             .environment(\.theme, theme)
                             .presentationBackgroundCompat(theme.listBackground)
                     }
@@ -323,7 +315,6 @@ struct WithSheets: ViewModifier {
                         self.newHighlight = nil
                     }, kind: .highlight, highlight: newHighlight)
                         .environmentObject(la)
-                        .environmentObject(dim)
                         .environment(\.theme, theme)
                         .environment(\.managedObjectContext, viewContext())
                         .presentationBackgroundCompat(theme.listBackground)
@@ -376,7 +367,7 @@ struct WithSheets: ViewModifier {
                         .frame(width: min(402, UIScreen.main.bounds.width))
                         .padding(.horizontal, DIMENSIONS.POST_ROW_HPADDING)
                         .padding(.vertical, 10)
-                        .environmentObject(screenshotDIM)
+                        .environment(\.availableWidth, min(402, UIScreen.main.bounds.width))
                         .environmentObject(la)
                         .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                         .environment(\.colorScheme, colorScheme)

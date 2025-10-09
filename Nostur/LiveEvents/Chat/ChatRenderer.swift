@@ -17,7 +17,6 @@ struct ChatRenderer: View { // VIEW things
     private let forceAutoload: Bool
 
     private var zoomableId: String
-    @StateObject private var childDIM: DIMENSIONS
     
     init(nrChat: NRChatMessage, availableWidth: CGFloat, forceAutoload: Bool = false, zoomableId: String = "Default") {
         self.nrChat = nrChat
@@ -25,7 +24,6 @@ struct ChatRenderer: View { // VIEW things
         self.contentElements = nrChat.contentElementsDetail
         self.forceAutoload = forceAutoload
         self.zoomableId = zoomableId
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth))
     }
     
     private var shouldAutoload: Bool {
@@ -40,7 +38,7 @@ struct ChatRenderer: View { // VIEW things
                     KindResolver(nrPost: nrPost, fullWidth: true, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
-                        .environmentObject(childDIM)
+                        .environment(\.availableWidth, availableWidth)
                     //                        .fixedSize(horizontal: false, vertical: true)
 //                        .debugDimensions("EmbeddedPost")
                         .padding(.vertical, 10)
@@ -51,7 +49,7 @@ struct ChatRenderer: View { // VIEW things
                     NEventView(identifier: identifier, forceAutoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
-                        .environmentObject(childDIM)
+                        .environment(\.availableWidth, availableWidth)
 //                        .debugDimensions("NEventView")
                         .padding(.vertical, 10)
                         .id(index)
@@ -80,7 +78,7 @@ struct ChatRenderer: View { // VIEW things
                         EmbedById(id: noteHex, forceAutoload: shouldAutoload)
                             .frame(maxWidth: max(600, availableWidth))
 //                            .frame(minHeight: 75)
-                            .environmentObject(childDIM)
+                            .environment(\.availableWidth, availableWidth)
 //                            .debugDimensions("QuoteById.note1")
                             .padding(.vertical, 10)
 //                            .withoutAnimation()
@@ -98,7 +96,7 @@ struct ChatRenderer: View { // VIEW things
                     EmbedById(id: hex, forceAutoload: shouldAutoload)
                         .frame(maxWidth: max(600, availableWidth))
 //                        .frame(minHeight: 75)
-                        .environmentObject(childDIM)
+                        .environment(\.availableWidth, availableWidth)
 //                        .debugDimensions("QuoteById.noteHex")
                         .padding(.vertical, 10)
 //                        .withoutAnimation()
@@ -132,7 +130,8 @@ struct ChatRenderer: View { // VIEW things
                         .padding(.vertical, 10)
                         .id(index)
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrChat.pubkey, availableWidth: availableWidth, autoload: shouldAutoload)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: nrChat.pubkey, autoload: shouldAutoload)
+                        .environment(\.availableWidth, availableWidth)
                 case .image(let galleryItem):
                     MediaContentView(
                         galleryItem: galleryItem,

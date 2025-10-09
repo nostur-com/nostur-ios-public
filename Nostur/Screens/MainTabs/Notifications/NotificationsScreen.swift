@@ -49,7 +49,7 @@ struct NotificationsScreen: View {
     @Binding public var navPath: NBNavigationPath
     
     @Environment(\.theme) private var theme
-    @EnvironmentObject var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var nvm: NotificationsViewModel = .shared
     @ObservedObject private var settings: SettingsStore = .shared
     
@@ -108,9 +108,9 @@ struct NotificationsScreen: View {
                         }
                     }, systemIcon: "person.3", selected: tab == "Followers", unread: nvm.unreadNewFollowers_, muted: nvm.muteFollows)
                 }
-                .frame(minWidth: dim.listWidth)
+                .frame(minWidth: availableWidth)
             }
-            .frame(width: dim.listWidth)
+            .frame(width: availableWidth)
             
             AvailableWidthContainer {
                 switch (tab) {

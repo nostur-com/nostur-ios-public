@@ -17,7 +17,6 @@ struct DMContentRenderer: View { // VIEW things
     private let pubkey: String // author of balloon (message)
     private let availableWidth: CGFloat
     private let contentElements: [ContentElement]
-    @StateObject private var childDIM: DIMENSIONS
     private let isSentByCurrentUser: Bool
     
     init(pubkey: String, contentElements: [ContentElement] = [], availableWidth: CGFloat, isSentByCurrentUser: Bool = false) {
@@ -25,7 +24,6 @@ struct DMContentRenderer: View { // VIEW things
         self.availableWidth = availableWidth
         self.contentElements = contentElements
         self.isSentByCurrentUser = isSentByCurrentUser
-        _childDIM = StateObject(wrappedValue: DIMENSIONS.embeddedDim(availableWidth: availableWidth - 130))
     }
     
     private var dmAvailableWidth: CGFloat {
@@ -38,13 +36,13 @@ struct DMContentRenderer: View { // VIEW things
                 switch contentElement {
                 case .nrPost(let nrPost):
                     KindResolver(nrPost: nrPost, fullWidth: false, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: false)
-                        .environmentObject(childDIM)
+                        .environment(\.availableWidth, dmAvailableWidth)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 
                 case .nevent1(let identifier):
                     NEventView(identifier: identifier, forceAutoload: false)
-                        .environmentObject(childDIM)
+                        .environment(\.availableWidth, dmAvailableWidth)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                 
@@ -62,7 +60,7 @@ struct DMContentRenderer: View { // VIEW things
                 case .note1(let noteId):
                     if let noteHex = hex(noteId) {
                         EmbedById(id: noteHex, forceAutoload: true)
-                            .environmentObject(childDIM)
+                            .environment(\.availableWidth, dmAvailableWidth)
                             .padding(.vertical, 10)
                             .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                             .onTapGesture {
@@ -74,7 +72,7 @@ struct DMContentRenderer: View { // VIEW things
                     }
                 case .noteHex(let hex):
                     EmbedById(id: hex, forceAutoload: true)
-                        .environmentObject(childDIM)
+                        .environment(\.availableWidth, dmAvailableWidth)
                         .padding(.vertical, 10)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .onTapGesture {
@@ -87,9 +85,9 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: availableWidth - 130, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: dmAvailableWidth, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? .mint : theme.accent)
                         .equatable()
-                        .environmentObject(childDIM)
+                        .environment(\.availableWidth, dmAvailableWidth)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .md(let markdownContentWithPs): // For long form articles
@@ -107,7 +105,8 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .video(let mediaContent):
-                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, availableWidth: dmAvailableWidth, autoload: false)
+                    EmbeddedVideoView(url: mediaContent.url, pubkey: pubkey, autoload: false)
+                        .environment(\.availableWidth, dmAvailableWidth)
                     
                 case .image(let galleryItem):
                     MediaContentView(
@@ -143,7 +142,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("473f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true))
                 }
             }
         }
@@ -162,7 +161,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("9b34fd9a53398fb51493d68ecfd0d64ff922d0cdf5ffd8f0ffab46c9a3cf54e3") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true))
                 }
             }
         }
@@ -181,7 +180,7 @@ struct DMContentRenderer: View { // VIEW things
         PreviewFeed {
             if let nrPost = PreviewFetcher.fetchNRPost("102177a51af895883e9256b70b2caff6b9ef90230359ee20f6dc7851ec9e5d5a") {
                 Box {
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), availableWidth: UIScreen.main.bounds.width)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true))
                 }
             }
         }

@@ -9,7 +9,6 @@ import SwiftUI
 import NavigationBackport
 
 struct DetailTab: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     @Environment(\.theme) private var theme
     @State private var navPath = NBNavigationPath()
     @EnvironmentObject private var tm: DetailTabsModel
@@ -47,7 +46,6 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     NoteById(id: notePathId, navTitleHidden: true)//.opacity(tm.selected == tab ? 1 : 0)
-//                        .environmentObject(dim)
                         .withNavigationDestinations()
                 }
                 

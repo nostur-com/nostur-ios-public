@@ -11,7 +11,6 @@ import NavigationBackport
 struct NXColumnView<HeaderContent: View>: View {
     
     @Environment(\.scenePhase) private var scenePhase
-    @EnvironmentObject private var dim: DIMENSIONS
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
     
@@ -113,7 +112,6 @@ struct NXColumnView<HeaderContent: View>: View {
             
             guard !didLoad else { return }
             didLoad = true
-            viewModel.availableWidth = dim.availableNoteRowWidth
             if isVisible, let relaysData = config.feed?.relaysData {
                 
                 // prepare auth
@@ -182,13 +180,6 @@ struct NXColumnView<HeaderContent: View>: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 viewModel.resume()
             }
-        }
-        .onChange(of: dim.availableNoteRowWidth) { newValue in
-#if DEBUG
-            L.og.debug("☘️☘️ \(config.name) .onChange(of: availableNoteRowWidth)")
-#endif
-            guard viewModel.availableWidth != newValue else { return }
-            viewModel.availableWidth = newValue
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             guard viewModel.isVisible, let config = viewModel.config else { return }

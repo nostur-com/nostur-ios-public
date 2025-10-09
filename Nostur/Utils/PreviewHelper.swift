@@ -16,7 +16,6 @@ public class PreviewEnvironment {
     
     var didLoad = false
     let er:ExchangeRateModel = .shared
-    let dim:DIMENSIONS = .shared
     let themes:Themes = .default
     let npn:NewPostNotifier = NewPostNotifier.shared
     let cp:ConnectionPool = ConnectionPool.shared
@@ -818,9 +817,7 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.ss)
                     .environmentObject(pe.er)
                     .environmentObject(pe.ss)
-                    .environmentObject(pe.dim)
                     .environmentObject(pe.themes)
-                    .environmentObject(pe.dim)
                     .environmentObject(pe.npn)
                     .environmentObject(pe.cp)
                     .environmentObject(pe.dm)

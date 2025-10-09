@@ -10,12 +10,12 @@ import SwiftUI
 struct PostEmbeddedLayout<Content: View>: View {
     @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var forceAutoload: Bool
     private var fullWidth: Bool
-    @EnvironmentObject private var parentDIM: DIMENSIONS
 
     private let content: Content
     private let authorAtBottom: Bool
@@ -40,7 +40,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                             PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
+                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                                 }
                             
                             Text(nrContact.anyName) // Name
@@ -51,7 +51,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                                 .lineLimit(1)
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
+                                    navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                                 }
                                 
                             
@@ -87,7 +87,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                     PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
-                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
+                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
                     
                     Text(nrContact.anyName) // Name
@@ -98,7 +98,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                         .lineLimit(1)
                         .onTapGesture {
                             guard !nxViewingContext.contains(.preview) else { return }
-                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: parentDIM.id)
+                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
                         
                     PossibleImposterLabelView(nrContact: nrContact)
@@ -135,6 +135,6 @@ struct PostEmbeddedLayout<Content: View>: View {
     
     private func navigateToPost() {
         guard !nxViewingContext.contains(.preview) else { return }
-        navigateTo(nrPost, context: parentDIM.id)
+        navigateTo(nrPost, context: containerID)
     }
 }

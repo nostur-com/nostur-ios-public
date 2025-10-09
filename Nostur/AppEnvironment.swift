@@ -114,16 +114,28 @@ enum NXViewingContextOptions {
     case feedPreview // to enable Follow button on every post for follow pack previews
 }
 
-struct DimensionsEnvironmentKey: EnvironmentKey {
-    static let defaultValue: DIMENSIONS = .shared
+struct AvailableWidthEnvironmentKey: EnvironmentKey {
+    static let defaultValue: CGFloat = UIScreen.main.bounds.width
 }
 
 extension EnvironmentValues {
-    var dim: DIMENSIONS {
-        get { self[DimensionsEnvironmentKey.self] }
-        set { self[DimensionsEnvironmentKey.self] = newValue }
+    var availableWidth: CGFloat {
+        get { self[AvailableWidthEnvironmentKey.self] }
+        set { self[AvailableWidthEnvironmentKey.self] = newValue }
     }
 }
+
+struct ContainerIDEnvironmentKey: EnvironmentKey {
+    static let defaultValue: String = "Default"
+}
+
+extension EnvironmentValues {
+    var containerID: String {
+        get { self[ContainerIDEnvironmentKey.self] }
+        set { self[ContainerIDEnvironmentKey.self] = newValue }
+    }
+}
+
 
 struct NetworkMonitorEnvironmentKey: EnvironmentKey {
     static let defaultValue: NetworkMonitor = .shared

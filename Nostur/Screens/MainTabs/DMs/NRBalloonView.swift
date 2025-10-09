@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct NRBalloonView: View {
-    @EnvironmentObject private var dim: DIMENSIONS
     public var event: Event
     public var isSentByCurrentUser: Bool
     public var time: String
     @State private var contentElements: [ContentElement] = []
     @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
     
     var body: some View {
         HStack {
@@ -25,7 +25,7 @@ struct NRBalloonView: View {
                 NRTextDynamic(convertToHieroglyphs(text: event.noteText))
             }
             else if !contentElements.isEmpty {
-                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: dim.listWidth, isSentByCurrentUser: isSentByCurrentUser)
+                DMContentRenderer(pubkey: event.pubkey, contentElements: contentElements, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
 //                    .debugDimensions("DMContentRenderer")
                     .padding(10)
                     .background(

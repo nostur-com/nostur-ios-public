@@ -14,7 +14,7 @@ struct LiveEventsBanner: View {
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var npn: NewPostNotifier
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var apm: AnyPlayerModel = .shared
     @ObservedObject private var liveEventsModel: LiveEventsModel = .shared
     @ObservedObject private var liveKitVoiceSession: LiveKitVoiceSession = .shared
@@ -28,7 +28,7 @@ struct LiveEventsBanner: View {
                     HStack {
                         ForEach(liveEventsModel.nrLiveEvents) { nrLiveEvent in
                             LiveEventCapsule(liveEvent: nrLiveEvent, onRemove: remove)
-                                .frame(maxWidth: dim.availableNoteRowImageWidth())
+                                .frame(maxWidth: DIMENSIONS.availableNoteRowImageWidth(availableWidth))
                                 .fixedSize(horizontal: true, vertical: false)
                         }
                     }

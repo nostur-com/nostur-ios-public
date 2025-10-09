@@ -13,9 +13,9 @@ import NostrEssentials
 // so it recursively renders up to the root
 struct PostAndParent: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     @ObservedObject private var nrPost: NRPost
-    @EnvironmentObject private var dim: DIMENSIONS
     
     private var navTitleHidden: Bool = false
     
@@ -99,7 +99,7 @@ struct PostAndParent: View {
                             theme.listBackground
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateTo(nrPost, context: dim.id)
+                                    navigateTo(nrPost, context: containerID)
                                 }
                         )
                 }

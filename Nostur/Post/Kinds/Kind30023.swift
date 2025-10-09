@@ -12,7 +12,8 @@ import NostrEssentials
 struct Kind30023: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme: Theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -32,7 +33,7 @@ struct Kind30023: View {
     private let THREAD_LINE_OFFSET = 24.0
     
     private var imageWidth: CGFloat {
-        dim.listWidth - 20
+        availableWidth - 20
     }
     
     @State var showMiniProfile = false
@@ -82,7 +83,7 @@ struct Kind30023: View {
                     
                     if let mostRecentId = nrPost.mostRecentId {
                         OpenLatestUpdateMessage {
-                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: nrPost.eventTitle ?? "Article"), context: dim.id)
+                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: nrPost.eventTitle ?? "Article"), context: containerID)
                         }
                         .padding(.vertical, 10)
                     }
@@ -95,7 +96,7 @@ struct Kind30023: View {
                     HStack {
                         ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
-                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
+                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                             }
                         VStack(alignment: .leading) {
                             HStack {
@@ -105,7 +106,7 @@ struct Kind30023: View {
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
-                                        navigateTo(nrContact, context: dim.id)
+                                        navigateTo(nrContact, context: containerID)
                                     }
                                 
                                 if nrContact.nip05verified, let nip05 = nrContact.nip05 {
@@ -128,10 +129,10 @@ struct Kind30023: View {
                     .padding(.vertical, 10)
                     
                     if let eventImageUrl = nrPost.eventImageUrl {
-                        //                        Text("imageWidth: \(dim.listWidth.description)")
+                        //                        Text("imageWidth: \(availableWidth.description)")
                         MediaContentView(
                             galleryItem: GalleryItem(url: eventImageUrl),
-                            availableWidth: dim.listWidth,
+                            availableWidth: availableWidth,
                             placeholderAspect: 2/1,
                             contentMode: .fit,
                             upscale: true,
@@ -141,7 +142,7 @@ struct Kind30023: View {
                         .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true)
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: true, fullWidth: true, forceAutoload: true)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
@@ -258,7 +259,7 @@ struct Kind30023: View {
             if let image = nrPost.eventImageUrl {
                 MediaContentView(
                     galleryItem: GalleryItem(url: image),
-                    availableWidth: dim.listWidth,
+                    availableWidth: availableWidth,
                     placeholderAspect: 2/1,
                     contentMode: .fit,
                     upscale: true,
@@ -314,7 +315,7 @@ struct Kind30023: View {
                         ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
                                 guard !nxViewingContext.contains(.preview) else { return }
-                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: dim.id)
+                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                             }
 
                         Text(nrContact.anyName)
@@ -324,7 +325,7 @@ struct Kind30023: View {
                             .layoutPriority(2)
                             .onTapGesture {
                                 guard !nxViewingContext.contains(.preview) else { return }
-                                navigateTo(nrContact, context: dim.id)
+                                navigateTo(nrContact, context: containerID)
                             }
                         
                         if nrContact.nip05verified, let nip05 = nrContact.nip05 {
@@ -354,7 +355,7 @@ struct Kind30023: View {
                                 .layoutPriority(2)
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                 }
                                 .onAppear {
                                     guard nrContact.metadata_created_at == 0 else { return }
@@ -400,7 +401,7 @@ struct Kind30023: View {
                             .layoutPriority(2)
                             .onTapGesture {
                                 guard !nxViewingContext.contains(.preview) else { return }
-                                navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                                navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                             }
                         
                         if nrContact.nip05verified, let nip05 = nrContact.nip05 {
@@ -433,7 +434,7 @@ struct Kind30023: View {
         .contentShape(Rectangle())
         .onTapGesture {
             guard !nxViewingContext.contains(.preview) else { return }
-            navigateTo(nrPost, context: dim.id)
+            navigateTo(nrPost, context: containerID)
         }
     }
 

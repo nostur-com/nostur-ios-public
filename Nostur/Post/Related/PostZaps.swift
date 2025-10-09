@@ -142,7 +142,8 @@ struct PostZaps: View {
 
 struct NxZapReceipt: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
     
     public let sats: Double
     public let receiptPubkey: String
@@ -182,14 +183,15 @@ struct NxZapReceipt: View {
             InnerPFP(pubkey: fromPubkey, pictureUrl: nrContact.pictureUrl, size: DIMENSIONS.POST_ROW_PFP_DIAMETER, color: nrContact.randomColor)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .onTapGesture {
-                    navigateTo(nrContact, context: dim.id)
+                    navigateTo(nrContact, context: containerID)
                 }
             
             VStack(alignment: .leading, spacing: 3) { // Post container
                 ZappedFrom(nrZapFrom: nrZapFrom)
                 
-                ContentRenderer(nrPost: nrZapFrom, showMore: .constant(true), isDetail: false, fullWidth: false, availableWidth: dim.availableNoteRowWidth - 80)
-                    .frame(maxWidth: dim.availableNoteRowWidth - 80, minHeight: 40, alignment: .leading)
+                ContentRenderer(nrPost: nrZapFrom, showMore: .constant(true), isDetail: false, fullWidth: false)
+                    .environment(\.availableWidth, DIMENSIONS.articleRowImageWidth(availableWidth) - 80)
+                    .frame(maxWidth: DIMENSIONS.articleRowImageWidth(availableWidth) - 80, minHeight: 40, alignment: .leading)
 //                ReceiptFrom(pubkey: receiptPubkey)
             }
             .task {

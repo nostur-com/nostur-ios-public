@@ -10,7 +10,7 @@ import SwiftUI
 struct ArticleByNaddr: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var settings: SettingsStore
-    @EnvironmentObject private var dim: DIMENSIONS
+    
     public let naddr1: String
     public var navigationTitle: String? = nil
     public var navTitleHidden: Bool = false

@@ -79,7 +79,7 @@ class NXColumnViewModel: ObservableObject {
             }
         }
     }
-    public var availableWidth: CGFloat? // Should set in NXColumnView.onAppear { } before .load()
+    
     private var fetchFeedTimer: Timer? = nil
     private var newEventsInDatabaseSub: AnyCancellable?
     private var newPostSavedSub: AnyCancellable?
@@ -2049,12 +2049,6 @@ extension NXColumnViewModel {
         
         Task { @MainActor in
             self.putOnScreen(partialThreadsWithParent, config: config, insertAtEnd: older, completion: completion)
-            
-#if DEBUG
-            if availableWidth == nil {
-                fatalError("availableWidth was never set, pls check")
-            }
-#endif
         }
     }
     

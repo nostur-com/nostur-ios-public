@@ -12,7 +12,7 @@ import SwiftUI
 struct Kind1222: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme: Theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -28,15 +28,6 @@ struct Kind1222: View {
     private let forceAutoload: Bool
     
     private let THREAD_LINE_OFFSET = 24.0
-    
-    
-    private var availableWidth: CGFloat {
-        if isDetail || fullWidth || isEmbedded {
-            return dim.listWidth - 20
-        }
-        
-        return dim.availableNoteRowImageWidth()
-    }
     
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
     
@@ -87,7 +78,7 @@ struct Kind1222: View {
                         .fontWeight(.bold)
                         .lineLimit(3)
                 }
-                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                     Image(systemName: "exclamationmark.triangle.fill")
                 }
                 else {
@@ -104,7 +95,7 @@ struct Kind1222: View {
                         .fontWeight(.bold)
                         .lineLimit(3)
                 }
-                if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+                if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                     Image(systemName: "exclamationmark.triangle.fill")
                 }
                 else {
@@ -137,7 +128,7 @@ struct Kind1222: View {
                     .fontWeight(.bold)
                     .lineLimit(3)
             }
-            if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+            if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             else {

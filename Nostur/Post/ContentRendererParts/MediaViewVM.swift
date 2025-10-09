@@ -176,8 +176,6 @@ struct GifInfo: Equatable {
             ImageProcessing.shared.content.cache.removeAll()
         }
     }
-    .environmentObject(Themes.default)
-    .environmentObject(DIMENSIONS.shared)
 }
 
 #Preview("GM") {
@@ -211,8 +209,6 @@ struct GifInfo: Equatable {
             ImageProcessing.shared.content.cache.removeAll()
         }
     }
-    .environmentObject(Themes.default)
-    .environmentObject(DIMENSIONS.shared)
 }
 
 
@@ -247,8 +243,6 @@ struct GifInfo: Equatable {
             ImageProcessing.shared.content.cache.removeAll()
         }
     }
-    .environmentObject(Themes.default)
-    .environmentObject(DIMENSIONS.shared)
 }
 
 
@@ -275,6 +269,4 @@ struct GifInfo: Equatable {
             ImageProcessing.shared.content.cache.removeAll()
         }
     }
-    .environmentObject(Themes.default)
-    .environmentObject(DIMENSIONS.shared)
 }

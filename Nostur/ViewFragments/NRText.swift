@@ -117,8 +117,6 @@ struct NRTextDynamic: View {
             .background(Color.green)
     }
     .padding()
-    .environmentObject(Themes.default)
-    .environmentObject(DIMENSIONS())
 }
 
 
@@ -359,7 +357,7 @@ extension NSMutableAttributedString {
 
 struct NRTextFixedTester: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject public var nrPost: NRPost
     @State private var text = NSAttributedString(string: "")
     @State private var primaryColor: Color = .primary
@@ -368,7 +366,7 @@ struct NRTextFixedTester: View {
     @State private var textHeight: CGFloat = 90
     
     var body: some View {
-        Text(dim.listWidth.description)
+        Text(availableWidth.description)
         Color.green
             .frame(height: 300)
             .fixedSize(horizontal: false, vertical: true)
@@ -381,7 +379,7 @@ struct NRTextFixedTester: View {
             
             NRTextFixed(text: text, fontColor: primaryColor, accentColor: accentColor, textWidth: $textWidth, textHeight: $textHeight)
             .onAppear {
-                textWidth = dim.listWidth - 20
+                textWidth = availableWidth - 20
                 text = NRTextParser.shared.parseText(fastTags: nrPost.fastTags, text: nrPost.content ?? "").output ?? NSAttributedString(string: "")
                 primaryColor = theme.primary
                 accentColor = theme.accent

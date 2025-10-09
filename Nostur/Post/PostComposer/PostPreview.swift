@@ -10,7 +10,7 @@ import NostrEssentials
 
 struct PostPreview: View {
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS // previewDIM from ComposePost
+    @Environment(\.availableWidth) private var availableWidth
 
     public let nrPost: NRPost
     public let kind: NEventKind
@@ -48,16 +48,11 @@ struct PostPreview: View {
 
     var body: some View {
         ScrollView {
-//            Color.red
-//                .overlay { Text("dim.listWidth: \(dim.listWidth.description)") }
-//                .frame(height: 30)
-//                .debugDimensions("PostPreview.ScrollView")
             AnyStatus()
             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
                 .environment(\.nxViewingContext, [.preview, .postDetail])
                 .padding(10)
                 .disabled(true)
-                .environmentObject(dim)
                 .onReceive(receiveNotification(.iMetaInfoForUrl)) { notification in
                     let (urlString, iMeta) = notification.object as! (String, iMetaInfo)
                     vm.remoteIMetas[urlString] = iMeta
@@ -105,7 +100,7 @@ struct PostPreview: View {
         .navigationTitle(String(localized: "Preview", comment: "Navigation title for Post Preview screen"))
         .navigationBarTitleDisplayMode(.inline)
         .background(theme.listBackground)
-        .frame(width: dim.listWidth)
+        .frame(width: availableWidth)
         .fixedSize(horizontal: true, vertical: false)
     }
 }

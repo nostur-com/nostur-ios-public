@@ -11,12 +11,12 @@ import NukeVideo
 
 struct EmbeddedVideoView: View {
     @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
     @StateObject var vm = EmbeddedVideoVM()
     
     public let url: URL
     public let pubkey: String
     public var nrPost: NRPost?
-    public let availableWidth: CGFloat
     public var availableHeight: CGFloat?
     public var metaDimension: CGSize? // Dimensions from meta data (imeta or other)
     public let autoload: Bool
@@ -265,6 +265,6 @@ struct EmbeddedVideoView: View {
 //        let m3u8testUrl = URL(string: "https://cdn.stemstr.app/stream/87b5962ef9e37845c72ae0fa2748e8e5b1b257274e8e2e0a8cdd5d3b5e5ff596.m3u8")!
         let videoUrl = URL(string: "https://m.primal.net/OErQ.mov")!
         
-        EmbeddedVideoView(url: videoUrl, pubkey: "dunno", availableWidth: UIScreen.main.bounds.width, autoload: true)
+        EmbeddedVideoView(url: videoUrl, pubkey: "dunno", autoload: true)
     }
 }

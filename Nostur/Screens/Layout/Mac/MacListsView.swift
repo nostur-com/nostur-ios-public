@@ -18,8 +18,6 @@ struct MacListsView: View {
 //    @EnvironmentObject private var screenSpace: ScreenSpace
     
     let SIDEBAR_WIDTH: CGFloat = 50.0
-    @StateObject private var dim = DIMENSIONS()
-    @StateObject private var childDM = DIMENSIONS()
     @StateObject private var vm: MacListState = .shared
 
     @State var availableFeeds: [CloudFeed] = []
@@ -40,31 +38,31 @@ struct MacListsView: View {
                     TabView(selection: $vm.selectedTab) {
                             PhoneViewIsh()
                                 .environment(\.horizontalSizeClass, .compact)
-                                .environmentObject(childDM)
+                                .environment(\.availableWidth, columnWidth)
                                 .tag("Main")
                                 .toolbar(.hidden, for: .tabBar)
                             
                             NotificationsContainer()
                                 .environment(\.horizontalSizeClass, .compact)
-                                .environmentObject(childDM)
+                                .environment(\.availableWidth, columnWidth)
                                 .tag("Notifications")
                                 .toolbar(.hidden, for: .tabBar)
 
                             Search()
                                 .environment(\.horizontalSizeClass, .compact)
-                                .environmentObject(childDM)
+                                .environment(\.availableWidth, columnWidth)
                                 .tag("Search")
                                 .toolbar(.hidden, for: .tabBar)
                             
                             BookmarksTab()
                                 .environment(\.horizontalSizeClass, .compact)
-                                .environmentObject(childDM)
+                                .environment(\.availableWidth, columnWidth)
                                 .tag("Bookmarks")
                                 .toolbar(.hidden, for: .tabBar)
                         
                             DMContainer()
                                 .environment(\.horizontalSizeClass, .compact)
-                                .environmentObject(childDM)
+                                .environment(\.availableWidth, columnWidth)
                                 .tag("Messages")
                                 .toolbar(.hidden, for: .tabBar)
                         }
@@ -83,19 +81,16 @@ struct MacListsView: View {
                 }
                 .onAppear {
                     columnWidth = columnSize(geo.size.width)
-                    childDM.listWidth = columnWidth
                 }
                 .onChange(of: geo.size.width) { newValue in
                     if newValue != columnWidth {
                         columnWidth = columnSize(geo.size.width)
-                        childDM.listWidth = columnWidth
                     }
                 }
                 .onChange(of: vm.columnsCount) { _ in
                     let newColumnSize = columnSize(geo.size.width)
                     if columnWidth != newColumnSize {
                         columnWidth = newColumnSize
-                        childDM.listWidth = newColumnSize
                     }
                 }
             }
@@ -117,7 +112,6 @@ struct MacListsView: View {
                     }
             }
             .withSheets()
-            .environmentObject(dim)
             .withLightningEffect()
         }
     }
@@ -234,17 +228,16 @@ struct MacListHeader: View {
 struct MacList<Content: View>: View {
     
     private let content: Content
-    let dim: DIMENSIONS
+    private let availableWidth: CGFloat
 
     init(availableWidth: CGFloat = 600, @ViewBuilder content: () -> Content) {
         self.content = content()
-        self.dim = DIMENSIONS()
-        self.dim.listWidth = CGFloat(availableWidth)
+        self.availableWidth = availableWidth
     }
     
     var body: some View {
         content
-            .environmentObject(dim)
+            .environment(\.availableWidth, availableWidth)
     }
 }
 

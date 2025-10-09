@@ -63,7 +63,7 @@ extension NXEvent {
 
 enum NXContentRendererViewState {
     case loading
-    case ready(DIMENSIONS)
+    case ready(CGFloat) // availableWidth
 }
 
 // Renders embeds (VIEWS), not links (in TEXT)
@@ -88,14 +88,14 @@ struct NXContentRenderer: View { // VIEW things
             case .loading:
                 ProgressView()
                     .onAppear {
-                        viewState = .ready(DIMENSIONS.embeddedDim(availableWidth: vc.availableWidth))
+                        viewState = .ready(vc.availableWidth)
                     }
-            case .ready(let childDIM):
+            case .ready(let availableWidth):
                 ForEach(contentElements.indices, id:\.self) { index in
                     switch contentElements[index] {
                     case .nrPost(let nrPost):
                         KindResolver(nrPost: nrPost, fullWidth: vc.fullWidthImages, hideFooter: true, isDetail: false, isEmbedded: true, forceAutoload: shouldAutoload)
-                            .environmentObject(childDIM)
+                            .environment(\.availableWidth, availableWidth)
     //                        .debugDimensions("EmbeddedPost")
                             .padding(.vertical, 10)
                             .id(index)
@@ -105,7 +105,7 @@ struct NXContentRenderer: View { // VIEW things
                     case .nevent1(let identifier):
                         NEventView(identifier: identifier, fullWidth: vc.fullWidthImages, forceAutoload: shouldAutoload)
     //                        .frame(minHeight: 75)
-                            .environmentObject(childDIM)
+                            .environment(\.availableWidth, availableWidth)
     //                        .debugDimensions("NEventView")
                             .padding(.vertical, 10)
                             .id(index)
@@ -131,7 +131,7 @@ struct NXContentRenderer: View { // VIEW things
                         if let noteHex = hex(noteId) {
                             EmbedById(id: noteHex, fullWidth: vc.fullWidthImages, forceAutoload: shouldAutoload)
     //                            .frame(minHeight: 75)
-                                .environmentObject(childDIM)
+                                .environment(\.availableWidth, availableWidth)
     //                            .debugDimensions("QuoteById.note1")
                                 .padding(.vertical, 10)
                                 .id(index)
@@ -143,7 +143,7 @@ struct NXContentRenderer: View { // VIEW things
                     case .noteHex(let hex):
                         EmbedById(id: hex, fullWidth: vc.fullWidthImages, forceAutoload: shouldAutoload)
     //                        .frame(minHeight: 75)
-                            .environmentObject(childDIM)
+                            .environment(\.availableWidth, availableWidth)
     //                        .debugDimensions("QuoteById.noteHex")
                             .padding(.vertical, 10)
                             .id(index)
@@ -167,7 +167,8 @@ struct NXContentRenderer: View { // VIEW things
                             .padding(.vertical, 10)
                             .id(index)
                     case .video(let mediaContent):
-                        EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey, availableWidth: vc.availableWidth + (vc.fullWidthImages ? 20 : 0), autoload: shouldAutoload)
+                        EmbeddedVideoView(url: mediaContent.url, pubkey: nxEvent.pubkey , autoload: shouldAutoload)
+                            .environment(\.availableWidth, availableWidth + (vc.fullWidthImages ? 20 : 0))
                             .padding(.horizontal, vc.fullWidthImages ? -10 : 0)
 
                     case .image(let galleryItem):

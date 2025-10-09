@@ -11,7 +11,7 @@ import NukeUI
 struct VideoEventView: View {
     @Environment(\.theme) private var theme
     @Environment(\.openURL) private var openURL
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     
     public let title: String
     public let url: URL
@@ -22,12 +22,6 @@ struct VideoEventView: View {
     
     public var autoload: Bool = false
     
-    public var availableWidth: CGFloat?
-    
-    var imageWidth: CGFloat {
-        availableWidth ?? dim.availableNoteRowImageWidth()
-    }
-    
     static let aspect: CGFloat = 16/9
     
     var body: some View {
@@ -37,7 +31,7 @@ struct VideoEventView: View {
                     if let imageUrl {
                         MediaContentView(
                             galleryItem: GalleryItem(url: imageUrl),
-                            availableWidth: imageWidth,
+                            availableWidth: availableWidth,
                             placeholderAspect: 16/9,
                             maxHeight: DIMENSIONS.MAX_MEDIA_ROW_HEIGHT,
                             contentMode: .fit,
@@ -103,6 +97,4 @@ struct VideoEventView: View {
 
 #Preview {
     VideoEventView(title: "Categorias de Aristóteles", url: URL(string: "https://www.youtube.com/watch?v=je-n0Ro-B5k")!, summary: "", imageUrl: URL(string: "https://i3.ytimg.com/vi/je-n0Ro-B5k/hqdefault.jpg")!, autoload: true)
-//        .environmentObject(Themes.default)
-        .environmentObject(DIMENSIONS.shared)
 }

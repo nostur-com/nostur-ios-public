@@ -10,7 +10,8 @@ import SwiftUI
 struct Kind9802: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme: Theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
+    @Environment(\.containerID) private var containerID
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -28,12 +29,12 @@ struct Kind9802: View {
     private let THREAD_LINE_OFFSET = 24.0
     
     
-    private var availableWidth: CGFloat {
+    private var availableWidth_: CGFloat {
         if isDetail || fullWidth || isEmbedded {
-            return dim.listWidth - 20
+            return availableWidth - 20
         }
         
-        return dim.availableNoteRowImageWidth()
+        return DIMENSIONS.availableNoteRowImageWidth(availableWidth)
     }
     
     init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, forceAutoload: Bool = false) {
@@ -82,7 +83,7 @@ struct Kind9802: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
-                    navigateTo(nrPost, context: dim.id)
+                    navigateTo(nrPost, context: containerID)
                 }
         }
         else {
@@ -92,7 +93,7 @@ struct Kind9802: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         guard !nxViewingContext.contains(.preview) else { return }
-                        navigateTo(nrPost, context: dim.id)
+                        navigateTo(nrPost, context: containerID)
                     }
                 
             }
@@ -103,7 +104,8 @@ struct Kind9802: View {
     var content: some View {
         
         // Comment on quote from "comment" tag
-        ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, availableWidth: availableWidth, forceAutoload: forceAutoload)
+        ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload)
+            .environment(\.availableWidth, availableWidth_)
             .frame(maxWidth: .infinity, alignment:.leading)
         
         // The highlight, from .content
@@ -117,11 +119,11 @@ struct Kind9802: View {
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
                     if let firstE = nrPost.firstE {
-                        navigateTo(NotePath(id: firstE), context: dim.id)
+                        navigateTo(NotePath(id: firstE), context: containerID)
                     }
                     else if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
                             let naddr = try? ShareableIdentifier(aTag: aTag.1) {
-                            navigateTo(Naddr1Path(naddr1: naddr.bech32string), context: dim.id)
+                            navigateTo(Naddr1Path(naddr1: naddr.bech32string), context: containerID)
                     }
                 }
                 .overlay(alignment:.topLeading) {
@@ -138,7 +140,7 @@ struct Kind9802: View {
                     .contentShape(Rectangle())
                     .onTapGesture {
                         guard !nxViewingContext.contains(.preview) else { return }
-                        navigateTo(ContactPath(key: hlAuthorPubkey), context: dim.id)
+                        navigateTo(ContactPath(key: hlAuthorPubkey), context: containerID)
                     }
                     .padding(.trailing, 40)
             }

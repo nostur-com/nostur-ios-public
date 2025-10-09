@@ -20,7 +20,7 @@ struct ProfileView: View {
     
     
     @Environment(\.theme) private var theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.availableWidth) private var availableWidth
     @EnvironmentObject private var la: LoggedInAccount
     
     @ObservedObject private var settings: SettingsStore = .shared
@@ -44,7 +44,7 @@ struct ProfileView: View {
             Section {
                 VStack(alignment: .leading) {
                     
-                    ProfileBanner(banner: nrContact.banner, width: dim.listWidth)
+                    ProfileBanner(banner: nrContact.banner, width: availableWidth)
                         .overlay(alignment: .bottomLeading, content: {
                             ZoomableItem({
                                 PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
@@ -399,9 +399,9 @@ struct ProfileView: View {
                             title: "Relays",
                             selected: selectedSubTab == "Relays")
                     }
-                    .frame(minWidth: dim.listWidth)
+                    .frame(minWidth: availableWidth)
                 }
-                .frame(width: dim.listWidth)
+                .frame(width: availableWidth)
                 .listRowInsets(.init())
                 .listSectionSeparator(.hidden)
                 .listRowSeparator(.hidden)

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct QuoteOrRepostChoiceSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
     
     public let quoteOrRepost: QuoteOrRepost
     @Binding public var quotePost: QuotePost?

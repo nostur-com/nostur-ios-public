@@ -13,7 +13,9 @@ import OrderedCollections
 struct Kind30000: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme: Theme
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
+    
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -30,12 +32,12 @@ struct Kind30000: View {
     
     private let THREAD_LINE_OFFSET = 24.0
     
-    private var availableWidth: CGFloat {
+    private var availableWidth_: CGFloat {
         if isDetail || fullWidth || isEmbedded {
-            return dim.listWidth - 20
+            return availableWidth - 20
         }
         
-        return dim.availableNoteRowImageWidth()
+        return DIMENSIONS.availableNoteRowImageWidth(availableWidth)
     }
     
     private let title: String
@@ -78,7 +80,7 @@ struct Kind30000: View {
                 .onAppear(perform: self.onAppear)
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
-                    navigateTo(nrPost, context: dim.id)
+                    navigateTo(nrPost, context: containerID)
                 }
         }
         else {
@@ -87,7 +89,7 @@ struct Kind30000: View {
                 .onTapGesture {
                     guard !nxViewingContext.contains(.preview) else { return }
                     guard !isDetail else { return }
-                    navigateTo(nrPost, context: dim.id)
+                    navigateTo(nrPost, context: containerID)
                 }
         }
     }
@@ -147,7 +149,7 @@ struct Kind30000: View {
             }
             else if didLoadFollowNRContacts { // Row view, show 10 big PFPS (prio follows)
                 overlappingPFPs
-                    .frame(width: dim.articleRowImageWidth(), alignment: .leading)
+                    .frame(width: DIMENSIONS.articleRowImageWidth(availableWidth), alignment: .leading)
 //                    .background(theme.listBackground)
             }
             else {
@@ -230,7 +232,7 @@ struct Kind30000: View {
                 .layoutPriority(1)
             }
             
-            if dim.listWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
+            if availableWidth < 75 { // Probably too many embeds in embeds in embeds in embeds, no space left
                 Image(systemName: "exclamationmark.triangle.fill")
             }
             
@@ -306,7 +308,7 @@ struct Kind30000: View {
 
 struct PubkeyRow: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
     @ObservedObject var nrContact: NRContact
     
     var body: some View {
@@ -316,7 +318,7 @@ struct PubkeyRow: View {
         }
         .onTapGesture {
             guard !nxViewingContext.contains(.preview) else { return }
-            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+            navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
         }
     }
 }

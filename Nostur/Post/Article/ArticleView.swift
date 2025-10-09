@@ -12,7 +12,8 @@ import NavigationBackport
 struct ArticleView: View {
     @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @EnvironmentObject private var dim: DIMENSIONS
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var article: NRPost
     @ObservedObject private var nrContact: NRContact
 
@@ -60,7 +61,7 @@ struct ArticleView: View {
                     
                     if let mostRecentId = article.mostRecentId {
                         OpenLatestUpdateMessage {
-                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: article.eventTitle ?? "Article"), context: dim.id)
+                            navigateTo(ArticlePath(id: mostRecentId, navigationTitle: article.eventTitle ?? "Article"), context: containerID)
                         }
                         .padding(.vertical, 10)
                     }
@@ -73,7 +74,7 @@ struct ArticleView: View {
                     HStack {
                         ZappablePFP(pubkey: article.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
-                                navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: dim.id)
+                                navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: containerID)
                             }
                         VStack(alignment: .leading) {
                             
@@ -84,7 +85,7 @@ struct ArticleView: View {
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
-                                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                     }
                                 
                                 if nrContact.nip05verified, let nip05 = nrContact.nip05 {
@@ -119,10 +120,10 @@ struct ArticleView: View {
                     .padding(.vertical, 10)
                     
                     if let eventImageUrl = article.eventImageUrl {
-                        //                        Text("imageWidth: \(dim.listWidth.description)")
+                        //                        Text("imageWidth: \(availableWidth.description)")
                         MediaContentView(
                             galleryItem: GalleryItem(url: eventImageUrl, pubkey: article.pubkey, eventId: article.id),
-                            availableWidth: dim.listWidth,
+                            availableWidth: availableWidth,
                             placeholderAspect: 2/1,
                             contentMode: .fit,
                             upscale: true,
@@ -132,7 +133,7 @@ struct ArticleView: View {
                         .padding(.horizontal, -20)
                     }
                     
-                    ContentRenderer(nrPost: article, showMore: .constant(true), isDetail: true, fullWidth: true, availableWidth: dim.listWidth, forceAutoload: true)
+                    ContentRenderer(nrPost: article, showMore: .constant(true), isDetail: true, fullWidth: true, forceAutoload: true)
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
@@ -205,7 +206,7 @@ struct ArticleView: View {
                 if let image = article.eventImageUrl {
                     MediaContentView(
                         galleryItem: GalleryItem(url: image, pubkey: article.pubkey, eventId: article.id),
-                        availableWidth: dim.listWidth,
+                        availableWidth: availableWidth,
                         placeholderAspect: 2/1,
                         contentMode: .fit,
                         upscale: true,
@@ -258,7 +259,7 @@ struct ArticleView: View {
                             ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: dim.id)
+                                    navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: containerID)
                                 }
                             
                             Text(nrContact.anyName)
@@ -268,7 +269,7 @@ struct ArticleView: View {
                                 .layoutPriority(2)
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                 }
                                 .onAppear {
                                     guard nrContact.metadata_created_at == 0 else { return }
@@ -309,7 +310,7 @@ struct ArticleView: View {
                                     .layoutPriority(2)
                                     .onTapGesture {
                                         guard !nxViewingContext.contains(.preview) else { return }
-                                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                     }
                                     .onAppear {
                                         guard nrContact.metadata_created_at == 0 else { return }
@@ -356,7 +357,7 @@ struct ArticleView: View {
                                 .layoutPriority(2)
                                 .onTapGesture {
                                     guard !nxViewingContext.contains(.preview) else { return }
-                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: dim.id)
+                                    navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                 }
                                 .onAppear {
                                     bg().perform {
@@ -393,7 +394,7 @@ struct ArticleView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 guard !nxViewingContext.contains(.preview) else { return }
-                navigateTo(article, context: dim.id)
+                navigateTo(article, context: containerID)
             }
         }
     }
