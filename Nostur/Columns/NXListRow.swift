@@ -23,19 +23,6 @@ struct NXListRow<Content: View>: View {
     
     var body: some View {
         self.content
-        
-#if DEBUG
-            .overlay(alignment: .bottomLeading) {
-                if onAppearOnce == nil {
-                    Text("onAppearOnce()")
-                        .foregroundStyle(Color.white)
-                        .background {
-                            Color.red.opacity(0.7)
-                        }
-                }
-            }
-#endif
-        
             .modifier { // From iOS 16+ onGeometryChange should be more performant than the old GeometryReader method
                 if #available(iOS 16.0, *) {
                     $0.onGeometryChange(for: Bool.self) { proxy in

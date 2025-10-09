@@ -9,7 +9,7 @@ import SwiftUI
 
 struct NewNoteButton: View {
     @Environment(\.theme) private var theme
-    @Binding var showingNewNote:Bool
+    @Binding var showingNewNote: Bool
     
     var body: some View {
         

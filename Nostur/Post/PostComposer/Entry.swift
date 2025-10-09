@@ -286,12 +286,12 @@ struct Entry: View {
         
         ToolbarItem(placement: .primaryAction) {
             HStack {
-                if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+                if kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
                     if showVoiceRecorderButton {
                         self.voiceRecordingButton
                     }
 
-                    if kind != .picture && kind != .highlight {
+                    if kind != .picture {
                         self.startNestButton
                     }
 
@@ -300,7 +300,7 @@ struct Entry: View {
                     if #available(iOS 16, *) {
                         self.pickPhotoButton
 
-                        if kind != .picture && kind != .highlight {
+                        if kind != .picture {
                             self.pickVideoButton
                         }
                     }
@@ -337,12 +337,12 @@ struct Entry: View {
         }
         
         ToolbarItemGroup(placement: .primaryAction) {
-            if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+            if  kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
                 if showVoiceRecorderButton {
                     self.voiceRecordingButton
                 }
 
-                if kind != .picture && kind != .highlight {
+                if kind != .picture {
                     self.startNestButton
                 }
 
@@ -350,7 +350,7 @@ struct Entry: View {
 
                 self.pickPhotoButton
 
-                if kind != .picture && kind != .highlight {
+                if kind != .picture {
                     self.pickVideoButton
                 }
 
@@ -384,13 +384,13 @@ struct Entry: View {
             Button("Cancel", systemImage: "xmark") { onDismiss() }
         }
         
-        if IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular) {
+        if kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
             ToolbarItemGroup(placement: .primaryAction) {
                 if showVoiceRecorderButton {
                     self.voiceRecordingButton
                 }
                 
-                if kind != .picture && kind != .highlight {
+                if kind != .picture {
                     self.startNestButton
                 }
                 
@@ -398,7 +398,7 @@ struct Entry: View {
                 
                 self.pickPhotoButton
                 
-                if kind != .picture && kind != .highlight {
+                if kind != .picture {
                     self.pickVideoButton
                 }
                 
@@ -446,7 +446,6 @@ struct Entry: View {
     @ViewBuilder
     private var takePhotoButton: some View {
         Button("Take Photo", systemImage: "camera") {
-//            showVoiceRecorderButton = false
             cameraSheetShown = true
         }
         .buttonStyle(.borderless)
@@ -456,7 +455,6 @@ struct Entry: View {
     @ViewBuilder
     private var pickPhotoButton: some View {
         Button("Pick Photo", systemImage: "photo") {
-//            showVoiceRecorderButton = false
             photoPickerShown = true
         }
         .buttonStyle(.borderless)
@@ -466,7 +464,6 @@ struct Entry: View {
     @ViewBuilder
     private var pickVideoButton: some View {
         Button("Pick Video", systemImage: "video") {
-//            showVoiceRecorderButton = false
             videoPickerShown = true
         }
         .buttonStyle(.borderless)
@@ -476,7 +473,6 @@ struct Entry: View {
     @ViewBuilder
     private var gifButton: some View {
         Button {
-//            showVoiceRecorderButton = false
             gifSheetShown = true
         } label: {
             Image("GifButton")
@@ -488,7 +484,6 @@ struct Entry: View {
     @ViewBuilder
     private var startNestButton: some View {
         Button("Start Nest", systemImage: "dot.radiowaves.left.and.right") {
-//            showVoiceRecorderButton = false
             if IS_CATALYST { // MacOS can reuse same weird sheet
                 sendNotification(.showCreateNestsSheet, vm.activeAccount)
             }
