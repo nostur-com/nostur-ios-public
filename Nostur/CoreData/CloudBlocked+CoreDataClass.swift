@@ -53,8 +53,10 @@ func unblock(pubkey: String, context: NSManagedObjectContext = context()) {
     if let existing = CloudTask.fetchTask(byType: .blockUntil, andPubkey: pubkey, context: context) {
         context.delete(existing)
     }
-        
     AppState.shared.bgAppState.blockedPubkeys.remove(pubkey)
+    if let blocked = CloudBlocked.fetchBlock(byPubkey: pubkey, context: context) {
+        context.delete(blocked)
+    }
     DataProvider.shared().saveToDiskNow(.viewContext)
     sendNotification(.blockListUpdated, AppState.shared.bgAppState.blockedPubkeys)
 }
