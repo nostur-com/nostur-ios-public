@@ -6467,7 +6467,7 @@
         }
       }
     },
-    "onAppearOnce!" : {
+    "onAppearOnce()" : {
 
     },
     "Only connect to additional relays when a VPN is active" : {
@@ -7684,6 +7684,9 @@
           }
         }
       }
+    },
+    "Relay Autopilot" : {
+
     },
     "Relay connection stats" : {
       "localizations" : {
@@ -10271,6 +10274,9 @@
           }
         }
       }
+    },
+    "Use additional relays from contacts in this feed to fetch posts" : {
+
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",

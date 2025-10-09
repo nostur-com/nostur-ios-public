@@ -12,6 +12,7 @@ import NavigationBackport
 // Settings for a local private list or public nip-51 list
 struct ContactFeedSettings: View {
     @ObservedObject public var feed: CloudFeed
+    @ObservedObject public var ss = SettingsStore.shared
     
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) private var dismiss
@@ -113,6 +114,18 @@ struct ContactFeedSettings: View {
                     Text("Remember feed")
                     Text("Resume feed from where you left off when you reopen the app")
                 }
+                
+                if ss.enableOutboxRelays {
+                    // TOGGLE USE OUTBOX
+                    Toggle(isOn: Binding(get: {
+                        feed.useOutbox
+                    }, set: { newValue in
+                        feed.useOutbox = newValue
+                    })) {
+                        Text("Relay Autopilot")
+                        Text("Use additional relays from contacts in this feed to fetch posts")
+                    }
+                }
             }
             else {
                 
@@ -151,6 +164,18 @@ struct ContactFeedSettings: View {
                     })) {
                         Text("Remember feed")
                         Text("Resume feed from where you left off when you reopen the app")
+                    }
+                    
+                    if ss.enableOutboxRelays {
+                        // TOGGLE USE OUTBOX
+                        Toggle(isOn: Binding(get: {
+                            feed.useOutbox
+                        }, set: { newValue in
+                            feed.useOutbox = newValue
+                        })) {
+                            Text("Relay Autopilot")
+                            Text("Use additional relays from contacts in this feed to fetch posts")
+                        }
                     }
                 }
                 
@@ -323,6 +348,12 @@ struct ContactFeedSettings: View {
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
+        }
+        
+        .onDisappear {
+            if ss.enableOutboxRelays && feed.useOutbox, !feed.contactPubkeys.isEmpty {
+                AccountsState.shared.loggedInAccount?.outboxLoader?.reload()
+            }
         }
     }
 }

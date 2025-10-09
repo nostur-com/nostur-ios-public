@@ -33,6 +33,9 @@ extension CloudFeed {
     
     // Continue Where Left Off toggle - Restore state / scroll position next time opening the feed. For relay feeds better default to off. For contact feeds turn on to catch up on missed posts
     @NSManaged public var `continue`: Bool
+    
+    // Toggle to use outbox for custom feeds (normally only on following feed)
+    @NSManaged public var useOutbox: Bool
     @NSManaged public var pubkeys: String?
     @NSManaged public var relays: String?
     

@@ -13,7 +13,8 @@ import Combine
 public class OutboxLoader {
     
     private let pubkey: String // Account
-    private let follows: Set<String> // Follows
+    private var follows: Set<String> // Follows
+    private var contactFeedPubkeys: Set<String> = [] // pubkeys from custom contact feeds with .useOutbox enabled
     private let context: NSManagedObjectContext
 
     private var mostRecentKind10002At: Int?
@@ -47,6 +48,16 @@ public class OutboxLoader {
     public func load() {
         // TODO: Skip if outbox disabled, track didLoad, run on toggle on + !didLoad
         
+        
+        // include pubkeys from contact feeds (.type == "pubkeys" or nil) with .useOutbox enabled, and are active (.showAsTab)
+        let contactFeedsPubkeys: Set<String> = Set(
+            CloudFeed.fetchAll(context: Nostur.context())
+                .filter { $0.useOutbox && ($0.type == nil || $0.type == "pubkeys") && $0.showAsTab }
+                .flatMap { $0.contactPubkeys }
+            )
+        
+        self.contactFeedPubkeys = contactFeedsPubkeys
+        
         // Load from DB, then fetch more
         
         self.loadKind10002sFromDb { kind10002s in
@@ -63,11 +74,29 @@ public class OutboxLoader {
         }
     }
     
+    // Reload (call after custom feed with .useOutbox on is updated)
+    public func reload() {
+        
+        // include pubkeys from contact feeds (.type == "pubkeys" or nil) with .useOutbox enabled, and are active (.showAsTab)
+        let contactFeedsPubkeys: Set<String> = Set(
+            CloudFeed.fetchAll(context: Nostur.context())
+                .filter { $0.useOutbox && ($0.type == nil || $0.type == "pubkeys") && $0.showAsTab }
+                .flatMap { $0.contactPubkeys }
+            )
+        
+        self.contactFeedPubkeys = contactFeedsPubkeys
+        self.loadKind10002sFromDb { kind10002s in
+            ConnectionPool.shared.reloadPreferredRelays(kind10002s: kind10002s)
+        }
+    }
+    
     private func loadKind10002sFromDb(_ completion: (([NostrEssentials.Event]) -> Void)? = nil) {
         context.perform { [weak self] in
             guard let self else { return }
+              
+            L.og.debug("📤📤 Outbox: including \(self.contactFeedPubkeys.subtracting(self.follows).count) pubkeys from contact feeds in relay autopilot")
             
-            let kind10002s: [NostrEssentials.Event] = Event.fetchReplacableEvents(10002, pubkeys: self.follows, context: context)
+            let kind10002s: [NostrEssentials.Event] = Event.fetchReplacableEvents(10002, pubkeys: self.follows.union(self.contactFeedPubkeys), context: context)
                 .map { event in
                     return event.toNostrEssentialsEvent()
                 }
@@ -95,6 +124,16 @@ public class OutboxLoader {
                 L.sockets.debug("📤📤 Outbox: Fetching contact relay info for \(self.follows) follows -[LOG]-")
 #endif
                 req(cm)
+                
+                let contactFeedPubkeys = self.contactFeedPubkeys.count <= 2000 ? self.contactFeedPubkeys : Set(self.contactFeedPubkeys.shuffled().prefix(2000))
+                        
+                if let cm2 = NostrEssentials
+                    .ClientMessage(type: .REQ,
+                                   subscriptionId: "OUTBOX1B-" + UUID().uuidString,
+                                   filters: [Filters(authors: contactFeedPubkeys, kinds: [10002], since: self.mostRecentKind10002At)]
+                    ).json() {
+                    req(cm2)
+                }
             },
             processResponseCommand: { [weak self] taskId, _, _ in
                 guard let self else { return }

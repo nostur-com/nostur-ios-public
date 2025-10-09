@@ -657,7 +657,7 @@ public class ConnectionPool: ObservableObject {
         
         self.preferredRelays = pubkeysByRelay(cleanKind10002s , ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(self.penaltybox))
         self.kind10002s = cleanKind10002s
-        // Set limit because to total relays will be derived from external events and can be abused
+        // Set limit because total relays will be derived from external events and can be abused
         self.maxPreferredRelays = maxPreferredRelays
     }
     
@@ -667,9 +667,15 @@ public class ConnectionPool: ObservableObject {
         if let newerKind10002s { // Update with new kind 10002s
             let cleanKind10002s = removeMisconfiguredKind10002s(newerKind10002s) // remove garbage first
             self.preferredRelays = pubkeysByRelay(cleanKind10002s, ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(self.penaltybox))
+#if DEBUG
+            L.sockets.debug("📤📤 Outbox .preferredRelays reloaded (A)")
+#endif
         }
         else { // no new kind 10002s, so probably update because new relays in penalty box
             self.preferredRelays = pubkeysByRelay(self.kind10002s, ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(self.penaltybox))
+#if DEBUG
+            L.sockets.debug("📤📤 Outbox .preferredRelays reloaded (B)")
+#endif
         }
     }
     

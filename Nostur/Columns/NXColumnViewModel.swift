@@ -1163,15 +1163,15 @@ class NXColumnViewModel: ObservableObject {
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: compatFilters), activeSubscriptionId: config.id)
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
-            let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
+            guard pubkeys.count > 0 else { return }
+            let filters = Filters(
+                authors: pubkeys,
+                kinds: FETCH_FOLLOWING_FEED_KINDS,
+                since: NTimestamp(date: Date.now).timestamp
+            )
             
-            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: FETCH_FOLLOWING_FEED_KINDS)
-            
-            if let message = CM(type: .REQ, subscriptionId: config.id, filters: filters).json() {
-                req(message, activeSubscriptionId: config.id)
-                // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
-            }
+            nxReq(filters, subscriptionId: config.id, isActiveSubscription: true, useOutbox: feed.useOutbox)
+
         case .someoneElses(_):
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
             let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
@@ -1350,21 +1350,26 @@ class NXColumnViewModel: ObservableObject {
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
-            let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
             
-            guard pubkeys.count > 0 || hashtags.count > 0 else {
-                L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
+            guard pubkeys.count > 0 else {
+                L.og.debug("☘️☘️ cmd with empty pubkeys")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: FETCH_FOLLOWING_FEED_KINDS)
             
-            if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
-                return (cmd: {
-                    req(message)
-                }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
-                // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
-            }
-            return nil
+            let filters = Filters(
+                authors: pubkeys,
+                kinds: FETCH_FOLLOWING_FEED_KINDS,
+                since: since,
+                until: until,
+                limit: !config.continue ? 150 : nil
+            )
+            
+            let subscriptionId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
+            
+            return (cmd: {
+                nxReq(filters, subscriptionId: subscriptionId, useOutbox: feed.useOutbox)
+            }, subId: subscriptionId)
+ 
         case .someoneElses(_):
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
             let hashtags = pubkeys.count + config.hashtags.count <= 2000 ? config.hashtags : [] // no hashtags if filter too large
@@ -1549,16 +1554,17 @@ class NXColumnViewModel: ObservableObject {
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
-            let hashtags = pubkeys.count + feed.followingHashtags.count <= 2000 ? feed.followingHashtags : [] // no hashtags if filter too large
             
-            guard pubkeys.count > 0 || hashtags.count > 0 else { return }
+            guard pubkeys.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 100, kinds: FETCH_FOLLOWING_FEED_KINDS)
+            let filters = Filters(
+                authors: pubkeys,
+                kinds: FETCH_FOLLOWING_FEED_KINDS,
+                until: Int(until),
+                limit: 100
+            )
             
-            if let message = CM(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters).json() {
-                req(message)
-                // TODO: Add toggle on .pubkeys custom feeds so we can also use outboxReq for non-"Following"
-            }
+            nxReq(filters, subscriptionId: "PAGE-" + config.id, useOutbox: feed.useOutbox)
             
         case .someoneElses(_):
             let pubkeys = config.pubkeys.count <= 2000 ? config.pubkeys : Set(config.pubkeys.shuffled().prefix(2000))
@@ -2551,18 +2557,16 @@ extension NXColumnViewModel {
 #endif
         
         let subscriptionId = "Profiles-" + feed.subscriptionId
-        let filters = [Filters(authors: pubkeys, kinds: FETCH_FOLLOWING_PROFILE_KINDS, since: since)]
+        let filters = Filters(authors: pubkeys, kinds: FETCH_FOLLOWING_PROFILE_KINDS, since: since)
         
         if case .following(_) = config.columnType {
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters))
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: [filters]))
         }
         else if case .picture(_) = config.columnType {
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: filters))
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: [filters]))
         }
         else {
-            if let message = CM(type: .REQ, subscriptionId: subscriptionId, filters: filters).json() {
-                req(message)
-            }
+            nxReq(filters, subscriptionId: subscriptionId, useOutbox: feed.useOutbox)
         }
         feed.profilesFetchedAt = .now
     }
