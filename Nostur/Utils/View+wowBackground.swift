@@ -15,8 +15,8 @@ extension View {
                     Color(red: 0.17, green: 0.96, blue: 0.92),
                     Color(red: 0.15, green: 0.48, blue: 0.25)
                     ]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+                    startPoint: .bottomTrailing,
+                    endPoint: .topLeading
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .ignoresSafeArea()
