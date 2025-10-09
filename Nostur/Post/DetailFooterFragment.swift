@@ -30,27 +30,27 @@ struct DetailFooterFragment: View {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.likesCount)
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
-                        .lineLimit(1)
                 }
+                .lineLimit(1)
             }
             NBNavigationLink(value: ViewPath.PostReposts(id: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.repostsCount)
                     Text("reposts", comment: "Label for reposts count, example: (7) reposts")
-                        .lineLimit(1)
                 }
+                .lineLimit(1)
             }
             NBNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.zapsCount)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
-                        .lineLimit(1)
                         .layoutPriority(3)
                     
                     AnimatedNumberString(number: tallyString)
                         .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
                         .layoutPriority(4)
                 }
+                .lineLimit(1)
             }
             
             Spacer()
