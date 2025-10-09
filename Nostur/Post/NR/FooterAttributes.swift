@@ -124,10 +124,13 @@ class FooterAttributes: ObservableObject {
         impactMed.impactOccurred()
         
         _ = Unpublisher.shared.cancel(cancellationId)
-        NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
-        NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
         self.zapState = .cancelled
         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: pubkey, eTag: id, zapState: .cancelled))
+        
+        bg().perform {
+            NWCRequestQueue.shared.removeRequest(byCancellationId: cancellationId)
+            NWCZapQueue.shared.removeZap(byCancellationId: cancellationId)
+        }
     }
     
     private var relayChangeSubscription: AnyCancellable?
