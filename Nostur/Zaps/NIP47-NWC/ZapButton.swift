@@ -172,7 +172,8 @@ struct ZapButtonInner: View {
         withAnimation(.easeIn(duration: 0.25).delay(0.25)) {// wait 0.25 for the strike
             activeColor = .yellow
         }
-        cancellationId = UUID()
+        let cancellationId = UUID()
+        self.cancellationId = cancellationId
         isZapped = true
         SoundManager.shared.playThunderzap()
         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: nrPost.pubkey, eTag: nrPost.id, zapState: .initiated))
@@ -180,7 +181,7 @@ struct ZapButtonInner: View {
         
         bg().perform {
             NWCRequestQueue.shared.ensureNWCconnection()
-            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId!, zapMessage: zapMessage)
+            let zap = Zap(isNC: isNC, amount: Int64(selectedAmount), nrContact: nrContact, eventId: nrPost.id, event: nrPost.event, cancellationId: cancellationId, zapMessage: zapMessage)
             NWCZapQueue.shared.sendZap(zap)
             accountCache()?.addZapped(nrPost.id)
         }
