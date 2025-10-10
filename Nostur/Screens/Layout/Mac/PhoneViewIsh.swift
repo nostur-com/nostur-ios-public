@@ -71,8 +71,8 @@ struct PhoneViewIsh: View {
         })
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
-            guard !IS_IPAD || horizontalSizeClass == .compact else { return }
             guard selectedTab() == "Main" else { return }
+            guard destination.context == "Default" else { return }
 
             navPath.append(destination.destination)
             

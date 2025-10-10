@@ -18,6 +18,7 @@ class MacColumnsVM: ObservableObject {
     static let shared = MacColumnsVM()
     
     @Published var columns: [MacColumnConfig] = []
+    @Published var availableFeeds: [CloudFeed] = []
     
     @MainActor
     public func addColumn() {
@@ -41,21 +42,52 @@ class MacColumnsVM: ObservableObject {
         columns.count > 0
     }
     
-    init() {
+    init() {}
+    
+    @MainActor
+    public func load() async {
+        availableFeeds = await getAvailableFeeds()
+        columns = await getConfiguredColumns()
+    }
+    
+    @MainActor
+    private func getConfiguredColumns() async -> [MacColumnConfig] {
         let decoder = JSONDecoder()
         if let macListState = try? decoder.decode(MacListStateSerialized.self, from: macListstateSerialized.data(using: .utf8)!) {
-            columns = macListState.columns
-            L.og.debug("MacListState: restoring columns: \(self.columns.count) and list ids: \(self.columns.map { $0 == nil ? "nil" : $0.type.rawValue } .joined(separator: ", "))")
+            L.og.debug("MacListState: restoring columns: \(macListState.columns.count) and list ids: \(macListState.columns.map { $0.type.rawValue } .joined(separator: ", "))")
+      
+            return macListState.columns
         }
         else {
             L.og.error("MacListState problem decoding macListstateSerialized")
+            return []
         }
+    }
+    
+    @MainActor
+    private func getAvailableFeeds() async -> [CloudFeed] {
+        return CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
+            .filter {
+                switch $0.feedType {
+                    case .picture(_):
+                        return true
+                    case .pubkeys(_):
+                        return true
+                    case .relays(_):
+                        return true
+                    case .followSet(_), .followPack(_):
+                        return true
+                    default:
+                        return false
+                }
+            }
     }
     
     @MainActor
     public func updateColumn(_ config: MacColumnConfig) {
         // replace config in self.columns where config.id matches
         if let index = columns.firstIndex(where: { $0.id == config.id }) {
+            self.objectWillChange.send()
             columns[index] = config
             saveState()
         }
@@ -82,6 +114,10 @@ struct MacColumnConfig: Codable, Equatable, Identifiable {
     var id: UUID = UUID()
     var type: MacColumnType = .unconfigured
     var cloudFeedId: String?
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.type == rhs.type && lhs.cloudFeedId == rhs.cloudFeedId
+    }
 }
 
 enum MacColumnType: String, Codable {

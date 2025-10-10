@@ -71,8 +71,9 @@ struct MacMainWindow: View {
                     
                     // Extra lists (+ -)
                     ForEach(vm.columns) { columnConfig in
-                        MacColumn(config: columnConfig, availableFeeds: availableFeeds)
+                        MacColumn(config: columnConfig)
                             .environment(\.availableWidth, columnSize(geo.size.width))
+                            .environment(\.containerID, columnConfig.id.uuidString)
                             .frame(width: columnWidth)
                             .debugDimensions()
                     }
@@ -92,22 +93,8 @@ struct MacMainWindow: View {
                     }
                 }
             }
-            .onAppear {
-                availableFeeds = CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
-                    .filter {
-                        switch $0.feedType {
-                            case .picture(_):
-                                return true
-                            case .pubkeys(_):
-                                return true
-                            case .relays(_):
-                                return true
-                            case .followSet(_), .followPack(_):
-                                return true
-                            default:
-                                return false
-                        }
-                    }
+            .task {
+                await vm.load()
             }
             .withSheets()
             .withLightningEffect()
