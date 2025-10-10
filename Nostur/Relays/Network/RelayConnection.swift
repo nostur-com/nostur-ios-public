@@ -496,6 +496,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         DispatchQueue.main.async { [weak self] in
             let anyConnected = ConnectionPool.shared.anyConnected
             self?.queue.async(flags: .barrier) { [weak self] in
+                // always clear outqueue after error/disconnect
+                self?.outQueue = []
+                
                 self?.webSocketTask?.cancel()
 //                self?.session?.invalidateAndCancel()
                 self?.nreqSubscriptions = []
