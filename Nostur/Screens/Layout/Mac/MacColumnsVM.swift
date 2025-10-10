@@ -10,35 +10,50 @@ import SwiftUI
 
 public typealias ListID = String
 
-class MacListState: ObservableObject {
+class MacColumnsVM: ObservableObject {
     
     @AppStorage("mac_list_state_serialized") var macListstateSerialized = ""
     @AppStorage("selected_tab") var selectedTab = "Main"
     
-    static let shared = MacListState()
+    static let shared = MacColumnsVM()
     
-    var columnsCount:Int = 0 {
-        didSet {
-            saveState()
-        }
+    @Published var columns: [ListID?] = []
+    
+    @MainActor
+    public func addColumn() {
+        guard allowAddColumn else { return }
+        columns.append(nil)
+        saveState()
     }
-    var columns:[ListID] = []
+    
+    public var allowAddColumn: Bool {
+        columns.count < 10
+    }
+    
+    @MainActor
+    public func removeColumn(_ id: String? = nil) {
+        guard allowRemoveColumn else { return }
+        _ = columns.removeLast()
+        saveState()
+    }
+    
+    public var allowRemoveColumn: Bool {
+        columns.count > 0
+    }
     
     init() {
         let decoder = JSONDecoder()
         if let macListState = try? decoder.decode(MacListStateSerialized.self, from: macListstateSerialized.data(using: .utf8)!) {
-            columnsCount = macListState.columnsCount
             columns = macListState.columns
-            L.og.debug("MacListState: restoring columns: \(self.columnsCount) and list ids: \(self.columns.joined(separator: ", "))")
+            L.og.debug("MacListState: restoring columns: \(self.columns.count) and list ids: \(self.columns.map { $0 == nil ? "nil" : $0! } .joined(separator: ", "))")
         }
         else {
-            columnsCount = 1
             L.og.error("MacListState problem decoding macListstateSerialized")
         }
     }
     
     public func saveState() {
-        let state = MacListStateSerialized(columnsCount: columnsCount, columns: columns)
+        let state = MacListStateSerialized(columns: columns)
         let encoder = JSONEncoder()
         if let encodedState = try? encoder.encode(state) {
             macListstateSerialized = String(data: encodedState, encoding: .utf8) ?? ""
@@ -48,11 +63,8 @@ class MacListState: ObservableObject {
             L.og.error("MacListState problem encoding macListstateSerialized")
         }
     }
-    
-    struct MacListStateSerialized: Codable {
-        let columnsCount:Int
-        let columns:[String]
-    }
-    
 }
 
+struct MacListStateSerialized: Codable {
+    let columns: [String?]
+}

@@ -11,7 +11,7 @@ struct SideTabs: View {
     @EnvironmentObject private var dm: DirectMessageViewModel
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @Environment(\.theme) private var theme
-    @Binding var columnsCount: Int
+    @ObservedObject var vm: MacColumnsVM
     @Binding var selectedTab: String
     @State private var unread: Int = 0
     
@@ -79,13 +79,15 @@ struct SideTabs: View {
             
             
             Group {
-                Button { addColumn() } label: {
+                Button { vm.addColumn() } label: {
                     Image(systemName: "rectangle.stack.fill.badge.plus")
                 }
+                .disabled(!vm.allowAddColumn)
                 Color.clear.frame(height: 5)
-                Button { removeColumn() } label: {
+                Button { vm.removeColumn() } label: {
                     Image(systemName: "rectangle.stack.badge.minus")
                 }
+                .disabled(!vm.allowRemoveColumn)
             }
             Spacer()
         }
@@ -96,15 +98,5 @@ struct SideTabs: View {
                 self.unread = unread
             }
         }
-    }
-    
-    func addColumn() {
-        guard columnsCount < 10 else { return }
-        columnsCount += 1
-    }
-    
-    func removeColumn() {
-        guard columnsCount > 1 else { return }
-        columnsCount -= 1
     }
 }

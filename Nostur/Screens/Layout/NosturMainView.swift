@@ -16,7 +16,7 @@ struct NosturMainView: View {
         AppEnvironment(la: la) {
             if #available(iOS 18.0, *), IS_CATALYST && ss.proMode {
                 WithSidebar {
-                    MacListsView()
+                    MacMainWindow()
                 }
             }
             else {
