@@ -40,32 +40,6 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
                     }
                 }
         }
-//        else if #available(iOS 16.0, *) {
-//            GeometryReader { geometry in
-//                content
-//                    .onTapGesture(coordinateSpace: .global) { location in
-//                        guard !nxViewingContext.contains(.preview) else { return }
-//                        let frame = geometry.frame(in: .global)
-//                        let frameSize_ = self.frameSize ?? contentSize
-//                        
-//                        print("Tapped location: \(location)")
-//                        print("Tapped frame: \(frame.minX + (frameSize_.width/2)) \(frame.minY + (frameSize_.height/2))")
-//                        
-//                        triggerZoom(origin: CGPoint(x: frame.minX + (frameSize_.width/2), y: frame.minY + (frameSize_.height/2)))
-//                    }
-//            }
-//            .modifier {
-//                if let frameSize {
-//                    $0.frame(width: frameSize.width, height: frameSize.height)
-//                }
-//                else {
-//                    $0.readSize(onChange: { size in
-//                        guard contentSize != size else { return }
-//                        contentSize = size
-//                    })
-//                }
-//            }
-//        }
         else {
             // Fallback on earlier versions
             content
