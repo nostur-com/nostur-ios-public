@@ -70,10 +70,9 @@ struct MacMainWindow: View {
                         .debugDimensions()
                     
                     // Extra lists (+ -)
-                    ForEach(0..<max(1,vm.columns.count), id:\.self) { columnIndex in
-                        MacColumn(availableFeeds: availableFeeds)
+                    ForEach(vm.columns) { columnConfig in
+                        MacColumn(config: columnConfig, availableFeeds: availableFeeds)
                             .environment(\.availableWidth, columnSize(geo.size.width))
-                            .id(columnIndex)
                             .frame(width: columnWidth)
                             .debugDimensions()
                     }

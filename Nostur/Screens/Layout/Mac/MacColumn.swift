@@ -11,7 +11,11 @@ import NavigationBackport
 @available(iOS 16.0, *)
 struct MacColumn: View {
     @Environment(\.theme) private var theme
+    @Environment(\.macColumnsState) private var vm
+    
+    var config: MacColumnConfig
     let availableFeeds: [CloudFeed]
+    
     @State private var selectedFeed: CloudFeed? = nil
     @State private var navPath = NBNavigationPath()
     @State private var columnConfig: NXColumnConfig?
@@ -20,6 +24,27 @@ struct MacColumn: View {
         NBNavigationStack(path: $navPath) {
             ZStack {
                 theme.listBackground
+                
+                switch config.type {
+                case .unconfigured:
+                    Text("unconfigured")
+                case .cloudFeed:
+                    CloudFeedColumn(config: config)
+                case .notifications:
+                    Text("notifications")
+                case .following:
+                    Text("following")
+                case .photos:
+                    Text("photos")
+                case .mentions:
+                    Text("mentions")
+                case .bookmarks:
+                    Text("bookmarks")
+                case .DMs:
+                    Text("DMs")
+                case .newPosts:
+                    Text("newPosts")
+                }
 
                 
                 if selectedFeed == nil {
@@ -77,7 +102,29 @@ struct MacColumn: View {
             .onChange(of: selectedFeed) { newValue in
                 guard let newValue else { return }
                 columnConfig = NXColumnConfig(id: newValue.subscriptionId, columnType: newValue.feedType, accountPubkey: newValue.accountPubkey, name: newValue.name_)
+                
+                vm.updateColumn(
+                    MacColumnConfig(id: config.id, type: .cloudFeed, cloudFeedId: newValue.id?.uuidString)
+                )
             }
         }
+    }
+}
+    
+
+
+struct CloudFeedColumn: View {
+    var config: MacColumnConfig
+    @State var cloudFeed: CloudFeed?
+    
+    var body: some View {
+        Text("Hello, World!")
+            .onAppear {
+                load()
+            }
+    }
+    
+    func load() {
+        
     }
 }
