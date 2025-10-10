@@ -41,39 +41,11 @@ struct HorizontallyCenteredView: ViewModifier {
     }
 }
 
-struct SizePreferenceKey: PreferenceKey {
-    static let defaultValue: CGSize = .zero
-
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
-    }
-}
-
-extension View {
-  func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
-    if #available(iOS 16.0, *) {
-      return onGeometryChange(for: CGSize.self) { geometry in
-        geometry.size
-      } action: { size in
-        onChange(size)
-      }
-    } else {
-      return overlay(
-        GeometryReader { geometryProxy in
-          Color.clear
-            .preference(key: SizePreferenceKey.self, value: geometryProxy.size)
-        }
-      )
-      .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
-    }
-  }
-}
-
 struct DebugDimensions: ViewModifier {
     
-    var label:String? = nil
-    var alignment:Alignment
-    @State var actualSize:CGSize? = nil
+    var label: String? = nil
+    var alignment: Alignment
+    @State var actualSize: CGSize? = nil
     
     var horizontalAlignment: HorizontalAlignment {
         switch alignment {
@@ -90,25 +62,36 @@ struct DebugDimensions: ViewModifier {
     #if DEBUG
         if 1 == 2 {
             content
-                .readSize { size in
-                    actualSize = size
-                }
-                .overlay(alignment: alignment) {
-                    if let actualSize {
-                        VStack(alignment: horizontalAlignment) {
-                            if let label {
-                                Text(label)
-                                    .font(.caption)
-                                    .foregroundColor(.white)
-                                    .background(.brown)
-                                    .fontWeightBold()
+                .modifier {
+                    if #available(iOS 16.0, *) {
+                        $0.onGeometryChange(for: CGSize.self) { geo in
+                            return geo.size
+                        } action: { newSize in
+                            if newSize != actualSize {
+                                self.actualSize = newSize
                             }
-                            Text(actualSize.debugDescription)
-                                .font(.caption)
-                                .foregroundColor(.white)
-                                .background(.black)
-                                .fontWeightBold()
                         }
+                        .overlay(alignment: alignment) {
+                            if let actualSize {
+                                VStack(alignment: horizontalAlignment) {
+                                    if let label {
+                                        Text(label)
+                                            .font(.caption)
+                                            .foregroundColor(.white)
+                                            .background(.brown)
+                                            .fontWeightBold()
+                                    }
+                                    Text(actualSize.debugDescription)
+                                        .font(.caption)
+                                        .foregroundColor(.white)
+                                        .background(.black)
+                                        .fontWeightBold()
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        $0
                     }
                 }
         }
@@ -121,22 +104,33 @@ struct DebugDimensions: ViewModifier {
     }
 }
 
+struct SizePreferenceKey: PreferenceKey {
+    static let defaultValue: CGSize = .zero
 
-
-
-struct SizeModifier: ViewModifier {
-    let onChange: ((CGSize) -> Void)?
-    
-    init(onChange: ((CGSize) -> Void)? = nil) {
-        self.onChange = onChange
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        value = nextValue()
     }
-    
-    func body(content: Content) -> some View {
-        if let onChange {
-            content.readSize(onChange: onChange)
+}
+
+extension View {
+    func readSize(onChange: @escaping (CGSize) -> Void) -> some View {
+        if #available(iOS 16.0, *) {
+            return onGeometryChange(for: CGSize.self) { geometry in
+                geometry.size
+            } action: { size in
+                onChange(size)
+            }
         } else {
-            // If no callback is provided, just return the content as-is
-            content
+            return overlay(
+                GeometryReader { geometryProxy in
+                    Color.clear
+                        .preference(
+                            key: SizePreferenceKey.self,
+                            value: geometryProxy.size
+                        )
+                }
+            )
+            .onPreferenceChange(SizePreferenceKey.self, perform: onChange)
         }
     }
 }
