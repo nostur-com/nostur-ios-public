@@ -17,12 +17,12 @@ struct Discover: View {
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+        set { setSelectedTab(newValue) }
     }
     
     private var selectedSubTab: String {
         get { UserDefaults.standard.string(forKey: "selected_subtab") ?? "Discover" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_subtab") }
+        set { setSelectedSubTab(newValue) }
     }
     
     var body: some View {

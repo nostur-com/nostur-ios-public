@@ -72,10 +72,11 @@ struct BookmarksTab: View {
             .navigationTitle(selectedSubTab)
             .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
+            .environment(\.containerID, "Bookmarks")
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard !IS_IPAD || horizontalSizeClass == .compact else { return }
-                guard selectedTab() == "Bookmarks" else { return }
+                guard destination.context == "Bookmarks" else { return }
                 navPath.append(destination.destination)
             }
             .onReceive(receiveNotification(.clearNavigation)) { notification in

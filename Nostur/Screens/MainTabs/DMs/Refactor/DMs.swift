@@ -13,6 +13,7 @@ struct DMs: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     
     @State private var tab = "Accepted"
     
@@ -164,6 +165,7 @@ struct DMs: View {
                         conv.dmState.didUpdate.send()
                     }
                     .environment(\.theme, theme)
+                    .environment(\.containerID, containerID)
             }
         }
         .sheet(isPresented: $showingNewDM) {
@@ -232,7 +234,7 @@ struct DMNavigationStack<Content: View>: View {
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Messages" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+        set { setSelectedTab(newValue) }
     }
     
     init(@ViewBuilder _ content: () -> Content) {
@@ -241,10 +243,11 @@ struct DMNavigationStack<Content: View>: View {
     var body: some View {
         NBNavigationStack(path: $navPath) {
             content
+                .environment(\.containerID, "Messages")
                 .onReceive(receiveNotification(.navigateTo)) { notification in
                     let destination = notification.object as! NavigationDestination
                     guard !IS_IPAD || horizontalSizeClass == .compact else { return }
-                    guard selectedTab == "Messages" else { return }
+                    guard destination.context == "Messages" else { return }
                     navPath.append(destination.destination)
                 }
                 .onReceive(receiveNotification(.clearNavigation)) { notification in

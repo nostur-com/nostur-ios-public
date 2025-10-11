@@ -43,6 +43,7 @@ struct PhoneViewIsh: View {
                     }
                 }
             }
+            .environment(\.containerID, "Default")
             .navigationTitle("Following")
             .navigationBarTitleDisplayMode(.inline)
             .withNavigationDestinations()
@@ -71,7 +72,7 @@ struct PhoneViewIsh: View {
         })
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
-            guard selectedTab() == "Main" else { return }
+//            guard selectedTab() == "Main" else { return }
             guard destination.context == "Default" else { return }
 
             navPath.append(destination.destination)

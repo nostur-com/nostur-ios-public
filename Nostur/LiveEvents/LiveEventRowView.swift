@@ -97,7 +97,7 @@ struct LiveEventRowView: View {
         )
         .contentShape(Rectangle())
         .onTapGesture {
-            UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+            setSelectedTab("Main")
             if let status = liveEvent.status, status == "planned" {
                 navigateTo(liveEvent, context: "Default")
             }

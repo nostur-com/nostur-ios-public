@@ -14,6 +14,8 @@ class MacColumnsVM: ObservableObject {
     
     @AppStorage("mac_columns_serialized") var macListstateSerialized = ""
     @AppStorage("selected_tab") var selectedTab = "Main"
+    @AppStorage("selected_subtab") var selectedSubTab = "Following"
+    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Mentions"
     
     static let shared = MacColumnsVM()
     

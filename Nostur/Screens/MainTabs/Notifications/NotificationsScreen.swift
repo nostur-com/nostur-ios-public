@@ -22,6 +22,7 @@ struct NotificationsContainer: View {
 #endif
         NBNavigationStack(path: $navPath) {
             NotificationsScreen(account: la.account, navPath: $navPath)
+                .environment(\.containerID, "Notifications")
                 .background(theme.listBackground)
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
@@ -32,7 +33,7 @@ struct NotificationsContainer: View {
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
             guard !IS_IPAD || horizontalSizeClass == .compact else { return }
-            guard selectedTab() == "Notifications" else { return }
+            guard destination.context == "Notifications" else { return }
             navPath.append(destination.destination)
         }
         .onReceive(receiveNotification(.clearNavigation)) { notification in

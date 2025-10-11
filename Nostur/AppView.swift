@@ -272,18 +272,18 @@ extension AppView {
 #if DEBUG
         L.og.info("nostr: nevent1/nprofile1: \(nostrSharable[0][2])\(nostrSharable[0][3])")
 #endif
-        UserDefaults.standard.setValue("Search", forKey: "selected_tab")
+        setSelectedTab("Search")
         if nostrSharable[0][2] == "nevent1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
-                navigateTo(Nevent1Path(nevent1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Default")
+                navigateTo(Nevent1Path(nevent1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Search")
             }
             return
         }
         if nostrSharable[0][2] == "nprofile1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 // TODO: Make proper loading into Search tab, instead of hoping the tab has loaded in time for .onReceive(receiveNotification(.navigateTo))
-                navigateTo(Nprofile1Path(nprofile1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Default")
+                navigateTo(Nprofile1Path(nprofile1: "\(nostrSharable[0][2])\(nostrSharable[0][3])"), context: "Search")
             }
             return
         }
@@ -327,9 +327,9 @@ extension AppView {
 #if DEBUG
         L.og.info("nostur: hashtag: \(nosturHashtag[0][2])")
 #endif
-        UserDefaults.standard.setValue("Search", forKey: "selected_tab")
+        setSelectedTab("Search")
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]), context: "Default")
+            navigateTo(HashtagPath(hashTag: nosturHashtag[0][2]), context: "Search")
         }
         return
     }

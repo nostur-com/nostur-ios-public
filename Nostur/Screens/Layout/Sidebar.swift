@@ -115,7 +115,7 @@ struct SideBar: View {
                     }
                     Button {
                         if selectedTab() != "Main" {
-                            UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                            setSelectedTab("Main")
                         }
                         navigateToOnMain(ViewPath.Lists)
                         showSidebar = false
@@ -132,7 +132,7 @@ struct SideBar: View {
                         .contentShape(Rectangle())
                     }
                     Button {
-                        UserDefaults.standard.setValue("Bookmarks", forKey: "selected_tab")
+                        setSelectedTab("Bookmarks")
                         showSidebar = false
                     } label: {
                         Label(
@@ -153,7 +153,7 @@ struct SideBar: View {
                     if #available(iOS 26.0, *), !IS_CATALYST {
                         Button {
                             if selectedTab() != "Main" {
-                                UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                                setSelectedTab("Main")
                             }
                             navigateToOnMain(ViewPath.DMs)
                             showSidebar = false
@@ -190,7 +190,7 @@ struct SideBar: View {
                     if !account.isNC {
                         Button {
                             if selectedTab() != "Main" {
-                                UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                                setSelectedTab("Main")
                             }
                             navigateToOnMain(ViewPath.Badges)
                             showSidebar = false
@@ -217,7 +217,7 @@ struct SideBar: View {
                     }
                     Button {
                         if selectedTab() != "Main" {
-                            UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                            setSelectedTab("Main")
                         }
                         navigateToOnMain(ViewPath.Settings)
                         showSidebar = false
@@ -235,7 +235,7 @@ struct SideBar: View {
                     }
                     Button {
                         if selectedTab() != "Main" {
-                            UserDefaults.standard.setValue("Main", forKey: "selected_tab")
+                            setSelectedTab("Main")
                         }
                         navigateToOnMain(ViewPath.Blocklist)
                         showSidebar = false

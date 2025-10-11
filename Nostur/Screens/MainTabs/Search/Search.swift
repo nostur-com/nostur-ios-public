@@ -175,11 +175,13 @@ struct Search: View {
                     }
                 }
             }
+            .environment(\.containerID, "Search")
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard type(of: destination.destination) == Nevent1Path.self || type(of: destination.destination) == Nprofile1Path.self || type(of: destination.destination) == HashtagPath.self || horizontalSizeClass == .compact else { return }
  
-                guard selectedTab() == "Search" else { return }
+                guard destination.context == "Search" else { return }
+                
                 if (type(of: destination.destination) == HashtagPath.self) {
                     navPath.removeLast(navPath.count)
                     let hashtag = (destination.destination as! HashtagPath).hashTag

@@ -19,13 +19,13 @@ struct NotificationsMentions: View {
     @State private var backlog = Backlog(timeout: 12, backlogDebugName: "NotificationsMentions")
     
     private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { setSelectedTab(newValue) }
     }
     
     private var selectedNotificationsTab: String {
         get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+        set { setSelectedNotificationsTab(newValue) }
     }
     
     var body: some View {

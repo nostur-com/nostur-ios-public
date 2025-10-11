@@ -20,6 +20,7 @@ struct ProfileView: View {
     
     
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
     @EnvironmentObject private var la: LoggedInAccount
     
@@ -135,7 +136,7 @@ struct ProfileView: View {
                         
                         if account()?.isFullAccount ?? false {
                             Button {
-                                UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
+                                goToDMs()
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                                     sendNotification(.triggerDM, (nrContact.pubkey, nrContact))
                                 }
@@ -474,6 +475,7 @@ struct ProfileView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
             .navigationTitle("Following")
             .background(theme.listBackground)
+            .environment(\.containerID, containerID)
         }
         .nbNavigationDestination(isPresented: $showFollowers) {
             NXList(plain: true) {
@@ -482,6 +484,7 @@ struct ProfileView: View {
             .navigationTitle("Followers")
             .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
             .background(theme.listBackground)
+            .environment(\.containerID, containerID)
         }
         
         .onAppear {

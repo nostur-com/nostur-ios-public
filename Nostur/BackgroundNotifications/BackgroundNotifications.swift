@@ -43,13 +43,13 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         if let tapDestination = userInfo["tapDestination"] as? String {
             switch tapDestination {
             case "Mentions":
-                UserDefaults.standard.setValue("Notifications", forKey: "selected_tab")
-                UserDefaults.standard.setValue("Mentions", forKey: "selected_notifications_tab")
+                setSelectedTab("Notifications")
+                setSelectedSubTab("Mentions")
             case "New Posts":
-                UserDefaults.standard.setValue("Notifications", forKey: "selected_tab")
-                UserDefaults.standard.setValue("New Posts", forKey: "selected_notifications_tab")
+                setSelectedTab("Notifications")
+                setSelectedSubTab("New Posts")
             case "Messages":
-                UserDefaults.standard.setValue("Messages", forKey: "selected_tab")
+                goToDMs()
             default:
                 break
             }

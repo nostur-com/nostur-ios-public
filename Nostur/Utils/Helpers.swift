@@ -11,9 +11,31 @@ func selectedTab() -> String {
     UserDefaults.standard.string(forKey: "selected_tab") ?? "Main"
 }
 
+func setSelectedTab(_ tab: String) {
+    UserDefaults.standard.set(tab, forKey: "selected_tab")
+    if IS_CATALYST && SettingsStore.shared.proMode {
+        MacColumnsVM.shared.selectedTab = tab
+    }
+}
+
 func selectedSubTab() -> String {
     UserDefaults.standard.string(forKey: "selected_subtab") ?? "Following"
 }
+
+func setSelectedNotificationsTab(_ notificationsTab: String) {
+    UserDefaults.standard.set(notificationsTab, forKey: "selected_notifications_tab")
+    if IS_CATALYST && SettingsStore.shared.proMode {
+        MacColumnsVM.shared.selectedNotificationsTab = notificationsTab
+    }
+}
+
+func setSelectedSubTab(_ subTab: String) {
+    UserDefaults.standard.set(subTab, forKey: "selected_subtab")
+    if IS_CATALYST && SettingsStore.shared.proMode {
+        MacColumnsVM.shared.selectedSubTab = subTab
+    }
+}
+
 
 func selectedListId() -> String {
     UserDefaults.standard.string(forKey: "selected_listId") ?? ""
@@ -51,4 +73,16 @@ func homeTabNavigationTitle(_ selectedList: CloudFeed? = nil) -> String {
         return String(localized: "Reads", comment: "Tab title for the Reads (Articles) feed")
     }
     return String(localized: "Feed", comment: "Tab title for a feed")
+}
+
+func goToDMs() {
+    // DMs moved to sidebar on iOS 26 (but not on desktop catalyst)
+    if #available(iOS 26.0, *), !IS_CATALYST {
+        setSelectedTab("Main")
+        navigateToOnMain(ViewPath.DMs)
+    }
+    
+    else { // older iOS, or catalyst (both pre/post 26)
+        setSelectedTab("Messages")
+    }
 }

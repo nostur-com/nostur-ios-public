@@ -19,17 +19,18 @@ struct NewPostsForPubkeys: Hashable {
 // Copy pasta from old NotificationsFollowers
 struct NotificationsNewPosts: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     
     @Binding private var navPath: NBNavigationPath
     
     private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        set { setSelectedTab(newValue) }
     }
     
     private var selectedNotificationsTab: String {
         get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "New Posts" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+        set { setSelectedNotificationsTab(newValue) }
     }
     
     @FetchRequest
@@ -127,6 +128,7 @@ struct NotificationsNewPosts: View {
         .nbNavigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
             NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
                 .environment(\.theme, theme)
+                .environment(\.containerID, containerID)
         })
     }
 }

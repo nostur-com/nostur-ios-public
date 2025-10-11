@@ -21,7 +21,7 @@ struct MainFeedsScreen: View {
     @ObservedObject private var ss: SettingsStore = .shared
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+        set { setSelectedTab(newValue) }
     }
     @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @AppStorage("selected_listId") private var selectedListId = ""
@@ -723,8 +723,8 @@ struct MainFeedsScreen: View {
     private func createSomeoneElsesFeed(_ pubkey: String) {
         
         // Switch to main tab
-        UserDefaults.standard.setValue("Main", forKey: "selected_tab")
-        UserDefaults.standard.setValue("Following", forKey: "selected_subtab")
+        setSelectedTab("Main")
+        setSelectedSubTab("Following")
         
         followingConfig = NXColumnConfig(id: "List-\(pubkey.prefix(18))", columnType: .someoneElses(pubkey), name: "Other feed")
     }

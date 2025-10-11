@@ -20,12 +20,12 @@ struct NotificationsZaps: View {
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_tab") }
+        set { setSelectedTab(newValue) }
     }
     
     private var selectedNotificationsTab: String {
         get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Zaps" }
-        set { UserDefaults.standard.setValue(newValue, forKey: "selected_notifications_tab") }
+        set { setSelectedNotificationsTab(newValue) }
     }
     
     @FetchRequest
