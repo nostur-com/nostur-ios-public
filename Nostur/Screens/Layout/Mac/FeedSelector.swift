@@ -57,8 +57,7 @@ extension CloudFeed {
             case .following(_):
                 return self.name_
             case .picture(_):
-                let accountName = self.account?.anyName ?? "?"
-                return "Photos (\(accountName))"
+                return "Photos"
             case .pubkeys(_):
                 return self.name_
             case .relays(_):
