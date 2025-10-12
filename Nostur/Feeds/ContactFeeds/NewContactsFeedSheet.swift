@@ -198,7 +198,8 @@ struct NewContactsFeedSheet: View {
                 searching = true
                 let key = try NIP19(displayString: searchTrimmed)
                 contacts.nsPredicate = NSPredicate(format: "pubkey = %@", key.hexString)
-                req(RM.getUserMetadata(pubkey: key.hexString), relayType: .SEARCH)
+                req(RM.getUserMetadata(pubkey: key.hexString), relayType: .READ)
+                req(RM.getUserMetadata(pubkey: key.hexString), relayType: .SEARCH_ONLY)
             }
             catch {
                 L.og.debug("npub1 search fail \(error)")
