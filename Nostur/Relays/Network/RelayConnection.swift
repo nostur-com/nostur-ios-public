@@ -33,7 +33,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public var relayData: RelayData
     public var queue: DispatchQueue
-    private var session: URLSession?
+    private var urlSession: URLSession?
+    
+    // For debugging - expose session state
+    public var session: URLSession? {
+        return urlSession
+    }
     private var webSocketTask: URLSessionWebSocketTask?
     private var subscriptions = Set<AnyCancellable>()
     private var outQueue: [SocketMessage] = []
@@ -220,8 +225,8 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 }
                 
                 if !self.isSocketConnected {
-                    self.session?.invalidateAndCancel()
-                    self.session = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
+                    self.urlSession?.invalidateAndCancel()
+                    self.urlSession = URLSession(configuration: .default, delegate: self, delegateQueue: nil)
                     
                     if let url = URL(string: relayData.url) {
                         var urlRequest = URLRequest(url: url)
@@ -232,7 +237,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                             urlRequest.setValue("", forHTTPHeaderField: "Sec-WebSocket-Extensions") // "When websocket-server is sending a large frame data（>1024 bytes) to client(ios15 equipment), client websocket will be closed with an error."
                         }
 
-                        self.webSocketTask = self.session?.webSocketTask(with: urlRequest)
+                        self.webSocketTask = self.urlSession?.webSocketTask(with: urlRequest)
                         self.webSocketTask?.delegate = self
                     }
                     
@@ -370,16 +375,38 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     // (Planned) disconnect, so exponetional backoff and skipped is reset
     public func disconnect() {
+#if DEBUG
+        L.og.debug("🔴 Disconnecting: \(self.url)")
+#endif
         queue.async(flags: .barrier) { [weak self] in
             self?.webSocketTask?.cancel(with: .normalClosure, reason: nil)
-//            self?.session?.invalidateAndCancel()
+            self?.webSocketTask = nil
+            
+            self?.urlSession?.invalidateAndCancel() 
+            self?.urlSession = nil
+            
             self?.exponentialReconnectBackOff = 0
             self?.skipped = 0
             self?.firstConnection = true
             self?.nreqSubscriptions = []
             self?.lastMessageReceivedAt = nil
             self?.isSocketConnected = false
+            self?.outQueue = [] // Clear any pending messages
         }
+    }
+    
+    deinit {
+#if DEBUG
+        L.og.debug("🗑️ Deinitializing RelayConnection: \(self.url)")
+#endif
+        // Ensure cleanup even if disconnect() wasn't called
+        webSocketTask?.cancel(with: .normalClosure, reason: nil)
+        webSocketTask = nil
+        urlSession?.invalidateAndCancel()
+        urlSession = nil
+        subscriptions.removeAll()
+        outQueue.removeAll()
+        nreqSubscriptions.removeAll()
     }
     
     public func ping() {
@@ -400,7 +427,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 if let error {
                     self?.queue.async(flags: .barrier) { [weak self] in
                         guard let self else { return }
-                        self.session?.invalidateAndCancel()
+                        self.urlSession?.invalidateAndCancel()
                         self.nreqSubscriptions = []
 //                        self.exponentialReconnectBackOff = 0
 //                        self.skipped = 0
