@@ -52,7 +52,7 @@ public class OutboxLoader {
         // include pubkeys from contact feeds (.type == "pubkeys" or nil) with .useOutbox enabled, and are active (.showAsTab)
         let contactFeedsPubkeys: Set<String> = Set(
             CloudFeed.fetchAll(context: Nostur.context())
-                .filter { $0.useOutbox && ($0.type == nil || $0.type == "pubkeys") && $0.showAsTab }
+                .filter { $0.useOutbox && $0.couldUseOutbox && $0.showAsTab }
                 .flatMap { $0.contactPubkeys }
             )
         
@@ -80,7 +80,7 @@ public class OutboxLoader {
         // include pubkeys from contact feeds (.type == "pubkeys" or nil) with .useOutbox enabled, and are active (.showAsTab)
         let contactFeedsPubkeys: Set<String> = Set(
             CloudFeed.fetchAll(context: Nostur.context())
-                .filter { $0.useOutbox && ($0.type == nil || $0.type == "pubkeys") && $0.showAsTab }
+                .filter { $0.useOutbox && $0.couldUseOutbox && $0.showAsTab }
                 .flatMap { $0.contactPubkeys }
             )
         

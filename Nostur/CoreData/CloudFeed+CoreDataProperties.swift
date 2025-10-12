@@ -58,6 +58,12 @@ extension CloudFeed {
 
 extension CloudFeed : Identifiable {
     
+    // helper to decide if a feed could use outbox (basically if it has pubkeys)
+    var couldUseOutbox: Bool {
+        self.type == nil || self.type == "pubkeys" || self.type == "30000" || self.type == "39089" || self.type == "following"
+        // TODO: Maybe flip this? Just use != "relays" instead...
+    }
+    
     var aTag: ATag? {
         guard let listId else { return nil }
         guard let aTag = try? ATag(listId) else {
@@ -153,7 +159,7 @@ extension CloudFeed : Identifiable {
         case "relays":
             return ("List-" + String(id.prefix(min(idLength,18))))
             
-        case "30000":
+        case "30000", "39089":
             return ("List-" + String(id.prefix(min(idLength,18))))
             
         default:
