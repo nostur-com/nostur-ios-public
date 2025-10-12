@@ -98,22 +98,26 @@ struct Search: View {
                                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)
                             }
                         }
-//                        .padding(.top, GUTTER)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarLeading) {
-                                Button {
-                                    showSidebar = true
-                                } label: {
-                                    PFP(pubkey: la.account.publicKey, account: la.account, size:30)
-                                }
-                                .accessibilityLabel("Account menu")
 
+                        .modifier {
+                            if !IS_DESKTOP_COLUMNS() {
+                                $0.toolbar {
+                                    ToolbarItem(placement: .navigationBarLeading) {
+                                        Button {
+                                            showSidebar = true
+                                        } label: {
+                                            PFP(pubkey: la.account.publicKey, account: la.account, size:30)
+                                        }
+                                        .accessibilityLabel("Account menu")
+
+                                    }
+                                }
+                                .toolbarNavigationBackgroundVisible()
                             }
-        //                    ToolbarItem(placement: .principal) {
-        //
-        //                    }
+                            else {
+                                $0
+                            }
                         }
-                        .toolbarNavigationBackgroundVisible()
                     }
                     .scrollDismissesKeyboardCompat()
                     .onTapGesture {
