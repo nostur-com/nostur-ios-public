@@ -27,7 +27,7 @@ struct SideTabs: View {
             
             Group {
                 
-                Button("Following", systemImage: "house.fill") {
+                Button("Following", systemImage: "house") {
                     selectedTab = "Main"
                 }
                 .frame(width: 40, height: 40)
@@ -35,7 +35,7 @@ struct SideTabs: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 
-                Button("Notifications", systemImage: "bell.fill") {
+                Button("Notifications", systemImage: "bell") {
                     selectedTab = "Notifications"
                 }
                 .frame(width: 40, height: 40)
@@ -52,7 +52,7 @@ struct SideTabs: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 
-                Button("Bookmarks", systemImage: "bookmark.fill") {
+                Button("Bookmarks", systemImage: "bookmark") {
                     selectedTab = "Bookmarks"
                 }
                 .frame(width: 40, height: 40)
@@ -60,7 +60,7 @@ struct SideTabs: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
                 
-                Button("Messages", systemImage: "envelope.fill") {
+                Button("Messages", systemImage: "envelope") {
                     selectedTab = "Messages"
                 }
                 .frame(width: 40, height: 40)
@@ -80,7 +80,7 @@ struct SideTabs: View {
             
             Group {
                 Button { vm.addColumn() } label: {
-                    Image(systemName: "rectangle.stack.fill.badge.plus")
+                    Image(systemName: "rectangle.stack.badge.plus")
                 }
                 .disabled(!vm.allowAddColumn)
                 Color.clear.frame(height: 5)

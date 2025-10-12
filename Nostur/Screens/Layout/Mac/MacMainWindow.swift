@@ -37,25 +37,25 @@ struct MacMainWindow: View {
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Main")
-                                .toolbar(.hidden, for: .tabBar)
+//                                .toolbar(.hidden, for: .tabBar)
                             
                             NotificationsContainer()
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Notifications")
-                                .toolbar(.hidden, for: .tabBar)
+//                                .toolbar(.hidden, for: .tabBar)
 
                             Search()
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Search")
-                                .toolbar(.hidden, for: .tabBar)
+//                                .toolbar(.hidden, for: .tabBar)
                             
                             BookmarksTab()
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Bookmarks")
-                                .toolbar(.hidden, for: .tabBar)
+//                                .toolbar(.hidden, for: .tabBar)
                         
                             DMNavigationStack {
                                 DMContainer()
@@ -63,7 +63,7 @@ struct MacMainWindow: View {
                             .environment(\.horizontalSizeClass, .compact)
                             .environment(\.availableWidth, columnWidth)
                             .tag("Messages")
-                            .toolbar(.hidden, for: .tabBar)
+//                            .toolbar(.hidden, for: .tabBar)
                         }
                         .frame(width: columnWidth)
                         .debugDimensions()
@@ -77,6 +77,7 @@ struct MacMainWindow: View {
                             .debugDimensions()
                     }
                 }
+                .background(theme.background)
                 .onAppear {
                     columnWidth = columnSize(geo.size.width)
                 }
