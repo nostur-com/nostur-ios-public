@@ -23,9 +23,10 @@ class MacColumnsVM: ObservableObject {
     @Published var availableFeeds: [CloudFeed] = []
     
     @MainActor
-    public func addColumn() {
+    public func addColumn(_ config: MacColumnConfig? = nil) {
         guard allowAddColumn else { return }
-        columns.append(MacColumnConfig())
+        availableFeeds = getAvailableFeeds()
+        columns.append(config ?? MacColumnConfig())
         saveState()
     }
     
@@ -48,7 +49,7 @@ class MacColumnsVM: ObservableObject {
     
     @MainActor
     public func load() async {
-        availableFeeds = await getAvailableFeeds()
+        availableFeeds = getAvailableFeeds()
         columns = await getConfiguredColumns()
     }
     
@@ -67,12 +68,17 @@ class MacColumnsVM: ObservableObject {
     }
     
     @MainActor
-    private func getAvailableFeeds() async -> [CloudFeed] {
+    private func getAvailableFeeds() -> [CloudFeed] {
+        let activeAccount: CloudAccount? = account()
+        
         return CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
             .filter {
                 switch $0.feedType {
                     case .picture(_):
+                    if let accountPubkey = activeAccount?.publicKey, $0.accountPubkey == accountPubkey {
                         return true
+                    }
+                    return false
                     case .pubkeys(_):
                         return true
                     case .relays(_):
@@ -115,7 +121,7 @@ struct MacListStateSerialized: Codable {
 struct MacColumnConfig: Codable, Equatable, Identifiable {
     var id: UUID = UUID()
     var type: MacColumnType = .unconfigured
-    var cloudFeedId: String?
+    var cloudFeedId: String? // CloudFeed.id.uuidString
     
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id && lhs.type == rhs.type && lhs.cloudFeedId == rhs.cloudFeedId

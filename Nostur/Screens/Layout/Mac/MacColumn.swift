@@ -61,7 +61,8 @@ struct MacColumn: View {
                 }
             }
             
-            .onChange(of: selectedFeed) { newSelectedFeed in
+            .onValueChange(selectedFeed, action: { oldSelectedFeed, newSelectedFeed in
+                guard oldSelectedFeed != newSelectedFeed else { return }
                 if let newSelectedFeed {
                     vm.updateColumn(
                         MacColumnConfig(id: config.id, type: .cloudFeed, cloudFeedId: newSelectedFeed.id?.uuidString)
@@ -73,6 +74,13 @@ struct MacColumn: View {
                         MacColumnConfig(id: config.id, type: .unconfigured, cloudFeedId: nil)
                     )
                     columnType = .unconfigured
+                }
+            })
+            
+            .onChange(of: vm.availableFeeds) { newValue in
+                if !newValue.contains(where: { $0.id == selectedFeed?.id }) {
+                    columnType = .unconfigured
+                    selectedFeed = nil
                 }
             }
             

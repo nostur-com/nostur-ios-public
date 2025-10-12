@@ -112,10 +112,19 @@ func createFeedFromRelayData(_ relayData: RelayData, authPubkey: String? = nil) 
     // Close sheet
     AppSheetsModel.shared.dismiss()
     
-    // Change active tab to this new feed
-    UserDefaults.standard.setValue("Main", forKey: "selected_tab") // Main feed tab
-    UserDefaults.standard.setValue("List", forKey: "selected_subtab") // Select List
-    UserDefaults.standard.setValue(newFeed.subscriptionId, forKey: "selected_listId") // Which list
+    if IS_DESKTOP_COLUMNS() {
+        // Create new column, or replace last column (if too many)
+        if !MacColumnsVM.shared.allowAddColumn {
+            MacColumnsVM.shared.columns.removeLast()
+        }
+        MacColumnsVM.shared.addColumn(MacColumnConfig(type: .cloudFeed, cloudFeedId: newFeed.id?.uuidString))
+    }
+    else {
+        // Change active tab to this new feed
+        UserDefaults.standard.setValue("Main", forKey: "selected_tab") // Main feed tab
+        UserDefaults.standard.setValue("List", forKey: "selected_subtab") // Select List
+        UserDefaults.standard.setValue(newFeed.subscriptionId, forKey: "selected_listId") // Which list
+    }
 }
 
 struct RelayFeedPreviewInfo: Identifiable, Equatable {

@@ -156,6 +156,11 @@ struct ListsAndFeedsScreen: View {
             viewContext.delete(item)
         }
         DataProvider.shared().saveToDiskNow(.viewContext)
+        if IS_DESKTOP_COLUMNS() {
+            Task {
+                await MacColumnsVM.shared.load()
+            }
+        }
     }
     
     private func removeDuplicateLists() {
