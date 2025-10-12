@@ -101,22 +101,28 @@ enum ViewPath: IdentifiableDestination {
     case ProfileReactionList(pubkey: String)
 }
 
-extension View {
-    func withNavigationDestinations() -> some View {
-        return self
+struct NavigationDestinationsModifier: ViewModifier {
+    @Environment(\.containerID) var containerID
+    
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        content
             .nbNavigationDestination(for: NRPost.self) { nrPost in
                 switch nrPost.kind {
                 case 30023:
                     ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
+                        .environment(\.containerID, self.containerID)
                 case 30311:
                     if let nrLiveEvent = nrPost.nrLiveEvent {
                         LiveEventDetail(liveEvent: nrLiveEvent)
+                            .environment(\.containerID, self.containerID)
                     }
                     else {
                         Text("Missing nrLiveEvent")
                     }
                 default:
                     PostDetailView(nrPost: nrPost)
+                        .environment(\.containerID, self.containerID)
 //                        .equatable()
 //                        .debugDimensions("nbNavigationDestination.PostDetailView", alignment: .topLeading)
                 }
@@ -125,72 +131,98 @@ extension View {
                 switch path.kind {
                 case 30311:
                     LiveEventByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
+                        .environment(\.containerID, self.containerID)
                 default:
                     ArticleByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
+                        .environment(\.containerID, self.containerID)
                 }
-            }       
+            }
             .nbNavigationDestination(for: NRLiveEvent.self) { nrLiveEvent in
                 LiveEventDetail(liveEvent: nrLiveEvent)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: ArticlePath.self) { path in
                 ArticleById(id: path.id, navigationTitle: path.navigationTitle)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
                 ArticleCommentsView(article: articleCommentsPath.article)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: NotePath.self) { path in
                 NoteById(id: path.id)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key, tab: path.tab)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: NRContactPath.self) { path in
                 ProfileView(nrContact: path.nrContact, tab: path.tab)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: NRContact.self) { nrContact in
                 ProfileView(nrContact: nrContact)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: CloudFeed.self) { feed in
                 FeedSettings(feed: feed)
+                    .environment(\.containerID, self.containerID)
             }
             .nbNavigationDestination(for: ViewPath.self) { path in
                 switch (path) {
                     case .Post(let post):
                         PostDetailView(nrPost: post)
-//                            .equatable()
-//                            .debugDimensions("nbNavigationDestination2.PostDetailView", alignment: .topLeading)
+                            .environment(\.containerID, self.containerID)
                     case .Blocklist:
                         BlockListScreen()
                             .tabBarSpaceCompat()
+                            .environment(\.containerID, self.containerID)
                     case .PostReactions(let eventId):
                         PostReactions(eventId: eventId)
+                            .environment(\.containerID, self.containerID)
                     case .PostReposts(let id):
-                            PostReposts(id: id)
+                        PostReposts(id: id)
+                            .environment(\.containerID, self.containerID)
                     case .PostZaps(let nrPost):
                         PostZaps(nrPost: nrPost)
+                            .environment(\.containerID, self.containerID)
                     case .Settings:
                         Settings()
                             .tabBarSpaceCompat()
+                            .environment(\.containerID, self.containerID)
                     case .Lists:
                         ListsAndFeedsScreen()
                             .tabBarSpaceCompat()
+                            .environment(\.containerID, self.containerID)
                     case .Relays:
-                        RelaysView()    
+                        RelaysView()
+                            .environment(\.containerID, self.containerID)
                     case .Badges:
                         BadgesView()
                             .tabBarSpaceCompat()
+                            .environment(\.containerID, self.containerID)
                     case .DMs:
                         DMContainer()
+                            .environment(\.containerID, self.containerID)
                     case .ProfileReactionList(let pubkey):
                         ProfileReactionList(pubkey: pubkey)
                             .tabBarSpaceCompat()
+                            .environment(\.containerID, self.containerID)
                     default:
                         EmptyView()
                 }
             }
+    }
+}
+
+extension View {
+    func withNavigationDestinations() -> some View {
+        modifier(NavigationDestinationsModifier())
     }
 }
 
