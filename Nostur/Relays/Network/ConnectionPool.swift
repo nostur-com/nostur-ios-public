@@ -518,16 +518,23 @@ public class ConnectionPool: ObservableObject {
                 if message.onlyForNWCRelay || message.onlyForNCRelay { continue }
                 guard limitToRelayIds.isEmpty || limitToRelayIds.contains(connection.url) else { continue }
                 
-                guard connection.relayData.read || connection.relayData.write || limitToRelayIds.contains(connection.url) || (connection.relayData.search && message.relayType == .SEARCH) else {
-                    // Skip if relay is not selected for reading or writing events. Or message and relay should be .SEARCH
+                guard connection.relayData.read || connection.relayData.write || limitToRelayIds.contains(connection.url)
+                        || (connection.relayData.search && message.relayType == .SEARCH)
+                        || (connection.relayData.search && message.relayType == .SEARCH_ONLY)
+                else {
+                    // Skip if relay is not selected for reading or writing events. Or message and relay should be .SEARCH(_ONLY)
                     continue
                 }
                 
                 if message.type == .REQ { // REQ FOR ALL READ RELAYS
                     
                     if message.relayType == .READ && !limitToRelayIds.contains(connection.url) && !connection.relayData.read { continue }
-                    if message.relayType == .SEARCH && !connection.relayData.search { continue }
-                    if message.relayType == .SEARCH && connection.relayData.read { continue } // no need to lookup on relays that we already read from (Search/Lookup is always in addition to .READ)
+                    
+                    // .SEARCH goes to either .search or .read relays
+                    if message.relayType == .SEARCH && (!connection.relayData.search && !connection.relayData.read) { continue }
+                    
+                    // .SEARCH_ONLY goes to .search, and not .read (for seperate req to .READ and .SEARCH_ONLY. before was .READ and .SEARCH and .SEARCH would do same .READ again)
+                    if message.relayType == .SEARCH_ONLY && (!connection.relayData.search || connection.relayData.read) { continue }
                     
                     if (!connection.isSocketConnected) {
                         if (!connection.isSocketConnecting) {

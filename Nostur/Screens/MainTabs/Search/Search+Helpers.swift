@@ -94,7 +94,7 @@ extension Search {
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
-            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH)
+            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH_ONLY)
         }, processResponseCommand: { taskId, _, _ in
             bg().perform {
                 guard let nrContact = NRContact.fetch(pubkey) else { return }
@@ -157,7 +157,7 @@ extension Search {
                     prefix: "ARTICLESEARCH-",
                     reqCommand: { taskId in
                         req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId), relayType: .READ)
-                        req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId), relayType: .SEARCH)
+                        req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition:definition, subscriptionId: taskId), relayType: .SEARCH_ONLY)
                     },
                     processResponseCommand: { taskId, _, _ in
                         bg().perform {
@@ -235,7 +235,7 @@ extension Search {
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .READ)
-            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH)
+            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH_ONLY)
         }, processResponseCommand: { taskId, _, _ in
             bg().perform {
                 guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
@@ -283,7 +283,7 @@ extension Search {
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .READ)
-            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH)
+            req(RM.getUserMetadata(pubkey: pubkey, subscriptionId: taskId), relayType: .SEARCH_ONLY)
         }, processResponseCommand: { taskId, _, _ in
             bg().perform {
                 guard let nrContact = NRContact.fetch(pubkey) else { return }
@@ -357,7 +357,7 @@ extension Search {
             let filters = [Filters(kinds: [1,20,9802], tagFilter: TagFilter(tag: "t", values: tags))]
             if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                 req(message, relayType: .READ)
-                req(message, relayType: .SEARCH)
+                req(message, relayType: .SEARCH_ONLY)
             }
         }, processResponseCommand: { taskId, _, _ in
             let existingIds = self.nrPosts.map { $0.id }
@@ -399,7 +399,7 @@ extension Search {
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .READ)
-            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH)
+            req(RM.getEvent(id: noteHex, subscriptionId: taskId), relayType: .SEARCH_ONLY)
         }, processResponseCommand: { taskId, _, _ in
             bg().perform {
                 guard let event = Event.fetchEvent(id: noteHex, context: bg()) else { return }
@@ -451,10 +451,10 @@ extension Search {
         
         let searchTask1 = ReqTask(prefix: "SEA-", reqCommand: { taskId in
             req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .READ)
-            req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .SEARCH)
+            req(RM.getEvent(id: term, subscriptionId: taskId), relayType: .SEARCH_ONLY)
             
             req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .READ)
-            req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .SEARCH)
+            req(RM.getUserMetadata(pubkey: term, subscriptionId: taskId), relayType: .SEARCH_ONLY)
         }, processResponseCommand: { taskId, _, _ in
             bg().perform {
                 guard let event = Event.fetchEvent(id: term, context: bg()) else { return }
@@ -545,7 +545,7 @@ extension Search {
                 let filters = [Filters(kinds:[443], tagFilter: TagFilter(tag: "r", values: tags))]
                 if let message = CM(type: .REQ, subscriptionId: taskId, filters: filters).json() {
                     req(message, relayType: .READ)
-                    req(message, relayType: .SEARCH)
+                    req(message, relayType: .SEARCH_ONLY)
                 }
             },
             processResponseCommand: { taskId, _, _ in

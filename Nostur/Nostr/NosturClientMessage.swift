@@ -50,6 +50,7 @@ public struct NosturClientMessage {
         case READ
         case WRITE
         case SEARCH
+        case SEARCH_ONLY // no .read
     }
     
     static func close(subscriptionId: String) -> String {
