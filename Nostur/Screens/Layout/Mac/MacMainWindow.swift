@@ -10,7 +10,6 @@ import NavigationBackport
 
 let COLUMN_SPACING = 1.0
 
-@available(iOS 16.0, *)
 struct MacMainWindow: View {
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme

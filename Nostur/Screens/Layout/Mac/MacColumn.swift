@@ -8,7 +8,6 @@
 import SwiftUI
 import NavigationBackport
 
-@available(iOS 16.0, *)
 struct MacColumn: View {
     @ObservedObject private var vm: MacColumnsVM = .shared
     @Environment(\.theme) private var theme
@@ -96,7 +95,6 @@ struct MacColumn: View {
     
 
 
-@available(iOS 16.0, *)
 struct CloudFeedColumn: View {
     @Environment(\.macColumnsState) private var vm
     @Binding var selectedFeed: CloudFeed?

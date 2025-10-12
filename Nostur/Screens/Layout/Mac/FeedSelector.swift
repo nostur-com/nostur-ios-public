@@ -30,23 +30,47 @@ import NavigationBackport
 }
 
 
-@available(iOS 16.0, *)
 struct FeedSelectorToolbarMenu: ViewModifier {
     let feeds: [CloudFeed]
     @Binding var selectedFeed: CloudFeed?
     
     func body(content: Content) -> some View {
         content
-            .navigationTitle(selectedFeed?.feedTitle() ?? "Select Feed")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-              ToolbarTitleMenu {
-                  ForEach(feeds) { feed in
-                      Button(feed.feedTitle()) {
-                          selectedFeed = feed
-                      }
-                  }
-              }
+            .modifier {
+                if #available(iOS 16.0, *) {
+                    $0.navigationTitle(selectedFeed?.feedTitle() ?? "Select Feed")
+                      .toolbar {
+                        ToolbarTitleMenu {
+                            ForEach(feeds) { feed in
+                                Button(feed.feedTitle()) {
+                                    selectedFeed = feed
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    $0
+                        .toolbar {
+                            ToolbarItem(placement: .title) {
+                                Menu {
+                                    ForEach(feeds) { feed in
+                                        Button(feed.feedTitle()) {
+                                            selectedFeed = feed
+                                        }
+                                    }
+                                } label: {
+                                    HStack {
+                                        Text(selectedFeed?.feedTitle() ?? "Select Feed")
+                                        Image(systemName: "chevron.down.circle.fill")
+                                            .font(.footnote)
+                                            .foregroundStyle(Color.secondary)
+                                    }
+                                }
+                            }
+                        }
+                }
           }
     }
 }
@@ -71,7 +95,6 @@ extension CloudFeed {
 }
 
 extension View {
-    @available(iOS 16.0, *)
     func withFeedSelectorToolbarMenu(feeds: [CloudFeed], selectedFeed: Binding<CloudFeed?>) -> some View {
         modifier(FeedSelectorToolbarMenu(feeds: feeds, selectedFeed: selectedFeed))
     }
