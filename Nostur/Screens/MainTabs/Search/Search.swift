@@ -55,7 +55,7 @@ struct Search: View {
                             ForEach(contacts) { nrContact in
                                 VStack {
                                     NRContactSearchResultRow(nrContact: nrContact, onSelect: {
-                                        navigateTo(NRContactPath(nrContact: nrContact), context: "Default")
+                                        navigateTo(NRContactPath(nrContact: nrContact), context: "Search")
                                     }, showFollowButton: true)
                                         
                                     HStack {
@@ -70,7 +70,7 @@ struct Search: View {
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    navigateTo(NRContactPath(nrContact: nrContact), context: "Default")
+                                    navigateTo(NRContactPath(nrContact: nrContact), context: "Search")
                                 }
                             }
                             ForEach(nrPosts) { nrPost in
@@ -85,7 +85,7 @@ struct Search: View {
                                                     .padding(.vertical, 5)
                                                     .contentShape(Rectangle())
                                                     .onTapGesture {
-                                                        navigateTo(nrPost, context: "Default")
+                                                        navigateTo(nrPost, context: "Search")
                                                     }
                                                 Spacer()
                                             }
@@ -138,6 +138,7 @@ struct Search: View {
             .background(theme.listBackground)
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()
+            .environment(\.containerID, "Search")
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: searchText) { searchInput in
@@ -179,11 +180,9 @@ struct Search: View {
                     }
                 }
             }
-            .environment(\.containerID, "Search")
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
-                guard type(of: destination.destination) == Nevent1Path.self || type(of: destination.destination) == Nprofile1Path.self || type(of: destination.destination) == HashtagPath.self || horizontalSizeClass == .compact else { return }
- 
+                guard !IS_IPAD || horizontalSizeClass == .compact else { return }
                 guard destination.context == "Search" else { return }
                 
                 if (type(of: destination.destination) == HashtagPath.self) {
