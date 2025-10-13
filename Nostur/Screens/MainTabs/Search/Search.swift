@@ -140,7 +140,7 @@ struct Search: View {
             .withNavigationDestinations()
             .environment(\.containerID, "Search")
             .simultaneousGesture(TapGesture().onEnded({ _ in
-                AppState.shared.containerIDTapped = "Notifications"
+                AppState.shared.containerIDTapped = "Search"
             }))
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)
