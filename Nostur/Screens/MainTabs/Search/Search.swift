@@ -139,6 +139,9 @@ struct Search: View {
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()
             .environment(\.containerID, "Search")
+            .simultaneousGesture(TapGesture().onEnded({ _ in
+                AppState.shared.containerIDTapped = "Notifications"
+            }))
             .navigationTitle(String(localized:"Search", comment: "Navigation title for Search screen"))
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: searchText) { searchInput in
@@ -208,10 +211,6 @@ struct Search: View {
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)
             }
-            .onOpenURL { url in
-                handleUrl(url, containerID: "Search")
-            }
-            
             .tabBarSpaceCompat()
         }
         .nbUseNavigationStack(.never)

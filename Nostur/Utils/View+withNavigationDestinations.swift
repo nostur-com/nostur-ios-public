@@ -303,15 +303,9 @@ func navigateToContact(pubkey: String, nrContact: NRContact? = nil, nrPost: NRPo
 
 import NostrEssentials
 
-func handleUrl(_ url: URL, account: CloudAccount? = nil, containerID: String = "Default") {
-    guard let account = account ?? AccountsState.shared.loggedInAccount?.account else {
+func handleUrl(_ url: URL) {
 #if DEBUG
-        L.og.debug("handleUrl: \(url.absoluteString) containerID: \(containerID) // MISSING ACCOUNT")
-#endif
-        return
-    }
-#if DEBUG
-    L.og.debug("handleUrl: \(url.absoluteString) containerID: \(containerID)")
+    L.og.debug("handleUrl: \(url.absoluteString)")
 #endif
     
     // HANDLE ADD RELAY FEED
@@ -327,9 +321,8 @@ func handleUrl(_ url: URL, account: CloudAccount? = nil, containerID: String = "
     // NOSTR LOGIN
     let nostrlogin = url.absoluteString.matchingStrings(regex: "^nostr\\+login:(.*):([a-zA-Z0-9\\-_\\.]+)$")
     if nostrlogin.count == 1 && nostrlogin[0].count >= 3 {
-        
         // can login even?
-        if account.isFullAccount || (AccountsState.shared.bgFullAccountPubkeys.count > 0) {
+        if AccountsState.shared.bgFullAccountPubkeys.count > 0 {
             
             let domainString = nostrlogin[0][1]
             let challenge = nostrlogin[0][2]
@@ -439,11 +432,25 @@ func handleUrl(_ url: URL, account: CloudAccount? = nil, containerID: String = "
         L.og.info("nostur: link: \(nostur[0][2])\(nostur[0][3])")
     #endif
         if nostur[0][2] == "p:" {
-            navigateTo(ContactPath(key: nostur[0][3]), context: containerID)
+            if IS_DESKTOP_COLUMNS() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
+                    navigateTo(ContactPath(key: nostur[0][3]), context: AppState.shared.containerIDTapped)
+                }
+            }
+            else {
+                navigateTo(ContactPath(key: nostur[0][3]), context: AppState.shared.containerIDTapped)
+            }
             return
         }
         if nostur[0][2] == "e:" {
-            navigateTo(NotePath(id: nostur[0][3]), context: containerID)
+            if IS_DESKTOP_COLUMNS() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
+                    navigateTo(NotePath(id: nostur[0][3]), context: AppState.shared.containerIDTapped)
+                }
+            }
+            else {
+                navigateTo(NotePath(id: nostur[0][3]), context: AppState.shared.containerIDTapped)
+            }
             return
         }
     }

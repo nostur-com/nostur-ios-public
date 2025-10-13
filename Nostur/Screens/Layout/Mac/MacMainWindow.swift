@@ -72,10 +72,10 @@ struct MacMainWindow: View {
                         MacColumn(config: columnConfig)
                             .environment(\.availableWidth, columnSize(geo.size.width))
                             .environment(\.containerID, columnConfig.id.uuidString)
+                            .simultaneousGesture(TapGesture().onEnded({ _ in
+                                AppState.shared.containerIDTapped = columnConfig.id.uuidString
+                            }))
                             .frame(width: columnWidth)
-                            .onOpenURL { url in
-                                handleUrl(url, containerID: columnConfig.id.uuidString)
-                            }
                             .debugDimensions()
                     }
                 }

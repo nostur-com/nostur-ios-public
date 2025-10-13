@@ -23,14 +23,14 @@ struct NotificationsContainer: View {
         NBNavigationStack(path: $navPath) {
             NotificationsScreen(account: la.account, navPath: $navPath)
                 .environment(\.containerID, "Notifications")
+                .simultaneousGesture(TapGesture().onEnded({ _ in
+                    AppState.shared.containerIDTapped = "Notifications"
+                }))
                 .background(theme.listBackground)
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
             
                 .tabBarSpaceCompat()
-                .onOpenURL { url in
-                    handleUrl(url, containerID: "Notifications")
-                }
         }
         .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.navigateTo)) { notification in

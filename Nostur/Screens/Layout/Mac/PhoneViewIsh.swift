@@ -44,9 +44,9 @@ struct PhoneViewIsh: View {
                 }
             }
             .environment(\.containerID, "Default")
-            .onOpenURL { url in
-                handleUrl(url, containerID: "Default")
-            }
+            .simultaneousGesture(TapGesture().onEnded({ _ in
+                AppState.shared.containerIDTapped = "Default"
+            }))
             .navigationTitle("Following")
             .navigationBarTitleDisplayMode(.inline)
             .withNavigationDestinations()

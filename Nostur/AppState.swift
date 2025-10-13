@@ -10,7 +10,11 @@ import Combine
 
 class AppState: ObservableObject {
     
+    
+    public var containerIDTapped: String = "Default"
+    
     static let shared = AppState()
+    
     private init() {
         if UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
             finishedTasks.insert(.firstTimeCopleted)

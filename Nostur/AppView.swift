@@ -41,6 +41,7 @@ struct AppView: View {
                             AppReviewView()
                         }
                     }
+                    .onOpenURL(perform: handleUrl)
             case .databaseError:
                 DatabaseProblemView()
             }
