@@ -51,9 +51,10 @@ struct Box<Content: View>: View {
         
         content
             .padding(padding)
-            .background(backgroundColor)
-            .contentShape(Rectangle())
-            .onTapGesture(perform: navigate)
+            .background {
+                backgroundColor
+                    .onTapGesture(perform: navigate)
+            }            
             .overlay(alignment: .bottom) {
                 if showGutter {
                     theme.background.frame(height: GUTTER)
