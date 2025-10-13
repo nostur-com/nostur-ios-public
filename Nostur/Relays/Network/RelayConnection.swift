@@ -177,7 +177,9 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func connect(andSend: String? = nil, forceConnectionAttempt: Bool = false) {
 #if DEBUG
-        L.sockets.debug("connect(\(andSend != nil ? "andSend" : "")) forceConnectionAttempt: \(forceConnectionAttempt) (\(self.relayData.url))")
+        if (forceConnectionAttempt) {
+            L.sockets.debug("connect(\(andSend != nil ? "andSend" : "")) forceConnectionAttempt: \(forceConnectionAttempt) (\(self.relayData.url))")
+        }
 #endif
         if isOutbox && !vpnGuardOK() { // TODO: Maybe need a small delay so VPN has time to connect first?
 #if DEBUG
@@ -198,9 +200,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     return
                 }
                 guard !self.isSocketConnecting || forceConnectionAttempt else {
-#if DEBUG
-                    L.sockets.debug("\(self.url) - Already connecting, skipping connect()")
-#endif
                     if let andSend {
                         let socketMessage = SocketMessage(text: andSend)
                         self.outQueue.append(socketMessage)
@@ -242,9 +241,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     }
                     
                     self.webSocketTask?.resume()
-#if DEBUG
-                    L.sockets.debug("\(self.url) webSocketTask?.resume()")
-#endif
                     
                     if self.exponentialReconnectBackOff >= 512 {
                         self.exponentialReconnectBackOff = 512
@@ -360,7 +356,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             for out in outQueue {
 #if DEBUG
-                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text)")
+                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(155))")
 #endif
                 webSocketTask.send(.string(out.text)) { error in
                     if let error {
