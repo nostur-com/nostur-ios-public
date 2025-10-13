@@ -355,7 +355,8 @@ let DETECT_MISCONFIGURED_KIND10002_HELPER_LIST: Set<String> = [
     "wss://nostr.mutinywallet.com", // is write only relay (blastr)
     "wss://feeds.nostr.band", // special feeds
     "wss://search.nos.today",
-    "wss://relay.getalby.com" // only for NWC connections
+    "wss://relay.getalby.com", // only for NWC connections
+    "sendit.nosflare.com", // "Denied! This relay does not accept REQs."
 ]
 
 func removeMisconfiguredKind10002s(_ kind10002s: [NostrEssentials.Event]) -> [NostrEssentials.Event] {
