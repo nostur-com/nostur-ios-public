@@ -103,7 +103,7 @@ struct Zapped: View {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
         .onAppear {
-            guard selectedTab == "Main" && selectedSubTab == "Zapped" else { return }
+            guard IS_DESKTOP_COLUMNS() || (selectedTab == "Main" && selectedSubTab == "Zapped") else { return }
             zappedVM.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in

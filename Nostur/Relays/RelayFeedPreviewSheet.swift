@@ -117,7 +117,7 @@ func createFeedFromRelayData(_ relayData: RelayData, authPubkey: String? = nil) 
         if !MacColumnsVM.shared.allowAddColumn {
             MacColumnsVM.shared.columns.removeLast()
         }
-        MacColumnsVM.shared.addColumn(MacColumnConfig(type: .cloudFeed, cloudFeedId: newFeed.id?.uuidString))
+        MacColumnsVM.shared.addColumn(MacColumnConfig(type: .cloudFeed(newFeed.id?.uuidString ?? "?")))
     }
     else {
         // Change active tab to this new feed

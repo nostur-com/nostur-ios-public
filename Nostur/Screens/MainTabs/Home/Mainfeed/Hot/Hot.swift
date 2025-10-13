@@ -103,7 +103,7 @@ struct Hot: View {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
         .onAppear {
-            guard selectedTab == "Main" && selectedSubTab == "Hot" else { return }
+            guard IS_DESKTOP_COLUMNS() || (selectedTab == "Main" && selectedSubTab == "Hot") else { return }
             hotVM.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in

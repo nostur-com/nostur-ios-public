@@ -89,10 +89,11 @@ struct DiscoverLists: View {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
         .onAppear {
-            guard selectedTab == "Main" && selectedSubTab == "DiscoverLists" else { return }
+            guard IS_DESKTOP_COLUMNS() || (selectedTab == "Main" && selectedSubTab == "DiscoverLists") else { return }
             discoverListsVM.load(speedTest: speedTest)
         }
         .onChange(of: selectedSubTab) { newValue in
+            guard !IS_CATALYST else { return }
             guard newValue == "DiscoverLists" else { return }
             discoverListsVM.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }

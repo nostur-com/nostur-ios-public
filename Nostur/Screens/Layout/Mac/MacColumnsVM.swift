@@ -57,7 +57,7 @@ class MacColumnsVM: ObservableObject {
     private func getConfiguredColumns() async -> [MacColumnConfig] {
         let decoder = JSONDecoder()
         if let macListState = try? decoder.decode(MacListStateSerialized.self, from: macListstateSerialized.data(using: .utf8)!) {
-            L.og.debug("MacListState: restoring columns: \(macListState.columns.count) and list ids: \(macListState.columns.map { $0.type.rawValue } .joined(separator: ", "))")
+            L.og.debug("MacListState: restoring columns: \(macListState.columns.count) and list ids: \(macListState.columns.map { $0.type.displayName } .joined(separator: ", "))")
       
             return macListState.columns
         }
@@ -121,16 +121,26 @@ struct MacListStateSerialized: Codable {
 struct MacColumnConfig: Codable, Equatable, Identifiable {
     var id: UUID = UUID()
     var type: MacColumnType = .unconfigured
-    var cloudFeedId: String? // CloudFeed.id.uuidString
-    
+    var cloudFeedId: String? {
+        if case .cloudFeed(let id) = type { return id }
+        else { return nil }
+    }
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id && lhs.type == rhs.type && lhs.cloudFeedId == rhs.cloudFeedId
     }
 }
 
-enum MacColumnType: String, Codable {
+enum MacColumnType: Codable, Equatable {
     case unconfigured
-    case cloudFeed
+    case cloudFeed(String)
+    
+    case hot
+    case zapped
+    case emoji
+    case articles // reads
+    case gallery
+    case discoverLists // lists & follow packs
+    
     case notifications
     case following
     case photos
@@ -138,6 +148,41 @@ enum MacColumnType: String, Codable {
     case bookmarks
     case DMs
     case newPosts
+    
+    var displayName: String {
+        switch self {
+        case .unconfigured:
+            return "unconfigured"
+        case .cloudFeed(let id):
+            return "cloudFeed(\(id))"
+        case .hot:
+            return "hot"
+        case .zapped:
+            return "zapped"
+        case .emoji:
+            return "emoji"
+        case .articles:
+            return "articles"
+        case .gallery:
+            return "gallery"
+        case .discoverLists:
+            return "discoverLists"
+        case .notifications:
+            return "notifications"
+        case .following:
+            return "following"
+        case .photos:
+            return "photos"
+        case .mentions:
+            return "mentions"
+        case .bookmarks:
+            return "bookmarks"
+        case .DMs:
+            return "DMs"
+        case .newPosts:
+            return "newPosts"
+        }
+    }
 }
 
 

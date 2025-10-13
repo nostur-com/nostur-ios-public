@@ -92,8 +92,8 @@ struct Gallery: View {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
         .onAppear {
-            // Load if tab is active OR if macOS (detail pane)
-            guard IS_CATALYST || (selectedTab == "Main" && selectedSubTab == "Gallery") else { return }
+            // Load if tab is active OR if macOS (detail pane), or desktop columns mode
+            guard IS_DESKTOP_COLUMNS() || IS_CATALYST || (selectedTab == "Main" && selectedSubTab == "Gallery") else { return }
             vm.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.activeAccountChanged)) { _ in

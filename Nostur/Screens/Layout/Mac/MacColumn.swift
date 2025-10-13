@@ -17,7 +17,48 @@ struct MacColumn: View {
     var config: MacColumnConfig
     
     @State private var columnType = MacColumnType.unconfigured // use instead of config.type
-    @State private var selectedFeed: CloudFeed?
+    private var selectedFeed: CloudFeed? {
+        if case .cloudFeed(let cloudFeedId) = columnType {
+            return vm.availableFeeds.first(where: { $0.id?.uuidString == cloudFeedId })
+        }
+        return nil
+    }
+    
+    private var selectedTitle: String {
+        switch columnType {
+        case .unconfigured:
+            return "Select Feed"
+        case .cloudFeed(let cloudFeedId):
+            return vm.availableFeeds.first(where: { $0.id?.uuidString == cloudFeedId })?.feedTitle() ?? "(Untitled)"
+        case .hot:
+            return String(localized: "Hot", comment: "Feed title")
+        case .zapped:
+            return String(localized: "Zapped", comment: "Feed title")
+        case .emoji:
+            return String(localized: "Funny", comment: "Feed title")
+        case .articles:
+            return String(localized: "Reads", comment: "Feed title")
+        case .gallery:
+            return String(localized: "Gallery", comment: "Feed title")
+        case .discoverLists:
+            return String(localized: "Lists & Follow Packs", comment: "Feed title")
+        case .notifications:
+            return String(localized: "Notifications", comment: "Feed title")
+        case .following:
+            return String(localized: "Following", comment: "Feed title")
+        case .photos:
+            return String(localized: "Photos", comment: "Feed title")
+        case .mentions:
+            return String(localized: "Mentions", comment: "Feed title")
+        case .bookmarks:
+            return String(localized: "Booksmarks", comment: "Feed title")
+        case .DMs:
+            return String(localized: "Messages", comment: "Feed title")
+        case .newPosts:
+            return String(localized: "New Posts", comment: "Feed title")
+        }
+    }
+    
     @State private var navPath = NBNavigationPath()
     
     var body: some View {
@@ -28,8 +69,31 @@ struct MacColumn: View {
                 switch columnType {
                 case .unconfigured:
                     Text("unconfigured")
-                case .cloudFeed:
-                    CloudFeedColumn(selectedFeed: $selectedFeed)
+                case .cloudFeed(_):
+                    if let selectedFeed {
+                        CloudFeedColumn(feed: selectedFeed)
+                    }
+                    else {
+                        ProgressView()
+                    }
+                case .hot:
+                    HotColumn()
+                    
+                case .zapped:
+                    ZappedColumn()
+                    
+                case .gallery:
+                    GalleryColumn()
+                    
+                case .articles:
+                    ArticlesColumn()
+                    
+                case .emoji:
+                    EmojiColumn()
+                    
+                case .discoverLists:
+                    DiscoverListsColumn()
+                    
                 case .notifications:
                     Text("notifications")
                 case .following:
@@ -50,36 +114,24 @@ struct MacColumn: View {
                 
             }
             
-            .withFeedSelectorToolbarMenu(feeds: vm.availableFeeds, selectedFeed: $selectedFeed)
+            .withColumnConfigToolbarMenu(feeds: vm.availableFeeds, columnType: $columnType, title: selectedTitle)
+//            .withFeedSelectorToolbarMenu(feeds: vm.availableFeeds, selectedFeed: $selectedFeed)
             
             .onAppear {
                 columnType = config.type
-                
-                if let cloudFeedId = config.cloudFeedId {
-                    selectedFeed = vm.availableFeeds.first(where: { $0.id?.uuidString == cloudFeedId })
-                }
             }
             
-            .onValueChange(selectedFeed, action: { oldSelectedFeed, newSelectedFeed in
-                guard oldSelectedFeed != newSelectedFeed else { return }
-                if let newSelectedFeed {
-                    vm.updateColumn(
-                        MacColumnConfig(id: config.id, type: .cloudFeed, cloudFeedId: newSelectedFeed.id?.uuidString)
-                    )
-                    columnType = .cloudFeed
-                }
-                else {
-                    vm.updateColumn(
-                        MacColumnConfig(id: config.id, type: .unconfigured, cloudFeedId: nil)
-                    )
-                    columnType = .unconfigured
-                }
+            .onValueChange(columnType, action: { oldColumnType, newColumnType in
+                guard oldColumnType != newColumnType else { return }
+                vm.updateColumn(
+                    MacColumnConfig(id: config.id, type: newColumnType)
+                )
             })
             
             .onChange(of: vm.availableFeeds) { newValue in
+                guard case .cloudFeed(_) = columnType else { return }
                 if !newValue.contains(where: { $0.id == selectedFeed?.id }) {
                     columnType = .unconfigured
-                    selectedFeed = nil
                 }
             }
             
@@ -90,45 +142,5 @@ struct MacColumn: View {
                 navPath.append(destination.destination)
             }
         }
-    }
-}
-    
-
-
-struct CloudFeedColumn: View {
-    @Environment(\.macColumnsState) private var vm
-    @Binding var selectedFeed: CloudFeed?
-    @State private var columnConfig: NXColumnConfig?
-    
-    var body: some View {
-        Container {
-            if columnConfig == nil {
-                ProgressView()
-                    .onAppear {
-                        if let selectedFeed {
-                            columnConfig = NXColumnConfig(id: selectedFeed.subscriptionId, columnType: selectedFeed.feedType, accountPubkey: selectedFeed.accountPubkey, name: selectedFeed.name_)
-                        }
-                    }
-            }
-            else if let columnConfig {
-                AvailableWidthContainer {
-                    NXColumnView(config: columnConfig, isVisible: true)
-                }
-            }
-        }
-                
-        .onChange(of: selectedFeed) { newSelectedFeed in
-            guard let newSelectedFeed else { return }
-            self.columnConfig = NXColumnConfig(
-                id: newSelectedFeed.subscriptionId,
-                columnType: newSelectedFeed.feedType,
-                accountPubkey: newSelectedFeed.accountPubkey,
-                name: newSelectedFeed.name_
-            )
-        }
-    }
-    
-    func load() {
-        
     }
 }

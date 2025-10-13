@@ -8,73 +8,6 @@
 import SwiftUI
 import NavigationBackport
 
-@available(iOS 17.0, *)
-#Preview {
-    @Previewable @State var feeds: [CloudFeed] = []
-    @Previewable @State var selected: CloudFeed? = nil
-    
-    PreviewContainer({ pe in
-        pe.loadContacts()
-        pe.loadCloudFeeds()
-    }) {
-        NBNavigationStack {
-            Color.red
-                .frame(width: 300, height: 600)
-                .withFeedSelectorToolbarMenu(feeds: feeds, selectedFeed: $selected)
-                .onAppear {
-                    feeds = PreviewFetcher.fetchLists()
-                    print("feeds: \(feeds.count)")
-                }
-        }
-    }
-}
-
-
-struct FeedSelectorToolbarMenu: ViewModifier {
-    let feeds: [CloudFeed]
-    @Binding var selectedFeed: CloudFeed?
-    
-    func body(content: Content) -> some View {
-        content
-            .navigationBarTitleDisplayMode(.inline)
-            .modifier {
-                if #available(iOS 16.0, *) {
-                    $0.navigationTitle(selectedFeed?.feedTitle() ?? "Select Feed")
-                      .toolbar {
-                        ToolbarTitleMenu {
-                            ForEach(feeds) { feed in
-                                Button(feed.feedTitle()) {
-                                    selectedFeed = feed
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    $0
-                        .toolbar {
-                            ToolbarItem(placement: .title) {
-                                Menu {
-                                    ForEach(feeds) { feed in
-                                        Button(feed.feedTitle()) {
-                                            selectedFeed = feed
-                                        }
-                                    }
-                                } label: {
-                                    HStack {
-                                        Text(selectedFeed?.feedTitle() ?? "Select Feed")
-                                        Image(systemName: "chevron.down.circle.fill")
-                                            .font(.footnote)
-                                            .foregroundStyle(Color.secondary)
-                                    }
-                                }
-                            }
-                        }
-                }
-          }
-    }
-}
-
 extension CloudFeed {
     func feedTitle() -> String {
         switch self.feedType {
@@ -94,8 +27,104 @@ extension CloudFeed {
     }
 }
 
+struct ColumnConfigToolbarMenu: ViewModifier {
+    let feeds: [CloudFeed]
+    @Binding var columnType: MacColumnType
+    var title: String = "Select Feed"
+    
+    func body(content: Content) -> some View {
+        content
+            .navigationBarTitleDisplayMode(.inline)
+            .modifier {
+                if #available(iOS 16.0, *) {
+                    $0.navigationTitle(title)
+                      .toolbar {
+                        ToolbarTitleMenu {
+                            menuItems
+                        }
+                    }
+                }
+                else {
+                    $0
+                        .toolbar {
+                            ToolbarItem(placement: .title) {
+                                Menu {
+                                    menuItems
+                                } label: {
+                                    HStack {
+                                        Text(title)
+                                        Image(systemName: "chevron.down.circle.fill")
+                                            .font(.footnote)
+                                            .foregroundStyle(Color.secondary)
+                                    }
+                                }
+                            }
+                        }
+                }
+          }
+    }
+    
+    @ViewBuilder
+    private var menuItems: some View {
+        Button("Hot") {
+            columnType = .hot
+        }
+        
+        Button("Funny") {
+            columnType = .emoji
+        }
+        
+        Button("Zapped") {
+            columnType = .zapped
+        }
+        
+        Button("Reads") {
+            columnType = .articles
+        }
+        
+        Button("Gallery") {
+            columnType = .gallery
+        }
+        
+        Button("Lists & Follow Packs") {
+            columnType = .discoverLists
+        }
+
+        ForEach(feeds) { feed in
+            Button(feed.feedTitle()) {
+                guard let feedId = feed.id?.uuidString else { return }
+                columnType = .cloudFeed(feedId)
+            }
+        }
+    }
+}
+
 extension View {
-    func withFeedSelectorToolbarMenu(feeds: [CloudFeed], selectedFeed: Binding<CloudFeed?>) -> some View {
-        modifier(FeedSelectorToolbarMenu(feeds: feeds, selectedFeed: selectedFeed))
+    func withColumnConfigToolbarMenu(feeds: [CloudFeed], columnType: Binding<MacColumnType>, title: String = "Select Feed") -> some View {
+        modifier(ColumnConfigToolbarMenu(feeds: feeds, columnType: columnType, title: title))
+    }
+}
+
+
+@available(iOS 17.0, *)
+#Preview {
+    @Previewable @State var columnType = MacColumnType.hot
+    
+    @Previewable @State var feeds: [CloudFeed] = []
+    @Previewable @State var selected: CloudFeed? = nil
+    
+    PreviewContainer({ pe in
+        pe.loadContacts()
+        pe.loadCloudFeeds()
+    }) {
+        NBNavigationStack {
+            Color.red
+                .frame(width: 300, height: 600)
+                .withColumnConfigToolbarMenu(feeds: feeds, columnType: $columnType)
+                .onAppear {
+                    feeds = PreviewFetcher.fetchLists()
+                    print("feeds: \(feeds.count)")
+                }
+        }
     }
 }

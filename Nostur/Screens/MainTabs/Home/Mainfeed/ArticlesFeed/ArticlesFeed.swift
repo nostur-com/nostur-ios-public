@@ -86,10 +86,11 @@ struct ArticlesFeed: View {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
         }
         .onAppear {
-            guard selectedTab == "Main" && selectedSubTab == "Articles" else { return }
+            guard IS_DESKTOP_COLUMNS() || (selectedTab == "Main" && selectedSubTab == "Articles") else { return }
             vm.load(speedTest: speedTest)
         }
         .onReceive(receiveNotification(.scenePhaseActive)) { _ in
+            guard !IS_CATALYST else { return }
             guard selectedTab == "Main" && selectedSubTab == "Articles" else { return }
             guard vm.shouldReload else { return }
             vm.articles = []
