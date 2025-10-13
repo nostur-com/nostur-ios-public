@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NewFollowersNotificationView: View {
+    @Environment(\.containerID) private var containerID
     public var notification: PersistentNotification
     
     private var notificationPubkeys: [String] {
@@ -23,7 +24,7 @@ struct NewFollowersNotificationView: View {
                     ObservedPFP(nrContact: nrContacts[index])
                         .id(nrContacts[index].pubkey)
                         .onTapGesture {
-                            navigateTo(ContactPath(key: nrContacts[index].pubkey, navigationTitle: nrContacts[index].anyName), context: "Default")
+                            navigateTo(ContactPath(key: nrContacts[index].pubkey, navigationTitle: nrContacts[index].anyName), context: containerID)
                         }
                         .zIndex(-Double(index))
                         .offset(x:Double(0 + (30*index)))

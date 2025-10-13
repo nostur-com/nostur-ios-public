@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ChatConfirmedZapRow: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var vc: ViewingContext
     private var confirmedZap: NRChatConfirmedZap
     @ObservedObject private var nrContact: NRContact
@@ -71,7 +72,7 @@ struct ChatConfirmedZapRow: View {
                         LiveKitVoiceSession.shared.visibleNest = nil
                     }
                     
-                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
+                    navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: containerID)
                 }))
                 .foregroundColor(theme.accent)
                 

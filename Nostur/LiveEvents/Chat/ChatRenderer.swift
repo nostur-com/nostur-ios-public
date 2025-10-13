@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ChatRenderer: View { // VIEW things
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     private let nrChat: NRChatMessage
     
@@ -84,7 +85,7 @@ struct ChatRenderer: View { // VIEW things
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                             .onTapGesture {
-                                navigateTo(NotePath(id: noteHex), context: "Default")
+                                navigateTo(NotePath(id: noteHex), context: containerID)
                             }
                             .id(index)
                     }
@@ -102,7 +103,7 @@ struct ChatRenderer: View { // VIEW things
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                         .onTapGesture {
-                            navigateTo(NotePath(id: hex), context: "Default")
+                            navigateTo(NotePath(id: hex), context: containerID)
                         }
                         .id(index)
                 case .code(let code): // For text notes

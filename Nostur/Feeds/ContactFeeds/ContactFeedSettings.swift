@@ -15,6 +15,7 @@ struct ContactFeedSettings: View {
     @ObservedObject public var ss = SettingsStore.shared
     
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var la: LoggedInAccount
     
@@ -232,7 +233,7 @@ struct ContactFeedSettings: View {
                     ForEach(listNRContacts) { nrContact in
                         NRContactSearchResultRow(nrContact: nrContact)
                             .padding()
-                            .onTapGesture { navigateTo(NRContactPath(nrContact: nrContact), context: "Default") }
+                            .onTapGesture { navigateTo(NRContactPath(nrContact: nrContact), context: containerID) }
                             .listRowInsets(EdgeInsets())
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {

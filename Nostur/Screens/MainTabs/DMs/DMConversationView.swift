@@ -18,6 +18,7 @@ import NostrEssentials
 struct DMConversationView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @Namespace private var top
     
     @EnvironmentObject var la: LoggedInAccount
@@ -151,7 +152,7 @@ struct DMConversationView: View {
                         if let contactPubkey {
                             VStack(alignment: .center) {
                                 PFP(pubkey: contactPubkey, contact: contact, size: 100)
-                                    .onTapGesture { navigateTo(ContactPath(key: contactPubkey), context: "Default") }
+                                    .onTapGesture { navigateTo(ContactPath(key: contactPubkey), context: containerID) }
                                 
                                 //                        ProfileBadgesContainer(pubkey: contactPubkey)
                                 

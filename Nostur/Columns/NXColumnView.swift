@@ -13,6 +13,7 @@ struct NXColumnView<HeaderContent: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     
     @StateObject private var viewModel = NXColumnViewModel()
     @StateObject private var speedTest = NXSpeedTest()
@@ -201,6 +202,7 @@ struct NXColumnView<HeaderContent: View>: View {
                         }
                     }
                     .environment(\.theme, theme)
+                    .environment(\.containerID, containerID)
                     .environmentObject(la)
             }
             .nbUseNavigationStack(.never)

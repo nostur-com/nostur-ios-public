@@ -244,6 +244,9 @@ struct DMNavigationStack<Content: View>: View {
         NBNavigationStack(path: $navPath) {
             content
                 .environment(\.containerID, "Messages")
+                .onOpenURL { url in
+                    handleUrl(url, containerID: "Messages")
+                }
                 .onReceive(receiveNotification(.navigateTo)) { notification in
                     let destination = notification.object as! NavigationDestination
                     guard !IS_IPAD || horizontalSizeClass == .compact else { return }

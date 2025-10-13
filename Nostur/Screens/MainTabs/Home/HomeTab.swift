@@ -35,6 +35,9 @@ struct HomeTab: View {
         #endif
         NBNavigationStack(path: $navPath) {
             MainFeedsScreen(showingOtherContact: $showingOtherContact)
+                .onOpenURL { url in
+                    handleUrl(url, containerID: "Default")
+                }
                 .background(theme.listBackground)
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()

@@ -23,6 +23,7 @@ struct ChatTopZaps: View {
 
 struct ChatZapPill: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     private let zap: NRChatConfirmedZap
     @ObservedObject private var nrContact: NRContact
     
@@ -67,7 +68,7 @@ struct ChatZapPill: View {
             else if LiveKitVoiceSession.shared.visibleNest != nil {
                 LiveKitVoiceSession.shared.visibleNest = nil
             }
-            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
+            navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: containerID)
         }
     }
 }

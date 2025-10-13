@@ -187,6 +187,7 @@ struct NotificationsZaps: View {
 
 struct PostZapsView: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @ObservedObject private var postZaps: GroupedPostZaps
     @ObservedObject private var footerAttributes: FooterAttributes
     
@@ -222,13 +223,14 @@ struct PostZapsView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            navigateTo(postZaps.nrPost, context: "Default")
+            navigateTo(postZaps.nrPost, context: containerID)
         }
     }
 }
 
 struct ProfileZap: View {
     public var zap: SingleZap
+    @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     
     var body: some View {
@@ -265,7 +267,7 @@ struct ProfileZap: View {
                 }
             }
             .onTapGesture {
-                navigateTo(ContactPath(key: zap.pubkey), context: "Default")
+                navigateTo(ContactPath(key: zap.pubkey), context: containerID)
             }
         }
     }

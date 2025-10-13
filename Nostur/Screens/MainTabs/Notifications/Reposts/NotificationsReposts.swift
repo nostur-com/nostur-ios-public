@@ -13,6 +13,7 @@ import NavigationBackport
 struct NotificationsReposts: View {
     public let pubkey: String
     @Binding public var navPath: NBNavigationPath
+    @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     @StateObject private var model = RepostsFeedModel()
     @ObservedObject private var settings: SettingsStore = .shared
@@ -46,7 +47,7 @@ struct NotificationsReposts: View {
                                 if let firstQuote = nrPost.firstQuote {
                                     MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5)
                                         .onTapGesture {
-                                            navigateTo(firstQuote, context: "Default")
+                                            navigateTo(firstQuote, context: containerID)
                                         }
                                 }
                             }

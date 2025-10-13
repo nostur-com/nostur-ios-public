@@ -621,6 +621,7 @@ struct MediaPlaceholder: View {
 
 struct MediaPostPreview: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
     @Binding private var showMiniProfile: Bool
@@ -645,7 +646,7 @@ struct MediaPostPreview: View {
                     .layoutPriority(2)
                     .onTapGesture {
                         dismiss()
-                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: "Default")
+                        navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                     }
                     .onAppear {
                         // TODO: check .missingPs instead of .contact?
@@ -668,7 +669,7 @@ struct MediaPostPreview: View {
                 Text("Posted on \(nrPost.createdAt.formatted(date: .abbreviated, time: .omitted))")
                     .onTapGesture {
                         dismiss()
-                        navigateTo(nrPost, context: "Default")
+                        navigateTo(nrPost, context: containerID)
                     }
             }
             
@@ -677,7 +678,7 @@ struct MediaPostPreview: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     dismiss()
-                    navigateTo(nrPost, context: "Default")
+                    navigateTo(nrPost, context: containerID)
                 }
         }
         .font(.custom("Charter", size: 18))

@@ -11,7 +11,6 @@ import NavigationBackport
 let COLUMN_SPACING = 1.0
 
 struct MacMainWindow: View {
-    @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
     
     let SIDEBAR_WIDTH: CGFloat = 50.0
@@ -74,6 +73,9 @@ struct MacMainWindow: View {
                             .environment(\.availableWidth, columnSize(geo.size.width))
                             .environment(\.containerID, columnConfig.id.uuidString)
                             .frame(width: columnWidth)
+                            .onOpenURL { url in
+                                handleUrl(url, containerID: columnConfig.id.uuidString)
+                            }
                             .debugDimensions()
                     }
                 }

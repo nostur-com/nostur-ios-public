@@ -208,6 +208,9 @@ struct Search: View {
             .onReceive(receiveNotification(.clearNavigation)) { notification in
                 navPath.removeLast(navPath.count)
             }
+            .onOpenURL { url in
+                handleUrl(url, containerID: "Search")
+            }
             
             .tabBarSpaceCompat()
         }

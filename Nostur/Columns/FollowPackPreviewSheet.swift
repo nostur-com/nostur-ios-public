@@ -11,6 +11,7 @@ import NostrEssentials
 // For follow pack or contact lists
 struct FollowPackPreviewSheet: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     private var nrPost: NRPost // The kind:30000 list (from naddr or nevent)
     private let config: NXColumnConfig
     
@@ -53,7 +54,7 @@ struct FollowPackPreviewSheet: View {
                         .layoutPriority(1)
                     ObservedPFP(nrContact: nrPost.contact, size: 20.0)
                         .onTapGesture {
-                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: "Default")
+                            navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
                         .layoutPriority(2)
                     Text(nrContact.anyName)

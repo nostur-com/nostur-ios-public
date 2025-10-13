@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct LiveEventCapsule: View {
+    @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     @Environment(\.colorScheme) var colorScheme
     @ObservedObject public var liveEvent: NRLiveEvent
@@ -85,10 +86,10 @@ struct LiveEventCapsule: View {
             TapGesture()
                .onEnded {
                    if let status = liveEvent.status, status == "planned" {
-                       navigateTo(liveEvent, context: "Default")
+                       navigateTo(liveEvent, context: containerID)
                    }
                    else if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
-                       navigateTo(liveEvent, context: "Default")
+                       navigateTo(liveEvent, context: containerID)
                    }
                    else {
                        // LOAD NEST

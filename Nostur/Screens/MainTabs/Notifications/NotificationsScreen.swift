@@ -28,6 +28,9 @@ struct NotificationsContainer: View {
                 .withNavigationDestinations()
             
                 .tabBarSpaceCompat()
+                .onOpenURL { url in
+                    handleUrl(url, containerID: "Notifications")
+                }
         }
         .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.navigateTo)) { notification in

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ChatMessageRow: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var vc: ViewingContext
     @ObservedObject private var nrChat: NRChatMessage
     @ObservedObject private var nrContact: NRContact
@@ -53,7 +54,7 @@ struct ChatMessageRow: View {
                     LiveKitVoiceSession.shared.visibleNest = nil
                 }
                 
-                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: "Default")
+                navigateTo(NRContactPath(nrContact: nrContact, navigationTitle: nrContact.anyName), context: containerID)
             }))
             
             ChatRenderer(nrChat: nrChat, availableWidth: min(600, vc.availableWidth) - 10, forceAutoload: false, zoomableId: zoomableId)

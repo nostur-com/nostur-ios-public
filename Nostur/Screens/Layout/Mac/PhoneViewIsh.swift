@@ -44,6 +44,9 @@ struct PhoneViewIsh: View {
                 }
             }
             .environment(\.containerID, "Default")
+            .onOpenURL { url in
+                handleUrl(url, containerID: "Default")
+            }
             .navigationTitle("Following")
             .navigationBarTitleDisplayMode(.inline)
             .withNavigationDestinations()

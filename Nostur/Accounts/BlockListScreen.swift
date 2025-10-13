@@ -46,6 +46,7 @@ struct BlockListScreen: View {
 
 struct BlockedContactsView: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -87,7 +88,7 @@ struct BlockedContactsView: View {
                         .padding()
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            navigateTo(ContactPath(key: blockedPubkey.pubkey), context: "Default")
+                            navigateTo(ContactPath(key: blockedPubkey.pubkey), context: containerID)
                         }
                         .background(theme.listBackground)
                         .overlay(alignment: .topTrailing) {
@@ -158,6 +159,7 @@ struct BlockedContactsView: View {
 
 struct MutedConversationsView: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @ObservedObject var settings:SettingsStore = .shared
     
     @Environment(\.managedObjectContext) private var viewContext
@@ -173,12 +175,12 @@ struct MutedConversationsView: View {
                         HStack(spacing: 10) {
                             PFP(pubkey: event.pubkey, contact: event.contact, size: 25)
                                 .onTapGesture {
-                                    navigateTo(ContactPath(key: event.pubkey), context: "Default")
+                                    navigateTo(ContactPath(key: event.pubkey), context: containerID)
                                 }
                             MinimalNoteTextRenderViewText(plainText: event.plainText, lineLimit: 1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
-                                .onTapGesture { navigateTo(NotePath(id: event.id), context: "Default") }
+                                .onTapGesture { navigateTo(NotePath(id: event.id), context: containerID) }
                         }
                     }
                     else {
@@ -187,7 +189,7 @@ struct MutedConversationsView: View {
                             NRTextDynamic("Can't find event id: \(note1(mutedRootId.eventId) ?? "?")")
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .contentShape(Rectangle())
-                                .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId), context: "Default") }
+                                .onTapGesture { navigateTo(NotePath(id: mutedRootId.eventId), context: containerID) }
                         }
                     }
                 }

@@ -174,6 +174,7 @@ import NavigationBackport
 
 struct LazyPrivateNote: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @ObservedObject private var settings: SettingsStore = .shared
     
     @ObservedObject public var pn: CloudPrivateNote
@@ -246,13 +247,13 @@ struct LazyPrivateNote: View {
                     HStack {
                         PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25)
                             .onTapGesture {
-                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrPost.contact, context: "Default")
+                                navigateToContact(pubkey: nrPost.pubkey, nrContact: nrPost.contact, context: containerID)
                             }
                         
                         MinimalNoteTextRenderView(nrPost: nrPost, lineLimit: 1)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
-                            .onTapGesture { navigateTo(nrPost, context: "Default") }
+                            .onTapGesture { navigateTo(nrPost, context: containerID) }
                     }
                     
                 case .readyContact(let contactInfo):
@@ -270,7 +271,7 @@ struct LazyPrivateNote: View {
                     }
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        navigateTo(ContactPath(key: contactInfo.pubkey), context: "Default")
+                        navigateTo(ContactPath(key: contactInfo.pubkey), context: containerID)
                     }
                 case .error(let message):
                     HStack {

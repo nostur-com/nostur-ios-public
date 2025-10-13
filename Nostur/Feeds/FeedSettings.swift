@@ -90,6 +90,7 @@ struct ListManagedByView: View {
 
 
 struct SendSatsToSupportView: View {
+    @Environment(\.containerID) private var containerID
     private var pubkey: String
     @ObservedObject private var nrContact: NRContact
     @ObservedObject private var ss: SettingsStore = .shared
@@ -114,7 +115,7 @@ struct SendSatsToSupportView: View {
                 Text("Maintained by ")
                 PFPandName(nrContact: nrContact)
                     .onTapGesture {
-                        navigateToContact(pubkey: nrContact.pubkey,  context: "Default")
+                        navigateToContact(pubkey: nrContact.pubkey,  context: containerID)
                         parentDismiss()
                     }
             }

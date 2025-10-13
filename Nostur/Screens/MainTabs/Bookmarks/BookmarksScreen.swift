@@ -190,6 +190,7 @@ struct PrivateNotesCountPreferenceKey: PreferenceKey {
 struct LazyBookmark: View {
     
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @ObservedObject public var nrLazyBookmark: NRLazyBookmark
     public var fullWidth: Bool
 
@@ -206,7 +207,7 @@ struct LazyBookmark: View {
                                 .padding(.vertical, 5)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    navigateTo(nrPost, context: "Default")
+                                    navigateTo(nrPost, context: containerID)
                                 }
                             Spacer()
                         }

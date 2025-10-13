@@ -73,6 +73,9 @@ struct BookmarksTab: View {
             .navigationBarHidden(true)
             .navigationBarTitleDisplayMode(.inline)
             .environment(\.containerID, "Bookmarks")
+            .onOpenURL { url in
+                handleUrl(url, containerID: "Bookmarks")
+            }
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard !IS_IPAD || horizontalSizeClass == .compact else { return }

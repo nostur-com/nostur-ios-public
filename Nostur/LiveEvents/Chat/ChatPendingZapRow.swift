@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ChatPendingZapRow: View {
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @EnvironmentObject private var vc: ViewingContext
     private var pendingZap: NRChatPendingZap
     @ObservedObject private var nrContact: NRContact
@@ -70,7 +71,7 @@ struct ChatPendingZapRow: View {
                     LiveKitVoiceSession.shared.visibleNest = nil
                 }
                 
-                navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: "Default")                
+                navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
             }))
             .foregroundColor(theme.accent)
             

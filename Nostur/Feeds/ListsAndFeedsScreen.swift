@@ -38,6 +38,7 @@ struct ListsAndFeedsScreen: View {
                     ForEach(lists) { list in
                         NavigationLink {
                             FeedSettings(feed: list)
+                                .environment(\.containerID, "Default") // Should be Default right?
                         } label: {
                             ListRow(list: list)
                         }

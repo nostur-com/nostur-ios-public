@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct SelectedParticipantView: View {
+    @Environment(\.containerID) private var containerID
     @Environment(\.dismiss) private var dismiss
     public var withoutFollowButton = false
     
@@ -70,7 +71,7 @@ struct SelectedParticipantView: View {
                     }
                     .onTapGesture {
                         dismiss()
-                        navigateTo(nrContact, context: "Default")
+                        navigateTo(nrContact, context: containerID)
                         selectedContact = nil
                     }
                         
