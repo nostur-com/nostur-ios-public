@@ -407,7 +407,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func ping() {
 #if DEBUG
-        L.sockets.debug("PING: Trying to ping: \(self.url) -[LOG]-")
+        L.sockets.debug("PING: \(self.url) -[LOG]-")
 #endif
         queue.async { [weak self] in
             if self?.webSocketTask == nil {
@@ -660,7 +660,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             }
         }
 #if DEBUG
-        L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url) - didOpenWithProtocol")
+        L.sockets.debug("🏎️🏎️🔌 CONNECTED \(self.url) - didOpenWithProtocol -[LOG]-")
 #endif
     }
     
