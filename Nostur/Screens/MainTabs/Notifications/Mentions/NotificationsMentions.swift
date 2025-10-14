@@ -13,13 +13,14 @@ struct NotificationsMentions: View {
     public let pubkey: String
     @Binding public var navPath: NBNavigationPath
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @StateObject private var model = MentionsFeedModel()
     @ObservedObject private var settings: SettingsStore = .shared
 
     @State private var backlog = Backlog(timeout: 12, backlogDebugName: "NotificationsMentions")
     
     private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
+        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Notifications" }
         set { setSelectedTab(newValue) }
     }
     
