@@ -13,3 +13,4 @@ echo "NOSTRCHECK_PUBLIC_API_KEY = $NOSTRCHECK_PUBLIC_API_KEY" >> ../Config.xccon
 echo "NOSTUR_IS_DESKTOP = $NOSTUR_IS_DESKTOP" >> ../Config.xcconfig
 echo "CI_BUILD_NUMBER = $CI_BUILD_NUMBER" >> ../Config.xcconfig
 echo "NIP89_APP_REFERENCE = $NIP89_APP_REFERENCE" >> ../Config.xcconfig
+echo "NIP89_APP_NAME = $NIP89_APP_NAME" >> ../Config.xcconfig
