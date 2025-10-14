@@ -91,6 +91,8 @@ struct NRContentTextRendererInner: View {
         if let nxText {
             Text(nxText)
                 .foregroundColor(primaryColor)
+                .tint(accentColor)
+                .accentColor(accentColor)
                 .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .onTapGesture {
@@ -159,6 +161,8 @@ struct NRContentTextRendererInner: View {
                 let aString = AttributedString(text)
                 Text(aString)
                     .foregroundColor(primaryColor)
+                    .tint(accentColor)
+                    .accentColor(accentColor)
                     .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
