@@ -432,23 +432,15 @@ func handleUrl(_ url: URL) {
         L.og.info("nostur: link: \(nostur[0][2])\(nostur[0][3])")
     #endif
         if nostur[0][2] == "p:" {
-            if IS_DESKTOP_COLUMNS() {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
-                    navigateTo(ContactPath(key: nostur[0][3]), context: AppState.shared.containerIDTapped)
-                }
-            }
-            else {
+            // Small delay to make sure AppState.shared.containerIDTapped is set (via  .simultaneousGesture(TapGesture()...)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
                 navigateTo(ContactPath(key: nostur[0][3]), context: AppState.shared.containerIDTapped)
             }
             return
         }
         if nostur[0][2] == "e:" {
-            if IS_DESKTOP_COLUMNS() {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
-                    navigateTo(NotePath(id: nostur[0][3]), context: AppState.shared.containerIDTapped)
-                }
-            }
-            else {
+            // Small delay to make sure AppState.shared.containerIDTapped is set (via  .simultaneousGesture(TapGesture()...)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.025) {
                 navigateTo(NotePath(id: nostur[0][3]), context: AppState.shared.containerIDTapped)
             }
             return

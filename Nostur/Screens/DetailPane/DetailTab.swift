@@ -13,6 +13,7 @@ struct DetailTab: View {
     @State private var navPath = NBNavigationPath()
     @EnvironmentObject private var tm: DetailTabsModel
     @ObservedObject public var tab: TabModel
+    private let containerID = "DetailTab"
     
     var body: some View {
         NBNavigationStack(path: $navPath) {
@@ -23,6 +24,7 @@ struct DetailTab: View {
                     PostDetailView(nrPost: nrPost, navTitleHidden: true)
 //                        .debugDimensions("DetailTab.PostDetailView", alignment: .topLeading)
                         .withNavigationDestinations()
+                        .environment(\.containerID, containerID)
                 }
             }
             else if let nrLiveEvent = tab.nrLiveEvent {
@@ -31,6 +33,7 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     LiveEventDetail(liveEvent: nrLiveEvent)
                         .withNavigationDestinations()
+                        .environment(\.containerID, containerID)
                 }
             }
             else if let nrContact = tab.nrContact {
@@ -39,6 +42,7 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()
+                        .environment(\.containerID, containerID)
                 }
             }
             else if let notePathId = tab.notePath?.id {
@@ -47,6 +51,7 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     NoteById(id: notePathId, navTitleHidden: true)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
+                        .environment(\.containerID, containerID)
                 }
                 
             }
@@ -58,9 +63,11 @@ struct DetailTab: View {
                     case 30311:
                         LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
                             .withNavigationDestinations()
+                            .environment(\.containerID, containerID)
                     default:
                         ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
                             .withNavigationDestinations()
+                            .environment(\.containerID, containerID)
                     }
                 }
                 
@@ -71,6 +78,7 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     ArticleById(id: articleId, navTitleHidden: true)
                         .withNavigationDestinations()
+                        .environment(\.containerID, containerID)
                 }
                 
             }
@@ -80,6 +88,7 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     ProfileByPubkey(pubkey: contactPubkey, tab: tab.contactPath?.tab)//.opacity(tm.selected == tab ? 1 : 0)
                         .withNavigationDestinations()
+                        .environment(\.containerID, containerID)
                 }
                 
             }
@@ -89,6 +98,7 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
                         .withNavigationDestinations()
+                        .environment(\.containerID, containerID)
                 }
                 
             }
@@ -98,7 +108,6 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     Gallery()
                         .environmentObject(galleryVM)
-//                        .withNavigationDestinations()
                 }
                 
             }
@@ -108,12 +117,12 @@ struct DetailTab: View {
         }
         .nbUseNavigationStack(.never)
         .onReceive(receiveNotification(.navigateTo)) { notification in
-            guard tm.selected == tab else { return }
+            guard tm.selected == tab else { return } // Only navigate in active tab
             let destination = notification.object as! NavigationDestination
             let navId = (destination.destination.id as! String)
             
             
-            guard destination.context == "DetailPane" else { return }
+            guard destination.context == "DetailTab" else { return }
             
             // don't navigate to self again
             guard navId != tm.selected?.navId else { return }
