@@ -42,23 +42,7 @@ struct NXPostsFeed: View {
             NXListRow {
                 PostOrThread(nrPost: nrPost)
             } onAppearOnce: {
-                guard !vmInner.isPerformingScroll else { return false }
-                onPostAppearOnce(nrPost)
-                
-                // SettingsStore.shared.fetchCounts should be true for below to work
-                vm.prefetch(nrPost)
-                if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
-                    vm.allShortIdsSeen.insert(nrPost.shortId)
-                    if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
-                        vm.allShortIdsSeen.insert(String(firstQuoteId.prefix(8)))
-                    }
-                }
-                else {
-                    let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
-                    vm.allShortIdsSeen.formUnion(leafIds)
-                }
-                
-                return true
+                return self.onPostAppearOnce(nrPost)
             }
             .onDisappear {
                 onPostDisappear(nrPost)
@@ -246,22 +230,20 @@ struct NXPostsFeed: View {
         // Handle going to detail and back
         .onAppear {
             vm.resumeViewUpdates()
-        }
-        .onDisappear {
-            // When opening detail, the feed would still update in background using withAnimation { },
-            // but because its not visible the hack to keep scroll position doesn't work
-            // so we pause() updates (and resume() in onAppear {})
-            vm.pauseViewUpdates()
-        }
-        
-        // Add updateIsAtTop() debounces
-        .onAppear {
+            
+            // Add updateIsAtTop() debounces
             guard updateIsAtTopSubscription == nil else { return }
             updateIsAtTopSubscription = vmInner.updateIsAtTopSubject
                 .debounce(for: 0.075, scheduler: RunLoop.main)
                 .sink {
                     self._updateIsAtTop()
                 }
+        }
+        .onDisappear {
+            // When opening detail, the feed would still update in background using withAnimation { },
+            // but because its not visible the hack to keep scroll position doesn't work
+            // so we pause() updates (and resume() in onAppear {})
+            vm.pauseViewUpdates()
         }
     }
     
@@ -347,17 +329,27 @@ struct NXPostsFeed: View {
         }
     }
     
-    private func onPostAppearOnce(_ nrPost: NRPost) {
+    private func onPostAppearOnce(_ nrPost: NRPost) -> Bool {
+        // Don't run if onPostAppearOnce is happening because of scrollToIndex (hidden scroll to keep scroll position)
+        // Only run if it is actual user based scroll
+        guard !vmInner.isPerformingScroll else { return false }
 #if DEBUG
         L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppearOnce() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
+        vm.prefetch(nrPost)
         updateIsAtTop()
         loadMoreIfNeeded()
-//        vm.haltProcessing() // will stop new updates on screen for 5.0 seconds
         
-        // Don't update markAsRead if the onPostAppearOnce is happening because of scrollToIndex (hidden scroll to keep scroll position)
-        // Only update if it is actual user based scroll
-        guard !vmInner.isPerformingScroll else { return }
+        if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
+            vm.allShortIdsSeen.insert(nrPost.shortId)
+            if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+                vm.allShortIdsSeen.insert(String(firstQuoteId.prefix(8)))
+            }
+        }
+        else {
+            let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
+            vm.allShortIdsSeen.formUnion(leafIds)
+        }
         
         
         // Remove this post from unread count, and mark as read
@@ -374,10 +366,9 @@ struct NXPostsFeed: View {
             }
         }
         
-        
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
             
-            // Current post index, until last post. (So all remaining posts further below in feed
+            // Current post index, until last post. (So all remaining posts further below in feed)
             for i in appearedIndex..<posts.count {
                 
                 // Remove them from unread count, and mark them as read
@@ -398,6 +389,8 @@ struct NXPostsFeed: View {
         }
         
         vm.saveLocalFeedState()
+        
+        return true
     }
     
     private func updateIsAtTop() {
