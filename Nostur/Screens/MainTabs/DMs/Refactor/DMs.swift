@@ -122,7 +122,6 @@ struct DMs: View {
             case "Accepted":
                 if !vm.conversationRows.isEmpty {
                     DirectMessageRows(pubkey: pubkey, conversationRows: $vm.conversationRows)
-                        .environment(\.theme, theme)
                 }
                 else {
                     Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
@@ -130,10 +129,7 @@ struct DMs: View {
                 }
             case "Requests":
                 if !vm.requestRows.isEmpty || vm.showNotWoT {
-                    VStack {
-                        DirectMessageRows(pubkey: pubkey, conversationRows: $vm.requestRows)
-                            .environment(\.theme, theme)
-                    }
+                    DirectMessageRows(pubkey: pubkey, conversationRows: $vm.requestRows)
                 }
                 else {
                     Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
@@ -152,8 +148,6 @@ struct DMs: View {
         }
         .overlay(alignment: .bottomTrailing) {
             NewDMButton(showingNewDM: $showingNewDM)
-//                    .padding([.top, .leading, .bottom], 10)
-//                    .padding([.trailing], 5)
         }
         .nbNavigationDestination(for: Conversation.self) { conv in
             if let event = conv.mostRecentEvent.toMain() {
@@ -244,9 +238,6 @@ struct DMNavigationStack<Content: View>: View {
         NBNavigationStack(path: $navPath) {
             content
                 .environment(\.containerID, "Messages")
-                .simultaneousGesture(TapGesture().onEnded({ _ in
-                    AppState.shared.containerIDTapped = "Messages"
-                }))
                 .onReceive(receiveNotification(.navigateTo)) { notification in
                     let destination = notification.object as! NavigationDestination
                     guard !IS_IPAD || horizontalSizeClass == .compact else { return }

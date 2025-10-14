@@ -440,7 +440,10 @@ struct DMConversationView: View {
                     subscriptionId: "DM-R"
                 )
             }
+            
+            
             .withNavigationDestinations()
+            .environment(\.containerID, "Messages")
         }
         else {
             Text("Error: could not find contact pubkey", comment: "Error shown on DM conversation screen")
