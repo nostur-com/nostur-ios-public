@@ -237,7 +237,6 @@ struct WithSheets: ViewModifier {
                             QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
                                 .environmentObject(la)
                                 .presentationDetents200()
-                                .presentationDragIndicatorVisible()
                                 .presentationBackgroundCompat(theme.listBackground)
                         }
                         .environment(\.theme, theme)
