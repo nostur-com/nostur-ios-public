@@ -146,6 +146,17 @@ struct Kind9802: View {
             }
             HStack {
                 Spacer()
+                if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
+                        let naddr = try? ShareableIdentifier(aTag: aTag.1) {
+                    ArticleTitleByNaddr(naddr1: naddr.bech32string)
+                        .onTapGesture {
+                            guard !nxViewingContext.contains(.preview) else { return }
+                            if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
+                                    let naddr = try? ShareableIdentifier(aTag: aTag.1) {
+                                    navigateTo(Naddr1Path(naddr1: naddr.bech32string), context: containerID)
+                            }
+                        }
+                }
                 if let url = highlightAttributes.url, let md = try? AttributedString(markdown:"[\(url)](\(url))") {
                     Text(md)
                         .lineLimit(1)
@@ -189,6 +200,10 @@ struct Kind9802: View {
     }) {
         // Preview highlight
         let testHighlight = testNRPost(###"{"sig":"6c119d31fc17d79ce405db9641179d96aec70917df8241f817363348f633c6c6c21a7159c42323450086eccce78fb116140ad286d82e694c48325e1edc93e9e1","pubkey":"6e468422dfb74a5738702a8823b9b28168abab8655faacb6853cd0ee15deee93","kind":9802,"content":"On Nostr, clients can be more aligned with users, since they can only capture user attention to the extent that their functionality is what's valuable to the user, not the data they have access to.","tags":[["a","30023:97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322:1757962925051"],["alt","Highlight created by Boris. read.withboris.com"],["p","97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322"],["zap","6e468422dfb74a5738702a8823b9b28168abab8655faacb6853cd0ee15deee93","wss://relay.damus.io","50"],["zap","29dea8672f44ed164bfc83db3da5bd472001af70307f42277674cbc64d33013e","wss://relay.damus.io","2.1"],["zap","97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322","wss://relay.damus.io","27.0"]],"id":"ab1455fab41fb6d2a7785bd77a45c3015388506cae6ed4511f67b4f21e1bed43","created_at":1760141439}"###)
-        PostRowDeletable(nrPost: testHighlight)
+        VStack {
+            PostRowDeletable(nrPost: testHighlight)
+                .padding(10)
+            Spacer()
+        }
     }
 }
