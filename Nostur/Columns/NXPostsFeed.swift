@@ -51,7 +51,7 @@ struct NXPostsFeed: View {
             .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
         }
         .withContainerTopOffsetEnvironmentKey()
-        .scrollOffsetID(vm.scrollOffsetID)
+        .scrollOffsetID(vm.columnVMid)
         .environment(\.defaultMinListRowHeight, 50)
         .listStyle(.plain)
         .introspect(.list, on: .iOS(.v15)) { view in
@@ -128,7 +128,7 @@ struct NXPostsFeed: View {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 UIView.setAnimationsEnabled(false)
-                let proxy = ScrollOffset.proxy(.top, id: vm.scrollOffsetID)
+                let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
                 
                 if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
                     if let collectionView,
@@ -357,12 +357,17 @@ struct NXPostsFeed: View {
             vmInner.unreadIds[nrPost.id] = 0
             vmInner.updateIsAtTopSubject.send()
             vm.markAsRead(nrPost.shortId)
+            FeedsCoordinator.shared.markedAsUnreadSubject.send((nrPost.id, vm.columnVMid))
             if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
                 vm.markAsRead(String(firstQuoteId.prefix(8)))
+                FeedsCoordinator.shared.markedAsUnreadSubject.send((firstQuoteId, vm.columnVMid))
             }
             
             if !nrPost.parentPosts.isEmpty {
                 vm.markAsRead(nrPost.parentPosts.map { $0.shortId })
+                _ = nrPost.parentPosts.map {
+                    FeedsCoordinator.shared.markedAsUnreadSubject.send(($0.id, vm.columnVMid))
+                }
             }
         }
         
@@ -398,7 +403,7 @@ struct NXPostsFeed: View {
     }
     
     private func _updateIsAtTop() {
-        let proxy = ScrollOffset.proxy(.top, id: vm.scrollOffsetID)
+        let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
         
         if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
             if collectionView != nil {

@@ -10,7 +10,7 @@ import Combine
 import NostrEssentials
 
 class NXColumnViewModel: ObservableObject {
-    public let scrollOffsetID = UUID()
+    public let columnVMid = UUID()
     
     public var speedTest: NXSpeedTest?
 
@@ -199,6 +199,34 @@ class NXColumnViewModel: ObservableObject {
                 }
                 .store(in: &subscriptions)
                 
+            FeedsCoordinator.shared.markedAsUnreadSubject
+                .delay(for: .milliseconds(200), scheduler: RunLoop.main)
+                .sink(receiveValue: { [weak self] (postId, columnVMid) in
+                    guard let self, columnVMid != self.columnVMid else { return }
+                    guard SettingsStore.shared.appWideSeenTracker else { return }
+                    
+                    // Only the keys of self.unreadIds where self.unreadIds[key] > 0
+                    let unreadIds: Set<String> = Set(
+                        self.vmInner.unreadIds.filter({ $0.value > 0 })
+                            .keys
+                    )
+                    
+                    // postId is the id marked as read in another column
+                    // unreadIds is currently unread in the current column
+                    guard unreadIds.contains(postId) else { return }
+                    
+                    if case .posts(let existingPosts) = self.viewState {
+                        if vmInner.unreadIds.keys.contains(postId) { // <-- This check is redundant?
+                            vmInner.unreadIds[postId] = nil
+                            vmInner.updateIsAtTopSubject.send()
+                        }
+                        withAnimation { // withAnimation and not at top keeps scroll position
+                            self.viewState = .posts(existingPosts.filter { $0.id != postId })
+                        }
+                    }
+                })
+                .store(in: &subscriptions)
+            
             feed?.objectWillChange
                 .sink(receiveValue: { [weak self] in
                     guard let self, let feed else { return }
@@ -2022,7 +2050,7 @@ extension NXColumnViewModel {
         let (danglers, partialThreadsWithParent) = extractDanglingReplies(partialThreads)
         
 #if DEBUG
-        let proxy = ScrollOffset.proxy(.top, id: self.scrollOffsetID)
+        let proxy = ScrollOffset.proxy(.top, id: self.columnVMid)
         L.og.debug("☘️☘️ \(config.name) processToScreen() danglers: \(danglers.count) partialThreadsWithParent: \(partialThreadsWithParent.count) offset: \(proxy.offset) -[LOG]-")
 #endif
         
