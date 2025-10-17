@@ -177,7 +177,9 @@ class NewPostNotifier: ObservableObject {
         
         // Create the new notification with all unread contacts merged
         let newPostNotification = PersistentNotification.createNewPostsNotification(pubkey: accountPubkey, contacts: Array(Set(allContacts)), since: since)
-        NotificationsViewModel.shared.checkNeedsUpdate(newPostNotification)
+        FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+            NeedsUpdateInfo(persistentNotification: newPostNotification)
+        )
         Task { @MainActor in
             DataProvider.shared().saveToDiskNow(.viewContext) // <-- need this or @FetchRequest in NotificationsNewPosts doesn't update realtime
         }

@@ -106,7 +106,7 @@ extension AppView {
                     ConnectionPool.shared.connectAll()
                     sendNotification(.scenePhaseActive)
                     FeedsCoordinator.shared.resumeFeeds()
-                    NotificationsViewModel.shared.restoreSubscriptions()
+                    NotificationsViewModel.restoreSubscriptions()
                     AppState.shared.startTaskTimers()
                 }
             }
@@ -115,7 +115,7 @@ extension AppView {
                 ConnectionPool.shared.connectAll()
                 sendNotification(.scenePhaseActive)
                 FeedsCoordinator.shared.resumeFeeds()
-                NotificationsViewModel.shared.restoreSubscriptions()
+                NotificationsViewModel.restoreSubscriptions()
                 AppState.shared.startTaskTimers()
             }
             

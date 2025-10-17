@@ -30,4 +30,10 @@ class FeedsCoordinator {
     
     public var markedAsUnreadSubject = PassthroughSubject<(String, UUID), Never>() // String = nrPost.id, vm.columnVMid
     
+    public var notificationNeedsUpdateSubject = PassthroughSubject<NeedsUpdateInfo, Never>()
+}
+
+struct NeedsUpdateInfo {
+    var event: Event?
+    var persistentNotification: PersistentNotification?
 }

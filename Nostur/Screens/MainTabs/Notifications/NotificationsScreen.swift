@@ -29,6 +29,11 @@ struct NotificationsContainer: View {
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
                 .environment(\.containerID, "Notifications")
+            
+                .onReceive(receiveNotification(.activeAccountChanged)) { notification in
+                    let account = notification.object as! CloudAccount
+                    NotificationsViewModel.shared.load(account.publicKey)
+                }
                 .onReceive(receiveNotification(.navigateTo)) { notification in
                     let destination = notification.object as! NavigationDestination
                     guard !IS_IPAD || horizontalSizeClass == .compact else { return }

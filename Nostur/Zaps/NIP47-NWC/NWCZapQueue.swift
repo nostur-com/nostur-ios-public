@@ -49,7 +49,9 @@ class NWCZapQueue {
                         L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
 #endif
                         let notification = PersistentNotification.createFailedNWCZaps(pubkey: AccountsState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
-                        NotificationsViewModel.shared.checkNeedsUpdate(notification)
+                        FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                            NeedsUpdateInfo(persistentNotification: notification)
+                        )
                     }
                 }
             }
@@ -180,7 +182,9 @@ class Zap {
                 if let eventId = self.eventId {
                     let message = String(localized: "[Zap](nostur:e:\(eventId)) failed.\n\(self.error ?? "")", comment: "Error message. don't translate the (nostur:e:...) part")
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: bg())
-                    NotificationsViewModel.shared.checkNeedsUpdate(notification)
+                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                        NeedsUpdateInfo(persistentNotification: notification)
+                    )
 #if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(self.error ?? "")")
 #endif
@@ -202,7 +206,9 @@ class Zap {
                 else {
                     let message = String(localized:"Zap failed for [contact](nostur:p:\(self.contactPubkey)).\n\(self.error ?? "")", comment: "Error message. Only translate the 'Zap failed for' part, don't change between brackets")
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: bg())
-                    NotificationsViewModel.shared.checkNeedsUpdate(notification)
+                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                        NeedsUpdateInfo(persistentNotification: notification)
+                    )
 #if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(self.contactPubkey)). \(self.error ?? "")")
 #endif

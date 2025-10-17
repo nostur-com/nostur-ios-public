@@ -262,8 +262,9 @@ class Importer {
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
-//                                    kind6firstQuote.repostsCount = 1
-                                    NotificationsViewModel.shared.checkNeedsUpdate(kind6firstQuote)
+                                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                                        NeedsUpdateInfo(event: kind6firstQuote)
+                                    )
                                 }
                             }
                             else {
@@ -286,7 +287,9 @@ class Importer {
                                 
                                 
                                 let toBePinnedPostEvent = Event.saveEvent(event: toBePinnedPost, relays: message.relays, context: bgContext)
-                                NotificationsViewModel.shared.checkNeedsUpdate(toBePinnedPostEvent)
+                                FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                                    NeedsUpdateInfo(event: toBePinnedPostEvent)
+                                )
                                 Event.updateRelays(toBePinnedPost.id, relays: message.relays, context: bgContext)
                             }
                         }
@@ -322,7 +325,9 @@ class Importer {
                     // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
                         // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
-                    NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
+                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                        NeedsUpdateInfo(event: savedEvent)
+                    )
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
                         subscriptionIds.insert(subscriptionId)
@@ -527,8 +532,9 @@ class Importer {
                                 kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
                                 
                                 if let kind6firstQuote = kind6firstQuote {
-//                                    kind6firstQuote.repostsCount = 1 
-                                    NotificationsViewModel.shared.checkNeedsUpdate(kind6firstQuote)
+                                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                                        NeedsUpdateInfo(event: kind6firstQuote)
+                                    )
                                 }
                             }
                             else {
@@ -566,7 +572,9 @@ class Importer {
                     
                     // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext)
-                    NotificationsViewModel.shared.checkNeedsUpdate(savedEvent)
+                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                        NeedsUpdateInfo(event: savedEvent)
+                    )
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
                         importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))

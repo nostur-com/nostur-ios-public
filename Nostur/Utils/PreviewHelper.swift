@@ -822,7 +822,6 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.cp)
                     .environmentObject(pe.dm)
                     .environmentObject(NetworkMonitor.shared)
-                    .environmentObject(NotificationsViewModel.shared)
                     .buttonStyle(NRButtonStyle())
                     .tint(Themes.GREEN.accent)
             }
@@ -831,7 +830,7 @@ struct PreviewContainer<Content: View>: View {
             }
         }
         .onAppear {
-            pe.themes.loadGreen()
+//            pe.themes.loadGreen()
             if pe.loadAccount() {
                 if let setup {
                     setup(pe)

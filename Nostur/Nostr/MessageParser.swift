@@ -309,7 +309,9 @@ class MessageParser {
                 if let eventId = awaitingZap.eventId {
                     let message = "[Zap](nostur:e:\(eventId)) may have failed.\n\(error.message)"
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
-                    NotificationsViewModel.shared.checkNeedsUpdate(notification)
+                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                        NeedsUpdateInfo(persistentNotification: notification)
+                    )
 #if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [post](nostur:e:\(eventId)). \(error.message)")
 #endif
@@ -323,7 +325,9 @@ class MessageParser {
                 else {
                     let message = "Zap may have failed for [contact](nostur:p:\(awaitingZap.nrContact.pubkey)).\n\(error.message)"
                     let notification = PersistentNotification.createFailedNWCZap(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
-                    NotificationsViewModel.shared.checkNeedsUpdate(notification)
+                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                        NeedsUpdateInfo(persistentNotification: notification)
+                    )
 #if DEBUG
                     L.og.info("⚡️ Created notification: Zap failed for [contact](nostur:p:\(awaitingZap.nrContact.pubkey)). \(error.message)")
 #endif
@@ -355,7 +359,9 @@ class MessageParser {
             if let error = nwcResponse.error {
                 let message = "Failed to pay lightning invoice.\n\(error.message)"
                 let notification = PersistentNotification.createFailedLightningInvoice(pubkey: AccountsState.shared.activeAccountPublicKey, message: message, context: self.bgQueue)
-                NotificationsViewModel.shared.checkNeedsUpdate(notification)
+                FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                    NeedsUpdateInfo(persistentNotification: notification)
+                )
 #if DEBUG
                 L.og.error("⚡️ Failed to pay lightning invoice. \(error.message)")
 #endif

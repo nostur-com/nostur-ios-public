@@ -189,7 +189,10 @@ class FollowerNotifier {
                 followers: Array(self.newFollowerPubkeys),
                 context: bg()
             )
-            NotificationsViewModel.shared.checkNeedsUpdate(notification)
+            
+            FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                NeedsUpdateInfo(persistentNotification: notification)
+            )
             
 //            if let account = account() {
 //                account.lastFollowerCreatedAt = Int64(Date.now.timeIntervalSince1970) // HM not needed since we use mostRecent (PNotification)

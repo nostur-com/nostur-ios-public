@@ -622,12 +622,12 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                             if self?.relayData.auth ?? false {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
                                     FeedsCoordinator.shared.resumeFeeds()
-                                    NotificationsViewModel.shared.restoreSubscriptions()
+                                    NotificationsViewModel.restoreSubscriptions()
                                 }
                             }
                             else {
                                 FeedsCoordinator.shared.resumeFeeds()
-                                NotificationsViewModel.shared.restoreSubscriptions()
+                                NotificationsViewModel.restoreSubscriptions()
                             }
                         }
                         sendNotification(.socketConnected, "Connected: \(self?.url ?? "?")")
