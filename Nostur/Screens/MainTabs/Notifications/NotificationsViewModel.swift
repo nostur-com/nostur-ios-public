@@ -11,6 +11,16 @@ import CoreData
 
 class NotificationsViewModel: ObservableObject {
     
+    // Short uuid
+    let id: String = String(UUID().uuidString.prefix(16))
+    
+    private var account: CloudAccount? {
+        didSet {
+            self.accountData = account?.toStruct()
+        }
+    }
+    private var accountData: AccountData?
+    
     private var lastLocalNotificationAt: Int {
         get { UserDefaults.standard.integer(forKey: "last_local_notification_timestamp") }
         set { UserDefaults.standard.setValue(newValue, forKey: "last_local_notification_timestamp") }
@@ -18,7 +28,9 @@ class NotificationsViewModel: ObservableObject {
     
     static let shared = NotificationsViewModel()
     
-    private init() {
+    @MainActor
+    public func load(_ pubkey: String) {
+        self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey })
         startTimer()
         setupSubscriptions()
         if IS_CATALYST {
@@ -30,7 +42,7 @@ class NotificationsViewModel: ObservableObject {
     // is true at start, then false after each notification check
     
     public func checkNeedsUpdate(_ notification: PersistentNotification) {
-        guard let account = account() else { return }
+        guard let account = self.account else { return }
         if notification.pubkey == account.publicKey {
             bg().perform { [weak self] in
                 self?.needsUpdate = true
@@ -39,20 +51,20 @@ class NotificationsViewModel: ObservableObject {
     }
     
     public func checkNeedsUpdate(_ event: Event) {
-        guard let account = account() else { return }
+        guard let accountData = self.accountData else { return }
         switch event.kind {
         case 1,1111,1222,1244,4,20,9802,30023,34235: // TODO: Should check if not muted or blocked
             let before = needsUpdate
-            needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == account.publicKey })
+            needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == accountData.publicKey })
             if needsUpdate && needsUpdate != before {
-                self.checkForUnreadMentions()
+                self.checkForUnreadMentions(accountData)
             }
         case 6:
-            needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore blocked or muted
+            needsUpdate = (event.otherPubkey == accountData.publicKey) // TODO: Should ignore blocked or muted
         case 7:
-            needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            needsUpdate = (event.otherPubkey == accountData.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
         case 9735:
-            needsUpdate = (event.otherPubkey == account.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            needsUpdate = (event.otherPubkey == accountData.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
         default:
             return
         }
@@ -211,15 +223,20 @@ class NotificationsViewModel: ObservableObject {
             }
             .store(in: &subscriptions)
         
-        restoreSubscriptionsSubject
-            .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
-            .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
-            .sink { [weak self] _ in
-                self?.relayCheckNewestNotifications()
-                self?.relayCheckSinceNotifications()
-            }
-            .store(in: &subscriptions)
+        if restoreSubscriptionsSubcription == nil {
+            restoreSubscriptionsSubcription = restoreSubscriptionsSubject
+                .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
+                .throttle(for: .seconds(10.0), scheduler: RunLoop.main, latest: false)
+                .sink { [weak self] _ in
+                    Task { @MainActor in
+                        self?.relayCheckNewestNotifications()
+                        self?.relayCheckSinceNotifications()
+                    }
+                }
+        }
     }
+    
+    private var restoreSubscriptionsSubcription: AnyCancellable?
     
     public func restoreSubscriptions() {
         restoreSubscriptionsSubject.send()
@@ -247,25 +264,26 @@ class NotificationsViewModel: ObservableObject {
     
     // From now, stays active
     private func relayCheckNewestNotifications() {
-        guard AccountsState.shared.activeAccountPublicKey != "" else { return }
+        guard let accountData else { return }
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
         
         // Public req for notifications
-        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235],
-                           subscriptionId: "Notifications", since: sinceNTimestamp),
-            activeSubscriptionId: "Notifications")
+        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235],
+                           subscriptionId: "-OPEN-Notifications-\(self.id)", since: sinceNTimestamp),
+            activeSubscriptionId: "-OPEN-Notifications-\(self.id)")
         
         // Separate req for kind 4, because possibly needs auth
-        req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [4],
-                           subscriptionId: "Notifications-A", since: sinceNTimestamp),
-            activeSubscriptionId: "Notifications-A")
+        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [4],
+                           subscriptionId: "-OPEN-Notifications-\(self.id)-A", since: sinceNTimestamp),
+            activeSubscriptionId: "-OPEN-Notifications-\(self.id)-A")
     }
     
+    @MainActor
     public var requestSince: Int64 { // TODO: If event .created_at, is in the future don't save date
         let oneWeekAgo = (Int64(Date.now.timeIntervalSince1970) - 604_800)
-        guard let account = account() else { return oneWeekAgo }
+        guard let account = self.account else { return oneWeekAgo }
         return [
             oneWeekAgo,
             account.lastSeenRepostCreatedAt,
@@ -277,19 +295,20 @@ class NotificationsViewModel: ObservableObject {
     }
     
     // Check since last notification
+    @MainActor
     private func relayCheckSinceNotifications() {
-        // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE:
-        guard AccountsState.shared.activeAccountPublicKey != "" else { return }
-                
+        // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE
+        guard let accountData = self.accountData else { return }
         let since = NTimestamp(timestamp: Int(self.requestSince))
         bg().perform { [weak self] in
-            self?.needsUpdate = true
+            guard let self else { return }
+            self.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP", since: since))
+                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
                 
                 // Separate req for kind 4, because possibly needs auth
-                req(RM.getMentions(pubkeys: [AccountsState.shared.activeAccountPublicKey], kinds: [4], subscriptionId: "NotificationsDM-CATCHUP", since: since))
+                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [4], subscriptionId: "NotificationsDM-CATCHUP-\(self.id)", since: since))
             }
         }
     }
@@ -302,15 +321,15 @@ class NotificationsViewModel: ObservableObject {
     private func startTimer() {
         guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
-            guard AccountsState.shared.activeAccountPublicKey != "" else { return }
             bg().perform { [weak self] in
+                guard let accountData = self?.accountData else { return }
                 if (AppState.shared.appIsInBackground && !IS_CATALYST) {
-                    self?.checkForUnreadMentions()
+                    self?.checkForUnreadMentions(accountData)
                 }
                 else {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { // Give time for AUTH / "auth-required:"
                         bg().perform { [weak self] in
-                            self?.checkForEverything()
+                            self?.checkForEverything(accountData)
                         }
                     }
                 }
@@ -319,7 +338,7 @@ class NotificationsViewModel: ObservableObject {
         timer?.tolerance = 5.0
     }
     
-    private func checkForEverything() {
+    private func checkForEverything(_ accountData: AccountData) {
         guard (!AppState.shared.appIsInBackground || IS_CATALYST) else {
 #if DEBUG
             L.og.debug("NotificationViewModel.checkForEverything(): skipping, app in background.");
@@ -331,7 +350,6 @@ class NotificationsViewModel: ObservableObject {
         OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
         
         guard needsUpdate else { return }
-        guard account() != nil else { return }
                 
         guard !Importer.shared.isImporting else {
 #if DEBUG
@@ -356,43 +374,41 @@ class NotificationsViewModel: ObservableObject {
 //            }
 //        }
         
-        bg().perform { [weak self] in self?.checkForUnreadMentions() }
+        bg().perform { [weak self] in self?.checkForUnreadMentions(accountData) }
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteNewPosts else { return }
-            self.checkForUnreadNewPosts()
+            self.checkForUnreadNewPosts(accountData)
         }
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteReposts else { return }
-            self.checkForUnreadReposts()
+            self.checkForUnreadReposts(accountData)
         }
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteFollows else { return }
-            self.checkForUnreadNewFollowers()
+            self.checkForUnreadNewFollowers(accountData)
         }
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteReactions else { return }
-            self.checkForUnreadReactions()
+            self.checkForUnreadReactions(accountData)
         }
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteZaps else { return }
-            self.checkForUnreadZaps()
+            self.checkForUnreadZaps(accountData)
         }
         bg().perform { [weak self] in
-            self?.checkForUnreadFailedZaps()
+            self?.checkForUnreadFailedZaps(accountData)
         }
     }
     
-    public func checkForUnreadMentions() {
+    public func checkForUnreadMentions(_ accountData: AccountData) {
         //TODO: Should check if there is actual mention in .content
         shouldBeBg()
-        guard let account = account() else { return }
-        let accountData = account.toStruct()
-        guard let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData) else { return }
+        let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
          
         let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
             .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notifications now.
@@ -410,18 +426,18 @@ class NotificationsViewModel: ObservableObject {
                     // but always allow if direct reply to own post
                     if let replyToId = $0.replyToId {
                         if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
-                            if replyTo.pubkey == account.publicKey { // direct reply to our post
+                            if replyTo.pubkey == accountData.publicKey { // direct reply to our post
                                 return true
                             }
                             // direct reply to someone elses post, check if we are actually mentioned in content. (we don't check old [0], [1] style...)
-                            return $0.content != nil && $0.content!.contains(account.npub)
+                            return $0.content != nil && $0.content!.contains(accountData.npub)
                         }
                         // We don't have our own event? Maybe new app user
                         return false // fallback to false
                     }
                     
                     // our npub is in content? (we don't check old [0], [1] style...)
-                    return $0.content != nil && $0.content!.contains(account.npub)
+                    return $0.content != nil && $0.content!.contains(accountData.npub)
                 }
                 
                 return true
@@ -433,7 +449,7 @@ class NotificationsViewModel: ObservableObject {
         // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
         // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
         let mentionsForNotification = unreadMentions
-            .filter { ($0.created_at > lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || account.followingPubkeys.contains($0.pubkey)) }
+            .filter { ($0.created_at > lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || accountData.followingPubkeys.contains($0.pubkey)) }
             .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
         
         DispatchQueue.main.async { [weak self] in
@@ -466,8 +482,8 @@ class NotificationsViewModel: ObservableObject {
 #endif
         await withCheckedContinuation { [weak self] continuation in
             bg().perform {
-                guard let self else { return }
-                guard let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData) else { continuation.resume(); return }
+                guard let self else { continuation.resume(); return }
+                let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
                  
                 let unreadMentionsWithSpam = ((try? bg().fetch(fetchRequest)) ?? [])
                 let unreadMentions = unreadMentionsWithSpam
@@ -491,7 +507,7 @@ class NotificationsViewModel: ObservableObject {
 #endif
                 
                 DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
+                    guard let self else { continuation.resume(); return }
                     if unreadMentionsCount != self.unreadMentions_ {
                         if SettingsStore.shared.receiveLocalNotifications {
                             
@@ -515,11 +531,10 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadNewPosts() {
+    private func checkForUnreadNewPosts(_ accountData: AccountData) {
         shouldBeBg()
         
-        guard let fetchRequest = q.unreadNewPostsQuery() else { return }
-        
+        let fetchRequest = q.unreadNewPostsQuery(accountData: accountData)
         let unreadNewPosts = (try? bg().count(for: fetchRequest)) ?? 0
         
         DispatchQueue.main.async { [weak self] in
@@ -535,12 +550,11 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadReposts() {
+    private func checkForUnreadReposts(_ accountData: AccountData) {
         //TODO: Should check if there is actual mention in .content
         shouldBeBg()
         
-        guard let fetchRequest = q.unreadRepostsQuery(resultType: .managedObjectResultType) else { return }
-         
+        let fetchRequest = q.unreadRepostsQuery(resultType: .managedObjectResultType, accountData: accountData)
         let unreadReposts = ((try? bg().fetch(fetchRequest)) ?? [])
             .filter { !$0.isSpam } // Need to filter so can't use .countResultType
             .count
@@ -558,11 +572,10 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadNewFollowers() {
+    private func checkForUnreadNewFollowers(_ accountData: AccountData) {
         shouldBeBg()
         
-        guard let fetchRequest = q.unreadNewFollowersQuery() else { return }
-        
+        let fetchRequest = q.unreadNewFollowersQuery(accountData: accountData)
         let unreadNewFollowers = (try? bg().count(for: fetchRequest)) ?? 0
         
         DispatchQueue.main.async { [weak self] in
@@ -578,11 +591,10 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadReactions() {
+    private func checkForUnreadReactions(_ accountData: AccountData) {
         shouldBeBg()
     
-        guard let fetchRequest = q.unreadReactionsQuery(resultType: .managedObjectResultType) else { return }
-    
+        let fetchRequest = q.unreadReactionsQuery(resultType: .managedObjectResultType, accountData: accountData)
         let unreadReactions = ((try? bg().fetch(fetchRequest)) ?? [])
             .filter { !$0.isSpam } // Need to filter so can't use .countResultType
             .count
@@ -600,11 +612,10 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadZaps() {
+    private func checkForUnreadZaps(_ accountData: AccountData) {
         shouldBeBg()
         
-        guard let fetchRequest = q.unreadZapsQuery(resultType: .managedObjectResultType) else { return }
-        
+        let fetchRequest = q.unreadZapsQuery(resultType: .managedObjectResultType, accountData: accountData)
         let unreadZaps = ((try? bg().fetch(fetchRequest)) ?? [])
             .filter { !$0.isSpam } // Need to filter so can't use .countResultType
             .count
@@ -622,11 +633,10 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadFailedZaps() {
+    private func checkForUnreadFailedZaps(_ accountData: AccountData) {
         shouldBeBg()
         
-        guard let fetchRequest = q.unreadFailedZapsQuery() else { return }
-        
+        let fetchRequest = q.unreadFailedZapsQuery(accountData: accountData)
         let unreadFailedZaps = (try? bg().count(for: fetchRequest)) ?? 0
         
         DispatchQueue.main.async { [weak self] in
@@ -645,30 +655,33 @@ class NotificationsViewModel: ObservableObject {
     // -- MARK: Mark as read
     
     @MainActor public func markMentionsAsRead() {
+        guard let accountData else { return }
         self.unreadMentions_ = 0
+        guard let account = self.account else { return }
+        let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard let account = Nostur.account() else { return }
-            guard let r = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: account.toStruct())
-            else {
-                account.lastSeenPostCreatedAt = Int64(Date.now.timeIntervalSince1970)
-                return
-            }
+            let r = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
             r.fetchLimit = 1
             
             if let mostRecent = try? bg().fetch(r).first {
-                if account.lastSeenPostCreatedAt != mostRecent.created_at {
-                    account.lastSeenPostCreatedAt = mostRecent.created_at
+                if lastSeenPostCreatedAt != mostRecent.created_at {
+                    let mostRecentCreated_at = mostRecent.created_at
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenPostCreatedAt = mostRecentCreated_at
+                    }
                 }
             }
             else {
 #if DEBUG
                 L.og.info("🔴🔴 markMentionsAsRead() - Falling back to 2 days before (should not happen)")
 #endif
-                let twoDaysAgoOrNewer = max(account.lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if account.lastSeenPostCreatedAt != twoDaysAgoOrNewer {
-                    account.lastSeenPostCreatedAt = twoDaysAgoOrNewer
+                let twoDaysAgoOrNewer = max(lastSeenPostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
+                if lastSeenPostCreatedAt != twoDaysAgoOrNewer {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenPostCreatedAt = twoDaysAgoOrNewer
+                    }
                 }
             }
             DataProvider.shared().saveToDiskNow(.bgContext)
@@ -679,17 +692,15 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markNewPostsAsRead() {
+        guard let accountData else { return }
         self.unreadNewPosts_ = 0
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard let account = Nostur.account() else { return }
-            let pubkey = account.publicKey
-                    
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
             r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
-                                       pubkey, PNType.newPosts.rawValue)
+                                       accountData.publicKey, PNType.newPosts.rawValue)
             r3.resultType = .updatedObjectIDsResultType
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
@@ -702,27 +713,30 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markRepostsAsRead() {
+        guard let accountData else { return }
         self.unreadReposts_ = 0
+        guard let account = self.account else { return }
+        let lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard let account = Nostur.account() else { return }
-            guard let r = q.unreadRepostsQuery(resultType: .managedObjectResultType)
-            else {
-                account.lastSeenRepostCreatedAt = Int64(Date.now.timeIntervalSince1970)
-                return
-            }
+            let r = q.unreadRepostsQuery(resultType: .managedObjectResultType, accountData: accountData)
             r.fetchLimit = 1
             
             if let mostRecent = try? bg().fetch(r).first {
-                if account.lastSeenRepostCreatedAt != mostRecent.created_at {
-                    account.lastSeenRepostCreatedAt = mostRecent.created_at
+                if lastSeenRepostCreatedAt != mostRecent.created_at {
+                    let mostRecentCreated_at = mostRecent.created_at
+                    DispatchQueue.main.async {
+                        self.account?.lastSeenRepostCreatedAt = mostRecentCreated_at
+                    }
                 }
             }
             else {
-                let twoDaysAgoOrNewer = max(account.lastSeenRepostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if account.lastSeenRepostCreatedAt != twoDaysAgoOrNewer {
-                    account.lastSeenRepostCreatedAt = twoDaysAgoOrNewer
+                let twoDaysAgoOrNewer = max(lastSeenRepostCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
+                if lastSeenRepostCreatedAt != twoDaysAgoOrNewer {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenRepostCreatedAt = twoDaysAgoOrNewer
+                    }
                 }
             }
             DataProvider.shared().saveToDiskNow(.bgContext)
@@ -733,27 +747,30 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markReactionsAsRead() {
+        guard let accountData else { return }
         self.unreadReactions_ = 0
+        guard let account = self.account else { return }
+        let lastSeenReactionCreatedAt = account.lastSeenReactionCreatedAt
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard let account = Nostur.account() else { return }
-            guard let r = q.unreadReactionsQuery(resultType: .managedObjectResultType)
-            else {
-                account.lastSeenReactionCreatedAt = Int64(Date.now.timeIntervalSince1970)
-                return
-            }
+            let r = q.unreadReactionsQuery(resultType: .managedObjectResultType, accountData: accountData)
             r.fetchLimit = 1
             
             if let mostRecent = try? bg().fetch(r).first {
-                if account.lastSeenReactionCreatedAt != mostRecent.created_at {
-                    account.lastSeenReactionCreatedAt = mostRecent.created_at
+                if lastSeenReactionCreatedAt != mostRecent.created_at {
+                    let mostRecentCreated_at = mostRecent.created_at
+                    DispatchQueue.main.async {
+                        self.account?.lastSeenReactionCreatedAt = mostRecentCreated_at
+                    }
                 }
             }
             else {
-                let twoDaysAgoOrNewer = max(account.lastSeenReactionCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if account.lastSeenReactionCreatedAt != twoDaysAgoOrNewer {
-                    account.lastSeenReactionCreatedAt = twoDaysAgoOrNewer
+                let twoDaysAgoOrNewer = max(lastSeenReactionCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
+                if lastSeenReactionCreatedAt != twoDaysAgoOrNewer {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenReactionCreatedAt = twoDaysAgoOrNewer
+                    }
                 }
             }
             DataProvider.shared().saveToDiskNow(.bgContext)
@@ -764,38 +781,39 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markZapsAsRead() {
+        guard let accountData else { return }
         self.unreadZaps_ = 0
         self.unreadFailedZaps_ = 0
+        guard let account = self.account else { return }
+        let lastSeenZapCreatedAt = account.lastSeenZapCreatedAt
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard let account = Nostur.account() else { return }
-            let pubkey = account.publicKey
-            
-            guard let r = q.unreadZapsQuery(resultType: .managedObjectResultType)
-            else {
-                account.lastSeenZapCreatedAt = Int64(Date.now.timeIntervalSince1970)
-                return
-            }
+            let r = q.unreadZapsQuery(resultType: .managedObjectResultType, accountData: accountData)
             
             r.fetchLimit = 1
             
             if let mostRecent = try? bg().fetch(r).first {
-                if account.lastSeenZapCreatedAt != mostRecent.created_at {
-                    account.lastSeenZapCreatedAt = mostRecent.created_at
+                if lastSeenZapCreatedAt != mostRecent.created_at {
+                    let mostRecentCreated_at = mostRecent.created_at
+                    DispatchQueue.main.async {
+                        self.account?.lastSeenZapCreatedAt = mostRecentCreated_at
+                    }
                 }
             }
             else {
-                let twoDaysAgoOrNewer = max(account.lastSeenZapCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
-                if account.lastSeenZapCreatedAt != twoDaysAgoOrNewer {
-                    account.lastSeenZapCreatedAt = twoDaysAgoOrNewer
+                let twoDaysAgoOrNewer = max(lastSeenZapCreatedAt, (Int64(Date.now.timeIntervalSince1970) - 172_800))
+                if lastSeenZapCreatedAt != twoDaysAgoOrNewer {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenZapCreatedAt = twoDaysAgoOrNewer
+                    }
                 }
             }
             
             // Also do failed zap notifications
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ IN %@", pubkey, [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue])
+            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ IN %@", accountData.publicKey, [PNType.failedLightningInvoice.rawValue,PNType.failedZap.rawValue,PNType.failedZaps.rawValue,PNType.failedZapsTimeout.rawValue])
             r3.resultType = .updatedObjectIDsResultType
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
@@ -809,17 +827,16 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markNewFollowersAsRead() {
+        guard let accountData else { return }
         self.unreadNewFollowers_ = 0
         
         bg().perform { [weak self] in
             guard let self = self else { return }
-            guard let account = Nostur.account() else { return }
-            let pubkey = account.publicKey
                     
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
             r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
-                                       pubkey, PNType.newFollowers.rawValue)
+                                       accountData.publicKey, PNType.newFollowers.rawValue)
             r3.resultType = .updatedObjectIDsResultType
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
@@ -833,12 +850,11 @@ class NotificationsViewModel: ObservableObject {
     
 }
 
-
-fileprivate class NotificationFetchRequests {
+class NotificationFetchRequests {
     
     static let FETCH_LIMIT = 999
     
-    func unreadMentionsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event>? {
+    func unreadMentionsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event> {
         let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
 
@@ -866,12 +882,9 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadNewPostsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
-        guard let account = account() else { return nil }
-        let pubkey = account.publicKey
-
+    func unreadNewPostsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<PersistentNotification> {
         let r = PersistentNotification.fetchRequest()
-        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newPosts.rawValue, pubkey)
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newPosts.rawValue, accountData.publicKey)
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r.resultType = .countResultType
@@ -880,12 +893,9 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadRepostsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
-        guard let account = account() else { return nil }
+    func unreadRepostsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event> {
         let mutedRootIds = AppState.shared.bgAppState.mutedRootIds
-        let pubkey = account.publicKey
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
-        let lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
 
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
@@ -894,9 +904,9 @@ fileprivate class NotificationFetchRequests {
                                     "AND kind == 6 " +
                                     "AND NOT pubkey IN %@ " +
                                     "AND NOT id IN %@ ",
-                                    lastSeenRepostCreatedAt,
-                                    pubkey,
-                                    (blockedPubkeys + [pubkey]),
+                                    accountData.lastSeenRepostCreatedAt,
+                                    accountData.publicKey,
+                                    (blockedPubkeys + [accountData.publicKey]),
                                     mutedRootIds)
         
         r.fetchLimit = Self.FETCH_LIMIT
@@ -906,12 +916,9 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadNewFollowersQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
-        guard let account = account() else { return nil }
-        let pubkey = account.publicKey
-
+    func unreadNewFollowersQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<PersistentNotification> {
         let r = PersistentNotification.fetchRequest()
-        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newFollowers.rawValue, pubkey)
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newFollowers.rawValue, accountData.publicKey)
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r.resultType = .countResultType
@@ -920,20 +927,17 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadReactionsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
-        guard let account = account() else { return nil }
-        let pubkey = account.publicKey
+    func unreadReactionsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event> {
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
-
         let r = Event.fetchRequest()
         r.predicate = NSPredicate(format:
                                     "created_at > %i " +
                                     "AND otherPubkey == %@ " +
                                     "AND NOT pubkey IN %@ " +
                                     "AND kind == 7",
-                                    account.lastSeenReactionCreatedAt,
-                                    pubkey,
-                                    (blockedPubkeys + [pubkey]))
+                                    accountData.lastSeenReactionCreatedAt,
+                                    accountData.publicKey,
+                                    (blockedPubkeys + [accountData.publicKey]))
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         r.resultType = resultType
@@ -941,9 +945,7 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadZapsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<Event>? {
-        guard let account = account() else { return nil }
-        let pubkey = account.publicKey
+    func unreadZapsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<Event> {
         let blockedPubkeys = AppState.shared.bgAppState.blockedPubkeys
 
         let r = Event.fetchRequest()
@@ -952,8 +954,8 @@ fileprivate class NotificationFetchRequests {
                                     "AND otherPubkey == %@" + // ONLY TO ME
                                     "AND kind == 9735 " + // ONLY ZAPS
                                     "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS. TODO: Maybe need another index like .otherPubkey
-                                    account.lastSeenZapCreatedAt,
-                                    pubkey,
+                                    accountData.lastSeenZapCreatedAt,
+                                    accountData.publicKey,
                                     blockedPubkeys)
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
@@ -962,13 +964,10 @@ fileprivate class NotificationFetchRequests {
         return r
     }
     
-    func unreadFailedZapsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification>? {
-        guard let account = account() else { return nil }
-        let pubkey = account.publicKey
-        
+    func unreadFailedZapsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<PersistentNotification> {
         let r = PersistentNotification.fetchRequest()
         r.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ IN %@", 
-                                  pubkey,
+                                  accountData.publicKey,
                                   [
                                     PNType.failedZap.rawValue,
                                     PNType.failedZaps.rawValue, // Error
@@ -981,92 +980,5 @@ fileprivate class NotificationFetchRequests {
         r.resultType = resultType
                 
         return r
-    }
-}
-
-
-class OfflinePosts {
-    
-    
-    static func checkForOfflinePosts(_ maxAgo: TimeInterval = 259_200) { // 3 days
-        DispatchQueue.main.async {
-            guard ConnectionPool.shared.anyConnected else { return }
-            let pubkey = AccountsState.shared.activeAccountPublicKey
-            
-            bg().perform {
-                let xDaysAgo = Date.now.addingTimeInterval(-(maxAgo))
-                
-                let r1 = Event.fetchRequest()
-                // X days ago, from our pubkey, only kinds that we can create+send
-                r1.predicate = NSPredicate(format:
-                                            "created_at > %i " +
-                                            "AND pubkey = %@ " +
-                                            "AND kind IN {0,1,1111,1222,1244,3,4,5,6,7,20,9802,34235} " +
-                                            "AND relays = \"\"" +
-                                            "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\",\"draft\"}" +
-                                            "AND sig != nil",
-                                            Int64(xDaysAgo.timeIntervalSince1970),
-                                            pubkey)
-                r1.fetchLimit = 100 // sanity
-                r1.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
-                
-                if let offlinePosts = try? bg().fetch(r1) {
-                    guard !offlinePosts.isEmpty else { return }
-                    for offlinePost in offlinePosts {
-                        let nEvent = offlinePost.toNEvent()
-
-                        // don't publish restricted events
-                        guard !nEvent.isRestricted else { continue }
-                        // make sure that event is older than 15 seconds to prevent interfering with undo timer
-                        guard offlinePost.created_at < Int64(Date.now.timeIntervalSince1970 - 15) else { continue }
-#if DEBUG
-                        L.og.debug("Publishing offline post: \(offlinePost.id)")
-#endif
-                        DispatchQueue.main.async {
-                            Unpublisher.shared.publishNow(nEvent)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-struct NotificationsDebugger: View {
-    @EnvironmentObject var nvm: NotificationsViewModel
-    
-    var body: some View {
-        HStack {
-            VStack {
-                Text("mentions")
-                Text(String(nvm.unreadMentions))
-            }            
-            VStack {
-                Text("new posts")
-                Text(String(nvm.unreadNewPosts))
-            }
-            VStack {
-                Text("new followers")
-                Text(String(nvm.unreadNewFollowers))
-            }
-            VStack {
-                Text("reposts")
-                Text(String(nvm.unreadReposts))
-            }
-            VStack {
-                Text("reactions")
-                Text(String(nvm.unreadReactions))
-            }
-            VStack {
-                Text("zaps")
-                Text(String(nvm.unreadZaps))
-            }
-            VStack {
-                Text("failed zaps")
-                Text(String(nvm.unreadFailedZaps))
-            }
-        }
-        .font(.caption)
     }
 }

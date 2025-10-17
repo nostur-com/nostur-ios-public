@@ -181,6 +181,9 @@ struct AccountData: Identifiable, Hashable {
     
     let publicKey: String
     let lastSeenPostCreatedAt: Int64
+    let lastSeenRepostCreatedAt: Int64
+    let lastSeenReactionCreatedAt: Int64
+    let lastSeenZapCreatedAt: Int64
     
     let followingPubkeys: Set<String>
     let privateFollowingPubkeys: Set<String>
@@ -191,4 +194,6 @@ struct AccountData: Identifiable, Hashable {
     let flags: Set<String>
     let isNC: Bool
     let anyName: String
+
+    var npub: String { try! NIP19(prefix: "npub", hexString: publicKey).displayString }
 }

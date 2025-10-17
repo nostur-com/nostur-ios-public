@@ -418,6 +418,9 @@ extension CloudAccount : Identifiable {
     func toStruct() -> AccountData {
         AccountData(publicKey: publicKey,
                     lastSeenPostCreatedAt: lastSeenPostCreatedAt,
+                    lastSeenRepostCreatedAt: lastSeenRepostCreatedAt,
+                    lastSeenReactionCreatedAt: lastSeenReactionCreatedAt,
+                    lastSeenZapCreatedAt: lastSeenZapCreatedAt,
                     followingPubkeys: followingPubkeys,
                     privateFollowingPubkeys: privateFollowingPubkeys,
                     followingHashtags: followingHashtags,
