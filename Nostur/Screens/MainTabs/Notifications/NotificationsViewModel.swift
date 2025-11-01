@@ -72,8 +72,8 @@ class NotificationsViewModel: ObservableObject {
     // is true at start, then false after each notification check
     
     public func checkNeedsUpdate(_ notification: PersistentNotification) {
-        guard let account = self.account else { return }
-        if notification.pubkey == account.publicKey {
+        guard let accountPubkey = self.accountData?.publicKey else { return }
+        if notification.pubkey == accountPubkey {
             bg().perform { [weak self] in
                 self?.needsUpdate = true
             }
