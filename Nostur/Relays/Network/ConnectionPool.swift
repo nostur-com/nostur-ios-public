@@ -253,9 +253,6 @@ public class ConnectionPool: ObservableObject {
                 
                 if let lastReceivedMessageAt = connection.lastMessageReceivedAt {
                     if Date.now.timeIntervalSince(lastReceivedMessageAt) >= 45 {
-#if DEBUG
-                        L.sockets.debug("PING: \(connection.url) Last message older that 45 seconds, sending ping -[LOG]-")
-#endif
                         connection.ping()
                     }
                 }
@@ -547,9 +544,6 @@ public class ConnectionPool: ObservableObject {
                         self.queue.async(flags: .barrier) { [weak connection] in
                             connection?.nreqSubscriptions.insert(subscriptionId!)
                         }
-#if DEBUG
-                        L.sockets.debug("⬇️⬇️ \(connection.url) .nreqSubscriptions.insert: \(subscriptionId!) - total subs: \(connection.nreqSubscriptions.count) onlyForNWC: \(message.onlyForNWCRelay) .isNWC: \(connection.isNWC) - onlyForNC: \(message.onlyForNCRelay) .isNC: \(connection.isNC)")
-#endif
                     }
                     connection.sendMessage(message.message)
                 }

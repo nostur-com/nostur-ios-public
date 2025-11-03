@@ -2244,6 +2244,9 @@
         }
       }
     },
+    "bookmarks" : {
+
+    },
     "Bookmarks" : {
       "comment" : "Navigation title for Bookmarks screen\nSide bar navigation button\nTab to switch to bookmarks",
       "localizations" : {
@@ -2254,6 +2257,9 @@
           }
         }
       }
+    },
+    "Booksmarks" : {
+      "comment" : "Feed title"
     },
     "Broadcast nostr event" : {
       "comment" : "Navigation title for screen to broadcast any nostr event",
@@ -2436,6 +2442,7 @@
       }
     },
     "Choose content for this column" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -2539,6 +2546,12 @@
           }
         }
       }
+    },
+    "Close all tabs" : {
+
+    },
+    "Close All Tabs" : {
+
     },
     "Close room" : {
       "localizations" : {
@@ -3283,6 +3296,7 @@
       }
     },
     "Custom Feed" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3665,6 +3679,9 @@
           }
         }
       }
+    },
+    "DMs" : {
+
     },
     "Done" : {
       "localizations" : {
@@ -4164,6 +4181,7 @@
       }
     },
     "failed zaps" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4445,8 +4463,11 @@
         }
       }
     },
+    "following" : {
+
+    },
     "Following" : {
-      "comment" : "Follow/Unfollow button when the state is 'Following'\nMenu choice to filter by Following\nShown when you follow someone in the multi follow sheet\nTab title for feed of people you follow",
+      "comment" : "Feed title\nFollow/Unfollow button when the state is 'Following'\nMenu choice to filter by Following\nShown when you follow someone in the multi follow sheet\nTab title for feed of people you follow",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4481,13 +4502,13 @@
       }
     },
     "Funny" : {
-      "comment" : "Tab title for the Funny feed"
+      "comment" : "Feed title\nTab title for the Funny feed"
     },
     "Funny Feed" : {
 
     },
     "Gallery" : {
-      "comment" : "Tab title for gallery feed\nTab title for the Gallery feed",
+      "comment" : "Feed title\nTab title for gallery feed\nTab title for the Gallery feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4569,6 +4590,7 @@
       }
     },
     "Hashtag" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4714,7 +4736,7 @@
       }
     },
     "Hot" : {
-      "comment" : "Tab title for feed of hot/popular posts\nTab title for the Hot feed",
+      "comment" : "Feed title\nTab title for feed of hot/popular posts\nTab title for the Hot feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5282,6 +5304,9 @@
         }
       }
     },
+    "Lists & Follow Packs" : {
+      "comment" : "Feed title"
+    },
     "Lists from people you follow" : {
       "localizations" : {
         "nl" : {
@@ -5621,6 +5646,7 @@
       }
     },
     "Mentions" : {
+      "comment" : "Feed title",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5663,7 +5689,7 @@
       }
     },
     "Messages" : {
-      "comment" : "Navigation title for DMs (Direct Messages)\nSide bar navigation button",
+      "comment" : "Feed title\nNavigation title for DMs (Direct Messages)\nSide bar navigation button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5948,6 +5974,7 @@
       "comment" : "Navigation title for screen to create a new feed"
     },
     "new followers" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6020,6 +6047,7 @@
       }
     },
     "new posts" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6040,6 +6068,7 @@
       }
     },
     "New Posts" : {
+      "comment" : "Feed title",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6102,6 +6131,9 @@
           }
         }
       }
+    },
+    "newPosts" : {
+
     },
     "Next" : {
       "localizations" : {
@@ -6387,6 +6419,7 @@
       }
     },
     "Notifications" : {
+      "comment" : "Feed title",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6466,9 +6499,6 @@
           }
         }
       }
-    },
-    "onAppearOnce()" : {
-
     },
     "Only connect to additional relays when a VPN is active" : {
       "localizations" : {
@@ -6636,8 +6666,11 @@
         }
       }
     },
+    "photos" : {
+
+    },
     "Photos" : {
-      "comment" : "Tab title for photos feed of people you follow"
+      "comment" : "Feed title\nTab title for photos feed of people you follow"
     },
     "Photos Feed settings" : {
 
@@ -7363,8 +7396,12 @@
         }
       }
     },
+    "Quote" : {
+      "comment" : "Button to Quote a post"
+    },
     "Quote post" : {
       "comment" : "Button to Quote a post",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7459,7 +7496,7 @@
       }
     },
     "Reads" : {
-      "comment" : "Tab title for feed of articles\nTab title for the Reads (Articles) feed"
+      "comment" : "Feed title\nTab title for feed of articles\nTab title for the Reads (Articles) feed"
     },
     "Reason" : {
       "comment" : "Label for the reason of a report",
@@ -8091,6 +8128,9 @@
           }
         }
       }
+    },
+    "Repost or quote this post" : {
+
     },
     "reposted" : {
       "extractionState" : "stale",
@@ -10138,6 +10178,9 @@
     "Unchecked" : {
       "shouldTranslate" : false
     },
+    "unconfigured" : {
+
+    },
     "Undelete" : {
       "comment" : "Button to undelete a deleted post",
       "localizations" : {
@@ -10830,7 +10873,7 @@
       }
     },
     "Zapped" : {
-      "comment" : "Tab title for feed of most zapped posts\nTab title for the Zapped feed",
+      "comment" : "Feed title\nTab title for feed of most zapped posts\nTab title for the Zapped feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

@@ -14,7 +14,7 @@ extension CloudFeed {
             case .following(_):
                 return self.name_
             case .picture(_):
-                return "Photos"
+                return String(localized: "Photos")
             case .pubkeys(_):
                 return self.name_
             case .relays(_):
