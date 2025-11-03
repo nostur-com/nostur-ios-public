@@ -12,6 +12,17 @@ struct FullAccountPicker: View {
     public var label: LocalizedStringKey = LocalizedStringKey("Account")
     public var required: Bool = false
     
+    var body: some View {
+        AccountPicker(selectedAccount: $selectedAccount, label: label, required: required, fullAccountsOnly: true)
+    }
+}
+
+struct AccountPicker: View {
+    @Binding var selectedAccount: CloudAccount?
+    public var label: LocalizedStringKey = LocalizedStringKey("Account")
+    public var required: Bool = false
+    public var fullAccountsOnly = false
+    
     @Environment(\.theme) private var theme
     
     @State private var accounts: [CloudAccount] = []
@@ -41,7 +52,7 @@ struct FullAccountPicker: View {
         }
         
         .onAppear {
-            accounts = AccountsState.shared.fullAccounts
+            accounts = (fullAccountsOnly ? AccountsState.shared.fullAccounts : AccountsState.shared.accounts)
                 .sorted(by: { $0.publicKey == AccountsState.shared.activeAccountPublicKey && $1.publicKey != AccountsState.shared.activeAccountPublicKey })
         }
         
