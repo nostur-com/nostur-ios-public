@@ -78,45 +78,52 @@ class FooterAttributes: ObservableObject {
     }
     
     @MainActor public func loadFooter() {
-        bg().perform { [weak self] in
-            guard let self else { return }
-            guard !self.withFooter else { return }
-            self.withFooter = true
-            self.setupListeners()
-            
-            let isReplied = Self.isReplied(self.event)
-            let isReposted = Self.isReposted(self.event)
-            
-            let ourReactions = Self.getOurReactions(self.event)
-            let hasPrivateNote = Self.hasPrivateNote(self.event)
-            
-            var isBookmarked = false
-            var bookmarkColor: Color = .orange
-            
-            if let color = Self.getBookmarkColor(event) {
-                isBookmarked = true
-                bookmarkColor = color
-            }
-            
-            let zapsCount = self.event.zapsCount
-            let zapTally = self.event.zapTally
-            
-            let zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
-            
-            DispatchQueue.main.async { [weak self] in
-                self?.objectWillChange.send()
-                self?.replied = isReplied
-                self?.reposted = isReposted
-                self?.ourReactions = ourReactions
-                self?.bookmarked = isBookmarked
-                self?.bookmarkColor = bookmarkColor
-                self?.hasPrivateNote = hasPrivateNote
-                self?.zapState = zapState
-                self?.zapsCount = zapsCount
-                self?.zapTally = zapTally
-            }
-        }
+        guard !self.withFooter else { return }
+        self.withFooter = true
         
+        Task {
+            let (isReplied, isReposted, ourReactions, hasPrivateNote, isBookmarked, bookmarkColor, zapsCount, zapTally, zapState) = await withCheckedContinuation { continuation in
+                bg().perform { [weak self] in
+                    guard let self else { 
+                        continuation.resume(returning: (false, false, Set<String>(), false, false, Color.orange, Int64(0), Int64(0), Optional<ZapState>.none))
+                        return 
+                    }
+                    
+                    let isReplied = Self.isReplied(self.event)
+                    let isReposted = Self.isReposted(self.event)
+                    let ourReactions = Self.getOurReactions(self.event)
+                    let hasPrivateNote = Self.hasPrivateNote(self.event)
+                    
+                    var isBookmarked = false
+                    var bookmarkColor: Color = .orange
+                    
+                    if let color = Self.getBookmarkColor(self.event) {
+                        isBookmarked = true
+                        bookmarkColor = color
+                    }
+                    
+                    let zapsCount = self.event.zapsCount
+                    let zapTally = self.event.zapTally
+                    let zapState = Self.hasZapReceipt(self.event) ? .zapReceiptConfirmed : self.event.zapState
+                    
+                    continuation.resume(returning: (isReplied, isReposted, ourReactions, hasPrivateNote, isBookmarked, bookmarkColor, zapsCount, zapTally, zapState))
+                }
+            }
+            
+            // All UI updates happen in a single batch
+            self.objectWillChange.send()
+            self.replied = isReplied
+            self.reposted = isReposted
+            self.ourReactions = ourReactions
+            self.bookmarked = isBookmarked
+            self.bookmarkColor = bookmarkColor
+            self.hasPrivateNote = hasPrivateNote
+            self.zapState = zapState
+            self.zapsCount = zapsCount
+            self.zapTally = zapTally
+            
+            self.setupListeners()
+        }
     }
     
     @MainActor public func cancelZap(_ cancellationId: UUID) {
@@ -133,7 +140,6 @@ class FooterAttributes: ObservableObject {
         }
     }
     
-    private var relayChangeSubscription: AnyCancellable?
     private var eventStatChangeSubscription: AnyCancellable?
     private var postActionSubscription: AnyCancellable?
     
@@ -141,21 +147,20 @@ class FooterAttributes: ObservableObject {
         guard eventStatChangeSubscription == nil else { return }
         let id = self.id
         
-        relayChangeSubscription = ViewUpdates.shared.eventStatChanged
+        // Single subscription handling both relay changes and stat changes
+        eventStatChangeSubscription = ViewUpdates.shared.eventStatChanged
             .filter { $0.id == id }
-            .sink { [weak self] change in
+//            .subscribe(on: DispatchQueue.global())
+//            .receive(on: DispatchQueue.global())
+            .handleEvents(receiveOutput: { [weak self] change in
+                // Handle relay changes immediately without debouncing
                 guard let self, let detectedRelay = change.detectedRelay else { return }
                 if !self.relays.contains(detectedRelay) {
                     DispatchQueue.main.async { [weak self] in
                         self?.relays.insert(detectedRelay)
                     }
                 }
-            }
-        
-        eventStatChangeSubscription = ViewUpdates.shared.eventStatChanged
-            .subscribe(on: DispatchQueue.global())
-            .receive(on: DispatchQueue.global())
-            .filter { $0.id == id }
+            })
             .scan(nil) { (accumulated: EventStatChange?, change: EventStatChange) -> EventStatChange? in
                 if let acc = accumulated {
                     var mergedChange = acc
@@ -169,7 +174,7 @@ class FooterAttributes: ObservableObject {
                 }
                 return change
             }
-            .compactMap { $0 } // Filter out nil values
+            .compactMap { $0 }
             .debounce(for: .seconds(0.25), scheduler: RunLoop.main)
             .receive(on: RunLoop.main)
             .sink { [weak self] change in
@@ -192,11 +197,6 @@ class FooterAttributes: ObservableObject {
                 if let zapTally = change.zapTally, zapTally != self.zapTally, zapTally != 0  {
                     self.zapTally = zapTally
                 }
-                
-                // Also update own like (or slow? disabled)
-//                if !self.liked && isLiked() { // nope. main bg thread mismatch
-//                    self.liked = true
-//                }
             }
         
         actionListener()

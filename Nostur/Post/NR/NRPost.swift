@@ -803,34 +803,32 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         relationSubscription = ViewUpdates.shared.eventRelationUpdate
             .filter { $0.id == id }
             .sink { [weak self] relationUpdate in
-                bg().perform { [weak self] in
-                    guard let self else { return }
-                    switch relationUpdate.relationType {
-                    case .replyTo:
-                        let nrReplyTo = NRPost(event: relationUpdate.event, withReplyTo: true)
-                        DispatchQueue.main.async { [weak self] in
-                            self?.objectWillChange.send()
-                            self?.replyTo = nrReplyTo
-                            // self.loadReplyTo() // need this??
-                        }
-                    case .replyToRoot:
-                        let nrReplyToRoot = NRPost(event: relationUpdate.event, withReplyTo: true)
-                        DispatchQueue.main.async { [weak self] in
-                            self?.objectWillChange.send()
-                            self?.replyToRoot = nrReplyToRoot
-                            // self.loadReplyTo() // need this??
-                        }
-                    case .firstQuote:
-                        let nrFirstQuote = NRPost(event: relationUpdate.event, withReplyTo: true, withReplies: self.withReplies)
-                        DispatchQueue.main.async { [weak self] in
-                            self?.objectWillChange.send()
-                            self?.noteRowAttributes.firstQuote = nrFirstQuote
-                        }
-                    case .replyToRootInverse:
-                        let nrReply = NRPost(event: relationUpdate.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
-                        self.repliesToRoot.append(nrReply)
-                        self.groupRepliesToRoot.send(self.replies)
+                guard let self else { return }
+                switch relationUpdate.relationType {
+                case .replyTo:
+                    let nrReplyTo = NRPost(event: relationUpdate.event, withReplyTo: true)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.replyTo = nrReplyTo
+                        // self.loadReplyTo() // need this??
                     }
+                case .replyToRoot:
+                    let nrReplyToRoot = NRPost(event: relationUpdate.event, withReplyTo: true)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.replyToRoot = nrReplyToRoot
+                        // self.loadReplyTo() // need this??
+                    }
+                case .firstQuote:
+                    let nrFirstQuote = NRPost(event: relationUpdate.event, withReplyTo: true, withReplies: self.withReplies)
+                    DispatchQueue.main.async { [weak self] in
+                        self?.objectWillChange.send()
+                        self?.noteRowAttributes.firstQuote = nrFirstQuote
+                    }
+                case .replyToRootInverse:
+                    let nrReply = NRPost(event: relationUpdate.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false)
+                    self.repliesToRoot.append(nrReply)
+                    self.groupRepliesToRoot.send(self.replies)
                 }
             }
     }
@@ -1169,14 +1167,11 @@ extension NRPost { // Helpers for grouped replies
 //            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] relation in
                 let cancellationIds:[String:UUID] = Dictionary(uniqueKeysWithValues: Unpublisher.shared.queue.map { ($0.nEvent.id, $0.cancellationId) })
+                guard let self else { return }
                 
-                bg().perform { [weak self] in
-                    guard let self else { return }
-                    
-                    let nrReply = NRPost(event: relation.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[relation.event.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
-                    self.repliesToRoot.append(nrReply)
-                    self.groupRepliesToRoot.send(self.replies)
-                }
+                let nrReply = NRPost(event: relation.event, withReplyTo: false, withParents: false, withReplies: false, plainText: false, cancellationId: cancellationIds[relation.event.id]) // Don't load replyTo/parents here, we do it in groupRepliesToRoot()
+                self.repliesToRoot.append(nrReply)
+                self.groupRepliesToRoot.send(self.replies)
             }
     }
     
