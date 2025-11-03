@@ -84,7 +84,7 @@ struct NewPostsBy: View {
         .navigationBarTitleDisplayMode(.inline)
         .background(theme.listBackground) // Screen / Toolbar background
         .onAppear {
-            guard selectedTab() == "Notifications" && selectedNotificationsTab == "New Posts" else { return }
+            guard IS_DESKTOP_COLUMNS() || (selectedTab() == "Notifications" && selectedNotificationsTab == "New Posts") else { return }
             vm.load()
         }
         .onChange(of: selectedNotificationsTab) { newValue in
