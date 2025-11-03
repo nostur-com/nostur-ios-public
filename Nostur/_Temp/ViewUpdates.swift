@@ -30,10 +30,12 @@ class ViewUpdates {
     }
     
     public var zapStateChanged = PassthroughSubject<ZapStateChange, Never>()
-    public var eventStatChanged = PassthroughSubject<EventStatChange, Never>()
+    public var eventStatChanged = PassthroughSubject<EventStatChange, Never>() // Should always .send() from bg
     public var repliesUpdated = PassthroughSubject<EventRepliesChange, Never>()
     public var postDeleted = PassthroughSubject<(toDeleteId: String, deletedById: String), Never>()
-    public var eventRelationUpdate = PassthroughSubject<EventRelationUpdate, Never>()
+    
+    public var eventRelationUpdate = PassthroughSubject<EventRelationUpdate, Never>() // Should always .send() from bg
+    
 //    public var contactUpdated = PassthroughSubject<(String, Contact), Never>()
     public var nip05updated = PassthroughSubject<(pubkey: String, isVerified: Bool, nip05: String, nameOnly: String), Never>() //
     public var updateNRPost = PassthroughSubject<Event, Never>()

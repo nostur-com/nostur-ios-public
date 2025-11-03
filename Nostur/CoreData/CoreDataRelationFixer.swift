@@ -41,20 +41,32 @@ class CoreDataRelationFixer {
     }
     
     private func _saveRelations() {
-        bgContext.perform { [unowned self] in
-            guard !self.taskQueue.isEmpty else { return }
-#if DEBUG
-            L.og.debug("💾💾 Saving \(self.taskQueue.count) relations -[LOG]-")
-#endif
-            for task in self.taskQueue {
-                task()
+        // Always defer to next run loop to avoid nested perform calls
+        DispatchQueue.main.async { [weak self] in
+            self?.bgContext.perform { [weak self] in
+                self?._executeTasksDirectly()
             }
-            
-            // Optionally clear the queue after executing tasks
-            self.taskQueue.removeAll()
-            
-            DataProvider.shared().saveToDiskNow(.bgContext)
         }
+    }
+    
+    private func _executeTasksDirectly() {
+        guard !self.taskQueue.isEmpty else { return }
+        
+        let tasksToProcess = self.taskQueue
+        self.taskQueue.removeAll()
+        
+#if DEBUG
+        L.og.debug("💾💾 Processing \(tasksToProcess.count) relations -[LOG]-")
+#endif
+        
+        for (index, task) in tasksToProcess.enumerated() {
+            L.og.debug("💾💾 Processing task \(index + 1)/\(tasksToProcess.count)")
+            task()
+            L.og.debug("💾💾 Completed task \(index + 1)/\(tasksToProcess.count)")
+        }
+        
+        DataProvider.shared().saveToDiskNow(.bgContext)
+        L.og.debug("💾💾 Completed processing \(tasksToProcess.count) relations -[LOG]-")
     }
     
 }
