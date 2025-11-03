@@ -72,9 +72,16 @@ struct MacMainWindow: View {
                         MacColumn(config: columnConfig)
                             .environment(\.availableWidth, columnSize(geo.size.width))
                             .environment(\.containerID, columnConfig.id.uuidString)
-                            .simultaneousGesture(TapGesture().onEnded({ _ in
-                                AppState.shared.containerIDTapped = columnConfig.id.uuidString
-                            }))
+                            .modifier {
+                                if case .notifications(let pubkey) = columnConfig.type, pubkey == nil {
+                                    $0
+                                }
+                                else {
+                                    $0.simultaneousGesture(TapGesture().onEnded({ _ in
+                                        AppState.shared.containerIDTapped = columnConfig.id.uuidString
+                                    }))
+                                }
+                            }
                             .frame(width: columnWidth)
                             .debugDimensions()
                     }
