@@ -17,6 +17,7 @@ struct MacColumn: View {
     var config: MacColumnConfig
     
     @State private var columnType = MacColumnType.unconfigured // use instead of config.type
+    @State private var selectedAccount: CloudAccount? = nil
     private var selectedFeed: CloudFeed? {
         if case .cloudFeed(let cloudFeedId) = columnType {
             return vm.availableFeeds.first(where: { $0.id?.uuidString == cloudFeedId })
@@ -94,8 +95,22 @@ struct MacColumn: View {
                 case .discoverLists:
                     DiscoverListsColumn()
                     
-                case .notifications:
-                    Text("notifications")
+                case .notifications(let accountPubkey):
+                    if let accountPubkey {
+                        NotificationsColumn(pubkey: accountPubkey, navPath: $navPath)
+                    }
+                    else {
+                        NXForm { // Needs to be wrapped in 
+                            AccountPicker(selectedAccount: $selectedAccount)
+                        }
+                        .onValueChange(selectedAccount) { oldValue, newValue in
+                            guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
+                            vm.updateColumn(
+                                MacColumnConfig(id: config.id, type: .notifications(pubkey))
+                            )
+                        }
+                    }
+                    
                 case .following:
                     Text("following")
                 case .photos:

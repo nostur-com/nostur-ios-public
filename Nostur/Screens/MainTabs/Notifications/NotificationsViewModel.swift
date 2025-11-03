@@ -11,6 +11,9 @@ import CoreData
 
 class NotificationsViewModel: ObservableObject {
     
+    @Published public var tab = "Mentions" // This is for per column tabs. Use @AppStorage("selected_notifications_tab") for pre-Desktop columns
+    public var didLoad = false
+    
     // Short uuid
     let id: String = String(UUID().uuidString.prefix(16))
     
@@ -32,6 +35,7 @@ class NotificationsViewModel: ObservableObject {
     
     @MainActor
     public func load(_ pubkey: String) {
+        self.didLoad = true
 #if DEBUG
         L.og.debug("NotificationViewModel.load() \(pubkey): skipping, app in background.");
 #endif
