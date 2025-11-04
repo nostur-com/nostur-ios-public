@@ -155,16 +155,15 @@ struct EmbeddedVideoView: View {
                 }
                 .overlay(alignment: .center) {
                     if vm.downloadProgress == 0 {
-                        Button(action: {
-                            vm.startPlaying()
-                        }) {
-                            Image(systemName:"play.circle")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 65, height: 65)
-                                .foregroundColor(theme.accent)
-                                .contentShape(Rectangle())
-                        }
+                        Image(systemName:"play.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 65, height: 65)
+                            .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                vm.startPlaying()
+                            }
                     }
                     else {
                         HStack(spacing: 5) {
@@ -218,16 +217,15 @@ struct EmbeddedVideoView: View {
                 }
                 .overlay {
                     if vm.downloadProgress == 0 {
-                        Button(action: {
-                            vm.startPlaying()
-                        }) {
-                            Image(systemName:"play.circle")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 65, height: 65)
-                                .foregroundColor(theme.accent)
-                                .contentShape(Rectangle())
-                        }
+                        Image(systemName:"play.circle")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 65, height: 65)
+                            .foregroundColor(theme.accent)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                vm.startPlaying()
+                            }
                     }
                     else {
                         HStack(spacing: 5) {
