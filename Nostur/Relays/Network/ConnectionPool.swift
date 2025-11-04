@@ -43,6 +43,42 @@ public class ConnectionPool: ObservableObject {
     // .connections should be read/mutated from connection context
     public var connections: [CanonicalRelayUrl: RelayConnection] = [:]
     
+    // Connection tracking for debugging
+    public func logConnectionCounts() {
+        queue.async { [weak self] in
+            guard let self = self else { return }
+            let regularCount = self.connections.count
+            let outboxCount = self.outboxConnections.count
+            let totalConnected = self.connections.values.count { $0.isConnected }
+            let outboxConnected = self.outboxConnections.values.count { $0.isConnected }
+            
+            Task { @MainActor in
+                let ephemeralCount = self.ephemeralConnections.count
+                let ephemeralConnected = self.ephemeralConnections.values.count { $0.isConnected }
+                
+#if DEBUG
+                L.og.info("🔢 CONNECTION COUNTS:")
+                L.og.info("  Regular: \(regularCount) total, \(totalConnected) connected")
+                L.og.info("  Outbox: \(outboxCount) total, \(outboxConnected) connected") 
+                L.og.info("  Ephemeral: \(ephemeralCount) total, \(ephemeralConnected) connected")
+                L.og.info("  TOTAL: \(regularCount + outboxCount + ephemeralCount) connections")
+                
+                // Also log URLSession/thread info per connection
+                self.queue.async {
+                    for (url, conn) in self.connections {
+                        let sessionExists = conn.session != nil ? "✅" : "❌"
+                        L.og.info("  Regular [\(url.prefix(25))]: connected=\(conn.isConnected), session=\(sessionExists)")
+                    }
+                    for (url, conn) in self.outboxConnections {
+                        let sessionExists = conn.session != nil ? "✅" : "❌"
+                        L.og.info("  Outbox [\(url.prefix(25))]: connected=\(conn.isConnected), session=\(sessionExists)")
+                    }
+                }
+#endif
+            }
+        }
+    }
+    
     // .ephemeralConnections should be read/mutated from main context
     private var ephemeralConnections: [CanonicalRelayUrl: RelayConnection] = [:]
     
@@ -200,6 +236,8 @@ public class ConnectionPool: ObservableObject {
     public func connectAll(resetExpBackOff: Bool = false) {
 #if DEBUG
         L.og.debug("ConnectionPool.shared.connectAll()")
+        // Log connection counts before connecting
+        self.logConnectionCounts()
 #endif
         
         queue.async { [unowned self] in
@@ -222,6 +260,10 @@ public class ConnectionPool: ObservableObject {
                 if NetworkMonitor.shared.isConnected {
                     if IS_CATALYST || !AppState.shared.appIsInBackground {
                         self?.stayConnectedPing()
+                        // Periodically clean up stale connections (every 5 minutes)
+                        if Int.random(in: 1...10) == 1 { // 10% chance = ~3 minutes average
+                            self?.cleanupStaleConnections()
+                        }
                     }
                 }
             })
@@ -312,6 +354,8 @@ public class ConnectionPool: ObservableObject {
     func disconnectAll() {
 #if DEBUG
         L.og.debug("ConnectionPool.disconnectAll")
+        // Log connection counts before disconnecting
+        self.logConnectionCounts()
 #endif
         stayConnectedTimer?.invalidate()
         stayConnectedTimer = nil
@@ -321,6 +365,13 @@ public class ConnectionPool: ObservableObject {
                 connection.disconnect()
             }
         }
+        
+#if DEBUG
+        // Log again after a short delay to see cleanup results
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.logConnectionCounts()
+        }
+#endif
     }
     
     @MainActor
@@ -824,6 +875,41 @@ public class ConnectionPool: ObservableObject {
         }
         
         return relays
+    }
+    
+    // Clean up stale connections periodically to prevent memory leaks
+    public func cleanupStaleConnections() {
+        queue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            
+            // Remove ephemeral connections that should have been cleaned up
+            Task { @MainActor in
+                let staleEphemeral = self.ephemeralConnections.filter { !$1.isConnected && $1.lastMessageReceivedAt?.timeIntervalSinceNow ?? 0 < -300 } // 5 minutes
+                for (url, connection) in staleEphemeral {
+                    connection.disconnect()
+                    self.ephemeralConnections.removeValue(forKey: url)
+#if DEBUG
+                    L.og.debug("🗑️ Cleaned up stale ephemeral connection: \(url)")
+#endif
+                }
+            }
+            
+            // Clean up disconnected outbox connections that haven't been used recently  
+            let staleOutbox = self.outboxConnections.filter { !$1.isConnected && $1.lastMessageReceivedAt?.timeIntervalSinceNow ?? 0 < -600 } // 10 minutes
+            for (url, connection) in staleOutbox {
+                connection.disconnect()
+                self.outboxConnections.removeValue(forKey: url)
+#if DEBUG
+                L.og.debug("🗑️ Cleaned up stale outbox connection: \(url)")
+#endif
+            }
+            
+#if DEBUG
+            if staleOutbox.count > 0 {
+                L.og.debug("🗑️ Cleaned up \(staleOutbox.count) stale outbox connections")
+            }
+#endif
+        }
     }
 }
 

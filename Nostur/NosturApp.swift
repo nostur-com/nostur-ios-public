@@ -82,7 +82,19 @@ struct iOSApp: App {
                 .environmentObject(themes)
                 .environmentObject(accountsState)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                .onAppear { hideTitleBarOnCatalyst() }
+                .onAppear { 
+                    hideTitleBarOnCatalyst()
+#if DEBUG
+                    // Log connection counts after a short delay to see startup state
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                        ConnectionPool.shared.logConnectionCounts()
+                    }
+                    // And again after 30 seconds to see normal operation state
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 30.0) {
+                        ConnectionPool.shared.logConnectionCounts()
+                    }
+#endif
+                }
         }
     }
 }
