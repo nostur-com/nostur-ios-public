@@ -130,7 +130,6 @@ struct MacColumn: View {
             }
             
             .withColumnConfigToolbarMenu(feeds: vm.availableFeeds, columnType: $columnType, title: selectedTitle)
-//            .withFeedSelectorToolbarMenu(feeds: vm.availableFeeds, selectedFeed: $selectedFeed)
             
             .onAppear {
                 columnType = config.type

@@ -111,6 +111,10 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         Button("Lists & Follow Packs") {
             columnType = .discoverLists
         }
+        
+        Button("Notifications") {
+            columnType = .notifications(nil)
+        }
 
         ForEach(feeds) { feed in
             Button(feed.feedTitle()) {
