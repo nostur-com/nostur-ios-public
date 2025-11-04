@@ -695,7 +695,14 @@
       }
     },
     "%@'s reactions" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s reacties"
+          }
+        }
+      }
     },
     "%lf" : {
       "shouldTranslate" : false
@@ -711,7 +718,14 @@
       }
     },
     "%lld contacts selected" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld contacten geselecteerd"
+          }
+        }
+      }
     },
     "%lld conversation(s) hidden by you" : {
       "localizations" : {
@@ -1445,7 +1459,14 @@
       }
     },
     "Add Blossom server" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blossom server toevoegen"
+          }
+        }
+      }
     },
     "Add comment" : {
       "comment" : "Placeholder text for adding a comment",
@@ -1852,10 +1873,24 @@
       }
     },
     "Authenticate as" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanmelden als"
+          }
+        }
+      }
     },
     "Authenticate with" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aanmelden met"
+          }
+        }
+      }
     },
     "Authenticating with account: %@" : {
       "localizations" : {
@@ -2259,7 +2294,15 @@
       }
     },
     "Booksmarks" : {
-      "comment" : "Feed title"
+      "comment" : "Feed title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bladwijzers"
+          }
+        }
+      }
     },
     "Broadcast nostr event" : {
       "comment" : "Navigation title for screen to broadcast any nostr event",
@@ -2649,7 +2692,15 @@
       }
     },
     "Configure" : {
-      "comment" : "Navigation title for screen to create a new feed"
+      "comment" : "Navigation title for screen to create a new feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instellen"
+          }
+        }
+      }
     },
     "Configure announced relays" : {
       "localizations" : {
@@ -2859,7 +2910,14 @@
       "shouldTranslate" : false
     },
     "Connection" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verbinding"
+          }
+        }
+      }
     },
     "contact" : {
       "comment" : "The word \"contact\" when used as contact #1, contact #2 and contact #3.",
@@ -4238,7 +4296,15 @@
       }
     },
     "Feed Settings" : {
-      "comment" : "Menu item for toggling feed settings"
+      "comment" : "Menu item for toggling feed settings",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed instellingen"
+          }
+        }
+      }
     },
     "Feeds" : {
       "comment" : "Navigation title for Feeds screen",
@@ -4419,7 +4485,15 @@
       }
     },
     "Follow Packs & Lists" : {
-      "comment" : "Tab title for the Discover Lists feed"
+      "comment" : "Tab title for the Discover Lists feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volglijsten"
+          }
+        }
+      }
     },
     "Follow relay hints" : {
       "comment" : "Setting on settings screen",
@@ -4478,7 +4552,14 @@
       }
     },
     "Following Feed settings" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgend feed instellingen"
+          }
+        }
+      }
     },
     "Follows you" : {
       "comment" : "Label shown when someone follows you\nLabel that shows if someone is following you",
@@ -4502,10 +4583,25 @@
       }
     },
     "Funny" : {
-      "comment" : "Feed title\nTab title for the Funny feed"
+      "comment" : "Feed title\nTab title for the Funny feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grappig"
+          }
+        }
+      }
     },
     "Funny Feed" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grappige Feed"
+          }
+        }
+      }
     },
     "Gallery" : {
       "comment" : "Feed title\nTab title for gallery feed\nTab title for the Gallery feed",
@@ -5305,7 +5401,15 @@
       }
     },
     "Lists & Follow Packs" : {
-      "comment" : "Feed title"
+      "comment" : "Feed title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijsten"
+          }
+        }
+      }
     },
     "Lists from people you follow" : {
       "localizations" : {
@@ -5442,7 +5546,14 @@
       }
     },
     "Logout" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afmelden"
+          }
+        }
+      }
     },
     "Long-form articles from people you follow" : {
       "localizations" : {
@@ -5546,7 +5657,15 @@
       }
     },
     "Make sure you have a back-up of your private key (nsec). Nostur cannot recover your account without it." : {
-      "comment" : "informational message"
+      "comment" : "informational message",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zorg ervoor dat je een back up van je privé sleutel hebt (nsec). Nostur kan je account niet herstellen zonder deze sleutel."
+          }
+        }
+      }
     },
     "Mark all as read" : {
       "comment" : "Menu action to mark all dm requests as read\nMenu action to mark all messages as read",
@@ -5943,7 +6062,14 @@
       }
     },
     "New contacts list feed" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw contactlijst feed"
+          }
+        }
+      }
     },
     "New direct message" : {
       "comment" : "Navigation title for a new Direct Message",
@@ -5968,10 +6094,25 @@
       }
     },
     "New Feed" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw Feed"
+          }
+        }
+      }
     },
     "New feed from contacts" : {
-      "comment" : "Navigation title for screen to create a new feed"
+      "comment" : "Navigation title for screen to create a new feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw contactenfeed"
+          }
+        }
+      }
     },
     "new followers" : {
       "extractionState" : "stale",
@@ -6110,7 +6251,15 @@
       }
     },
     "New relay feed" : {
-      "comment" : "Navigation title for screen to create a new feed"
+      "comment" : "Navigation title for screen to create a new feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe relay feed"
+          }
+        }
+      }
     },
     "New reposts" : {
       "localizations" : {
@@ -6335,7 +6484,15 @@
       }
     },
     "Nostur Pro (Beta)" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nostur Pro (Beta)"
+          }
+        }
+      }
     },
     "Not yet" : {
       "extractionState" : "stale",
@@ -6674,16 +6831,45 @@
 
     },
     "Photos" : {
-      "comment" : "Feed title\nTab title for photos feed of people you follow"
+      "comment" : "Feed title\nTab title for photos feed of people you follow",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Foto’s"
+          }
+        }
+      }
     },
     "Photos Feed settings" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fotos feed instellingen"
+          }
+        }
+      }
     },
     "Pick Photo" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies foto"
+          }
+        }
+      }
     },
     "Pick Video" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies video"
+          }
+        }
+      }
     },
     "Picture-in-picture" : {
       "shouldTranslate" : false
@@ -7014,7 +7200,14 @@
       }
     },
     "Posts from anyone reacted to by people you follow" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten van iedereen waarop gereageerd is door mensen die je volgt"
+          }
+        }
+      }
     },
     "Posts from anyone which are most liked or reposted by people you follow" : {
       "localizations" : {
@@ -7401,7 +7594,15 @@
       }
     },
     "Quote" : {
-      "comment" : "Button to Quote a post"
+      "comment" : "Button to Quote a post",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citeer"
+          }
+        }
+      }
     },
     "Quote post" : {
       "comment" : "Button to Quote a post",
@@ -7727,7 +7928,14 @@
       }
     },
     "Relay Autopilot" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay Autopiloot"
+          }
+        }
+      }
     },
     "Relay connection stats" : {
       "localizations" : {
@@ -7740,7 +7948,14 @@
       }
     },
     "Relay feed" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay feed"
+          }
+        }
+      }
     },
     "Relay Mastery" : {
       "extractionState" : "manual",
@@ -7880,7 +8095,14 @@
       }
     },
     "Remember feed" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedpositie onthouden"
+          }
+        }
+      }
     },
     "Remember this amount for all zaps" : {
       "comment" : "Toggle on zap screen to set selected amount as default for all zaps",
@@ -8134,7 +8356,14 @@
       }
     },
     "Repost or quote this post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herplaats of citeer dit bericht"
+          }
+        }
+      }
     },
     "reposted" : {
       "extractionState" : "stale",
@@ -8148,7 +8377,14 @@
       }
     },
     "Reposted by" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herplaatst door"
+          }
+        }
+      }
     },
     "reposts" : {
       "comment" : "Label for reposts count, example: (7) reposts",
@@ -8327,7 +8563,14 @@
       }
     },
     "Resume feed from where you left off when you reopen the app" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ga verder waar je gebleven was wanneer je de app opnieuw opent"
+          }
+        }
+      }
     },
     "Retake" : {
       "localizations" : {
@@ -8382,7 +8625,14 @@
       }
     },
     "sats" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sats"
+          }
+        }
+      }
     },
     "Sats" : {
       "comment" : "Heading (short for Satoshis)",
@@ -8540,7 +8790,15 @@
       }
     },
     "Select contacts" : {
-      "comment" : "Section header for adding contacts to a feed"
+      "comment" : "Section header for adding contacts to a feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies contacten"
+          }
+        }
+      }
     },
     "Select Date & Time" : {
       "localizations" : {
@@ -8553,7 +8811,14 @@
       }
     },
     "Select relay(s)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies relay(s)"
+          }
+        }
+      }
     },
     "Self-hosted nsecBunker" : {
       "extractionState" : "manual",
@@ -8567,7 +8832,14 @@
       }
     },
     "Send" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzend"
+          }
+        }
+      }
     },
     "Send %@ sats %@" : {
       "localizations" : {
@@ -8831,7 +9103,14 @@
       }
     },
     "Show %@'s reactions" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon reactions van %@"
+          }
+        }
+      }
     },
     "Show anyway" : {
       "comment" : "Button to show the blocked content anyway",
@@ -8845,7 +9124,14 @@
       }
     },
     "Show blocked (%lld)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon geblokkeerd (%lld)"
+          }
+        }
+      }
     },
     "Show bookmarks" : {
       "localizations" : {
@@ -8922,7 +9208,14 @@
       }
     },
     "Show more (%lld)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon meer (%lld)"
+          }
+        }
+      }
     },
     "Show more..." : {
       "extractionState" : "stale",
@@ -9088,7 +9381,14 @@
       }
     },
     "Some relays may require authentication" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bij sommige relays is authenticatie nodig"
+          }
+        }
+      }
     },
     "Something about yourself" : {
       "comment" : "Placeholder on input field for Bio on Edit Profile screen",
@@ -9227,7 +9527,14 @@
       }
     },
     "Start Nest" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nest starten"
+          }
+        }
+      }
     },
     "Start now" : {
       "localizations" : {
@@ -9359,7 +9666,14 @@
       }
     },
     "Take Photo" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Neem foto"
+          }
+        }
+      }
     },
     "Tap account to exclude" : {
       "localizations" : {
@@ -9480,7 +9794,14 @@
       }
     },
     "Text Post" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekstbericht"
+          }
+        }
+      }
     },
     "The article feed shows articles from people you follow in the selected time frame" : {
       "localizations" : {
@@ -10323,7 +10644,14 @@
       }
     },
     "Use additional relays from contacts in this feed to fetch posts" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gebruik extra relays van contacten in deze feed om berichten te vinden"
+          }
+        }
+      }
     },
     "Use existing account" : {
       "comment" : "Button to start using an existing account",
@@ -10425,7 +10753,14 @@
 
     },
     "Voice" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spraak"
+          }
+        }
+      }
     },
     "VPN detected" : {
       "localizations" : {
@@ -10491,7 +10826,15 @@
       }
     },
     "Web of Trust spam filter" : {
-      "comment" : "Header for a feed setting"
+      "comment" : "Header for a feed setting",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web of Trust spamfilter"
+          }
+        }
+      }
     },
     "Week" : {
       "localizations" : {
@@ -10759,7 +11102,14 @@
       }
     },
     "You are not following anyone yet, visit the Explore tab and follow some people" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je volgt nog niemand, kijk bij Verkennen en volg een aantal mensen"
+          }
+        }
+      }
     },
     "You are using a read-only account.\n\nSwitch to another account or add the private key to fully use this account." : {
       "comment" : "Message about read-only mode",
