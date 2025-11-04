@@ -32,6 +32,9 @@ struct OverlayPlayer: View {
     
     private var videoWidth: CGFloat {
         if vm.viewMode == .audioOnlyBar {
+            if IS_DESKTOP_COLUMNS() {
+                return ScreenSpace.shared.columnWidth
+            }
             return ScreenSpace.shared.mainTabSize.width
         }
         if vm.viewMode != .overlay {
@@ -645,7 +648,12 @@ struct OverlayPlayer: View {
     private func clampedOffsetX(geometry: GeometryProxy) -> CGFloat {
         if vm.viewMode == .detailstream { return 0 }
         if vm.viewMode == .fullscreen { return 0 }
-        if vm.viewMode == .audioOnlyBar { return 0 }
+        if vm.viewMode == .audioOnlyBar {
+            if IS_DESKTOP_COLUMNS() {
+                return SIDEBAR_WIDTH
+            }
+            return 0
+        }
         
         let totalWidth = videoWidth * currentScale + 2
         let maxOffsetX = geometry.size.width - totalWidth
@@ -656,7 +664,12 @@ struct OverlayPlayer: View {
     private func clampedOffsetY(geometry: GeometryProxy) -> CGFloat {
         if vm.viewMode == .detailstream { return 0 }
         if vm.viewMode == .fullscreen { return 0 }
-        if vm.viewMode == .audioOnlyBar { return ScreenSpace.shared.screenSize.height - 98.0}
+        if vm.viewMode == .audioOnlyBar {
+            if IS_DESKTOP_COLUMNS() {
+                return ScreenSpace.shared.mainTabSize.height - AUDIOONLYPILL_HEIGHT
+            }
+            return ScreenSpace.shared.screenSize.height - 98.0
+        }
         
         let maxOffsetY = geometry.size.height - (videoHeight * currentScale)
         return clamp(value: currentOffset.height + dragOffset.height, min: 0, max: maxOffsetY)

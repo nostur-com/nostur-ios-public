@@ -42,6 +42,8 @@ struct PhoneViewIsh: View {
                         }
                     }
                 }
+                
+                AudioOnlyBarSpace()
             }
             .environment(\.containerID, "Default")
             .simultaneousGesture(TapGesture().onEnded({ _ in

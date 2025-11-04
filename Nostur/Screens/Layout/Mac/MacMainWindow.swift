@@ -9,15 +9,20 @@ import SwiftUI
 import NavigationBackport
 
 let COLUMN_SPACING = 1.0
+let SIDEBAR_WIDTH: CGFloat = 50.0
 
 struct MacMainWindow: View {
     @Environment(\.theme) private var theme
     
-    let SIDEBAR_WIDTH: CGFloat = 50.0
+
     @StateObject private var vm: MacColumnsVM = .shared
 
     @State var availableFeeds: [CloudFeed] = []
-    @State private var columnWidth: CGFloat = 200.0
+    @State private var columnWidth: CGFloat = 200.0 {
+        didSet {
+            ScreenSpace.shared.columnWidth = columnWidth
+        }
+    }
     
     var body: some View {
 #if DEBUG
@@ -87,6 +92,12 @@ struct MacMainWindow: View {
                     }
                 }
                 .background(theme.background)
+                
+                .overlay(alignment: .center) {
+                    OverlayPlayer()
+                        .edgesIgnoringSafeArea(.bottom)
+                }
+                
                 .onAppear {
                     columnWidth = columnSize(geo.size.width)
                 }

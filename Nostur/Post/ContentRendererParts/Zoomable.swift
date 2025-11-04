@@ -243,6 +243,7 @@ struct ZoomRequested {
 class ScreenSpace {
     public var screenSize: CGSize = UIScreen.main.bounds.size
     public var mainTabSize: CGSize = UIScreen.main.bounds.size
+    public var columnWidth: CGFloat = 200.0 // Needed for setting audio only bar width. Set from MacMainWindow
     
     static let shared = ScreenSpace()
     private init() { }
