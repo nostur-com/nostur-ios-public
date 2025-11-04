@@ -65,18 +65,16 @@ struct Settings: View {
         NXForm {
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {
-                    #if DEBUG
-                    if #available(iOS 18.0, *), IS_CATALYST {
+                    if IS_CATALYST {
                         Toggle(isOn: $settings.proMode) {
                             VStack(alignment: .leading) {
-                                Text("Nostur Pro", comment:"Setting on settings screen")
+                                Text("Nostur Pro (Beta)", comment:"Setting on settings screen")
                                 Text("Multi-columns and more")
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                             }
                         }
                     }
-                    #endif
                     
                     if #available(iOS 16, *) {
                         ThemePicker()
