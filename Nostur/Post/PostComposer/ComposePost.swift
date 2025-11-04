@@ -264,6 +264,7 @@ struct ComposePost: View {
                                         if let replyToNRPost = replyToNRPost {
                                             // Reply, so full-width false and connecting line to bottom
                                             KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom)
+                                                .environment(\.availableWidth, geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20))
                                                 .environment(\.nxViewingContext, [.preview, .selectableText, .postParent])
                                                 .onTapGesture { }
                                         }
