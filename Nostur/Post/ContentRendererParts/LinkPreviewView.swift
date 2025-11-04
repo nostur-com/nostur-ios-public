@@ -68,7 +68,7 @@ struct LinkPreviewView: View {
             }
             .background(theme.background)
             .frame(height: DIMENSIONS.PREVIEW_HEIGHT)
-            .clipShape(RoundedRectangle(cornerRadius: 10.0))
+            .clipShape(RoundedRectangle(cornerRadius: 8.0))
             .onTapGesture {
                 UIApplication.shared.open(url)
             }

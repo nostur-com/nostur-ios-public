@@ -69,8 +69,8 @@ struct BigLinkPreview: View {
                     
                 }
                 .background(theme.listBackground)
-                .cornerRadius(10.0)
-                .clipShape(RoundedRectangle(cornerRadius: 10.0))
+                .cornerRadius(8.0)
+                .clipShape(RoundedRectangle(cornerRadius: 8.0))
             }
             .onTapGesture {
                 UIApplication.shared.open(url)

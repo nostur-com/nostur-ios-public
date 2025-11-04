@@ -167,8 +167,8 @@ struct Kind9802: View {
         }
         .padding(10)
         .overlay(
-            RoundedRectangle(cornerRadius: 15)
-                .stroke(theme.lineColor.opacity(0.5), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(theme.lineColor, lineWidth: 1)
         )
     }
 }
