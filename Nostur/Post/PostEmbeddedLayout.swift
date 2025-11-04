@@ -131,6 +131,7 @@ struct PostEmbeddedLayout<Content: View>: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(theme.lineColor, lineWidth: 1)
         )
+        .clipped()
     }
     
     private func navigateToPost() {

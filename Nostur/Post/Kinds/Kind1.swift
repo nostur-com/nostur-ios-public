@@ -54,6 +54,7 @@ struct Kind1: View {
         self.isEmbedded = isEmbedded
         self.grouped = grouped
         self.forceAutoload = forceAutoload
+//        _clipBottomHeight = State(wrappedValue: isEmbedded ? 300.0 : 900.0)
     }
     
     var body: some View {
