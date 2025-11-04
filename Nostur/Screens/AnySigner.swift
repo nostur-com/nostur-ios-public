@@ -116,18 +116,19 @@ struct AnySigner: View {
             .navigationTitle(tab == "Signer" ? String(localized:"Sign any nostr event", comment:"Navigation title for screen to sign any nostr event") : String(localized:"Broadcast nostr event", comment:"Navigation title for screen to broadcast any nostr event"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel", systemImage: "xmark") { dismiss() }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { UIPasteboard.general.string = input } label: { Image(systemName: "doc.on.clipboard.fill") }
+                    Button { UIPasteboard.general.string = input } label: { Image(systemName: "doc.on.doc") }
+                        .disabled(input.isEmpty)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(String(localized:"Publish", comment:"Button to publish")) { publish() }
+                    Button(String(localized:"Publish", comment:"Button to publish"), systemImage: "paperplane") { publish() }
                         .disabled(signedNEvent == nil)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if tab == "Signer" {
-                        Button(String(localized:"Sign event", comment:"Button to sign a nostr JSON event")) {
+                        Button(String(localized:"Sign event", comment:"Button to sign a nostr JSON event"), systemImage: "signature") {
                             let decoder = JSONDecoder()
                             
                             guard let inputData = input.data(using: .utf8) else {
@@ -199,13 +200,9 @@ struct AnySigner: View {
 
 import NavigationBackport
 
-struct AnySigner_Previews: PreviewProvider {
-    static var previews: some View {
-        NBNavigationStack {
-            AnySigner()
-                .environmentObject(Themes.default)
-        }
-        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+#Preview {
+    NBNavigationStack {
+        AnySigner()
     }
 }
 

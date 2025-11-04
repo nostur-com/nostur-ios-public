@@ -6324,6 +6324,7 @@
     },
     "Nostur Pro" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6332,6 +6333,9 @@
           }
         }
       }
+    },
+    "Nostur Pro (Beta)" : {
+      "comment" : "Setting on settings screen"
     },
     "Not yet" : {
       "extractionState" : "stale",

@@ -30,6 +30,11 @@ class FeedsCoordinator {
     
     public var markedAsUnreadSubject = PassthroughSubject<(String, UUID), Never>() // String = nrPost.id, vm.columnVMid
     
+    
+    public var fetchLoopSubject = PassthroughSubject<Void, Never>()
+    
+    
+    
     public var notificationNeedsUpdateSubject = PassthroughSubject<NeedsUpdateInfo, Never>()
 }
 
