@@ -117,68 +117,8 @@ struct NXPostsFeed: View {
 #if DEBUG
             L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
 #endif
-  
-            // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
-            // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
-            vmInner.isPerformingScroll = true
             
-            // Anti-flicker approach
-            DispatchQueue.main.async {
-                // Completely disable animations during the scroll
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
-                UIView.setAnimationsEnabled(false)
-                let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
-                
-                if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
-                    if let collectionView,
-                       let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
-                       rows > scrollToIndex
-                    {
-                        
-#if DEBUG
-                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") proxy.offset: \(proxy.offset) -[LOG]-")
-#endif
-                        if proxy.offset >= 0 {
-                            // Perform the scroll with all animations disabled
-                            collectionView.layer.removeAllAnimations()
-                            collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0),
-                                                       at: .top,
-                                                       animated: false)
-                            vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
-                        }
-                        vmInner.scrollToIndex = nil
-                    }
-                }
-                else { // iOS 15 UITableView
-                    if let tableView,
-                       let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
-                       rows > scrollToIndex
-                    {
-                        if proxy.offset >= 0 {
-                            // Perform the scroll with all animations disabled
-                            tableView.layer.removeAllAnimations()
-                            tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0),
-                                                at: .top,
-                                                animated: false)
-                            vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
-                        }
-                        vmInner.scrollToIndex = nil
-                    }
-                }
-                
-                // Re-enable animations after a short delay to ensure all updates are complete
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    UIView.setAnimationsEnabled(true)
-                    CATransaction.commit()
-                    
-                    // Reset flags after animations are re-enabled
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        vmInner.isPerformingScroll = false
-                        updateIsAtTop()
-                    }
-                }
-            }
+            performScrollToIndex(scrollToIndex)
         }
         .overlay(alignment: .topTrailing) {
             if vmInner.unreadCount != 0 {
@@ -231,10 +171,10 @@ struct NXPostsFeed: View {
         .onAppear {
             vm.resumeViewUpdates()
             
-            // Add updateIsAtTop() debounces
+            // Add updateIsAtTop() debounces - increase debounce time for better performance
             guard updateIsAtTopSubscription == nil else { return }
             updateIsAtTopSubscription = vmInner.updateIsAtTopSubject
-                .debounce(for: 0.075, scheduler: RunLoop.main)
+                .debounce(for: 0.15, scheduler: RunLoop.main) // Increased from 0.075 for smoother scrolling
                 .sink {
                     self._updateIsAtTop()
                 }
@@ -294,6 +234,49 @@ struct NXPostsFeed: View {
 //        }
     }
     
+    private func performScrollToIndex(_ scrollToIndex: Int) {
+        // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
+        // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
+        vmInner.isPerformingScroll = true
+        
+        Task { @MainActor in
+            let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
+            
+            // Only proceed if we're in a valid scroll state
+            guard proxy.offset >= 0 else {
+                vmInner.isPerformingScroll = false
+                vmInner.scrollToIndex = nil
+                return
+            }
+            
+            // Disable animations for smoother performance
+            UIView.performWithoutAnimation {
+                if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+                    if let collectionView,
+                       let rows = collectionView.dataSource?.collectionView(collectionView, numberOfItemsInSection: 0),
+                       rows > scrollToIndex {
+                        collectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                        vmInner.isAtTop = scrollToIndex == 0
+                    }
+                } else { // iOS 15 UITableView
+                    if let tableView,
+                       let rows = tableView.dataSource?.tableView(tableView, numberOfRowsInSection: 0),
+                       rows > scrollToIndex {
+                        tableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                        vmInner.isAtTop = scrollToIndex == 0
+                    }
+                }
+            }
+            
+            vmInner.scrollToIndex = nil
+            
+            // Reset flag and update state after a brief delay
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            vmInner.isPerformingScroll = false
+            updateIsAtTop()
+        }
+    }
+    
     private func scrollToIndex(_ scrollToIndex: Int) {
         vmInner.isPerformingScrollToFirstUnread = true
 
@@ -336,10 +319,26 @@ struct NXPostsFeed: View {
 #if DEBUG
         L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostAppearOnce() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
-        vm.prefetch(nrPost)
+        
+        // Batch async operations to avoid blocking the main thread
+        Task.detached(priority: .userInitiated) {
+            await vm.prefetch(nrPost)
+            await vm.saveLocalFeedState()
+        }
+        
         updateIsAtTop()
         loadMoreIfNeeded()
         
+        // Optimize ID collection operations
+        performIDCollectionUpdates(for: nrPost)
+        
+        // Optimize unread marking operations
+        performUnreadMarkingUpdates(for: nrPost)
+        
+        return true
+    }
+    
+    private func performIDCollectionUpdates(for nrPost: NRPost) {
         if nrPost.postOrThreadAttributes.parentPosts.isEmpty {
             vm.allShortIdsSeen.insert(nrPost.shortId)
             if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
@@ -350,52 +349,67 @@ struct NXPostsFeed: View {
             let leafIds: Set<String> = Set(nrPost.postOrThreadAttributes.parentPosts.map { $0.shortId } + [nrPost.shortId])
             vm.allShortIdsSeen.formUnion(leafIds)
         }
+    }
+    
+    private func performUnreadMarkingUpdates(for nrPost: NRPost) {
+        // Early exit if no unread items to process
+        guard vmInner.unreadIds[nrPost.id] != 0 else { return }
         
+        // Batch unread ID updates
+        var idsToMarkAsRead: [String] = []
+        var notificationPairs: [(String, UUID)] = []
         
-        // Remove this post from unread count, and mark as read
-        if vmInner.unreadIds[nrPost.id] != 0 {
-            vmInner.unreadIds[nrPost.id] = 0
-            vmInner.updateIsAtTopSubject.send()
-            vm.markAsRead(nrPost.shortId)
-            FeedsCoordinator.shared.markedAsUnreadSubject.send((nrPost.id, vm.columnVMid))
-            if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
-                vm.markAsRead(String(firstQuoteId.prefix(8)))
-                FeedsCoordinator.shared.markedAsUnreadSubject.send((firstQuoteId, vm.columnVMid))
-            }
-            
-            if !nrPost.parentPosts.isEmpty {
-                vm.markAsRead(nrPost.parentPosts.map { $0.shortId })
-                _ = nrPost.parentPosts.map {
-                    FeedsCoordinator.shared.markedAsUnreadSubject.send(($0.id, vm.columnVMid))
-                }
-            }
+        // Current post
+        vmInner.unreadIds[nrPost.id] = 0
+        idsToMarkAsRead.append(nrPost.shortId)
+        notificationPairs.append((nrPost.id, vm.columnVMid))
+        
+        // Quote posts
+        if nrPost.kind == 6, let firstQuoteId = nrPost.firstQuoteId {
+            let shortQuoteId = String(firstQuoteId.prefix(8))
+            idsToMarkAsRead.append(shortQuoteId)
+            notificationPairs.append((firstQuoteId, vm.columnVMid))
         }
         
+        // Parent posts
+        if !nrPost.parentPosts.isEmpty {
+            let parentShortIds = nrPost.parentPosts.map { $0.shortId }
+            idsToMarkAsRead.append(contentsOf: parentShortIds)
+            notificationPairs.append(contentsOf: nrPost.parentPosts.map { ($0.id, vm.columnVMid) })
+        }
+        
+        // Mark remaining posts in feed as read (optimize this heavy operation)
         if let appearedIndex = posts.firstIndex(where: { $0.id == nrPost.id }) {
-            
-            // Current post index, until last post. (So all remaining posts further below in feed)
             for i in appearedIndex..<posts.count {
-                
-                // Remove them from unread count, and mark them as read
                 if vmInner.unreadIds[posts[i].id] != 0 {
                     vmInner.unreadIds[posts[i].id] = 0
-                    vmInner.updateIsAtTopSubject.send()
-                    vm.markAsRead(posts[i].shortId)
+                    idsToMarkAsRead.append(posts[i].shortId)
                     
                     if posts[i].isRepost, let firstQuoteId = posts[i].firstQuoteId {
-                        vm.markAsRead(String(firstQuoteId.prefix(8)))
+                        idsToMarkAsRead.append(String(firstQuoteId.prefix(8)))
                     }
                     
                     if !posts[i].parentPosts.isEmpty {
-                        vm.markAsRead(posts[i].parentPosts.map { $0.shortId })
+                        idsToMarkAsRead.append(contentsOf: posts[i].parentPosts.map { $0.shortId })
                     }
                 }
             }
         }
         
-        vm.saveLocalFeedState()
+        // Batch the marking operations to reduce main thread blocking
+        Task.detached(priority: .userInitiated) {
+            await vm.markAsRead(idsToMarkAsRead)
+            
+            await MainActor.run {
+                // Send notifications in batch
+                for (id, columnId) in notificationPairs {
+                    FeedsCoordinator.shared.markedAsUnreadSubject.send((id, columnId))
+                }
+            }
+        }
         
-        return true
+        // Update UI immediately for responsiveness
+        vmInner.updateIsAtTopSubject.send()
     }
     
     private func updateIsAtTop() {
@@ -404,41 +418,26 @@ struct NXPostsFeed: View {
     
     private func _updateIsAtTop() {
         let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
+        let offset = proxy.offset
         
-        if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
-            if collectionView != nil {
+        // Cache the offset threshold to avoid recalculation
+        let threshold: CGFloat = -5
+        let isAtTopNow = offset >= threshold
+        
+        // Only update if the state actually changed
+        guard vmInner.isAtTop != isAtTopNow else { return }
+        
+        vmInner.isAtTop = isAtTopNow
+        
 #if DEBUG
-                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") proxy.offset: \(proxy.offset) -[LOG]-")
+        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") proxy.offset: \(offset) isAtTop: \(isAtTopNow) -[LOG]-")
 #endif
-                
-                if proxy.offset >= -5 { // or should we use >= 0?
-                    if !vmInner.isAtTop {
-                        vmInner.isAtTop = true
-#if DEBUG
-                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") vmInner.isAtTop set to true -[LOG]-")
-#endif
-                        self.markAllAsRead()
-                    }
-                }
-                else {
-                    if vmInner.isAtTop {
-                        vmInner.isAtTop = false
-                    }
-                }
-            }
-        }
-        else { // iOS 15 UITableView
-            if tableView != nil {
-                if proxy.offset >= -5 { // or should we use >= 0?
-                    if !vmInner.isAtTop {
-                        vmInner.isAtTop = true
-                        self.markAllAsRead()
-                    }
-                }
-                else {
-                    if vmInner.isAtTop {
-                        vmInner.isAtTop = false
-                    }
+        
+        // Only mark all as read when transitioning to top, not when leaving top
+        if isAtTopNow {
+            Task.detached(priority: .userInitiated) {
+                await MainActor.run {
+                    self.markAllAsRead()
                 }
             }
         }
@@ -466,8 +465,11 @@ struct NXPostsFeed: View {
     }
     
     private func onPostDisappear(_ nrPost: NRPost) {
+        // Only trigger updateIsAtTop if we're not performing programmatic scrolls
+        guard !vmInner.isPerformingScroll && !vmInner.isPerformingScrollToFirstUnread else { return }
+        
 #if DEBUG
-L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostDisappear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
+        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostDisappear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
 #endif
         updateIsAtTop()
     }
