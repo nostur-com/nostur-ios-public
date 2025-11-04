@@ -9,13 +9,42 @@
 import SwiftUI
 import NavigationBackport
 
+// NotificationsColumn uses own StateObject for each column
+// MainNotificationsColumn uses NotificationsViewModel.shared
+
 struct NotificationsColumn: View {
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
     
     public let pubkey: String
     @Binding var navPath: NBNavigationPath
-    @StateObject private var nvm = NotificationsViewModel()
+    @StateObject private var nvm = NotificationsViewModel() // Own StateObject
+    
+    var body: some View {
+        NotificationsColumnInner(pubkey: pubkey, nvm: nvm, navPath: $navPath)
+    }
+}
+
+struct MainNotificationsColumn: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
+    
+    public let pubkey: String
+    @Binding var navPath: NBNavigationPath
+    @ObservedObject private var nvm: NotificationsViewModel = .shared // Reuse .shared
+    
+    var body: some View {
+        NotificationsColumnInner(pubkey: pubkey, nvm: nvm, navPath: $navPath)
+    }
+}
+
+// same code for NotificationsColumn and MainNotificationsColumn moved this this NotificationsColumnInner:
+struct NotificationsColumnInner: View {
+    @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
+    public let pubkey: String
+    @ObservedObject public var nvm: NotificationsViewModel // State lives in parent StateObject or .shared depending on main account or not
+    @Binding var navPath: NBNavigationPath
     
     var body: some View {
         VStack(spacing: 0) {

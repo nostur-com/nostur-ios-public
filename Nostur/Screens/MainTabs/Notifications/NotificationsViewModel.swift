@@ -17,6 +17,19 @@ class NotificationsViewModel: ObservableObject {
     // Short uuid
     let id: String = String(UUID().uuidString.prefix(16))
     
+    public var isMain: Bool {
+        self.id == Self.shared.id
+    }
+    
+    init() {
+        // For the main nvm we can't wait for Notifications View to trigger .load() (as in other notification columns)
+        DispatchQueue.main.async { [weak self] in
+            if (self?.isMain ?? false) && !AccountsState.shared.activeAccountPublicKey.isEmpty {
+                self?.load(AccountsState.shared.activeAccountPublicKey)
+            }
+        }
+    }
+    
     private var account: CloudAccount? {
         didSet {
             self.accountData = account?.toStruct()
@@ -37,7 +50,7 @@ class NotificationsViewModel: ObservableObject {
     public func load(_ pubkey: String) {
         self.didLoad = true
 #if DEBUG
-        L.og.debug("NotificationViewModel.load() \(pubkey): skipping, app in background.");
+        L.og.debug("NotificationViewModel.load(\(pubkey))");
 #endif
         badgeSubcription?.cancel()
         badgeSubcription = nil
@@ -147,7 +160,9 @@ class NotificationsViewModel: ObservableObject {
             if unreadMentions_ > oldValue {
                 sendNotification(.newMentions)
             }
-            unreadPublisher.send(unread)
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
         }
     }
     @Published var unreadNewPosts_: Int = 0 {      // 1,20,9802,30023,34235
@@ -155,7 +170,9 @@ class NotificationsViewModel: ObservableObject {
             if unreadNewPosts_ > oldValue {
                 sendNotification(.unreadNewPosts)
             }
-            unreadPublisher.send(unread)
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
         }
     }
     @Published var unreadNewFollowers_: Int = 0 {  // custom
@@ -163,7 +180,9 @@ class NotificationsViewModel: ObservableObject {
             if unreadNewFollowers_ > oldValue {
                 sendNotification(.newFollowers)
             }
-            unreadPublisher.send(unread)
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
         }
     }
     @Published var unreadReposts_: Int = 0 {     // 6
@@ -171,7 +190,9 @@ class NotificationsViewModel: ObservableObject {
             if unreadReposts_ > oldValue {
                 sendNotification(.newReposts)
             }
-            unreadPublisher.send(unread)
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
         }
     }
     @Published var unreadReactions_: Int = 0 {  // 7
@@ -179,7 +200,9 @@ class NotificationsViewModel: ObservableObject {
             if unreadReactions_ > oldValue {
                 sendNotification(.newReactions)
             }
-            unreadPublisher.send(unread)
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
         }
     }
     @Published var unreadZaps_: Int = 0 {       // 9735
@@ -187,23 +210,17 @@ class NotificationsViewModel: ObservableObject {
             if unreadZaps_ > oldValue {
                 sendNotification(.newZaps)
             }
-            unreadPublisher.send(unread)
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
         }
     }
     @Published var unreadFailedZaps_: Int = 0 {  // custom
         didSet {
-            unreadPublisher.send(unread)
+            if self.id == NotificationsViewModel.shared.id {
+                unreadPublisher.send(unread)
+            }
         }
-    }
-    
-    private var selectedTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
-        set { setSelectedTab(newValue) }
-    }
-    
-    private var selectedNotificationsTab: String {
-        get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions" }
-        set { setSelectedNotificationsTab(newValue) }
     }
     
     public var muteFollows: Bool {
@@ -500,13 +517,7 @@ class NotificationsViewModel: ObservableObject {
                     }
                 }
                 
-                
-                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
-                    self.unreadMentions_ = 0
-                }
-                else {
-                    self.unreadMentions_ = min(unreadMentionsCount,9999)
-                }
+                self.unreadMentions_ = min(unreadMentionsCount,9999)
             }
         }
     }    
@@ -554,12 +565,7 @@ class NotificationsViewModel: ObservableObject {
                             }
                         }
                         
-                        if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
-                            self.unreadMentions_ = 0
-                        }
-                        else {
-                            self.unreadMentions_ = min(unreadMentionsCount,9999)
-                        }
+                        self.unreadMentions_ = min(unreadMentionsCount,9999)
                     }
                     continuation.resume()
                 }
@@ -577,12 +583,7 @@ class NotificationsViewModel: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if unreadNewPosts != self.unreadNewPosts_ {
-                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "New Posts" {
-                    self.unreadNewPosts_ = 0
-                }
-                else {
-                    self.unreadNewPosts_ = min(unreadNewPosts,9999)
-                }
+                self.unreadNewPosts_ = min(unreadNewPosts,9999)
             }
         }
     }
@@ -600,12 +601,7 @@ class NotificationsViewModel: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if unreadReposts != self.unreadReposts_ {
-                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
-                    self.unreadReposts_ = 0
-                }
-                else {
-                    self.unreadReposts_ = min(unreadReposts,9999)
-                }
+                self.unreadReposts_ = min(unreadReposts,9999)
             }
         }
     }
@@ -620,12 +616,7 @@ class NotificationsViewModel: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if unreadNewFollowers != self.unreadNewFollowers_ {
-                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Posts" {
-                    self.unreadNewFollowers_ = 0
-                }
-                else {
-                    self.unreadNewFollowers_ = min(unreadNewFollowers,9999)
-                }
+                self.unreadNewFollowers_ = min(unreadNewFollowers,9999)
             }
         }
     }
@@ -642,12 +633,7 @@ class NotificationsViewModel: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if unreadReactions != self.unreadReactions_ {
-                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Reactions" {
-                    self.unreadReactions_ = 0
-                }
-                else {
-                    self.unreadReactions_ = min(unreadReactions,9999)
-                }
+                self.unreadReactions_ = min(unreadReactions,9999)
             }
         }
     }
@@ -664,12 +650,7 @@ class NotificationsViewModel: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if unreadZaps != self.unreadZaps_ {
-                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Zaps" {
-                    self.unreadZaps_ = 0
-                }
-                else {
-                    self.unreadZaps_ = min(unreadZaps,9999)
-                }
+                self.unreadZaps_ = min(unreadZaps,9999)
             }
         }
     }
@@ -684,12 +665,7 @@ class NotificationsViewModel: ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             if unreadFailedZaps != self.unreadFailedZaps_ {
-                if self.selectedTab == "Notifications" && self.selectedNotificationsTab == "Zaps" {
-                    self.unreadFailedZaps_ = 0
-                }
-                else {
-                    self.unreadFailedZaps_ = min(unreadFailedZaps,9999)
-                }
+                self.unreadFailedZaps_ = min(unreadFailedZaps,9999)
             }
         }
     }

@@ -96,20 +96,7 @@ struct MacColumn: View {
                     DiscoverListsColumn()
                     
                 case .notifications(let accountPubkey):
-                    if let accountPubkey {
-                        NotificationsColumn(pubkey: accountPubkey, navPath: $navPath)
-                    }
-                    else {
-                        NXForm { // Needs to be wrapped in 
-                            AccountPicker(selectedAccount: $selectedAccount)
-                        }
-                        .onValueChange(selectedAccount) { oldValue, newValue in
-                            guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
-                            vm.updateColumn(
-                                MacColumnConfig(id: config.id, type: .notifications(pubkey))
-                            )
-                        }
-                    }
+                    self.renderNotificationsColumn(accountPubkey)
                     
                 case .following:
                     Text("following")
@@ -154,6 +141,29 @@ struct MacColumn: View {
                 let destination = notification.object as! NavigationDestination
                 guard destination.context == containerID else { return }
                 navPath.append(destination.destination)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func renderNotificationsColumn(_ accountPubkey: String?) -> some View {
+        if let accountPubkey {
+            if !AccountsState.shared.activeAccountPublicKey.isEmpty, accountPubkey == AccountsState.shared.activeAccountPublicKey {
+                MainNotificationsColumn(pubkey: AccountsState.shared.activeAccountPublicKey, navPath: $navPath)
+            }
+            else {
+                NotificationsColumn(pubkey: accountPubkey, navPath: $navPath)
+            }
+        }
+        else {
+            NXForm { // Needs to be wrapped in
+                AccountPicker(selectedAccount: $selectedAccount)
+            }
+            .onValueChange(selectedAccount) { oldValue, newValue in
+                guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
+                vm.updateColumn(
+                    MacColumnConfig(id: config.id, type: .notifications(pubkey))
+                )
             }
         }
     }
