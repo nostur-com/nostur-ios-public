@@ -115,6 +115,8 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         Button("Notifications") {
             columnType = .notifications(nil)
         }
+        
+        Divider()
 
         ForEach(feeds) { feed in
             Button(feed.feedTitle()) {
