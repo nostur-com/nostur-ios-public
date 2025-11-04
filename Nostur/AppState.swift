@@ -17,7 +17,7 @@ class AppState: ObservableObject {
     
     private init() {
         if UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
-            finishedTasks.insert(.firstTimeCopleted)
+            finishedTasks.insert(.firstTimeCompleted)
         }
         managePowerUsage()
         loadMutedWords()
@@ -222,7 +222,7 @@ class AppState: ObservableObject {
 
 extension AppState {
     enum AppTask: Hashable {
-        case firstTimeCopleted
+        case firstTimeCompleted
         case didRunConnectAll
     }
 }
@@ -265,7 +265,7 @@ func startNosturing() async {
     }
 #endif
     
-    if (AppState.shared.finishedTasks.contains(.firstTimeCopleted)) {
+    if (AppState.shared.finishedTasks.contains(.firstTimeCompleted)) {
         await Maintenance.upgradeDatabase(context: bg())
     }
     else {
@@ -330,7 +330,7 @@ func initializeGuestAccount() async {
 #if DEBUG
         L.og.debug("🚀🚀 Setting up Guest account")
 #endif
-    if (!AppState.shared.finishedTasks.contains(.firstTimeCopleted)) {
+    if (!AppState.shared.finishedTasks.contains(.firstTimeCompleted)) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             bg().perform {
                 _ = GuestAccountManager.shared.createGuestAccount()
