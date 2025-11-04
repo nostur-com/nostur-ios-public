@@ -166,10 +166,12 @@ struct Kind9802: View {
             .padding(.trailing, 40)
         }
         .padding(10)
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(theme.lineColor, lineWidth: 1)
-        )
+        .overlay {
+            if !isEmbedded { // double lines look weird when embedded
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(theme.lineColor, lineWidth: 1)
+            }
+        }
     }
 }
 
