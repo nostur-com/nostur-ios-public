@@ -168,21 +168,17 @@ struct MainTabsDesktop: View {
                 .padding(3)
                 .modifier {
                     if #available(iOS 26.0, *) {
-                        if colorScheme == .dark {
-                            $0
-                                .glassEffect(.clear.tint(theme.accent.opacity(0.35)).interactive())
-                        }
-                        else { // .accent colors on .clear look too bright on light mode for liquid glass tint, so mix with black to make darker
-                            $0
-                                .glassEffect(
-                                    .clear.tint(
+                        $0
+                            .glassEffect(
+                                colorScheme == .dark
+                                    ? .clear.tint(theme.accent.opacity(0.35)).interactive()
+                                    : .clear.tint(
                                         theme.accent
-                                            .mix(with: .black, by: 0.1)
+                                            .mix(with: .black, by: 0.1) // .accent colors on .clear look too bright on light mode for liquid glass tint, so mix with black to make darker
                                             .opacity(0.6)
-                                    )
-                                    .interactive()
-                                )
-                        }
+                                      )
+                                      .interactive()
+                            )
                     }
                     else {
                         $0

@@ -50,25 +50,15 @@ struct NXUnreadCounterView26: View {
                     .foregroundColor(.white)
             }
             .fontWeightBold()
-//            .foregroundColor(.white)
-//            .padding(5)
-            .modifier {
-                if colorScheme == .dark {
-                    $0.glassEffect(.clear.tint(theme.accent.opacity(0.35)).interactive())
-                }
-                else {
-                    $0.glassEffect(
-                        .clear.tint(
-                            theme.accent
-                                .mix(with: .black, by: 0.10)
-                                .opacity(0.6)
-                        )
-                        .interactive()
-                    )
-                }
-            }
         
-//            .opacity(0.85)
+            .glassEffect(
+                .clear.tint(
+                    colorScheme == .dark
+                        ? theme.accent.opacity(0.35)
+                        : theme.accent.mix(with: .black, by: 0.10).opacity(0.6)
+                )
+                .interactive()
+            )
             .contentShape(Rectangle())
     }
 }
