@@ -78,12 +78,24 @@ class NotificationsViewModel: ObservableObject {
         startTimer()
         setupCheckNeedsUpdateListeners()
         setupRestorRelaySubSubscriptions()
+        setupAccountChangedListener()
         if IS_CATALYST {
             setupBadgeNotifications()
         }
     }
-    
+    private var accountChangedSubscription: AnyCancellable?
     private var badgeSubcription: AnyCancellable?
+    
+    private func setupAccountChangedListener() {
+        guard isMain && accountChangedSubscription == nil else { return }
+        accountChangedSubscription = receiveNotification(.activeAccountChanged)
+            .sink { [weak self] notification in
+                Task { @MainActor in
+                    let account = notification.object as! CloudAccount
+                    self?.load(account.publicKey)
+                }
+            }
+    }
     
     public var needsUpdate: Bool = true // Importer or other parts will set this flag to true if anything incoming is part of a notification. Only then the notification queries will run. (instead of before, every 15 sec, even for no reason)
     // is true at start, then false after each notification check
