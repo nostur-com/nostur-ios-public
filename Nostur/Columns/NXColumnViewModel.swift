@@ -2004,6 +2004,11 @@ class NXColumnViewModel: ObservableObject {
     }
     
     deinit {
+#if DEBUG
+        if let config {
+            L.og.debug("☘️☘️ \(config.name) deinit")
+        }
+#endif
         // Cancel all subscriptions
         newEventsInDatabaseSub?.cancel()
         newPostSavedSub?.cancel()

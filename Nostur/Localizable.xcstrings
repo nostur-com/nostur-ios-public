@@ -4193,7 +4193,7 @@
       }
     },
     "Explore" : {
-      "comment" : "Button to go to the Explore tab\nTab title for the Explore feed",
+      "comment" : "Button to go to the Explore tab\nFeed title\nTab title for the Explore feed",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
