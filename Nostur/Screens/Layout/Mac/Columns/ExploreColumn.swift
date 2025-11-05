@@ -18,43 +18,23 @@ struct ExploreColumn: View {
     @State private var didCreate = false
     @State var exploreConfig: NXColumnConfig?
     
-    @State private var navPath = NBNavigationPath()
-    
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
-        NBNavigationStack(path: $navPath) {
-            VStack(spacing: 0) {
-                ZStack {
-                    theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
-                    // FOLLOWING
-                    if let exploreConfig {
-                        AvailableWidthContainer {
-                            NXColumnView(config: exploreConfig, isVisible: true)
-                        }
-                    }
+#endif
+        ZStack {
+            theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
+            // FOLLOWING
+            if let exploreConfig {
+                AvailableWidthContainer {
+                    NXColumnView(config: exploreConfig, isVisible: true)
                 }
             }
-            .environment(\.containerID, "Explore")
-            .simultaneousGesture(TapGesture().onEnded({ _ in
-                AppState.shared.containerIDTapped = "Explore"
-            }))
-            .navigationTitle("Explore")
-            .navigationBarTitleDisplayMode(.inline)
-            .withNavigationDestinations()
         }
-        .nbUseNavigationStack(.never)
         .onAppear {
             guard !didCreate else { return }
             didCreate = true
             createExploreFeed()
-        }
-        .onReceive(receiveNotification(.navigateTo)) { notification in
-            let destination = notification.object as! NavigationDestination
-            guard destination.context == "Explore" else { return }
-
-            navPath.append(destination.destination)
         }
     }
 
