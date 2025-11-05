@@ -140,6 +140,7 @@ enum MacColumnType: Codable, Equatable {
     case articles // reads
     case gallery
     case discoverLists // lists & follow packs
+    case explore
     
     case notifications(String?) // .notifications(accountPubkey)
     case following
@@ -167,6 +168,8 @@ enum MacColumnType: Codable, Equatable {
             return "gallery"
         case .discoverLists:
             return "discoverLists"
+        case .explore:
+            return "explore"
         case .notifications(let accountPubkey):
             return "notifications(\(accountPubkey ?? "nil"))"
         case .following:

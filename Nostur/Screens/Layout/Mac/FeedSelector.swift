@@ -28,6 +28,7 @@ extension CloudFeed {
 }
 
 struct ColumnConfigToolbarMenu: ViewModifier {
+    @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
     let feeds: [CloudFeed]
     @Binding var columnType: MacColumnType
     var title: String = "Select Feed"
@@ -114,6 +115,12 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         
         Button("Notifications") {
             columnType = .notifications(nil)
+        }
+        
+        if enableExploreFeed {
+            Button("Explore", systemImage: "binoculars") {
+                columnType = .explore
+            }
         }
         
         Divider()
