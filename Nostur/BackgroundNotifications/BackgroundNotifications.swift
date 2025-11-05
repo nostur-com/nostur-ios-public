@@ -44,10 +44,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             switch tapDestination {
             case "Mentions":
                 setSelectedTab("Notifications")
-                setSelectedSubTab("Mentions")
+                setSelectedNotificationsTab("Mentions")
             case "New Posts":
                 setSelectedTab("Notifications")
-                setSelectedSubTab("New Posts")
+                setSelectedNotificationsTab("New Posts")
             case "Messages":
                 goToDMs()
             default:
