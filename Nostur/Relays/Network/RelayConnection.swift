@@ -356,7 +356,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             
             for out in outQueue {
 #if DEBUG
-                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(155))")
+                L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE (A) \(self.url): \(out.text.prefix(155))")
 #endif
                 webSocketTask.send(.string(out.text)) { error in
                     if let error {
@@ -648,7 +648,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             else {
                 for out in outQueue {
 #if DEBUG
-                    L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(155))")
+                    L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE (B) \(self.url): \(out.text.prefix(155))")
 #endif
                     webSocketTask.send(.string(out.text)) { error in
                         if let error {

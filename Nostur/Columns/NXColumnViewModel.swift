@@ -377,6 +377,27 @@ class NXColumnViewModel: ObservableObject {
         muteListUpdatedSub?.cancel()
         muteListUpdatedSub = nil
         listenForMuteListUpdatedSub(config)
+        
+        nextTickSub?.cancel()
+        nextTickSub = nil
+        listenForNextTickSub(config)
+    }
+    
+    private var nextTickSub: AnyCancellable?
+    public func fetchFeedTimerNextTick() {
+        nextTickSubject.send()
+    }
+    
+    private var nextTickSubject = PassthroughSubject<Void, Never>()
+    
+    @MainActor
+    private func listenForNextTickSub(_ config: NXColumnConfig) {
+        guard nextTickSub == nil else { return }
+        nextTickSub = nextTickSubject
+            .throttle(for: .seconds(9), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] _ in
+                self?._fetchFeedTimerNextTick()
+            }
     }
     
     @MainActor
@@ -755,7 +776,8 @@ class NXColumnViewModel: ObservableObject {
         }
     }
     
-    private func fetchFeedTimerNextTick() {
+    // Somehow sometimes there are 250+ subs, maybe from queued ticks from the timer? Now only call this throttled to be sure... see nextTickSub / listenForNextTickSub
+    private func _fetchFeedTimerNextTick() {
         guard let config, (!AppState.shared.appIsInBackground || IS_CATALYST) && (isVisible || (config.id.starts(with: "Following-") && config.name != "Explore")) else { return }
         bg().perform { [weak self] in
             guard !Importer.shared.isImporting else { return }
