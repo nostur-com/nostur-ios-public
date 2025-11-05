@@ -38,131 +38,19 @@ struct ProfileView: View {
     @State private var showFollowers = false
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         List {
             Section {
                 VStack(alignment: .leading) {
                     
                     ProfileBanner(banner: nrContact.banner, width: availableWidth)
                         .overlay(alignment: .bottomLeading, content: {
-                            ZoomableItem({
-                                PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
-                                    .overlay(
-                                        Circle()
-                                            .strokeBorder(theme.listBackground, lineWidth: 3)
-                                    )
-                                    .background {
-                                        GeometryReader { geometry in
-                                            Color.clear
-                                                .preference(key: NXScrollOffset.self, value: geometry.frame(in: .global).origin)
-                                        }
-                                    }
-                                    .onPreferenceChange(NXScrollOffset.self) { position in
-                                        self.scrollPosition.position = position
-                                    }
-                            }, frameSize: CGSize(width: DIMENSIONS.PFP_BIG, height: DIMENSIONS.PFP_BIG)) {
-                                if let pictureUrl = nrContact.pictureUrl {
-                                    GalleryFullScreenSwiper(
-                                        initialIndex: 0,
-                                        items: [GalleryItem(url: pictureUrl)],
-                                        usePFPpipeline: false // false or we only get 50x50 version scaled up blurry
-                                    )
-                                }
-                                else {
-                                    Circle()
-                                        .strokeBorder(theme.listBackground, lineWidth: 3)
-                                }
-                            }
-                            .allowsHitTesting(nrContact.pictureUrl != nil)
-                            .overlay(alignment: .bottomTrailing) {
-                                if let fixedPfp = vm.fixedPfp {
-                                    ZoomableItem({
-                                        FixedPFP(picture: fixedPfp)
-                                    }, frameSize: .init(width: 20.0, height: 20.0)) {
-                                        GalleryFullScreenSwiper(
-                                            initialIndex: 0,
-                                            items: [GalleryItem(url: fixedPfp)],
-                                            usePFPpipeline: true // needs to be from pfp cache, will be blurry scaled up but too bad
-                                        )
-                                    }
-                                }
-                            }
-                            .offset(y: DIMENSIONS.PFP_BIG/2)
+                            self.pfpView
                         })
                     
-                    HStack(alignment: .top) {
-                        if (!settings.hideBadges) {
-                            ProfileBadgesContainer(pubkey: nrContact.pubkey)
-                                .offset(x: 85, y: 0)
-                        }
-                        
-                        Spacer()
-                        
-                        if vm.newPostsNotificationsEnabled {
-                            Image(systemName: "bell")
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                                .overlay(alignment: .topTrailing) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .resizable()
-                                        .frame(width: 10, height: 10)
-                                        .foregroundColor(.green)
-                                        .background(theme.listBackground)
-                                        .offset(y: -3)
-                                }
-                                .offset(y: 3)
-                                .onTapGesture { vm.toggleNewPostNotifications(nrContact.pubkey) }
-                                .padding([.trailing, .top], 5)
-                        }
-                        else {
-                            Image(systemName: "bell")
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                                .overlay(alignment: .topTrailing) {
-                                    Image(systemName: "plus")
-                                        .resizable()
-                                        .frame(width: 10, height: 10)
-                                        .background(theme.listBackground)
-                                        .border(theme.listBackground, width: 2.0)
-                                        .offset(y: -3)
-                                }
-                                .offset(y: 3)
-                                .onTapGesture { vm.toggleNewPostNotifications(nrContact.pubkey) }
-                                .padding([.trailing, .top], 5)
-                        }
-                        
-                        
-                        if account()?.isFullAccount ?? false {
-                            Button {
-                                goToDMs()
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                    sendNotification(.triggerDM, (nrContact.pubkey, nrContact))
-                                }
-                            } label: { Image(systemName: "envelope.fill") }
-                                .buttonStyle(NosturButton())
-                        }
-                        
-                        if nrContact.anyLud {
-                            ProfileLightningButton(nrContact: nrContact)
-                        }
-                        
-                        if nrContact.pubkey == AccountsState.shared.activeAccountPublicKey {
-                            Button {
-                                guard let account = account() else { return }
-                                guard isFullAccount(account) else { showReadOnlyMessage(); return }
-                                editingAccount = account
-                            } label: {
-                                Text("Edit profile", comment: "Button to edit own profile")
-                            }
-                            .buttonStyle(NosturButton())
-                        }
-                        else {
-                            FollowButton(pubkey: nrContact.pubkey)
-                            .buttonStyle(.borderless)
-                        }
-                    }
+                    self.firstRowItemsView
 
                     HStack(spacing: 0) {
                         Text("\(nrContact.anyName) ")
@@ -283,133 +171,7 @@ struct ProfileView: View {
             .listRowSeparator(.hidden)
             .background(theme.listBackground)
             
-            Section(content: {
-                switch selectedSubTab {
-                case "Posts":
-                    if let pinnedPost = vm.pinnedPost {
-                        Box(nrPost: pinnedPost) {
-                            VStack(alignment: .leading) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "pin.fill")
-                                        .fontWeightBold()
-                                        .scaleEffect(0.6)
-                                        .layoutPriority(1)
-                                    
-                                    Text("Pinned")
-                                        .lineLimit(1)
-                                        .font(.subheadline)
-                                        .fontWeightBold()
-                                }
-                                .foregroundColor(.gray)
-                                .padding(.leading, 36)
-                                PostRowDeletable(nrPost: pinnedPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true)
-                                    .environment(\.pinnedPostId, pinnedPost.id)
-                            }
-                        }
-                    }
-                    ProfilePostsView(pubkey: nrContact.pubkey, type: .posts)
-                        .background(theme.listBackground)
-                case "Replies":
-                    ProfilePostsView(pubkey: nrContact.pubkey, type: .replies)
-                        .background(theme.listBackground)
-                case "Highlights":
-                    ProfileHighlights(pubkey: nrContact.pubkey)
-                        .background(theme.listBackground)
-                case "Lists":
-                    ProfilePostsView(pubkey: nrContact.pubkey, type: .lists)
-                        .background(theme.listBackground)
-                case "Articles":
-                    ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
-                        .background(theme.listBackground)
-                case "Interactions":
-                    ProfileInteractionsView(nrContact: nrContact)
-                        .background(theme.listBackground)
-                case "Media":
-                    ProfileMediaView(pubkey: nrContact.pubkey)
-                        .background(theme.listBackground)
-                case "Reactions":
-                    ProfileReactionsView(pubkey: nrContact.pubkey)
-                        .background(theme.listBackground)
-                case "Zaps":
-                    ProfileZapsView(nrContact: nrContact)
-                        .background(theme.listBackground)
-                case "Relays":
-                    ProfileRelays(pubkey: nrContact.pubkey, name: nrContact.anyName)
-                        .background(theme.listBackground)
-                default:
-                    Text("🥪")
-                }
-            }, header: {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 0) {
-                        TabButton(
-                            action: { selectedSubTab = "Posts" },
-                            title: String(localized: "Posts", comment:"Tab title"),
-                            selected: selectedSubTab == "Posts")
-                        Spacer()
-                        TabButton(
-                            action: { selectedSubTab = "Replies" },
-                            title: String(localized: "Replies", comment:"Tab title"),
-                            selected: selectedSubTab == "Replies")
-                        Spacer()
-                        if vm.showHighlightsTab {
-                            TabButton(
-                                action: { selectedSubTab = "Highlights" },
-                                title: String(localized: "Highlights", comment:"Tab title"),
-                                selected: selectedSubTab == "Highlights")
-                            Spacer()
-                        }
-                        if vm.showListsTab {
-                            TabButton(
-                                action: { selectedSubTab = "Lists" },
-                                title: String(localized: "Lists", comment:"Tab title"),
-                                selected: selectedSubTab == "Lists")
-                            Spacer()
-                        }
-                        if vm.showArticlesTab {
-                            TabButton(
-                                action: { selectedSubTab = "Articles" },
-                                title: String(localized: "Articles", comment:"Tab title"),
-                                selected: selectedSubTab == "Articles")
-                            Spacer()
-                        }
-                        TabButton(
-                            action: { selectedSubTab = "Interactions" },
-                            title: String(localized: "Interactions", comment:"Tab title"),
-                            selected: selectedSubTab == "Interactions")
-                        Spacer()
-                        TabButton(
-                            action: { selectedSubTab = "Media" },
-                            title: String(localized: "Media", comment:"Tab title"),
-                            selected: selectedSubTab == "Media")
-                        Spacer()
-                        TabButton(
-                            action: { selectedSubTab = "Reactions" },
-                            title: String(localized: "Reactions", comment:"Tab title"),
-                            selected: selectedSubTab == "Reactions")
-                        Spacer()
-                        if #available(iOS 16.0, *) {
-                            TabButton(
-                                action: { selectedSubTab = "Zaps" },
-                                title: String(localized: "Zaps", comment:"Tab title"),
-                                selected: selectedSubTab == "Zaps")
-                            Spacer()
-                        }
-                        TabButton(
-                            action: { selectedSubTab = "Relays" },
-                            title: "Relays",
-                            selected: selectedSubTab == "Relays")
-                    }
-                    .frame(minWidth: availableWidth)
-                }
-                .frame(width: availableWidth)
-                .listRowInsets(.init())
-                .listSectionSeparator(.hidden)
-                .listRowSeparator(.hidden)
-            })
-            .listRowInsets(EdgeInsets())
-            .listSectionSeparator(.hidden)
-            .listRowSeparator(.hidden)
+            self.subTabsView
         }
         .background(theme.listBackground)
         .listRowInsets(EdgeInsets())
@@ -502,6 +264,258 @@ struct ProfileView: View {
                 nxReq(Filters(authors: [nrContact.pubkey], kinds: [0]), subscriptionId: UUID().uuidString, relayType: .SEARCH)
             }
         }
+    }
+    
+    @ViewBuilder
+    var pfpView: some View {
+        ZoomableItem({
+            PFP(pubkey: nrContact.pubkey, nrContact: nrContact, size: DIMENSIONS.PFP_BIG)
+                .overlay(
+                    Circle()
+                        .strokeBorder(theme.listBackground, lineWidth: 3)
+                )
+                .background {
+                    GeometryReader { geometry in
+                        Color.clear
+                            .preference(key: NXScrollOffset.self, value: geometry.frame(in: .global).origin)
+                    }
+                }
+                .onPreferenceChange(NXScrollOffset.self) { position in
+                    self.scrollPosition.position = position
+                }
+        }, frameSize: CGSize(width: DIMENSIONS.PFP_BIG, height: DIMENSIONS.PFP_BIG)) {
+            if let pictureUrl = nrContact.pictureUrl {
+                GalleryFullScreenSwiper(
+                    initialIndex: 0,
+                    items: [GalleryItem(url: pictureUrl)],
+                    usePFPpipeline: false // false or we only get 50x50 version scaled up blurry
+                )
+            }
+            else {
+                Circle()
+                    .strokeBorder(theme.listBackground, lineWidth: 3)
+            }
+        }
+        .allowsHitTesting(nrContact.pictureUrl != nil)
+        .overlay(alignment: .bottomTrailing) {
+            if let fixedPfp = vm.fixedPfp {
+                ZoomableItem({
+                    FixedPFP(picture: fixedPfp)
+                }, frameSize: .init(width: 20.0, height: 20.0)) {
+                    GalleryFullScreenSwiper(
+                        initialIndex: 0,
+                        items: [GalleryItem(url: fixedPfp)],
+                        usePFPpipeline: true // needs to be from pfp cache, will be blurry scaled up but too bad
+                    )
+                }
+            }
+        }
+        .offset(y: DIMENSIONS.PFP_BIG/2)
+    }
+    
+    @ViewBuilder
+    var firstRowItemsView: some View {
+        HStack(alignment: .top) {
+            if (!settings.hideBadges) {
+                ProfileBadgesContainer(pubkey: nrContact.pubkey)
+                    .offset(x: 85, y: 0)
+            }
+            
+            Spacer()
+            
+            if vm.newPostsNotificationsEnabled {
+                Image(systemName: "bell")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .overlay(alignment: .topTrailing) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .resizable()
+                            .frame(width: 10, height: 10)
+                            .foregroundColor(.green)
+                            .background(theme.listBackground)
+                            .offset(y: -3)
+                    }
+                    .offset(y: 3)
+                    .onTapGesture { vm.toggleNewPostNotifications(nrContact.pubkey) }
+                    .padding([.trailing, .top], 5)
+            }
+            else {
+                Image(systemName: "bell")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .overlay(alignment: .topTrailing) {
+                        Image(systemName: "plus")
+                            .resizable()
+                            .frame(width: 10, height: 10)
+                            .background(theme.listBackground)
+                            .border(theme.listBackground, width: 2.0)
+                            .offset(y: -3)
+                    }
+                    .offset(y: 3)
+                    .onTapGesture { vm.toggleNewPostNotifications(nrContact.pubkey) }
+                    .padding([.trailing, .top], 5)
+            }
+            
+            
+            if account()?.isFullAccount ?? false {
+                Button {
+                    goToDMs()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        sendNotification(.triggerDM, (nrContact.pubkey, nrContact))
+                    }
+                } label: { Image(systemName: "envelope.fill") }
+                    .buttonStyle(NosturButton())
+            }
+            
+            if nrContact.anyLud {
+                ProfileLightningButton(nrContact: nrContact)
+            }
+            
+            if nrContact.pubkey == AccountsState.shared.activeAccountPublicKey {
+                Button {
+                    guard let account = account() else { return }
+                    guard isFullAccount(account) else { showReadOnlyMessage(); return }
+                    editingAccount = account
+                } label: {
+                    Text("Edit profile", comment: "Button to edit own profile")
+                }
+                .buttonStyle(NosturButton())
+            }
+            else {
+                FollowButton(pubkey: nrContact.pubkey)
+                .buttonStyle(.borderless)
+            }
+        }    }
+    
+    @ViewBuilder
+    var subTabsView: some View {
+        Section(content: {
+            switch selectedSubTab {
+            case "Posts":
+                if let pinnedPost = vm.pinnedPost {
+                    Box(nrPost: pinnedPost) {
+                        VStack(alignment: .leading) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "pin.fill")
+                                    .fontWeightBold()
+                                    .scaleEffect(0.6)
+                                    .layoutPriority(1)
+                                
+                                Text("Pinned")
+                                    .lineLimit(1)
+                                    .font(.subheadline)
+                                    .fontWeightBold()
+                            }
+                            .foregroundColor(.gray)
+                            .padding(.leading, 36)
+                            PostRowDeletable(nrPost: pinnedPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true)
+                                .environment(\.pinnedPostId, pinnedPost.id)
+                        }
+                    }
+                }
+                ProfilePostsView(pubkey: nrContact.pubkey, type: .posts)
+                    .background(theme.listBackground)
+            case "Replies":
+                ProfilePostsView(pubkey: nrContact.pubkey, type: .replies)
+                    .background(theme.listBackground)
+            case "Highlights":
+                ProfileHighlights(pubkey: nrContact.pubkey)
+                    .background(theme.listBackground)
+            case "Lists":
+                ProfilePostsView(pubkey: nrContact.pubkey, type: .lists)
+                    .background(theme.listBackground)
+            case "Articles":
+                ProfilePostsView(pubkey: nrContact.pubkey, type: .articles)
+                    .background(theme.listBackground)
+            case "Interactions":
+                ProfileInteractionsView(nrContact: nrContact)
+                    .background(theme.listBackground)
+            case "Media":
+                ProfileMediaView(pubkey: nrContact.pubkey)
+                    .background(theme.listBackground)
+            case "Reactions":
+                ProfileReactionsView(pubkey: nrContact.pubkey)
+                    .background(theme.listBackground)
+            case "Zaps":
+                ProfileZapsView(nrContact: nrContact)
+                    .background(theme.listBackground)
+            case "Relays":
+                ProfileRelays(pubkey: nrContact.pubkey, name: nrContact.anyName)
+                    .background(theme.listBackground)
+            default:
+                Text("🥪")
+            }
+        }, header: {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    TabButton(
+                        action: { selectedSubTab = "Posts" },
+                        title: String(localized: "Posts", comment:"Tab title"),
+                        selected: selectedSubTab == "Posts")
+                    Spacer()
+                    TabButton(
+                        action: { selectedSubTab = "Replies" },
+                        title: String(localized: "Replies", comment:"Tab title"),
+                        selected: selectedSubTab == "Replies")
+                    Spacer()
+                    if vm.showHighlightsTab {
+                        TabButton(
+                            action: { selectedSubTab = "Highlights" },
+                            title: String(localized: "Highlights", comment:"Tab title"),
+                            selected: selectedSubTab == "Highlights")
+                        Spacer()
+                    }
+                    if vm.showListsTab {
+                        TabButton(
+                            action: { selectedSubTab = "Lists" },
+                            title: String(localized: "Lists", comment:"Tab title"),
+                            selected: selectedSubTab == "Lists")
+                        Spacer()
+                    }
+                    if vm.showArticlesTab {
+                        TabButton(
+                            action: { selectedSubTab = "Articles" },
+                            title: String(localized: "Articles", comment:"Tab title"),
+                            selected: selectedSubTab == "Articles")
+                        Spacer()
+                    }
+                    TabButton(
+                        action: { selectedSubTab = "Interactions" },
+                        title: String(localized: "Interactions", comment:"Tab title"),
+                        selected: selectedSubTab == "Interactions")
+                    Spacer()
+                    TabButton(
+                        action: { selectedSubTab = "Media" },
+                        title: String(localized: "Media", comment:"Tab title"),
+                        selected: selectedSubTab == "Media")
+                    Spacer()
+                    TabButton(
+                        action: { selectedSubTab = "Reactions" },
+                        title: String(localized: "Reactions", comment:"Tab title"),
+                        selected: selectedSubTab == "Reactions")
+                    Spacer()
+                    if #available(iOS 16.0, *) {
+                        TabButton(
+                            action: { selectedSubTab = "Zaps" },
+                            title: String(localized: "Zaps", comment:"Tab title"),
+                            selected: selectedSubTab == "Zaps")
+                        Spacer()
+                    }
+                    TabButton(
+                        action: { selectedSubTab = "Relays" },
+                        title: "Relays",
+                        selected: selectedSubTab == "Relays")
+                }
+                .frame(minWidth: availableWidth)
+            }
+            .frame(width: availableWidth)
+            .listRowInsets(.init())
+            .listSectionSeparator(.hidden)
+            .listRowSeparator(.hidden)
+        })
+        .listRowInsets(EdgeInsets())
+        .listSectionSeparator(.hidden)
+        .listRowSeparator(.hidden)
     }
 }
 
