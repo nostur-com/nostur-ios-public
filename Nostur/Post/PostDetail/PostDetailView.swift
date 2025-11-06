@@ -56,12 +56,16 @@ struct PostDetailView: View {
                         if (nrPost.kind == 443) {
                             // SPECIAL HANDLING FOR WEBSITE COMMENTS
                             WebsiteComments(nrPost: nrPost)
-                                .environment(\.nxViewingContext, [.selectableText, .postReply, .detailPane])
+                                .transformEnvironment(\.nxEnv) { nxEnv in
+                                    nxEnv.nxViewingContext = [.selectableText, .postParent, .detailPane]
+                                }
                         }
                         else if didLoad {
                             // NORMAL REPLIES TO A POST
                             ThreadReplies(nrPost: nrPost)
-                                .environment(\.nxViewingContext, [.selectableText, .postReply, .detailPane])
+                                .transformEnvironment(\.nxEnv) { nxEnv in
+                                    nxEnv.nxViewingContext = [.selectableText, .postParent, .detailPane]
+                                }
                         }
                     }
 //                    .background(theme.listBackground)
@@ -93,7 +97,9 @@ struct PostDetailView: View {
         }
             .nosturNavBgCompat(theme: theme)
             .background(theme.listBackground)
-            .environment(\.nxViewingContext, [.selectableText, .detailPane])
+            .transformEnvironment(\.nxEnv) { nxEnv in
+                nxEnv.nxViewingContext = [.selectableText, .detailPane]
+            }
     }
 }
 

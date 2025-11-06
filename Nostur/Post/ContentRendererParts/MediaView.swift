@@ -80,7 +80,7 @@ struct MediaContentView: View {
 }
 
 struct MediaPlaceholder: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @StateObject private var vm = MediaViewVM()
     @Environment(\.theme) private var theme
     
@@ -426,7 +426,7 @@ struct MediaPlaceholder: View {
             }
             else if contentMode == .fit {
                 ZoomableItem(id: zoomableId) {
-                    if nxViewingContext.contains(.screenshot), let flatGif = UIImage(data: gifInfo.gifData) {
+                    if nxEnv.nxViewingContext.contains(.screenshot), let flatGif = UIImage(data: gifInfo.gifData) {
                         Image(uiImage: flatGif)
                             .resizable()
                             .scaledToFit()
@@ -474,7 +474,7 @@ struct MediaPlaceholder: View {
             }
             else {
                 ZoomableItem(id: zoomableId) {
-                    if nxViewingContext.contains(.screenshot), let flatGif = UIImage(data: gifInfo.gifData) {
+                    if nxEnv.nxViewingContext.contains(.screenshot), let flatGif = UIImage(data: gifInfo.gifData) {
                         Image(uiImage: flatGif)
                             .resizable()
                             .scaledToFill()

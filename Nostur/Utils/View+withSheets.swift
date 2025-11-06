@@ -371,7 +371,9 @@ struct WithSheets: ViewModifier {
                         .environment(\.managedObjectContext, DataProvider.shared().viewContext)
                         .environment(\.colorScheme, colorScheme)
                         .environment(\.theme, theme)
-                        .environment(\.nxViewingContext, [.screenshot, .postDetail]) // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
+                        .transformEnvironment(\.nxEnv) { nxEnv in
+                            nxEnv.nxViewingContext = [.screenshot, .postDetail] // Will hide 'Sent to X relays' in footer + Use Text instead of NRText
+                        }
                     )
                     
                     

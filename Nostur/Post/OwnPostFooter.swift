@@ -55,7 +55,7 @@ class OwnPostAttributes: ObservableObject {
 
 struct OwnPostFooter: View {
     @Environment(\.theme) private var theme
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     private let nrPost: NRPost
     @ObservedObject private var own: OwnPostAttributes
     @State private var unpublishing = false
@@ -110,7 +110,7 @@ struct OwnPostFooter: View {
                 .padding(.bottom, 5)
                 .foregroundColor(Color.primary)
             }
-            else if nxViewingContext.isDisjoint(with: [.screenshot, .preview]) && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
+            else if nxEnv.nxViewingContext.isDisjoint(with: [.screenshot, .preview]) && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
                 HStack {
                     if own.flags == "nsecbunker_unsigned" && own.relaysCount != 0 {
                         Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)

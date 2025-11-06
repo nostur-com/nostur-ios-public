@@ -13,7 +13,7 @@ import Combine
 // Renders embeds (VIEWS), not links (in TEXT)
 struct ContentRenderer: View { // VIEW things
     @Environment(\.theme) private var theme
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
     
@@ -36,7 +36,7 @@ struct ContentRenderer: View { // VIEW things
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {
@@ -85,7 +85,7 @@ struct ContentRenderer: View { // VIEW things
 //                            .withoutAnimation()
 //                            .transaction { t in t.animation = nil }
                             .onTapGesture {
-                                guard !nxViewingContext.contains(.preview) else { return }
+                                guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                                 guard !isDetail else { return }
                                 navigateTo(nrPost, context: containerID)
                             }
@@ -102,7 +102,7 @@ struct ContentRenderer: View { // VIEW things
 //                        .withoutAnimation()
 //                        .transaction { t in t.animation = nil }
                         .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: containerID)
                         }
@@ -111,7 +111,7 @@ struct ContentRenderer: View { // VIEW things
                     Text(verbatim: code)
                         .font(.system(.body, design: .monospaced))
                         .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: containerID)
                         }
@@ -127,7 +127,7 @@ struct ContentRenderer: View { // VIEW things
 //                            navigateTo(nrPost, context: childDIM.id)
 //                        }
                     NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: $showMore, availableWidth: availableWidth, isDetail: isDetail, primaryColor: theme.primary, accentColor: theme.accent, onTap: {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: containerID)
                     })
@@ -136,7 +136,7 @@ struct ContentRenderer: View { // VIEW things
                 case .md(let markdownContentWithPs): // For long form articles
                     NRContentMarkdownRenderer(markdownContentWithPs: markdownContentWithPs, maxWidth: availableWidth)
                         .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: containerID)
                         }
@@ -173,7 +173,7 @@ struct ContentRenderer: View { // VIEW things
                         galleryItems: nrPost.galleryItems,
                         autoload: shouldAutoload,
                         isNSFW: nrPost.isNSFW,
-                        generateIMeta: nxViewingContext.contains(.preview),
+                        generateIMeta: nxEnv.nxViewingContext.contains(.preview),
                         zoomableId: zoomableId
                     )
                     .padding(.horizontal, fullWidth ? -10 : 0)
@@ -236,7 +236,7 @@ struct ContentRenderer: View { // VIEW things
                 default:
                     EmptyView()
                         .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: containerID)
                         }

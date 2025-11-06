@@ -39,8 +39,10 @@ struct FollowPackPreviewSheet: View {
                 }
             })
         }
-            .environment(\.nxViewingContext, [.feedPreview])
-            .toolbar {
+        .transformEnvironment(\.nxEnv) { nxEnv in
+            nxEnv.nxViewingContext = [.feedPreview]
+        }
+        .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Close", systemImage: "xmark") {
                     AppSheetsModel.shared.dismiss() // Normal @Environment(\.dismiss) is broken with NavigationBackport

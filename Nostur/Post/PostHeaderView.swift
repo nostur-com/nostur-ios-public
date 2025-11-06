@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NRPostHeaderContainer: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.containerID) private var containerID
     private let nrPost: NRPost
     @ObservedObject var settings: SettingsStore = .shared
@@ -33,7 +33,7 @@ struct NRPostHeaderContainer: View {
     }
     
     private func nameTapped() {
-        guard !nxViewingContext.contains(.preview) else { return }
+        guard !nxEnv.nxViewingContext.contains(.preview) else { return }
         navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
     }
 }
@@ -53,7 +53,7 @@ struct NRPostHeaderContainer: View {
 }
 
 struct PostHeaderView: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @EnvironmentObject private var la: LoggedInAccount
     
     public let pubkey: String
@@ -80,7 +80,7 @@ struct PostHeaderView: View {
                 .lineLimit(1)
                 .layoutPriority(2)
                 .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
+                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                     onTap?()
                 }
             
@@ -149,7 +149,7 @@ struct PostHeaderView: View {
         if let nrContact, nrContact.similarToPubkey != nil {
             return false
         }
-        return nxViewingContext.contains(.feedPreview) || (nxViewingContext.isDisjoint(with: [.preview, .screenshot]) && la.viewFollowingPublicKeys.count < 50)
+        return nxEnv.nxViewingContext.contains(.feedPreview) || (nxEnv.nxViewingContext.isDisjoint(with: [.preview, .screenshot]) && la.viewFollowingPublicKeys.count < 50)
     }
 }
 

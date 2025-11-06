@@ -10,7 +10,7 @@ import SwiftUI
 // Kinds we know and need but don't really render
 struct OtherKnownKinds: View {
     @Environment(\.theme) private var theme
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.containerID) private var containerID
     @ObservedObject private var settings: SettingsStore = .shared
     
@@ -38,7 +38,7 @@ struct OtherKnownKinds: View {
             
             HStack {
                 Spacer()
-                ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
+                ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
                     .onTapGesture {
                         navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                     }
@@ -49,7 +49,7 @@ struct OtherKnownKinds: View {
                     .lineLimit(1)
                     .layoutPriority(2)
                     .onTapGesture {
-                        guard !nxViewingContext.contains(.preview) else { return }
+                        guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                         navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                     }
                     .onAppear {

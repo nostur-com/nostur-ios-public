@@ -10,7 +10,7 @@ import SwiftUI
 // Kind 1222 and 1244
 // 1222 for root messages and kind: 1244 for reply messages to be used for short voice messages, typically up to 60 seconds in length.
 struct Kind1222: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.theme) private var theme: Theme
     @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var settings: SettingsStore = .shared
@@ -60,7 +60,7 @@ struct Kind1222: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -70,7 +70,7 @@ struct Kind1222: View {
 //        #endif
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload) { 
             if (isDetail) {
-                if missingReplyTo || nxViewingContext.contains(.screenshot) {
+                if missingReplyTo || nxEnv.nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let subject = nrPost.subject {
@@ -87,7 +87,7 @@ struct Kind1222: View {
             }
             else {
                 
-                if missingReplyTo || nxViewingContext.contains(.screenshot) {
+                if missingReplyTo || nxEnv.nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let subject = nrPost.subject {
@@ -120,7 +120,7 @@ struct Kind1222: View {
     private var embeddedView: some View {
         PostEmbeddedLayout(nrPost: nrPost) {
             
-            if missingReplyTo || nxViewingContext.contains(.screenshot) {
+            if missingReplyTo || nxEnv.nxViewingContext.contains(.screenshot) {
                 ReplyingToFragmentView(nrPost: nrPost)
             }
             if let subject = nrPost.subject {

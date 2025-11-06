@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PostEmbeddedLayout<Content: View>: View {
     @Environment(\.theme) private var theme
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.containerID) private var containerID
     @ObservedObject private var nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -37,9 +37,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                     if !authorAtBottom {
                         HStack(spacing: 5) {
                             // profile image
-                            PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
+                            PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
-                                    guard !nxViewingContext.contains(.preview) else { return }
+                                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                                 }
                             
@@ -50,7 +50,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                                 .fontWeightBold()
                                 .lineLimit(1)
                                 .onTapGesture {
-                                    guard !nxViewingContext.contains(.preview) else { return }
+                                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                                 }
                                 
@@ -84,9 +84,9 @@ struct PostEmbeddedLayout<Content: View>: View {
                 HStack(spacing: 5) {
                     Spacer()
                     // profile image
-                    PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxViewingContext.contains(.screenshot))
+                    PFP(pubkey: nrPost.pubkey, pictureUrl: nrContact.pictureUrl, size: 20, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
                         .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
                     
@@ -97,7 +97,7 @@ struct PostEmbeddedLayout<Content: View>: View {
                         .fontWeightBold()
                         .lineLimit(1)
                         .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
                         
@@ -135,7 +135,7 @@ struct PostEmbeddedLayout<Content: View>: View {
     }
     
     private func navigateToPost() {
-        guard !nxViewingContext.contains(.preview) else { return }
+        guard !nxEnv.nxViewingContext.contains(.preview) else { return }
         navigateTo(nrPost, context: containerID)
     }
 }

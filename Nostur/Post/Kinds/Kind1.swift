@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Kind1: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth // was dim (for dim.listWidth)
     @ObservedObject private var settings: SettingsStore = .shared
@@ -70,7 +70,7 @@ struct Kind1: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -80,7 +80,7 @@ struct Kind1: View {
 //        #endif
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload) {
             if (isDetail) {
-                if missingReplyTo || nxViewingContext.contains(.screenshot) {
+                if missingReplyTo || nxEnv.nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let subject = nrPost.subject {
@@ -103,7 +103,7 @@ struct Kind1: View {
             }
             else {
                 
-                if missingReplyTo || nxViewingContext.contains(.screenshot) {
+                if missingReplyTo || nxEnv.nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost)
                 }
                 if let subject = nrPost.subject {

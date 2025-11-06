@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ZappedFrom: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     private let nrZapFrom: NRPost
     @ObservedObject private var nrContact: NRContact
     private var context: String = "Default"
@@ -29,7 +29,7 @@ struct ZappedFrom: View {
                 .lineLimit(2)
                 .layoutPriority(2)
                 .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
+                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                     navigateToContact(pubkey: nrZapFrom.pubkey, nrContact: nrContact, nrPost: nrZapFrom, context: context)
                 }
             

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChatRenderer: View { // VIEW things
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     private let nrChat: NRChatMessage
@@ -28,7 +28,7 @@ struct ChatRenderer: View { // VIEW things
     }
     
     private var shouldAutoload: Bool {
-        return !nrChat.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(nrChat) || nxViewingContext.contains(.screenshot))
+        return !nrChat.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(nrChat) || nxEnv.nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {

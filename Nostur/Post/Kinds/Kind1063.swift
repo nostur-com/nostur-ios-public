@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Kind1063: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var settings: SettingsStore = .shared
@@ -77,7 +77,7 @@ struct Kind1063: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder

@@ -11,7 +11,7 @@ import OrderedCollections
 // Kind 30000: Follow sets: categorized groups of users a client may choose to check out in different circumstances
 // Also kind: 39089
 struct Kind30000: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.theme) private var theme: Theme
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
@@ -79,7 +79,7 @@ struct Kind30000: View {
             self.embeddedView
                 .onAppear(perform: self.onAppear)
                 .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
+                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                     navigateTo(nrPost, context: containerID)
                 }
         }
@@ -87,7 +87,7 @@ struct Kind30000: View {
             self.normalView
                 .onAppear(perform: self.onAppear)
                 .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
+                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                     guard !isDetail else { return }
                     navigateTo(nrPost, context: containerID)
                 }
@@ -116,7 +116,7 @@ struct Kind30000: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -307,7 +307,7 @@ struct Kind30000: View {
 
 
 struct PubkeyRow: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.containerID) private var containerID
     @ObservedObject var nrContact: NRContact
     
@@ -317,7 +317,7 @@ struct PubkeyRow: View {
             Text(nrContact.anyName)
         }
         .onTapGesture {
-            guard !nxViewingContext.contains(.preview) else { return }
+            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
             navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
         }
     }

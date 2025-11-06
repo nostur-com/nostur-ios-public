@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct Kind9802: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.nxEnv) private var nxEnv
     @Environment(\.theme) private var theme: Theme
     @Environment(\.availableWidth) private var availableWidth
     @Environment(\.containerID) private var containerID
@@ -61,7 +61,7 @@ struct Kind9802: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -82,7 +82,7 @@ struct Kind9802: View {
             content
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
+                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                     navigateTo(nrPost, context: containerID)
                 }
         }
@@ -92,7 +92,7 @@ struct Kind9802: View {
                 content
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        guard !nxViewingContext.contains(.preview) else { return }
+                        guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                         navigateTo(nrPost, context: containerID)
                     }
                 
@@ -117,7 +117,7 @@ struct Kind9802: View {
                 .padding(20)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    guard !nxViewingContext.contains(.preview) else { return }
+                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                     if let firstE = nrPost.firstE {
                         navigateTo(NotePath(id: firstE), context: containerID)
                     }
@@ -139,7 +139,7 @@ struct Kind9802: View {
                 PFPandName(pubkey: hlAuthorPubkey, alignment: .trailing)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        guard !nxViewingContext.contains(.preview) else { return }
+                        guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                         navigateTo(ContactPath(key: hlAuthorPubkey), context: containerID)
                     }
                     .padding(.trailing, 40)
@@ -150,7 +150,7 @@ struct Kind9802: View {
                         let naddr = try? ShareableIdentifier(aTag: aTag.1) {
                     ArticleTitleByNaddr(naddr1: naddr.bech32string)
                         .onTapGesture {
-                            guard !nxViewingContext.contains(.preview) else { return }
+                            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
                             if let aTag = nrPost.fastTags.first(where: { $0.0 == "a" }),
                                     let naddr = try? ShareableIdentifier(aTag: aTag.1) {
                                     navigateTo(Naddr1Path(naddr1: naddr.bech32string), context: containerID)
