@@ -69,7 +69,7 @@ enum NXContentRendererViewState {
 // Renders embeds (VIEWS), not links (in TEXT)
 struct NXContentRenderer: View { // VIEW things
     @Environment(\.theme) public var theme
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @EnvironmentObject private var vc: ViewingContext
     public let nxEvent: NXEvent
     public let contentElements: [ContentElement]
@@ -79,7 +79,7 @@ struct NXContentRenderer: View { // VIEW things
     @State private var viewState: NXContentRendererViewState = .loading
     
     private var shouldAutoload: Bool {
-        return !nxEvent.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nxEvent) || nxEnv.nxViewingContext.contains(.screenshot))
+        return !nxEvent.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nxEvent) || nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {

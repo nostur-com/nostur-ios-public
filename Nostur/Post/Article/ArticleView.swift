@@ -11,7 +11,7 @@ import NavigationBackport
 
 struct ArticleView: View {
     @Environment(\.theme) private var theme
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
     @ObservedObject private var article: NRPost
@@ -44,7 +44,7 @@ struct ArticleView: View {
     @State private var didLoad = false
     
     private var shouldAutoload: Bool { // Only for non-detail view. On detail we force show images.
-        !article.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(article) || nxEnv.nxViewingContext.contains(.screenshot))
+        !article.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(article) || nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {
@@ -72,7 +72,7 @@ struct ArticleView: View {
                     }
                     
                     HStack {
-                        ZappablePFP(pubkey: article.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                        ZappablePFP(pubkey: article.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
                                 navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: containerID)
                             }
@@ -145,11 +145,9 @@ struct ArticleView: View {
                 }
                 .padding(20)
                 
-                if (!nxEnv.nxViewingContext.contains(.postParent)) {
+                if (!nxViewingContext.contains(.postParent)) {
                     ThreadReplies(nrPost: article)
-                        .transformEnvironment(\.nxEnv) { nxEnv in
-                            nxEnv.nxViewingContext = [.selectableText, .postReply, .detailPane]
-                        }
+                        .environment(\.nxViewingContext, [.selectableText, .postReply, .detailPane])
                 }
             }
             .background(Color(.secondarySystemBackground))
@@ -258,9 +256,9 @@ struct ArticleView: View {
                     ViewThatFits(in: .horizontal) {
                         HStack {
                             Spacer()
-                            ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                            ZappablePFP(pubkey: article.pubkey, contact: article.contact, size: 25.0, zapEtag: article.id, forceFlat: nxViewingContext.contains(.screenshot))
                                 .onTapGesture {
-                                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: article.pubkey, nrContact: article.contact, context: containerID)
                                 }
                             
@@ -270,7 +268,7 @@ struct ArticleView: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
-                                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                 }
                                 .onAppear {
@@ -304,14 +302,14 @@ struct ArticleView: View {
                         VStack {
                             HStack {
                                 Spacer()
-                                PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                                PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
                                 Text(nrContact.anyName)
                                     .foregroundColor(.primary)
                                     .fontWeight(.bold)
                                     .lineLimit(1)
                                     .layoutPriority(2)
                                     .onTapGesture {
-                                        guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                        guard !nxViewingContext.contains(.preview) else { return }
                                         navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                     }
                                     .onAppear {
@@ -351,14 +349,14 @@ struct ArticleView: View {
                     VStack {
                         HStack {
                             Spacer()
-                            PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                            PFP(pubkey: article.pubkey, nrContact: article.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
                             Text(nrContact.anyName)
                                 .foregroundColor(.primary)
                                 .fontWeight(.bold)
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
-                                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                 }
                                 .onAppear {
@@ -395,7 +393,7 @@ struct ArticleView: View {
 //            .padding(20)
             .contentShape(Rectangle())
             .onTapGesture {
-                guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                guard !nxViewingContext.contains(.preview) else { return }
                 navigateTo(article, context: containerID)
             }
         }
@@ -406,9 +404,7 @@ struct ArticleCommentsView: View {
     let article:NRPost
     var body: some View {
         ThreadReplies(nrPost: article)
-            .transformEnvironment(\.nxEnv) { nxEnv in
-                nxEnv.nxViewingContext = [.selectableText, .postReply, .detailPane]
-            }
+            .environment(\.nxViewingContext, [.selectableText, .postReply, .detailPane])
     }
 }
 

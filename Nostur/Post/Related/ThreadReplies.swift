@@ -89,9 +89,7 @@ import NavigationBackport
             if let nrPost = PreviewFetcher.fetchNRPost(exampleId, withReplies: true) {
                 ScrollView {
                     ThreadReplies(nrPost: nrPost)
-                        .transformEnvironment(\.nxEnv) { nxEnv in
-                            nxEnv.nxViewingContext = [.selectableText, .postParent, .detailPane]
-                        }
+                        .environment(\.nxViewingContext, [.selectableText, .postReply, .detailPane])
                 }
             }
         }

@@ -68,9 +68,7 @@ struct ComposePost: View {
                         if let replyToNRPost = replyToNRPost {
                             // Reply, so full-width false and connecting line to bottom
                             KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom)
-                                .transformEnvironment(\.nxEnv) { nxEnv in
-                                    nxEnv.nxViewingContext = [.preview, .selectableText, .postParent]
-                                }
+                                .environment(\.nxViewingContext, [.preview, .selectableText, .postParent])
                                 .onTapGesture { }
                         }
                         
@@ -267,9 +265,7 @@ struct ComposePost: View {
                                             // Reply, so full-width false and connecting line to bottom
                                             KindResolver(nrPost: replyToNRPost, fullWidth: false, hideFooter: true, missingReplyTo: true, isReply: false, isDetail: false, isEmbedded: false, connect: .bottom)
                                                 .environment(\.availableWidth, geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20))
-                                                .transformEnvironment(\.nxEnv) { nxEnv in
-                                                    nxEnv.nxViewingContext = [.preview, .selectableText, .postParent]
-                                                }
+                                                .environment(\.nxViewingContext, [.preview, .selectableText, .postParent])
                                                 .onTapGesture { }
                                         }
                                         
@@ -288,9 +284,7 @@ struct ComposePost: View {
                                         
                                         if let quotingNRPost = quotePost?.nrPost {
                                             KindResolver(nrPost: quotingNRPost, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: true, isEmbedded: true)
-                                                .transformEnvironment(\.nxEnv) { nxEnv in
-                                                    nxEnv.nxViewingContext = [.preview, .selectableText, .postEmbedded]
-                                                }
+                                                .environment(\.nxViewingContext, [.preview, .selectableText, .postEmbedded])
                                                 .fixedSize(horizontal: false, vertical: true)
                                                 .onTapGesture { }
                                                 .environment(\.availableWidth, geo.size.width - (SettingsStore.shared.fullWidthImages ? 20 : DIMENSIONS.ROW_PFP_SPACE+20))

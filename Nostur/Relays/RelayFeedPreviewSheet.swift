@@ -32,9 +32,7 @@ struct RelayFeedPreviewSheet: View {
             .frame(maxWidth: .infinity, alignment: .center) // Make toolbar background fill full width
             .background(theme.listBackground)
         })
-        .transformEnvironment(\.nxEnv) { nxEnv in
-            nxEnv.nxViewingContext = [.feedPreview]
-        }
+        .environment(\.nxViewingContext, [.feedPreview])
         .toolbar {
             ToolbarItem(placement: .principal) {
                 HStack {

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct KindResolver: View {
     @Environment(\.theme) private var theme
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     public let nrPost: NRPost
     public var fullWidth: Bool = false
     public var hideFooter: Bool = false // For rendering in NewReply
@@ -21,7 +21,7 @@ struct KindResolver: View {
     public var forceAutoload: Bool = false // To override auto downloaded of reposted post using pubkey of reposter
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     var body: some View {

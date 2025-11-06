@@ -138,9 +138,7 @@ struct WebsiteComments: View {
                     ForEach(roots) { root in
                         ThreadReplies(nrPost: root)
                             .id(root.id)
-                            .transformEnvironment(\.nxEnv) { nxEnv in
-                                nxEnv.nxViewingContext = [.selectableText, .postParent, .detailPane]
-                            }
+                            .environment(\.nxViewingContext, [.selectableText, .postReply, .detailPane])
                     }
                 }
                 else {

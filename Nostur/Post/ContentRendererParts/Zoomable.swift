@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct ZoomableItem<Content: View, DetailContent: View>: View {
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private let id: String
     private let content: Content
     private let detailContent: DetailContent
@@ -28,7 +28,7 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
         if #available(iOS 16.0, *) {
             content
                 .onTapGesture(coordinateSpace: .global) { location in
-                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                    guard !nxViewingContext.contains(.preview) else { return }
                     triggerZoom(origin: CGPoint(x: location.x - 30, y: location.y - 30))
                 }
                 .modifier {
@@ -44,7 +44,7 @@ struct ZoomableItem<Content: View, DetailContent: View>: View {
             // Fallback on earlier versions
             content
                 .onTapGesture {
-                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                    guard !nxViewingContext.contains(.preview) else { return }
                     triggerZoom(origin: CGPoint(x: UIScreen.main.bounds.width/2, y: UIScreen.main.bounds.height/2))
                 }
         }

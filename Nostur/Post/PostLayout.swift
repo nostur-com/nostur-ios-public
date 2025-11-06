@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PostLayout<Content: View, TitleContent: View>: View {
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
@@ -164,7 +164,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     @ViewBuilder
     private var regularPFP: some View {
         if SettingsStore.shared.enableLiveEvents && LiveEventsModel.shared.livePubkeys.contains(nrPost.pubkey) {
-            LiveEventPFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+            LiveEventPFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, forceFlat: nxViewingContext.contains(.screenshot))
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
@@ -174,7 +174,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     }
                 }
                 .onTapGesture {
-                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                    guard !nxViewingContext.contains(.preview) else { return }
                     if let liveEvent = LiveEventsModel.shared.nrLiveEvents.first(where: { $0.pubkey == nrPost.pubkey || $0.participantsOrSpeakers.map { $0.pubkey }.contains(nrPost.pubkey) }) {
                         if let status = liveEvent.status, status == "planned" {
                             navigateTo(liveEvent, context: containerID)
@@ -202,7 +202,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
         }
         else {
-            ZappablePFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+            ZappablePFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 .background(alignment: .top) {
                     if connect == .top || connect == .both {
@@ -212,7 +212,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     }
                 }
                 .onTapGesture {
-                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                    guard !nxViewingContext.contains(.preview) else { return }
                     navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost,  context: containerID)
                 }
         }
@@ -220,7 +220,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     
     @ViewBuilder
     private var itemPFP: some View { // No live event animation for item PFP
-        ZappablePFP(pubkey: nrPost.pubkey, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+        ZappablePFP(pubkey: nrPost.pubkey, size: 20.0, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: nxViewingContext.contains(.screenshot))
             .frame(width: 20.0, height: 20.0)
             .onTapGesture {
                 navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost, context: containerID)
@@ -246,7 +246,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 .lineLimit(1)
                 .layoutPriority(2)
                 .onTapGesture {
-                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                    guard !nxViewingContext.contains(.preview) else { return }
                     navigateTo(nrPost, context: containerID)
                 }
                 .onAppear {

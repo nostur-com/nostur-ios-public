@@ -10,7 +10,7 @@ import Combine
 
 struct ReplyingToFragmentView: View {
     @Environment(\.theme) private var theme
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     private let nrPost: NRPost
     @ObservedObject private var replyingToAttributes: ReplyingToAttributes
     
@@ -25,7 +25,7 @@ struct ReplyingToFragmentView: View {
                 .fontWeight(.light)
                 .foregroundColor(theme.secondary)
                 .frame(maxWidth:.infinity, alignment: .leading)
-                .allowsHitTesting(!nxEnv.nxViewingContext.contains(.preview))
+                .allowsHitTesting(!nxViewingContext.contains(.preview))
         }
         else {
             EmptyView()

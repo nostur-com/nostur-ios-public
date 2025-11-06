@@ -12,7 +12,7 @@ import NostrEssentials
 // the parent is another PostAndParent
 // so it recursively renders up to the root
 struct PostAndParent: View {
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.containerID) private var containerID
     @Environment(\.theme) private var theme
     @ObservedObject private var nrPost: NRPost
@@ -42,9 +42,7 @@ struct PostAndParent: View {
                 if replyTo.deletedById == nil {
                     let connect:ThreadConnectDirection? = replyTo.replyToId != nil ? .both : .bottom
                     PostAndParent(nrPost: replyTo, connect: connect)
-                        .transformEnvironment(\.nxEnv) { nxEnv in
-                            nxEnv.nxViewingContext = [.selectableText, .postParent, .detailPane]
-                        }
+                        .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .background(theme.listBackground)
                 }
                 else {
@@ -93,25 +91,21 @@ struct PostAndParent: View {
             }
             // MARK: A POST 
             VStack(alignment: .leading, spacing: 0) {
-                if nxEnv.nxViewingContext.contains(.postParent) {
+                if nxViewingContext.contains(.postParent) {
                     PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: connect)
-                        .transformEnvironment(\.nxEnv) { nxEnv in
-                            nxEnv.nxViewingContext = [.selectableText, .postParent, .detailPane]
-                        }
+                        .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .background(
                             theme.listBackground
                                 .onTapGesture {
-                                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateTo(nrPost, context: containerID)
                                 }
                         )
                 }
                 else {
                     PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true)
-                        .transformEnvironment(\.nxEnv) { nxEnv in
-                            nxEnv.nxViewingContext = [.selectableText, .postParent, .detailPane]
-                        }
+                        .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
                         .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line
                         .preference(key: TabTitlePreferenceKey.self, value: nrPost.anyName)
@@ -138,7 +132,7 @@ struct PostAndParent: View {
                         QueuedFetcher.shared.enqueue(pTags: nrPost.missingPs)
                     }
                     
-                    if (!nxEnv.nxViewingContext.contains(.postParent)) {
+                    if (!nxViewingContext.contains(.postParent)) {
                         
                         fetchDetailStuff(
                             kind: Int(nrPost.kind),

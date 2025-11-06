@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LiveEventRowView: View {
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
@@ -20,7 +20,7 @@ struct LiveEventRowView: View {
     private var forceAutoload: Bool
     
     private var shouldAutoload: Bool {
-        return !liveEvent.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(liveEvent) || nxEnv.nxViewingContext.contains(.screenshot))
+        return !liveEvent.isNSFW  && (forceAutoload || SettingsStore.shouldAutodownload(liveEvent) || nxViewingContext.contains(.screenshot))
     }
     
     init(nrPost: NRPost, liveEvent: NRLiveEvent, fullWidth: Bool = false, hideFooter: Bool = false, navTitleHidden: Bool = false, forceAutoload: Bool = false) {

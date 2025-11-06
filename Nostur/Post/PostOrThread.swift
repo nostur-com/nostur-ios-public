@@ -15,16 +15,15 @@ struct PostOrThread: View { //, Equatable {
 //        lhs.nrPost.id == rhs.nrPost.id
 //    }
     
-    private let theme: Theme
+    @Environment(\.theme) private var theme
     private let nrPost: NRPost
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
     private var rootId: String? = nil
     @ObservedObject private  var settings: SettingsStore = .shared
     
-    init(nrPost: NRPost, rootId: String? = nil, theme: Theme = Themes.default.theme) {
+    init(nrPost: NRPost, rootId: String? = nil) {
         self.nrPost = nrPost
         self.postOrThreadAttributes = nrPost.postOrThreadAttributes
-        self.theme = theme
         self.rootId = rootId
     }
     

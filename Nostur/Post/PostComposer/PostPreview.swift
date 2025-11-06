@@ -50,9 +50,7 @@ struct PostPreview: View {
         ScrollView {
             AnyStatus()
             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
-                .transformEnvironment(\.nxEnv) { nxEnv in
-                    nxEnv.nxViewingContext = [.preview, .postDetail]
-                }
+                .environment(\.nxViewingContext, [.preview, .postDetail])
                 .padding(10)
                 .disabled(true)
                 .onReceive(receiveNotification(.iMetaInfoForUrl)) { notification in

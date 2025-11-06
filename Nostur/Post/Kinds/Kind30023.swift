@@ -10,7 +10,7 @@ import MarkdownUI
 import NostrEssentials
 
 struct Kind30023: View {
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme: Theme
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
@@ -62,7 +62,7 @@ struct Kind30023: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     @ViewBuilder
@@ -94,7 +94,7 @@ struct Kind30023: View {
                     }
                     
                     HStack {
-                        ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                        ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
                                 navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                             }
@@ -312,9 +312,9 @@ struct Kind30023: View {
                 ViewThatFits(in: .horizontal) {
                     HStack {
                         Spacer()
-                        ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                        ZappablePFP(pubkey: nrPost.pubkey, contact: nrContact, size: 25.0, zapEtag: nrPost.id, forceFlat: nxViewingContext.contains(.screenshot))
                             .onTapGesture {
-                                guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                guard !nxViewingContext.contains(.preview) else { return }
                                 navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                             }
 
@@ -324,7 +324,7 @@ struct Kind30023: View {
                             .lineLimit(1)
                             .layoutPriority(2)
                             .onTapGesture {
-                                guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                guard !nxViewingContext.contains(.preview) else { return }
                                 navigateTo(nrContact, context: containerID)
                             }
                         
@@ -346,7 +346,7 @@ struct Kind30023: View {
                     VStack {
                         HStack {
                             Spacer()
-                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                            PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
                             
                             Text(nrContact.anyName)
                                 .foregroundColor(.primary)
@@ -354,7 +354,7 @@ struct Kind30023: View {
                                 .lineLimit(1)
                                 .layoutPriority(2)
                                 .onTapGesture {
-                                    guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                    guard !nxViewingContext.contains(.preview) else { return }
                                     navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                                 }
                                 .onAppear {
@@ -393,14 +393,14 @@ struct Kind30023: View {
                 VStack {
                     HStack {
                         Spacer()
-                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxEnv.nxViewingContext.contains(.screenshot))
+                        PFP(pubkey: nrPost.pubkey, nrContact: nrPost.contact, size: 25, forceFlat: nxViewingContext.contains(.screenshot))
                         Text(nrContact.anyName)
                             .foregroundColor(.primary)
                             .fontWeight(.bold)
                             .lineLimit(1)
                             .layoutPriority(2)
                             .onTapGesture {
-                                guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+                                guard !nxViewingContext.contains(.preview) else { return }
                                 navigateToContact(pubkey: nrContact.pubkey, nrContact: nrContact, context: containerID)
                             }
                         
@@ -433,7 +433,7 @@ struct Kind30023: View {
 //            .padding(20)
         .contentShape(Rectangle())
         .onTapGesture {
-            guard !nxEnv.nxViewingContext.contains(.preview) else { return }
+            guard !nxViewingContext.contains(.preview) else { return }
             navigateTo(nrPost, context: containerID)
         }
     }

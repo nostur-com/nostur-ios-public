@@ -136,22 +136,6 @@ extension EnvironmentValues {
     }
 }
 
-struct NXEnvironmentEnvironmentKey: EnvironmentKey {
-    static let defaultValue: NXEnvironment = NXEnvironment()
-}
-
-extension EnvironmentValues {
-    var nxEnv: NXEnvironment {
-        get { self[NXEnvironmentEnvironmentKey.self] }
-        set { self[NXEnvironmentEnvironmentKey.self] = newValue }
-    }
-}
-
-class NXEnvironment {
-    var containerID: String = "Default"
-    var nxViewingContext: Set<NXViewingContextOptions> = []
-    var theme: Theme = Themes.default.theme
-}
 
 struct NetworkMonitorEnvironmentKey: EnvironmentKey {
     static let defaultValue: NetworkMonitor = .shared

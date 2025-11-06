@@ -27,10 +27,10 @@ struct NRContentTextRenderer: View, Equatable {
     public var accentColor: Color? = nil
     public var onTap: (() -> Void)? = nil
     
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     
     var body: some View {
-        NRContentTextRendererInner(nxEnv: nxEnv, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
+        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
     }
 }
 
@@ -45,7 +45,7 @@ struct NRContentTextRendererInner: View {
     private let primaryColor: Color
     private let accentColor: Color
     private let onTap: (() -> Void)?
-    private let nxEnv: NXEnvironment
+    private let nxViewingContext: Set<NXViewingContextOptions>
     
     @State private var text: NSAttributedString?
     @State private var nxText: AttributedString?
@@ -55,7 +55,7 @@ struct NRContentTextRendererInner: View {
     @State private var reparsedOutput: NSAttributedString? = nil
     @State private var reparsedNxOutput: AttributedString? = nil
     
-    init(nxEnv: NXEnvironment, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
+    init(nxViewingContext: Set<NXViewingContextOptions>, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
         self.attributedStringWithPs = attributedStringWithPs
         _showMore = showMore
         self.availableWidth = availableWidth
@@ -63,12 +63,12 @@ struct NRContentTextRendererInner: View {
         self.primaryColor = primaryColor ?? Themes.default.theme.primary
         self.accentColor = accentColor ?? Themes.default.theme.accent
         self.onTap = onTap
-        self.nxEnv = nxEnv
+        self.nxViewingContext = nxViewingContext
         
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)
         
-        if nxEnv.nxViewingContext.isDisjoint(with: SELECTABLE_TEXT_CONTEXTS), let nxOutput = attributedStringWithPs.nxOutput { // Not selectable, but faster
+        if nxViewingContext.isDisjoint(with: SELECTABLE_TEXT_CONTEXTS), let nxOutput = attributedStringWithPs.nxOutput { // Not selectable, but faster
             _nxText = State(wrappedValue: nxOutput)
 //            _nxText = State(wrappedValue: nxOutput.prefix(NRTEXT_LIMIT)) // TODO: Reminder: also add back below reparsedNxOutput
             _shouldShowMoreButton = State(wrappedValue: false && !showMore.wrappedValue)
@@ -152,12 +152,12 @@ struct NRContentTextRendererInner: View {
                 }
         }
         else if let text {
-            if nxEnv.nxViewingContext.contains(.preview) {
+            if nxViewingContext.contains(.preview) {
                 NRTextDynamic(text, fontColor: primaryColor, accentColor: accentColor)
                     .fixedSize(horizontal: false, vertical: true) // <-- Needed or text gets truncated in VStack
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            else if nxEnv.nxViewingContext.contains(.screenshot) {
+            else if nxViewingContext.contains(.screenshot) {
                 let aString = AttributedString(text)
                 Text(aString)
                     .foregroundColor(primaryColor)

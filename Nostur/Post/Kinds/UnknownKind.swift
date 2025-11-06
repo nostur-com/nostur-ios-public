@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct UnknownKind: View {
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
@@ -52,7 +52,7 @@ struct UnknownKind: View {
     }
     
     private var shouldAutoload: Bool {
-        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxEnv.nxViewingContext.contains(.screenshot))
+        return !nrPost.isNSFW && (forceAutoload || SettingsStore.shouldAutodownload(nrPost) || nxViewingContext.contains(.screenshot))
     }
     
     @StateObject private var model = UnknownKindModel()

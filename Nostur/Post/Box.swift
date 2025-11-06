@@ -11,7 +11,8 @@ import SwiftUI
 
 struct Box<Content: View>: View {
     @Environment(\.theme) private var theme
-    @Environment(\.nxEnv) private var nxEnv
+    @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.containerID) private var containerID
 
     private let content: Content
     private let kind: Int64
@@ -62,18 +63,18 @@ struct Box<Content: View>: View {
     }
 
     private func navigate() {
-        guard navMode != .noNavigation && !nxEnv.nxViewingContext.contains(.preview), let nrPost else { return }
+        guard navMode != .noNavigation && !nxViewingContext.contains(.preview), let nrPost else { return }
 
         if nrPost.isRepost {
             if let quote = nrPost.firstQuote {
-                navigateTo(quote, context: nxEnv.containerID)
+                navigateTo(quote, context: containerID)
             } else if let id = nrPost.firstQuoteId {
-                navigateTo(NotePath(id: id), context: nxEnv.containerID)
+                navigateTo(NotePath(id: id), context: containerID)
             }
         } else if let liveEvent = nrPost.nrLiveEvent {
-            navigateTo(liveEvent, context: nxEnv.containerID)
+            navigateTo(liveEvent, context: containerID)
         } else {
-            navigateTo(nrPost, context: nxEnv.containerID)
+            navigateTo(nrPost, context: containerID)
         }
     }
 }
