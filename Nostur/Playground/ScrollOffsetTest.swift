@@ -18,21 +18,21 @@ struct ScrollOffsetTest: View {
 //                .frame(height: 32) <-- This won't work because then we need to add +32 in NXListRow .preference(key: ListRowTopOffsetKey.self ..
             List {
                 ForEach(0...70, id: \.self) { i in
-                    NXListRow {
-                        Text("Hello, World!")
-                            .padding(10)
-                            .padding(.top, 40)
-                            .background(Color.random)
-                            .padding(10)
-                            .background(Color.random)
-                            .id(i)
-                        
-                    } onAppearOnce: {
-                        print("onAppearOnce: \(String(describing: i))")
-                        return true
-                    }
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
+//                    NXListRow {
+//                        Text("Hello, World!")
+//                            .padding(10)
+//                            .padding(.top, 40)
+//                            .background(Color.random)
+//                            .padding(10)
+//                            .background(Color.random)
+//                            .id(i)
+//                        
+//                    } onAppearOnce: {
+//                        print("onAppearOnce: \(String(describing: i))")
+//                        return true
+//                    }
+//                    .listRowInsets(EdgeInsets())
+//                    .listRowSeparator(.hidden)
                 }
             }
             .scrollOffsetID("Foo")

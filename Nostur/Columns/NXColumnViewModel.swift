@@ -18,9 +18,44 @@ class NXColumnViewModel: ObservableObject {
     public var id: String? { config?.id }
     public var config: NXColumnConfig?
     
+    public var collectionView: UICollectionView?
+    public var collectionPrefetcher: NXPostsFeedPrefetcher?
+    
+    public var tableView: UITableView?
+    public var tablePrefetcher: NXPostsFeedTablePrefetcher?
+    
     public let vmInner = NXColumnViewModelInner()
     
     private var didLoadFirstLocalState = false
+    
+    @MainActor
+    func handleAppearOnce(nrPost: NRPost) -> Bool {
+        // Don't run if onPostAppearOnce is happening because of scrollToIndex (hidden scroll to keep scroll position)
+        // Only run if it is actual user based scroll
+        guard !vmInner.isPerformingScroll else { return false }
+    #if DEBUG
+        L.og.debug("☘️☘️ \(self.config?.name ?? "?") NXPostsFeed.onPostAppearOnce() -> updateIsAtTop() BEFORE: \(self.vmInner.isAtTop) -[LOG]-")
+    #endif
+        
+        // Batch async operations to avoid blocking the main thread
+        Task.detached(priority: .userInitiated) {
+            await self.prefetch(nrPost)
+            await self.saveLocalFeedState()
+        }
+        
+        vmInner.updateIsAtTopSubject.send()
+     
+        loadMoreIfNeeded(vm: self)
+        
+        
+        // Optimize ID collection operations
+        performIDCollectionUpdates(for: nrPost, vm: self)
+        
+        // Optimize unread marking operations
+        performUnreadMarkingUpdates(for: nrPost, vm: self)
+        
+        return true
+    }
     
     @MainActor
     private func didFinish() {

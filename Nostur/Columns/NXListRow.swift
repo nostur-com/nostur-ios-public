@@ -12,42 +12,40 @@ import SwiftUI
 // Needs .withContainerTopOffsetEnvironmentKey() on a container view, only works when container is maximally at the top of screen
 // if other views need to be above this view, they need to be in the top safeArea (toolbar etc) or offset calculation will be broken
 struct NXListRow<Content: View>: View {
-    @Environment(\.containerTopOffset) var topOffset
-    private let content: Content
-    @State private var onAppearOnce: (() -> Bool)?
+    let nrPost: NRPost
+    let vm: NXColumnViewModel
+    let containerTopOffset: CGFloat
     
-    init(@ViewBuilder _ content: () -> Content, onAppearOnce: (() -> Bool)? = nil) {
-        self.content = content()
-        _onAppearOnce = State(wrappedValue: onAppearOnce)
-    }
+    @ViewBuilder var content: Content
+    @State private var didAppearOnce = false
     
     var body: some View {
-        self.content
+        content
             .modifier { // From iOS 16+ onGeometryChange should be more performant than the old GeometryReader method
                 if #available(iOS 16.0, *) {
                     $0.onGeometryChange(for: Bool.self) { proxy in
-                        guard onAppearOnce != nil else { return false }
+                        guard !didAppearOnce else { return false }
                         let frame = proxy.frame(in: .global)
-                        return (frame.minY - topOffset) > -25
+                        return (frame.minY - containerTopOffset) > -25
                         
                     } action: { isVisible in
-                        guard onAppearOnce != nil && isVisible else { return }
-                        if onAppearOnce?() ?? false { // Set to nil ONLY if it actually ran (based on return value) (true means it ran)
-                            onAppearOnce = nil
+                        guard !didAppearOnce && isVisible else { return }
+                        if vm.handleAppearOnce(nrPost: nrPost) {
+                            didAppearOnce = true
                         }
                     }
                 }
                 else {
                     $0.overlay { // Old GeometryReader method
-                        if onAppearOnce != nil {
+                        if !didAppearOnce {
                             GeometryReader { proxy in
                                 Color.clear
-                                    .preference(key: ListRowTopOffsetKey.self, value: proxy.frame(in: .global).minY - topOffset)
+                                    .preference(key: ListRowTopOffsetKey.self, value: proxy.frame(in: .global).minY - containerTopOffset)
                             }
                             .onPreferenceChange(ListRowTopOffsetKey.self) { offset in
                                 if offset >= -25 {
-                                    if onAppearOnce?() ?? false { // Set to nil ONLY if it actually ran (based on return value) (true means it ran)
-                                        onAppearOnce = nil
+                                    if vm.handleAppearOnce(nrPost: nrPost) {
+                                        didAppearOnce = true
                                     }
                                 }
                             }
