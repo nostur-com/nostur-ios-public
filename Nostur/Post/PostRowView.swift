@@ -9,7 +9,6 @@ import SwiftUI
 
 // Todo, when all works, rename to PostRowView
 struct PostRowDeletable: View {
-    @Environment(\.theme) private var theme
     private let nrPost: NRPost // Need for .deletedById
     @ObservedObject private var postRowDeletableAttributes: PostRowDeletableAttributes
     private var hideFooter = true // For rendering in NewReply
@@ -20,8 +19,9 @@ struct PostRowDeletable: View {
     private var isDetail: Bool = false
     private var isEmbedded: Bool = false
     private var ignoreBlock: Bool = false // Force show, when we open profile of blocked account
+    private var theme: Theme
     
-    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, ignoreBlock: Bool = false) {
+    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, ignoreBlock: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.hideFooter = hideFooter
@@ -32,6 +32,7 @@ struct PostRowDeletable: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.ignoreBlock = ignoreBlock
+        self.theme = theme
     }
     
     var body: some View {

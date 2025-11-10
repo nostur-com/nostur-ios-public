@@ -9,7 +9,6 @@ import SwiftUI
 import NavigationBackport
 
 struct PossibleImposterLabelView: View {
-    @Environment(\.theme) private var theme
     @ObservedObject public var nrContact: NRContact
     
     var body: some View {
@@ -38,8 +37,6 @@ struct PossibleImposterLabelView: View {
 }
 
 struct PossibleImposterLabelView2: View {
-    @Environment(\.theme) private var theme
-
     @ObservedObject private var nrContact: NRContact
 
     init(pubkey: String) {

@@ -13,6 +13,7 @@ import Combine
 // Renders embeds (VIEWS), not links (in TEXT)
 struct DMContentRenderer: View { // VIEW things
     @Environment(\.theme) private var theme
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.openURL) private var openURL
     private let pubkey: String // author of balloon (message)
     private let availableWidth: CGFloat
@@ -85,7 +86,7 @@ struct DMContentRenderer: View { // VIEW things
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                     
                 case .text(let attributedStringWithPs): // For text notes
-                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: dmAvailableWidth, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? theme.primary : theme.accent)
+                    NRContentTextRenderer(attributedStringWithPs: attributedStringWithPs, showMore: .constant(true), availableWidth: dmAvailableWidth, isDetail: true, primaryColor: isSentByCurrentUser ? .white : theme.primary, accentColor: isSentByCurrentUser ? theme.primary : theme.accent, theme: theme, nxViewingContext: nxViewingContext)
                         .equatable()
                         .environment(\.availableWidth, dmAvailableWidth)
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts

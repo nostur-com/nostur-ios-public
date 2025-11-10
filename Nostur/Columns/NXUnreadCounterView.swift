@@ -152,21 +152,21 @@ struct NXUnreadCounterView15: View {
             ScrollView {
                 VStack(spacing: 0) {
                     Box {
-                        PostRowDeletable(nrPost: testNRPost())
+                        PostRowDeletable(nrPost: testNRPost(), theme: Themes.default.theme)
                     }
                     Box {
-                        PostRowDeletable(nrPost: testNRPost())
+                        PostRowDeletable(nrPost: testNRPost(), theme: Themes.default.theme)
                     }
                     Box {
-                        PostRowDeletable(nrPost: testNRPost())
+                        PostRowDeletable(nrPost: testNRPost(), theme: Themes.default.theme)
                     }
                     Box {
-                        PostRowDeletable(nrPost: testNRPost())
+                        PostRowDeletable(nrPost: testNRPost(), theme: Themes.default.theme)
                     }
                     Color.clear
                         .frame(height: 500)
                     Box {
-                        PostRowDeletable(nrPost: testNRPost())
+                        PostRowDeletable(nrPost: testNRPost(), theme: Themes.default.theme)
                     }
                     Spacer()
                 }

@@ -46,7 +46,7 @@ struct ArticlesFeed: View {
                     LazyVStack(spacing: GUTTER) {
                         ForEach(vm.articles) { post in
                             Box(nrPost: post) {
-                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                PostRowDeletable(nrPost: post, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                             }
                             .id(post.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
 //                            .transaction { t in

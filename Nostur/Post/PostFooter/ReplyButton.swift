@@ -8,19 +8,20 @@
 import SwiftUI
 
 struct ReplyButton: View {
-    @Environment(\.theme) private var theme
     private let nrPost: NRPost
     @ObservedObject private var footerAttributes: FooterAttributes
     private var isDetail: Bool
     private var isFirst :Bool
     private var isLast: Bool
+    private var theme: Theme
     
-    init(nrPost: NRPost, isDetail: Bool = false, isFirst: Bool = false, isLast: Bool = false) {
+    init(nrPost: NRPost, isDetail: Bool = false, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.isDetail = isDetail
         self.footerAttributes = nrPost.footerAttributes
         self.isFirst = isFirst
         self.isLast = isLast
+        self.theme = theme
     }
     
     var body: some View {

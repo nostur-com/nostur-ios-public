@@ -30,7 +30,7 @@ struct OtherKnownKinds: View {
                 Text("Nostr event")
                     .font(.caption)
                 Spacer()
-                PostMenuButton(nrPost: nrPost)
+                PostMenuButton(nrPost: nrPost, theme: theme)
             }
             Text(fallbackDescription(for: nrPost))
                 .fontWeightBold()
@@ -69,7 +69,7 @@ struct OtherKnownKinds: View {
             }
             
             if (!hideFooter && settings.rowFooterEnabled) {
-                CustomizableFooterFragmentView(nrPost: nrPost)
+                CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                     .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                     .drawingGroup(opaque: true)
             }
@@ -135,21 +135,21 @@ func fallbackDescription(for nrPost: NRPost) -> String {
             // Embedded zap req
             if let embeddedZapreq = PreviewFetcher.fetchNRPost("7b438527390a2dd5c5490dc2535047977e50810b3506aa924563d85d427e8c40") {
                 Box {
-                    PostRowDeletable(nrPost: embeddedZapreq)
+                    PostRowDeletable(nrPost: embeddedZapreq, theme: Themes.default.theme)
                 }
             }
             
             // Just the zap req
             if let zapreq = PreviewFetcher.fetchNRPost("9aaced67e48d08b9f5d10a4547dcb38303cd5cf36df29bb90b7f3c278e044ee6") {
                 Box {
-                    PostRowDeletable(nrPost: zapreq)
+                    PostRowDeletable(nrPost: zapreq, theme: Themes.default.theme)
                 }
             }
             
             // Row
             if let unknownKind = PreviewFetcher.fetchNRPost("04b6343a794bffdd74025748441afc0871d88e60fdab3dcefcbf6f94443750be") {
                 Box {
-                    PostRowDeletable(nrPost: unknownKind)
+                    PostRowDeletable(nrPost: unknownKind, theme: Themes.default.theme)
                 }
             }
         }

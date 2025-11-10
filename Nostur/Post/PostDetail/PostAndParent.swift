@@ -92,7 +92,7 @@ struct PostAndParent: View {
             // MARK: A POST 
             VStack(alignment: .leading, spacing: 0) {
                 if nxViewingContext.contains(.postParent) {
-                    PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: connect)
+                    PostRowDeletable(nrPost: nrPost, hideFooter: true, connect: connect, theme: theme)
                         .environment(\.nxViewingContext, [.selectableText, .postParent, .detailPane])
                         .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
                         .background(
@@ -104,7 +104,7 @@ struct PostAndParent: View {
                         )
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.replyTo == nil, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: theme)
                         .environment(\.nxViewingContext, [.selectableText, .postDetail, .detailPane])
 //                        .id(nrPost.id)
                         .padding(.top, 10) // So the focused post is not glued to top after scroll, so you can still see .replyTo connecting line

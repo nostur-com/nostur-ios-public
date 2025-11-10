@@ -31,21 +31,21 @@ struct PostTest_Previews: PreviewProvider {
         }) {
             PreviewFeed {
                 if let post = PreviewFetcher.fetchNRPost("0e090529d5fa674eeb07a3a17a012349ee6c1db56fa172fd3dc0f704f46a8e3e") {
-                    PostOrThread(nrPost: post)
+                    PostOrThread(nrPost: post, theme: Themes.default.theme)
                 }
                 
                 if let event = PreviewFetcher.fetchEvent("84bfeabb613520f9d2951c8d137c603dc91acaec0c7124e49093d361a5fc3061") {
-                    PostOrThread(nrPost: NRPost(event: Self.loadParents(event), withReplyTo: true, withParents: true))
+                    PostOrThread(nrPost: NRPost(event: Self.loadParents(event), withReplyTo: true, withParents: true), theme: Themes.default.theme)
                 }
 //                if let post = PreviewFetcher.fetchNRPost("dcfbf61fb232e0e916fc28945a588febcdba4f523ce42959f7f2177364d91b37") {
-//                    PostOrThread(nrPost: post)
+//                    PostOrThread(nrPost: post, theme: Themes.default.theme)
 //                }
                 if let post = PreviewFetcher.fetchNRPost("03d933fd31532369184eb307780de3a4b74eefd708a4225f13e0c897fcbd859f") {
-                    PostOrThread(nrPost: post)
+                    PostOrThread(nrPost: post, theme: Themes.default.theme)
                 }
 //
                 if let post = PreviewFetcher.fetchNRPost("60cae008116dccccdf970e36a8e7e789c2fc10e950cae9eefe1069235bc34faf") {
-                    PostOrThread(nrPost: post)
+                    PostOrThread(nrPost: post, theme: Themes.default.theme)
                 }
             }
         }

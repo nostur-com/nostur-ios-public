@@ -92,7 +92,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                     HStack(alignment: .top) { // name + reply + context menu
                         NRPostHeaderContainer(nrPost: nrPost)
                         Spacer()
-                        PostMenuButton(nrPost: nrPost)
+                        PostMenuButton(nrPost: nrPost, theme: theme)
                     }
                 }
                 
@@ -104,7 +104,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 // No need for DetailFooterFragment here because .isDetail will always be in .fullWidthLayout
                 
                 if (!hideFooter && settings.rowFooterEnabled) && !isItem { // also no footer for items (only in Detail)
-                    CustomizableFooterFragmentView(nrPost: nrPost, isItem: isItem)
+                    CustomizableFooterFragmentView(nrPost: nrPost, isItem: isItem, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }
@@ -134,7 +134,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 
                 if !isItem || isDetail {
                     Spacer()
-                    PostMenuButton(nrPost: nrPost)
+                    PostMenuButton(nrPost: nrPost, theme: theme)
                 }
             }
             
@@ -152,7 +152,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 
                 if isDetail || ((!hideFooter && settings.rowFooterEnabled) && !isItem) {
-                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, isItem: isItem)
+                    CustomizableFooterFragmentView(nrPost: nrPost, isDetail: true, isItem: isItem, theme: theme)
                         .background(nrPost.kind == 30023 ? theme.secondaryBackground : theme.listBackground)
                         .drawingGroup(opaque: true)
                 }

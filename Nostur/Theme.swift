@@ -230,13 +230,13 @@ import NavigationBackport
                     Themes.default.loadBlue()
                 }
                 if let p = PreviewFetcher.fetchNRPost() {
-                    PostOrThread(nrPost: p)
+                    PostOrThread(nrPost: p, theme: Themes.default.theme)
                         .onAppear {
                             p.loadParents()
                         }
                 }
                 if let p = PreviewFetcher.fetchNRPost() {
-                    PostOrThread(nrPost: p)
+                    PostOrThread(nrPost: p, theme: Themes.default.theme)
                         .onAppear {
                             p.loadParents()
                         }

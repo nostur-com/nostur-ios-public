@@ -10,6 +10,7 @@ import CoreData
 import NavigationBackport
 
 struct ProfileReactionsView: View {
+    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var vm: ProfileReactionsViewModel
     
@@ -39,7 +40,7 @@ struct ProfileReactionsView: View {
             ForEach(vm.posts) { nrPost in
                 ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                     Box(nrPost: nrPost) {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                     }
                     .overlay(alignment: .topLeading) {
                         if let reaction = vm.reactionsMap[nrPost.id] {

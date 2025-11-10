@@ -224,17 +224,17 @@ struct KindResolver_Previews: PreviewProvider {
             PreviewFeed {
                 if let article = PreviewFetcher.fetchNRPost("21b3bd3c5eec98bba15aa0fd32f24f18a0540e70c18ed1ac4f156d41ffc17ce6") {
                     Box {
-                        PostRowDeletable(nrPost: article)
+                        PostRowDeletable(nrPost: article, theme: Themes.default.theme)
                     }
                 }
                 if let nrPost = PreviewFetcher.fetchNRPost() {
                     Box {
-                        PostRowDeletable(nrPost: nrPost)
+                        PostRowDeletable(nrPost: nrPost, theme: Themes.default.theme)
                     }
                 }
                 if let article = PreviewFetcher.fetchNRPost("d3f509e5eb6dd06f96d4797969408f5f9c90e9237f012f83130b1fa592b26433") {
                     Box {
-                        PostRowDeletable(nrPost: article)
+                        PostRowDeletable(nrPost: article, theme: Themes.default.theme)
                     }
                 }
                 Spacer()

@@ -199,7 +199,7 @@ struct LazyBookmark: View {
             if let nrPost = nrLazyBookmark.nrPost {
                 if nrPost.kind == 443 {
                     VStack {
-                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth)
+                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth, theme: theme)
                         HStack(spacing: 0) {
                             self.replyButton
                                 .foregroundColor(theme.footerButtons)
@@ -214,7 +214,7 @@ struct LazyBookmark: View {
                     }
                 }
                 else {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: fullWidth, theme: theme)
                 }
             }
             else {

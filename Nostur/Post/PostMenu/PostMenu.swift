@@ -312,8 +312,8 @@ let NEXT_SHEET_DELAY = 0.05
 
 struct PostMenuButton: View {
     @Environment(\.pinnedPostId) var pinnedPostId
-    @Environment(\.theme) private var theme
     public let nrPost: NRPost
+    public let theme: Theme
     
     var body: some View {
         Image(systemName: "ellipsis")

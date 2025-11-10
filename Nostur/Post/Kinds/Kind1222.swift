@@ -159,17 +159,17 @@ struct Kind1222: View {
             // 16ac8c7c0e36b7356e45fd94e1c98d91ddf00a46daf2aeb4bcbec7e89685fcb4
             if let voiceMessage = PreviewFetcher.fetchNRPost("16ac8c7c0e36b7356e45fd94e1c98d91ddf00a46daf2aeb4bcbec7e89685fcb4") {
                 Box {
-                    PostRowDeletable(nrPost: voiceMessage)
+                    PostRowDeletable(nrPost: voiceMessage, theme: Themes.default.theme)
                 }
             }
 //            if let nrPost = PreviewFetcher.fetchNRPost() {
 //                Box {
-//                    PostRowDeletable(nrPost: nrPost)
+//                    PostRowDeletable(nrPost: nrPost, theme: Themes.default.theme)
 //                }
 //            }
 //            if let article = PreviewFetcher.fetchNRPost("d3f509e5eb6dd06f96d4797969408f5f9c90e9237f012f83130b1fa592b26433") {
 //                Box {
-//                    PostRowDeletable(nrPost: article)
+//                    PostRowDeletable(nrPost: article, theme: Themes.default.theme)
 //                }
 //            }
             Spacer()

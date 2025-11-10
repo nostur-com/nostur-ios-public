@@ -103,10 +103,10 @@ struct CashuTokenView: View {
     }) {
         VStack {
             if let post = PreviewFetcher.fetchNRPost("23cfeb2e3b4df14d0af1f71311cbb750a2bc6febbc8b42e2fad3892344eef504") {
-                PostRowDeletable(nrPost: post)
+                PostRowDeletable(nrPost: post, theme: Themes.default.theme)
             }
             if let post = PreviewFetcher.fetchNRPost("815bc97d86bbaa5a5a152b6298dff1ec5c068d1235bfd5744dc51bc4927fe569") {
-                PostRowDeletable(nrPost: post)
+                PostRowDeletable(nrPost: post, theme: Themes.default.theme)
             }
         }
         .padding(10)

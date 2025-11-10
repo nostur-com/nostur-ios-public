@@ -11,27 +11,30 @@ import SwiftUI
 struct ZapButton: View, Equatable {
 
     static func == (lhs: ZapButton, rhs: ZapButton) -> Bool {
-        lhs.nrPost.id == rhs.nrPost.id
+        lhs.nrPost.id == rhs.nrPost.id &&
+        lhs.theme == rhs.theme
     }
     
     private let nrPost: NRPost
     private var isFirst: Bool
     private var isLast: Bool
+    private var theme: Theme
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.isFirst = isFirst
         self.isLast = isLast
+        self.theme = theme
     }
 
     var body: some View {
-        ZapButtonInner(nrPost: nrPost, isFirst: isFirst, isLast: isLast)
+        ZapButtonInner(nrPost: nrPost, isFirst: isFirst, isLast: isLast, theme: theme)
     }
 }
 
 struct ZapButtonInner: View {
-    @Environment(\.theme) private var theme
     private let nrPost: NRPost
+    private var theme: Theme
     @ObservedObject private var footerAttributes: FooterAttributes
     @ObservedObject private var ss: SettingsStore = .shared
     @State private var cancellationId: UUID? = nil
@@ -49,11 +52,12 @@ struct ZapButtonInner: View {
     private var isFirst: Bool
     private var isLast: Bool
     
-    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false) {
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.footerAttributes = nrPost.footerAttributes
         self.isFirst = isFirst
         self.isLast = isLast
+        self.theme = theme
     }
     
     private var icon: String {
@@ -278,7 +282,7 @@ struct ZapButton_Previews: PreviewProvider {
         }) {
             VStack {
                 if let nrPost = PreviewFetcher.fetchNRPost("49635b590782cb1ab1580bd7e9d85ba586e6e99e48664bacf65e71821ae79df1") {
-                    ZapButton(nrPost: nrPost)
+                    ZapButton(nrPost: nrPost, theme: Themes.default.theme)
                 }
                 
                 Image("BoltIconActive").foregroundColor(.yellow)

@@ -35,7 +35,7 @@ struct NXPostsFeed: View {
         GeometryReader { geo in
             List(posts) { nrPost in
                 NXListRow(nrPost: nrPost, vm: vm, containerTopOffset: geo.safeAreaInsets.top == 0 ? geo.frame(in: .global).minY : geo.safeAreaInsets.top) {
-                    PostOrThread(nrPost: nrPost)
+                    PostOrThread(nrPost: nrPost, theme: theme)
                 }
                 .onDisappear {
                     onPostDisappear(nrPost)

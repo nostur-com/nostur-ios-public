@@ -38,7 +38,7 @@ struct NotificationsMentions: View {
                 ForEach (model.mentions) { nrPost in
                     ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯
                         Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                         }
                     }
                     .id(nrPost.id) // <-- must use .id or can't .scrollTo

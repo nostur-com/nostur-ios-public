@@ -130,7 +130,7 @@ struct ContentRenderer: View { // VIEW things
                             guard !nxViewingContext.contains(.preview) else { return }
                             guard !isDetail else { return }
                             navigateTo(nrPost, context: containerID)
-                    })
+                    }, theme: theme, nxViewingContext: nxViewingContext)
                     .equatable()
                     
                 case .md(let markdownContentWithPs): // For long form articles

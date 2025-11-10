@@ -258,10 +258,10 @@ struct OverlayPlayer: View {
                                                     
                                                     if let nrPost = vm.nrPost {
                                                         HStack {
-                                                            EmojiButton(nrPost: nrPost, isFirst: true, isLast: false)
+                                                            EmojiButton(nrPost: nrPost, isFirst: true, isLast: false, theme: theme)
                                                                 .foregroundColor(theme.footerButtons)
                                                             if IS_NOT_APPSTORE { // Only available in non app store version
-                                                                ZapButton(nrPost: nrPost, isFirst: false, isLast: false)
+                                                                ZapButton(nrPost: nrPost, isFirst: false, isLast: false, theme: theme)
                                                                     .opacity(nrPost.contact.anyLud ? 1 : 0.3)
                                                                     .disabled(!nrPost.contact.anyLud)
                                                             }

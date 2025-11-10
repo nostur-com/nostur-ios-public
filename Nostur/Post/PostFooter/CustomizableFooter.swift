@@ -10,18 +10,19 @@ import SwiftUI
 import Algorithms
 
 struct CustomizableFooterFragmentView: View {
-    @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var vmc: ViewModelCache = .shared
+    private var theme: Theme
 
     private let nrPost: NRPost
     private var isDetail = false
     private let isItem: Bool
     
-    init(nrPost: NRPost, isDetail: Bool = false, isItem: Bool = false) {
+    init(nrPost: NRPost, isDetail: Bool = false, isItem: Bool = false, theme: Theme) {
         self.nrPost = nrPost
         self.isDetail = isDetail
         self.isItem = isItem
+        self.theme = theme
     }
     
     var body: some View {
@@ -52,12 +53,12 @@ struct CustomizableFooterFragmentView: View {
             ForEach(vmc.buttonRow) { button in
                 switch button.id {
                 case "🔄":
-                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, isItem: true)
+                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, isItem: true, theme: theme)
                 case "+":
-                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
-                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                             .opacity(nrPost.contact.anyLud ? 1 : 0.3)
                             .disabled(!(nrPost.contact.anyLud))
                     }
@@ -65,7 +66,7 @@ struct CustomizableFooterFragmentView: View {
                         EmptyView()
                     }
                 case "🔖":
-                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 default:
                     EmptyView()
                 }
@@ -93,14 +94,14 @@ struct CustomizableFooterFragmentView: View {
             ForEach(vmc.buttonRow) { button in
                 switch button.id {
                 case "💬":
-                    ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast)
+                    ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "🔄":
-                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                    RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "+":
-                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                    EmojiButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
                     if IS_NOT_APPSTORE { // Only available in non app store version
-                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                        ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                             .opacity(nrPost.contact.anyLud ? 1 : 0.3)
                             .disabled(!(nrPost.contact.anyLud))
                     }
@@ -108,7 +109,7 @@ struct CustomizableFooterFragmentView: View {
                         EmptyView()
                     }
                 case "🔖":
-                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast)
+                    BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 default:
                     ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
                         .equatable()
@@ -141,7 +142,7 @@ struct CustomizablePreviewFooterFragmentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             if let nrPost {
-                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false)
+                CustomizableFooterFragmentView(nrPost: nrPost, isDetail: false, theme: theme)
             }
         }
         .foregroundColor(theme.footerButtons)
@@ -188,7 +189,7 @@ struct CustomizablePreviewFooterFragmentView: View {
                 
                 if let p = PreviewFetcher.fetchNRPost("6f74b952991bb12b61de7c5891706711e51c9e34e9f120498d32226f3c1f4c81", withReplies: true) {
                     
-                    CustomizableFooterFragmentView(nrPost: p)
+                    CustomizableFooterFragmentView(nrPost: p, theme: Themes.default.theme)
                         .drawingGroup(opaque: true)
                     
                     ForEach(p.replies) {

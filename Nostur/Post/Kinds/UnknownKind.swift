@@ -147,7 +147,7 @@ struct UnknownKind: View {
         PreviewFeed {
             if let unknownKind = PreviewFetcher.fetchNRPost("04b6343a794bffdd74025748441afc0871d88e60fdab3dcefcbf6f94443750be") {
                 Box {
-                    PostRowDeletable(nrPost: unknownKind)
+                    PostRowDeletable(nrPost: unknownKind, theme: Themes.default.theme)
                 }
             }
         }

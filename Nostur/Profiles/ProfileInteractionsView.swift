@@ -53,7 +53,7 @@ struct ProfileInteractionsView: View {
                     ForEach(conversationsVM.posts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                             Box(nrPost: nrPost) {
-                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                             }
                         }
                         //                    .id(nrPost.id)
@@ -96,7 +96,7 @@ struct ProfileInteractionsView: View {
                     ForEach(reactionsVM.posts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                             Box(nrPost: nrPost) {
-                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                             }
                         }
                         //                    .id(nrPost.id)
@@ -146,7 +146,7 @@ struct ProfileInteractionsView: View {
                     ForEach(repostsVM.posts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                             Box(nrPost: nrPost) {
-                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                             }
                         }
                         //                    .id(nrPost.id)
@@ -189,7 +189,7 @@ struct ProfileInteractionsView: View {
                     ForEach(zapsVM.posts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                             Box(nrPost: nrPost) {
-                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                                     .padding(.top, 20) // bit more padding so we have some space to put zap
                             }
                         }

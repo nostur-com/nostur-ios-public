@@ -160,7 +160,7 @@ struct LightningInvoice_Previews: PreviewProvider {
                         }
                         return nil
                     }() {
-                        PostRowDeletable(nrPost: nrPost)
+                        PostRowDeletable(nrPost: nrPost, theme: Themes.default.theme)
                     }
                 }
                 .padding(10)

@@ -408,7 +408,7 @@ struct ProfileView: View {
                             }
                             .foregroundColor(.gray)
                             .padding(.leading, 36)
-                            PostRowDeletable(nrPost: pinnedPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true)
+                            PostRowDeletable(nrPost: pinnedPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: theme)
                                 .environment(\.pinnedPostId, pinnedPost.id)
                         }
                     }

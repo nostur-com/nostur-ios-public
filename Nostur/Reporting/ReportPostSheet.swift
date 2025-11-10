@@ -19,7 +19,7 @@ struct ReportPostSheet: View {
         VStack {
             ScrollView {
                 Box(nrPost: nrPost, navMode: .noNavigation) {
-                    PostRowDeletable(nrPost: nrPost, hideFooter: true, missingReplyTo: true)
+                    PostRowDeletable(nrPost: nrPost, hideFooter: true, missingReplyTo: true, theme: theme)
                 }
                 .disabled(true)
 //                .overlay(

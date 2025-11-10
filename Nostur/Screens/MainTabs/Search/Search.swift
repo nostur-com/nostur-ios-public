@@ -77,7 +77,7 @@ struct Search: View {
                                 Box(nrPost: nrPost) {
                                     if nrPost.kind == 443 {
                                         VStack {
-                                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                                             HStack(spacing: 0) {
                                                 self.replyButton
                                                     .foregroundColor(theme.footerButtons)
@@ -92,7 +92,7 @@ struct Search: View {
                                         }
                                     }
                                     else {
-                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages)
+                                        PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
                                     }
                                 }
                                 .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)

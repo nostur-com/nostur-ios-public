@@ -16,6 +16,7 @@ struct NRContentTextRenderer: View, Equatable {
         lhs.isDetail == rhs.isDetail &&
         lhs.primaryColor == rhs.primaryColor &&
         lhs.accentColor == rhs.accentColor &&
+        lhs.theme == rhs.theme &&
         lhs.availableWidth == rhs.availableWidth
     }
     
@@ -26,18 +27,20 @@ struct NRContentTextRenderer: View, Equatable {
     public var primaryColor: Color? = nil
     public var accentColor: Color? = nil
     public var onTap: (() -> Void)? = nil
+    public var theme: Theme
+    public var nxViewingContext: Set<NXViewingContextOptions>
     
-    @Environment(\.nxViewingContext) private var nxViewingContext
+    
     
     var body: some View {
-        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap)
+        NRContentTextRendererInner(nxViewingContext: nxViewingContext, showMore: $showMore, attributedStringWithPs: attributedStringWithPs, availableWidth: availableWidth, isDetail: isDetail, primaryColor: primaryColor, accentColor: accentColor, onTap: onTap, theme: theme)
     }
 }
 
 let SELECTABLE_TEXT_CONTEXTS: Set<NXViewingContextOptions> = Set([.detailPane, .selectableText, .preview])
 
 struct NRContentTextRendererInner: View {
-    @Environment(\.theme) private var theme
+    
     private let attributedStringWithPs: AttributedStringWithPs
     @Binding var showMore: Bool
     private let availableWidth: CGFloat
@@ -46,6 +49,7 @@ struct NRContentTextRendererInner: View {
     private let accentColor: Color
     private let onTap: (() -> Void)?
     private let nxViewingContext: Set<NXViewingContextOptions>
+    private var theme: Theme
     
     @State private var text: NSAttributedString?
     @State private var nxText: AttributedString?
@@ -55,7 +59,7 @@ struct NRContentTextRendererInner: View {
     @State private var reparsedOutput: NSAttributedString? = nil
     @State private var reparsedNxOutput: AttributedString? = nil
     
-    init(nxViewingContext: Set<NXViewingContextOptions>, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil) {
+    init(nxViewingContext: Set<NXViewingContextOptions>, showMore: Binding<Bool>, attributedStringWithPs: AttributedStringWithPs, availableWidth: CGFloat, isDetail: Bool = false, primaryColor: Color? = nil, accentColor: Color? = nil, onTap: (() -> Void)? = nil, theme: Theme) {
         self.attributedStringWithPs = attributedStringWithPs
         _showMore = showMore
         self.availableWidth = availableWidth
@@ -64,6 +68,7 @@ struct NRContentTextRendererInner: View {
         self.accentColor = accentColor ?? Themes.default.theme.accent
         self.onTap = onTap
         self.nxViewingContext = nxViewingContext
+        self.theme = theme
         
         _textWidth = State(wrappedValue: availableWidth)
         _textHeight = State(wrappedValue: 60)

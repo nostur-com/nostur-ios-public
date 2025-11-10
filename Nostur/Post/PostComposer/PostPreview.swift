@@ -49,7 +49,7 @@ struct PostPreview: View {
     var body: some View {
         ScrollView {
             AnyStatus()
-            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true)
+            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, isDetail: true, theme: theme)
                 .environment(\.nxViewingContext, [.preview, .postDetail])
                 .padding(10)
                 .disabled(true)

@@ -15,16 +15,17 @@ struct PostOrThread: View { //, Equatable {
 //        lhs.nrPost.id == rhs.nrPost.id
 //    }
     
-    @Environment(\.theme) private var theme
     private let nrPost: NRPost
+    private var theme: Theme
     @ObservedObject private var postOrThreadAttributes:  PostOrThreadAttributes
     private var rootId: String? = nil
     @ObservedObject private  var settings: SettingsStore = .shared
     
-    init(nrPost: NRPost, rootId: String? = nil) {
+    init(nrPost: NRPost, theme: Theme, rootId: String? = nil) {
         self.nrPost = nrPost
         self.postOrThreadAttributes = nrPost.postOrThreadAttributes
         self.rootId = rootId
+        self.theme = theme
     }
     
     var body: some View {
@@ -33,7 +34,7 @@ struct PostOrThread: View { //, Equatable {
 //        #endif
         if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
             Box(nrPost: nrPost) {
-                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false)
+                PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
             }
             .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
             .background {
@@ -49,7 +50,7 @@ struct PostOrThread: View { //, Equatable {
                         PostRowDeletable(nrPost: nrParent,
                                          hideFooter: true,
                                          missingReplyTo: nrParent.replyToId != rootId && nrParent.replyToId != nil && nrParent.id == postOrThreadAttributes.parentPosts.first?.id,
-                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false)
+                                         connect: nrParent.replyToId != nil || postOrThreadAttributes.parentPosts.first?.id != nrParent.id ? .both : .bottom, fullWidth: false, isDetail: false, theme: theme)
                     }
                     .id(nrParent.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                     //                .padding([.top, .horizontal], nrParent.kind == 30023 ? -20 : 10)
@@ -58,7 +59,7 @@ struct PostOrThread: View { //, Equatable {
                 }
 
                 Box(nrPost: nrPost) {
-                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false)
+                    PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)
                 }
                 .id(nrPost.id) // without .id the .ago on posts is wrong, not sure why. NRPost is Identifiable, Hashable, Equatable
                 .fixedSize(horizontal: false, vertical: true) // Needed or we get whitespace, equal height posts
@@ -106,13 +107,13 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
             NBNavigationStack {
                 PreviewFeed {
                     if let p = PreviewFetcher.fetchNRPost("0047225fd5ba958d71725d0744cd21b9b6ace949acab69f1fcbb8db2a7020bed") {
-                        PostOrThread(nrPost: p)
+                        PostOrThread(nrPost: p, theme: Themes.default.theme)
                             .onAppear {
                                 p.loadParents()
                             }
                     }
                     if let p = PreviewFetcher.fetchNRPost() {
-                        PostOrThread(nrPost: p)
+                        PostOrThread(nrPost: p, theme: Themes.default.theme)
                             .onAppear {
                                 p.loadParents()
                             }
@@ -153,18 +154,18 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
                     .debugDimensions("spacer", alignment: .center)
                 
                 if let fz = PreviewFetcher.fetchNRPost("43340b307c7b4cb76e29f3a8dd796279c5d27e1729d8ab3f68d961397d4c478a") {
-                    PostOrThread(nrPost: fz)
+                    PostOrThread(nrPost: fz, theme: Themes.default.theme)
                 }
                 
                 if let reply = PreviewFetcher.fetchEvent("148f326f04d10c1ef210d25a434ae8a4bc9e1087e9ddd87ad9323e1d21aa9751") {
                     let _ = reply.parentEvents = Event.getParentEvents(reply, fixRelations: true)
                     let nrReply = NRPost(event: reply, withReplyTo: true, withParents: true, withReplies: false, plainText: false)
                     
-                    PostOrThread(nrPost: nrReply)
+                    PostOrThread(nrPost: nrReply, theme: Themes.default.theme)
                 }
                 
                 if let p = PreviewFetcher.fetchNRPost() {
-                    PostOrThread(nrPost: p)
+                    PostOrThread(nrPost: p, theme: Themes.default.theme)
                 }
             }
         }
@@ -201,7 +202,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
                     .debugDimensions("spacer", alignment: .center)
                 
                 if let qq = PreviewFetcher.fetchNRPost("ff42811e971737587e4438356891b3f88cf8c06a609cec23a3bd6e3b3ac52616") {
-                    PostOrThread(nrPost: qq)
+                    PostOrThread(nrPost: qq, theme: Themes.default.theme)
                 }
             }
         }
@@ -229,7 +230,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
                 Text("出張の帰りに新幹線で報告書まとめたら後で楽だなあと思ってパソコン開いたけど気持ち悪くなってやめたことあるL cuttttttt tttof d d d d d d d d d a b c d")
                 
                 if let qq = PreviewFetcher.fetchNRPost("3dcaf40eaf8820d97d0fc5ae9a2eed02b356717c88c3ee6a46f1a7d18e5caf4f") {
-                    PostOrThread(nrPost: qq)
+                    PostOrThread(nrPost: qq, theme: Themes.default.theme)
                 }
             }
         }

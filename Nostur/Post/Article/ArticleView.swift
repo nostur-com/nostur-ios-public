@@ -55,7 +55,7 @@ struct ArticleView: View {
                         Text(article.eventTitle ?? "")
                             .font(.custom("Charter-Black", size: 28))
                         Spacer()
-                        PostMenuButton(nrPost: article)
+                        PostMenuButton(nrPost: article, theme: theme)
                     }
                     .padding(.vertical, 10)
                     
@@ -137,7 +137,7 @@ struct ArticleView: View {
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
-                        CustomizableFooterFragmentView(nrPost: article)
+                        CustomizableFooterFragmentView(nrPost: article, theme: theme)
                             .background(theme.secondaryBackground)
                             .drawingGroup(opaque: true)
                             .padding(.vertical, 10)
@@ -199,7 +199,7 @@ struct ArticleView: View {
                         .font(.custom("Charter-Black", size: 24))
                         .lineLimit(5)
                     Spacer()
-                    PostMenuButton(nrPost: article)
+                    PostMenuButton(nrPost: article, theme: theme)
                 }
                 .padding(.bottom, 10)
                 
@@ -385,7 +385,7 @@ struct ArticleView: View {
                 }
                 
                 if !hideFooter {
-                    CustomizableFooterFragmentView(nrPost: article)
+                    CustomizableFooterFragmentView(nrPost: article, theme: theme)
                         .background(theme.secondaryBackground)
                         .drawingGroup(opaque: true)
                 }
@@ -453,11 +453,11 @@ struct Articles_Previews: PreviewProvider {
             PreviewFeed {
                 if let p = PreviewFetcher.fetchNRPost("12c29454fc1f995eb6e08a97f91dff37f891d1de130fbb333b5976f2cca99395") {
                     Box(nrPost: p) {
-                        PostRowDeletable(nrPost: p, fullWidth: true)
+                        PostRowDeletable(nrPost: p, fullWidth: true, theme: Themes.default.theme)
                     }
                     
                     Box(nrPost: p) {
-                        PostRowDeletable(nrPost: p)
+                        PostRowDeletable(nrPost: p, theme: Themes.default.theme)
                     }
                         
                 }

@@ -163,7 +163,7 @@ struct LiveEventsBanner: View {
                     .frame(height: 60)
                 ForEach(0..<10) { _ in
                     Box {
-                        PostRowDeletable(nrPost: testNRPost())
+                        PostRowDeletable(nrPost: testNRPost(), theme: Themes.default.theme)
                     }
                 }
             }

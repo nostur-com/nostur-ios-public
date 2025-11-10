@@ -77,7 +77,7 @@ struct Kind30023: View {
                         Text(nrPost.eventTitle ?? "")
                             .font(.custom("Charter-Black", size: 28))
                         Spacer()
-                        PostMenuButton(nrPost: nrPost)
+                        PostMenuButton(nrPost: nrPost, theme: theme)
                     }
                     .padding(.vertical, 10)
                     
@@ -146,7 +146,7 @@ struct Kind30023: View {
                         .padding(.vertical, 10)
                     
                     if !hideFooter {
-                        CustomizableFooterFragmentView(nrPost: nrPost)
+                        CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                             .background(theme.secondaryBackground)
                             .drawingGroup(opaque: true)
                             .padding(.vertical, 10)
@@ -252,7 +252,7 @@ struct Kind30023: View {
                     .font(.custom("Charter-Black", size: 24))
                     .lineLimit(5)
                 Spacer()
-                PostMenuButton(nrPost: nrPost)
+                PostMenuButton(nrPost: nrPost, theme: theme)
             }
             .padding(.bottom, 10)
             
@@ -425,7 +425,7 @@ struct Kind30023: View {
             }
             
             if !hideFooter {
-                CustomizableFooterFragmentView(nrPost: nrPost)
+                CustomizableFooterFragmentView(nrPost: nrPost, theme: theme)
                     .background(theme.secondaryBackground)
                     .drawingGroup(opaque: true)
             }

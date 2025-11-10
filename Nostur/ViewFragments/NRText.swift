@@ -127,7 +127,7 @@ struct NRTextDynamic: View {
         ])
     }) {
         if let p = PreviewFetcher.fetchNRPost("a3d05222ad9459511b66814348eff9688f24edc06d1f86897636ae7c7bb2e031") {
-            PostOrThread(nrPost: p)
+            PostOrThread(nrPost: p, theme: Themes.default.theme)
         }
     }
 }
@@ -142,7 +142,7 @@ struct NRTextDynamic: View {
     }) {
         if let p = PreviewFetcher.fetchNRPost("ea4ea2b6ec2e2208aa2be575769114378c7d73b31a35abf345a8d6a60c949182", withReplyTo: true, withParents: true) {
             PreviewFeed {
-                PostOrThread(nrPost: p)
+                PostOrThread(nrPost: p, theme: Themes.default.theme)
             }
         }
     }

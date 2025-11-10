@@ -343,7 +343,7 @@ struct WithSheets: ViewModifier {
                     
                     let renderer = ImageRenderer(content:
                         VStack(spacing:0) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true)
+                            PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != nil && nrPost.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: true, isDetail: true, theme: theme)
 
                             Group {
                                 if SettingsStore.shared.includeSharedFrom {
