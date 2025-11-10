@@ -515,7 +515,7 @@ class NotificationsViewModel: ObservableObject {
         // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
         // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
         // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
-        let mentionsForNotification = unreadMentions
+        let mentionsForNotification = isMain ? [] : unreadMentions
             .filter { ($0.created_at > lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || accountData.followingPubkeys.contains($0.pubkey)) }
             .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
         
@@ -524,9 +524,9 @@ class NotificationsViewModel: ObservableObject {
             if unreadMentionsCount != self.unreadMentions_ {
                 if SettingsStore.shared.receiveLocalNotifications {
                     
-                    // Show notification on Mac: ALWAYS
+                    // Show notification on Mac: ALWAYS (but only for main account)
                     // On iOS: Only if app is in background
-                    if (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
+                    if isMain && (IS_CATALYST || AppState.shared.appIsInBackground) && !mentionsForNotification.isEmpty {
                         scheduleMentionNotification(mentionsForNotification)
                     }
                 }
