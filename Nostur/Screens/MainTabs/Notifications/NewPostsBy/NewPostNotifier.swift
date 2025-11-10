@@ -20,11 +20,6 @@ class NewPostNotifier: ObservableObject {
     
     static let shared = NewPostNotifier()
     
-    private var lastLocalNotificationAt: Int {
-        get { UserDefaults.standard.integer(forKey: "last_new_posts_local_notification_timestamp") }
-        set { UserDefaults.standard.setValue(newValue, forKey: "last_new_posts_local_notification_timestamp") }
-    }
-    
     @Published var enabledPubkeys: Set<String> = []
     
     // Needed as fallback if account() doesn't resolve yet
