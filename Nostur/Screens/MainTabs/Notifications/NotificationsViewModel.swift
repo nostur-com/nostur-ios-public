@@ -411,7 +411,9 @@ class NotificationsViewModel: ObservableObject {
         shouldBeBg()
         guard let accountData = self.accountData else { return }
         
-        OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
+        if self.id == NotificationsViewModel.shared.id {
+            OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
+        }
         
         guard needsUpdate else { return }
                 
