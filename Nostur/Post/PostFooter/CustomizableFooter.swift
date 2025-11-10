@@ -38,8 +38,10 @@ struct CustomizableFooterFragmentView: View {
             }
             
             // UNDO SEND AND SENT TO RELAYS
-            OwnPostFooter(nrPost: nrPost)
-                .offset(y: 14)
+            if nrPost.ownPostAttributes.isOwnPost {
+                OwnPostFooter(nrPost: nrPost)
+                    .offset(y: 14)
+            }
         }
         .padding(.top, 5)
         .padding(.bottom, 16)

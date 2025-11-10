@@ -10,7 +10,9 @@ import SwiftUI
 struct Kind1: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
-    @Environment(\.availableWidth) private var availableWidth // was dim (for dim.listWidth)
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
+    
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -42,7 +44,9 @@ struct Kind1: View {
     @State var showMiniProfile = false
     @State var clipBottomHeight: CGFloat = 900.0
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false, forceAutoload: Bool = false) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil,
+         isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, fullWidth: Bool, grouped: Bool = false,
+         forceAutoload: Bool = false) {
         self.nrPost = nrPost
         self.nrContact = nrPost.contact
         self.hideFooter = hideFooter
@@ -78,7 +82,8 @@ struct Kind1: View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply,
+                   isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) {
             if (isDetail) {
                 if missingReplyTo || nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost)

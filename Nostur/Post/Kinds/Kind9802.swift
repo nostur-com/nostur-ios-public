@@ -12,6 +12,7 @@ struct Kind9802: View {
     @Environment(\.theme) private var theme: Theme
     @Environment(\.availableWidth) private var availableWidth
     @Environment(\.containerID) private var containerID
+    
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -66,7 +67,7 @@ struct Kind9802: View {
     
     @ViewBuilder
     private var normalView: some View {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) {
             
             content
             

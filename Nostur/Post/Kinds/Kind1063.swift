@@ -10,7 +10,9 @@ import SwiftUI
 struct Kind1063: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
+    
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -82,7 +84,7 @@ struct Kind1063: View {
     
     @ViewBuilder
     private var normalView: some View {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: true, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) {
             
             content
             

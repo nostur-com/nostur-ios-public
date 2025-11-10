@@ -8,10 +8,7 @@
 import SwiftUI
 
 struct PostLayout<Content: View, TitleContent: View>: View {
-    @Environment(\.nxViewingContext) private var nxViewingContext
-    @Environment(\.containerID) private var containerID
-    @Environment(\.theme) private var theme
-    @Environment(\.availableWidth) private var availableWidth
+    
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -41,14 +38,17 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     }
     
     private var isOlasGeneric: Bool { (nrPost.kind == 1 && (nrPost.kTag ?? "") == "20") }
-    
-    @State var showMiniProfile = false
-
     private let content: Content
     private let titleContent: TitleContent
     
+    private var nxViewingContext: Set<NXViewingContextOptions>
+    private var containerID: String
+    private var theme: Theme
+    private var availableWidth: CGFloat
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, @ViewBuilder content: () -> Content, @ViewBuilder title: () -> TitleContent) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil,
+         isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false,
+         nxViewingContext: Set<NXViewingContextOptions> = [], containerID: String, theme: Theme, availableWidth: CGFloat, @ViewBuilder content: () -> Content, @ViewBuilder title: () -> TitleContent) {
         self.nrPost = nrPost
         self.nrContact = nrPost.contact
         self.hideFooter = hideFooter
@@ -61,6 +61,11 @@ struct PostLayout<Content: View, TitleContent: View>: View {
         self.isItem = isItem
         self.content = content()
         self.titleContent = title()
+        
+        self.nxViewingContext = nxViewingContext
+        self.containerID = containerID
+        self.theme = theme
+        self.availableWidth = availableWidth
     }
     
     var body: some View {
@@ -275,9 +280,14 @@ struct PostLayout<Content: View, TitleContent: View>: View {
 
 extension PostLayout where TitleContent == EmptyView {
     
-    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false, isItem: Bool = false, @ViewBuilder content: () -> Content) {
+    init(nrPost: NRPost, hideFooter: Bool = true, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil,
+         isReply: Bool = false, isDetail: Bool = false, fullWidth: Bool = true, forceAutoload: Bool = false,
+         isItem: Bool = false, nxViewingContext: Set<NXViewingContextOptions>, containerID: String, theme: Theme, availableWidth: CGFloat, @ViewBuilder content: () -> Content) {
      
-        self.init(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, isItem: isItem, content: content, title: { EmptyView() })
+        self.init(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect,
+                  isReply: isReply, isDetail: isDetail, fullWidth: fullWidth, forceAutoload: forceAutoload, isItem: isItem,
+                  nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth,
+                  content: content, title: { EmptyView() })
         
     }
 }

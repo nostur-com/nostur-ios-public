@@ -66,63 +66,61 @@ struct OwnPostFooter: View {
     }
     
     var body: some View {
-        if (own.isOwnPost) {
-            if (own.isGoingToSend) {
-                HStack {
-                    if own.flags == "nsecbunker_unsigned" {
-                        Text("**Signing post...**")
-                    }
-                    else {
-                        Text("**Sending post...**")
-                    }
-                    Spacer()
-                    if own.flags != "nsecbunker_unsigned" {
-                        Button("**Send now**") {
-                            nrPost.sendNow()
-                            DispatchQueue.main.async {
-                                Drafts.shared.draft = ""
-                                Drafts.shared.restoreDraft = ""
-                            }
-                        }
-                        .buttonStyle(.borderless)
-                        .foregroundColor(theme.accent)
-                        .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
-                        .padding(.trailing, 5)
-                    }
-                    if unpublishing {
-                        Image(systemName:"hourglass.tophalf.filled")
-                    }
-                    else {
-                        Button("Undo") {
-                            unpublishing = true
-                            nrPost.unpublish()
-                            DispatchQueue.main.async {
-                                Drafts.shared.draft = Drafts.shared.restoreDraft
-                                Drafts.shared.restoreDraft = ""
-                            }
-                            
-                        }
-                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
-                        .foregroundColor(Color.white)
-                        .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
-                    }
+        if (own.isGoingToSend) {
+            HStack {
+                if own.flags == "nsecbunker_unsigned" {
+                    Text("**Signing post...**")
                 }
-                .padding(.bottom, 5)
-                .foregroundColor(Color.primary)
-            }
-            else if nxViewingContext.isDisjoint(with: [.screenshot, .preview]) && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
-                HStack {
-                    if own.flags == "nsecbunker_unsigned" && own.relaysCount != 0 {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
-                    }
-                    else if own.relaysCount == 0 {
-                        Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.yellow)
-                    }
-                    Text("Sent to \(own.relaysCount) relays", comment:"Message shown in footer of sent post")
-                    Spacer()
+                else {
+                    Text("**Sending post...**")
                 }
-                .padding(.bottom, 5)
+                Spacer()
+                if own.flags != "nsecbunker_unsigned" {
+                    Button("**Send now**") {
+                        nrPost.sendNow()
+                        DispatchQueue.main.async {
+                            Drafts.shared.draft = ""
+                            Drafts.shared.restoreDraft = ""
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundColor(theme.accent)
+                    .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
+                    .padding(.trailing, 5)
+                }
+                if unpublishing {
+                    Image(systemName:"hourglass.tophalf.filled")
+                }
+                else {
+                    Button("Undo") {
+                        unpublishing = true
+                        nrPost.unpublish()
+                        DispatchQueue.main.async {
+                            Drafts.shared.draft = Drafts.shared.restoreDraft
+                            Drafts.shared.restoreDraft = ""
+                        }
+                        
+                    }
+                    .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                    .foregroundColor(Color.white)
+                    .opacity(own.flags == "nsecbunker_unsigned" ? 0 : 1.0)
+                }
             }
+            .padding(.bottom, 5)
+            .foregroundColor(Color.primary)
+        }
+        else if nxViewingContext.isDisjoint(with: [.screenshot, .preview]) && !["awaiting_send","nsecbunker_unsigned","draft"].contains(own.flags) {
+            HStack {
+                if own.flags == "nsecbunker_unsigned" && own.relaysCount != 0 {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
+                }
+                else if own.relaysCount == 0 {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.yellow)
+                }
+                Text("Sent to \(own.relaysCount) relays", comment:"Message shown in footer of sent post")
+                Spacer()
+            }
+            .padding(.bottom, 5)
         }
         else {
             EmptyView()

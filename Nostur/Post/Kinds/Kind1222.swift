@@ -11,8 +11,10 @@ import SwiftUI
 // 1222 for root messages and kind: 1244 for reply messages to be used for short voice messages, typically up to 60 seconds in length.
 struct Kind1222: View {
     @Environment(\.nxViewingContext) private var nxViewingContext
-    @Environment(\.theme) private var theme: Theme
+    @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
+    
     @ObservedObject private var settings: SettingsStore = .shared
     private let nrPost: NRPost
     @ObservedObject private var nrContact: NRContact
@@ -68,7 +70,8 @@ struct Kind1222: View {
 //        #if DEBUG
 //        let _ = Self._printChanges()
 //        #endif
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload) { 
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect,
+                   isReply: isReply, isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) { 
             if (isDetail) {
                 if missingReplyTo || nxViewingContext.contains(.screenshot) {
                     ReplyingToFragmentView(nrPost: nrPost)

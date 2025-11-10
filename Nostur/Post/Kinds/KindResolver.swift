@@ -8,8 +8,11 @@
 import SwiftUI
 
 struct KindResolver: View {
-    @Environment(\.theme) private var theme
     @Environment(\.nxViewingContext) private var nxViewingContext
+    @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
+    @Environment(\.availableWidth) private var availableWidth
+    
     public let nrPost: NRPost
     public var fullWidth: Bool = false
     public var hideFooter: Bool = false // For rendering in NewReply
@@ -121,7 +124,8 @@ struct KindResolver: View {
                         .onDisappear { self.dequeue() }
                 }
                 else {
-                    PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true) {
+                    PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect,
+                               isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) {
                         LiveEventRowView(nrPost: nrPost, liveEvent: liveEvent, fullWidth: fullWidth, hideFooter: hideFooter, forceAutoload: forceAutoload)
                             .onAppear { self.enqueue() }
                             .onDisappear { self.dequeue() }

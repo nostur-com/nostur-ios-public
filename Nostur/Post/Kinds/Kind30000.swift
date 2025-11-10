@@ -125,7 +125,8 @@ struct Kind30000: View {
 //        let _ = Self._printChanges()
 //        #endif
 //        PostEmbeddedLayout(nrPost: nrPost, authorAtBottom: true) {
-        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true) {
+        PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect,
+                   isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) {
             
             if didLoadFollowNRContacts && isDetail { // Show full list
                 // if more that 20 do 2 columns
