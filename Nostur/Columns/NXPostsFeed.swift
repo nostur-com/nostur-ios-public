@@ -43,7 +43,7 @@ struct NXPostsFeed: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
             }
-//            .withContainerTopOffsetEnvironmentKey()
+            .withContainerTopOffsetEnvironmentKey()
             .scrollOffsetID(vm.columnVMid)
             .environment(\.defaultMinListRowHeight, 50)
             .listStyle(.plain)
