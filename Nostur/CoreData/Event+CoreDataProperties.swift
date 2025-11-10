@@ -814,7 +814,7 @@ extension Event {
         return nil
     }
     
-    static func saveZapRequest(event: NEvent, context: NSManagedObjectContext) -> Event? {
+    static func saveZapRequest(event: NEvent, context: NSManagedObjectContext) -> Event {
         if let existingZapReq = Event.fetchEvent(id: event.id, context: context) {
             return existingZapReq
         }
@@ -963,7 +963,11 @@ extension Event {
             if (nZapRequest != nil) {
                 let zapRequest = Event.saveZapRequest(event: nZapRequest!, context: context)
                 
-                savedEvent.zapFromRequest = zapRequest
+                
+                CoreDataRelationFixer.shared.addTask({
+                    guard contextWontCrash([savedEvent, zapRequest], debugInfo: "OO  savedEvent.zapFromRequest = zapRequest") else { return }
+                    savedEvent.zapFromRequest = zapRequest
+                })
                 if let firstE = event.firstE() {
                     savedEvent.zappedEventId = firstE
                     
@@ -984,7 +988,7 @@ extension Event {
                             }
                         })
                     }
-                    if let zapRequest, zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
+                    if zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, eTag: savedEvent.zappedEventId, zapState: .zapReceiptConfirmed))
                         
@@ -1016,7 +1020,7 @@ extension Event {
                             }
                         })
                     }
-                    if let zapRequest, zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
+                    if zapRequest.pubkey == AccountsState.shared.activeAccountPublicKey {
                         savedEvent.zappedEvent?.zapState = .zapReceiptConfirmed
                         ViewUpdates.shared.zapStateChanged.send(ZapStateChange(pubkey: savedEvent.pubkey, aTag: firstA, zapState: .zapReceiptConfirmed))
                         // TODO: How to handle a tag here?? need to update cache and reading from cache if its aTag instead of id
