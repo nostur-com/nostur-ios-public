@@ -12,7 +12,7 @@ class RepostsFeedModel: ObservableObject {
     @Published public var reposts: [NRPost] = []
 
     private var pubkey: String?
-    private var account: CloudAccount? // Main context
+    public var account: CloudAccount? // Main context
     
     // bg
     public var mostRecentRepostCreatedAt: Int64 {

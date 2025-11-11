@@ -124,8 +124,9 @@ struct NotificationsZaps: View {
             model.load(limit: 150)
             fetchNewer()
         }
-        .onReceive(receiveNotification(.newZaps)) { _ in
-            // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReactions for other accounts (unread badge)
+        .onReceive(receiveNotification(.newNotification)) { notifcation in
+            let newNotification = notifcation.object as! NewNotification
+            guard newNotification.pubkey == pubkey && newNotification.type == .newZaps else { return }
             model.load(limit: 150) { mostRecentCreatedAt in
                 saveLastSeenZapCreatedAt(mostCreatedAt: mostRecentCreatedAt)
             }
@@ -173,13 +174,14 @@ struct NotificationsZaps: View {
         fetchNewerTask.fetch()
     }
     
-    func saveLastSeenZapCreatedAt(mostCreatedAt: Int64) {
-        guard selectedTab == "Notifications" && selectedNotificationsTab == "Zaps" else { return }
-        guard mostCreatedAt != 0 else { return }
-        if let account = account() {
+    private func saveLastSeenZapCreatedAt(mostCreatedAt: Int64) {
+        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Zaps" else { return }
+        guard mostCreatedAt != 0, let account = model.account else { return }
+        
+        if self.pubkey == account.publicKey {
             if account.lastSeenZapCreatedAt < mostCreatedAt {
                 account.lastSeenZapCreatedAt = mostCreatedAt
-                DataProvider.shared().saveToDiskNow(.viewContext) // Account is from main context
+                DataProvider.shared().saveToDiskNow(.viewContext)
             }
         }
     }

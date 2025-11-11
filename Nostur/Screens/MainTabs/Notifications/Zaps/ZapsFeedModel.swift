@@ -13,7 +13,7 @@ class ZapsFeedModel: ObservableObject {
     
 
     private var pubkey: String?
-    private var account: CloudAccount? // Main context
+    public var account: CloudAccount? // Main context
 
     // bg
     public var mostRecentZapCreatedAt: Int64 {

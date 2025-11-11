@@ -12,7 +12,7 @@ class GroupedReactionsFeedModel: ObservableObject {
     @Published public var groupedReactions: [GroupedReactions] = []
 
     private var pubkey: String?
-    private var account: CloudAccount? // Main context
+    public var account: CloudAccount? // Main context
     
     // bg
     public var mostRecentReactionCreatedAt: Int64 {

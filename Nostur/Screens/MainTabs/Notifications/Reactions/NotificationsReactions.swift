@@ -80,8 +80,9 @@ struct NotificationsReactions: View {
             model.load(limit: 150)
             fetchNewer()
         }
-        .onReceive(receiveNotification(.newReactions)) { _ in
-            // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReactions for other accounts (unread badge)
+        .onReceive(receiveNotification(.newNotification)) { notifcation in
+            let newNotification = notifcation.object as! NewNotification
+            guard newNotification.pubkey == pubkey && newNotification.type == .newReactions else { return }
             model.load(limit: 150) { mostRecentCreatedAt in
                 saveLastSeenReactionCreatedAt(mostCreatedAt: mostRecentCreatedAt)
             }
@@ -130,12 +131,13 @@ struct NotificationsReactions: View {
     }
     
     func saveLastSeenReactionCreatedAt(mostCreatedAt: Int64) {
-        guard selectedTab == "Notifications" && selectedNotificationsTab == "Reactions" else { return }
-        guard mostCreatedAt != 0 else { return }
-        if let account = account() {
+        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Reactions" else { return }
+        guard mostCreatedAt != 0, let account = model.account else { return }
+        
+        if self.pubkey == account.publicKey {
             if account.lastSeenReactionCreatedAt < mostCreatedAt {
                 account.lastSeenReactionCreatedAt = mostCreatedAt
-                DataProvider.shared().saveToDiskNow(.viewContext) // Account is from main context
+                DataProvider.shared().saveToDiskNow(.viewContext)
             }
         }
     }

@@ -169,8 +169,8 @@ class NotificationsViewModel: ObservableObject {
     // Don't read these @Published vars, only set them. Use the computed above instead because they correctly return 0 when muted
     @Published var unreadMentions_: Int = 0 {      // 1,20,9802,30023,34235
         didSet {
-            if unreadMentions_ > oldValue {
-                sendNotification(.newMentions)
+            if unreadMentions_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+                sendNotification(.newNotification, NewNotification(type: .newMentions, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
@@ -179,8 +179,8 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadNewPosts_: Int = 0 {      // 1,20,9802,30023,34235
         didSet {
-            if unreadNewPosts_ > oldValue {
-                sendNotification(.unreadNewPosts)
+            if unreadNewPosts_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+                sendNotification(.newNotification, NewNotification(type: .newUnreadNewPosts, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
@@ -189,8 +189,8 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadNewFollowers_: Int = 0 {  // custom
         didSet {
-            if unreadNewFollowers_ > oldValue {
-                sendNotification(.newFollowers)
+            if unreadNewFollowers_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+                sendNotification(.newNotification, NewNotification(type: .newFollowers, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
@@ -199,8 +199,8 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadReposts_: Int = 0 {     // 6
         didSet {
-            if unreadReposts_ > oldValue {
-                sendNotification(.newReposts)
+            if unreadReposts_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+                sendNotification(.newNotification, NewNotification(type: .newReposts, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
@@ -209,8 +209,8 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadReactions_: Int = 0 {  // 7
         didSet {
-            if unreadReactions_ > oldValue {
-                sendNotification(.newReactions)
+            if unreadReactions_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+                sendNotification(.newNotification, NewNotification(type: .newReactions, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
@@ -219,8 +219,8 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadZaps_: Int = 0 {       // 9735
         didSet {
-            if unreadZaps_ > oldValue {
-                sendNotification(.newZaps)
+            if unreadZaps_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+                sendNotification(.newNotification, NewNotification(type: .newZaps, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
@@ -1013,4 +1013,18 @@ class NotificationFetchRequests {
                 
         return r
     }
+}
+
+struct NewNotification {
+    let type: NewNotificationType
+    let pubkey: String
+}
+
+enum NewNotificationType {
+    case newMentions
+    case newUnreadNewPosts
+    case newReposts
+    case newReactions
+    case newZaps
+    case newFollowers
 }

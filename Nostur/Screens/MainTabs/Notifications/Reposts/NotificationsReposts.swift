@@ -95,7 +95,9 @@ struct NotificationsReposts: View {
             model.load(limit: 50)
             fetchNewer()
         }
-        .onReceive(receiveNotification(.newReposts)) { _ in
+        .onReceive(receiveNotification(.newNotification)) { notification in
+            let newNotification = notification.object as! NewNotification
+            guard newNotification.pubkey == pubkey && newNotification.type == .newReposts else { return }
             // Receive here for logged in account (from NotificationsViewModel). In multi-column we don't track .newReposts for other accounts (unread badge)
             model.load(limit: 50) { mostRecentCreatedAt in
                 saveLastSeenRepostCreatedAt(mostCreatedAt: mostRecentCreatedAt)
@@ -145,12 +147,13 @@ struct NotificationsReposts: View {
     }
     
     private func saveLastSeenRepostCreatedAt(mostCreatedAt: Int64) {
-        guard selectedTab == "Notifications" && selectedNotificationsTab == "Reposts" else { return }
-        guard mostCreatedAt != 0 else { return }
-        if let account = account() {
+        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Reposts" else { return }
+        guard mostCreatedAt != 0, let account = model.account else { return }
+        
+        if self.pubkey == account.publicKey {
             if account.lastSeenRepostCreatedAt < mostCreatedAt {
                 account.lastSeenRepostCreatedAt = mostCreatedAt
-                DataProvider.shared().saveToDiskNow(.viewContext) // Account is from main context
+                DataProvider.shared().saveToDiskNow(.viewContext)
             }
         }
     }

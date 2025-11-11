@@ -237,28 +237,8 @@ extension Notification.Name {
         return Notification.Name("receivedPendingZap")
     }
     
-    static var newMentions: Notification.Name {
-        return Notification.Name("newMentions")
-    }   
-    
-    static var unreadNewPosts: Notification.Name {
-        return Notification.Name("unreadNewPosts")
-    }
-    
-    static var newReposts: Notification.Name {
-        return Notification.Name("newReposts")
-    }
-    
-    static var newReactions: Notification.Name {
-        return Notification.Name("newReactions")
-    }
-    
-    static var newZaps: Notification.Name {
-        return Notification.Name("newZaps")
-    }
-    
-    static var newFollowers: Notification.Name {
-        return Notification.Name("newFollowers")
+    static var newNotification: Notification.Name {
+        return Notification.Name("newNotification")
     }
     
     static var postAction: Notification.Name {

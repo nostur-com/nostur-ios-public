@@ -13,7 +13,7 @@ class MentionsFeedModel: ObservableObject {
 
     private var pubkey: String?
     private var npub: String?
-    private var account: CloudAccount? // Main context
+    public var account: CloudAccount? // Main context
     
     // bg
     public var mostRecentMentionCreatedAt: Int64 {

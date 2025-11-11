@@ -18,6 +18,7 @@ struct NotificationsFollowers: View {
     @State private var backlog = Backlog(backlogDebugName: "NotificationsFollowers")
     @State private var didLoad = false
     @Binding private var navPath: NBNavigationPath
+    private let pubkey: String
     
     private var selectedTab: String {
         get { UserDefaults.standard.string(forKey: "selected_tab") ?? "Main" }
@@ -33,6 +34,7 @@ struct NotificationsFollowers: View {
     private var notifications:FetchedResults<PersistentNotification>
     
     init(pubkey: String, navPath: Binding<NBNavigationPath>) {
+        self.pubkey = pubkey
         _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
@@ -76,19 +78,19 @@ struct NotificationsFollowers: View {
             let account = notification.object as! CloudAccount
             notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newFollowers.rawValue)
         }
+        .onReceive(receiveNotification(.newNotification)) { notifcation in
+            let newNotification = notifcation.object as! NewNotification
+            guard newNotification.pubkey == pubkey && newNotification.type == .newFollowers else { return }
+            saveLastSeenFollowersCreatedAt()
+        }
     }
     
     private func saveLastSeenFollowersCreatedAt() {
-        guard selectedTab == "Notifications" && selectedNotificationsTab == "Followers" else { return }
-        if let first = notifications.first {
-            let firstCreatedAt = first.createdAt
-            bg().perform {
-                if let account = account() {
-                    if account.lastFollowerCreatedAt < Int64(firstCreatedAt.timeIntervalSince1970) {
-                        account.lastFollowerCreatedAt = Int64(firstCreatedAt.timeIntervalSince1970)
-                    }
-                }
-                DataProvider.shared().saveToDiskNow(.bgContext)
+        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Followers" else { return }
+        if let first = notifications.first, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey }) {
+            if account.lastFollowerCreatedAt < Int64(first.createdAt.timeIntervalSince1970) {
+                account.lastFollowerCreatedAt = Int64(first.createdAt.timeIntervalSince1970)
+                DataProvider.shared().saveToDiskNow(.viewContext)
             }
         }
     }
