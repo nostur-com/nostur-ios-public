@@ -75,12 +75,12 @@ public class PersistentNotification: NSManagedObject {
     }
     
     // pubkey is for the account the notification is for (not always relevant, but its not the pubkey of a contact in the notification)
-    static func createNewPostsNotification(pubkey: String, context: NSManagedObjectContext = context(), contacts:[ContactInfo], since: Int64) -> PersistentNotification {
+    static func createNewPostsNotification(context: NSManagedObjectContext = context(), contacts:[ContactInfo], since: Int64) -> PersistentNotification {
   
         let newPostNotification = PersistentNotification(context: context)
         newPostNotification.id = UUID()
         newPostNotification.createdAt = .now
-        newPostNotification.pubkey = pubkey
+        newPostNotification.pubkey = "deprecated"
         newPostNotification.type = .newPosts
         newPostNotification.since = since
         if let contactsData = try? JSONEncoder().encode(contacts), let contactsJson = String(data: contactsData, encoding: .utf8) {
@@ -89,9 +89,14 @@ public class PersistentNotification: NSManagedObject {
         return newPostNotification
     }
     
-    static func fetchUnreadNewPostNotifications(accountPubkey: String) -> [PersistentNotification] {
+    static func fetchUnreadNewPostNotifications(accountPubkey: String? = nil) -> [PersistentNotification] {
         let fr = PersistentNotification.fetchRequest()
-        fr.predicate = NSPredicate(format: "pubkey = %@ AND readAt = nil AND type_ = %@ AND NOT id = nil", accountPubkey, PersistentNotificationType.newPosts.rawValue)
+        if let accountPubkey {
+            fr.predicate = NSPredicate(format: "pubkey = %@ AND readAt = nil AND type_ = %@ AND NOT id = nil", accountPubkey, PersistentNotificationType.newPosts.rawValue)
+        }
+        else {
+            fr.predicate = NSPredicate(format: "readAt = nil AND type_ = %@ AND NOT id = nil", PersistentNotificationType.newPosts.rawValue)
+        }
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
         guard let existing = (try? context().fetch(fr)) else { return [] }
         return existing

@@ -49,7 +49,7 @@ struct ColumnConfigToolbarMenu: ViewModifier {
     @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
-    @AppStorage("enableEmojiFeed") private var enableEmojiFeed: Bool = true
+    @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
@@ -158,6 +158,10 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         
         Button("Notifications", systemImage: "bell") {
             columnType = .notifications(nil)
+        }
+        
+        Button("New Posts", systemImage: "bell") {
+            columnType = .newPosts
         }
         
         if enableExploreFeed {

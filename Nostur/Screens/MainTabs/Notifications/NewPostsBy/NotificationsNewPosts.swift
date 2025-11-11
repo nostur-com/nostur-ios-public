@@ -39,18 +39,18 @@ struct NotificationsNewPosts: View {
     @State private var showNewPosts = false
     @State private var newPostsForPubkeys:NewPostsForPubkeys? = nil
     
-    init(pubkey: String, navPath: Binding<NBNavigationPath>) {
+    init(navPath: Binding<NBNavigationPath>) {
         _navPath = navPath
         let fr = PersistentNotification.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
-        fr.predicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", pubkey, PNType.newPosts.rawValue)
+        fr.predicate = NSPredicate(format: "type_ == %@ AND NOT id == nil", PNType.newPosts.rawValue)
         _notifications = FetchRequest(fetchRequest: fr)
     }
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         ScrollViewReader { proxy in
             if !notifications.isEmpty {
                 ScrollView {
@@ -121,10 +121,6 @@ struct NotificationsNewPosts: View {
                 .centered()
             }
         }
-        .onReceive(receiveNotification(.activeAccountChanged)) { notification in
-            let account = notification.object as! CloudAccount
-            notifications.nsPredicate = NSPredicate(format: "pubkey == %@ AND type_ == %@ AND NOT id == nil", account.publicKey, PNType.newPosts.rawValue)
-        }
         .nbNavigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
             NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
                 .environment(\.theme, theme)
@@ -134,13 +130,12 @@ struct NotificationsNewPosts: View {
 }
 
 #Preview("Notifications New Posts") {
-    let pubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
-    return PreviewContainer({ pe in
+   PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadNewPostsNotification()
     }) {
         VStack {
-            NotificationsNewPosts(pubkey: pubkey, navPath: .constant(NBNavigationPath()))
+            NotificationsNewPosts(navPath: .constant(NBNavigationPath()))
         }
     }
 }

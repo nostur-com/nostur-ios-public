@@ -39,7 +39,7 @@ extension PersistentNotification {
 }
 
 extension PersistentNotification : Identifiable {
-    static func fetchPersistentNotification(byPubkey pubkey:String? = nil, id:String? = nil, type:PersistentNotificationType? = nil, context:NSManagedObjectContext = context()) -> PersistentNotification? {
+    static func fetchPersistentNotification(byPubkey pubkey: String? = nil, id: String? = nil, type: PersistentNotificationType? = nil, context: NSManagedObjectContext = context()) -> PersistentNotification? {
         let request = NSFetchRequest<PersistentNotification>(entityName: "PersistentNotification")
         
         if let id {

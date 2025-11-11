@@ -103,6 +103,9 @@ struct MacColumn: View {
                 case .notifications(let accountPubkey):
                     self.renderNotificationsColumn(accountPubkey)
                     
+                case .newPosts:
+                    NotificationsNewPosts(navPath: $navPath)
+                    
                 case .following:
                     Text("following")
                 case .photos:
@@ -113,8 +116,6 @@ struct MacColumn: View {
                     Text("bookmarks")
                 case .DMs:
                     Text("DMs")
-                case .newPosts:
-                    Text("newPosts")
                 }
 
                 

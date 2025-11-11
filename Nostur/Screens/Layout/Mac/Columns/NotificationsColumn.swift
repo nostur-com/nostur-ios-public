@@ -101,7 +101,7 @@ struct NotificationsColumnInner: View {
                     case "Mentions", "Posts": // (old name was "Posts")
                         NotificationsMentions(pubkey: pubkey, navPath: $navPath)
                     case "New Posts":
-                        NotificationsNewPosts(pubkey: pubkey, navPath: $navPath)
+                        NotificationsNewPosts(navPath: $navPath)
                     case "Reactions":
                         NotificationsReactions(pubkey: pubkey, navPath: $navPath)
                     case "Reposts":

@@ -121,7 +121,7 @@ struct NotificationsScreen: View {
                     case "Mentions", "Posts": // (old name was "Posts")
                         NotificationsMentions(pubkey: account.publicKey, navPath: $navPath)
                     case "New Posts":
-                        NotificationsNewPosts(pubkey: account.publicKey, navPath: $navPath)
+                        NotificationsNewPosts(navPath: $navPath)
                     case "Reactions":
                         NotificationsReactions(pubkey: account.publicKey, navPath: $navPath)
                     case "Reposts":

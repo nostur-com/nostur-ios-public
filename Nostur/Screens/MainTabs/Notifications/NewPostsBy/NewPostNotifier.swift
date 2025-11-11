@@ -21,16 +21,11 @@ class NewPostNotifier: ObservableObject {
     static let shared = NewPostNotifier()
     
     @Published var enabledPubkeys: Set<String> = []
-    
-    // Needed as fallback if account() doesn't resolve yet
-    @AppStorage("activeAccountPublicKey") var activeAccountPublicKey: String = ""
 
     private var backlog = Backlog(timeout: 10.0, auto: true, backlogDebugName: "NewPostNotifier")
     private var lastCheck: Date? = nil
     
-    private init() {
-        
-    }
+    private init() { }
     
     @MainActor
     public func reload() {
@@ -41,7 +36,7 @@ class NewPostNotifier: ObservableObject {
 #if DEBUG
         L.og.debug("NewPostNotifier.load() -[LOG]-")
 #endif
-        let tasks = CloudTask.fetchAll(byType: .notifyOnPosts, andAccountPubkey: account()?.publicKey ?? activeAccountPublicKey)
+        let tasks = CloudTask.fetchAll(byType: .notifyOnPosts)
         enabledPubkeys = Set(tasks.compactMap { $0.value_ })
     }
     
@@ -56,14 +51,13 @@ class NewPostNotifier: ObservableObject {
 #if DEBUG
         L.og.debug("NewPostNotifier.runCheck() -[LOG]-")
 #endif
-        let accountPubkey = account()?.publicKey ?? activeAccountPublicKey
-        let tasks = CloudTask.fetchAll(byType: .notifyOnPosts, andAccountPubkey: accountPubkey)
+        let tasks = CloudTask.fetchAll(byType: .notifyOnPosts)
         enabledPubkeys = Set(tasks.compactMap { $0.value_ })
         
         guard enabledPubkeys.count > 0 else { return }
         
         // since = "lastCheck" ?? "most recent notification" ?? "most recent task" ?? "8 hours ago"
-        let since = (self.lastCheck?.timeIntervalSince1970 ?? (PersistentNotification.fetchPersistentNotification(byPubkey: accountPubkey, type: .newPosts)?.createdAt.timeIntervalSince1970 ?? tasks.first?.createdAt.timeIntervalSince1970)) ?? (Date.now.timeIntervalSince1970 - 28800)
+        let since = (self.lastCheck?.timeIntervalSince1970 ?? (PersistentNotification.fetchPersistentNotification(type: .newPosts)?.createdAt.timeIntervalSince1970 ?? tasks.first?.createdAt.timeIntervalSince1970)) ?? (Date.now.timeIntervalSince1970 - 28800)
         
         let task = ReqTask(
             debounceTime: 0.5,
@@ -96,7 +90,7 @@ class NewPostNotifier: ObservableObject {
                     fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
                     fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([5,6]))) // not reposts or delete requests
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
-                        self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
+                        self.createNewPostsNotification(newPosts)
                     }
                 }
             },
@@ -111,7 +105,7 @@ class NewPostNotifier: ObservableObject {
                     let fr = Event.fetchRequest()
                     fr.predicate = NSPredicate(format: "created_at >= %i AND pubkey IN %@ AND kind IN %@ AND flags != \"is_update\"", Int(since), self.enabledPubkeys, PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([5,6]))) // not reposts or delete requests
                     if let newPosts = try? bg().fetch(fr), !newPosts.isEmpty {
-                        self.createNewPostsNotification(newPosts, accountPubkey: accountPubkey)
+                        self.createNewPostsNotification(newPosts)
                     }
                 }
             })
@@ -136,28 +130,25 @@ class NewPostNotifier: ObservableObject {
     
     private func enable(_ pubkey: String) {
         enabledPubkeys.insert(pubkey)
-        let accountPubkey = account()?.publicKey ?? activeAccountPublicKey
         let task = CloudTask.new(ofType: .notifyOnPosts, andValue: pubkey, date: .now)
-        task.accountPubkey_ = accountPubkey
         DataProvider.shared().saveToDiskNow(.viewContext)
     }
     
     private func disable(_ pubkey: String) {
         enabledPubkeys.remove(pubkey)
-        let accountPubkey = account()?.publicKey ?? activeAccountPublicKey
-        if let task = CloudTask.fetchTask(byType: .notifyOnPosts, andPubkey: pubkey, andAccountPubkey: accountPubkey) {
+        if let task = CloudTask.fetchTask(byType: .notifyOnPosts, andPubkey: pubkey) {
             context().delete(task)
             DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
     
-    private func createNewPostsNotification(_ newPosts: [Event], accountPubkey: String) {
+    private func createNewPostsNotification(_ newPosts: [Event]) {
 #if DEBUG
         L.og.debug("NewPostNotifier.createNewPostsNotification: newPosts: \(newPosts.count)")
 #endif
         let contacts = Contact.fetchByPubkeys(newPosts.map { $0.pubkey }).map { ContactInfo(name: $0.anyName, pubkey: $0.pubkey, pfp: $0.picture) }
         // Checking existing unread new posts notification(s), merge them into a new one, delete older.
-        let existing = PersistentNotification.fetchUnreadNewPostNotifications(accountPubkey: accountPubkey)
+        let existing = PersistentNotification.fetchUnreadNewPostNotifications()
         let allContacts: [ContactInfo] = existing.reduce(contacts) { partialResult, notification in
             return (partialResult + notification.contactsInfo)
         }
@@ -171,7 +162,7 @@ class NewPostNotifier: ObservableObject {
         }
         
         // Create the new notification with all unread contacts merged
-        let newPostNotification = PersistentNotification.createNewPostsNotification(pubkey: accountPubkey, contacts: Array(Set(allContacts)), since: since)
+        let newPostNotification = PersistentNotification.createNewPostsNotification(contacts: Array(Set(allContacts)), since: since)
         FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
             NeedsUpdateInfo(persistentNotification: newPostNotification)
         )
