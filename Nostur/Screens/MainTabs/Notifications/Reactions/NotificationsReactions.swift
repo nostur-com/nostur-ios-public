@@ -131,7 +131,7 @@ struct NotificationsReactions: View {
     }
     
     func saveLastSeenReactionCreatedAt(mostCreatedAt: Int64) {
-        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Reactions" else { return }
+        guard IS_DESKTOP_COLUMNS() || (selectedTab == "Notifications" && selectedNotificationsTab == "Reactions") else { return }
         guard mostCreatedAt != 0, let account = model.account else { return }
         
         if self.pubkey == account.publicKey {

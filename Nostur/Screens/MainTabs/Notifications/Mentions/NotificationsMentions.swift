@@ -139,7 +139,7 @@ struct NotificationsMentions: View {
     }
     
     private func saveLastSeenMentionCreatedAt(mostCreatedAt: Int64) {
-        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Mentions" else { return }
+        guard IS_DESKTOP_COLUMNS() || (selectedTab == "Notifications" && selectedNotificationsTab == "Mentions") else { return }
         guard mostCreatedAt != 0, let account = model.account else { return }
         
         if self.pubkey == account.publicKey {

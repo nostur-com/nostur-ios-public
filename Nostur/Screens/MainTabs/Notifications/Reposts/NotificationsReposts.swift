@@ -147,7 +147,7 @@ struct NotificationsReposts: View {
     }
     
     private func saveLastSeenRepostCreatedAt(mostCreatedAt: Int64) {
-        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Reposts" else { return }
+        guard IS_DESKTOP_COLUMNS() || (selectedTab == "Notifications" && selectedNotificationsTab == "Reposts") else { return }
         guard mostCreatedAt != 0, let account = model.account else { return }
         
         if self.pubkey == account.publicKey {

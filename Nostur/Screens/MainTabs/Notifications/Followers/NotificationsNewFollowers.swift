@@ -86,7 +86,7 @@ struct NotificationsFollowers: View {
     }
     
     private func saveLastSeenFollowersCreatedAt() {
-        guard IS_DESKTOP_COLUMNS() || selectedTab == "Notifications" && selectedNotificationsTab == "Followers" else { return }
+        guard IS_DESKTOP_COLUMNS() || (selectedTab == "Notifications" && selectedNotificationsTab == "Followers") else { return }
         if let first = notifications.first, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey }) {
             if account.lastFollowerCreatedAt < Int64(first.createdAt.timeIntervalSince1970) {
                 account.lastFollowerCreatedAt = Int64(first.createdAt.timeIntervalSince1970)
