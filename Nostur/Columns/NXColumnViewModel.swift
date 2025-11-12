@@ -1232,20 +1232,16 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [20,5])
+            // kind:20 + hashtags + kind:1-k20-tag
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [20,5]) + [Filters(
+                authors: pubkeys,
+                kinds: [1],
+                tagFilter: TagFilter(tag: "k", values: ["20"]),
+                since: NTimestamp(date: Date.now).timestamp
+            )]
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
             
-            let compatFilters = [
-                Filters(
-                    authors: pubkeys,
-                    kinds: [1],
-                    tagFilter: TagFilter(tag: "k", values: ["20"]),
-                    since: NTimestamp(date: Date.now).timestamp
-                )
-            ]
-            
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: compatFilters), activeSubscriptionId: config.id)
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
             guard pubkeys.count > 0 else { return }
@@ -1410,28 +1406,25 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: [20,5])
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: [20,5]) + [Filters(
+                authors: pubkeys,
+                kinds: [1],
+                tagFilter: TagFilter(tag: "k", values: ["20"]),
+                since: since,
+                until: until,
+                limit: !config.continue ? 75 : 300
+            )]
             
-            let compatFilters = [
-                Filters(
-                    authors: pubkeys,
-                    kinds: [1],
-                    tagFilter: TagFilter(tag: "k", values: ["20"]),
-                    since: since,
-                    until: until,
-                    limit: !config.continue ? 75 : 300
-                )
-            ]
-             
+            let subId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
+
             return (cmd: {
                 guard pubkeys.count > 0 || hashtags.count > 0 else {
                     L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                     return
                 }
-                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters))
-                
-                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "RESUME-COMPAT-" + config.id + "-" + (since?.description ?? "any"), filters: compatFilters))
-            }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
+                outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subId, filters: filters))
+                                
+            }, subId: subId)
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
@@ -1622,20 +1615,15 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: [20,5])
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: [20,5]) + [Filters(
+                authors: pubkeys,
+                kinds: [1],
+                tagFilter: TagFilter(tag: "k", values: ["20"]),
+                until: Int(until),
+                limit: 150
+            )]
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
-            
-            let compatFilters = [
-                Filters(
-                    authors: pubkeys,
-                    kinds: [1],
-                    tagFilter: TagFilter(tag: "k", values: ["20"]),
-                    until: Int(until),
-                    limit: 150
-                )
-            ]
-            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-COMPAT-" + config.id, filters: compatFilters))
             
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
