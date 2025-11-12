@@ -31,7 +31,7 @@ extension CloudAccount {
     @NSManaged public var lastFollowerCreatedAt: Int64
     @NSManaged public var lastProfileReceivedAt: Date?
     @NSManaged public var lastSeenDMRequestCreatedAt: Int64
-    @NSManaged public var lastSeenPostCreatedAt: Int64
+    @NSManaged public var lastSeenPostCreatedAt: Int64 // mentions post
     @NSManaged public var lastSeenReactionCreatedAt: Int64
     @NSManaged public var lastSeenRepostCreatedAt: Int64
     @NSManaged public var lastSeenZapCreatedAt: Int64

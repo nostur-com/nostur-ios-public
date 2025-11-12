@@ -77,7 +77,7 @@ class NotificationsViewModel: ObservableObject {
         
         startTimer()
         setupCheckNeedsUpdateListeners()
-        setupRestorRelaySubSubscriptions()
+        setupRestoreRelaySubSubscriptions()
         setupAccountChangedListener()
         if IS_CATALYST {
             setupBadgeNotifications()
@@ -282,7 +282,7 @@ class NotificationsViewModel: ObservableObject {
             }
     }
     
-    private func setupRestorRelaySubSubscriptions() {
+    private func setupRestoreRelaySubSubscriptions() {
         if restoreRelaySubSubcription == nil { // Subscribe to the singleton
             restoreRelaySubSubcription = NotificationsViewModel.shared.sharedRestoreSubscriptionsSubject
                 .debounce(for: .seconds(0.2), scheduler: RunLoop.main)
