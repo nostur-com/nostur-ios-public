@@ -112,8 +112,8 @@ struct MacColumn: View {
                     Text("photos")
                 case .mentions:
                     Text("mentions")
-                case .bookmarks:
-                    Text("bookmarks")
+                case .bookmarks(let activeBookmarkFilters):
+                    BookmarksColumn(filters: activeBookmarkFilters)
                 case .DMs:
                     Text("DMs")
                 }

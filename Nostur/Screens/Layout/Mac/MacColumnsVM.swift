@@ -146,7 +146,7 @@ enum MacColumnType: Codable, Equatable {
     case following
     case photos
     case mentions
-    case bookmarks
+    case bookmarks(ActiveBookmarkFilters)
     case DMs
     case newPosts
     
@@ -178,7 +178,7 @@ enum MacColumnType: Codable, Equatable {
             return "photos"
         case .mentions:
             return "mentions"
-        case .bookmarks:
+        case .bookmarks(_):
             return "bookmarks"
         case .DMs:
             return "DMs"
@@ -186,6 +186,10 @@ enum MacColumnType: Codable, Equatable {
             return "newPosts"
         }
     }
+}
+
+struct ActiveBookmarkFilters: Codable, Equatable {
+    let filters: Set<String>
 }
 
 

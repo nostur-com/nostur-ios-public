@@ -164,6 +164,10 @@ struct ColumnConfigToolbarMenu: ViewModifier {
             columnType = .newPosts
         }
         
+        Button("Bookmarks", systemImage: "bookmark") {
+            columnType = .bookmarks(ActiveBookmarkFilters(filters: ["red", "blue", "purple", "green", "orange", "brown"]))
+        }
+        
         if enableExploreFeed {
             Button("Explore", systemImage: "binoculars") {
                 columnType = .explore
