@@ -25,6 +25,30 @@ struct BookmarksColumn: View {
         }
         return []
     }
+    
+    private var filterColor: Color {
+        if bookmarkFilters.count == 1 {
+            if let colorString = bookmarkFilters.first {
+                return switch colorString {
+                    case "red":
+                        .red
+                    case "blue":
+                        .blue
+                    case "purple":
+                        .purple
+                    case "green":
+                        .green
+                    case "orange":
+                        .orange
+                    case "brown":
+                        .brown
+                    default:
+                        theme.accent
+                }
+            }
+        }
+        return theme.accent
+    }
 
     var body: some View {
 #if DEBUG
@@ -117,6 +141,7 @@ struct BookmarksColumn: View {
                     Button("Filter", systemImage: bookmarkFilters.count < BOOKMARK_COLORS.count ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
                         showBookmarkFilterOptions = true
                     }
+                    .foregroundStyle(filterColor)
                 }
             }
         }
