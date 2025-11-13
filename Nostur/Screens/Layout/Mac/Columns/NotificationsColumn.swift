@@ -18,10 +18,11 @@ struct NotificationsColumn: View {
     
     public let pubkey: String
     @Binding var navPath: NBNavigationPath
+    @Binding var columnType: MacColumnType
     @StateObject private var nvm = NotificationsViewModel() // Own StateObject
     
     var body: some View {
-        NotificationsColumnInner(pubkey: pubkey, nvm: nvm, navPath: $navPath)
+        NotificationsColumnInner(pubkey: pubkey, nvm: nvm, navPath: $navPath, columnType: $columnType)
     }
 }
 
@@ -31,10 +32,11 @@ struct MainNotificationsColumn: View {
     
     public let pubkey: String
     @Binding var navPath: NBNavigationPath
+    @Binding var columnType: MacColumnType
     @ObservedObject private var nvm: NotificationsViewModel = .shared // Reuse .shared
     
     var body: some View {
-        NotificationsColumnInner(pubkey: pubkey, nvm: nvm, navPath: $navPath)
+        NotificationsColumnInner(pubkey: pubkey, nvm: nvm, navPath: $navPath, columnType: $columnType)
     }
 }
 
@@ -45,6 +47,7 @@ struct NotificationsColumnInner: View {
     public let pubkey: String
     @ObservedObject public var nvm: NotificationsViewModel // State lives in parent StateObject or .shared depending on main account or not
     @Binding var navPath: NBNavigationPath
+    @Binding var columnType: MacColumnType
     
     var body: some View {
         VStack(spacing: 0) {
@@ -118,6 +121,19 @@ struct NotificationsColumnInner: View {
             .background(theme.listBackground)
         }
         
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+                    Button {
+                        columnType = .notifications(nil)
+                    } label: {
+                        PFP(pubkey: accountPubkey, account: account, size: 30)
+                    }
+                    .accessibilityLabel("Account menu")
+                }
+            }
+        }
+        
         .onAppear {
             guard !nvm.didLoad else { return }
             nvm.load(pubkey)
@@ -128,6 +144,7 @@ struct NotificationsColumnInner: View {
 @available(iOS 17.0, *)
 #Preview {
     @Previewable @State var navPath = NBNavigationPath()
+    @Previewable @State var columnType: MacColumnType = .notifications(nil)
     PreviewContainer({ pe in
         pe.loadContacts()
         pe.loadPosts()
@@ -137,7 +154,8 @@ struct NotificationsColumnInner: View {
         NBNavigationStack(path: $navPath) {
             NotificationsColumn(
                 pubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                navPath: $navPath
+                navPath: $navPath,
+                columnType: $columnType
             )
         }
     }

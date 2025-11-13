@@ -58,7 +58,7 @@ struct ColumnConfigToolbarMenu: ViewModifier {
     
     let feeds: [CloudFeed]
     @Binding var columnType: MacColumnType
-    var title: String = "Select Feed"
+    var title: String = "Select Feed" // need title here instead of on views to build the title menu for pre iOS 16
     
     func body(content: Content) -> some View {
         content
@@ -69,17 +69,6 @@ struct ColumnConfigToolbarMenu: ViewModifier {
                       .toolbar {
                           ToolbarTitleMenu {
                               menuItems
-                          }
-                          
-                          ToolbarItem(placement: .topBarTrailing) {
-                              if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
-                                  Button {
-                                      
-                                  } label: {
-                                      PFP(pubkey: accountPubkey, account: account, size: 30)
-                                  }
-                                  .accessibilityLabel("Account menu")
-                              }
                           }
                     }
                 }
@@ -96,17 +85,6 @@ struct ColumnConfigToolbarMenu: ViewModifier {
                                             .font(.footnote)
                                             .foregroundStyle(Color.secondary)
                                     }
-                                }
-                            }
-                            
-                            ToolbarItem(placement: .topBarTrailing) {
-                                if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
-                                    Button {
-                                        
-                                    } label: {
-                                        PFP(pubkey: accountPubkey, account: account, size: 30)
-                                    }
-                                    .accessibilityLabel("Account menu")
                                 }
                             }
                         }

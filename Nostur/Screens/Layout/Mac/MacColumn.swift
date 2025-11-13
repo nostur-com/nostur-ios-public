@@ -104,7 +104,7 @@ struct MacColumn: View {
                     ExploreColumn()
                     
                 case .notifications(let accountPubkey):
-                    self.renderNotificationsColumn(accountPubkey)
+                    self.renderNotificationsColumn(accountPubkey, columnType: $columnType)
                     
                 case .newPosts:
                     NotificationsNewPosts(navPath: $navPath)
@@ -157,13 +157,13 @@ struct MacColumn: View {
     }
     
     @ViewBuilder
-    private func renderNotificationsColumn(_ accountPubkey: String?) -> some View {
+    private func renderNotificationsColumn(_ accountPubkey: String?, columnType: Binding<MacColumnType>) -> some View {
         if let accountPubkey {
             if !AccountsState.shared.activeAccountPublicKey.isEmpty, accountPubkey == AccountsState.shared.activeAccountPublicKey {
-                MainNotificationsColumn(pubkey: AccountsState.shared.activeAccountPublicKey, navPath: $navPath)
+                MainNotificationsColumn(pubkey: AccountsState.shared.activeAccountPublicKey, navPath: $navPath, columnType: $columnType)
             }
             else {
-                NotificationsColumn(pubkey: accountPubkey, navPath: $navPath)
+                NotificationsColumn(pubkey: accountPubkey, navPath: $navPath, columnType: $columnType)
             }
         }
         else {
