@@ -22,7 +22,7 @@ extension Bookmark {
     @NSManaged public var color_: String?
     
     // Default is orange.
-    // "orange", "red", "blue", "purple", "green"
+    // "orange", "red", "blue", "purple", "green", "brown" (BOOKMARK_COLORS)
     public var color: Color {
         get {
             return switch color_ {

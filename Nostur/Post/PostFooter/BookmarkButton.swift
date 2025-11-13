@@ -43,7 +43,7 @@ struct BookmarkButton: View {
                         tap()
                     }
             )
-            .overlay { // "orange", "red", "blue", "purple", "green"
+            .overlay { // "orange", "red", "blue", "purple", "green", "brown" (BOOKMARK_COLORS)
                 if showColorSelector {
                     HStack(spacing: 0) {
                         Image(systemName: "bookmark.fill")

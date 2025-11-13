@@ -8,6 +8,7 @@
 import SwiftUI
 import Combine
 
+let BOOKMARK_COLORS: [String] = ["red", "blue", "purple", "green", "orange", "brown"]
 
 class NRLazyBookmark: ObservableObject, Identifiable {
     public let id: String
@@ -63,7 +64,7 @@ class BookmarksFeedModel: ObservableObject {
     private var subscriptions: Set<AnyCancellable> = []
     
     public init() {
-        bookmarkFilters = Set<String>((UserDefaults.standard.array(forKey: "bookmark_filters") as? [String] ?? ["red", "blue", "purple", "green", "orange", "brown"]))
+        bookmarkFilters = Set<String>((UserDefaults.standard.array(forKey: "bookmark_filters") as? [String] ?? BOOKMARK_COLORS))
         
         searchSubscription = $searchText
                     .removeDuplicates()
@@ -148,15 +149,7 @@ class BookmarksFeedModel: ObservableObject {
 
 
 // Separate views for columns
-class BookmarksColumnVM: ObservableObject {
-    @Published public var bookmarkFilters: ActiveBookmarkFilters = ActiveBookmarkFilters(filters: []) {
-        didSet {
-            Task { @MainActor in
-                self.load(filters: bookmarkFilters)
-            }
-        }
-    }
-    
+class BookmarksColumnVM: ObservableObject {    
     @Published public var isLoading = true
     @Published public var nrLazyBookmarks: [NRLazyBookmark] = []
     @Published public var searchText: String = ""
@@ -191,8 +184,7 @@ class BookmarksColumnVM: ObservableObject {
     }
     
     @MainActor
-    public func load(filters: ActiveBookmarkFilters) {
-        let bookmarkFilters = filters.filters
+    public func load(filters: Set<String>) {
         let bgContext = bg()
         bgContext.perform { [weak self] in
             guard let self else { return }
@@ -201,7 +193,7 @@ class BookmarksColumnVM: ObservableObject {
             r1.sortDescriptors = [NSSortDescriptor(keyPath:\Bookmark.createdAt, ascending: false)]
    
             let bookmarks = ((try? bgContext.fetch(r1)) ?? [])
-                .filter { bookmarkFilters.contains($0.color_ ?? "orange") }
+                .filter { filters.contains($0.color_ ?? "orange") }
             
             var uniqueEventIds = Set<String>()
             let sortedBookmarks = bookmarks.sorted {

@@ -15,7 +15,7 @@ struct PostActionNotification {
     var hasPrivateNote: Bool = false
     
     enum ActionType {
-        case bookmark(Color) // "orange", "red", "blue", "purple", "green"
+        case bookmark(Color) // "orange", "red", "blue", "purple", "green", "brown" (BOOKMARK_COLORS)
         
         case reacted(UUID?, String) // cancellation uuid, reaction.content (like "+" or "😂")
         case unreacted(String) // reaction.content (like "+" or "😂")

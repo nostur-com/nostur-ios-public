@@ -70,8 +70,10 @@ struct MacColumn: View {
                 theme.listBackground
                 
                 switch columnType {
+                    
                 case .unconfigured:
                     Text("unconfigured")
+                    
                 case .cloudFeed(_):
                     if let selectedFeed {
                         CloudFeedColumn(feed: selectedFeed)
@@ -79,6 +81,7 @@ struct MacColumn: View {
                     else {
                         ProgressView()
                     }
+                    
                 case .hot:
                     HotColumn()
                     
@@ -112,8 +115,10 @@ struct MacColumn: View {
                     Text("photos")
                 case .mentions:
                     Text("mentions")
-                case .bookmarks(let activeBookmarkFilters):
-                    BookmarksColumn(filters: activeBookmarkFilters)
+                    
+                case .bookmarks(_):
+                    BookmarksColumn(columnType: $columnType)
+                    
                 case .DMs:
                     Text("DMs")
                 }

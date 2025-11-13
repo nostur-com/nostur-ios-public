@@ -165,7 +165,7 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         }
         
         Button("Bookmarks", systemImage: "bookmark") {
-            columnType = .bookmarks(ActiveBookmarkFilters(filters: ["red", "blue", "purple", "green", "orange", "brown"]))
+            columnType = .bookmarks(Set(BOOKMARK_COLORS))
         }
         
         if enableExploreFeed {
