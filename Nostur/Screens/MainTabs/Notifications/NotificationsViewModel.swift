@@ -32,10 +32,11 @@ class NotificationsViewModel: ObservableObject {
     
     private var account: CloudAccount? {
         didSet {
-            self.accountData = account?.toStruct()
+            self.accountDataCache = account?.toStruct()
         }
     }
-    private var accountData: AccountData?
+    private var accountDataCache: AccountData?
+    private var pubkey: String?
     
     private var lastLocalNotificationAt: Int {
         get { UserDefaults.standard.integer(forKey: "last_local_notification_timestamp") }
@@ -48,6 +49,7 @@ class NotificationsViewModel: ObservableObject {
     
     @MainActor
     public func load(_ pubkey: String) {
+        self.pubkey = pubkey
         self.didLoad = true
 #if DEBUG
         L.og.debug("NotificationViewModel.load(\(pubkey))");
@@ -101,8 +103,7 @@ class NotificationsViewModel: ObservableObject {
     // is true at start, then false after each notification check
     
     public func checkNeedsUpdate(_ notification: PersistentNotification) {
-        guard let accountPubkey = self.accountData?.publicKey else { return }
-        if notification.pubkey == accountPubkey {
+        if notification.pubkey == self.pubkey {
             bg().perform { [weak self] in
                 self?.needsUpdate = true
             }
@@ -110,20 +111,21 @@ class NotificationsViewModel: ObservableObject {
     }
     
     public func checkNeedsUpdate(_ event: Event) {
-        guard let accountData = self.accountData else { return }
+        guard let accountData = self.accountDataCache else { return }
+        guard let pubkey = self.pubkey else { return }
         switch event.kind {
         case 1,1111,1222,1244,4,20,9802,30023,34235: // TODO: Should check if not muted or blocked
             let before = needsUpdate
-            needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == accountData.publicKey })
+            needsUpdate = event.flags != "is_update" && event.fastPs.contains(where: { $0.1 == pubkey })
             if needsUpdate && needsUpdate != before {
-                self.checkForUnreadMentions()
+                self.checkForUnreadMentions(accountData: accountData)
             }
         case 6:
-            needsUpdate = (event.otherPubkey == accountData.publicKey) // TODO: Should ignore blocked or muted
+            needsUpdate = (event.otherPubkey == pubkey) // TODO: Should ignore blocked or muted
         case 7:
-            needsUpdate = (event.otherPubkey == accountData.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            needsUpdate = (event.otherPubkey == pubkey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
         case 9735:
-            needsUpdate = (event.otherPubkey == accountData.publicKey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
+            needsUpdate = (event.otherPubkey == pubkey) // TODO: Should ignore if blocked? (NOT zapFromRequest.pubkey IN %@)
         default:
             return
         }
@@ -169,7 +171,7 @@ class NotificationsViewModel: ObservableObject {
     // Don't read these @Published vars, only set them. Use the computed above instead because they correctly return 0 when muted
     @Published var unreadMentions_: Int = 0 {      // 1,20,9802,30023,34235
         didSet {
-            if unreadMentions_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+            if unreadMentions_ > oldValue, let accountPubkey = self.pubkey {
                 sendNotification(.newNotification, NewNotification(type: .newMentions, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
@@ -179,7 +181,7 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadNewPosts_: Int = 0 {      // 1,20,9802,30023,34235
         didSet {
-            if unreadNewPosts_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+            if unreadNewPosts_ > oldValue, let accountPubkey = self.pubkey {
                 sendNotification(.newNotification, NewNotification(type: .newUnreadNewPosts, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
@@ -189,7 +191,7 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadNewFollowers_: Int = 0 {  // custom
         didSet {
-            if unreadNewFollowers_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+            if unreadNewFollowers_ > oldValue, let accountPubkey = self.pubkey {
                 sendNotification(.newNotification, NewNotification(type: .newFollowers, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
@@ -199,7 +201,7 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadReposts_: Int = 0 {     // 6
         didSet {
-            if unreadReposts_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+            if unreadReposts_ > oldValue, let accountPubkey = self.pubkey {
                 sendNotification(.newNotification, NewNotification(type: .newReposts, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
@@ -209,7 +211,7 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadReactions_: Int = 0 {  // 7
         didSet {
-            if unreadReactions_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+            if unreadReactions_ > oldValue, let accountPubkey = self.pubkey {
                 sendNotification(.newNotification, NewNotification(type: .newReactions, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
@@ -219,7 +221,7 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadZaps_: Int = 0 {       // 9735
         didSet {
-            if unreadZaps_ > oldValue, let accountPubkey = self.accountData?.publicKey {
+            if unreadZaps_ > oldValue, let accountPubkey = self.pubkey {
                 sendNotification(.newNotification, NewNotification(type: .newZaps, pubkey: accountPubkey))
             }
             if self.id == NotificationsViewModel.shared.id {
@@ -328,18 +330,18 @@ class NotificationsViewModel: ObservableObject {
     
     // From now, stays active
     private func relayCheckNewestNotifications() {
-        guard let accountData else { return }
+        guard let accountPubkey = self.pubkey else { return }
         let calendar = Calendar.current
         let ago = calendar.date(byAdding: .minute, value: -1, to: Date())!
         let sinceNTimestamp = NTimestamp(date: ago)
         
         // Public req for notifications
-        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235],
+        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235],
                            subscriptionId: "-OPEN-Notifications-\(self.id)", since: sinceNTimestamp),
             activeSubscriptionId: "-OPEN-Notifications-\(self.id)")
         
         // Separate req for kind 4, because possibly needs auth
-        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [4],
+        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [4],
                            subscriptionId: "-OPEN-Notifications-\(self.id)-A", since: sinceNTimestamp),
             activeSubscriptionId: "-OPEN-Notifications-\(self.id)-A")
     }
@@ -347,13 +349,13 @@ class NotificationsViewModel: ObservableObject {
     @MainActor
     public var requestSince: Int64 { // TODO: If event .created_at, is in the future don't save date
         let oneWeekAgo = (Int64(Date.now.timeIntervalSince1970) - 604_800)
-        guard let accountData else { return oneWeekAgo }
+        guard let account else { return oneWeekAgo }
         return [
             oneWeekAgo,
-            accountData.lastSeenRepostCreatedAt,
-            accountData.lastSeenPostCreatedAt,
-            accountData.lastSeenZapCreatedAt,
-            accountData.lastSeenReactionCreatedAt,
+            account.lastSeenRepostCreatedAt,
+            account.lastSeenPostCreatedAt,
+            account.lastSeenZapCreatedAt,
+            account.lastSeenReactionCreatedAt,
             (DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? oneWeekAgo
         ].sorted(by: >).first!
     }
@@ -362,17 +364,17 @@ class NotificationsViewModel: ObservableObject {
     @MainActor
     private func relayCheckSinceNotifications() {
         // THIS ONE IS TO CATCH UP, WILL CLOSE AFTER EOSE
-        guard let accountData = self.accountData else { return }
+        guard let accountPubkey = self.pubkey else { return }
         let since = NTimestamp(timestamp: Int(self.requestSince))
         bg().perform { [weak self] in
             guard let self else { return }
             self.needsUpdate = true
             
             DispatchQueue.main.async {
-                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
+                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
                 
                 // Separate req for kind 4, because possibly needs auth
-                req(RM.getMentions(pubkeys: [accountData.publicKey], kinds: [4], subscriptionId: "NotificationsDM-CATCHUP-\(self.id)", since: since))
+                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [4], subscriptionId: "NotificationsDM-CATCHUP-\(self.id)", since: since))
             }
         }
     }
@@ -382,17 +384,20 @@ class NotificationsViewModel: ObservableObject {
     // Query events for counts
     // But only fetch and parse recent to show on screen.
     
+    @MainActor
     private func startTimer() {
         guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 15.0, repeats: true) { [weak self] timer in
             bg().perform { [weak self] in
                 if (AppState.shared.appIsInBackground && !IS_CATALYST) {
-                    self?.checkForUnreadMentions()
+                    guard let accountData = self?.accountDataCache else { return }
+                    self?.checkForUnreadMentions(accountData: accountData)
                 }
                 else {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) { // Give time for AUTH / "auth-required:"
                         bg().perform { [weak self] in
-                            self?.checkForEverything()
+                            guard let accountData = self?.accountDataCache else { return }
+                            self?.checkForEverything(accountData: accountData)
                         }
                     }
                 }
@@ -401,15 +406,14 @@ class NotificationsViewModel: ObservableObject {
         timer?.tolerance = 5.0
     }
     
-    private func checkForEverything() {
+    private func checkForEverything(accountData: AccountData) {
         guard (!AppState.shared.appIsInBackground || IS_CATALYST) else {
 #if DEBUG
-            L.og.debug("NotificationViewModel.checkForEverything() \(self.accountData?.anyName): skipping, app in background.");
+            L.og.debug("NotificationViewModel.checkForEverything() \(self.pubkey): skipping, app in background.");
 #endif
             return
         }
         shouldBeBg()
-        guard let accountData = self.accountData else { return }
         
         if self.id == NotificationsViewModel.shared.id {
             OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
@@ -419,14 +423,14 @@ class NotificationsViewModel: ObservableObject {
                 
         guard !Importer.shared.isImporting else {
 #if DEBUG
-            L.og.debug("⏳ NotificationsViewModelcheckForEverything() \(self.accountData?.anyName) Still importing, new notifications check skipped.");
+            L.og.debug("⏳ NotificationsViewModelcheckForEverything() \(accountData.publicKey) Still importing, new notifications check skipped.");
 #endif
             return
         }
         
         needsUpdate = false // don't check again. Wait for something to set needsUpdate to true to check again.
 #if DEBUG
-        L.og.debug("💜 NotificationsViewModel.checkForEverything() \(self.accountData?.anyName) needsUpdate, updating unread counts...")
+        L.og.debug("💜 NotificationsViewModel.checkForEverything() \(accountData.publicKey) needsUpdate, updating unread counts...")
 #endif
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?
@@ -440,7 +444,7 @@ class NotificationsViewModel: ObservableObject {
 //            }
 //        }
         
-        bg().perform { [weak self] in self?.checkForUnreadMentions() }
+        bg().perform { [weak self] in self?.checkForUnreadMentions(accountData: accountData) }
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteNewPosts else { return }
@@ -449,7 +453,7 @@ class NotificationsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteReposts else { return }
-            self.checkForUnreadReposts()
+            self.checkForUnreadReposts(accountData: accountData)
         }
         bg().perform { [weak self] in
             guard let self else { return }
@@ -459,22 +463,21 @@ class NotificationsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteReactions else { return }
-            self.checkForUnreadReactions()
+            self.checkForUnreadReactions(accountData: accountData)
         }
         bg().perform { [weak self] in
             guard let self else { return }
             guard !self.muteZaps else { return }
-            self.checkForUnreadZaps()
+            self.checkForUnreadZaps(accountData: accountData)
         }
         bg().perform { [weak self] in
             self?.checkForUnreadFailedZaps()
         }
     }
     
-    public func checkForUnreadMentions() {
+    public func checkForUnreadMentions(accountData: AccountData) {
         //TODO: Should check if there is actual mention in .content
         shouldBeBg()
-        guard let accountData else { return }
         let fetchRequest = q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
          
         let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
@@ -539,7 +542,7 @@ class NotificationsViewModel: ObservableObject {
     // async for background fetch, copy paste of checkForUnreadMentions() with withCheckedContinuation added
     public func checkForUnreadMentionsBackground(accountData: AccountData) async {
 #if DEBUG
-        L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(self.accountData?.anyName)")
+        L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(accountData.anyName)")
 #endif
         await withCheckedContinuation { [weak self] continuation in
             bg().perform {
@@ -553,7 +556,7 @@ class NotificationsViewModel: ObservableObject {
                 let unreadMentionsCount = unreadMentions.count
                 
 #if DEBUG
-                L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(self.accountData?.anyName): unreadMentionsCount \(unreadMentionsCount), with spam: \(unreadMentionsWithSpam.count)")
+                L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(accountData.anyName): unreadMentionsCount \(unreadMentionsCount), with spam: \(unreadMentionsWithSpam.count)")
 #endif
                 
                 // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
@@ -564,7 +567,7 @@ class NotificationsViewModel: ObservableObject {
                     .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
                 
 #if DEBUG
-                L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(self.accountData?.anyName): mentions for notifications: \(mentionsForNotification.count)")
+                L.og.debug("NotificationsViewModel.checkForUnreadMentionsBackground() \(accountData.anyName): mentions for notifications: \(mentionsForNotification.count)")
 #endif
                 
                 DispatchQueue.main.async { [weak self] in
@@ -589,9 +592,7 @@ class NotificationsViewModel: ObservableObject {
     
     private func checkForUnreadNewPosts() {
         shouldBeBg()
-        guard let accountData else { return }
-        
-        let fetchRequest = q.unreadNewPostsQuery(accountData: accountData)
+        let fetchRequest = q.unreadNewPostsQuery()
         let unreadNewPosts = (try? bg().count(for: fetchRequest)) ?? 0
         
         DispatchQueue.main.async { [weak self] in
@@ -602,10 +603,9 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadReposts() {
+    private func checkForUnreadReposts(accountData: AccountData) {
         //TODO: Should check if there is actual mention in .content
         shouldBeBg()
-        guard let accountData else { return }
         
         let fetchRequest = q.unreadRepostsQuery(resultType: .managedObjectResultType, accountData: accountData)
         let unreadReposts = ((try? bg().fetch(fetchRequest)) ?? [])
@@ -622,9 +622,9 @@ class NotificationsViewModel: ObservableObject {
     
     private func checkForUnreadNewFollowers() {
         shouldBeBg()
-        guard let accountData else { return }
+        guard let accountPubkey = self.pubkey else { return }
         
-        let fetchRequest = q.unreadNewFollowersQuery(accountData: accountData)
+        let fetchRequest = q.unreadNewFollowersQuery(accountPubkey: accountPubkey)
         let unreadNewFollowers = (try? bg().count(for: fetchRequest)) ?? 0
         
         DispatchQueue.main.async { [weak self] in
@@ -635,10 +635,8 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadReactions() {
+    private func checkForUnreadReactions(accountData: AccountData) {
         shouldBeBg()
-        guard let accountData else { return }
-    
         let fetchRequest = q.unreadReactionsQuery(resultType: .managedObjectResultType, accountData: accountData)
         let unreadReactions = ((try? bg().fetch(fetchRequest)) ?? [])
             .filter { !$0.isSpam } // Need to filter so can't use .countResultType
@@ -652,9 +650,8 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    private func checkForUnreadZaps() {
+    private func checkForUnreadZaps(accountData: AccountData) {
         shouldBeBg()
-        guard let accountData else { return }
         
         let fetchRequest = q.unreadZapsQuery(resultType: .managedObjectResultType, accountData: accountData)
         let unreadZaps = ((try? bg().fetch(fetchRequest)) ?? [])
@@ -671,9 +668,9 @@ class NotificationsViewModel: ObservableObject {
     
     private func checkForUnreadFailedZaps() {
         shouldBeBg()
-        guard let accountData else { return }
+        guard let accountPubkey = self.pubkey else { return }
         
-        let fetchRequest = q.unreadFailedZapsQuery(accountData: accountData)
+        let fetchRequest = q.unreadFailedZapsQuery(accountPubkey: accountPubkey)
         let unreadFailedZaps = (try? bg().count(for: fetchRequest)) ?? 0
         
         DispatchQueue.main.async { [weak self] in
@@ -687,9 +684,10 @@ class NotificationsViewModel: ObservableObject {
     // -- MARK: Mark as read
     
     @MainActor public func markMentionsAsRead() {
-        guard let accountData = self.accountData else { return }
         self.unreadMentions_ = 0
         guard let account = self.account else { return }
+        let accountData = account.toStruct()
+        self.accountDataCache = accountData
         let lastSeenPostCreatedAt = account.lastSeenPostCreatedAt
         
         bg().perform { [weak self] in
@@ -702,6 +700,7 @@ class NotificationsViewModel: ObservableObject {
                     let mostRecentCreated_at = mostRecent.created_at
                     DispatchQueue.main.async { [weak self] in
                         self?.account?.lastSeenPostCreatedAt = mostRecentCreated_at
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -713,6 +712,7 @@ class NotificationsViewModel: ObservableObject {
                 if lastSeenPostCreatedAt != twoDaysAgoOrNewer {
                     DispatchQueue.main.async { [weak self] in
                         self?.account?.lastSeenPostCreatedAt = twoDaysAgoOrNewer
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -724,7 +724,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markNewPostsAsRead() {
-        guard let accountData else { return }
+        guard let accountPubkey = self.pubkey else { return }
         self.unreadNewPosts_ = 0
         
         bg().perform { [weak self] in
@@ -732,7 +732,7 @@ class NotificationsViewModel: ObservableObject {
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
             r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
-                                       accountData.publicKey, PNType.newPosts.rawValue)
+                                       accountPubkey, PNType.newPosts.rawValue)
             r3.resultType = .updatedObjectIDsResultType
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
@@ -745,9 +745,10 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markRepostsAsRead() {
-        guard let accountData else { return }
         self.unreadReposts_ = 0
         guard let account = self.account else { return }
+        let accountData = account.toStruct()
+        self.accountDataCache = accountData
         let lastSeenRepostCreatedAt = account.lastSeenRepostCreatedAt
         
         bg().perform { [weak self] in
@@ -758,8 +759,9 @@ class NotificationsViewModel: ObservableObject {
             if let mostRecent = try? bg().fetch(r).first {
                 if lastSeenRepostCreatedAt != mostRecent.created_at {
                     let mostRecentCreated_at = mostRecent.created_at
-                    DispatchQueue.main.async {
-                        self.account?.lastSeenRepostCreatedAt = mostRecentCreated_at
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenRepostCreatedAt = mostRecentCreated_at
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -768,6 +770,7 @@ class NotificationsViewModel: ObservableObject {
                 if lastSeenRepostCreatedAt != twoDaysAgoOrNewer {
                     DispatchQueue.main.async { [weak self] in
                         self?.account?.lastSeenRepostCreatedAt = twoDaysAgoOrNewer
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -779,9 +782,10 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markReactionsAsRead() {
-        guard let accountData else { return }
         self.unreadReactions_ = 0
         guard let account = self.account else { return }
+        let accountData = account.toStruct()
+        self.accountDataCache = accountData
         let lastSeenReactionCreatedAt = account.lastSeenReactionCreatedAt
         
         bg().perform { [weak self] in
@@ -792,8 +796,9 @@ class NotificationsViewModel: ObservableObject {
             if let mostRecent = try? bg().fetch(r).first {
                 if lastSeenReactionCreatedAt != mostRecent.created_at {
                     let mostRecentCreated_at = mostRecent.created_at
-                    DispatchQueue.main.async {
-                        self.account?.lastSeenReactionCreatedAt = mostRecentCreated_at
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenReactionCreatedAt = mostRecentCreated_at
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -802,6 +807,7 @@ class NotificationsViewModel: ObservableObject {
                 if lastSeenReactionCreatedAt != twoDaysAgoOrNewer {
                     DispatchQueue.main.async { [weak self] in
                         self?.account?.lastSeenReactionCreatedAt = twoDaysAgoOrNewer
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -813,10 +819,11 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markZapsAsRead() {
-        guard let accountData else { return }
         self.unreadZaps_ = 0
         self.unreadFailedZaps_ = 0
         guard let account = self.account else { return }
+        let accountData = account.toStruct()
+        self.accountDataCache = accountData
         let lastSeenZapCreatedAt = account.lastSeenZapCreatedAt
         
         bg().perform { [weak self] in
@@ -828,8 +835,9 @@ class NotificationsViewModel: ObservableObject {
             if let mostRecent = try? bg().fetch(r).first {
                 if lastSeenZapCreatedAt != mostRecent.created_at {
                     let mostRecentCreated_at = mostRecent.created_at
-                    DispatchQueue.main.async {
-                        self.account?.lastSeenZapCreatedAt = mostRecentCreated_at
+                    DispatchQueue.main.async { [weak self] in
+                        self?.account?.lastSeenZapCreatedAt = mostRecentCreated_at
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -838,6 +846,7 @@ class NotificationsViewModel: ObservableObject {
                 if lastSeenZapCreatedAt != twoDaysAgoOrNewer {
                     DispatchQueue.main.async { [weak self] in
                         self?.account?.lastSeenZapCreatedAt = twoDaysAgoOrNewer
+                        self?.accountDataCache = self?.account?.toStruct()
                     }
                 }
             }
@@ -859,7 +868,7 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markNewFollowersAsRead() {
-        guard let accountData else { return }
+        guard let accountPubkey = self.pubkey else { return }
         self.unreadNewFollowers_ = 0
         
         bg().perform { [weak self] in
@@ -868,7 +877,7 @@ class NotificationsViewModel: ObservableObject {
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
             r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
-                                       accountData.publicKey, PNType.newFollowers.rawValue)
+                                       accountPubkey, PNType.newFollowers.rawValue)
             r3.resultType = .updatedObjectIDsResultType
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
@@ -914,9 +923,9 @@ class NotificationFetchRequests {
         return r
     }
     
-    func unreadNewPostsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<PersistentNotification> {
+    func unreadNewPostsQuery(resultType: NSFetchRequestResultType = .countResultType) -> NSFetchRequest<PersistentNotification> {
         let r = PersistentNotification.fetchRequest()
-        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newPosts.rawValue, accountData.publicKey)
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil", PNType.newPosts.rawValue)
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r.resultType = .countResultType
@@ -948,9 +957,9 @@ class NotificationFetchRequests {
         return r
     }
     
-    func unreadNewFollowersQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<PersistentNotification> {
+    func unreadNewFollowersQuery(resultType: NSFetchRequestResultType = .countResultType, accountPubkey: String) -> NSFetchRequest<PersistentNotification> {
         let r = PersistentNotification.fetchRequest()
-        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newFollowers.rawValue, accountData.publicKey)
+        r.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND pubkey == %@ AND NOT id == nil", PNType.newFollowers.rawValue, accountPubkey)
         r.fetchLimit = Self.FETCH_LIMIT
         r.sortDescriptors = [NSSortDescriptor(keyPath:\PersistentNotification.createdAt, ascending: false)]
         r.resultType = .countResultType
@@ -996,10 +1005,10 @@ class NotificationFetchRequests {
         return r
     }
     
-    func unreadFailedZapsQuery(resultType: NSFetchRequestResultType = .countResultType, accountData: AccountData) -> NSFetchRequest<PersistentNotification> {
+    func unreadFailedZapsQuery(resultType: NSFetchRequestResultType = .countResultType, accountPubkey: String) -> NSFetchRequest<PersistentNotification> {
         let r = PersistentNotification.fetchRequest()
         r.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ IN %@", 
-                                  accountData.publicKey,
+                                  accountPubkey,
                                   [
                                     PNType.failedZap.rawValue,
                                     PNType.failedZaps.rawValue, // Error
