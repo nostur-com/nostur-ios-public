@@ -18,7 +18,7 @@ struct SideTabs: View {
     var body: some View {
         VStack(alignment: .center) {
             if let account = account() {
-                PFP(pubkey: account.publicKey, account: account, size:30)
+                PFP(pubkey: account.publicKey, account: account, size: 30)
                     .padding(10)
                     .onTapGesture {
                         showSidebar = true
@@ -89,6 +89,11 @@ struct SideTabs: View {
                 }
                 .disabled(!vm.allowRemoveColumn)
             }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .font(.system(size: 20))
+            .foregroundColor(theme.accent)
+            
             Spacer()
             
             Button { sendNotification(.newPost) } label: {
