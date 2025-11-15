@@ -212,6 +212,14 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 guard self.stats.errors == 0 || self.exponentialReconnectBackOff > 512 || self.exponentialReconnectBackOff == 1 || forceConnectionAttempt || self.skipped == self.exponentialReconnectBackOff else { // Should be 0 == 0 to continue, or 2 == 2 etc..
                     self.skipped = self.skipped + 1
                     self.isSocketConnecting = false
+                    
+                    if self.skipped > 4 { // Skipped too many times, keep only the last message in outQueue (other messages are too old now)
+                        if !self.outQueue.isEmpty {
+                            let last = self.outQueue.removeLast()
+                            self.outQueue = [last]
+                        }
+                    }
+                    
 #if DEBUG
                     L.sockets.debug("🏎️🏎️🔌 Skipping reconnect. \(self.url) EB: (\(self.exponentialReconnectBackOff)) skipped: \(self.skipped) -[LOG]-")
 #endif
@@ -262,19 +270,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                     self.sendAfterAuthSubject.send()
                     return
                 }
-//                else if self.isSocketConnected {
-//                    for out in self.outQueue {
-//#if DEBUG
-//                        L.sockets.debug("🟠🟠🏎️🔌🔌 SENDING FROM OUTQUEUE \(self.url): \(out.text.prefix(155))")
-//#endif
-//                        webSocketTask.send(.string(out.text)) { error in
-//                            if let error {
-//                                self.didReceiveError(error)
-//                            }
-//                        }
-//                        self.outQueue.removeAll(where: { $0.id == out.id })
-//                    }
-//                }
             }
         }
     }
@@ -425,8 +420,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                         guard let self else { return }
                         self.urlSession?.invalidateAndCancel()
                         self.nreqSubscriptions = []
-//                        self.exponentialReconnectBackOff = 0
-//                        self.skipped = 0
                         self.lastMessageReceivedAt = nil
                         self.isSocketConnected = false
                         Task { @MainActor [weak self] in
@@ -670,8 +663,6 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
         queue.async(flags: .barrier) { [weak self] in
 //            self?.session?.invalidateAndCancel()
             self?.nreqSubscriptions = []
-//            self?.exponentialReconnectBackOff = 0
-//            self?.skipped = 0
             self?.lastMessageReceivedAt = nil
             self?.isSocketConnected = false
             DispatchQueue.main.async {
