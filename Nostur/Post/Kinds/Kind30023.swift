@@ -192,7 +192,7 @@ struct Kind30023: View {
                     // Fetch A direct or sub 1111 (new commments style)
                     nxReq(
                         Filters(
-                            kinds: [1111],
+                            kinds: [1111,1244],
                             tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
                             limit: 500
                         ),
@@ -202,7 +202,7 @@ struct Kind30023: View {
                     // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
                     nxReq(
                         Filters(
-                            kinds: [1111],
+                            kinds: [1111,1244],
                             tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
                             since: NTimestamp(date: Date.now).timestamp
                         ),

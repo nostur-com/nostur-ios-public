@@ -49,7 +49,7 @@ struct DetailPane: View {
                                             // Fetch A direct or sub 1111 (new commments style)
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1111],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
                                                     limit: 500
                                                 ),
@@ -59,7 +59,7 @@ struct DetailPane: View {
                                             // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1111],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
                                                     since: NTimestamp(date: Date.now).timestamp
                                                 ),
@@ -70,7 +70,7 @@ struct DetailPane: View {
                                             // Fetch E direct or sub 1111,1244 (new commments style)
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1244],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
                                                     limit: 500
                                                 ),
@@ -80,7 +80,7 @@ struct DetailPane: View {
                                             // Fetch E direct or sub 1111,1244 (new commments style) - REAL TIME UPDATES
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1244],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
                                                     since: NTimestamp(date: Date.now).timestamp
                                                 ),
@@ -91,7 +91,7 @@ struct DetailPane: View {
                                             // Fetch E direct or sub 1111,1244 (new commments style)
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1111],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
                                                     limit: 500
                                                 ),
@@ -101,7 +101,7 @@ struct DetailPane: View {
                                             // Fetch E direct or sub 1111,1244 (new commments style) - REAL TIME UPDATES
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1111],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "E", values: [nrPost.id]),
                                                     since: NTimestamp(date: Date.now).timestamp
                                                 ),
@@ -146,7 +146,7 @@ struct DetailPane: View {
                                             // Fetch A direct or sub 1111 (new commments style)
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1111],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
                                                     limit: 500
                                                 ),
@@ -156,7 +156,7 @@ struct DetailPane: View {
                                             // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
                                             nxReq(
                                                 Filters(
-                                                    kinds: [1111],
+                                                    kinds: [1111,1244],
                                                     tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
                                                     since: NTimestamp(date: Date.now).timestamp
                                                 ),
@@ -216,7 +216,7 @@ struct DetailPane: View {
                                                 // Fetch A direct or sub 1111 (new commments style)
                                                 nxReq(
                                                     Filters(
-                                                        kinds: [1111],
+                                                        kinds: [1111,1244],
                                                         tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
                                                         limit: 500
                                                     ),
@@ -226,7 +226,7 @@ struct DetailPane: View {
                                                 // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
                                                 nxReq(
                                                     Filters(
-                                                        kinds: [1111],
+                                                        kinds: [1111,1244],
                                                         tagFilter: TagFilter(tag: "A", values: [nrPost.aTag]),
                                                         since: NTimestamp(date: Date.now).timestamp
                                                     ),
@@ -271,7 +271,7 @@ struct DetailPane: View {
                                                 // Fetch A direct or sub 1111 (new commments style)
                                                 nxReq(
                                                     Filters(
-                                                        kinds: [1111],
+                                                        kinds: [1111,1244],
                                                         tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
                                                         limit: 500
                                                     ),
@@ -281,7 +281,7 @@ struct DetailPane: View {
                                                 // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
                                                 nxReq(
                                                     Filters(
-                                                        kinds: [1111],
+                                                        kinds: [1111,1244],
                                                         tagFilter: TagFilter(tag: "A", values: [naddrPath.navId]),
                                                         since: NTimestamp(date: Date.now).timestamp
                                                     ),

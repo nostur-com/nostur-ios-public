@@ -53,7 +53,7 @@ class ProfileInteractionsConversationsVM: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: [self.pubkey],
-                                                kinds: Set([1,1244]),
+                                                kinds: Set([1,1111,1244]),
 //                                                kinds: Set([1,6,7,20,30023,9802]),
                                                 tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
                                                 limit: 2500

@@ -8,6 +8,7 @@
 import SwiftUI
 import MarkdownUI
 import NavigationBackport
+import NostrEssentials
 
 struct ArticleView: View {
     @Environment(\.theme) private var theme
@@ -181,6 +182,26 @@ struct ArticleView: View {
                     
                     // Same but use the a-tag (proper) // TODO: when other clients handle replies to ParaReplaceEvents properly we can remove the old E fetching
                     req(RM.getPREventReferences(aTag: article.aTag, subscriptionId: "REALTIME-DETAIL-A", since: NTimestamp(date: Date.now)))
+                    
+                    // Fetch A direct or sub 1111 (new commments style)
+                    nxReq(
+                        Filters(
+                            kinds: [1111,1244],
+                            tagFilter: TagFilter(tag: "A", values: [article.aTag]),
+                            limit: 500
+                        ),
+                        subscriptionId: "DETAIL-"+UUID().uuidString
+                    )
+                    
+                    // Fetch A direct or sub 1111(new commments style) - REAL TIME UPDATES
+                    nxReq(
+                        Filters(
+                            kinds: [1111,1244],
+                            tagFilter: TagFilter(tag: "A", values: [article.aTag]),
+                            since: NTimestamp(date: Date.now).timestamp
+                        ),
+                        subscriptionId: "REALTIME-DETAIL-22",
+                    )
                 }
             }
             .onDisappear {
