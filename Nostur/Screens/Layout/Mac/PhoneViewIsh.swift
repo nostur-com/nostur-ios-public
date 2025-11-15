@@ -16,6 +16,7 @@ struct PhoneViewIsh: View {
     @Environment(\.theme) private var theme
     @ObservedObject private var ss: SettingsStore = .shared
     
+    @State private var showingNewNote = false
     @State private var didCreate = false
     @State var didSend = false
     
@@ -100,6 +101,30 @@ struct PhoneViewIsh: View {
                 let lastPath = destination.destination as! NRPost
                 lastPathPostId = lastPath.id
             }
+        }
+        
+        .sheet(isPresented: $showingNewNote) {
+            NRNavigationStack {
+                if la.account.isNC {
+                    WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                        ComposePost(onDismiss: { showingNewNote = false }, kind: .textNote)
+                    }
+                    .environment(\.theme, theme)
+                }
+                else {
+                    ComposePost(onDismiss: { showingNewNote = false }, kind: .textNote)
+                        .environment(\.theme, theme)
+                }
+            }
+            .presentationBackgroundCompat(theme.listBackground)
+            .environmentObject(la)
+        }
+        .onReceive(receiveNotification(.newPost)) { _ in
+            showingNewNote = true
+        }
+        .onReceive(receiveNotification(.newTemplatePost)) { _ in
+            // Note: use  Drafts.shared.draft = ...
+            showingNewNote = true
         }
     }
     

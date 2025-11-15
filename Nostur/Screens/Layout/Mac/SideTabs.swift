@@ -90,6 +90,16 @@ struct SideTabs: View {
                 .disabled(!vm.allowRemoveColumn)
             }
             Spacer()
+            
+            Button { sendNotification(.newPost) } label: {
+                Image(systemName: "square.and.pencil.circle.fill")
+            }
+            .help("New Post")
+            .labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .font(.system(size: 24))
+            .foregroundColor(theme.accent)
+            .padding(.bottom, 20)
         }
 //        .padding(.top, 100)
         
