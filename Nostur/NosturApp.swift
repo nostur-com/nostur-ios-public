@@ -45,6 +45,7 @@ struct iOSApp: App {
     private let wot = WebOfTrust.shared
     private let nsecBunker = NSecBunkerManager.shared
     private let feedsCoordinator = FeedsCoordinator.shared
+    private let deduplicator = Deduplicator.shared
     private let screenSpace = ScreenSpace.shared // Needed for "full screen" window size on desktop
     private let unpublisher = Unpublisher.shared
     
