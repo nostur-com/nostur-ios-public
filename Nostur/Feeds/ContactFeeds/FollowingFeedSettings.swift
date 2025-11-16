@@ -37,7 +37,7 @@ struct FollowingFeedSettings: View {
                 }
             }
             
-            if feed.accountPubkey != nil, !la.account.followingHashtags.isEmpty {
+            if feed.accountPubkey != nil && feed.accountPubkey != EXPLORER_PUBKEY, !la.account.followingHashtags.isEmpty {
                 Section("Included hashtags") {
                     FollowingFeedSettings_Hashtags(hashtags: Array(la.account.followingHashtags), onChange: { hashtags in
                         la.account.followingHashtags = Set(hashtags)
