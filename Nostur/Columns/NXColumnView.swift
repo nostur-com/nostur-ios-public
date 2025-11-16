@@ -182,6 +182,17 @@ struct NXColumnView<HeaderContent: View>: View {
                 viewModel.resume()
             }
         }
+        
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if IS_DESKTOP_COLUMNS() {
+                    Button("Feed settings...", systemImage: "gearshape") {
+                        feedSettingsFeed = config.feed
+                    }
+                }
+            }
+        }
+        
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             guard viewModel.isVisible, let config = viewModel.config else { return }
             feedSettingsFeed = config.feed
