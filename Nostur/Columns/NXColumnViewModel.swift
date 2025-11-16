@@ -990,7 +990,10 @@ class NXColumnViewModel: ObservableObject {
             }
             else { nil }
             
-            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
                 QUERY_FOLLOWING_KINDS.subtracting([20])
             } else { QUERY_FOLLOWING_KINDS }
             
@@ -1039,14 +1042,21 @@ class NXColumnViewModel: ObservableObject {
 #if DEBUG
             L.og.debug("☘️☘️ \(config.name) loadLocal(.pubkeys/.followSet/Pack)\(older ? "older" : "") \(pubkeys.count) pubkeys")
 #endif
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                QUERY_FOLLOWING_KINDS
+            }
 
             bg().perform { [weak self] in
                 guard let self else { return }
+                
                 let fr = if !older {
-                    Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
+                    Event.postsByPubkeys(pubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 else {
-                    Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
+                    Event.postsByPubkeys(pubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
 
@@ -1089,13 +1099,21 @@ class NXColumnViewModel: ObservableObject {
             L.og.debug("☘️☘️ \(config.name) loadLocal(.relays)\(older ? "older" : "")")
 #endif
             let relaysData = feed.relaysData
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                QUERY_FOLLOWING_KINDS.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
             bg().perform { [weak self] in
                 guard let self else { return }
+                
                 let fr = if !older {
-                    Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
+                    Event.postsByRelays(relaysData, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 else {
-                    Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: QUERY_FOLLOWING_KINDS)
+                    Event.postsByRelays(relaysData, until: untilTimestamp, hideReplies: !repliesEnabled, kinds: kinds)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
@@ -1195,10 +1213,13 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_FEED_KINDS.subtracting([20])
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             } else {
-                FETCH_FOLLOWING_FEED_KINDS
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: kinds)
@@ -1245,9 +1266,17 @@ class NXColumnViewModel: ObservableObject {
         case .pubkeys(let feed), .followSet(let feed), .followPack(let feed):
             let pubkeys = feed.contactPubkeys.count <= 2000 ? feed.contactPubkeys : Set(feed.contactPubkeys.shuffled().prefix(2000))
             guard pubkeys.count > 0 else { return }
+            
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
             let filters = Filters(
                 authors: pubkeys,
-                kinds: FETCH_FOLLOWING_FEED_KINDS,
+                kinds: kinds,
                 since: NTimestamp(date: Date.now).timestamp
             )
             
@@ -1277,7 +1306,15 @@ class NXColumnViewModel: ObservableObject {
         case .relays(let feed):
             let relaysData = feed.relaysData
             guard !relaysData.isEmpty else { return }
-            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, since: Int(Date.now.timeIntervalSince1970), limit: 100), subscriptionId: config.id, isActiveSubscription: true, relays: relaysData)
+            
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                FETCH_GLOBAL_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
+            nxReq(Filters(kinds: kinds, since: Int(Date.now.timeIntervalSince1970), limit: 100), subscriptionId: config.id, isActiveSubscription: true, relays: relaysData)
             
         case .relayPreview(let relayData):
             let relaysData: Set<RelayData> = [relayData]
@@ -1353,10 +1390,15 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
-            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_FEED_KINDS.subtracting([20])
+            
+            
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             } else {
-                FETCH_FOLLOWING_FEED_KINDS
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: kinds)
@@ -1434,9 +1476,16 @@ class NXColumnViewModel: ObservableObject {
                 return nil
             }
             
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
             let filters = Filters(
                 authors: pubkeys,
-                kinds: FETCH_FOLLOWING_FEED_KINDS,
+                kinds: kinds,
                 since: since,
                 until: until,
                 limit: !config.continue ? 150 : nil
@@ -1486,7 +1535,14 @@ class NXColumnViewModel: ObservableObject {
             let relaysData = feed.relaysData
             guard !relaysData.isEmpty else { return nil }
             
-            let filters = globalFeedReqFilters(since: since, until: until)
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                FETCH_GLOBAL_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
+            let filters = globalFeedReqFilters(kinds: kinds, since: since, until: until)
             
             if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
@@ -1498,7 +1554,7 @@ class NXColumnViewModel: ObservableObject {
             let relaysData: Set<RelayData> = [relayData]
             guard !relaysData.isEmpty else { return nil }
             
-            let filters = globalFeedReqFilters(since: since, until: until)
+            let filters = globalFeedReqFilters(kinds: FETCH_GLOBAL_KINDS, since: since, until: until)
             
             if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
@@ -1576,11 +1632,14 @@ class NXColumnViewModel: ObservableObject {
             else { [] } // Skip hashtags if filter is too large
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
-            
-            let kinds = if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_FEED_KINDS.subtracting([20])
+             
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             } else {
-                FETCH_FOLLOWING_FEED_KINDS
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: kinds)
@@ -1630,9 +1689,16 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 else { return }
             
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
             let filters = Filters(
                 authors: pubkeys,
-                kinds: FETCH_FOLLOWING_FEED_KINDS,
+                kinds: kinds,
                 until: Int(until),
                 limit: 100
             )
@@ -1664,7 +1730,15 @@ class NXColumnViewModel: ObservableObject {
         case .relays(let feed):
             let relaysData = feed.relaysData
             guard !relaysData.isEmpty else { return }
-            nxReq(Filters(kinds: FETCH_GLOBAL_KINDS, until: Int(until), limit: 100), subscriptionId: "G-PAGE-" + config.id, relays: relaysData)
+            
+            let kinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                FETCH_GLOBAL_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
+            nxReq(Filters(kinds: kinds, until: Int(until), limit: 100), subscriptionId: "G-PAGE-" + config.id, relays: relaysData)
         
         case .relayPreview(let relayData):
             let relaysData: Set<RelayData> = [relayData]
@@ -1913,6 +1987,21 @@ class NXColumnViewModel: ObservableObject {
                     self?.reload(config)
                 }
             }
+        
+        feed.publisher(for: \.kinds_)
+            .scan((feed.kinds_, feed.kinds_)) { (previous, current) in
+                return (previous.1, current)
+            }
+            .dropFirst()  // Skip the initial value to avoid unnecessary reload on setup
+            .sink { [weak self] oldValue, newValue in
+                if oldValue != newValue {
+#if DEBUG
+                    L.og.debug("☘️☘️ \(config.name) 🟠 reloadWhenNeeded feed.kinds_ changed from \(oldValue) to \(newValue)")
+#endif
+                    self?.reload(config)
+                }
+            }
+            .store(in: &subscriptions)
     }
     
     @MainActor
@@ -2510,12 +2599,26 @@ extension NXColumnViewModel {
             let wotEnabled = config.wotEnabled
             let repliesEnabled = config.repliesEnabled
             
+            let fetchKinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                FETCH_GLOBAL_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            
             // Fetch from relays
-            _ = try? await relayReq(Filters(kinds: FETCH_GLOBAL_KINDS, limit: 250), timeout: 5.5, relays: relays)
+            _ = try? await relayReq(Filters(kinds: fetchKinds, limit: 250), timeout: 5.5, relays: relays)
+            
+            let queryKinds = if !feed.kinds.isEmpty {
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
+            else {
+                QUERY_FOLLOWING_KINDS.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
                               
             // Fetch from DB
             let postsByRelays: [Event] = await withBgContext { _ in
-                let fr = Event.postsByRelays(relays, lastAppearedCreatedAt: Int64(mostRecentCreatedAt), fetchLimit: 150, kinds: QUERY_FOLLOWING_KINDS)
+                let fr = Event.postsByRelays(relays, lastAppearedCreatedAt: Int64(mostRecentCreatedAt), fetchLimit: 150, kinds: queryKinds)
                 return (try? bg().fetch(fr)) ?? []
             }
             
@@ -2782,8 +2885,8 @@ func pubkeyOrHashtagReqFilters(_ pubkeys: Set<String>, hashtags: Set<String>, si
     return filters
 }
 
-func globalFeedReqFilters(since: Int? = nil, until: Int? = nil, limit: Int = 250) -> [Filters] {
-    return [Filters(kinds: FETCH_GLOBAL_KINDS,
+func globalFeedReqFilters(kinds: Set<Int>, since: Int? = nil, until: Int? = nil, limit: Int = 250) -> [Filters] {
+    return [Filters(kinds: kinds,
                     since: since, until: until, limit: limit )]
 }
 
@@ -2837,6 +2940,8 @@ let QUERY_FOLLOWING_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235]
 
 let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235]
 //let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1222,1244]
+
+let REPLY_KINDS: Set<Int> = [1111,1244] // substract these is replies toggle is off
 
 let QUERY_FETCH_LIMIT = 50 // Was 25 before, but seems we are missing posts, maybe too much non WoT-hashtag coming back. Increase limit or split query? or could be the time cutoff is too short/strict
 

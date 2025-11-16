@@ -45,6 +45,15 @@ struct FollowingFeedSettings: View {
                     })
                 }
             }
+            
+            // Only show specific content types (kinds)
+            NavigationLink(destination: ContentTypesPicker(selectedKinds: $feed.kinds)) {
+                HStack {
+                    Text("Limit content types")
+                    Spacer()
+                    Text(!feed.kinds.isEmpty ? "\(kindsDescription(feed.kinds))" : "All")
+                }
+            }
         }
         
         .navigationTitle("Following Feed settings")

@@ -1,5 +1,5 @@
 //
-//  EditList.swift
+//  FeedRelaysPicker.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 08/04/2023.

@@ -127,6 +127,15 @@ struct ContactFeedSettings: View {
                         Text("Use additional relays from contacts in this feed to fetch posts")
                     }
                 }
+                
+                // Only show specific content types (kinds)
+                NavigationLink(destination: ContentTypesPicker(selectedKinds: $feed.kinds)) {
+                    HStack {
+                        Text("Limit content types")
+                        Spacer()
+                        Text(!feed.kinds.isEmpty ? "\(kindsDescription(feed.kinds))" : "All")
+                    }
+                }
             }
             else {
                 
@@ -176,6 +185,15 @@ struct ContactFeedSettings: View {
                         })) {
                             Text("Relay Autopilot")
                             Text("Use additional relays from contacts in this feed to fetch posts")
+                        }
+                    }
+                    
+                    // Only show specific content types (kinds)
+                    NavigationLink(destination: ContentTypesPicker(selectedKinds: $feed.kinds)) {
+                        HStack {
+                            Text("Limit content types")
+                            Spacer()
+                            Text(!feed.kinds.isEmpty ? "\(kindsDescription(feed.kinds))" : "All")
                         }
                     }
                 }

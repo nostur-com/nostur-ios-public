@@ -38,6 +38,7 @@ extension CloudFeed {
     @NSManaged public var useOutbox: Bool
     @NSManaged public var pubkeys: String?
     @NSManaged public var relays: String?
+    @NSManaged public var kinds_: String?
     
     // Fields from old ListState migrated to CloudFeed
     
@@ -211,6 +212,15 @@ extension CloudFeed : Identifiable {
         }
         set {
             lastRead_ = newValue.joined(separator: " ")
+        }
+    }
+    
+    public var kinds: Set<Int> {
+        get {
+            return Set(kinds_?.split(separator: " ").compactMap { Int($0) } ?? [])
+        }
+        set {
+            kinds_ = newValue.map(String.init).joined(separator: " ")
         }
     }
 }
