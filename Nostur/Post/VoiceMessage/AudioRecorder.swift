@@ -589,6 +589,7 @@ struct AudioRecorderContentView: View {
                 .buttonStyleGlassProminent()
                 .disabled(shouldDisablePostButton)
                 .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+                .help("Send")
             }
             
             ToolbarItem(placement: .principal) {

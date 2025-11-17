@@ -97,6 +97,7 @@ struct LiveEventsBanner: View {
                                     Button("Minimize", systemImage: "rectangle.portrait.topthird.inset.filled") {
                                         LiveKitVoiceSession.shared.visibleNest = nil
                                     }
+                                    .help("Minimize")
                                 }
                             }
                         }

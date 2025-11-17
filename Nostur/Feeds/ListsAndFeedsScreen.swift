@@ -145,6 +145,7 @@ struct ListsAndFeedsScreen: View {
                 } label: {
                     Label("New Feed", systemImage: "plus")
                 }
+                .help("New Feed...")
             }
         }
         

@@ -121,10 +121,12 @@ struct AnySigner: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { UIPasteboard.general.string = input } label: { Image(systemName: "doc.on.doc") }
                         .disabled(input.isEmpty)
+                        .help("Copy to clipboard")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(String(localized:"Publish", comment:"Button to publish"), systemImage: "paperplane") { publish() }
                         .disabled(signedNEvent == nil)
+                        .help("Publish")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if tab == "Signer" {

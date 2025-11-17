@@ -52,6 +52,7 @@ struct LogoutAccountSheet: View {
                         self.account = nil
                     }
                     .buttonStyleGlassProminent(tint: Color.red)
+                    .help("Logout")
                 }
             }
         }

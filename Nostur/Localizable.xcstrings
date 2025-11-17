@@ -1327,6 +1327,9 @@
         }
       }
     },
+    "Activate Picture-in-Picture" : {
+
+    },
     "Activate this filter" : {
       "comment" : "Toggle to activate filter",
       "localizations" : {

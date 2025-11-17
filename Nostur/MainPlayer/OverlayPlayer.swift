@@ -142,12 +142,14 @@ struct OverlayPlayer: View {
                                                 Button("Save to Photo Library", systemImage: "square.and.arrow.down") {
                                                     saveAVAssetToPhotos()
                                                 }
+                                                .help("Save to Photo Library")
                                                 Button("Copy video URL", systemImage: "document.on.document") {
                                                     if let url = vm.currentlyPlayingUrl {
                                                         UIPasteboard.general.string = url
                                                         sendNotification(.anyStatus, ("Video URL copied to clipboard", "APP_NOTICE"))
                                                     }
                                                 }
+                                                .help("Copy video URL")
                                             }, label: {
                                                 if isSaving {
                                                     HStack {
@@ -188,6 +190,7 @@ struct OverlayPlayer: View {
 //                                            .font(.title2)
                                             .buttonStyle(.borderless)
                                             .foregroundColor(Color.white)
+                                            .help("Activate Picture-in-Picture")
                                         }
                                     }
                                 }

@@ -95,6 +95,7 @@ struct PostPreview: View {
                 .buttonStyleGlassProminent()
                 .disabled(shouldDisablePostButton)
                 .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+                .help("Send")
             }
         }
         .navigationTitle(String(localized: "Preview", comment: "Navigation title for Post Preview screen"))

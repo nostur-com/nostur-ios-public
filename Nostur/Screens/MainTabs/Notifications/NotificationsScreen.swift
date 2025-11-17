@@ -167,6 +167,7 @@ struct NotificationsScreen: View {
                     .onTapGesture {
                         showNotificationSettings.toggle()
                     }
+                    .help("Notifications settings...")
             }
         }
         .sheet(isPresented: $showNotificationSettings, content: {

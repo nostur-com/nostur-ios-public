@@ -142,6 +142,7 @@ struct BookmarksColumn: View {
                         showBookmarkFilterOptions = true
                     }
                     .foregroundStyle(filterColor)
+                    .help("Toggle filters...")
                 }
             }
         }

@@ -194,6 +194,7 @@ struct DMs: View {
                     .onTapGesture {
                         sendNotification(.showDMToggles)
                     }
+                    .help("Settings...")
             }
         }
         .overlay(alignment: .top) {

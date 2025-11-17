@@ -320,6 +320,7 @@ struct ContactFeedSettings: View {
                         addContactsSheetShown = true
                     }
                     .labelStyle(.iconOnly)
+                    .help("Add contact...")
                 }
             }            
         }
