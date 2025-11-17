@@ -4997,6 +4997,9 @@
         }
       }
     },
+    "Include column" : {
+
+    },
     "Include Nostur caption when sharing posts" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -6866,6 +6869,9 @@
         }
       }
     },
+    "Pick GIF" : {
+
+    },
     "Pick Photo" : {
       "localizations" : {
         "nl" : {
@@ -7890,6 +7896,9 @@
           }
         }
       }
+    },
+    "Record Voice Message" : {
+
     },
     "Recordings" : {
       "localizations" : {
@@ -9277,6 +9286,9 @@
         }
       }
     },
+    "Show Preview of this post" : {
+
+    },
     "Show replies" : {
       "localizations" : {
         "nl" : {
@@ -9562,6 +9574,9 @@
           }
         }
       }
+    },
+    "Start Nest (Audio room)" : {
+
     },
     "Start now" : {
       "localizations" : {
