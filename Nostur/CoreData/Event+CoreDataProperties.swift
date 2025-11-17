@@ -1264,7 +1264,7 @@ extension Event {
                         }
                     }
                     // Let DirectMessageViewModel handle view updates
-                    DirectMessageViewModel.default.newMessage(dmState)
+                    DirectMessageViewModel.default.newMessage()
                     DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                 }
                 // Same but account / contact switched, because we support multiple accounts so we need to be able to track both ways
@@ -1275,53 +1275,67 @@ extension Event {
                         dmState.accepted = true
                     }
                     // Let DirectMessageViewModel handle view updates
-                    DirectMessageViewModel.default.newMessage(dmState)
+                    DirectMessageViewModel.default.newMessage()
                     DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                 }
                 else {
                     // if we are sender with full account
                     if AccountsState.shared.bgAccountPubkeys.contains(event.publicKey) {
-                        let dmState = CloudDMState(context: context)
-                        dmState.accountPubkey_ = event.publicKey
-                        dmState.contactPubkey_ = contactPubkey
-                        dmState.accepted = true
-                        dmState.markedReadAt_ = savedEvent.date
-                        // Let DirectMessageViewModel handle view updates
-                        DirectMessageViewModel.default.newMessage(dmState)
+                        let savedEventDate = savedEvent.date
+                        Task { @MainActor in
+                            let dmState = CloudDMState(context: viewContext())
+                            dmState.accountPubkey_ = event.publicKey
+                            dmState.contactPubkey_ = contactPubkey
+                            dmState.accepted = true
+                            dmState.markedReadAt_ = savedEventDate
+                            DataProvider.shared().saveToDiskNow(.viewContext)
+                            // Let DirectMessageViewModel handle view updates
+                            DirectMessageViewModel.default.newMessage()
+                        }
                         DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                     }
                     
                     // if we are receiver with full account
                     else if AccountsState.shared.bgAccountPubkeys.contains(contactPubkey) {
-                        let dmState = CloudDMState(context: context)
-                        dmState.accountPubkey_ = contactPubkey
-                        dmState.contactPubkey_ = event.publicKey
-                        dmState.accepted = false
-                        // Let DirectMessageViewModel handle view updates
-                        DirectMessageViewModel.default.newMessage(dmState)
+                        Task { @MainActor in
+                            let dmState = CloudDMState(context: viewContext())
+                            dmState.accountPubkey_ = contactPubkey
+                            dmState.contactPubkey_ = event.publicKey
+                            dmState.accepted = false
+                            DataProvider.shared().saveToDiskNow(.viewContext)
+                            // Let DirectMessageViewModel handle view updates
+                            DirectMessageViewModel.default.newMessage()
+                        }
                         DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                     }
                     
                     // if we are sender with read only account
                     else if AccountsState.shared.bgAccountPubkeys.contains(event.publicKey) {
-                        let dmState = CloudDMState(context: context)
-                        dmState.accountPubkey_ = event.publicKey
-                        dmState.contactPubkey_ = contactPubkey
-                        dmState.accepted = true
-                        dmState.markedReadAt_ = savedEvent.date
-                        // Let DirectMessageViewModel handle view updates
-                        DirectMessageViewModel.default.newMessage(dmState)
+                        let savedEventDate = savedEvent.date
+                        Task { @MainActor in
+                            let dmState = CloudDMState(context: viewContext())
+                            dmState.accountPubkey_ = event.publicKey
+                            dmState.contactPubkey_ = contactPubkey
+                            dmState.accepted = true
+                            dmState.markedReadAt_ = savedEventDate
+                            DataProvider.shared().saveToDiskNow(.viewContext)
+                            // Let DirectMessageViewModel handle view updates
+                            DirectMessageViewModel.default.newMessage()
+                        }
                         DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                     }
                     
                     // if we are receiver with read only account
                     else if AccountsState.shared.bgAccountPubkeys.contains(contactPubkey) {
-                        let dmState = CloudDMState(context: context)
-                        dmState.accountPubkey_ = contactPubkey
-                        dmState.contactPubkey_ = event.publicKey
-                        dmState.accepted = false
-                        // Let DirectMessageViewModel handle view updates
-                        DirectMessageViewModel.default.newMessage(dmState)
+                        Task { @MainActor in
+                            let dmState = CloudDMState(context: viewContext())
+                            dmState.accountPubkey_ = contactPubkey
+                            dmState.contactPubkey_ = event.publicKey
+                            dmState.accepted = false
+                            DataProvider.shared().saveToDiskNow(.viewContext)
+                            // Let DirectMessageViewModel handle view updates
+                            DirectMessageViewModel.default.newMessage()
+                        }
                         DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                     }
                 }

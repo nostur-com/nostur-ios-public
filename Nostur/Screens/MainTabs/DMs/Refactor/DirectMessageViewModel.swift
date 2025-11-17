@@ -404,7 +404,7 @@ class DirectMessageViewModel: ObservableObject {
         }
     }
     
-    public func newMessage(_ dmState: CloudDMState) {
+    public func newMessage() {
         reloadAccepted()
         reloadMessageRequests()
         reloadMessageRequestsNotWot()
