@@ -731,8 +731,7 @@ class NotificationsViewModel: ObservableObject {
             guard let self = self else { return }
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND pubkey == %@ AND type_ == %@ AND NOT id == nil",
-                                       accountPubkey, PNType.newPosts.rawValue)
+            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil", PNType.newPosts.rawValue)
             r3.resultType = .updatedObjectIDsResultType
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
