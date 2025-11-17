@@ -1468,6 +1468,9 @@
         }
       }
     },
+    "Add column" : {
+
+    },
     "Add comment" : {
       "comment" : "Placeholder text for adding a comment",
       "localizations" : {
@@ -3024,6 +3027,9 @@
         }
       }
     },
+    "Content types" : {
+      "comment" : "Header for a feed setting"
+    },
     "Continue" : {
       "localizations" : {
         "nl" : {
@@ -4306,6 +4312,9 @@
         }
       }
     },
+    "Feed settings..." : {
+
+    },
     "Feeds" : {
       "comment" : "Navigation title for Feeds screen",
       "localizations" : {
@@ -4382,6 +4391,9 @@
           }
         }
       }
+    },
+    "Filter" : {
+
     },
     "Filter by your follows only (strict), or also your follows follows (normal)" : {
       "localizations" : {
@@ -5327,6 +5339,9 @@
           }
         }
       }
+    },
+    "Limit content types" : {
+
     },
     "Limit Home/Lock screen notifications to only from people you follow" : {
       "localizations" : {
@@ -8156,6 +8171,9 @@
         }
       }
     },
+    "Remove column" : {
+
+    },
     "Remove from stage" : {
       "localizations" : {
         "nl" : {
@@ -8800,6 +8818,9 @@
         }
       }
     },
+    "Select content types" : {
+
+    },
     "Select Date & Time" : {
       "localizations" : {
         "nl" : {
@@ -9079,6 +9100,12 @@
           }
         }
       }
+    },
+    "Short videos" : {
+
+    },
+    "Short Videos (Vines)" : {
+
     },
     "Show" : {
       "comment" : "Button to show more items in a post",
@@ -10739,6 +10766,9 @@
     "Verifying... Done." : {
       "shouldTranslate" : false
     },
+    "Videos" : {
+
+    },
     "View on web" : {
       "localizations" : {
         "nl" : {
@@ -10761,6 +10791,12 @@
           }
         }
       }
+    },
+    "Voice Messages" : {
+
+    },
+    "Voice Messages (Yaks)" : {
+
     },
     "VPN detected" : {
       "localizations" : {

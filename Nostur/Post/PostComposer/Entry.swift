@@ -437,9 +437,11 @@ struct Entry: View {
     var highlightAddRemoveAuthorButton: some View {
         if selectedAuthor != nil {
             Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight"), systemImage: "person.crop.circle.badge.minus.fill") { selectedAuthor = nil }
+                .help("Remove author")
         }
         else {
             Button(String(localized:"Include author", comment: "Button to include author in Highlight"), systemImage: "person.crop.circle.badge.plus") { isAuthorSelectionShown = true }
+                .help("Include column")
         }
     }
     
@@ -450,6 +452,7 @@ struct Entry: View {
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading)
+        .help("Take Photo")
     }
     
     @ViewBuilder
@@ -459,6 +462,7 @@ struct Entry: View {
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading)
+        .help("Pick Photo")
     }
     
     @ViewBuilder
@@ -468,6 +472,7 @@ struct Entry: View {
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading)
+        .help("Pick Video")
     }
     
     @ViewBuilder
@@ -479,6 +484,7 @@ struct Entry: View {
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading)
+        .help("Pick GIF")
     }
     
     @ViewBuilder
@@ -496,6 +502,7 @@ struct Entry: View {
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading)
+        .help("Start Nest (Audio room)")
     }
     
     @ViewBuilder
@@ -505,6 +512,7 @@ struct Entry: View {
         }
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading)
+        .help("Record Voice Message")
     }
     
     @ViewBuilder
@@ -514,6 +522,7 @@ struct Entry: View {
         }
         .disabled(shouldDisablePostButton)
         .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+        .help("Show Preview of this post")
     }
     
     @ViewBuilder
@@ -531,6 +540,7 @@ struct Entry: View {
         .buttonStyleGlassProminent()
         .disabled(shouldDisablePostButton)
         .opacity(shouldDisablePostButton ? 0.25 : 1.0)
+        .help("Send")
     }
     
     private func sendNow() {
