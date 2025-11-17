@@ -291,7 +291,7 @@ extension AccountEditView {
         
         Task {
             let response = try await LUD16.getCallbackUrl(lud16: account.lud16)
-            if let zapperPubkey = response.nostrPubkey, (response.allowsNostr ?? false), isValidPubkey(zapperPubkey) {
+            if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                 DispatchQueue.main.async {
                     contact.zapperPubkeys.insert(zapperPubkey)
                 }

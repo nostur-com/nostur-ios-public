@@ -312,8 +312,7 @@ class ZapperPubkeyVerifier: ObservableObject {
             else {
                 try await LUD16.getCallbackUrl(lud06: anyLud)
             }
-            guard let allowsNostr = response.allowsNostr, allowsNostr,
-                  let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey)
+            guard let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey)
             else {
                 return nil
             }

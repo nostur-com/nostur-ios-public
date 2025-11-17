@@ -221,7 +221,7 @@ struct ZapButtonInner: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                            if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrPost.contact.zapperPubkeys.insert(zapperPubkey)
@@ -255,7 +255,7 @@ struct ZapButtonInner: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                            if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 nrPost.contact.zapperPubkeys.insert(zapperPubkey)

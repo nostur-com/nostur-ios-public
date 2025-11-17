@@ -254,7 +254,7 @@ struct SelectedParticipantView: View {
                 do {
                     if let lud16 = lud16orNil, lud16 != "" {
                         let response = try await LUD16.getCallbackUrl(lud16: lud16)
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                        if response.nostrPubkey != nil {
                             await bg().perform {
                                 guard let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
                                 nrContact.zapperPubkeys.insert(zapperPubkey)
@@ -266,7 +266,7 @@ struct SelectedParticipantView: View {
                     }
                     else if let lud06 = lud06orNil, lud06 != "" {
                         let response = try await LUD16.getCallbackUrl(lud06: lud06)
-                        if (response.allowsNostr ?? false) && (response.nostrPubkey != nil) {
+                        if response.nostrPubkey != nil {
                             await bg().perform {
                                 guard let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) else { return }
                                 nrContact.zapperPubkeys.insert(zapperPubkey)
@@ -320,7 +320,7 @@ struct SelectedParticipantView: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 100000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                            if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 bg().perform {
@@ -356,7 +356,7 @@ struct SelectedParticipantView: View {
                         let max = ((response.maxSendable ?? 200000000) > 200000000 ? 200000000 : (response.maxSendable ?? 200000000)) / 1000
                         if response.callback != nil {
                             let callback = response.callback!
-                            if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                            if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                                 supportsZap = true
                                 // Store zapper nostrPubkey on contact.zapperPubkey as cache
                                 bg().perform {

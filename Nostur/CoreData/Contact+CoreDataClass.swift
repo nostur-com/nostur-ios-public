@@ -36,9 +36,9 @@ extension Contact {
 
 
 func withContact(pubkey: String, completion: @escaping (Contact) -> Void) {
-    #if DEBUG
+#if DEBUG
     shouldBeBg()
-    #endif
+#endif
     if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
         completion(contact)
     }

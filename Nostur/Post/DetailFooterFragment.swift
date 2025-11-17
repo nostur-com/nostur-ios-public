@@ -84,7 +84,7 @@ struct DetailFooterFragment: View {
                 if let lud16 = nrPost.contact.lud16, lud16 != "" {
                     let response = try await LUD16.getCallbackUrl(lud16: lud16)
                     await MainActor.run {
-                        if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                        if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                             nrPost.contact.zapperPubkeys.insert(zapperPubkey)
 #if DEBUG
                             L.og.debug("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
@@ -96,7 +96,7 @@ struct DetailFooterFragment: View {
                 else if let lud06 = nrPost.contact.lud06, lud06 != "" {
                     let response = try await LUD16.getCallbackUrl(lud06: lud06)
                     await MainActor.run {
-                        if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                        if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                             nrPost.contact.zapperPubkeys.insert(zapperPubkey)
 #if DEBUG
                             L.og.debug("⚡️ contact.zapperPubkey updated: \(zapperPubkey)")
