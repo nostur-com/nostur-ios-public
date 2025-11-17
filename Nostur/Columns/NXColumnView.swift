@@ -189,6 +189,7 @@ struct NXColumnView<HeaderContent: View>: View {
                     Button("Feed settings...", systemImage: "gearshape") {
                         feedSettingsFeed = config.feed
                     }
+                    .help("Feed settings...")
                 }
             }
         }
