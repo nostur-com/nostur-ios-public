@@ -479,11 +479,13 @@ struct ProfileView: View {
                             selected: selectedSubTab == "Articles")
                         Spacer()
                     }
-                    TabButton(
-                        action: { selectedSubTab = "Interactions" },
-                        title: String(localized: "Interactions", comment:"Tab title"),
-                        selected: selectedSubTab == "Interactions")
-                    Spacer()
+                    if nrContact.pubkey != AccountsState.shared.activeAccountPublicKey {
+                        TabButton(
+                            action: { selectedSubTab = "Interactions" },
+                            title: String(localized: "Interactions", comment:"Tab title"),
+                            selected: selectedSubTab == "Interactions")
+                        Spacer()
+                    }
                     TabButton(
                         action: { selectedSubTab = "Media" },
                         title: String(localized: "Media", comment:"Tab title"),
