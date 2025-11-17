@@ -994,8 +994,8 @@ class NXColumnViewModel: ObservableObject {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                QUERY_FOLLOWING_KINDS.subtracting([20])
-            } else { QUERY_FOLLOWING_KINDS }
+                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            } else { QUERY_FOLLOWING_KINDS.subtracting( !feed.repliesEnabled ? REPLY_KINDS : []) }
             
             bg().perform { [weak self] in
                 guard let self else { return }
@@ -1046,7 +1046,7 @@ class NXColumnViewModel: ObservableObject {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             else {
-                QUERY_FOLLOWING_KINDS
+                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
 
             bg().perform { [weak self] in
@@ -1103,7 +1103,7 @@ class NXColumnViewModel: ObservableObject {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             else {
-                QUERY_FOLLOWING_KINDS.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
             bg().perform { [weak self] in
@@ -2613,7 +2613,7 @@ extension NXColumnViewModel {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             else {
-                QUERY_FOLLOWING_KINDS.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
                               
             // Fetch from DB
@@ -2922,24 +2922,19 @@ func makeHashtagRegex(_ hashtags: Set<String>) -> String? {
 
 typealias CM = NostrEssentials.ClientMessage
 
-let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
-//let FETCH_GLOBAL_KINDS: Set<Int> = [1222]
+let FETCH_GLOBAL_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 
-let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
-//let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1222,1244]
+let FETCH_GLOBAL_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235,34236] // removed kind 5 because relays send back only 5's?? and alot? hit limit and no other kinds come back
 
-let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,1222,5,6,20,9802,30023,34235,30311]
-//let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1222]
+let FETCH_FOLLOWING_FEED_KINDS: Set<Int> = [1,1222,5,6,20,9802,30023,34235,34236,30311]
 
-let FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,5,6,20,9802,30023,34235,30311]
-//let FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES: Set<Int> = [1222,1244]
+let FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,5,6,20,9802,30023,34235,34236,30311]
+
 let FETCH_FOLLOWING_PROFILE_KINDS: Set<Int> = [0,10002,10063]
 
-let QUERY_FOLLOWING_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235]
-//let QUERY_FOLLOWING_KINDS: Set<Int> = [1222]
+let QUERY_FOLLOWING_KINDS: Set<Int> = [1,1222,6,20,9802,30023,34235,34236]
 
-let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235]
-//let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1222,1244]
+let QUERY_FOLLOWING_KINDS_WITH_REPLIES: Set<Int> = [1,1111,1222,1244,6,20,9802,30023,34235,34236]
 
 let REPLY_KINDS: Set<Int> = [1111,1244] // substract these is replies toggle is off
 
