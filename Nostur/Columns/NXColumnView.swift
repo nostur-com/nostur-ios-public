@@ -198,18 +198,17 @@ struct NXColumnView<HeaderContent: View>: View {
             guard viewModel.isVisible, let config = viewModel.config else { return }
             feedSettingsFeed = config.feed
         }
-        .sheet(item: $feedSettingsFeed, content: { feed in
+        .sheet(item: $feedSettingsFeed, onDismiss: {
+            if let feed = feedSettingsFeed {
+                dismissSheet(feed)
+            }
+        }, content: { feed in
             NBNavigationStack {
                 FeedSettings(feed: feed)
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Close", systemImage: "xmark") {
-                                DataProvider.shared().saveToDiskNow(.viewContext)
-                                feedSettingsFeed = nil
-                                
-                                if feed.type == CloudFeedType.relays.rawValue {
-                                    sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: feed.subscriptionId, relays: feed.relaysData, wotEnabled: feed.wotEnabled))
-                                }
+                                dismissSheet(feed)
                             }
                         }
                     }
@@ -220,6 +219,15 @@ struct NXColumnView<HeaderContent: View>: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         })
+    }
+    
+    private func dismissSheet(_ feed: CloudFeed) {
+        DataProvider.shared().saveToDiskNow(.viewContext)
+        feedSettingsFeed = nil
+        
+        if feed.type == CloudFeedType.relays.rawValue {
+            sendNotification(.listRelaysChanged, NewRelaysForList(subscriptionId: feed.subscriptionId, relays: feed.relaysData, wotEnabled: feed.wotEnabled))
+        }
     }
     
 #if DEBUG
