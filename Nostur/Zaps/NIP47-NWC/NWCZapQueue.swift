@@ -225,10 +225,12 @@ class Zap {
             do {
                 let response = try await (lud16 != nil ? LUD16.getCallbackUrl(lud16: lud16!) : LUD16.getCallbackUrl(lud06: lud06!))
                 if let callback = response.callback {
-                    if (response.allowsNostr ?? false), let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
+                    if let zapperPubkey = response.nostrPubkey, isValidPubkey(zapperPubkey) {
                         self.supportsZap = true
                         // Store zapper nostrPubkey on contact.zapperPubkey as cache
-                        self.nrContact.zapperPubkeys.insert(zapperPubkey)
+                        Task { @MainActor in
+                            self.nrContact.zapperPubkeys.insert(zapperPubkey)
+                        }
                     }
                     self.callbackUrl = callback
                     Task { @MainActor in
