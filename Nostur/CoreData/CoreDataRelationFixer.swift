@@ -60,13 +60,10 @@ class CoreDataRelationFixer {
 #endif
         
         for (index, task) in tasksToProcess.enumerated() {
-            L.og.debug("💾💾 Processing task \(index + 1)/\(tasksToProcess.count)")
             task()
-            L.og.debug("💾💾 Completed task \(index + 1)/\(tasksToProcess.count)")
         }
         
         DataProvider.shared().saveToDiskNow(.bgContext)
-        L.og.debug("💾💾 Completed processing \(tasksToProcess.count) relations -[LOG]-")
     }
     
 }
