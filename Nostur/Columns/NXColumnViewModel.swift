@@ -2648,7 +2648,15 @@ extension NXColumnViewModel {
                     
                     // Then back to bg for processing
                     bg().perform { [weak self] in
-                        self?.processToScreen(postsByRelays, config: config, allShortIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                        self?.processToScreen(postsByRelays, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled) {
+                            // completion runs in @MainActor
+                            // if still nothing is on screen, run again without already-seen id filter
+                            if self?.currentIdsOnScreen.count == 0 {
+                                bg().perform { [weak self] in
+                                    self?.processToScreen(postsByRelays, config: config, allShortIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                                }
+                            }
+                        }
                     }
                 }
             }
