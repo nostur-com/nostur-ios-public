@@ -841,6 +841,124 @@ struct PreviewContainer<Content: View>: View {
     }
 }
 
+import NavigationBackport
+
+@available(iOS 26.0, *)
+struct PreviewApp<Content: View>: View {
+    @Environment(\.theme) private var theme
+    
+    @EnvironmentObject private var la: LoggedInAccount
+    @ObservedObject private var settings: SettingsStore = .shared
+    
+    @State var selectedTab: String = "Main"
+    @ViewBuilder var content: Content
+    
+    var body: some View {
+        
+        TabView(selection: $selectedTab) {
+            Tab(value: "Main") {
+                NBNavigationStack {
+                    GeometryReader { geo in
+                        self.content
+                            .environment(\.availableHeight, geo.size.height)
+                            .environment(\.availableWidth, geo.size.width)
+                    }
+                    .background(theme.listBackground)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            HStack(spacing: 10) {
+                                PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
+                            }
+                        }
+                        .sharedBackgroundVisibility(.hidden)
+                        
+                        ToolbarItem(placement: .title) {
+                            Text("Preview App")
+                        }
+                        
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            if settings.lowDataMode {
+                                Image(systemName: "tortoise")
+                                    .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                                    .onTapGesture {
+                                        settings.lowDataMode.toggle()
+                                        sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                    }
+                            }
+                        }
+                        
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Menu {
+                                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                                    sendNotification(.showFeedToggles)
+                                }
+                                Button(String(localized: "Low Data Mode", comment: "Menu item"), systemImage: "tortoise") {
+                                    settings.lowDataMode.toggle()
+                                    sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                }
+                            } label: {
+                                Label("Feed options", systemImage: "ellipsis")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundColor(theme.accent)
+                                
+//                                    Image(systemName: "elipsis")
+//                                        .foregroundColor(theme.accent)
+//                                        .onTapGesture {
+//                                            sendNotification(.showFeedToggles)
+//                                        }
+                            }
+
+                        }
+                    }
+                }
+            } label: {
+                Label("Home", systemImage: "house")
+                    .labelStyle(.iconOnly)
+            }
+            
+            Tab(value: "Bookmarks") {
+                EmptyView()
+            } label: {
+                Label("Bookmarks", systemImage: "bookmark")
+                    .labelStyle(.iconOnly)
+                    .controlSize(.small)
+            }
+            
+            Tab(value: "Search") {
+                EmptyView()
+            } label: {
+                Label("Search", systemImage: "magnifyingglass")
+                    .labelStyle(.iconOnly)
+            }
+            
+            Tab(value: "Notifications") {
+                EmptyView()
+            } label: {
+                Label("Notifications", systemImage: "bell.fill")
+                    .labelStyle(.iconOnly)
+            }
+            .badge(3)
+            
+            Tab(value: "New Post", role: .search) {
+                Spacer()
+                    .onAppear { selectedTab = "Main" }
+            } label: {
+                Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
+                    .fontWeightBold()
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(theme.accent)
+                    .tint(theme.accent)
+            }
+            .hidden(selectedTab != "Main")
+
+        }
+        .tabBarMinimizeBehavior(.onScrollDown)
+        .edgesIgnoringSafeArea(.all)
+        .toolbarBackground(.hidden, for: .bottomBar)
+        
+    }
+}
+
 struct PreviewFetcher {
     
     static let viewContext = DataProvider.shared().container.viewContext
