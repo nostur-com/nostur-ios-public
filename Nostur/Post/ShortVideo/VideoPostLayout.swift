@@ -1,0 +1,56 @@
+//
+//  VideoPostLayout.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 19/11/2025.
+//
+
+import SwiftUI
+
+struct VideoPostLayout<Content: View>: View {
+    let nrPost: NRPost
+    let theme: Theme
+    @ViewBuilder var content: Content
+
+    
+    var body: some View {
+        self.content
+            // Post menu
+            .overlay(alignment: .topTrailing) {
+                PostMenuButton(nrPost: nrPost, theme: theme)
+                    .offset(x: -16, y: 25)
+            }
+        
+            // Post info
+            .overlay(alignment: .bottomLeading) {
+                VStack {
+                    if let title = nrPost.eventTitle {
+                        Text(title)
+                            .foregroundStyle(Color.white)
+                            .lineLimit(2)
+                            .layoutPriority(1)
+                            .fontWeightBold()
+                            .padding(5)
+                    }
+                    
+                    MinimalNoteTextRenderView(nrPost: nrPost, textColor: Color.white)
+                    
+                    if let summary = nrPost.eventSummary, !summary.isEmpty {
+                        Text(summary)
+                            .foregroundColor(Color.white)
+                            .lineLimit(30)
+                            .font(.caption)
+                            .padding(5)
+                    }
+                }
+                .padding(10)
+            }
+        
+            // Buttons
+            .overlay(alignment: .bottomTrailing) {
+                VideoPostButtons(nrPost: nrPost, theme: theme)
+                    .padding(.horizontal, 3)
+                    .frame(width: 56)
+            }
+    }
+}
