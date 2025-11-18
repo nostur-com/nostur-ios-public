@@ -36,6 +36,7 @@ struct NXPostsFeed: View {
             List(posts) { nrPost in
                 NXListRow(nrPost: nrPost, vm: vm, containerTopOffset: geo.safeAreaInsets.top == 0 ? geo.frame(in: .global).minY : geo.safeAreaInsets.top) {
                     PostOrThread(nrPost: nrPost, theme: theme)
+                        .environment(\.availableHeight, geo.size.height)
                 }
                 .onDisappear {
                     onPostDisappear(nrPost)

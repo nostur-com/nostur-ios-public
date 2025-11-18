@@ -77,27 +77,7 @@ struct ContentTypesPicker: View {
                 .onTapGesture {
                     toggle(.photos)
                 }
-                
-                HStack {
-                    Image(systemName: selectedContentTypes.contains(.normalVideos) ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(selectedContentTypes.contains(.normalVideos) ? Color.primary : Color.secondary)
-                    Text("Videos")
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    toggle(.normalVideos)
-                }
-                
-                HStack {
-                    Image(systemName: selectedContentTypes.contains(.shortVideos) ? "checkmark.circle.fill" : "circle")
-                        .foregroundColor(selectedContentTypes.contains(.shortVideos) ? Color.primary : Color.secondary)
-                    Text("Short Videos (Vines)")
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    toggle(.shortVideos)
-                }
-                
+
                 HStack {
                     Image(systemName: selectedContentTypes.contains(.highlights) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedContentTypes.contains(.highlights) ? Color.primary : Color.secondary)
@@ -116,6 +96,28 @@ struct ContentTypesPicker: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     toggle(.voiceMessages)
+                }
+                
+                HStack {
+                    Image(systemName: selectedContentTypes.contains(.normalVideos) ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selectedContentTypes.contains(.normalVideos) ? Color.primary : Color.secondary)
+                    Text("Videos")
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    toggle(.normalVideos)
+                }
+                
+                HStack {
+                    Image(systemName: selectedContentTypes.contains(.shortVideos) ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selectedContentTypes.contains(.shortVideos) ? Color.primary : Color.secondary)
+                    Text("Short Videos (coming soon)")
+                }
+                .opacity(0.5)
+                .contentShape(Rectangle())
+                .disabled(true)
+                .onTapGesture {
+//                    toggle(.shortVideos)
                 }
             }
         }

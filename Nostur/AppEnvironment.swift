@@ -125,6 +125,17 @@ extension EnvironmentValues {
     }
 }
 
+struct AvailableHeightEnvironmentKey: EnvironmentKey {
+    static let defaultValue: CGFloat = UIScreen.main.bounds.height
+}
+
+extension EnvironmentValues {
+    var availableHeight: CGFloat {
+        get { self[AvailableHeightEnvironmentKey.self] }
+        set { self[AvailableHeightEnvironmentKey.self] = newValue }
+    }
+}
+
 struct ContainerIDEnvironmentKey: EnvironmentKey {
     static let defaultValue: String = "Default"
 }

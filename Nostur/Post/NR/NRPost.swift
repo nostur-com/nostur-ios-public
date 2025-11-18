@@ -225,7 +225,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     let isSpam: Bool // Should use this in all views to hide or not
     let isRestricted: Bool // NIP-70: Protected Events
     
-    // article stuff
+    // article/video stuff
     var eventId: String? // d tag
     var eventTitle: String?
     var eventSummary: String?
@@ -233,6 +233,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var eventImageUrl: URL?
     var eventUrl: URL?
     var mostRecentId: String?
+    var blurhash: String?
     
     var isNSFW: Bool = false
     var sizeEstimate: RowSizeEstimate
@@ -251,7 +252,19 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         for tag in event.fastTags {
             switch tag.0 {
             case "imeta":
-                if let content = event.content, (event.kind == 1222 || event.kind == 1244) && tag.1 == "url " + content {
+                if VIDEO_TYPES.contains(Int(event.kind)), self.eventUrl == nil {
+                    let imeta = parseVideoIMeta(tag)
+                    if let url = imeta.url, let videoUrl = URL(string: url) {
+                        self.eventUrl = videoUrl
+                        self.duration = imeta.duration
+                        self.blurhash = imeta.blurhash
+                    }
+                    if let poster = imeta.poster, let videoPoster = URL(string: poster) {
+                        self.eventImageUrl = videoPoster
+                    }
+                    
+                }
+                else if let content = event.content, (event.kind == 1222 || event.kind == 1244) && tag.1 == "url " + content {
                     let (waveformSamples, duration) = parseVoiceMessageIMeta(tag)
                     self.samples = waveformSamples
                     self.duration = duration
@@ -283,6 +296,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             case "alt", "title":
                 if self.alt == nil {
                     self.alt = tag.1
+                }
+                if self.eventTitle == nil {
+                    self.eventTitle = tag.1
                 }
                 
             case "t":
@@ -490,7 +506,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         case 30000, 39089:
             eventTitle = event.eventTitle
             
-        case 30023, 34235, 30311:
+        case 30023, 30311:
             eventId = event.eventId
             eventTitle = event.eventTitle
             eventSummary = event.eventSummary
@@ -499,6 +515,23 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                 self.eventImageUrl = eventImageUrl
             }
             if let eventUrlString = event.eventUrl, let eventUrl = URL(string: eventUrlString) {
+                self.eventUrl = eventUrl
+            }
+            mostRecentId = event.mostRecentId
+            
+            if event.kind == 30311 {
+                self.nrLiveEvent = NRLiveEvent(event: event)
+            }
+            
+        case 21, 22, 34235, 34236:
+            eventId = event.eventId
+            eventTitle = event.eventTitle
+            eventSummary = event.eventSummary
+            eventPublishedAt = event.eventPublishedAt
+            if let eventImageUrlString = (event.eventImage ?? event.eventThumb), let eventImageUrl = URL(string: eventImageUrlString.replacingOccurrences(of: "http://", with: "https://")) {
+                self.eventImageUrl = eventImageUrl
+            }
+            if self.eventUrl == nil, let eventUrlString = event.eventUrl, let eventUrl = URL(string: eventUrlString) {
                 self.eventUrl = eventUrl
             }
             mostRecentId = event.mostRecentId
