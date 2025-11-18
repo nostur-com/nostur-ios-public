@@ -104,7 +104,7 @@ struct SideTabs: View {
             .help("New Post")
             .labelStyle(.iconOnly)
             .buttonStyle(.plain)
-            .font(.system(size: 24))
+            .font(.system(size: 34))
             .foregroundColor(theme.accent)
             .padding(.bottom, 20)
         }
