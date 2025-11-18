@@ -466,7 +466,7 @@ extension Event {
         }
         else if let zappedEventId = zap.zappedEventId {
             guard let zappedEvent = Event.fetchEvent(id: zappedEventId, context: context) else { return }
-            CoreDataRelationFixer.shared.addTask ({
+            CoreDataRelationFixer.shared.addTask({
                 zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
                 zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
@@ -1408,16 +1408,20 @@ extension Event {
                         // We need to get firstQuote from db or cache
                         if let firstE = event.firstE() {
                             if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
-                                savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
-                                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-        //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-                                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                                if contextWontCrash([savedEvent, repostedEvent], debugInfo: "X savedEvent.firstQuote = repostedEvent") {
+                                    savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
+                                    repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                                    //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                                }
                             }
                             else if let repostedEvent = Event.fetchEvent(id: firstE, context: context) {
-                                savedEvent.firstQuote = repostedEvent
-                                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-        //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
-                                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                                if contextWontCrash([savedEvent, repostedEvent], debugInfo: "X2 savedEvent.firstQuote = repostedEvent") {
+                                    savedEvent.firstQuote = repostedEvent
+                                    repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                                    //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                                }
                             }
                         }
                     }
