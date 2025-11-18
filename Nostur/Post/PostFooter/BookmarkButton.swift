@@ -195,7 +195,7 @@ struct VideoBookmarkButton: View {
     
     var body: some View {
         Image(systemName: "bookmark.fill")
-            .foregroundColor(footerAttributes.bookmarked ? footerAttributes.bookmarkColor : theme.footerButtons)
+            .foregroundColor(footerAttributes.bookmarked ? footerAttributes.bookmarkColor : Color.white)
             .contentShape(Rectangle())
             .simultaneousGesture(
                 LongPressGesture()

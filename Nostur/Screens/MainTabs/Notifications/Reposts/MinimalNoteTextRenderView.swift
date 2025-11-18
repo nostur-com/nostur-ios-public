@@ -11,6 +11,7 @@ struct MinimalNoteTextRenderView: View {
     
     @ObservedObject var nrPost:NRPost
     var lineLimit:Int = 10
+    var textColor: Color = .primary.opacity(0.5)
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -18,7 +19,7 @@ struct MinimalNoteTextRenderView: View {
                 Text(nrPost.plainText)//.border(.cyan)
                     .lineLimit(lineLimit, reservesSpace: false)
                     .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(.primary.opacity(0.5))
+                    .foregroundColor(textColor)
                     .lineSpacing(3)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 5)
@@ -27,7 +28,7 @@ struct MinimalNoteTextRenderView: View {
                 Text(nrPost.plainText)//.border(.cyan)
                     .lineLimit(lineLimit)
                     .multilineTextAlignment(TextAlignment.leading)
-                    .foregroundColor(.primary.opacity(0.5))
+                    .foregroundColor(textColor)
                     .lineSpacing(3)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.vertical, 5)

@@ -179,31 +179,6 @@ struct VideoEventView2: View {
     }
 }
 
-#Preview("Vine") {
-    PreviewContainer({ pe in
-        
-    }) {
-        PostOrThread(
-            nrPost: testNRPost(###"{"id":"82bb357dc59d3361bbf6ff768513e8f5e4eed5504ab6656c4c3c665618765266","pubkey":"7306f0459d42ed3b50926256710beb8ef031a80b659aa9ae819ec4fab4bd8812","created_at":1763330209,"kind":34236,"tags":[["d","684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1"],["imeta","url https://cdn.divine.video/684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1.mp4","m video/mp4","image https://cdn.divine.video/bcd371cc9bb42efaab5cdb5afd70b90523043924652a02a5347ae8f894706c83.jpg","size 1070110","x 684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1","blurhash LEE_,9WANGjY}=NKRkazENn$oeWB"],["title","70s bathroom"],["summary","🤔"],["t","vine"],["t","nostr"],["client","openvine"],["published_at","1763330239"],["duration","3"],["alt","70s bathroom"],["verification","verified_web"],["proofmode","{\"videoHash\":\"684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1\",\"pgpSignature\":\"-----BEGIN PGP SIGNATURE-----\\nVersion: BCPG v1.71\\n\\niQIcBAABCAAGBQJpGkh4AAoJEGJlPhmNpi91J3MP/jGMnOE8IsjV6fx4uJ2sKxjm\\n4yXcSfnkukMqX0tJu5tnz02LS0UveFDq21y5S8Ffea0pZmX4bLa6YlgzahSunfoU\\nWN4E0ukfLa46HpfXnz4h9+xvMfsFCW8MuvW3kRtG9BhHiZvFXCQFHmkWbnuMdAIC\\nVPKpeZxB7VUTV2dN1O4ErBgN1ylPzuSzwk12+6fJ7PEi4lGnLYBhWC1BROYVsWqh\\nse3AFisRTUsth3OAwGGITmysq3mn9zsQrLdrR553vx9OO3HZwzZOjrjWTZONfEgj\\nGWgI8lXE4ros60Fdyk4xOYY8ibPgIrpmZgHkIekhVmxq1BDuW1kIClHZJ+E9+JPc\\n48H71cliGJlfK4PBgeNtS2fL1WIWkPE6i7qqRk2+OClvZ8kH2YJt/zAW43sU3guQ\\nP7DVv/S3M8pOVLEEbiD9KLhIlsH3izBr1pV8T9i+K54W5IJyflvzX4pQEv6Ig6Sb\\ngHk8kz4Nx6sXsDRQXFTbryLruahR9UzRBYL2pR4n5YroJ8hG+yQ150XCGuZ4MnKB\\n7pqbrn/zT2mJDVa1CkNKCeFZydAZk9J0VWMNVk3mSXffiwv4VQnBMjHmooUWKeic\\nnpgR53qcCWbIizipud+2MyKzfDZ96iBqAq6DaEJR2w0CiLLgzPmZnGHX7MkxYzWI\\ngAOwdQcsl0blct3j0+VY\\n=6Oo/\\n-----END PGP SIGNATURE-----\\n\"}"]],"content":"🤔","sig":"217d837c4c9e4c1112c65b3b50e9cd1407d3e85936c4891d4459a4c85b366b874c7bd9f3c082e8d374fe4cc661836f6f276c115842146fdbdcda48255872a839"}"###),
-            theme: Themes.default.theme)
-    }
-}
-
-#Preview("Vine 2") {
-    PreviewContainer({ pe in
-        
-    }) {
-        PostOrThread(
-            nrPost: testNRPost(###"{"kind":34236,"id":"26eff0b456d3f9b0030f6897aa0f23c5fc7f52301e468d836c6c3347f3f805f0","tags":[["d","97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7"],["imeta","url https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4","url https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/playlist.m3u8","m video/mp4","image https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/thumbnail.jpg","size 1001958","x 97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7","blurhash LjGRPYbDM_xZ0gxZxrWY$ut7bJRn"],["title",""],["summary",""],["client","openvine"],["published_at","1763406697"],["duration","6"],["alt",""]],"sig":"de5345eda729e1c52ef38685440f2e52812c05216723c9227e811764766e741b0e621b86359879278a7bcfdefde906349c0311000702cd132cd5dcde85215b89","created_at":1763406667,"content":"","pubkey":"a0e998aaf688a5ee796384212681c670446c430fd60bf9e942606d68ab564324"}"###),
-            theme: Themes.default.theme)
-    }
-}
-
-#Preview {
-    VideoEventView(title: "Categorias de Aristóteles", url: URL(string: "https://www.youtube.com/watch?v=je-n0Ro-B5k")!, summary: "", imageUrl: URL(string: "https://i3.ytimg.com/vi/je-n0Ro-B5k/hqdefault.jpg")!, autoload: true)
-}
-
-
 func parseVideoIMeta(_ tag: FastTag) -> (url: String?, duration: Int?, blurhash: String?, poster: String?) {
     guard tag.0 == "imeta" else { return (url: nil, duration: nil, blurhash: nil, poster: nil) }
     
@@ -361,16 +336,19 @@ struct VideoFeedItemView: View {
     @Environment(\.availableHeight) var availableHeight: CGFloat
     @Environment(\.availableWidth) var availableWidth: CGFloat
     let videoURL: URL
-    @State private var isVisible = false
+    @State private var isPlaying = false
     
     var body: some View {
-        SmoothVideoPlayer(url: videoURL, isPlaying: $isVisible)
+        SmoothVideoPlayer(url: videoURL, isPlaying: $isPlaying)
             .frame(width: availableWidth, height: availableHeight)
+            .onTapGesture(perform: {
+                isPlaying = true
+            })
             .onAppear {
-//                isVisible = true
+//                isPlaying = true
             }
             .onDisappear {
-                isVisible = false
+                isPlaying = false
             }
     }
 }
@@ -383,37 +361,8 @@ func prefetchNextVideos(at index: Int, urls: [URL]) {
     }
 }
 
-
 @available(iOS 26.0, *)
-#Preview("Vine 3") {
-    @Previewable @Environment(\.theme) var theme
-    @Previewable @State var nrPost = testNRPost(###"{"kind":34236,"id":"26eff0b456d3f9b0030f6897aa0f23c5fc7f52301e468d836c6c3347f3f805f0","tags":[["d","97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7"],["imeta","url https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4","url https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/playlist.m3u8","m video/mp4","image https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/thumbnail.jpg","size 1001958","x 97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7","blurhash LjGRPYbDM_xZ0gxZxrWY$ut7bJRn"],["title",""],["summary",""],["client","openvine"],["published_at","1763406697"],["duration","6"],["alt",""]],"sig":"de5345eda729e1c52ef38685440f2e52812c05216723c9227e811764766e741b0e621b86359879278a7bcfdefde906349c0311000702cd132cd5dcde85215b89","created_at":1763406667,"content":"","pubkey":"a0e998aaf688a5ee796384212681c670446c430fd60bf9e942606d68ab564324"}"###)
-    PreviewContainer({ pe in
-        
-    }) {
-        PreviewApp {
-            ScrollView {
-                LazyVStack {
-//                    Color.random
-//                        .frame(height: 400)
-                    
-                    VideoPostLayout(nrPost: nrPost, theme: theme) {
-                        VideoFeedItemView(videoURL: URL(string: "https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4")!)
-                    }
-                    
-//                    Color.random
-//                        .frame(height: 400)
-//                    
-//                    Color.random
-//                        .frame(height: 400)
-                }
-            }
-        }
-    }
-}
-
-@available(iOS 26.0, *)
-#Preview("Vine 4") {
+#Preview("Vine A") {
     @Previewable @Environment(\.theme) var theme
     @Previewable @State var nrPost = testNRPost(###"{"pubkey":"5943c88f3c60cd9edb125a668e2911ad419fc04e94549ed96a721901dd958372","created_at":1763179480,"kind":22,"tags":[["alt","Vertical Video"],["title",""],["published_at","1763179481"],["imeta","url https://blossom.primal.net/cf5a5ff1dddc3b97d8938f33d1088c9e5babcdc3f94c5178112392e9b3a36d27.mp4","m video/mp4","alt Vertical Video","x cf5a5ff1dddc3b97d8938f33d1088c9e5babcdc3f94c5178112392e9b3a36d27","size 3069605","dim 720x1280","blurhash _FF}~1~p%z-p~W0fE2.S?aNH^+xu%gt79ZIV-WWVNaxu-:IpjG%MNHoMsAR,S6kCX5NxofxZNGf,W.slt7X8bFs:%1WARkxFslR*R*xDV@kDjFnOoft7WBs;t7oKafs;of"],["nonce","229","16"]],"id":"0000c09aa7133e2e75e7e352af918c56e7a8cafc4ed456a67a24dc4a9f777272","content":"Marin 💕✨\nOriginally published in: 2025-11-13","sig":"53badb2a42b0b147252b0ac23545773a50ec123c9761da6e910a7c37f046dccae51e7174d5498ff83e4a33987c9a618808b62d7c34b09abaafec4b543b6ed819"}"###)
     PreviewContainer({ pe in
@@ -464,7 +413,7 @@ struct VideoPostLayout<Content: View>: View {
             // Post menu
             .overlay(alignment: .topTrailing) {
                 PostMenuButton(nrPost: nrPost, theme: theme)
-                    .offset(x: -25, y: 25)
+                    .offset(x: -16, y: 25)
             }
         
             // Post info
@@ -472,33 +421,37 @@ struct VideoPostLayout<Content: View>: View {
                 VStack {
                     if let title = nrPost.eventTitle {
                         Text(title)
+                            .foregroundStyle(Color.white)
                             .lineLimit(2)
                             .layoutPriority(1)
                             .fontWeightBold()
                             .padding(5)
                     }
                     
-                    ContentRenderer(nrPost: nrPost, showMore: .constant(false))
+                    MinimalNoteTextRenderView(nrPost: nrPost, textColor: Color.white)
                     
                     if let summary = nrPost.eventSummary, !summary.isEmpty {
                         Text(summary)
+                            .foregroundColor(Color.white)
                             .lineLimit(30)
                             .font(.caption)
                             .padding(5)
                     }
                 }
+                .padding(10)
             }
         
             // Buttons
             .overlay(alignment: .bottomTrailing) {
                 VideoPostButtons(nrPost: nrPost, theme: theme)
-                    .padding(.horizontal, 10)
-                    .frame(width: 60)
+                    .padding(.horizontal, 3)
+                    .frame(width: 56)
             }
     }
 }
 
 struct VideoPostButtons: View {
+    @Environment(\.containerID) var containerID
     @ObservedObject private var settings: SettingsStore = .shared
     @ObservedObject private var vmc: ViewModelCache = .shared
     private var theme: Theme
@@ -532,8 +485,15 @@ struct VideoPostButtons: View {
     
     @ViewBuilder
     private var postButtons: some View {
-        VStack(spacing: 0.0) {
+        VStack(spacing: 15.0) {
             Spacer()
+            ZappablePFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: true)
+                .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
+                
+                .onTapGesture {
+                    navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost,  context: containerID)
+                }
+                .padding(.bottom, 15.0)
             ForEach(vmc.buttonRow) { button in
                 switch button.id {
                 case "💬":
@@ -558,7 +518,7 @@ struct VideoPostButtons: View {
                 }
             }
         }
-        .font(.system(size: 30))
+        .font(.system(size: 26))
     }
 }
 
@@ -677,5 +637,62 @@ struct PreviewApp<Content: View>: View {
         .edgesIgnoringSafeArea(.all)
         .toolbarBackground(.hidden, for: .bottomBar)
         
+    }
+}
+
+
+
+
+#Preview("Vine") {
+    PreviewContainer({ pe in
+        
+    }) {
+        PostOrThread(
+            nrPost: testNRPost(###"{"id":"82bb357dc59d3361bbf6ff768513e8f5e4eed5504ab6656c4c3c665618765266","pubkey":"7306f0459d42ed3b50926256710beb8ef031a80b659aa9ae819ec4fab4bd8812","created_at":1763330209,"kind":34236,"tags":[["d","684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1"],["imeta","url https://cdn.divine.video/684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1.mp4","m video/mp4","image https://cdn.divine.video/bcd371cc9bb42efaab5cdb5afd70b90523043924652a02a5347ae8f894706c83.jpg","size 1070110","x 684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1","blurhash LEE_,9WANGjY}=NKRkazENn$oeWB"],["title","70s bathroom"],["summary","🤔"],["t","vine"],["t","nostr"],["client","openvine"],["published_at","1763330239"],["duration","3"],["alt","70s bathroom"],["verification","verified_web"],["proofmode","{\"videoHash\":\"684ee62db8db6347a4a1ef27a23c363f1129a65efa4930d8f7e17a4be3b4b5b1\",\"pgpSignature\":\"-----BEGIN PGP SIGNATURE-----\\nVersion: BCPG v1.71\\n\\niQIcBAABCAAGBQJpGkh4AAoJEGJlPhmNpi91J3MP/jGMnOE8IsjV6fx4uJ2sKxjm\\n4yXcSfnkukMqX0tJu5tnz02LS0UveFDq21y5S8Ffea0pZmX4bLa6YlgzahSunfoU\\nWN4E0ukfLa46HpfXnz4h9+xvMfsFCW8MuvW3kRtG9BhHiZvFXCQFHmkWbnuMdAIC\\nVPKpeZxB7VUTV2dN1O4ErBgN1ylPzuSzwk12+6fJ7PEi4lGnLYBhWC1BROYVsWqh\\nse3AFisRTUsth3OAwGGITmysq3mn9zsQrLdrR553vx9OO3HZwzZOjrjWTZONfEgj\\nGWgI8lXE4ros60Fdyk4xOYY8ibPgIrpmZgHkIekhVmxq1BDuW1kIClHZJ+E9+JPc\\n48H71cliGJlfK4PBgeNtS2fL1WIWkPE6i7qqRk2+OClvZ8kH2YJt/zAW43sU3guQ\\nP7DVv/S3M8pOVLEEbiD9KLhIlsH3izBr1pV8T9i+K54W5IJyflvzX4pQEv6Ig6Sb\\ngHk8kz4Nx6sXsDRQXFTbryLruahR9UzRBYL2pR4n5YroJ8hG+yQ150XCGuZ4MnKB\\n7pqbrn/zT2mJDVa1CkNKCeFZydAZk9J0VWMNVk3mSXffiwv4VQnBMjHmooUWKeic\\nnpgR53qcCWbIizipud+2MyKzfDZ96iBqAq6DaEJR2w0CiLLgzPmZnGHX7MkxYzWI\\ngAOwdQcsl0blct3j0+VY\\n=6Oo/\\n-----END PGP SIGNATURE-----\\n\"}"]],"content":"🤔","sig":"217d837c4c9e4c1112c65b3b50e9cd1407d3e85936c4891d4459a4c85b366b874c7bd9f3c082e8d374fe4cc661836f6f276c115842146fdbdcda48255872a839"}"###),
+            theme: Themes.default.theme)
+    }
+}
+
+#Preview("Vine 2") {
+    PreviewContainer({ pe in
+        
+    }) {
+        PostOrThread(
+            nrPost: testNRPost(###"{"kind":34236,"id":"26eff0b456d3f9b0030f6897aa0f23c5fc7f52301e468d836c6c3347f3f805f0","tags":[["d","97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7"],["imeta","url https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4","url https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/playlist.m3u8","m video/mp4","image https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/thumbnail.jpg","size 1001958","x 97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7","blurhash LjGRPYbDM_xZ0gxZxrWY$ut7bJRn"],["title",""],["summary",""],["client","openvine"],["published_at","1763406697"],["duration","6"],["alt",""]],"sig":"de5345eda729e1c52ef38685440f2e52812c05216723c9227e811764766e741b0e621b86359879278a7bcfdefde906349c0311000702cd132cd5dcde85215b89","created_at":1763406667,"content":"","pubkey":"a0e998aaf688a5ee796384212681c670446c430fd60bf9e942606d68ab564324"}"###),
+            theme: Themes.default.theme)
+    }
+}
+
+#Preview {
+    VideoEventView(title: "Categorias de Aristóteles", url: URL(string: "https://www.youtube.com/watch?v=je-n0Ro-B5k")!, summary: "", imageUrl: URL(string: "https://i3.ytimg.com/vi/je-n0Ro-B5k/hqdefault.jpg")!, autoload: true)
+}
+
+
+
+@available(iOS 26.0, *)
+#Preview("Vine 3") {
+    @Previewable @Environment(\.theme) var theme
+    @Previewable @State var nrPost = testNRPost(###"{"kind":34236,"id":"26eff0b456d3f9b0030f6897aa0f23c5fc7f52301e468d836c6c3347f3f805f0","tags":[["d","97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7"],["imeta","url https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4","url https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/playlist.m3u8","m video/mp4","image https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/thumbnail.jpg","size 1001958","x 97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7","blurhash LjGRPYbDM_xZ0gxZxrWY$ut7bJRn"],["title",""],["summary",""],["client","openvine"],["published_at","1763406697"],["duration","6"],["alt",""]],"sig":"de5345eda729e1c52ef38685440f2e52812c05216723c9227e811764766e741b0e621b86359879278a7bcfdefde906349c0311000702cd132cd5dcde85215b89","created_at":1763406667,"content":"","pubkey":"a0e998aaf688a5ee796384212681c670446c430fd60bf9e942606d68ab564324"}"###)
+    PreviewContainer({ pe in
+        
+    }) {
+        PreviewApp {
+            ScrollView {
+                LazyVStack {
+//                    Color.random
+//                        .frame(height: 400)
+                    
+                    VideoPostLayout(nrPost: nrPost, theme: theme) {
+                        VideoFeedItemView(videoURL: URL(string: "https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4")!)
+                    }
+                    
+//                    Color.random
+//                        .frame(height: 400)
+//
+//                    Color.random
+//                        .frame(height: 400)
+                }
+            }
+        }
     }
 }

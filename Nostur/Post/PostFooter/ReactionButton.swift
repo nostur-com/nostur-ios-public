@@ -141,6 +141,9 @@ struct VideoReactionButton: View {
     
     var body: some View {
         Text(reactionContent)
+            .foregroundStyle(Color.white)
+            .font(.system(size: 20))
+            .lineLimit(1)
             .opacity(isActivated ? 1.0 : 0.7)
             .padding(.vertical, 5)
             .contentShape(Rectangle())

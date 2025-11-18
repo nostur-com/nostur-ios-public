@@ -179,7 +179,7 @@ struct VideoEmojiButton: View {
         }
         else {
             Image(systemName: "heart.fill")
-                .foregroundColor(footerAttributes.ourReactions.contains("+")  ? .red : theme.footerButtons)
+                .foregroundColor(footerAttributes.ourReactions.contains("+")  ? .red : Color.white)
         }
     }
     
@@ -187,6 +187,9 @@ struct VideoEmojiButton: View {
         VStack {
             emojiOrLikeButton
             AnimatedNumber(number: footerAttributes.likesCount)
+                .foregroundStyle(Color.white)
+                .font(.system(size: 20))
+                .lineLimit(1)
                 .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
         }
             

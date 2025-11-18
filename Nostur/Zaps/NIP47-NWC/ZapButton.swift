@@ -298,14 +298,18 @@ struct VideoZapButton: View {
                     .multilineTextAlignment(.center)
                     .animation(.snappy, value: footerAttributes.zapTally)
                     .contentTransition(.numericText(countsDown: false))
+                    .font(.system(size: 20))
+                    .lineLimit(1)
                     .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
             }
             else {
                 AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)
+                    .font(.system(size: 20))
+                    .lineLimit(1)
                     .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
             }
         }
-        .foregroundColor(isZapped ? .yellow : theme.footerButtons)
+        .foregroundColor(isZapped ? .yellow : Color.white)
         .padding(.vertical, 5)
         .contentShape(Rectangle())
         .simultaneousGesture(

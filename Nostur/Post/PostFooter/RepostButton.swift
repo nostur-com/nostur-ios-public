@@ -67,8 +67,11 @@ struct VideoRepostButton: View {
     var body: some View {
         VStack {
             Image(systemName: "arrow.2.squarepath")
-                .foregroundColor(footerAttributes.reposted ? .green : theme.footerButtons)
+                .foregroundColor(footerAttributes.reposted ? .green : Color.white)
             AnimatedNumber(number: footerAttributes.repostsCount)
+                .foregroundStyle(Color.white)
+                .font(.system(size: 20))
+                .lineLimit(1)
                 .opacity(footerAttributes.repostsCount == 0 ? 0 : 1.0)
         }
         .contentShape(Rectangle())

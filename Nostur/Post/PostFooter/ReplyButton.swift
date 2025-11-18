@@ -81,19 +81,23 @@ struct VideoReplyButton: View {
     }
     
     var body: some View {
-            VStack {
-                Image("ReplyIconActive")
-                    .resizable()
-                    .scaledToFit()
-                    .foregroundColor(footerAttributes.replied ? theme.accent : theme.footerButtons)
-                   
-                AnimatedNumber(number: footerAttributes.repliesCount)
-                    .opacity(footerAttributes.repliesCount == 0 ? 0 : 1.0)
-            }
-            .contentShape(Rectangle())
-            .onTapGesture {
-                tap()
-            }
+        VStack(spacing: 3) {
+            Image("ReplyIconActive")
+                .resizable()
+                .scaledToFit()
+                .foregroundColor(footerAttributes.replied ? theme.accent : Color.white)
+                .frame(width: 34)
+               
+            AnimatedNumber(number: footerAttributes.repliesCount)
+                .foregroundStyle(Color.white)
+                .font(.system(size: 20))
+                .lineLimit(1)
+                .opacity(footerAttributes.repliesCount == 0 ? 0 : 1.0)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            tap()
+        }
     }
     
     private func tap() {
