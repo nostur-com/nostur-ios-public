@@ -1495,6 +1495,9 @@
         }
       }
     },
+    "Add contact..." : {
+
+    },
     "Add contacts" : {
       "comment" : "Navigation title of sheet to add contacts to feed",
       "localizations" : {
@@ -3149,6 +3152,9 @@
           }
         }
       }
+    },
+    "Copy to clipboard" : {
+
     },
     "Copy video URL" : {
       "localizations" : {
@@ -6135,6 +6141,9 @@
         }
       }
     },
+    "New Feed..." : {
+
+    },
     "new followers" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6610,6 +6619,9 @@
           }
         }
       }
+    },
+    "Notifications settings..." : {
+
     },
     "Notify selection (%lld)" : {
       "localizations" : {
@@ -9040,6 +9052,9 @@
         }
       }
     },
+    "Settings..." : {
+
+    },
     "Share" : {
       "localizations" : {
         "nl" : {
@@ -10353,6 +10368,9 @@
     },
     "TODO PLAINTEXTONLY" : {
       "shouldTranslate" : false
+    },
+    "Toggle filters..." : {
+
     },
     "toggle red" : {
       "localizations" : {

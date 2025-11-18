@@ -183,7 +183,7 @@ struct PostMenu: View {
                     L.og.debug("Mute conversation")
                     mute(eventId: nrPost.id, replyToRootId: nrPost.replyToRootId, replyToId: nrPost.replyToId)
                 }) {
-                    Label("Mute", systemImage: "bell.slash")
+                    Label("Mute conversation", systemImage: "bell.slash")
                         .foregroundColor(theme.accent)
                 }
                 
