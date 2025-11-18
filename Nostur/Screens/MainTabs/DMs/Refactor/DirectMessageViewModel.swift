@@ -27,8 +27,13 @@ class DirectMessageViewModel: ObservableObject {
                 // so this .load() updates the unread counts after sync
                 self.load()
             }
+            allowedWoT = Set(dmStates.filter { $0.accepted }.compactMap { $0.contactPubkey_ })
         }
     }
+    
+    // pubkeys we started a conv with (but maybe not in WoT), should be allowed in DM WoT
+    // Add this to WoT
+    public var allowedWoT: Set<String> = []
     
     var pubkey: String?
     var lastNotificationReceivedAt: Date? = nil
@@ -185,7 +190,7 @@ class DirectMessageViewModel: ObservableObject {
             .filter { !$0.isHidden && $0.accountPubkey_ == pubkey }
             .filter { $0.accepted && !blockedPubkeys.contains($0.contactPubkey_ ?? "HMMICECREAMSOGOOD") }
         
-        var lastNotificationReceivedAt:Date? = nil
+        var lastNotificationReceivedAt: Date? = nil
         
         var conversationRows = [Conversation]()
         

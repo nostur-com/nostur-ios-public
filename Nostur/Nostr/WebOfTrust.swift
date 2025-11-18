@@ -286,7 +286,16 @@ class WebOfTrust: ObservableObject {
         if webOfTrustLevel == SettingsStore.WebOfTrustLevel.strict.rawValue {
             return false
         }
-        return followingFollowingPubkeys.contains(pubkey)
+        if followingFollowingPubkeys.contains(pubkey) {
+            return true
+        }
+        
+        // Also allow outgoing DM conv pubkeys we initiated
+        if DirectMessageViewModel.default.allowedWoT.contains(pubkey) {
+            return true
+        }
+        
+        return false
     }
     
     // This is for "normal" mode (follows + follows of follows)
