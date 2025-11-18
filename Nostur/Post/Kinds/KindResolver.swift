@@ -152,20 +152,6 @@ struct KindResolver: View {
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
             
-        case 9999999: //21,34235: // Videos
-            if let eventUrl = nrPost.eventUrl {
-                KindVideos(url: eventUrl, nrPost: nrPost, hideFooter: hideFooter, isDetail: isDetail, isEmbedded: isEmbedded, forceAutoload: shouldAutoload)
-//                VideoEventView(title: title, url: eventUrl, summary: nrPost.eventSummary, imageUrl: nrPost.eventImageUrl, autoload: true)
-//                    .padding(.vertical, 10)
-                    .onAppear { self.enqueue() }
-                    .onDisappear { self.dequeue() }
-            }
-            else {
-                UnknownKind(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isDetail: isDetail, isEmbedded: isEmbedded, fullWidth: fullWidth, forceAutoload: shouldAutoload)
-                    .onAppear { self.enqueue() }
-                    .onDisappear { self.dequeue() }
-            }
-            
         case 22,34236: // Short videos
             VideoPost(nrPost: nrPost, theme: theme)
                 .onAppear { self.enqueue() }
