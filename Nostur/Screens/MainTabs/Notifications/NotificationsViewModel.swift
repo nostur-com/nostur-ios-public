@@ -550,8 +550,38 @@ class NotificationsViewModel: ObservableObject {
                 let fetchRequest = self.q.unreadMentionsQuery(resultType: .managedObjectResultType, accountData: accountData)
                  
                 let unreadMentionsWithSpam = ((try? bg().fetch(fetchRequest)) ?? [])
-                let unreadMentions = unreadMentionsWithSpam
+                let unreadMentions = ((try? bg().fetch(fetchRequest)) ?? [])
                     .filter { !$0.isSpam } // need to filter so can't use .countResultType - Also we use it for local notifications now.
+                
+                    // Hellthread handling
+                    .filter {
+                    
+                        // check if actual mention is in content (if there are more than 20 Ps, potential hellthread)
+                        if $0.fastPs.count > 20 {
+                            // but always allow if its a root post
+                            if $0.replyToId == nil && $0.replyToRootId == nil {
+                                return true
+                            }
+                            
+                            // but always allow if direct reply to own post
+                            if let replyToId = $0.replyToId {
+                                if let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
+                                    if replyTo.pubkey == accountData.publicKey { // direct reply to our post
+                                        return true
+                                    }
+                                    // direct reply to someone elses post, check if we are actually mentioned in content. (we don't check old [0], [1] style...)
+                                    return $0.content != nil && $0.content!.contains(accountData.npub)
+                                }
+                                // We don't have our own event? Maybe new app user
+                                return false // fallback to false
+                            }
+                            
+                            // our npub is in content? (we don't check old [0], [1] style...)
+                            return $0.content != nil && $0.content!.contains(accountData.npub)
+                        }
+                        
+                        return true
+                    }
                     
                 let unreadMentionsCount = unreadMentions.count
                 
