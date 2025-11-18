@@ -2648,7 +2648,7 @@ extension NXColumnViewModel {
                     
                     // Then back to bg for processing
                     bg().perform { [weak self] in
-                        self?.processToScreen(postsByRelays, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
+                        self?.processToScreen(postsByRelays, config: config, allShortIdsSeen: [], currentIdsOnScreen: currentIdsOnScreen, sinceOrUntil: since, older: false, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled)
                     }
                 }
             }

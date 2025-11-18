@@ -13,6 +13,7 @@ struct NXColumnView<HeaderContent: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.containerID) private var containerID
     
     @StateObject private var viewModel = NXColumnViewModel()
