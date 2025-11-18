@@ -72,6 +72,7 @@ struct ContentTypesPicker: View {
                     Image(systemName: selectedContentTypes.contains(.photos) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedContentTypes.contains(.photos) ? Color.primary : Color.secondary)
                     Text("Photos")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -82,6 +83,7 @@ struct ContentTypesPicker: View {
                     Image(systemName: selectedContentTypes.contains(.highlights) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedContentTypes.contains(.highlights) ? Color.primary : Color.secondary)
                     Text("Highlights")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -92,6 +94,7 @@ struct ContentTypesPicker: View {
                     Image(systemName: selectedContentTypes.contains(.voiceMessages) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedContentTypes.contains(.voiceMessages) ? Color.primary : Color.secondary)
                     Text("Voice Messages (Yaks)")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -102,6 +105,7 @@ struct ContentTypesPicker: View {
                     Image(systemName: selectedContentTypes.contains(.normalVideos) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedContentTypes.contains(.normalVideos) ? Color.primary : Color.secondary)
                     Text("Videos")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -111,13 +115,14 @@ struct ContentTypesPicker: View {
                 HStack {
                     Image(systemName: selectedContentTypes.contains(.shortVideos) ? "checkmark.circle.fill" : "circle")
                         .foregroundColor(selectedContentTypes.contains(.shortVideos) ? Color.primary : Color.secondary)
-                    Text("Short Videos (coming soon)")
+                    Text("Short Videos")
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .opacity(0.5)
+//                .opacity(0.5)
                 .contentShape(Rectangle())
-                .disabled(true)
+//                .disabled(true)
                 .onTapGesture {
-//                    toggle(.shortVideos)
+                    toggle(.shortVideos)
                 }
             }
         }
