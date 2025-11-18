@@ -176,6 +176,170 @@ struct BookmarkButton: View {
 }
 
 
+struct VideoBookmarkButton: View {
+    private let nrPost: NRPost
+    @ObservedObject private var footerAttributes: FooterAttributes
+    private var isFirst: Bool
+    private var isLast: Bool
+    private var theme: Theme
+
+    @State private var showColorSelector = false
+    
+    init(nrPost: NRPost, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
+        self.nrPost = nrPost
+        self.footerAttributes = nrPost.footerAttributes
+        self.isFirst = isFirst
+        self.isLast = isLast
+        self.theme = theme
+    }
+    
+    var body: some View {
+        Image(systemName: "bookmark.fill")
+            .foregroundColor(footerAttributes.bookmarked ? footerAttributes.bookmarkColor : theme.footerButtons)
+            .contentShape(Rectangle())
+            .simultaneousGesture(
+                LongPressGesture()
+                    .onEnded { _ in
+                        self.longTap()
+                    }
+            )
+            .highPriorityGesture(
+                TapGesture()
+                    .onEnded { _ in
+                        tap()
+                    }
+            )
+            .overlay { // "orange", "red", "blue", "purple", "green", "brown" (BOOKMARK_COLORS)
+                if showColorSelector {
+                    HStack(spacing: 0) {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.brown)
+                            .contentShape(Rectangle())
+                            .padding(.leading, 10)
+                            .padding(.trailing, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.addBookmark(.brown)
+                                showColorSelector = false
+                            }
+                        
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.red)
+                            .contentShape(Rectangle())
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.addBookmark(.red)
+                                showColorSelector = false
+                            }
+                        
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.blue)
+                            .contentShape(Rectangle())
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.addBookmark(.blue)
+                                showColorSelector = false
+                            }
+                        
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.purple)
+                            .contentShape(Rectangle())
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.addBookmark(.purple)
+                                showColorSelector = false
+                            }
+                        
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.green)
+                            .contentShape(Rectangle())
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.addBookmark(.green)
+                                showColorSelector = false
+                            }
+                        
+                        Image(systemName: "bookmark.fill")
+                            .foregroundColor(.orange)
+                            .contentShape(Rectangle())
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.addBookmark(.orange)
+                                showColorSelector = false
+                            }
+                        
+                        Image(systemName: "bookmark")
+                            .foregroundColor(.orange)
+                            .contentShape(Rectangle())
+                            .padding(.leading, 10)
+                            .padding(.trailing, 10)
+                            .padding(.vertical, 10)
+                            .onTapGesture {
+                                self.removeBookmark()
+                                showColorSelector = false
+                            }
+                    }
+                        
+                    .background(theme.listBackground)
+                    .zIndex(1)
+                    .offset(x: -115)
+//                        .frame(width: 100, height: 100)
+                    
+                }
+            }
+            .zIndex(1)
+    }
+    
+    private func tap() {
+        guard !showColorSelector else { return }
+        if footerAttributes.bookmarked {
+            self.removeBookmark()
+        }
+        else {
+            self.addBookmark()
+        }
+    }
+    
+    private func addBookmark(_ color: Color = .orange) {
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
+
+        // If already bookmarked, just change color
+        if footerAttributes.bookmarked {
+            Bookmark.updateColor(nrPost.id, color: color)
+            
+            bg().perform { // Update cache
+                accountCache()?.addBookmark(nrPost.id, color: color)
+            }
+            return
+        }
+        
+        // Otherwise, normal add bookamrk
+        Bookmark.addBookmark(nrPost, color: color)
+        self.footerAttributes.bookmarkColor = color
+        bg().perform {
+            accountCache()?.addBookmark(nrPost.id, color: color)
+        }
+    }
+    
+    private func removeBookmark() {
+        let impactMed = UIImpactFeedbackGenerator(style: .medium)
+        impactMed.impactOccurred()
+        Bookmark.removeBookmark(nrPost)
+        bg().perform {
+            accountCache()?.removeBookmark(nrPost.id)
+        }
+    }
+    
+    private func longTap() {
+        showColorSelector = true
+    }
+}
 
 #Preview("Bookmark button") {
     

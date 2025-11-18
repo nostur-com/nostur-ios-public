@@ -61,3 +61,42 @@ struct ReplyButton: View {
         sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
     }
 }
+
+
+struct VideoReplyButton: View {
+    private let nrPost: NRPost
+    @ObservedObject private var footerAttributes: FooterAttributes
+    private var isDetail: Bool
+    private var isFirst :Bool
+    private var isLast: Bool
+    private var theme: Theme
+    
+    init(nrPost: NRPost, isDetail: Bool = false, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
+        self.nrPost = nrPost
+        self.isDetail = isDetail
+        self.footerAttributes = nrPost.footerAttributes
+        self.isFirst = isFirst
+        self.isLast = isLast
+        self.theme = theme
+    }
+    
+    var body: some View {
+            VStack {
+                Image("ReplyIconActive")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundColor(footerAttributes.replied ? theme.accent : theme.footerButtons)
+                   
+                AnimatedNumber(number: footerAttributes.repliesCount)
+                    .opacity(footerAttributes.repliesCount == 0 ? 0 : 1.0)
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                tap()
+            }
+    }
+    
+    private func tap() {
+        sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
+    }
+}

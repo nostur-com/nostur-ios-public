@@ -358,11 +358,14 @@ struct SmoothVideoPlayer: UIViewControllerRepresentable {
 
 // MARK: - Usage Example (in your feed)
 struct VideoFeedItemView: View {
+    @Environment(\.availableHeight) var availableHeight: CGFloat
+    @Environment(\.availableWidth) var availableWidth: CGFloat
     let videoURL: URL
     @State private var isVisible = false
     
     var body: some View {
         SmoothVideoPlayer(url: videoURL, isPlaying: $isVisible)
+            .frame(width: availableWidth, height: availableHeight)
             .onAppear {
 //                isVisible = true
             }
@@ -381,7 +384,270 @@ func prefetchNextVideos(at index: Int, urls: [URL]) {
 }
 
 
-
+@available(iOS 26.0, *)
 #Preview("Vine 3") {
-    VideoFeedItemView(videoURL: URL(string: "https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4")!)
+    @Previewable @Environment(\.theme) var theme
+    @Previewable @State var nrPost = testNRPost(###"{"kind":34236,"id":"26eff0b456d3f9b0030f6897aa0f23c5fc7f52301e468d836c6c3347f3f805f0","tags":[["d","97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7"],["imeta","url https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4","url https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/playlist.m3u8","m video/mp4","image https://stream.divine.video/678778b3-b8a3-4a57-ac34-6f046907aab0/thumbnail.jpg","size 1001958","x 97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7","blurhash LjGRPYbDM_xZ0gxZxrWY$ut7bJRn"],["title",""],["summary",""],["client","openvine"],["published_at","1763406697"],["duration","6"],["alt",""]],"sig":"de5345eda729e1c52ef38685440f2e52812c05216723c9227e811764766e741b0e621b86359879278a7bcfdefde906349c0311000702cd132cd5dcde85215b89","created_at":1763406667,"content":"","pubkey":"a0e998aaf688a5ee796384212681c670446c430fd60bf9e942606d68ab564324"}"###)
+    PreviewContainer({ pe in
+        
+    }) {
+        PreviewApp {
+            ScrollView {
+                LazyVStack {
+//                    Color.random
+//                        .frame(height: 400)
+                    
+                    VideoPostLayout(nrPost: nrPost, theme: theme) {
+                        VideoFeedItemView(videoURL: URL(string: "https://cdn.divine.video/97a09d5ad5874c1234c2d4f8cab1001895582afbda3b48e97513b00f79cd54b7.mp4")!)
+                    }
+                    
+//                    Color.random
+//                        .frame(height: 400)
+//                    
+//                    Color.random
+//                        .frame(height: 400)
+                }
+            }
+        }
+    }
+}
+
+struct VideoPost: View {
+    let nrPost: NRPost
+    let theme: Theme
+    
+    var body: some View {
+        VideoPostLayout(nrPost: nrPost, theme: theme) {
+            if let url = nrPost.eventUrl {
+                VideoFeedItemView(videoURL: url)
+            }
+        }
+    }
+}
+
+struct VideoPostLayout<Content: View>: View {
+    let nrPost: NRPost
+    let theme: Theme
+    @ViewBuilder var content: Content
+
+    
+    var body: some View {
+        self.content
+            // Post menu
+            .overlay(alignment: .topTrailing) {
+                PostMenuButton(nrPost: nrPost, theme: theme)
+                    .offset(x: -25, y: 25)
+            }
+        
+            // Post info
+            .overlay(alignment: .bottomLeading) {
+                VStack {
+                    if let title = nrPost.eventTitle {
+                        Text(title)
+                            .lineLimit(2)
+                            .layoutPriority(1)
+                            .fontWeightBold()
+                            .padding(5)
+                    }
+                    
+                    ContentRenderer(nrPost: nrPost, showMore: .constant(false))
+                    
+                    if let summary = nrPost.eventSummary, !summary.isEmpty {
+                        Text(summary)
+                            .lineLimit(30)
+                            .font(.caption)
+                            .padding(5)
+                    }
+                }
+            }
+        
+            // Buttons
+            .overlay(alignment: .bottomTrailing) {
+                VideoPostButtons(nrPost: nrPost, theme: theme)
+                    .padding(.horizontal, 10)
+                    .frame(width: 60)
+            }
+    }
+}
+
+struct VideoPostButtons: View {
+    @ObservedObject private var settings: SettingsStore = .shared
+    @ObservedObject private var vmc: ViewModelCache = .shared
+    private var theme: Theme
+
+    private let nrPost: NRPost
+    private var isDetail = false
+    private let isItem: Bool
+    
+    init(nrPost: NRPost, isDetail: Bool = false, isItem: Bool = false, theme: Theme) {
+        self.nrPost = nrPost
+        self.isDetail = isDetail
+        self.isItem = isItem
+        self.theme = theme
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            postButtons
+            
+            // UNDO SEND AND SENT TO RELAYS
+            if nrPost.ownPostAttributes.isOwnPost { // TODO: fixme
+//                OwnPostFooter(nrPost: nrPost)
+//                    .offset(y: 14)
+            }
+        }
+        .padding(.top, 5)
+        .padding(.bottom, 16)
+        .foregroundColor(theme.footerButtons)
+        .font(.system(size: 14))
+    }
+    
+    @ViewBuilder
+    private var postButtons: some View {
+        VStack(spacing: 0.0) {
+            Spacer()
+            ForEach(vmc.buttonRow) { button in
+                switch button.id {
+                case "💬":
+                    VideoReplyButton(nrPost: nrPost, isDetail: isDetail, theme: theme)
+                case "🔄":
+                    VideoRepostButton(nrPost: nrPost, theme: theme)
+                case "+":
+                    VideoEmojiButton(nrPost: nrPost, theme: theme)
+                case "⚡️", "⚡": // These are different. Apple Emoji keyboard creates \u26A1\uFE0F, but its the same as \u26A1 🤷‍♂️
+                    if IS_NOT_APPSTORE { // Only available in non app store version
+                        VideoZapButton(nrPost: nrPost, theme: theme)
+                            .opacity(nrPost.contact.anyLud ? 1 : 0.3)
+                            .disabled(!(nrPost.contact.anyLud))
+                    }
+                    else {
+                        EmptyView()
+                    }
+                case "🔖":
+                    VideoBookmarkButton(nrPost: nrPost, theme: theme)
+                default:
+                    VideoReactionButton(nrPost: nrPost, reactionContent:button.id)
+                }
+            }
+        }
+        .font(.system(size: 30))
+    }
+}
+
+import NavigationBackport
+
+@available(iOS 26.0, *)
+struct PreviewApp<Content: View>: View {
+    @Environment(\.theme) private var theme
+    
+    @EnvironmentObject private var la: LoggedInAccount
+    @ObservedObject private var settings: SettingsStore = .shared
+    
+    @State var selectedTab: String = "Main"
+    @ViewBuilder var content: Content
+    
+    var body: some View {
+        
+        TabView(selection: $selectedTab) {
+            Tab(value: "Main") {
+                NBNavigationStack {
+                    GeometryReader { geo in
+                        self.content
+                            .environment(\.availableHeight, geo.size.height)
+                            .environment(\.availableWidth, geo.size.width)
+                    }
+                    .background(theme.listBackground)
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                            HStack(spacing: 10) {
+                                PFP(pubkey: la.account.publicKey, account: la.account, size: 30)
+                            }
+                        }
+                        .sharedBackgroundVisibility(.hidden)
+                        
+                        ToolbarItem(placement: .title) {
+                            Text("Preview App")
+                        }
+                        
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            if settings.lowDataMode {
+                                Image(systemName: "tortoise")
+                                    .foregroundColor(theme.accent.opacity(settings.lowDataMode ? 1.0 : 0.3))
+                                    .onTapGesture {
+                                        settings.lowDataMode.toggle()
+                                        sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                    }
+                            }
+                        }
+                        
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            Menu {
+                                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                                    sendNotification(.showFeedToggles)
+                                }
+                                Button(String(localized: "Low Data Mode", comment: "Menu item"), systemImage: "tortoise") {
+                                    settings.lowDataMode.toggle()
+                                    sendNotification(.anyStatus, ("Low Data mode: \(settings.lowDataMode ? "enabled" : "disabled")", "APP_NOTICE"))
+                                }
+                            } label: {
+                                Label("Feed options", systemImage: "ellipsis")
+                                    .labelStyle(.iconOnly)
+                                    .foregroundColor(theme.accent)
+                                
+//                                    Image(systemName: "elipsis")
+//                                        .foregroundColor(theme.accent)
+//                                        .onTapGesture {
+//                                            sendNotification(.showFeedToggles)
+//                                        }
+                            }
+
+                        }
+                    }
+                }
+            } label: {
+                Label("Home", systemImage: "house")
+                    .labelStyle(.iconOnly)
+            }
+            
+            Tab(value: "Bookmarks") {
+                EmptyView()
+            } label: {
+                Label("Bookmarks", systemImage: "bookmark")
+                    .labelStyle(.iconOnly)
+                    .controlSize(.small)
+            }
+            
+            Tab(value: "Search") {
+                EmptyView()
+            } label: {
+                Label("Search", systemImage: "magnifyingglass")
+                    .labelStyle(.iconOnly)
+            }
+            
+            Tab(value: "Notifications") {
+                EmptyView()
+            } label: {
+                Label("Notifications", systemImage: "bell.fill")
+                    .labelStyle(.iconOnly)
+            }
+            .badge(3)
+            
+            Tab(value: "New Post", role: .search) {
+                Spacer()
+                    .onAppear { selectedTab = "Main" }
+            } label: {
+                Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
+                    .fontWeightBold()
+                    .labelStyle(.iconOnly)
+                    .foregroundStyle(theme.accent)
+                    .tint(theme.accent)
+            }
+            .hidden(selectedTab != "Main")
+
+        }
+        .tabBarMinimizeBehavior(.onScrollDown)
+        .edgesIgnoringSafeArea(.all)
+        .toolbarBackground(.hidden, for: .bottomBar)
+        
+    }
 }
