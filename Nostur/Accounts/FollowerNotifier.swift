@@ -159,6 +159,9 @@ class FollowerNotifier {
                 bg().perform { [weak self] in
                     guard let self = self else { return }
                     guard !self.currentFollowerPubkeys.isEmpty else { return }
+                    
+                    // Don't generate notification for blocked pubkeys
+                    guard !AppState.shared.bgAppState.blockedPubkeys.contains(nEvent.publicKey) else { return }
 
                     if !self.currentFollowerPubkeys.contains(nEvent.publicKey) {
                         self.newFollowerPubkeys.insert(nEvent.publicKey)
@@ -169,7 +172,7 @@ class FollowerNotifier {
             .store(in: &subscriptions)
     }
     
-    private func _generateNewFollowersNotification(_ pubkey:String) {
+    private func _generateNewFollowersNotification(_ pubkey: String) {
         bg().perform { [weak self] in
             guard let self = self else { return }
             guard !self.newFollowerPubkeys.isEmpty else { return }
@@ -199,7 +202,7 @@ class FollowerNotifier {
 //            }
             
 #if DEBUG
-            L.og.info("New followers (\(self.newFollowerPubkeys.count)) notification, for \(pubkey)")
+            L.og.debug("New followers (\(self.newFollowerPubkeys.count)) notification, for \(pubkey)")
             L.og.debug("Prefetching kind 0 for first 10 new followers")
 #endif
             QueuedFetcher.shared.enqueue(pTags: Array(self.newFollowerPubkeys.prefix(10)))
