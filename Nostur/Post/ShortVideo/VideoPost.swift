@@ -25,7 +25,7 @@ struct VideoPost: View {
                     .background(Color.black)
                     .frame(width: availableWidth, height: availableHeight)
                     .onTapGesture(perform: {
-                        isPlaying = true
+                        isPlaying.toggle()
                     })
                     .onAppear {
         //                isPlaying = true

@@ -47,6 +47,7 @@ struct SideBar: View {
                             if IS_IPAD {
                                 showSidebar = false
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                    setSelectedTab("Main")
                                     navigateTo(ContactPath(key: account.publicKey, navigationTitle: account.anyName), context: "Default")
                                 }
                             }

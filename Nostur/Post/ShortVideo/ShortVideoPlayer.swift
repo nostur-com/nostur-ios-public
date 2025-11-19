@@ -63,7 +63,7 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> AVPlayerViewController {
         let controller = AVPlayerViewController()
         controller.showsPlaybackControls = false
-        controller.videoGravity = .resizeAspectFill
+//        controller.videoGravity = .resizeAspectFill
         controller.view.backgroundColor = .black
         
         // Critical for smoothness

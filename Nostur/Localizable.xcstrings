@@ -5964,6 +5964,7 @@
       }
     },
     "Mute" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7350,6 +7351,9 @@
           }
         }
       }
+    },
+    "Preview App" : {
+
     },
     "Previously known as: %@" : {
       "localizations" : {
@@ -9131,7 +9135,7 @@
     "Short videos" : {
 
     },
-    "Short Videos (Vines)" : {
+    "Short Videos" : {
 
     },
     "Show" : {
