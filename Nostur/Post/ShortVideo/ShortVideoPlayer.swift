@@ -14,17 +14,14 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
     let url: URL
     @Binding var isPlaying: Bool
     
-    // Shared player pool to recycle AVPlayers (critical for performance)
-    private static var playerPool: [AVPlayer] = []
-    private static let queue = DispatchQueue(label: "com.nostur.playerpool")
-    
+
     // Reuse or create player
     private static func getPlayer(for url: URL) -> AVPlayer {
-        queue.sync {
+        ShortVideoPlayerPool.shared.queue.sync {
             // Try to reuse an existing player with the same URL
-            if let existing = playerPool.first(where: { ($0.currentItem?.asset as? AVURLAsset)?.url == url }) {
-                if let index = playerPool.firstIndex(of: existing) {
-                    playerPool.remove(at: index)
+            if let existing = ShortVideoPlayerPool.shared.playerPool.first(where: { ($0.currentItem?.asset as? AVURLAsset)?.url == url }) {
+                if let index = ShortVideoPlayerPool.shared.playerPool.firstIndex(of: existing) {
+                    ShortVideoPlayerPool.shared.playerPool.remove(at: index)
                 }
                 existing.seek(to: .zero)
                 existing.volume = 1.0
@@ -49,13 +46,13 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
     
     // Return player to pool when done
     private static func returnPlayer(_ player: AVPlayer) {
-        queue.async {
+        ShortVideoPlayerPool.shared.queue.async {
             player.pause()
             player.replaceCurrentItem(with: nil)
-            playerPool.append(player)
+            ShortVideoPlayerPool.shared.playerPool.append(player)
             // Keep pool reasonable size
-            if playerPool.count > 8 {
-                playerPool.removeFirst()
+            if ShortVideoPlayerPool.shared.playerPool.count > 8 {
+                ShortVideoPlayerPool.shared.playerPool.removeFirst()
             }
         }
     }
@@ -122,4 +119,13 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
     static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: Coordinator) {
         uiViewController.player?.pause()
     }
+}
+
+
+class ShortVideoPlayerPool {
+    public let queue = DispatchQueue(label: "com.nostur.playerpool")
+    public var playerPool: [AVPlayer] = []
+    
+    private init() { }
+    static let shared: ShortVideoPlayerPool = .init()
 }
