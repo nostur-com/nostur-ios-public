@@ -142,7 +142,10 @@ class NotificationsViewModel: ObservableObject {
     
     public var unreadNewPosts: Int {
         guard !muteNewPosts else { return 0 }
-        return unreadNewPosts_
+        if self.isMain { // New Posts is no longer account based. 
+            return unreadNewPosts_
+        }
+        return NotificationsViewModel.shared.unreadNewPosts
     }
         
     public var unreadNewFollowers: Int {
