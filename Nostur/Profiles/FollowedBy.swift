@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+let FOLLOWED_BY_MIN_HEIGHT = 24.0
+
 struct FollowedBy: View {
     @Environment(\.containerID) private var containerID
     
@@ -18,6 +20,13 @@ struct FollowedBy: View {
     
     @State private var commonFollowerPFPs: [(Pubkey, URL)] = []
     
+    private var textAlignment: Alignment {
+        if alignment == HorizontalAlignment.leading {
+            return Alignment.leading
+        }
+        return Alignment.trailing
+    }
+    
     private var firstRow: ArraySlice<(Pubkey, URL)> {
         commonFollowerPFPs.prefix(15)
     }
@@ -28,16 +37,15 @@ struct FollowedBy: View {
     
     var body: some View {
         VStack(alignment: alignment) {
-            Color.clear
-                .frame(height: 1)
-                .frame(maxWidth: .infinity)
             if (!commonFollowerPFPs.isEmpty || showZero) {
                 if !minimal && showHeaderText {
                     if commonFollowerPFPs.isEmpty {
                         Text("Followed by 0 others you follow").font(.caption)
+                            .frame(maxWidth: .infinity, alignment: textAlignment)
                     }
                     else {
                         Text("Followed by").font(.caption)
+                            .frame(maxWidth: .infinity, alignment: textAlignment)
                     }
                 }
                 HStack(spacing: 2) {
@@ -52,6 +60,7 @@ struct FollowedBy: View {
                             .id(index)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: textAlignment)
                 
                 if !minimal {
                     HStack(spacing: 2) {
@@ -66,18 +75,24 @@ struct FollowedBy: View {
                                 .id(index)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: textAlignment)
                 }
             }
             if minimal && commonFollowerPFPs.count > 16 {
                 Text("+\(commonFollowerPFPs.count - 15) others").font(.caption)
+                    .frame(maxWidth: .infinity, alignment: textAlignment)
             }
             else if commonFollowerPFPs.count > 31 {
                 Text("and \(commonFollowerPFPs.count - 30) others you follow").font(.caption)
+                    .frame(maxWidth: .infinity, alignment: textAlignment)
             }
             else if commonFollowerPFPs.count > 30 {
                 Text("and 1 other person you follow").font(.caption)
+                    .frame(maxWidth: .infinity, alignment: textAlignment)
             }
         }
+        .frame(minHeight: FOLLOWED_BY_MIN_HEIGHT)
+        .frame(maxWidth: .infinity)
         .task {
             guard let pubkey, let followingCache = AccountsState.shared.loggedInAccount?.followingCache else { return }
             
@@ -98,6 +113,49 @@ struct FollowedBy: View {
             }
             
         }
+    }
+}
+
+struct LazyFollowedBy: View {
+    
+    public var pubkey: Pubkey? = nil
+    public var alignment: HorizontalAlignment = .leading
+    public var minimal: Bool = false
+    
+    @State private var didLoad = false
+    @State private var timer: Timer?
+    
+    var body: some View {
+        Container {
+            if didLoad {
+                FollowedBy(pubkey: pubkey, alignment: alignment, minimal: minimal)
+            }
+            else {
+                Color.clear
+                    .frame(height: FOLLOWED_BY_MIN_HEIGHT)
+            }
+        }
+        .onAppear {
+            guard !didLoad else { return }
+            self.load()
+        }
+        .onDisappear {
+            self.cancel()
+        }
+    }
+    
+    private func load() {
+        guard timer == nil else { return }
+        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { _ in
+            withAnimation {
+                didLoad = true
+            }
+        }
+    }
+    
+    private func cancel() {
+        timer?.invalidate()
+        timer = nil
     }
 }
 

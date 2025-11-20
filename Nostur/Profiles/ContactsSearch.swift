@@ -77,7 +77,7 @@ struct ContactsSearch: View, Equatable {
                 }
                 LazyVStack {
                     ForEach(filteredContacts) { contact in
-                        HStack(alignment:.top) {
+                        HStack(alignment: .top) {
                             if onSelectContacts != nil {
                                 Button {
                                     if selectedContacts.contains(contact) {
@@ -98,18 +98,21 @@ struct ContactsSearch: View, Equatable {
                                     }
                                 }
                             }
-                            ContactSearchResultRow(contact: contact) {
-                                if let onSelectContact {
-                                    onSelectContact(contact)
-                                }
-                                else {
-                                    if selectedContacts.contains(contact) {
-                                        selectedContacts.remove(contact)
+                            VStack {
+                                ContactSearchResultRow(contact: contact) {
+                                    if let onSelectContact {
+                                        onSelectContact(contact)
                                     }
                                     else {
-                                        selectedContacts.insert(contact)
+                                        if selectedContacts.contains(contact) {
+                                            selectedContacts.remove(contact)
+                                        }
+                                        else {
+                                            selectedContacts.insert(contact)
+                                        }
                                     }
                                 }
+                                LazyFollowedBy(pubkey: contact.pubkey, alignment: .trailing, minimal: true)
                             }
                         }
                         Divider()

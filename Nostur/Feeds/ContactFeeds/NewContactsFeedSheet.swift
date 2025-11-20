@@ -98,9 +98,10 @@ struct NewContactsFeedSheet: View {
                 }
                 else {
                     ForEach(filteredContacts) { contact in
-                        HStack {
+                        HStack(alignment: .top) {
                             Image(systemName: selectedContacts.contains(contact) ? "checkmark.circle.fill" : "circle")
                                 .foregroundColor(selectedContacts.contains(contact) ? Color.primary  : Color.secondary)
+                                .padding(.top, 18)
                             
                                                         
                             VStack {
