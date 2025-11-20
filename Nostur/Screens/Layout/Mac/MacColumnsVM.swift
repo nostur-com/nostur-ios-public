@@ -13,9 +13,18 @@ public typealias ListID = String
 class MacColumnsVM: ObservableObject {
     
     @AppStorage("mac_columns_serialized") var macListstateSerialized = ""
-    @AppStorage("selected_tab") var selectedTab = "Main"
-    @AppStorage("selected_subtab") var selectedSubTab = "Following"
-    @AppStorage("selected_notifications_tab") var selectedNotificationsTab = "Mentions"
+    
+    @Published var selectedTab: String = "Main" {
+        didSet {
+            UserDefaults.standard.set(selectedTab, forKey: "selected_tab")
+        }
+    }
+    
+    @Published var selectedNotificationsTab: String = "Mentions" {
+        didSet {
+            UserDefaults.standard.set(selectedNotificationsTab, forKey: "selected_notifications_tab")
+        }
+    }
     
     static let shared = MacColumnsVM()
     
@@ -45,7 +54,10 @@ class MacColumnsVM: ObservableObject {
         columns.count > 0
     }
     
-    init() {}
+    init() {
+        self.selectedTab = UserDefaults.standard.string(forKey: "selected_tab") ?? "Main"
+        self.selectedNotificationsTab = UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "Mentions"
+    }
     
     @MainActor
     public func load() async {

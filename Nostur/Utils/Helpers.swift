@@ -31,9 +31,6 @@ func setSelectedNotificationsTab(_ notificationsTab: String) {
 
 func setSelectedSubTab(_ subTab: String) {
     UserDefaults.standard.set(subTab, forKey: "selected_subtab")
-    if IS_CATALYST && SettingsStore.shared.proMode {
-        MacColumnsVM.shared.selectedSubTab = subTab
-    }
 }
 
 

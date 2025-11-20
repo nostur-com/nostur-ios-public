@@ -44,14 +44,16 @@ struct SideBar: View {
                                 .strokeBorder(theme.listBackground, lineWidth: 3)
                         )
                         .onTapGesture {
-                            if IS_IPAD {
+                            if IS_IPAD && !IS_DESKTOP_COLUMNS() {
                                 showSidebar = false
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                                    setSelectedTab("Main")
                                     navigateTo(ContactPath(key: account.publicKey, navigationTitle: account.anyName), context: "Default")
                                 }
                             }
                             else {
+                                if selectedTab() != "Main" {
+                                    setSelectedTab("Main")
+                                }
                                 navigateTo(ContactPath(key: account.publicKey), context: "Default")
                                 showSidebar = false
                             }
@@ -92,13 +94,16 @@ struct SideBar: View {
                     .padding(.bottom, 20)
                      
                     Button {
-                        if IS_IPAD {
+                        if IS_IPAD && !IS_DESKTOP_COLUMNS() {
                             showSidebar = false
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                                 navigateTo(ContactPath(key: account.publicKey), context: "Default")
                             }
                         }
                         else {
+                            if selectedTab() != "Main" {
+                                setSelectedTab("Main")
+                            }
                             navigateTo(ContactPath(key: account.publicKey), context: "Default")
                             showSidebar = false
                         }
