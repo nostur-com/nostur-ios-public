@@ -134,9 +134,11 @@ struct BookmarksColumn: View {
             ToolbarItem(placement: .topBarTrailing) {
                 
                 HStack {
-                    Text(vm.nrLazyBookmarks.count.description).lineLimit(1)
-                        .font(.caption)
-                        .foregroundColor(theme.accent.opacity(0.5))
+                    if vm.nrLazyBookmarks.count > 0 {
+                        Text(vm.nrLazyBookmarks.count.description).lineLimit(1)
+                            .font(.caption)
+                            .foregroundColor(theme.accent.opacity(0.5))
+                    }
                     
                     Button("Filter", systemImage: bookmarkFilters.count < BOOKMARK_COLORS.count ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
                         showBookmarkFilterOptions = true
