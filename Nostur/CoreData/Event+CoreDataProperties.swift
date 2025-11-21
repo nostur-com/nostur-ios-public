@@ -1280,7 +1280,7 @@ extension Event {
                 }
                 else {
                     // if we are sender with full account
-                    if AccountsState.shared.bgAccountPubkeys.contains(event.publicKey) {
+                    if AccountsState.shared.bgFullAccountPubkeys.contains(event.publicKey) {
                         let savedEventDate = savedEvent.date
                         Task { @MainActor in
                             let dmState = CloudDMState(context: viewContext())
@@ -1296,7 +1296,7 @@ extension Event {
                     }
                     
                     // if we are receiver with full account
-                    else if AccountsState.shared.bgAccountPubkeys.contains(contactPubkey) {
+                    else if AccountsState.shared.bgFullAccountPubkeys.contains(contactPubkey) {
                         Task { @MainActor in
                             let dmState = CloudDMState(context: viewContext())
                             dmState.accountPubkey_ = contactPubkey

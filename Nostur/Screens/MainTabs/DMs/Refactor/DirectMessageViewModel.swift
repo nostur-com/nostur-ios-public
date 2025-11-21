@@ -39,9 +39,21 @@ class DirectMessageViewModel: ObservableObject {
     var lastNotificationReceivedAt: Date? = nil
     var didLoad = false
     
-    @Published var conversationRows: [Conversation] = []
-    @Published var requestRows: [Conversation] = []
-    @Published var requestRowsNotWoT: [Conversation] = []
+    @Published var conversationRows: [Conversation] = [] {
+        didSet {
+            NotificationsViewModel.shared.unreadPublisher.send(NotificationsViewModel.shared.unread)
+        }
+    }
+    @Published var requestRows: [Conversation] = [] {
+        didSet {
+            NotificationsViewModel.shared.unreadPublisher.send(NotificationsViewModel.shared.unread)
+        }
+    }
+    @Published var requestRowsNotWoT: [Conversation] = [] {
+        didSet {
+            NotificationsViewModel.shared.unreadPublisher.send(NotificationsViewModel.shared.unread)
+        }
+    }
     
     @Published var showNotWoT = false {
         didSet {

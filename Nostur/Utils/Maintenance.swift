@@ -970,7 +970,7 @@ struct Maintenance {
     static func runFixMissingDMStates(context: NSManagedObjectContext, firstRun: Bool = true) {
         
         // Run at one time at startup, or again if firstRun is false
-        guard !firstRun || !Self.didRun(migrationCode: migrationCode.fixMissingDMStates, context: context) else { return }
+        guard !firstRun || !Self.didRun(migrationCode: migrationCode.fixMissingDMStatesAgain, context: context) else { return }
         
         // Find all DMs sent to full accounts as receiver
         
@@ -1026,7 +1026,7 @@ struct Maintenance {
         }
         
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.fixMissingDMStates.rawValue
+        migration.migrationCode = migrationCode.fixMissingDMStatesAgain.rawValue
     }
     
     // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
@@ -1191,6 +1191,9 @@ struct Maintenance {
 
         // Fix missing DM States
         case fixMissingDMStates = "fixMissingDMStates"
+        
+        // Fix missing DM States (again)
+        case fixMissingDMStatesAgain = "fixMissingDMStatesAgain"
         
         // Put first A tag in .otherAtag
         case putReferencedAtag = "putReferencedAtag"
