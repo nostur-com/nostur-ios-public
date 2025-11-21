@@ -56,13 +56,13 @@ struct ZapButton: View {
                         .contentTransition(.numericText(countsDown: false))
                         .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
                         .frame(width: 34)
-                        .offset(x: 14)
+                        .offset(x: 14, y: -1)
                 }
                 else {
                     AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)
                         .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
                         .frame(width: 34)
-                        .offset(x: 14)
+                        .offset(x: 14, y: -1)
                 }
             }
             .padding(.trailing, 34)

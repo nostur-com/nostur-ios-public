@@ -25,7 +25,7 @@ struct ReplyButton: View {
     }
     
     var body: some View {
-            Image(footerAttributes.replied ? "ReplyIconActive" : "ReplyIcon")
+            Image(systemName: footerAttributes.replied ? "bubble.left.fill" : "bubble.left")
                 .foregroundColor(footerAttributes.replied ? theme.accent : theme.footerButtons)
                 .overlay(alignment: .topLeading) {
                     if !isDetail && !footerAttributes.replyPFPs.isEmpty { // TODO: Mabye this shouldn't be here but in PostLayout() or Kind1()
@@ -44,7 +44,7 @@ struct ReplyButton: View {
                     AnimatedNumber(number: footerAttributes.repliesCount)
                         .opacity(footerAttributes.repliesCount == 0 ? 0 : 1.0)
                         .frame(width: 26)
-                        .offset(x: 18)
+                        .offset(x: 18, y: -1)
 //                    AnimatedNumber(number: 347)
 //                        .frame(width: 26)
 //                        .offset(x: 18)
@@ -82,11 +82,9 @@ struct VideoReplyButton: View {
     
     var body: some View {
         VStack(spacing: 3) {
-            Image("ReplyIconActive")
-                .resizable()
-                .scaledToFit()
+            Image(systemName: "bubble.left.fill")
                 .foregroundColor(footerAttributes.replied ? theme.accent : Color.white)
-                .frame(width: 34)
+
                
             AnimatedNumber(number: footerAttributes.repliesCount)
                 .foregroundStyle(Color.white)

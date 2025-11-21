@@ -97,6 +97,7 @@ struct CustomizableFooterFragmentView: View {
                 switch button.id {
                 case "💬":
                     ReplyButton(nrPost: nrPost, isDetail: isDetail, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                        .offset(y: +1)
                 case "🔄":
                     RepostButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                 case "+":
@@ -105,6 +106,7 @@ struct CustomizableFooterFragmentView: View {
                     if IS_NOT_APPSTORE { // Only available in non app store version
                         ZapButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
                             .opacity(nrPost.contact.anyLud ? 1 : 0.3)
+                            .offset(y: +1)
                             .disabled(!(nrPost.contact.anyLud))
                     }
                     else {
@@ -112,6 +114,7 @@ struct CustomizableFooterFragmentView: View {
                     }
                 case "🔖":
                     BookmarkButton(nrPost: nrPost, isFirst: button.isFirst, isLast: button.isLast, theme: theme)
+                        .offset(y: +1)
                 default:
                     ReactionButton(nrPost: nrPost, reactionContent:button.id, isFirst: button.isFirst, isLast: button.isLast)
                         .equatable()
@@ -183,9 +186,24 @@ struct CustomizablePreviewFooterFragmentView: View {
                 .fixedSize()
             VStack(spacing: 10) {
                 
-//                Text(UIScreen.main.bounds.width.description)
+                Text(UIScreen.main.bounds.width.description)
+                Text(UIScreen.main.bounds.width.description)
+                Text(UIScreen.main.bounds.width.description)
+                Text(UIScreen.main.bounds.width.description)
                 
                 CustomizablePreviewFooterFragmentView()
+                    .overlay {
+                        Color.red.opacity(0.5)
+                    }
+                    .border(Color.green, width: 2)
+                    .overlay(alignment: .top) {
+                        Color.black.frame(height: 1)
+                            .offset(y: 10)
+                    }
+                    .overlay(alignment: .top) {
+                        Color.black.frame(height: 1)
+                            .offset(y: 26)
+                    }
                 
                 Divider()
                 

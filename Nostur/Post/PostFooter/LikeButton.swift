@@ -29,7 +29,7 @@ struct LikeButton: View {
                 AnimatedNumber(number: footerAttributes.likesCount)
                     .opacity(footerAttributes.likesCount == 0 ? 0 : 1)
                     .frame(width: 26)
-                    .offset(x: 18)
+                    .offset(x: 18, y: -2)
 //                AnimatedNumber(number: 547)
 //                    .frame(width: 26)
 //                    .offset(x: 18)
