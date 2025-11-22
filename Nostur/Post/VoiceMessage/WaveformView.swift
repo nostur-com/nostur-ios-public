@@ -516,20 +516,25 @@ struct WaveformShape: Shape {
     }
 }
 
-func parseVoiceMessageIMeta(_ tag: FastTag) -> ([Int]?, Int?) {
-    guard tag.0 == "imeta" else { return (nil, nil) }
+func parseVoiceMessageIMeta(_ tag: FastTag) -> (URL?, [Int]?, Int?) {
+    guard tag.0 == "imeta" else { return (nil, nil, nil) }
     
     var waveform: [Int]?
     var duration: Int?
+    var url: URL?
     
     // Iterate through optional fields (2–9)
-    for field in [tag.2, tag.3, tag.4, tag.5, tag.6, tag.7, tag.8, tag.9] {
+    for field in [tag.1, tag.2, tag.3, tag.4, tag.5, tag.6, tag.7, tag.8, tag.9] {
         guard let value = field else { continue }
         let components = value.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
         guard let key = components.first else { continue }
         guard let value = components.dropFirst().first else { continue }
         
         switch key {
+        case "url":
+            if let urlValue = URL(string: String(value)) {
+                url = urlValue
+            }
         case "waveform":
             // normalize to integers
             if value.contains(".") {
@@ -550,7 +555,7 @@ func parseVoiceMessageIMeta(_ tag: FastTag) -> ([Int]?, Int?) {
         }
     }
     
-    return (waveform, duration)
+    return (url, waveform, duration)
 }
 
 func normalizeToIntegers(_ floats: [Float]) -> [Int] {

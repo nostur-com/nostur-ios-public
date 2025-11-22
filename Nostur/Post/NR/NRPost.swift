@@ -264,8 +264,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
                     }
                     
                 }
-                else if let content = event.content, (event.kind == 1222 || event.kind == 1244) && tag.1 == "url " + content {
-                    let (waveformSamples, duration) = parseVoiceMessageIMeta(tag)
+                else if let content = event.content, (event.kind == 1222 || event.kind == 1244) {
+                    let (audioUrl, waveformSamples, duration) = parseVoiceMessageIMeta(tag)
+                    if let audioUrl, content.contains(audioUrl.absoluteString) {
+                        self.audioUrl = audioUrl
+                    }
                     self.samples = waveformSamples
                     self.duration = duration
                 }
@@ -466,8 +469,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         
         switch kind {
         case 1222,1244:
-            guard let urlContent = event.content, !urlContent.isEmpty, let url = URL(string: urlContent) else { break }
+            // self.audioUrl should already be set from .init() (Process tags)
+            guard self.audioUrl == nil, let urlContent = event.content, !urlContent.isEmpty, let url = URL(string: urlContent) else { break }
+            // if its somehow not set (from init, which checks imeta and matching url in .content). We can try again here our original method (just .content)
             self.audioUrl = url
+            // Also make text + url in content work if first imeta url matches ANY url in .content
         case 1063:
             self.fileMetadata = getKindFileMetadata(event: event)
 
