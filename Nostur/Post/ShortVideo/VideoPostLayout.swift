@@ -23,7 +23,7 @@ struct VideoPostLayout<Content: View>: View {
         
             // Post info
             .overlay(alignment: .bottomLeading) {
-                VStack {
+                VStack(alignment: .leading) {
                     if let title = nrPost.eventTitle {
                         Text(title)
                             .foregroundStyle(Color.white)
@@ -51,6 +51,7 @@ struct VideoPostLayout<Content: View>: View {
                 VideoPostButtons(nrPost: nrPost, theme: theme)
                     .padding(.horizontal, 3)
                     .frame(width: 56)
+                    .padding(.trailing, 7)
             }
     }
 }
