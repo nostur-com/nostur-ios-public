@@ -134,6 +134,7 @@ struct MainTabs26: View {
     @Environment(\.theme) private var theme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @AppStorage("selected_tab") private var selectedTab = "Main"
+    @AppStorage("selected_subtab") private var selectedSubTab = "Following"
     @State private var unread: Int = 0
     
     var body: some View {
@@ -190,7 +191,7 @@ struct MainTabs26: View {
                         .foregroundStyle(theme.accent)
                         .tint(theme.accent)
                 }
-                .hidden(selectedTab != "Main")
+                .hidden((selectedTab != "Main") || (selectedTab == "Main" && selectedSubTab == "Vine"))
 
             }
             .tabBarMinimizeBehavior(.onScrollDown)
