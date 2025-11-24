@@ -1,0 +1,358 @@
+//
+//  NXVinesFeed.swift
+//  Nostur
+//
+//  Created by Fabian Lachman on 24/11/2025.
+//
+
+import SwiftUI
+@_spi(Advanced) import SwiftUIIntrospect
+import Combine
+
+struct NXVinesFeed: View {
+    
+    @Environment(\.theme) private var theme
+    
+    private var vm: NXColumnViewModel
+    private let posts: [NRPost]
+    @ObservedObject private var vmInner: NXColumnViewModelInner
+
+    @State private var updateIsAtTopSubscription: AnyCancellable?
+    
+    // State variables for unread counter position
+    @AppStorage("nx_unread_counter_offset_x") private var nxUnreadCounterOffsetX: Double = 0
+    @AppStorage("nx_unread_counter_offset_y") private var nxUnreadCounterOffsetY: Double = 0
+    
+    @State private var dragOffset = CGSize.zero
+    
+    init(vm: NXColumnViewModel, posts: [NRPost]) {
+        self.vm = vm
+        self.posts = posts
+        self.vmInner = vm.vmInner
+    }
+    
+    var body: some View {
+        GeometryReader { geo in
+            List(posts) { nrPost in
+                NXListRow(nrPost: nrPost, vm: vm, containerTopOffset: geo.safeAreaInsets.top == 0 ? geo.frame(in: .global).minY : geo.safeAreaInsets.top) {
+                    PostOrThread(nrPost: nrPost, theme: theme)
+                        .environment(\.availableHeight, geo.size.height)
+                        .environment(\.availableWidth, geo.size.width)
+                }
+                .onDisappear {
+                    onPostDisappear(nrPost)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+            }
+            .withContainerTopOffsetEnvironmentKey()
+            .scrollOffsetID(vm.columnVMid)
+            .environment(\.defaultMinListRowHeight, 50)
+            .listStyle(.plain)
+            .introspect(.list, on: .iOS(.v15)) { [weak vm] view in
+                guard let vm else { return }
+                DispatchQueue.main.async {
+                    vm.tableView = view
+                    if vm.tablePrefetcher == nil {
+                        vm.tablePrefetcher = NXPostsFeedTablePrefetcher()
+                        vm.tablePrefetcher?.columnViewModel = vm
+                        view.isPrefetchingEnabled = true
+                        view.prefetchDataSource = vm.tablePrefetcher
+                    }
+                }
+                
+                // Special handling for the anti-flicker approach
+                if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
+                    // Immediately scroll to the target index without animation
+                    if let rows = view.dataSource?.tableView(view, numberOfRowsInSection: 0),
+                       rows > pendingIndex {
+                        UIView.setAnimationsEnabled(false)
+                        view.scrollToRow(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                        UIView.setAnimationsEnabled(true)
+                        
+                        if pendingIndex > 0 {
+                            vm.vmInner.updateIsAtTopSubject.send()
+                        }
+                    }
+                }
+            }
+            .introspect(.list, on: .iOS(.v16...)) { [weak vm] view in
+                guard let vm else { return }
+                DispatchQueue.main.async {
+                    vm.collectionView = view
+                    
+                    if vm.collectionPrefetcher == nil {
+                        vm.collectionPrefetcher = NXPostsFeedPrefetcher()
+                        vm.collectionPrefetcher?.columnViewModel = vm
+                        view.isPrefetchingEnabled = true
+                        view.prefetchDataSource = vm.collectionPrefetcher
+                    }
+                }
+                
+                // Special handling for the anti-flicker approach
+                if vm.vmInner.isPreparingForScrollRestore, let pendingIndex = vm.vmInner.pendingScrollToIndex {
+                    // Immediately scroll to the target index without animation
+                    if let rows = view.dataSource?.collectionView(view, numberOfItemsInSection: 0),
+                       rows > pendingIndex {
+                        UIView.setAnimationsEnabled(false)
+                        view.scrollToItem(at: .init(row: pendingIndex, section: 0), at: .top, animated: false)
+                        UIView.setAnimationsEnabled(true)
+                        
+                        if pendingIndex > 0 {
+                            vm.vmInner.updateIsAtTopSubject.send()
+                        }
+                    }
+                }
+            }
+            .scrollContentBackgroundHidden()
+            .background(theme.listBackground)
+            .onChange(of: vmInner.scrollToIndex) { scrollToIndex in
+                guard let scrollToIndex else { return }
+                guard !vmInner.isPerformingScroll else { return } // Prevent re-entrancy
+                guard !vmInner.isPerformingScrollToFirstUnread else { return } // Prevent re-entrancy
+                
+    #if DEBUG
+                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
+    #endif
+                
+                performScrollToIndex(scrollToIndex)
+            }
+            .overlay(alignment: .topTrailing) {
+                if vmInner.unreadCount != 0 {
+                    unreadCounterView
+                        .offset(x: nxUnreadCounterOffsetX + dragOffset.width,
+                               y: nxUnreadCounterOffsetY + dragOffset.height)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    dragOffset = value.translation
+                                }
+                                .onEnded { value in
+                                    let newX = nxUnreadCounterOffsetX + value.translation.width
+                                    let newY = nxUnreadCounterOffsetY + value.translation.height
+                                    
+                                    // Constrain position within screen bounds with padding
+                                    let minX: CGFloat = -(ScreenSpace.shared.mainTabSize.width - 91) // not offscreen to the left
+                                    let minY: CGFloat = 0 // already top-right, don't move more
+                                    let maxX: CGFloat = 0 // already top-right, don't move more
+                                    let maxY: CGFloat = ScreenSpace.shared.mainTabSize.height - 296 // not too low
+                                    
+                                    let clampedX = min(max(newX, minX), maxX)
+                                    let clampedY = min(max(newY, minY), maxY)
+                                    
+                                    // Save position to UserDefaults
+                                    nxUnreadCounterOffsetX = clampedX
+                                    nxUnreadCounterOffsetY = clampedY
+                                    dragOffset = .zero
+                                }
+                        )
+                        .onTapGesture {
+                            scrollToFirstUnread()
+                        }
+                        .simultaneousGesture(LongPressGesture().onEnded { _ in
+                            scrollToTop()
+                        })
+                }
+            }
+            .onReceive(receiveNotification(.shouldScrollToFirstUnread)) { _ in
+                guard vm.isVisible else { return }
+                scrollToFirstUnread()
+            }
+            .onReceive(receiveNotification(.shouldScrollToTop)) { _ in
+                guard vm.isVisible else { return }
+                
+                scrollToTop()
+            }
+            
+            // Handle going to detail and back
+            .onAppear {
+                vm.resumeViewUpdates()
+                
+                // Add updateIsAtTop() debounces - increase debounce time for better performance
+                guard updateIsAtTopSubscription == nil else { return }
+                updateIsAtTopSubscription = vmInner.updateIsAtTopSubject
+                    .debounce(for: 0.15, scheduler: RunLoop.main) // Increased from 0.075 for smoother scrolling
+                    .sink {
+                        self._updateIsAtTop()
+                    }
+            }
+            .onDisappear {
+                // When opening detail, the feed would still update in background using withAnimation { },
+                // but because its not visible the hack to keep scroll position doesn't work
+                // so we pause() updates (and resume() in onAppear {})
+                vm.pauseViewUpdates()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    public var unreadCounterView: some View {
+        NXUnreadCounterView(vm: vm.vmInner)
+            .padding(.trailing, 10)
+            .padding(.top, 5)
+    }
+    
+    private func scrollToFirstUnread() {
+        if vmInner.unreadCount == 0 {
+            scrollToTop()
+            return
+        }
+        for post in posts.reversed() {
+            if let unreadCount = vmInner.unreadIds[post.id], unreadCount > 0 {
+                if let firstUnreadPostIndex = posts.firstIndex(where: { $0.id == post.id }) {
+                    scrollToIndex(firstUnreadPostIndex)
+
+//                    // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
+//                    // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
+//                    // so force update here after small delay
+//                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+//                        #if DEBUG
+//                        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
+//                        #endif
+//                        updateIsAtTop()
+//                    }
+                }
+                break
+            }
+        }
+    }
+    
+    private func scrollToTop() {
+        scrollToIndex(0)
+        vmInner.isAtTop = true
+//        
+//        // Regular updateIsAtTop() in onPostAppearOnce { } doesn't catch the first row appearing to set isAtTop to 0, probably because
+//        // .onAppear happens when the offset is closer (like almost appearing), not at 0 when it would be too late for lazy loading
+//        // so force update here after small delay
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+//            #if DEBUG
+//            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") scrollToFirstUnread -> updateIsAtTop()")
+//            #endif
+//            updateIsAtTop()
+//        }
+    }
+    
+    private func performScrollToIndex(_ scrollToIndex: Int) {
+        // While we scroll to previous index here, we are triggering onPostAppearOnce(), which updates markAsRead
+        // But it wasn't a real onPostAppearOnce, so we need to avoid that markAsRead. Using isPerformingScroll flag to track that, and prevent re-entrancy.
+        vmInner.isPerformingScroll = true
+        
+        Task { @MainActor in
+            let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
+            
+            // Only proceed if we're in a valid scroll state
+            guard proxy.offset >= 0 else {
+                vmInner.isPerformingScroll = false
+                vmInner.scrollToIndex = nil
+                return
+            }
+            
+            // Disable animations for smoother performance
+            UIView.performWithoutAnimation {
+                if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+                    if let vmCollectionView = vm.collectionView,
+                       let rows = vmCollectionView.dataSource?.collectionView(vmCollectionView, numberOfItemsInSection: 0),
+                       rows > scrollToIndex {
+                        vmCollectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                        vmInner.isAtTop = scrollToIndex == 0
+                    }
+                } else { // iOS 15 UITableView
+                    if let vmTableView = vm.tableView,
+                       let rows = vmTableView.dataSource?.tableView(vmTableView, numberOfRowsInSection: 0),
+                       rows > scrollToIndex {
+                        vmTableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: false)
+                        vmInner.isAtTop = scrollToIndex == 0
+                    }
+                }
+            }
+            
+            vmInner.scrollToIndex = nil
+            
+            // Reset flag and update state after a brief delay
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            vmInner.isPerformingScroll = false
+            vmInner.updateIsAtTopSubject.send()
+        }
+    }
+    
+    private func scrollToIndex(_ scrollToIndex: Int) {
+        vmInner.isPerformingScrollToFirstUnread = true
+
+        if #available(iOS 16.0, *) { // iOS 16+ UICollectionView
+            if let vmCollectionView = vm.collectionView,
+               let rows = vmCollectionView.dataSource?.collectionView(vmCollectionView, numberOfItemsInSection: 0),
+               rows > scrollToIndex
+            {
+                vmCollectionView.scrollToItem(at: .init(row: scrollToIndex, section: 0), at: .top, animated: true)
+                vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
+                
+                // Reset flags after animations are re-enabled
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    vmInner.isPerformingScrollToFirstUnread = false
+                    vmInner.updateIsAtTopSubject.send()
+                }
+            }
+        }
+        else { // iOS 15 UITableView
+            if let vmTableView = vm.tableView,
+               let rows = vmTableView.dataSource?.tableView(vmTableView, numberOfRowsInSection: 0),
+               rows > scrollToIndex
+            {
+                vmTableView.scrollToRow(at: .init(row: scrollToIndex, section: 0), at: .top, animated: true)
+                vmInner.isAtTop = scrollToIndex == 0 // false unless scrollToIndex == 0
+            }
+            
+            // Reset flags after animations are re-enabled
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                vmInner.isPerformingScrollToFirstUnread = false
+                vmInner.updateIsAtTopSubject.send()
+            }
+        }
+    }
+
+    private func _updateIsAtTop() {
+        let proxy = ScrollOffset.proxy(.top, id: vm.columnVMid)
+        let offset = proxy.offset
+        
+        // Cache the offset threshold to avoid recalculation
+        let threshold: CGFloat = -5
+        let isAtTopNow = offset >= threshold
+        
+        // Only update if the state actually changed
+        guard vmInner.isAtTop != isAtTopNow else { return }
+        
+        vmInner.isAtTop = isAtTopNow
+        
+#if DEBUG
+        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") proxy.offset: \(offset) isAtTop: \(isAtTopNow) -[LOG]-")
+#endif
+        
+        // Only mark all as read when transitioning to top, not when leaving top
+        if isAtTopNow {
+            Task.detached(priority: .userInitiated) {
+                await MainActor.run {
+                    self.markAllAsRead()
+                }
+            }
+        }
+    }
+
+    private func onPostDisappear(_ nrPost: NRPost) {
+        // Only trigger updateIsAtTop if we're not performing programmatic scrolls
+        guard !vmInner.isPerformingScroll && !vmInner.isPerformingScrollToFirstUnread else { return }
+        
+#if DEBUG
+        L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.onPostDisappear() -> updateIsAtTop() BEFORE: \(vmInner.isAtTop) -[LOG]-")
+#endif
+        vmInner.updateIsAtTopSubject.send()
+    }
+    
+    private func markAllAsRead() {
+        if !vmInner.unreadIds.isEmpty {
+#if DEBUG
+            L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed.markAllAsRead() -[LOG]-")
+#endif
+            vmInner.unreadIds = [:]
+        }
+    }
+}
