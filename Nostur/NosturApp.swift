@@ -54,6 +54,7 @@ struct iOSApp: App {
     private let cp: ConnectionPool = .shared
     private let npn: NewPostNotifier = .shared
     private let ss: SettingsStore = .shared
+    private let live: LiveEventsModel = .shared
     
     // There is a NotificationsViewModel for every notifications column as @StateObject. (for example multiple accounts in columns)
     // But this .shared is the main one for the currently logged in account

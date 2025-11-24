@@ -28,6 +28,7 @@ struct AppEnvironment<Content: View>: View {
             .environmentObject(NetworkMonitor.shared)
             .environmentObject(SettingsStore.shared)
             .environmentObject(la)
+            .environmentObject(VideoPostPlaybackCoordinator.shared)
     }
 }
 
