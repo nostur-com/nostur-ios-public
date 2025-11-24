@@ -25,24 +25,7 @@ struct VideoPostButtons: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            postButtons
-            
-            // UNDO SEND AND SENT TO RELAYS
-            if nrPost.ownPostAttributes.isOwnPost { // TODO: fixme
-//                OwnPostFooter(nrPost: nrPost)
-//                    .offset(y: 14)
-            }
-        }
-        .padding(.top, 5)
-        .padding(.bottom, 16)
-        .foregroundColor(theme.footerButtons)
-        .font(.system(size: 14))
-    }
-    
-    @ViewBuilder
-    private var postButtons: some View {
-        VStack(spacing: 15.0) {
+        VStack(spacing: 5) {
             Spacer()
             ZappablePFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: true)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
@@ -50,7 +33,8 @@ struct VideoPostButtons: View {
                 .onTapGesture {
                     navigateToContact(pubkey: nrPost.pubkey, nrPost: nrPost,  context: containerID)
                 }
-                .padding(.bottom, 15.0)
+                .padding(.bottom, 25.0)
+            
             ForEach(vmc.buttonRow) { button in
                 switch button.id {
                 case "💬":
@@ -74,7 +58,16 @@ struct VideoPostButtons: View {
                     VideoReactionButton(nrPost: nrPost, reactionContent:button.id)
                 }
             }
+            
+            // UNDO SEND AND SENT TO RELAYS
+            if nrPost.ownPostAttributes.isOwnPost { // TODO: fixme
+//                OwnPostFooter(nrPost: nrPost)
+//                    .offset(y: 14)
+            }
         }
-        .font(.system(size: 26))
+        .padding(.top, 5)
+        .padding(.bottom, 16)
+        .foregroundColor(theme.footerButtons)
+        .font(.system(size: 24))
     }
 }
