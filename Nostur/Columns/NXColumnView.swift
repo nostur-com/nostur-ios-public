@@ -43,7 +43,11 @@ struct NXColumnView<HeaderContent: View>: View {
             case .posts(let nrPosts):
                 VStack(spacing: 0) {
                     header
-                    NXPostsFeed(vm: viewModel, posts: nrPosts)
+                    if case .vine(_) = config.columnType {
+                        NXVinesFeed(vm: viewModel, posts: nrPosts)
+                    } else {
+                        NXPostsFeed(vm: viewModel, posts: nrPosts)
+                    }
                 }
             case .timeout:
                 ZStack(alignment: .center) {
