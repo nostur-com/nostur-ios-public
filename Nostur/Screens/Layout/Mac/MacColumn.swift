@@ -76,7 +76,7 @@ struct MacColumn: View {
                 switch columnType {
                     
                 case .unconfigured:
-                    Text("unconfigured")
+                    Text("Unconfigured")
                     
                 case .cloudFeed(_):
                     if let selectedFeed {
@@ -115,8 +115,10 @@ struct MacColumn: View {
                     
                 case .following:
                     Text("following")
-                case .photos, .yaks, .vines:
-                    Text("_photos, .yaks, .vines_")
+                    
+                case .photos(let accountPubkey), .yaks(let accountPubkey), .vines(let accountPubkey):
+                    self.renderContentTypeColumn(accountPubkey, columnType: $columnType)
+                    
                 case .mentions:
                     Text("mentions")
                     
@@ -126,9 +128,6 @@ struct MacColumn: View {
                 case .DMs:
                     Text("DMs")
                 }
-
-                
-                
             }
             
             .withColumnConfigToolbarMenu(feeds: vm.availableFeeds, columnType: $columnType, title: selectedTitle)
@@ -179,6 +178,36 @@ struct MacColumn: View {
                 vm.updateColumn(
                     MacColumnConfig(id: config.id, type: .notifications(pubkey))
                 )
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func renderContentTypeColumn(_ accountPubkey: String?, columnType: Binding<MacColumnType>) -> some View {
+        if let accountPubkey {
+            ContentTypeColumn(pubkey: accountPubkey, navPath: $navPath, columnType: $columnType)
+        }
+        else {
+            NXForm { // Needs to be wrapped in
+                AccountPicker(selectedAccount: $selectedAccount)
+            }
+            .onValueChange(selectedAccount) { oldValue, newValue in
+                guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
+                
+                switch self.columnType {
+                case .yaks(_):
+                    vm.updateColumn(
+                        MacColumnConfig(id: config.id, type: .yaks(pubkey))
+                    )
+                case .vines(_):
+                    vm.updateColumn(
+                        MacColumnConfig(id: config.id, type: .vines(pubkey))
+                    )
+                default: // .photos(_)
+                    vm.updateColumn(
+                        MacColumnConfig(id: config.id, type: .photos(pubkey))
+                    )
+                }
             }
         }
     }

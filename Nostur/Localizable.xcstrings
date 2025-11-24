@@ -85,9 +85,6 @@
         }
       }
     },
-    "_photos, .yaks, .vines_" : {
-
-    },
     "_Post deleted by %@_" : {
       "comment" : "Message shown when a post is deleted by (name)",
       "extractionState" : "stale",
@@ -6867,9 +6864,6 @@
         }
       }
     },
-    "photos" : {
-
-    },
     "Photos" : {
       "comment" : "Feed title\nTab title for photos feed of people you follow",
       "localizations" : {
@@ -10580,6 +10574,9 @@
       "shouldTranslate" : false
     },
     "unconfigured" : {
+
+    },
+    "Unconfigured" : {
 
     },
     "Undelete" : {

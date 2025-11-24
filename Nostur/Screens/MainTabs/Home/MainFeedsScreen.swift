@@ -756,7 +756,6 @@ struct MainFeedsScreen: View {
         else {
             let newFeed = CloudFeed(context: context)
             newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFeed.name = "📸"
             newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
             newFeed.id = UUID()
             newFeed.createdAt = .now
@@ -764,11 +763,12 @@ struct MainFeedsScreen: View {
             newFeed.type = CloudFeedType.picture.rawValue
             newFeed.repliesEnabled = false
             newFeed.order = 0
+            newFeed.name = "\(newFeed.feedTitle()) for \(account.anyName)"
                         
             newFeed.continue = false // kind 20 feed needs more pics so false
             
             DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: "Picture")
+                pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: newFeed.feedTitle())
             }
         }
     }
@@ -787,7 +787,7 @@ struct MainFeedsScreen: View {
             })
         
         if let feed = feedsNewest.first {
-            yakConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .yak(feed), accountPubkey: account.publicKey, name: "Yaks")
+            yakConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .yak(feed), accountPubkey: account.publicKey, name: feed.feedTitle())
             
             guard feeds.count > 1 else { return }
             for f in feedsNewest.dropFirst(1) {
@@ -798,7 +798,6 @@ struct MainFeedsScreen: View {
         else {
             let newFeed = CloudFeed(context: context)
             newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFeed.name = "📸"
             newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
             newFeed.id = UUID()
             newFeed.createdAt = .now
@@ -806,11 +805,12 @@ struct MainFeedsScreen: View {
             newFeed.type = CloudFeedType.yak.rawValue
             newFeed.repliesEnabled = false
             newFeed.order = 0
+            newFeed.name = "\(newFeed.feedTitle()) for \(account.anyName)"
                         
             newFeed.continue = false // feed needs more content false
             
             DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                yakConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .yak(newFeed), accountPubkey: account.publicKey, name: "Yaks")
+                yakConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .yak(newFeed), accountPubkey: account.publicKey, name: newFeed.feedTitle())
             }
         }
     }
@@ -829,7 +829,7 @@ struct MainFeedsScreen: View {
             })
         
         if let feed = feedsNewest.first {
-            vineConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .vine(feed), accountPubkey: account.publicKey, name: "diVines")
+            vineConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .vine(feed), accountPubkey: account.publicKey, name: feed.feedTitle())
             
             guard feeds.count > 1 else { return }
             for f in feedsNewest.dropFirst(1) {
@@ -840,7 +840,6 @@ struct MainFeedsScreen: View {
         else {
             let newFeed = CloudFeed(context: context)
             newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
-            newFeed.name = "📸"
             newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
             newFeed.id = UUID()
             newFeed.createdAt = .now
@@ -848,11 +847,12 @@ struct MainFeedsScreen: View {
             newFeed.type = CloudFeedType.vine.rawValue
             newFeed.repliesEnabled = false
             newFeed.order = 0
-                        
+            newFeed.name = "\(newFeed.feedTitle()) for \(account.anyName)"
+            
             newFeed.continue = false // feed needs more content false
             
             DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
-                vineConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .vine(newFeed), accountPubkey: account.publicKey, name: "diVines")
+                vineConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .vine(newFeed), accountPubkey: account.publicKey, name: newFeed.feedTitle())
             }
         }
     }

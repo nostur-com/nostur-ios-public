@@ -163,6 +163,24 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         }
         
         Divider()
+        
+        if enableYakFeed {
+            Button("Yaks", systemImage: "waveform.circle") {
+                columnType = .yaks(Nostur.account()?.publicKey)
+            }
+        }
+        
+        if enableVineFeed {
+            Button("diVines", systemImage: "person.crop.square.badge.video") {
+                columnType = .vines(Nostur.account()?.publicKey)
+            }
+        }
+        
+        if enablePictureFeed {
+            Button("Photos", systemImage: "photo") {
+                columnType = .photos(Nostur.account()?.publicKey)
+            }
+        }
 
         ForEach(feeds) { feed in
             Button(feed.feedTitle(), systemImage: feed.feedIconName()) {
