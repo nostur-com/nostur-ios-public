@@ -73,7 +73,7 @@ struct MainTabs15: View {
             }
             .environment(\.horizontalSizeClass, .compact)
             .withSheets() // Move .sheets to each (NB)NavigationStack?
-            .edgesIgnoringSafeArea(.all)
+//            .edgesIgnoringSafeArea(.all)
         }
         
         .onChange(of: selectedTab) { newValue in

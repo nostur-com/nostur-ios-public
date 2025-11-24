@@ -44,6 +44,7 @@ struct VideoPostLayout<Content: View>: View {
                     }
                 }
                 .padding(10)
+                .offset(y: -65.0)
             }
         
             // Buttons
@@ -52,6 +53,7 @@ struct VideoPostLayout<Content: View>: View {
                     .padding(.horizontal, 3)
                     .frame(width: 56)
                     .padding(.trailing, 7)
+                    .offset(y: -90.0)
             }
     }
 }

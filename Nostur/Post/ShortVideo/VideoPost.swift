@@ -95,6 +95,7 @@ struct VideoPost: View {
                                 isPlaying = (coordinator.mostVisiblePostID == postID)
                             }
                     }
+                    .frame(width: availableWidth, height: availableHeight)
                 }
             }
         }
