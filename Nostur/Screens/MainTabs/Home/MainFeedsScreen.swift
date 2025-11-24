@@ -249,9 +249,11 @@ struct MainFeedsScreen: View {
                     }
                 }
                 
-                LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
-                    .opacity(showLiveEventsBanner ? 1.0 : 0)
-                    .frame(height: showLiveEventsBanner ? 50 : 0)
+                if selectedSubTab != "Vine" {
+                    LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
+                        .opacity(showLiveEventsBanner ? 1.0 : 0)
+                        .frame(height: showLiveEventsBanner ? 50 : 0)
+                }
             }
             
             ZStack {
@@ -383,9 +385,11 @@ struct MainFeedsScreen: View {
         
         .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
             if #available(iOS 26.0, *) {
-                LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
-                    .opacity(showLiveEventsBanner ? 1.0 : 0)
-                    .frame(height: showLiveEventsBanner ? 50 : 0)
+                if selectedSubTab != "Vine" { // <-- this if condition
+                    LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
+                        .opacity(showLiveEventsBanner ? 1.0 : 0)
+                        .frame(height: showLiveEventsBanner ? 50 : 0)
+                }
             }
         }
 

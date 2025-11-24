@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 struct NXVinesFeed: View {
-    
+    @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
     @Environment(\.theme) private var theme
     
     private var vm: NXColumnViewModel
@@ -40,10 +40,12 @@ struct NXVinesFeed: View {
                     .scrollTargetBehavior(.paging)
                 } else {
                     ScrollView {
-                        ForEach(posts, id: \.id) { post in
-                            PostOrThread(nrPost: post, theme: theme)
-                                .environment(\.availableHeight, geo.size.height)
-                                .environment(\.availableWidth, geo.size.width)
+                        LazyVStack {
+                            ForEach(posts, id: \.id) { post in
+                                PostOrThread(nrPost: post, theme: theme)
+                                    .environment(\.availableHeight, geo.size.height)
+                                    .environment(\.availableWidth, geo.size.width)
+                            }
                         }
                     }
                 }
