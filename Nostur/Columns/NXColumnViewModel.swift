@@ -1437,9 +1437,11 @@ class NXColumnViewModel: ObservableObject {
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+                    .subtracting(since == nil ? [5] : [-1])
             }
             else {
                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting(removeSeperateFeedKinds)
+                    .subtracting(since == nil ? [5] : [-1])
                     .subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
@@ -1529,6 +1531,10 @@ class NXColumnViewModel: ObservableObject {
                 return nil
             }
             
+            let removeKinds: Set<Int> = [
+                since == nil ? 5 : -1
+            ]
+            
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
@@ -1538,7 +1544,7 @@ class NXColumnViewModel: ObservableObject {
             
             let filters = Filters(
                 authors: pubkeys,
-                kinds: kinds,
+                kinds: kinds.subtracting(removeKinds),
                 since: since,
                 until: until,
                 limit: !config.continue ? 150 : nil
@@ -1558,7 +1564,12 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, limit: 150, kinds: FETCH_FOLLOWING_FEED_KINDS)
+            
+            let removeKinds: Set<Int> = [
+                since == nil ? 5 : -1
+            ]
+            
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, limit: 150, kinds: FETCH_FOLLOWING_FEED_KINDS.subtracting(removeKinds))
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
@@ -1574,7 +1585,12 @@ class NXColumnViewModel: ObservableObject {
                 L.og.debug("☘️☘️ cmd with empty pubkeys and hashtags")
                 return nil
             }
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], limit: 150, kinds: FETCH_FOLLOWING_FEED_KINDS)
+            
+            let removeKinds: Set<Int> = [
+                since == nil ? 5 : -1
+            ]
+            
+            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: [], limit: 150, kinds: FETCH_FOLLOWING_FEED_KINDS.subtracting(removeKinds))
             
             if let message = CM(type: .REQ, subscriptionId: "RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
@@ -1588,11 +1604,15 @@ class NXColumnViewModel: ObservableObject {
             let relaysData = feed.relaysData
             guard !relaysData.isEmpty else { return nil }
             
+            let removeKinds: Set<Int> = [
+                since == nil ? 5 : -1
+            ]
+            
             let kinds = if !feed.kinds.isEmpty {
-                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+                feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : []).subtracting(removeKinds)
             }
             else {
-                FETCH_GLOBAL_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+                FETCH_GLOBAL_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : []).subtracting(removeKinds)
             }
             
             let filters = globalFeedReqFilters(kinds: kinds, since: since, until: until)
@@ -1607,7 +1627,11 @@ class NXColumnViewModel: ObservableObject {
             let relaysData: Set<RelayData> = [relayData]
             guard !relaysData.isEmpty else { return nil }
             
-            let filters = globalFeedReqFilters(kinds: FETCH_GLOBAL_KINDS, since: since, until: until)
+            let removeKinds: Set<Int> = [
+                since == nil ? 5 : -1
+            ]
+            
+            let filters = globalFeedReqFilters(kinds: FETCH_GLOBAL_KINDS.subtracting(removeKinds), since: since, until: until)
             
             if let message = CM(type: .REQ, subscriptionId: "G-RESUME-" + config.id + "-" + (since?.description ?? "any"), filters: filters).json() {
                 return (cmd: {
