@@ -14,7 +14,7 @@ struct ListsAndFeedsScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.managedObjectContext) var viewContext
     
-    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture"]))
+    @FetchRequest(sortDescriptors: [SortDescriptor(\CloudFeed.order, order: .forward)], predicate: NSPredicate(format: "NOT type IN %@ OR type = nil", ["following", "picture", "yak", "vine"]))
     var lists: FetchedResults<CloudFeed>
 
     @State var newContactsFeedSheet = false
