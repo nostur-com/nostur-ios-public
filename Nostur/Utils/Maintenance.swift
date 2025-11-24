@@ -109,6 +109,7 @@ struct Maintenance {
             Self.runInsertFixedPfps(context: context)
             Self.runPutReferencedAtag(context: context)
             Self.runSetCloudFeedOrder(context: context)
+            Self.runTempAlways(context: context)
             do {
                 if context.hasChanges {
                     try context.save()
@@ -143,6 +144,7 @@ struct Maintenance {
         return await context.perform {
             Self.audioDownloadCacheCleanUp()
             Self.databaseCleanUp(context)
+            Self.runFixMissingDMStates(context: context, firstRun: false)
             try? context.save()
             return true
         }
