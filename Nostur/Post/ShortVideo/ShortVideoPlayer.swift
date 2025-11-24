@@ -62,7 +62,7 @@ struct ShortVideoPlayer: UIViewControllerRepresentable {
         controller.showsPlaybackControls = false
         controller.videoGravity = .resizeAspectFill
         controller.view.backgroundColor = .black
-        if #available(iOS 16.0, *) {
+        if #available(iOS 18.0, *) {
             controller.allowsVideoFrameAnalysis = false
         }
         
