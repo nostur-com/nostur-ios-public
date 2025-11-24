@@ -51,6 +51,10 @@ struct MacColumn: View {
             return String(localized: "Following", comment: "Feed title")
         case .photos:
             return String(localized: "Photos", comment: "Feed title")
+        case .yaks:
+            return String(localized: "Yaks", comment: "Feed title")
+        case .vines:
+            return String(localized: "diVines", comment: "Feed title")
         case .mentions:
             return String(localized: "Mentions", comment: "Feed title")
         case .bookmarks:
@@ -111,8 +115,8 @@ struct MacColumn: View {
                     
                 case .following:
                     Text("following")
-                case .photos:
-                    Text("photos")
+                case .photos, .yaks, .vines:
+                    Text("_photos, .yaks, .vines_")
                 case .mentions:
                     Text("mentions")
                     

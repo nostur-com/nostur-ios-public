@@ -86,7 +86,7 @@ class MacColumnsVM: ObservableObject {
         return CloudFeed.fetchAll(context: DataProvider.shared().viewContext)
             .filter {
                 switch $0.feedType {
-                    case .picture(_):
+                    case .picture(_), .yak(_), .vine(_):
                     if let accountPubkey = activeAccount?.publicKey, $0.accountPubkey == accountPubkey {
                         return true
                     }
@@ -157,6 +157,8 @@ enum MacColumnType: Codable, Equatable {
     case notifications(String?) // .notifications(accountPubkey)
     case following
     case photos
+    case yaks
+    case vines
     case mentions
     case bookmarks(Set<String>)
     case DMs
@@ -188,6 +190,10 @@ enum MacColumnType: Codable, Equatable {
             return "following"
         case .photos:
             return "photos"
+        case .yaks:
+            return "yaks"
+        case .vines:
+            return "vines"
         case .mentions:
             return "mentions"
         case .bookmarks(let filters):

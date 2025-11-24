@@ -24,6 +24,8 @@ struct ListsAndFeedsScreen: View {
     @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
+    @AppStorage("enable_yak_feed") private var enableYakFeed: Bool = true
+    @AppStorage("enable_vine_feed") private var enableVineFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
@@ -61,6 +63,14 @@ struct ListsAndFeedsScreen: View {
                 Toggle(isOn: $enablePictureFeed, label: {
                     Text("Pictures")
                     Text("Pictures-only feed from people you follow")
+                })
+                Toggle(isOn: $enableYakFeed, label: {
+                    Text("Yaks")
+                    Text("Voice Messages feed from people you follow")
+                })
+                Toggle(isOn: $enableVineFeed, label: {
+                    Text("diVines")
+                    Text("Short videos feed from people you follow")
                 })
                 Toggle(isOn: $enableZappedFeed, label: {
                     Text("Zapped")

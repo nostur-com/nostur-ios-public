@@ -15,6 +15,10 @@ extension CloudFeed {
                 return "person.circle"
             case .picture(_):
                 return "photo"
+            case .yak(_):
+                return "waveform.circle"
+            case .vine(_):
+                return "person.crop.square.badge.video"
             case .pubkeys(_):
                 return "star"
             case .relays(_):
@@ -32,6 +36,10 @@ extension CloudFeed {
                 return self.name_
             case .picture(_):
                 return String(localized: "Photos")
+            case .vine(_):
+                return String(localized: "diVines")
+            case .yak(_):
+                return String(localized: "Yaks")
             case .pubkeys(_):
                 return self.name_
             case .relays(_):
@@ -49,6 +57,8 @@ struct ColumnConfigToolbarMenu: ViewModifier {
     @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
+    @AppStorage("enable_yak_feed") private var enableYakFeed: Bool = true
+    @AppStorage("enable_vine_feed") private var enableVineFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true

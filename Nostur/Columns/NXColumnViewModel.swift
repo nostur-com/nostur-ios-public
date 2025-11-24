@@ -154,7 +154,7 @@ class NXColumnViewModel: ObservableObject {
             }
             
             switch config.columnType {
-            case .following(let feed), .picture(let feed):
+            case .following(let feed), .picture(let feed), .vine(let feed), .yak(let feed):
                 if let refreshedAt = feed.refreshedAt, let mostRecentCreatedAt = self.mostRecentCreatedAt {
                     return min(Int64(refreshedAt.timeIntervalSince1970),Int64(mostRecentCreatedAt) - 300)
                 }
@@ -195,7 +195,7 @@ class NXColumnViewModel: ObservableObject {
         set {
             guard let config else { return }
             switch config.columnType {
-            case .following(let feed), .picture(let feed):
+            case .following(let feed), .picture(let feed), .vine(let feed), .yak(let feed):
                 feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
             case .pubkeys(let feed):
                 feed.refreshedAt = Date(timeIntervalSince1970: TimeInterval(newValue))
@@ -581,7 +581,7 @@ class NXColumnViewModel: ObservableObject {
                     feed.contactPubkeys
                 case .following(_):
                     (config.account?.followingPubkeys ?? []).union(Set([config.accountPubkey ?? ""]))
-                case .picture(_):
+                case .picture(_), .vine(_), .yak(_):
                     (config.account?.followingPubkeys ?? []).union(Set([config.accountPubkey ?? ""]))
                 default:
                     []
@@ -592,6 +592,15 @@ class NXColumnViewModel: ObservableObject {
                 
                 let event = notification.object as! Event
                 bg().perform { [weak self] in
+                    // Only kind 1222/1244 on yak-only feed
+                    if case .yak(_) = config.columnType, (event.kind != 1222 && event.kind != 1244) {
+                        return
+                    }
+                    
+                    // Only kind 34236 on picture-only feed
+                    if case .vine(_) = config.columnType, event.kind != 34236 {
+                        return
+                    }
                     
                     // Only kind 20 on picture-only feed
                     if case .picture(_) = config.columnType, (event.kind != 20 && !(event.kind == 1 && event.kTag == 20)) {
@@ -724,7 +733,7 @@ class NXColumnViewModel: ObservableObject {
         self.realTimeReqTask?.cancel()
         
         switch config.columnType {
-        case .picture(_):
+        case .picture(_), .vine(_), .yak(_):
             ConnectionPool.shared.closeSubscription(config.id) // List-...
         case .pubkeys(_):
             ConnectionPool.shared.closeSubscription(config.id) // List-...
@@ -990,12 +999,19 @@ class NXColumnViewModel: ObservableObject {
             }
             else { nil }
             
+            let removeSeperateFeedKinds: Set<Int> = [
+                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
+                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+            ]
+            
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
-            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
-            } else { QUERY_FOLLOWING_KINDS.subtracting( !feed.repliesEnabled ? REPLY_KINDS : []) }
+            else {
+                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting(removeSeperateFeedKinds).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            }
             
             bg().perform { [weak self] in
                 guard let self else { return }
@@ -1008,7 +1024,7 @@ class NXColumnViewModel: ObservableObject {
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
             }
-        case .picture(let feed):
+        case .picture(let feed), .vine(let feed), .yak(let feed):
             
             let followingPubkeys: Set<String> = if let account = feed.account {
                 account.followingPubkeys.union(Set([account.publicKey]))
@@ -1017,8 +1033,18 @@ class NXColumnViewModel: ObservableObject {
             else {
                 []
             }
+            
+            let kinds: Set<Int> = switch config.columnType {
+            case .vine:
+                [34236]
+            case .yak:
+                [1222,1244]
+            default: // .picture
+                [20]
+            }
+
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) loadLocal(.picture) \(older ? "older" : "") \(followingPubkeys.count) pubkeys")
+            L.og.debug("☘️☘️ \(config.name) loadLocal(.picture/.vine) (\(kinds.description) \(older ? "older" : "") \(followingPubkeys.count) pubkeys - loadAnyFlag:\(self.loadAnyFlag)")
 #endif
             
             let hashtagRegex: String? = if let account = feed.account {
@@ -1029,10 +1055,10 @@ class NXColumnViewModel: ObservableObject {
             bg().perform { [weak self] in
                 guard let self else { return }
                 let fr = if !older {
-                    Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: [20])
+                    Event.postsByPubkeys(followingPubkeys, lastAppearedCreatedAt: sinceTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
                 else {
-                    Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: [20])
+                    Event.postsByPubkeys(followingPubkeys, until: untilTimestamp, hideReplies: !repliesEnabled, hashtagRegex: hashtagRegex, kinds: kinds)
                 }
                 guard let events: [Event] = try? bg().fetch(fr) else { return }
                 self.processToScreen(events, config: config, allShortIdsSeen: allShortIdsSeen, currentIdsOnScreen: currentIdsOnScreen, currentNRPostsOnScreen: currentNRPostsOnScreen, sinceOrUntil: Int(sinceOrUntil), older: older, wotEnabled: wotEnabled, repliesEnabled: repliesEnabled, completion: completion)
@@ -1213,19 +1239,25 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
+            
+            let removeSeperateFeedKinds: Set<Int> = [
+                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
+                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+            ]
+            
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
-            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
-            } else {
-                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            else {
+                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting(removeSeperateFeedKinds).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: kinds)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
-        case .picture(let feed):
+        case .picture(let feed), .vine(let feed), .yak(let feed):
             // Make sure max pubkeys is < 2000 (relay limits)
             let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
             let ownPubkey: Set<String> = if let account = feed.account {
@@ -1253,13 +1285,19 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            // kind:20 + hashtags + kind:1-k20-tag
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [20,5]) + [Filters(
-                authors: pubkeys,
-                kinds: [1],
-                tagFilter: TagFilter(tag: "k", values: ["20"]),
-                since: NTimestamp(date: Date.now).timestamp
-            )]
+            let filters = switch config.columnType {
+                case .vine(_):
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [34236,5])
+                case .yak(_):
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [1222,1244,5])
+                default: // .picture: // kind:20 + hashtags + kind:1-k20-tag
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: NTimestamp(date: Date.now).timestamp, kinds: [20,5]) + [Filters(
+                    authors: pubkeys,
+                    kinds: [1],
+                    tagFilter: TagFilter(tag: "k", values: ["20"]),
+                    since: NTimestamp(date: Date.now).timestamp
+                )]
+            }
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: config.id, filters: filters), activeSubscriptionId: config.id)
             
@@ -1390,15 +1428,19 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
-            
+            let removeSeperateFeedKinds: Set<Int> = [
+                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
+                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+            ]
             
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
-            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
-            } else {
-                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            else {
+               FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting(removeSeperateFeedKinds)
+                    .subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: kinds)
@@ -1422,7 +1464,7 @@ class NXColumnViewModel: ObservableObject {
                 }
             }, subId: "RESUME-" + config.id + "-" + (since?.description ?? "any"))
 
-        case .picture(let feed):
+        case .picture(let feed), .vine(let feed), .yak(let feed):
             // Make sure max pubkeys is < 2000 (relay limits)
             let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
             let ownPubkey: Set<String> = if let account = feed.account {
@@ -1448,14 +1490,25 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: [20,5]) + [Filters(
-                authors: pubkeys,
-                kinds: [1],
-                tagFilter: TagFilter(tag: "k", values: ["20"]),
-                since: since,
-                until: until,
-                limit: !config.continue ? 75 : 300
-            )]
+            let removeKinds: Set<Int> = [
+                since == nil ? 5 : -1
+            ]
+            
+            let filters = switch config.columnType {
+                case .vine(_):
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: Set([34236,5]).subtracting(removeKinds))
+                case .yak(_):
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: Set([1222,1244,5]).subtracting(removeKinds))
+                default: // .picture: // kind:20 + hashtags + kind:1-k20-tag
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, since: since, until: until, limit: !config.continue ? 150 : nil, kinds: Set([20,5]).subtracting(removeKinds)) + [Filters(
+                    authors: pubkeys,
+                    kinds: [1],
+                    tagFilter: TagFilter(tag: "k", values: ["20"]),
+                    since: since,
+                    until: until,
+                    limit: !config.continue ? 75 : 300
+                )]
+            }
             
             let subId = "RESUME-" + config.id + "-" + (since?.description ?? "any")
 
@@ -1633,20 +1686,25 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
              
+            let removeSeperateFeedKinds: Set<Int> = [
+                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
+                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
+                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+            ]
+            
             let kinds = if !feed.kinds.isEmpty {
                 feed.kinds.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
-            else if UserDefaults.standard.bool(forKey: "enable_picture_feed") {
-                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting([20]).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
-            } else {
-                FETCH_FOLLOWING_FEED_KINDS_WITH_REPLIES.subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
+            else {
+                QUERY_FOLLOWING_KINDS_WITH_REPLIES.subtracting(removeSeperateFeedKinds).subtracting( !feed.repliesEnabled ? REPLY_KINDS : [])
             }
             
             let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: kinds)
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
-        case .picture(let feed):
+        case .picture(let feed), .vine(let feed), .yak(let feed):
             // Make sure max pubkeys is < 2000 (relay limits)
             let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
             let ownPubkey: Set<String> = if let account = feed.account {
@@ -1674,13 +1732,20 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
-            let filters = pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: [20,5]) + [Filters(
-                authors: pubkeys,
-                kinds: [1],
-                tagFilter: TagFilter(tag: "k", values: ["20"]),
-                until: Int(until),
-                limit: 150
-            )]
+            let filters = switch config.columnType {
+                case .vine(_):
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: [34236,5])
+                case .yak(_):
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: [1222,1244,5])
+                default: // .picture: // kind:20 + hashtags + kind:1-k20-tag
+                pubkeyOrHashtagReqFilters(pubkeys, hashtags: hashtags, until: Int(until), limit: 150, kinds: [20,5]) + [Filters(
+                    authors: pubkeys,
+                    kinds: [1],
+                    tagFilter: TagFilter(tag: "k", values: ["20"]),
+                    until: Int(until),
+                    limit: 150
+                )]
+            }
             
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: "PAGE-" + config.id, filters: filters))
             
@@ -1790,6 +1855,12 @@ class NXColumnViewModel: ObservableObject {
             if case .picture(_) = config?.columnType {
                 return _allShortIdsSeen
             }
+            else if case .vine(_) = config?.columnType {
+                return _allShortIdsSeen
+            }
+            else if case .yak(_) = config?.columnType {
+                return _allShortIdsSeen
+            }
             else {
                 return SettingsStore.shared.appWideSeenTracker ? Deduplicator.shared.onScreenSeen : _allShortIdsSeen
             }
@@ -1802,6 +1873,12 @@ class NXColumnViewModel: ObservableObject {
                 return
             }
             else if case .picture(_) = config?.columnType {
+                _allShortIdsSeen = newValue
+            }
+            else if case .vine(_) = config?.columnType {
+                _allShortIdsSeen = newValue
+            }
+            else if case .yak(_) = config?.columnType {
                 _allShortIdsSeen = newValue
             }
             else if SettingsStore.shared.appWideSeenTracker {
@@ -2298,6 +2375,16 @@ extension NXColumnViewModel {
             return events // no need, hashtags are already filtered in RelayMessage.parseRelayMessage()
         }
         
+        // if vine feed, always show all the pubkeys
+        if case .vine(_) = config.columnType {
+            return events // no need, hashtags are already filtered in RelayMessage.parseRelayMessage()
+        }
+        
+        // if yak feed, always show all the pubkeys
+        if case .yak(_) = config.columnType {
+            return events // no need, hashtags are already filtered in RelayMessage.parseRelayMessage()
+        }
+        
         guard WOT_FILTER_ENABLED() else { return events }  // Return all if globally disabled
         
         if case .relays(_) = config.columnType {
@@ -2695,7 +2782,7 @@ extension NXColumnViewModel {
         var pubkeys: Set<String>
         
         switch config.columnType {
-            case .following(let feed), .picture(let feed):
+        case .following(let feed), .picture(let feed), .vine(let feed), .yak(let feed):
                 // Make sure max pubkeys is < 2000 (relay limits)
                 let followingPubkeys = (feed.account?.followingPubkeys ?? []).union(feed.account?.privateFollowingPubkeys ?? [])
                 let ownPubkey: Set<String> = if let account = feed.account {
@@ -2746,6 +2833,12 @@ extension NXColumnViewModel {
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: [filters]))
         }
         else if case .picture(_) = config.columnType {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: [filters]))
+        }
+        else if case .vine(_) = config.columnType {
+            outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: [filters]))
+        }
+        else if case .yak(_) = config.columnType {
             outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: subscriptionId, filters: [filters]))
         }
         else {
@@ -2976,7 +3069,7 @@ extension Event {
         if let hashtagRegex = hashtagRegex {
             var predicate = "created_at <= %i"
             
-            if kinds.contains(20) && kinds.count == 1 {
+            if kinds.contains(20) {
                 predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {
@@ -2995,7 +3088,7 @@ extension Event {
         }
         else {
             var predicate = "created_at <= %i AND pubkey IN %@"
-            if kinds.contains(20) && kinds.count == 1 {
+            if kinds.contains(20) {
                 predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {
@@ -3021,7 +3114,7 @@ extension Event {
         
         var predicate = "created_at >= %i AND created_at < %i AND pubkey IN %@"
         
-        if kinds.contains(20) && kinds.count == 1 {
+        if kinds.contains(20) {
             predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
         }
         else {
@@ -3055,7 +3148,7 @@ extension Event {
             
             var predicate = "created_at > %i AND created_at <= %i"
             
-            if kinds.contains(20) && kinds.count == 1 {
+            if kinds.contains(20) {
                 predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {
@@ -3076,7 +3169,7 @@ extension Event {
             
             var predicate = "created_at <= %i AND pubkey IN %@"
             
-            if kinds.contains(20) && kinds.count == 1 {
+            if kinds.contains(20) {
                 predicate += " AND (kind IN %@ OR (kind = 1 AND kTag = 20))"
             }
             else {

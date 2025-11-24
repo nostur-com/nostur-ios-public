@@ -74,6 +74,10 @@ struct NXColumnConfig: Identifiable, Equatable {
             return feed
         case .picture(let feed):
             return feed
+        case .vine(let feed):
+            return feed
+        case .yak(let feed):
+            return feed
         default:
             return nil
         }
@@ -95,7 +99,7 @@ struct NXColumnConfig: Identifiable, Equatable {
             switch columnType {
             case .pubkeysPreview(let pubkeys): // pubkeys are in the .columnType enum
                 return pubkeys
-            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed), .followPack(let feed): // pubkeys are in the CloudFeed
+            case .following(let feed), .pubkeys(let feed), .picture(let feed), .vine(let feed), .yak(let feed), .followSet(let feed), .followPack(let feed): // pubkeys are in the CloudFeed
                 return feed.contactPubkeys
             default: // pubkeys are in the NXColumnConfig
                 return _pubkeys
@@ -105,7 +109,7 @@ struct NXColumnConfig: Identifiable, Equatable {
             switch columnType {
             case .pubkeysPreview(_): // pubkeys are in the .columnType enum
                 self.setPubkeys(newValue)
-            case .following(let feed), .pubkeys(let feed), .picture(let feed), .followSet(let feed), .followPack(let feed): // pubkeys are in the CloudFeed
+            case .following(let feed), .pubkeys(let feed), .picture(let feed), .vine(let feed), .yak(let feed), .followSet(let feed), .followPack(let feed): // pubkeys are in the CloudFeed
                 feed.contactPubkeys = newValue
             default: // pubkeys are in the NXColumnConfig
                 _pubkeys = newValue
@@ -138,6 +142,8 @@ enum NXColumnType {
     case hashtags(CloudFeed)
     case someoneElses(String) // pubkey of whose feed
     case picture(CloudFeed) // kind:20 from follows
+    case vine(CloudFeed) // kind:34236 from follows
+    case yak(CloudFeed) // kind:1222/1244 from follows
     
     case mentions
     case newPosts

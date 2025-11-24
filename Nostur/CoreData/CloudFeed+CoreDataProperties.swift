@@ -174,6 +174,10 @@ extension CloudFeed : Identifiable {
             .following(self)
         case "picture":
             .picture(self)
+        case "vine":
+            .vine(self)
+        case "yak":
+            .yak(self)
         case "pubkeys":
             .pubkeys(self)
         case "relays":
@@ -230,6 +234,8 @@ public enum CloudFeedType: String, Identifiable, Hashable {
     case relays = "relays"
     case following = "following"
     case picture = "picture"
+    case yak = "yak"
+    case vine = "vine"
     case mentions = "mentions"
     case hashtags = "hashtags"
     

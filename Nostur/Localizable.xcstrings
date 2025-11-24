@@ -85,6 +85,9 @@
         }
       }
     },
+    "_photos, .yaks, .vines_" : {
+
+    },
     "_Post deleted by %@_" : {
       "comment" : "Message shown when a post is deleted by (name)",
       "extractionState" : "stale",
@@ -3741,6 +3744,9 @@
           }
         }
       }
+    },
+    "diVines" : {
+      "comment" : "Feed title\nTab title for short videos feed of people you follow"
     },
     "DM" : {
       "comment" : "Navigation title for a DM conversation screen (Direct Message)",
@@ -9138,6 +9144,9 @@
     "Short Videos" : {
 
     },
+    "Short videos feed from people you follow" : {
+
+    },
     "Show" : {
       "comment" : "Button to show more items in a post",
       "localizations" : {
@@ -10838,6 +10847,9 @@
     "Voice Messages (Yaks)" : {
 
     },
+    "Voice Messages feed from people you follow" : {
+
+    },
     "VPN detected" : {
       "localizations" : {
         "nl" : {
@@ -11155,6 +11167,9 @@
           }
         }
       }
+    },
+    "Yaks" : {
+      "comment" : "Feed title\nTab title for voice messages feed of people you follow"
     },
     "Year" : {
       "localizations" : {

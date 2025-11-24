@@ -29,6 +29,8 @@ struct MainFeedsScreen: View {
     @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     @AppStorage("enable_picture_feed") private var enablePictureFeed: Bool = true
+    @AppStorage("enable_yak_feed") private var enableYakFeed: Bool = true
+    @AppStorage("enable_vine_feed") private var enableVineFeed: Bool = true
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
@@ -58,6 +60,8 @@ struct MainFeedsScreen: View {
     @State private var columnConfigs: [NXColumnConfig] = []
     @State private var followingConfig: NXColumnConfig?
     @State private var pictureConfig: NXColumnConfig?
+    @State private var yakConfig: NXColumnConfig?
+    @State private var vineConfig: NXColumnConfig?
     @State private var exploreConfig: NXColumnConfig?
     
     @State private var backlog = Backlog(backlogDebugName: "MainFeedsScreen")
@@ -69,6 +73,8 @@ struct MainFeedsScreen: View {
         if (la.viewFollowingPublicKeys.count > 10 && enableZappedFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableHotFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enablePictureFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableYakFeed) { return false }
+        if (la.viewFollowingPublicKeys.count > 10 && enableVineFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed) { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed) { return false }
 //        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
@@ -106,6 +112,24 @@ struct MainFeedsScreen: View {
                                             systemIcon: "photo",
                                             selected: selectedSubTab == "Picture")
                                         .id("Picture")
+                                        Spacer()
+                                    }
+                                    
+                                    if la.viewFollowingPublicKeys.count > 10 && enableYakFeed {
+                                        TabButton(
+                                            action: { selectedSubTab = "Yak" },
+                                            systemIcon: "waveform.circle",
+                                            selected: selectedSubTab == "Yak")
+                                        .id("Yak")
+                                        Spacer()
+                                    }
+                                    
+                                    if la.viewFollowingPublicKeys.count > 10 && enableVineFeed {
+                                        TabButton(
+                                            action: { selectedSubTab = "Vine" },
+                                            systemIcon: "person.crop.square.badge.video",
+                                            selected: selectedSubTab == "Vine")
+                                        .id("Vine")
                                         Spacer()
                                     }
                                     
@@ -270,6 +294,20 @@ struct MainFeedsScreen: View {
                     .opacity(selectedSubTab == "Picture" ? 1.0 : 0)
                 }
                 
+                if let yakConfig, la.viewFollowingPublicKeys.count > 10  {
+                    AvailableWidthContainer {
+                        NXColumnView(config: yakConfig, isVisible: selectedSubTab == "Yak")
+                    }
+                    .opacity(selectedSubTab == "Yak" ? 1.0 : 0)
+                }
+                
+                if let vineConfig, la.viewFollowingPublicKeys.count > 10  {
+                    AvailableWidthContainer {
+                        NXColumnView(config: vineConfig, isVisible: selectedSubTab == "Vine")
+                    }
+                    .opacity(selectedSubTab == "Vine" ? 1.0 : 0)
+                }
+                
                 // LISTS
                 ForEach(columnConfigs) { config in
                     AvailableWidthContainer {
@@ -367,6 +405,8 @@ struct MainFeedsScreen: View {
             loadColumnConfigs()
             createFollowingFeed(la.account)
             createPictureFeed(la.account)
+            createYakFeed(la.account)
+            createVineFeed(la.account)
             createExploreFeed() // Also create Explore Feed
   
         }
@@ -387,6 +427,8 @@ struct MainFeedsScreen: View {
             }
             createFollowingFeed(newAccount)
             createPictureFeed(newAccount)
+            createYakFeed(newAccount)
+            createVineFeed(newAccount)
         }
         .navigationTitle(homeTabNavigationTitle(self.selectedList))
         .navigationBarTitleDisplayMode(.inline)
@@ -465,6 +507,14 @@ struct MainFeedsScreen: View {
                               Button("Photos", systemImage: "photo") { selectedSubTab = "Picture" }
                           }
                           
+                          if la.viewFollowingPublicKeys.count > 10 && enableYakFeed {
+                              Button("Yaks", systemImage: "waveform.circle") { selectedSubTab = "Yak" }
+                          }
+                          
+                          if la.viewFollowingPublicKeys.count > 10 && enableVineFeed {
+                              Button("diVines", systemImage: "person.crop.square.badge.video") { selectedSubTab = "Vine" }
+                          }
+                          
                           ForEach(lists) { list in
                               Button(list.name ?? "(no title)", systemImage: "star") {
                                   selectedSubTab = "List"
@@ -526,6 +576,9 @@ struct MainFeedsScreen: View {
         if #available(iOS 16.0,* ), selectedTab == "Main" && selectedSubTab == "Picture" {
             return .picture
         }
+        if #available(iOS 16.0,* ), selectedTab == "Main" && selectedSubTab == "Yak" {
+            return .shortVoiceMessage
+        }
         return .textNote
     }
     
@@ -557,7 +610,7 @@ struct MainFeedsScreen: View {
         columnConfigs = lists
             .filter {
                 switch $0.feedType {
-                    case .picture(_):
+                    case .picture(_), .vine(_), .yak(_):
                         return false
                     case .pubkeys(_):
                         return true
@@ -716,6 +769,90 @@ struct MainFeedsScreen: View {
             
             DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
                 pictureConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .picture(newFeed), accountPubkey: account.publicKey, name: "Picture")
+            }
+        }
+    }
+    
+    private func createYakFeed(_ account: CloudAccount) {
+        let context = viewContext()
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.yak.rawValue, account.publicKey)
+        
+        let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
+        let feedsNewest: [CloudFeed] = feeds
+            .sorted(by: { a, b in
+                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                return mostRecentA > mostRecentB
+            })
+        
+        if let feed = feedsNewest.first {
+            yakConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .yak(feed), accountPubkey: account.publicKey, name: "Yaks")
+            
+            guard feeds.count > 1 else { return }
+            for f in feedsNewest.dropFirst(1) {
+                context.delete(f)
+            }
+            DataProvider.shared().saveToDiskNow(.viewContext)
+        }
+        else {
+            let newFeed = CloudFeed(context: context)
+            newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
+            newFeed.name = "📸"
+            newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
+            newFeed.id = UUID()
+            newFeed.createdAt = .now
+            newFeed.accountPubkey = account.publicKey
+            newFeed.type = CloudFeedType.yak.rawValue
+            newFeed.repliesEnabled = false
+            newFeed.order = 0
+                        
+            newFeed.continue = false // feed needs more content false
+            
+            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
+                yakConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .yak(newFeed), accountPubkey: account.publicKey, name: "Yaks")
+            }
+        }
+    }
+    
+    private func createVineFeed(_ account: CloudAccount) {
+        let context = viewContext()
+        let fr = CloudFeed.fetchRequest()
+        fr.predicate = NSPredicate(format: "type = %@ AND accountPubkey = %@", CloudFeedType.vine.rawValue, account.publicKey)
+        
+        let feeds: [CloudFeed] = (try? context.fetch(fr)) ?? []
+        let feedsNewest: [CloudFeed] = feeds
+            .sorted(by: { a, b in
+                let mostRecentA = max(a.createdAt ?? .now, a.refreshedAt ?? .now)
+                let mostRecentB = max(b.createdAt ?? .now, b.refreshedAt ?? .now)
+                return mostRecentA > mostRecentB
+            })
+        
+        if let feed = feedsNewest.first {
+            vineConfig = NXColumnConfig(id: feed.subscriptionId, columnType: .vine(feed), accountPubkey: account.publicKey, name: "diVines")
+            
+            guard feeds.count > 1 else { return }
+            for f in feedsNewest.dropFirst(1) {
+                context.delete(f)
+            }
+            DataProvider.shared().saveToDiskNow(.viewContext)
+        }
+        else {
+            let newFeed = CloudFeed(context: context)
+            newFeed.wotEnabled = false // WoT is only for hashtags or relays feeds
+            newFeed.name = "📸"
+            newFeed.showAsTab = false // or it will appear in "List" / "Custom Feeds"
+            newFeed.id = UUID()
+            newFeed.createdAt = .now
+            newFeed.accountPubkey = account.publicKey
+            newFeed.type = CloudFeedType.vine.rawValue
+            newFeed.repliesEnabled = false
+            newFeed.order = 0
+                        
+            newFeed.continue = false // feed needs more content false
+            
+            DataProvider.shared().saveToDiskNow(.viewContext) { // callback after save:
+                vineConfig = NXColumnConfig(id: newFeed.subscriptionId, columnType: .vine(newFeed), accountPubkey: account.publicKey, name: "diVines")
             }
         }
     }
