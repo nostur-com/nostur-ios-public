@@ -18,7 +18,12 @@ extension CloudFeed {
             case .yak(_):
                 return "waveform.circle"
             case .vine(_):
+            if #available(iOS 27.0, *) {
                 return "person.crop.square.badge.video"
+            }
+            else {
+                return "video.bubble.left"
+            }
             case .pubkeys(_):
                 return "star"
             case .relays(_):
@@ -171,8 +176,14 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         }
         
         if enableVineFeed {
-            Button("diVines", systemImage: "person.crop.square.badge.video") {
-                columnType = .vines(Nostur.account()?.publicKey)
+            if #available(iOS 17.0, *) {
+                Button("diVines", systemImage: "person.crop.square.badge.video") {
+                    columnType = .vines(Nostur.account()?.publicKey)
+                }
+            } else {
+                Button("diVines", systemImage: "video.bubble.left") {
+                    columnType = .vines(Nostur.account()?.publicKey)
+                }
             }
         }
         

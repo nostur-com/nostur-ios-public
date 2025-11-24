@@ -125,11 +125,19 @@ struct MainFeedsScreen: View {
                                     }
                                     
                                     if la.viewFollowingPublicKeys.count > 10 && enableVineFeed {
-                                        TabButton(
-                                            action: { selectedSubTab = "Vine" },
-                                            systemIcon: "person.crop.square.badge.video",
-                                            selected: selectedSubTab == "Vine")
-                                        .id("Vine")
+                                        if #available(iOS 17.0, *) {
+                                            TabButton(
+                                                action: { selectedSubTab = "Vine" },
+                                                systemIcon: "person.crop.square.badge.video",
+                                                selected: selectedSubTab == "Vine")
+                                            .id("Vine")
+                                        } else {
+                                            TabButton(
+                                                action: { selectedSubTab = "Vine" },
+                                                systemIcon: "video.bubble.left",
+                                                selected: selectedSubTab == "Vine")
+                                            .id("Vine")
+                                        }
                                         Spacer()
                                     }
                                     
@@ -516,7 +524,11 @@ struct MainFeedsScreen: View {
                           }
                           
                           if la.viewFollowingPublicKeys.count > 10 && enableVineFeed {
-                              Button("diVines", systemImage: "person.crop.square.badge.video") { selectedSubTab = "Vine" }
+                              if #available(iOS 17.0, *) {
+                                  Button("diVines", systemImage: "person.crop.square.badge.video") { selectedSubTab = "Vine" }
+                              } else {
+                                  Button("diVines", systemImage: "video.bubble.left") { selectedSubTab = "Vine" }
+                              }
                           }
                           
                           ForEach(lists) { list in
