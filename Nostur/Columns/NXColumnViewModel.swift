@@ -999,11 +999,12 @@ class NXColumnViewModel: ObservableObject {
             }
             else { nil }
             
+            // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
-                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
-                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
             ]
             
             let kinds = if !feed.kinds.isEmpty {
@@ -1240,11 +1241,12 @@ class NXColumnViewModel: ObservableObject {
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
             
             
+            // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
-                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
-                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
             ]
             
             let kinds = if !feed.kinds.isEmpty {
@@ -1428,11 +1430,12 @@ class NXColumnViewModel: ObservableObject {
             }
             else { [] } // Skip hashtags if filter is too large
             
+            // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
-                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
-                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
             ]
             
             let kinds = if !feed.kinds.isEmpty {
@@ -1710,11 +1713,12 @@ class NXColumnViewModel: ObservableObject {
             
             guard pubkeys.count > 0 || hashtags.count > 0 else { return }
              
+            // Remove picture/yak/vine kinds from main following feed, but only if their seperate feeds are enabled and not desktop columns
             let removeSeperateFeedKinds: Set<Int> = [
-                UserDefaults.standard.bool(forKey: "enable_picture_feed") ? 20 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1222 : -1,
-                UserDefaults.standard.bool(forKey: "enable_yak_feed") ? 1244 : -1,
-                UserDefaults.standard.bool(forKey: "enable_vine_feed") ? 34236 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_picture_feed")) ? 20 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1222 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_yak_feed")) ? 1244 : -1,
+                (!IS_DESKTOP_COLUMNS() && UserDefaults.standard.bool(forKey: "enable_vine_feed")) ? 34236 : -1,
             ]
             
             let kinds = if !feed.kinds.isEmpty {
