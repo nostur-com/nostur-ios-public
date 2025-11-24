@@ -63,52 +63,63 @@ struct ListsAndFeedsScreen: View {
                 Toggle(isOn: $enablePictureFeed, label: {
                     Text("Pictures")
                     Text("Pictures-only feed from people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableYakFeed, label: {
                     Text("Yaks")
                     Text("Voice Messages feed from people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableVineFeed, label: {
                     Text("diVines")
                     Text("Short videos feed from people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableZappedFeed, label: {
                     Text("Zapped")
                     Text("Posts from anyone which are most zapped by people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableHotFeed, label: {
                     Text("Hot")
                     Text("Posts from anyone which are most liked or reposted by people you follow")
+                        .foregroundStyle(.secondary)
                 })
 //                    Toggle(isOn: $enableDiscoverFeed, label: {
 //                        Text("Discover")
-//                        Text("Posts from people you don't follow which are most liked or reposted by people you follow")
+//                        Text("Posts from people you don't follow which are most liked or reposted by people you follow").font(.footnote)
+//                .foregroundStyle(.secondary)
 //                    })
                 Toggle(isOn: $enableDiscoverListsFeed, label: {
                     Text("Follow Packs & Lists")
                     Text("Lists from people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableEmojiFeed, label: {
                     Text("Funny Feed")
                     Text("Posts from anyone reacted to by people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableGalleryFeed, label: {
                     Text("Gallery")
                     Text("Media from posts from anyone which are most liked or reposted by people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableArticleFeed, label: {
                     Text("Reads")
                     Text("Long-form articles from people you follow")
+                        .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableExploreFeed, label: {
                     Text("Explore")
                     Text("Posts from people followed by the [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account")
+                        .foregroundStyle(.secondary)
                 })
             } header: {
                 Text("Default feeds")
             } footer: {
-                Text("Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
-                    .font(.footnote)
+                Text("Picture-only, Yaks, diVines, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people.")
+                    .foregroundStyle(.secondary)
             }
         }
 //        .scrollContentBackgroundCompat(.hidden)

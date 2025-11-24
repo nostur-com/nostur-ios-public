@@ -1328,7 +1328,14 @@
       }
     },
     "Activate Picture-in-Picture" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer Picture-in-Picture"
+          }
+        }
+      }
     },
     "Activate this filter" : {
       "comment" : "Toggle to activate filter",
@@ -1472,7 +1479,14 @@
       }
     },
     "Add column" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolom toevoegen"
+          }
+        }
+      }
     },
     "Add comment" : {
       "comment" : "Placeholder text for adding a comment",
@@ -3154,7 +3168,14 @@
       }
     },
     "Copy to clipboard" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer naar klembord"
+          }
+        }
+      }
     },
     "Copy video URL" : {
       "localizations" : {
@@ -3743,7 +3764,15 @@
       }
     },
     "diVines" : {
-      "comment" : "Feed title\nTab title for short videos feed of people you follow"
+      "comment" : "Feed title\nTab title for short videos feed of people you follow",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "diVines"
+          }
+        }
+      }
     },
     "DM" : {
       "comment" : "Navigation title for a DM conversation screen (Direct Message)",
@@ -3757,7 +3786,14 @@
       }
     },
     "DMs" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PBs"
+          }
+        }
+      }
     },
     "Done" : {
       "localizations" : {
@@ -4290,7 +4326,14 @@
       }
     },
     "Feed options" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed opties"
+          }
+        }
+      }
     },
     "Feed preview" : {
       "localizations" : {
@@ -4325,7 +4368,14 @@
       }
     },
     "Feed settings..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feed instellingen…"
+          }
+        }
+      }
     },
     "Feeds" : {
       "comment" : "Navigation title for Feeds screen",
@@ -4729,6 +4779,9 @@
           }
         }
       }
+    },
+    "Hello World" : {
+
     },
     "Hello, World!" : {
 
@@ -6146,7 +6199,14 @@
       }
     },
     "New Feed..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe Feed…"
+          }
+        }
+      }
     },
     "new followers" : {
       "extractionState" : "stale",
@@ -6392,7 +6452,14 @@
       }
     },
     "None" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen"
+          }
+        }
+      }
     },
     "Nostr address (NIP-05)" : {
       "comment" : "Label for entering a NIP-05 username on Edit Profile screen",
@@ -6625,7 +6692,14 @@
       }
     },
     "Notifications settings..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notificatie instellingen…"
+          }
+        }
+      }
     },
     "Notify selection (%lld)" : {
       "localizations" : {
@@ -6737,6 +6811,9 @@
           }
         }
       }
+    },
+    "Open Detail Window" : {
+
     },
     "Open in %@" : {
       "localizations" : {
@@ -6886,7 +6963,14 @@
       }
     },
     "Pick GIF" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies GIF"
+          }
+        }
+      }
     },
     "Pick Photo" : {
       "localizations" : {
@@ -6915,11 +6999,22 @@
       "shouldTranslate" : false
     },
     "Picture-only, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Foto’s, Hot, Discover, Gallery, en Artikelen feed zijn niet zichtbaar tot je meer dan 10 mensen volgt"
+          }
+        }
+      }
+    },
+    "Picture-only, Yaks, diVines, Hot, Discover, Gallery, and Articles feed will not be visible if you don't follow more than 10 people." : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Een aantal feeds zijn alleen zichtbaar als je meer dan 10 personen volgt"
           }
         }
       }
@@ -7353,7 +7448,7 @@
       }
     },
     "Preview App" : {
-
+      "shouldTranslate" : false
     },
     "Previously known as: %@" : {
       "localizations" : {
@@ -7917,7 +8012,14 @@
       }
     },
     "Record Voice Message" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audiobericht opnemen"
+          }
+        }
+      }
     },
     "Recordings" : {
       "localizations" : {
@@ -8200,7 +8302,14 @@
       }
     },
     "Remove column" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kolom verwijderen"
+          }
+        }
+      }
     },
     "Remove from stage" : {
       "localizations" : {
@@ -9057,7 +9166,14 @@
       }
     },
     "Settings..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instellingen…"
+          }
+        }
+      }
     },
     "Share" : {
       "localizations" : {
@@ -9133,10 +9249,24 @@
       }
     },
     "Short videos" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korte videos"
+          }
+        }
+      }
     },
     "Short Videos" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Korte videos"
+          }
+        }
+      }
     },
     "Short videos feed from people you follow" : {
 
@@ -9507,6 +9637,9 @@
           }
         }
       }
+    },
+    "Sowwy, this app doesn't work on macOS" : {
+
     },
     "Spam" : {
       "comment" : "Menu item in choice list",
@@ -10089,6 +10222,12 @@
         }
       }
     },
+    "This is the DETAIL window" : {
+
+    },
+    "This is the MAIN window" : {
+
+    },
     "This list is public" : {
       "localizations" : {
         "nl" : {
@@ -10574,7 +10713,7 @@
       "shouldTranslate" : false
     },
     "unconfigured" : {
-
+      "shouldTranslate" : false
     },
     "Unconfigured" : {
 
@@ -10813,7 +10952,14 @@
       "shouldTranslate" : false
     },
     "Videos" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Videos"
+          }
+        }
+      }
     },
     "View on web" : {
       "localizations" : {
@@ -10826,7 +10972,7 @@
       }
     },
     "viewState: %@" : {
-
+      "shouldTranslate" : false
     },
     "Voice" : {
       "localizations" : {
@@ -10839,13 +10985,34 @@
       }
     },
     "Voice Messages" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioberichten"
+          }
+        }
+      }
     },
     "Voice Messages (Yaks)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioberichten (Yaks)"
+          }
+        }
+      }
     },
     "Voice Messages feed from people you follow" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audioberichten van wie je volgt"
+          }
+        }
+      }
     },
     "VPN detected" : {
       "localizations" : {
@@ -11166,7 +11333,15 @@
       }
     },
     "Yaks" : {
-      "comment" : "Feed title\nTab title for voice messages feed of people you follow"
+      "comment" : "Feed title\nTab title for voice messages feed of people you follow",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yaks"
+          }
+        }
+      }
     },
     "Year" : {
       "localizations" : {
