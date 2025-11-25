@@ -32,6 +32,13 @@ struct ContentTypeColumn: View {
             if let config {
                 AvailableWidthContainer {
                     NXColumnView(config: config, isVisible: true)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                                    AppSheetsModel.shared.feedSettingsFeed = config.feed
+                                }
+                            }
+                        }
                 }
             }
         }

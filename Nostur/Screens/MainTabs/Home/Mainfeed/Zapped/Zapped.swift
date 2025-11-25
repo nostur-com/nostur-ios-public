@@ -126,6 +126,13 @@ struct Zapped: View {
             NBNavigationStack {
                 ZappedFeedSettings(zappedVM: zappedVM)
                     .environment(\.theme, theme)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close", systemImage: "xmark") {
+                                showSettings = false
+                            }
+                        }
+                    }
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)

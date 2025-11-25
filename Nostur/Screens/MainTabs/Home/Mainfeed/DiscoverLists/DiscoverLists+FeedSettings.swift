@@ -14,17 +14,10 @@ struct DiscoverListsFeedSettings: View {
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
     
     var body: some View {
-        Form {
+        NXForm {
             Toggle(isOn: $enableDiscoverListsFeed, label: {
                 Text("Show feed in tab bar")
             })
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                  dismiss()
-                }
-            }
         }
     }
 }

@@ -14,7 +14,7 @@ struct ZappedFeedSettings: View {
     @AppStorage("enable_zapped_feed") private var enableZappedFeed: Bool = true
     
     var body: some View {
-        Form {
+        NXForm {
             Section {
                 Picker("Time frame", selection: $zappedVM.ago) {
                     Text("48h").tag(48)
@@ -30,13 +30,6 @@ struct ZappedFeedSettings: View {
             Toggle(isOn: $enableZappedFeed, label: {
                 Text("Show feed in tab bar")
             })
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                  dismiss()
-                }
-            }
         }
     }
 }

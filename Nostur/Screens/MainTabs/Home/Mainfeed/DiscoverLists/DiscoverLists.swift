@@ -104,6 +104,13 @@ struct DiscoverLists: View {
             NBNavigationStack {
                 DiscoverListsFeedSettings(discoverListsVM: discoverListsVM)
                     .environment(\.theme, theme)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close", systemImage: "xmark") {
+                                showSettings = false
+                            }
+                        }
+                    }
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)

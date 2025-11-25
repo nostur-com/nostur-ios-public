@@ -31,13 +31,6 @@ struct EmojiFeedSettings: View {
                 Text("Show feed in tab bar")
             })
         }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                  dismiss()
-                }
-            }
-        }
     }
 }
 

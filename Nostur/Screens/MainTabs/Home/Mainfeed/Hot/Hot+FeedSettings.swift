@@ -14,7 +14,7 @@ struct HotFeedSettings: View {
     @AppStorage("enable_hot_feed") private var enableHotFeed: Bool = true
     
     var body: some View {
-        Form {
+        NXForm {
             Section {
                 Picker("Time frame", selection: $hotVM.ago) {
                     Text("48h").tag(48)
@@ -30,13 +30,6 @@ struct HotFeedSettings: View {
             Toggle(isOn: $enableHotFeed, label: {
                 Text("Show feed in tab bar")
             })
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                  dismiss()
-                }
-            }
         }
     }
 }

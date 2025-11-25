@@ -6,14 +6,38 @@
 //
 
 import SwiftUI
+import NavigationBackport
 
 struct HotColumn: View {
-    
+    @Environment(\.theme) var theme
     @StateObject private var vm = HotViewModel()
+    @State private var showSettings = false
     
     var body: some View {
         Hot()
             .environmentObject(vm)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                        showSettings = true
+                    }
+                }
+            }
+            .sheet(isPresented: $showSettings) {
+                NBNavigationStack {
+                    HotFeedSettings(hotVM: vm)
+                        .environment(\.theme, theme)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Close", systemImage: "xmark") {
+                                  showSettings = false
+                                }
+                            }
+                        }
+                }
+                .nbUseNavigationStack(.whenAvailable) // .never is broken on macCatalyst, showSettings = false will not dismiss  .sheet(isPresented: $showSettings) ..
+                .presentationBackgroundCompat(theme.listBackground)
+            }
     }
 }
 

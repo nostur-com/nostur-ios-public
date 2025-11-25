@@ -13,7 +13,6 @@ struct NXColumnView<HeaderContent: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.containerID) private var containerID
     
     @StateObject private var viewModel = NXColumnViewModel()
@@ -196,42 +195,10 @@ struct NXColumnView<HeaderContent: View>: View {
             }
         }
         
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if IS_DESKTOP_COLUMNS() {
-                    Button("Feed settings...", systemImage: "gearshape") {
-                        feedSettingsFeed = config.feed
-                    }
-                    .help("Feed settings...")
-                }
-            }
-        }
-        
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             guard viewModel.isVisible, let config = viewModel.config else { return }
-            feedSettingsFeed = config.feed
+            AppSheetsModel.shared.feedSettingsFeed = config.feed
         }
-        .sheet(item: $feedSettingsFeed, onDismiss: {
-            if let feed = feedSettingsFeed {
-                dismissSheet(feed)
-            }
-        }, content: { feed in
-            NBNavigationStack {
-                FeedSettings(feed: feed)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Close", systemImage: "xmark") {
-                                dismissSheet(feed)
-                            }
-                        }
-                    }
-                    .environment(\.theme, theme)
-                    .environment(\.containerID, containerID)
-                    .environmentObject(la)
-            }
-            .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(theme.listBackground)
-        })
     }
     
     private func dismissSheet(_ feed: CloudFeed) {

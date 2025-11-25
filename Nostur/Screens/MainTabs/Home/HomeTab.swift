@@ -134,12 +134,6 @@ struct HomeTab: View {
                                     Label("Feed options", systemImage: "ellipsis")
                                         .labelStyle(.iconOnly)
                                         .foregroundColor(theme.accent)
-                                    
-//                                    Image(systemName: "elipsis")
-//                                        .foregroundColor(theme.accent)
-//                                        .onTapGesture {
-//                                            sendNotification(.showFeedToggles)
-//                                        }
                                 }
 
                             }

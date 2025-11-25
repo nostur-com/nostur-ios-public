@@ -14,7 +14,7 @@ struct DiscoverFeedSettings: View {
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     
     var body: some View {
-        Form {
+        NXForm {
             Section {
                 Picker("Time frame", selection: $discoverVM.ago) {
                     Text("48h").tag(48)
@@ -30,13 +30,6 @@ struct DiscoverFeedSettings: View {
             Toggle(isOn: $enableDiscoverFeed, label: {
                 Text("Show feed in tab bar")
             })
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                  dismiss()
-                }
-            }
         }
     }
 }

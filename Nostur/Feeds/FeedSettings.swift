@@ -8,10 +8,7 @@
 import SwiftUI
 
 struct FeedSettings: View {
-    @Environment(\.theme) private var theme
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject public var feed: CloudFeed
-    @EnvironmentObject private var la: LoggedInAccount
+    public var feed: CloudFeed
 
     var body: some View {
 #if DEBUG
@@ -33,13 +30,6 @@ struct FeedSettings: View {
         default:
             Rectangle()
                 .frame(width: 100, height: 100)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Close", systemImage: "xmark") {
-                          dismiss()
-                        }
-                    }
-                }
         }
     }
 }

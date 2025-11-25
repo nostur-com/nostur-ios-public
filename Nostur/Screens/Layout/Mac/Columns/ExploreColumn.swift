@@ -28,6 +28,13 @@ struct ExploreColumn: View {
             if let exploreConfig {
                 AvailableWidthContainer {
                     NXColumnView(config: exploreConfig, isVisible: true)
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                                    AppSheetsModel.shared.feedSettingsFeed = exploreConfig.feed
+                                }
+                            }
+                        }
                 }
             }
         }

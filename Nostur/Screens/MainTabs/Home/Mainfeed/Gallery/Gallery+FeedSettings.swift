@@ -14,7 +14,7 @@ struct GalleryFeedSettings: View {
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     
     var body: some View {
-        Form {
+        NXForm {
             Section {
                 Picker("Time frame", selection: $vm.ago) {
                     Text("48h").tag(48)
@@ -30,13 +30,6 @@ struct GalleryFeedSettings: View {
             Toggle(isOn: $enableGalleryFeed, label: {
                 Text("Show feed in tab bar")
             })
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                  dismiss()
-                }
-            }
         }
     }
 }

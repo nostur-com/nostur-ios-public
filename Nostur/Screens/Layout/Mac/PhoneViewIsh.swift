@@ -40,6 +40,13 @@ struct PhoneViewIsh: View {
                     if let followingConfig {
                         AvailableWidthContainer {
                             NXColumnView(config: followingConfig, isVisible: true)
+                                .toolbar {
+                                    ToolbarItem(placement: .navigationBarTrailing) {
+                                        Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                                            AppSheetsModel.shared.feedSettingsFeed = followingConfig.feed
+                                        }
+                                    }
+                                }
                         }
                     }
                 }

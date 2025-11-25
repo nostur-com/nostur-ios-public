@@ -126,6 +126,13 @@ struct Hot: View {
             NBNavigationStack {
                 HotFeedSettings(hotVM: hotVM)
                     .environment(\.theme, theme)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Close", systemImage: "xmark") {
+                                showSettings = false
+                            }
+                        }
+                    }
             }
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)

@@ -14,7 +14,7 @@ struct ArticleFeedSettings: View {
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     
     var body: some View {
-        Form {
+        NXForm {
             Section {
                 Picker("Time frame", selection: $vm.ago) {
                     Text("Year").tag(356)
@@ -31,13 +31,6 @@ struct ArticleFeedSettings: View {
         }
         .navigationTitle("Article feed settings")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                  dismiss()
-                }
-            }
-        }
     }
 }
 

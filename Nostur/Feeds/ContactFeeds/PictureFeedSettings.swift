@@ -10,9 +10,6 @@ import SwiftUI
 struct PictureFeedSettings: View {
     @ObservedObject public var feed: CloudFeed
     
-    @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var la: LoggedInAccount
-    
     var body: some View {
         NXForm {
             Section(header: Text("Feed settings", comment: "Header for feed settings")) {

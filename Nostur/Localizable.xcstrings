@@ -4368,6 +4368,7 @@
       }
     },
     "Feed settings..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
