@@ -10,10 +10,8 @@ import NavigationBackport
 
 // Copy pasta from PhoneViewish, turned from Following into Explore, Turned into generic ContentTypeColumn
 struct ContentTypeColumn: View {
-//    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.availableWidth) private var availableWidth
     @Environment(\.theme) private var theme
-//    @ObservedObject private var ss: SettingsStore = .shared
     
     public let pubkey: String
     @Binding var navPath: NBNavigationPath
@@ -34,8 +32,13 @@ struct ContentTypeColumn: View {
                     NXColumnView(config: config, isVisible: true)
                         .toolbar {
                             ToolbarItem(placement: .navigationBarTrailing) {
-                                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-                                    AppSheetsModel.shared.feedSettingsFeed = config.feed
+                                if case .vine(_) = config.columnType { // No settings for .vine
+                                    
+                                }
+                                else {
+                                    Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                                        AppSheetsModel.shared.feedSettingsFeed = config.feed
+                                    }
                                 }
                             }
                         }

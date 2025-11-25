@@ -21,6 +21,9 @@ struct FeedSettings: View {
         case "picture":
             PictureFeedSettings(feed: feed)
             
+        case "yak":
+            YakFeedSettings(feed: feed)
+            
         case "relays":
             RelayFeedSettings(feed: feed)
             
