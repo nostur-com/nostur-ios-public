@@ -10,7 +10,7 @@ import SwiftUI
 struct ThreadReplies: View {
     @Environment(\.theme) private var theme
     @ObservedObject public var nrPost: NRPost
-    @State private var timer:Timer? = nil
+    @State private var timer: Timer? = nil
     @State private var showNotWoT = false
     @State private var didLoad = false
     

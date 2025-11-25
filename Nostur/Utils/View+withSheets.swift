@@ -445,7 +445,7 @@ struct MiniProfileSheetInfo: Identifiable, Equatable {
     }
 }
 
-struct ReplyTo: Identifiable {
+struct ReplyTo: Identifiable, Hashable {
     let id = UUID()
     let nrPost: NRPost
 }

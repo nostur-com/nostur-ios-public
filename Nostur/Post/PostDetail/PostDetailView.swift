@@ -91,9 +91,9 @@ struct PostDetailView: View {
                 .navigationBarHidden(navTitleHidden)
             }
         }
-            .nosturNavBgCompat(theme: theme)
-            .background(theme.listBackground)
-            .environment(\.nxViewingContext, [.selectableText, .detailPane])
+        .nosturNavBgCompat(theme: theme)
+        .background(theme.listBackground)
+        .environment(\.nxViewingContext, [.selectableText, .detailPane])
     }
 }
 

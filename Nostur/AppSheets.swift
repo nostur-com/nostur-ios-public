@@ -22,6 +22,7 @@ class AppSheetsModel: ObservableObject {
     @Published var addContactsToListInfo: AddContactsToListInfo? = nil
     @Published var emojiRR: EmojiPickerFor? = nil
     @Published var feedSettingsFeed: CloudFeed? = nil
+    @Published var showReplyToSheet: ReplyTo? = nil
     
     // Workaround because .sheet / .fullScreenCover has some issues with NavigationBackPort where dismiss() doesn't work
     @MainActor func dismiss() {
@@ -33,6 +34,7 @@ class AppSheetsModel: ObservableObject {
         addContactsToListInfo = nil
         emojiRR = nil
         feedSettingsFeed = nil
+        showReplyToSheet = nil
     }
 }
 
@@ -84,6 +86,22 @@ struct WithAppSheets: ViewModifier {
                             ToolbarItem(placement: .cancellationAction) {
                                 Button("Close", systemImage: "xmark") {
                                     asm.feedSettingsFeed = nil
+                                }
+                            }
+                        }
+                }
+                .environmentObject(la)
+            })
+        
+            .sheet(item: $asm.showReplyToSheet, content: { replyToInfo in
+                NRSheetNavigationStack {
+                    CommentsDetail(nrPost: replyToInfo.nrPost)
+                        .navigationTitle("Comments")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Close", systemImage: "xmark") {
+                                    asm.showReplyToSheet = nil
                                 }
                             }
                         }

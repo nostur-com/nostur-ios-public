@@ -62,6 +62,7 @@ struct ReplyButton: View {
     }
 }
 
+import NavigationBackport
 
 struct VideoReplyButton: View {
     private let nrPost: NRPost
@@ -70,6 +71,8 @@ struct VideoReplyButton: View {
     private var isFirst :Bool
     private var isLast: Bool
     private var theme: Theme
+    
+    @State private var commentsDetail: ReplyTo? = nil
     
     init(nrPost: NRPost, isDetail: Bool = false, isFirst: Bool = false, isLast: Bool = false, theme: Theme) {
         self.nrPost = nrPost
@@ -96,9 +99,15 @@ struct VideoReplyButton: View {
         .onTapGesture {
             tap()
         }
+        .nbNavigationDestination(item: $commentsDetail) { replyTo in
+            CommentsDetail(nrPost: replyTo.nrPost)
+                .navigationTitle("Comments")
+                .navigationBarTitleDisplayMode(.inline)
+        }
     }
     
     private func tap() {
-        sendNotification(.createNewReply, ReplyTo(nrPost: nrPost))
+        commentsDetail = ReplyTo(nrPost: nrPost)
+//        AppSheetsModel.shared.showReplyToSheet = ReplyTo(nrPost: nrPost)
     }
 }
