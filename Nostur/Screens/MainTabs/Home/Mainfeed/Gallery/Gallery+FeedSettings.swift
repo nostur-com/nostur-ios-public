@@ -27,9 +27,11 @@ struct GalleryFeedSettings: View {
                 .pickerStyle(.segmented)
             } header: { Text("Gallery feed time frame") } footer: { Text("The Gallery feed shows pictures most liked or reposted by people you follow in the last \(vm.ago) hours") }
             
-            Toggle(isOn: $enableGalleryFeed, label: {
-                Text("Show feed in tab bar")
-            })
+            if !IS_DESKTOP_COLUMNS() {
+                Toggle(isOn: $enableGalleryFeed, label: {
+                    Text("Show feed in feed selector")
+                })
+            }
         }
     }
 }

@@ -27,9 +27,11 @@ struct DiscoverFeedSettings: View {
                 .pickerStyle(.segmented)
             } header: { Text("Discover feed time frame") } footer: { Text("The Discover feed shows posts from people you don't follow which are most liked or reposted by people you follow in the last \(discoverVM.ago) hours") }
             
-            Toggle(isOn: $enableDiscoverFeed, label: {
-                Text("Show feed in tab bar")
-            })
+            if !IS_DESKTOP_COLUMNS() {
+                Toggle(isOn: $enableDiscoverFeed, label: {
+                    Text("Show feed in feed selector")
+                })
+            }
         }
     }
 }

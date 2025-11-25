@@ -25,9 +25,11 @@ struct ArticleFeedSettings: View {
                 .pickerStyle(.segmented)
             } header: { Text("Article feed time frame") } footer: { Text("The article feed shows articles from people you follow in the selected time frame") }
             
-            Toggle(isOn: $enableArticleFeed, label: {
-                Text("Show feed in tab bar")
-            })
+            if !IS_DESKTOP_COLUMNS() {
+                Toggle(isOn: $enableArticleFeed, label: {
+                    Text("Show feed in feed selector")
+                })
+            }
         }
         .navigationTitle("Article feed settings")
         .navigationBarTitleDisplayMode(.inline)

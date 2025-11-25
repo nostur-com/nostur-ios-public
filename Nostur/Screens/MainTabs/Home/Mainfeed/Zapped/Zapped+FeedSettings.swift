@@ -27,9 +27,11 @@ struct ZappedFeedSettings: View {
                 .pickerStyle(.segmented)
             } header: { Text("Zapped feed time frame") } footer: { Text("The Zapped feed shows posts from anyone which are most zapped by people you follow in the last \(zappedVM.ago) hours") }
             
-            Toggle(isOn: $enableZappedFeed, label: {
-                Text("Show feed in tab bar")
-            })
+            if !IS_DESKTOP_COLUMNS() {
+                Toggle(isOn: $enableZappedFeed, label: {
+                    Text("Show feed in feed selector")
+                })
+            }
         }
     }
 }

@@ -27,9 +27,11 @@ struct HotFeedSettings: View {
                 .pickerStyle(.segmented)
             } header: { Text("Hot feed time frame") } footer: { Text("The Hot feed shows posts from anyone which are most liked or reposted by people you follow in the last \(hotVM.ago) hours") }
             
-            Toggle(isOn: $enableHotFeed, label: {
-                Text("Show feed in tab bar")
-            })
+            if !IS_DESKTOP_COLUMNS() {
+                Toggle(isOn: $enableHotFeed, label: {
+                    Text("Show feed in feed selector")
+                })
+            }
         }
     }
 }

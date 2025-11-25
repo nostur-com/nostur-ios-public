@@ -16,7 +16,7 @@ struct DiscoverListsFeedSettings: View {
     var body: some View {
         NXForm {
             Toggle(isOn: $enableDiscoverListsFeed, label: {
-                Text("Show feed in tab bar")
+                Text("Show feed in feed selector")
             })
         }
     }

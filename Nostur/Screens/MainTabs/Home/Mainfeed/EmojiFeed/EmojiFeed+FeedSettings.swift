@@ -27,9 +27,11 @@ struct EmojiFeedSettings: View {
                 .pickerStyle(.segmented)
             } header: { Text("Emoji feed time frame") } footer: { Text("The Emoji feed shows posts from anyone which are reacted to with specific emojis by people you follow in the last \(vm.ago) hours") }
             
-            Toggle(isOn: $enableEmojiFeed, label: {
-                Text("Show feed in tab bar")
-            })
+            if !IS_DESKTOP_COLUMNS() {
+                Toggle(isOn: $enableEmojiFeed, label: {
+                    Text("Show feed in feed selector")
+                })
+            }
         }
     }
 }
