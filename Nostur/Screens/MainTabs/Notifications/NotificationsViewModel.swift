@@ -757,7 +757,6 @@ class NotificationsViewModel: ObservableObject {
     }
     
     @MainActor public func markNewPostsAsRead() {
-        guard let accountPubkey = self.pubkey else { return }
         self.unreadNewPosts_ = 0
         
         bg().perform { [weak self] in
