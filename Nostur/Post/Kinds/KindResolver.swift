@@ -21,6 +21,7 @@ struct KindResolver: View {
     public var isDetail: Bool = false
     public var isEmbedded: Bool = false
     public var connect: ThreadConnectDirection? = nil
+    public var isVisible: Bool = true
     public var forceAutoload: Bool = false // To override auto downloaded of reposted post using pubkey of reposter
     
     private var shouldAutoload: Bool {
@@ -153,7 +154,7 @@ struct KindResolver: View {
                 .onDisappear { self.dequeue() }
             
         case 22,34236: // Short videos
-            VideoPost(nrPost: nrPost, theme: theme)
+            VideoPost(nrPost: nrPost, isDetail: isDetail, isVisible: isVisible, theme: theme)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
 //            if let eventUrl = nrPost.eventUrl {

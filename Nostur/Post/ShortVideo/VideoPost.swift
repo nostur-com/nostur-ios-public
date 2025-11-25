@@ -35,16 +35,18 @@ class VideoPostPlaybackCoordinator: ObservableObject {
 
 struct VideoPost: View {
     
-    @Environment(\.availableHeight) var availableHeight: CGFloat
-    @Environment(\.availableWidth) var availableWidth: CGFloat
-    @EnvironmentObject var coordinator: VideoPostPlaybackCoordinator
+    @Environment(\.availableHeight) private var availableHeight: CGFloat
+    @Environment(\.availableWidth) private var availableWidth: CGFloat
+    @EnvironmentObject private var coordinator: VideoPostPlaybackCoordinator
     
-    let nrPost: NRPost
-    let theme: Theme
+    public let nrPost: NRPost
+    public var isDetail: Bool = false
+    public var isVisible: Bool = true
+    public let theme: Theme
     
     @State private var isPlaying = false
     
-    var postID: String { nrPost.id }
+    private var postID: String { nrPost.id }
     
     var body: some View {
         VideoPostLayout(nrPost: nrPost, theme: theme) {
@@ -55,23 +57,34 @@ struct VideoPost: View {
                         .background(Color.black)
                         .frame(width: availableWidth, height: availableHeight)
                         .onTapGesture { isPlaying.toggle() }
-                        .onGeometryChange(for: CGFloat.self) { proxy in
-                            let globalFrame = proxy.frame(in: .global)
-                            let mainScreen = UIScreen.main.bounds
-                            let intersection = globalFrame.intersection(mainScreen)
-                            let visibleArea = intersection.width * intersection.height
-                            let totalArea = globalFrame.width * globalFrame.height
-                            return totalArea > 0 ? visibleArea / totalArea : 0
-                        } action: { fraction in
-                            coordinator.reportVisibility(postID: postID, visibility: fraction)
-                        }
-                        .onAppear { isPlaying = (coordinator.mostVisiblePostID == postID) }
-                        .onDisappear {
-                            coordinator.removeVisibility(postID: postID)
-                            isPlaying = false
-                        }
-                        .onChange(of: coordinator.mostVisiblePostID) { newValue in
-                            isPlaying = (coordinator.mostVisiblePostID == postID)
+                        .modifier {
+                            if !isDetail {
+                                $0.onGeometryChange(for: CGFloat.self) { proxy in
+                                    let globalFrame = proxy.frame(in: .global)
+                                    let mainScreen = UIScreen.main.bounds
+                                    let intersection = globalFrame.intersection(mainScreen)
+                                    let visibleArea = intersection.width * intersection.height
+                                    let totalArea = globalFrame.width * globalFrame.height
+                                    return totalArea > 0 ? visibleArea / totalArea : 0
+                                } action: { fraction in
+                                    coordinator.reportVisibility(postID: postID, visibility: fraction)
+                                }
+                                .onAppear {
+                                    guard isVisible else { return }
+                                    isPlaying = (coordinator.mostVisiblePostID == postID)
+                                }
+                                .onDisappear {
+                                    guard isVisible else { return }
+                                    coordinator.removeVisibility(postID: postID)
+                                    isPlaying = false
+                                }
+                                .onChange(of: coordinator.mostVisiblePostID) { newValue in
+                                    guard isVisible else { return }
+                                    isPlaying = (coordinator.mostVisiblePostID == postID)
+                                }
+                                
+                            }
+                            else { $0 }
                         }
                 } else {
                     GeometryReader { geo in
@@ -80,19 +93,28 @@ struct VideoPost: View {
                             .background(Color.black)
                             .frame(width: availableWidth, height: availableHeight)
                             .onTapGesture { isPlaying.toggle() }
-                            .onAppear {
-                                updateVisibilityPreiOS16(geo: geo)
-                                isPlaying = (coordinator.mostVisiblePostID == postID)
-                            }
-                            .onDisappear {
-                                coordinator.removeVisibility(postID: postID)
-                                isPlaying = false
-                            }
-                            .onChange(of: geo.frame(in: .global)) { _ in
-                                updateVisibilityPreiOS16(geo: geo)
-                            }
-                            .onChange(of: coordinator.mostVisiblePostID) { newValue in
-                                isPlaying = (coordinator.mostVisiblePostID == postID)
+                            .modifier {
+                                if !isDetail {
+                                    $0.onAppear {
+                                        guard isVisible else { return }
+                                        updateVisibilityPreiOS16(geo: geo)
+                                        isPlaying = (coordinator.mostVisiblePostID == postID)
+                                    }
+                                    .onDisappear {
+                                        guard isVisible else { return }
+                                        coordinator.removeVisibility(postID: postID)
+                                        isPlaying = false
+                                    }
+                                    .onChange(of: geo.frame(in: .global)) { _ in
+                                        guard isVisible else { return }
+                                        updateVisibilityPreiOS16(geo: geo)
+                                    }
+                                    .onChange(of: coordinator.mostVisiblePostID) { newValue in
+                                        guard isVisible else { return }
+                                        isPlaying = (coordinator.mostVisiblePostID == postID)
+                                    }
+                                }
+                                else { $0 }
                             }
                     }
                     .frame(width: availableWidth, height: availableHeight)

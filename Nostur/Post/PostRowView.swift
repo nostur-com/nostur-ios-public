@@ -19,9 +19,10 @@ struct PostRowDeletable: View {
     private var isDetail: Bool = false
     private var isEmbedded: Bool = false
     private var ignoreBlock: Bool = false // Force show, when we open profile of blocked account
+    private var isVisible: Bool = true
     private var theme: Theme
     
-    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, ignoreBlock: Bool = false, theme: Theme) {
+    init(nrPost: NRPost, hideFooter: Bool = false, missingReplyTo: Bool = false, connect: ThreadConnectDirection? = nil, fullWidth: Bool = false, isReply: Bool = false, isDetail: Bool = false, isEmbedded: Bool = false, ignoreBlock: Bool = false, isVisible: Bool = true, theme: Theme) {
         self.nrPost = nrPost
         self.postRowDeletableAttributes = nrPost.postRowDeletableAttributes
         self.hideFooter = hideFooter
@@ -32,6 +33,7 @@ struct PostRowDeletable: View {
         self.isDetail = isDetail
         self.isEmbedded = isEmbedded
         self.ignoreBlock = ignoreBlock
+        self.isVisible = isVisible
         self.theme = theme
     }
     
@@ -58,7 +60,7 @@ struct PostRowDeletable: View {
                 Repost(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, fullWidth: fullWidth, isReply: isReply, isDetail: isDetail)
             }
             else { // IS NOT A REPOST
-                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, isEmbedded: isEmbedded, connect: connect)
+                KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: hideFooter, missingReplyTo: missingReplyTo, isReply: isReply, isDetail: isDetail, isEmbedded: isEmbedded, connect: connect, isVisible: isVisible)
             }
         }
         else {

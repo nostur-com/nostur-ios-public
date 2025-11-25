@@ -44,7 +44,7 @@ struct NXColumnView<HeaderContent: View>: View {
                 VStack(spacing: 0) {
                     header
                     if case .vine(_) = config.columnType {
-                        NXVinesFeed(vm: viewModel, posts: nrPosts)
+                        NXVinesFeed(vm: viewModel, posts: nrPosts, isVisible: isVisible)
                             .modifier {
                                 if #available(iOS 16.0, *) {
                                     $0.ignoresSafeArea()

@@ -15,12 +15,14 @@ struct NXVinesFeed: View {
     
     private var vm: NXColumnViewModel
     private let posts: [NRPost]
+    private let isVisible: Bool
     @ObservedObject private var vmInner: NXColumnViewModelInner
     
-    init(vm: NXColumnViewModel, posts: [NRPost]) {
+    init(vm: NXColumnViewModel, posts: [NRPost], isVisible: Bool) {
         self.vm = vm
         self.posts = posts
         self.vmInner = vm.vmInner
+        self.isVisible = isVisible
     }
     
     var body: some View {
@@ -30,7 +32,7 @@ struct NXVinesFeed: View {
                     ScrollView(.vertical, showsIndicators: false) {
                         LazyVStack(spacing: 0, pinnedViews: []) {
                             ForEach(posts, id: \.id) { post in
-                                PostRowDeletable(nrPost: post, theme: theme)
+                                PostRowDeletable(nrPost: post, isVisible: isVisible, theme: theme)
                                     .environment(\.availableHeight, geo.size.height)
                                     .environment(\.availableWidth, geo.size.width)
                                     .frame(height: geo.size.height)
@@ -42,7 +44,7 @@ struct NXVinesFeed: View {
                     ScrollView {
                         LazyVStack {
                             ForEach(posts, id: \.id) { post in
-                                PostOrThread(nrPost: post, theme: theme)
+                                PostRowDeletable(nrPost: post, isVisible: isVisible, theme: theme)
                                     .environment(\.availableHeight, geo.size.height)
                                     .environment(\.availableWidth, geo.size.width)
                             }
