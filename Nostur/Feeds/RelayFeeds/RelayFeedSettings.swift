@@ -65,15 +65,15 @@ struct RelayFeedSettings: View {
                 }
                 
                 // Only show specific content types (kinds)
-                NavigationLink(destination: ContentTypesPicker(selectedKinds: $feed.kinds)) {
-                    VStack {
-                        HStack {
-                            Text("Limit content types")
-                            Spacer()
-                            Text(!feed.kinds.isEmpty ? "\(kindsDescription(feed.kinds))" : "All")
-                        }
-                    }
-                }
+//                NavigationLink(destination: ContentTypesPicker(selectedKinds: $feed.kinds)) {
+//                    VStack {
+//                        HStack {
+//                            Text("Limit content types")
+//                            Spacer()
+//                            Text(!feed.kinds.isEmpty ? "\(kindsDescription(feed.kinds))" : "All")
+//                        }
+//                    }
+//                }
             }
             
             Section {
