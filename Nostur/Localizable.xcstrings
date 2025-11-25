@@ -4780,9 +4780,6 @@
         }
       }
     },
-    "Hello World" : {
-
-    },
     "Hello, World!" : {
 
     },
@@ -6811,9 +6808,6 @@
           }
         }
       }
-    },
-    "Open Detail Window" : {
-
     },
     "Open in %@" : {
       "localizations" : {
@@ -9638,9 +9632,6 @@
         }
       }
     },
-    "Sowwy, this app doesn't work on macOS" : {
-
-    },
     "Spam" : {
       "comment" : "Menu item in choice list",
       "localizations" : {
@@ -10221,12 +10212,6 @@
           }
         }
       }
-    },
-    "This is the DETAIL window" : {
-
-    },
-    "This is the MAIN window" : {
-
     },
     "This list is public" : {
       "localizations" : {
