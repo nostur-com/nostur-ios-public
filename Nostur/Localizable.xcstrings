@@ -9351,7 +9351,11 @@
         }
       }
     },
+    "Show feed in feed selector" : {
+
+    },
     "Show feed in tab bar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
