@@ -82,7 +82,7 @@ struct VideoReplyButton: View {
     
     var body: some View {
         VStack(spacing: 3) {
-            Image(systemName: "bubble.left.fill")
+            Image(systemName: footerAttributes.replied ? "bubble.left.fill" : "bubble.left")
                 .foregroundColor(footerAttributes.replied ? theme.accent : Color.white)
 
                

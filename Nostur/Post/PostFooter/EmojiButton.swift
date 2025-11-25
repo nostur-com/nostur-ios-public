@@ -178,7 +178,7 @@ struct VideoEmojiButton: View {
             Text(selectedEmoji)
         }
         else {
-            Image(systemName: "heart.fill")
+            Image(systemName: footerAttributes.ourReactions.contains("+") ? "heart.fill" : "heart")
                 .foregroundColor(footerAttributes.ourReactions.contains("+")  ? .red : Color.white)
         }
     }
