@@ -15,12 +15,6 @@ struct VideoPostLayout<Content: View>: View {
     
     var body: some View {
         self.content
-            // Post menu
-            .overlay(alignment: .topTrailing) {
-                PostMenuButton(nrPost: nrPost, theme: theme)
-                    .offset(x: -16, y: 25)
-            }
-        
             // Post info
             .overlay(alignment: .bottomLeading) {
                 VStack(alignment: .leading) {

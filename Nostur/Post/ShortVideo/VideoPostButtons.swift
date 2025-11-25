@@ -25,8 +25,12 @@ struct VideoPostButtons: View {
     }
     
     var body: some View {
-        VStack(spacing: 5) {
+        VStack(alignment: .center, spacing: 5) {
             Spacer()
+            PostMenuButton(nrPost: nrPost, theme: theme)
+                .offset(x: -7)
+                .padding(.bottom, 20)
+            
             ZappablePFP(pubkey: nrPost.pubkey, size: DIMENSIONS.POST_ROW_PFP_WIDTH, zapEtag: nrPost.id, zapAtag: nrPost.aTag, forceFlat: true)
                 .frame(width: DIMENSIONS.POST_ROW_PFP_DIAMETER, height: DIMENSIONS.POST_ROW_PFP_DIAMETER)
                 
