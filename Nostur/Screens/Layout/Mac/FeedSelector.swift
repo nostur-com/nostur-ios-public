@@ -192,6 +192,10 @@ struct ColumnConfigToolbarMenu: ViewModifier {
                 columnType = .photos(Nostur.account()?.publicKey)
             }
         }
+        
+        if (enableYakFeed || enableVineFeed || enablePictureFeed) {
+            Divider()
+        }
 
         ForEach(feeds) { feed in
             Button(feed.feedTitle(), systemImage: feed.feedIconName()) {
