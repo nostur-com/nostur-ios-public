@@ -120,6 +120,7 @@ struct NotificationsColumnInner: View {
             .padding(.top, GUTTER)
             .background(theme.listBackground)
         }
+        .background(theme.listBackground)
         
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

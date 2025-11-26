@@ -133,6 +133,8 @@ struct MacMainWindow: View {
 @available(iOS 16.0, *)
 #Preview {
     PreviewContainer({ pe in
+        pe.loadPosts()
+        pe.loadBookmarks()
         pe.loadContacts()
         pe.loadCloudFeeds()
     }, previewDevice: PreviewDevice(rawValue: "My Mac (Mac Catalyst)"), content: {

@@ -9,6 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct CloudFeedColumn: View {
+    @Environment(\.theme) private var theme
     @Environment(\.macColumnsState) private var vm
     var feed: CloudFeed
     @State private var columnConfig: NXColumnConfig?
@@ -34,7 +35,7 @@ struct CloudFeedColumn: View {
                 }
             }
         }
-                
+        .background(theme.listBackground)
         .onValueChange(feed, action: { oldFeed, newFeed in
             guard oldFeed != newFeed else { return }
             self.columnConfig = NXColumnConfig(

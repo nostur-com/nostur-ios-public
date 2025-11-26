@@ -43,6 +43,7 @@ struct ExploreColumn: View {
             didCreate = true
             createExploreFeed()
         }
+        .background(theme.listBackground)
     }
 
     private func createExploreFeed() {

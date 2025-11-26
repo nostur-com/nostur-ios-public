@@ -51,7 +51,7 @@ struct NotificationsNewPosts: View {
 #if DEBUG
         let _ = Self._printChanges()
 #endif
-        ScrollViewReader { proxy in
+        Container {
             if !notifications.isEmpty {
                 ScrollView {
                     LazyVStack(spacing: GUTTER) {
@@ -74,15 +74,6 @@ struct NotificationsNewPosts: View {
                                     
                             })
                             .id(notification.id)
-                        }
-                    }
-                }
-                .onReceive(receiveNotification(.didTapTab)) { notification in
-                    guard selectedNotificationsTab == "New Posts" else { return }
-                    guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                    if navPath.count == 0, let topId = notifications.first?.id {
-                        withAnimation {
-                            proxy.scrollTo(topId)
                         }
                     }
                 }
@@ -121,6 +112,7 @@ struct NotificationsNewPosts: View {
                 .centered()
             }
         }
+        .background(theme.listBackground)
         .nbNavigationDestination(for: NewPostsForPubkeys.self, destination: { newPostsForPubkeys in
             NewPostsBy(pubkeys: newPostsForPubkeys.pubkeys, since: newPostsForPubkeys.since)
                 .environment(\.theme, theme)

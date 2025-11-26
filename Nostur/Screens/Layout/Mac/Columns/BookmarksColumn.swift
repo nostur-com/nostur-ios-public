@@ -91,6 +91,7 @@ struct BookmarksColumn: View {
                     .background(theme.listBackground)
             }
         }
+        .background(theme.listBackground)
         .onAppear {
             guard !didLoad else { return }
             if case .bookmarks(let filters) = columnType {
