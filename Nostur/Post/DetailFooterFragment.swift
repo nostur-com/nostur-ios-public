@@ -29,26 +29,31 @@ struct DetailFooterFragment: View {
             NBNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.likesCount)
+                        .layoutPriority(footerAttributes.likesCount == 0 ? -1 : 1)
                     Text("reactions", comment: "Label for reactions count, example: (7) reactions")
+                        .layoutPriority(footerAttributes.likesCount == 0 ? -1 : 1)
                 }
                 .lineLimit(1)
             }
             NBNavigationLink(value: ViewPath.PostReposts(id: nrPost.id)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.repostsCount)
+                        .layoutPriority(footerAttributes.repostsCount == 0 ? -1 : 1)
                     Text("reposts", comment: "Label for reposts count, example: (7) reposts")
+                        .layoutPriority(footerAttributes.repostsCount == 0 ? -1 : 1)
                 }
                 .lineLimit(1)
             }
             NBNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
                 HStack(spacing: 3) {
                     AnimatedNumber(number: footerAttributes.zapsCount)
+                        .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 1)
                     Text("zaps", comment: "Label for zaps count, example: (4) zaps")
-                        .layoutPriority(3)
+                        .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 1)
                     
                     AnimatedNumberString(number: tallyString)
                         .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
-                        .layoutPriority(4)
+                        .layoutPriority(footerAttributes.zapTally == 0 ? -1 : 1)
                 }
                 .lineLimit(1)
             }
@@ -145,10 +150,9 @@ func reverifyZaps(eventId: String, expectedZpks: Set<String>) {
 
 struct Previews_DetailFooterFragment_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewContainer({ pe in pe.loadPosts() }) {
-            if let p = PreviewFetcher.fetchNRPost() {
-                DetailFooterFragment(nrPost: p)
-            }
+        PreviewContainer {
+            DetailFooterFragment(nrPost: testNRPost())
         }
+        .frame(width: 350)
     }
 }
