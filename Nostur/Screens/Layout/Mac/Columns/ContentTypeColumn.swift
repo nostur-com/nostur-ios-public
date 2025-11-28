@@ -45,6 +45,7 @@ struct ContentTypeColumn: View {
                 }
             }
         }
+        .background(theme.listBackground)
         .onAppear {
             guard !didCreate else { return }
             didCreate = true

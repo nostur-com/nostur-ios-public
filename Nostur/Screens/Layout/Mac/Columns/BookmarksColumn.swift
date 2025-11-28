@@ -157,7 +157,7 @@ struct BookmarksColumn: View {
                 ColumnBookmarkFilters(columnType: $columnType)
                     .environment(\.theme, theme)
             }
-            .nbUseNavigationStack(.never)
+            .nbUseNavigationStack(.whenAvailable)
             .presentationBackgroundCompat(theme.background)
             .presentationDetents200()
         })
