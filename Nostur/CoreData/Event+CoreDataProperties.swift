@@ -900,28 +900,11 @@ extension Event {
             }
         #endif
         
-        if event.kind == .setMetadata {
-            QueuedFetcher.shared.addRecentP(pTag: event.publicKey)
-        }
-        else {
-            QueuedFetcher.shared.addRecentId(id: event.id)
-        }
+        if event.kind == .setMetadata { QueuedFetcher.shared.addRecentP(pTag: event.publicKey) }
+        else { QueuedFetcher.shared.addRecentId(id: event.id) }
         
-        // Generic handling for all events
-        let savedEvent = Event(context: context)
-        savedEvent.insertedAt = Date.now
-        savedEvent.id = event.id
-        savedEvent.kind = Int64(event.kind.id)
-        savedEvent.created_at = Int64(event.createdAt.timestamp)
-        savedEvent.content = event.content
-        savedEvent.sig = event.signature
-        savedEvent.pubkey = event.publicKey
-        savedEvent.likesCount = 0
-        savedEvent.isRepost = event.kind == .repost
-        savedEvent.flags = flags
-        savedEvent.otherAtag = savedEvent.firstA()
-
-        savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags) // TODO: why encode again, need to just store what we received before (performance)
+        // Save basic event info to DB
+        let savedEvent = Event.fromNEvent(nEvent: event, flags: flags, context: context)
         
         // backwards compatible tag (used for kind 20 for now)
         if event.kind == .textNote, let kTag = event.fastTags.first(where: { $0.0 == "k" })?.1, let kTagInt = Int64(kTag) {
@@ -934,261 +917,28 @@ extension Event {
         }
         updateEventCache(event.id, status: .SAVED, relays: relays)
         
+        if (event.kind == .shortVoiceMessage || event.kind == .textNote || NIP22_COMMENT_KINDS.contains(event.kind.id)) {
+            EventCache.shared.setObject(for: event.id, value: savedEvent)
+#if DEBUG
+            L.og.debug("Saved \(event.id) in cache -[LOG]-")
+#endif
+        }
+        
         // Specific handling per kind
         handleZap(nEvent: event, savedEvent: savedEvent, context: context)
         handleReaction(nEvent: event, savedEvent: savedEvent, context: context)
-        handleTextPost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)        
+        
+        handleTextPost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
+        handlePostRelations(nEvent: event, savedEvent: savedEvent, context: context)
+        
         handleRepost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
         handleDM(nEvent: event, savedEvent: savedEvent, context: context)
         handleContactList(nEvent: event, context: context)
         handleReplacableEvent(nEvent: event, context: context)
+        handleAddressableReplacableEvent(nEvent: event, savedEvent: savedEvent, context: context)
+        handleDelete(nEvent: event, context: context)
+        handleComment(nEvent: event, savedEvent: savedEvent, context: context)
         
-        if event.kind == .delete {
-            let eventIdsToDelete = event.eTags()
-            // TODO: Also do aTags
-            
-            let eventIdsToDeleteReq = NSFetchRequest<Event>(entityName: "Event")
-            
-            // Only same author (pubkey) can delete
-            eventIdsToDeleteReq.predicate = NSPredicate(format: "kind IN {1,1111,1222,1244,6,20,9802,10001,10601,30023,34235} AND pubkey = %@ AND id IN %@ AND deletedById = nil", event.publicKey, eventIdsToDelete)
-            eventIdsToDeleteReq.sortDescriptors = []
-            if let eventsToDelete = try? context.fetch(eventIdsToDeleteReq) {
-                for eventToDelete in eventsToDelete {
-                    eventToDelete.deletedById = event.id
-                    ViewUpdates.shared.postDeleted.send((toDeleteId: eventToDelete.id, deletedById: event.id))
-                }
-            }
-        }
-        
-        // Handle replacable event (NIP-33)
-        if (event.kind.id >= 30000 && event.kind.id < 40000) {
-            savedEvent.dTag = event.tags.first(where: { $0.type == "d" })?.value ?? ""
-            // update older events:
-            // 1. set pointer to most recent (this one)
-            // 2. set "is_update" flag on this one so it doesn't show up as new in feed
-            let r = Event.fetchRequest()
-            r.predicate = NSPredicate(format: "dTag == %@ AND kind == %d AND pubkey == %@", savedEvent.dTag, savedEvent.kind, event.publicKey)
-
-            var existingEventIds = Set<String>() // need to repoint all replies to older articles to the newest id
-            
-            // Set pointer on older events to the latest event id
-            if let existingEvents = try? context.fetch(r) {
-                
-                // existingEvents will already include the savedEvent event also (can also be older one, if from relay that doesn't have latest
-                let newestFirst = existingEvents.sorted { $0.created_at > $1.created_at }
-                
-                // most recent event (.created_at)
-                if let first = newestFirst.first {
-                    // .mostRecentId should be nil
-                    first.mostRecentId = nil
-                    
-                    // if we already had this article, mark this one as "is_update" so it doesn't reappear in feed
-                    if existingEvents.count > 1 && first.id == savedEvent.id {
-                        savedEvent.flags = "is_update" // is supdate, don't reappear in feed
-                    }
-                    
-                    // older events
-                    for existingEvent in newestFirst.dropFirst() {
-                        existingEvent.mostRecentId = first.id
-                        existingEventIds.insert(existingEvent.id)
-                    }
-                    
-                    
-                    
-                    // Find existing replies referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
-                    // also do for replyToId
-                    if savedEvent.kind == 30023 { // Only do this for articles
-                        existingEventIds.insert(savedEvent.aTag)
-                        let fr = Event.fetchRequest()
-                        fr.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND replyToRootId IN %@", existingEventIds)
-                        if let existingReplies = try? context.fetch(fr) {
-                            for existingReply in existingReplies {
-                                existingReply.replyToRootId = first.id
-                                existingReply.replyToRoot = first
-                            }
-                        }
-                        
-                        let fr2 = Event.fetchRequest()
-                        fr2.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND replyToId IN %@", existingEventIds)
-                        if let existingReplies = try? context.fetch(fr) {
-                            for existingReply in existingReplies {
-                                existingReply.replyToId = first.id
-                                existingReply.replyTo = first
-                            }
-                        }
-                    }
-                }
-            }
-
-            if Set([30311]).contains(savedEvent.kind) { // Only update views for kinds that need it (so far: 30311)
-                ViewUpdates.shared.replacableEventUpdate.send(savedEvent)
-            }
-        }
-        
-        
-        
-        
-        
-        // Use new EventRelationsQueue to fix relations
-        if (event.kind == .textNote) {
-            
-            let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
-            
-            for waitingEvent in awaitingEvents {
-                if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
-                    CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyTo = savedEvent") else { return }
-                        waitingEvent.replyTo = savedEvent
-                    })
-                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyTo, id: waitingEvent.id, event: savedEvent)))
-                }
-                if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
-                    CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyToRoot = savedEvent") else { return }
-                        waitingEvent.replyToRoot = savedEvent
-                    })
-                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
-                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRootInverse, id: savedEvent.id, event: waitingEvent)))
-                }
-                if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
-                    CoreDataRelationFixer.shared.addTask({
-                        // Ensure both objects have a valid context
-                        guard contextWontCrash([waitingEvent, savedEvent], debugInfo: "waitingEvent.firstQuote = savedEvent") else { return }
-                        waitingEvent.firstQuote = savedEvent
-                    })
-                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))
-                }
-            }
-        }
-        
-        
-        
-        // Handle Voice Message (root)
-        if (event.kind == .shortVoiceMessage) {
-            
-            EventCache.shared.setObject(for: event.id, value: savedEvent)
-#if DEBUG
-            L.og.debug("Saved \(event.id) in cache -[LOG]-")
-#endif
-            
-            // IF we already have replies, need to link them to this root:
-            let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
-            
-            for waitingEvent in awaitingEvents {
-                if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
-                    CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "XwaitingEvent.replyTo = savedEvent") else { return }
-                        waitingEvent.replyTo = savedEvent
-                    })
-                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyTo, id: waitingEvent.id, event: savedEvent)))
-                }
-                if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
-                    CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "XwaitingEvent.replyToRoot = savedEvent") else { return }
-                        waitingEvent.replyToRoot = savedEvent
-                    })
-                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
-                    ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRootInverse, id: savedEvent.id, event: waitingEvent)))
-                }
-            }
-            
-        }
-        
-        
-        // Handle Voice Message (comment/reply)
-        if NIP22_COMMENT_KINDS.contains(event.kind.id) {
-            EventCache.shared.setObject(for: event.id, value: savedEvent)
-#if DEBUG
-            L.og.debug("Saved \(event.id) in cache -[LOG]-")
-#endif
-            
-            // THIS EVENT REPLYING TO SOMETHING
-            // CACHE THE REPLY "E" IN replyToId
-            if let replyToEtag = event.replyToEtag(), savedEvent.replyToId == nil {
-                savedEvent.replyToId = replyToEtag.id
-                
-                // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                if let parent = Event.fetchEvent(id: replyToEtag.id, context: context) {
-                    CoreDataRelationFixer.shared.addTask({
-                        // Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
-                        // (when opening from bookmarks)
-                        guard contextWontCrash([savedEvent, parent], debugInfo: "XF savedEvent.replyTo = parent") else { return }
-                        savedEvent.replyTo = parent
-                    })
-                    // Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
-                    parent.addToReplies(savedEvent)
-                    parent.repliesCount += 1
-//                    replyTo.repliesUpdated.send(replyTo.replies_)
-                    ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
-                    ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
-                }
-            }
-            
-            // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO. AND ROOT IS NOT ALREADY SET FROM ROOT E TAG
-            // DO THE SAME AS WITH THE REPLY BEFORE
-            if let replyToRootEtag = event.replyToRootEtag(), savedEvent.replyToRootId == nil {
-                savedEvent.replyToRootId = replyToRootEtag.id
-                // Need to put it in queue to fix relations for replies to root / grouped replies
-                //                EventRelationsQueue.shared.addAwaitingEvent(savedEvent, debugInfo: "saveEvent.123")
-                
-                let replyToRootIsSameAsReplyTo = savedEvent.replyToId == replyToRootEtag.id
-                
-                if (savedEvent.replyToId == nil) {
-                    savedEvent.replyToId = savedEvent.replyToRootId // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                }
-                
-                if !replyToRootIsSameAsReplyTo, let root = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                    
-                    CoreDataRelationFixer.shared.addTask({
-                        guard contextWontCrash([savedEvent, root], debugInfo: "XEE savedEvent.replyToRoot = root") else { return }
-                        savedEvent.replyToRoot = root
-                    })
-                    
-                    // Thread 32193: "Illegal attempt to establish a relationship 'replyToRoot' between objects in different contexts (source = <Nostur.Event: 0x371850ee0> (entity: Event; id: 0x351b9e3e0 <x-coredata:///Event/tB769F78C-0ED3-427A-B8A2-BDDA94C71D1030798>; data: {\n    bookmarkedBy =     (\n    );\n    contact = \"0xafbaca1f2e1691dc <x-coredata://3DA0D6F2-885E-43D0-B952-9C23B7D82BA8/Contact/p12190>\";\n    content = \"Do you mind elaborating on \\U201crolling your own kind number is a heavy lift in practice\\U201d? \\n\\nIs it the choice of which kind number to use that\\U2019s the blocker? Are people hesitant to pick a new one and just\";\n    \"created_at\" = 1728407076;\n    dTag = \"\";\n    deletedById = nil;\n    dmAccepted = 0;\n    firstQuote = nil;\n    firstQuoteId = nil;\n    flags = \"\";\n    id = 10eeb3d72083929e9409750c6ad009f736297557b6f8e76bb320b3bd1e61bebd;\n    insertedAt = \"2024-10-10 19:27:50 +0000\";\n    isRepost = 0;\n    kind = 1;\n    lastSeenDMCreatedAt = 0;\n    likesCount = 0;\n    mentionsCount = 0;\n    mostRecentId = nil;\n    otherAtag"
-                    
-                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: root))
-                    ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRootInverse, id:  root.id, event: savedEvent))
-                    if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                        CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, root], debugInfo: "DDX savedEvent.replyTo = root") else { return }
-                            savedEvent.replyTo = root // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                        })
-                        root.addToReplies(savedEvent)
-                        root.repliesCount += 1
-                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: root.id, replies: root.replies_))
-                        ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyTo, id: savedEvent.id, event: root))
-                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: root.id, replies: root.repliesCount))
-                    }
-                }
-            }
-            
-            // Finally, we have a reply to root set from e tag, but we still don't have a replyTo
-            else if savedEvent.replyToRootId != nil, savedEvent.replyToId == nil {
-                // so set replyToRoot as replyTo
-                savedEvent.replyToId = savedEvent.replyToRootId
-                CoreDataRelationFixer.shared.addTask({
-                    guard let replyToRoot = savedEvent.replyToRoot, contextWontCrash([savedEvent, replyToRoot], debugInfo: "CC savedEvent.replyTo = replyToRoot") else { return }
-                    savedEvent.replyTo = replyToRoot
-                    
-                    if let parent = savedEvent.replyTo {
-                        parent.addToReplies(savedEvent)
-                        parent.repliesCount += 1
-    //                    replyTo.repliesUpdated.send(replyTo.replies_)
-                        ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
-                        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
-                    }
-                })
-            }
-            
-            if let replyToId = savedEvent.replyToId, event.publicKey == AccountsState.shared.activeAccountPublicKey {
-                // Update own replied to cache
-                Task { @MainActor in
-                    accountCache()?.addRepliedTo(replyToId)
-                    sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
-                }
-            }
-            
-        }
         return savedEvent
     }
     
@@ -1227,6 +977,24 @@ extension Event {
         fr.predicate = NSPredicate(format: "zappedEventId == %@ AND kind == 9735", id)
         
         return (try? context.fetch(fr)) ?? []
+    }
+    
+    static func fromNEvent(nEvent: NEvent, flags: String = "", context: NSManagedObjectContext) -> Event {
+        let savedEvent = Event(context: context)
+        savedEvent.insertedAt = Date.now
+        savedEvent.id = nEvent.id
+        savedEvent.kind = Int64(nEvent.kind.id)
+        savedEvent.created_at = Int64(nEvent.createdAt.timestamp)
+        savedEvent.content = nEvent.content
+        savedEvent.sig = nEvent.signature
+        savedEvent.pubkey = nEvent.publicKey
+        savedEvent.likesCount = 0
+        savedEvent.isRepost = nEvent.kind == .repost
+        savedEvent.flags = flags
+        savedEvent.otherAtag = savedEvent.firstA()
+
+        savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: nEvent.tags) // TODO: why encode again, need to just store what we received before (performance)
+        return savedEvent
     }
 }
 

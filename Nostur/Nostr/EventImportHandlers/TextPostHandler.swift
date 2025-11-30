@@ -10,11 +10,6 @@ import CoreData
 
 func handleTextPost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
     guard nEvent.kind == .textNote else { return }
-
-    EventCache.shared.setObject(for: nEvent.id, value: savedEvent)
-#if DEBUG
-    L.og.debug("Saved \(nEvent.id) in cache -[LOG]-")
-#endif
     
     if nEvent.content == "#[0]", let firstE = nEvent.firstE() {
         savedEvent.isRepost = true
@@ -213,6 +208,50 @@ func handleRepostInKind1(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
             
 //                firstQuote.objectWillChange.send()
             firstQuote.mentionsCount += 1
+        }
+    }
+}
+
+
+func handlePostRelations(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
+    guard nEvent.kind == .textNote || nEvent.kind == .shortVoiceMessage else { return }
+    
+    // IF we already have replies, need to link them to this root or parent:
+    // or link post to embeded post (.firstQuote)
+    let awaitingEvents = EventRelationsQueue.shared.getAwaitingBgEvents()
+    
+    for waitingEvent in awaitingEvents {
+        
+        // Handle replies we already have, but parent arrived just now
+        if (waitingEvent.replyToId != nil) && (waitingEvent.replyToId == savedEvent.id) {
+            CoreDataRelationFixer.shared.addTask({
+                guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyTo = savedEvent") else { return }
+                waitingEvent.replyTo = savedEvent
+            })
+            ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyTo, id: waitingEvent.id, event: savedEvent)))
+        }
+        
+        // Handle replies we already have, but root arrived just now
+        if (waitingEvent.replyToRootId != nil) && (waitingEvent.replyToRootId == savedEvent.id) {
+            CoreDataRelationFixer.shared.addTask({
+                guard contextWontCrash([savedEvent, waitingEvent], debugInfo: "waitingEvent.replyToRoot = savedEvent") else { return }
+                waitingEvent.replyToRoot = savedEvent
+            })
+            ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRoot, id: waitingEvent.id, event: savedEvent)))
+            ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .replyToRootInverse, id: savedEvent.id, event: waitingEvent)))
+        }
+        
+        
+        // handle post with missing quoted post, and quoted post arrived just now
+        // but not relevant for voice messsages
+        if nEvent.kind == .shortVoiceMessage { continue }
+        if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
+            CoreDataRelationFixer.shared.addTask({
+                // Ensure both objects have a valid context
+                guard contextWontCrash([waitingEvent, savedEvent], debugInfo: "waitingEvent.firstQuote = savedEvent") else { return }
+                waitingEvent.firstQuote = savedEvent
+            })
+            ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))
         }
     }
 }
