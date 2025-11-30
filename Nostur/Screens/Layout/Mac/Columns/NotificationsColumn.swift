@@ -60,12 +60,14 @@ struct NotificationsColumnInner: View {
                         }
                     }, systemIcon: "text.bubble", selected: nvm.tab == "Mentions", unread: nvm.unreadMentions)
                     
-                    TabButton(action: {
-                        withAnimation {
-                            nvm.tab = "New Posts"
-                            nvm.markNewPostsAsRead()
-                        }
-                    }, systemIcon: "bell", selected: nvm.tab == "New Posts", unread: nvm.unreadNewPosts)
+                    if nvm.isMain {
+                        TabButton(action: {
+                            withAnimation {
+                                nvm.tab = "New Posts"
+                                nvm.markNewPostsAsRead()
+                            }
+                        }, systemIcon: "bell", selected: nvm.tab == "New Posts", unread: nvm.unreadNewPosts)
+                    }
                     
                     TabButton(action: {
                         withAnimation {
