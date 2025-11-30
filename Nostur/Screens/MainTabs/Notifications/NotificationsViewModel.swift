@@ -344,8 +344,11 @@ class NotificationsViewModel: ObservableObject {
             activeSubscriptionId: "-OPEN-Notifications-\(self.id)")
         
         // Separate req for kind 4, because possibly needs auth
-        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [4],
-                           subscriptionId: "-OPEN-Notifications-\(self.id)-A", since: sinceNTimestamp),
+        
+        // 2 days ago to deal with NIP-17 randomized created_at
+        let sinceTwoDaysAgo: NTimestamp = NTimestamp(timestamp: Int(Date.now.addingTimeInterval(-2 * 24 * 60 * 60).timeIntervalSince1970))
+        req(RM.getMentions(pubkeys: [accountPubkey], kinds: [4,1059],
+                           subscriptionId: "-OPEN-Notifications-\(self.id)-A", since: sinceTwoDaysAgo),
             activeSubscriptionId: "-OPEN-Notifications-\(self.id)-A")
     }
     
@@ -377,7 +380,9 @@ class NotificationsViewModel: ObservableObject {
                 req(RM.getMentions(pubkeys: [accountPubkey], kinds: [1,1111,1222,1244,6,7,20,9735,9802,30023,34235], subscriptionId: "Notifications-CATCHUP-\(self.id)", since: since))
                 
                 // Separate req for kind 4, because possibly needs auth
-                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [4], subscriptionId: "NotificationsDM-CATCHUP-\(self.id)", since: since))
+                // 2 days ago to deal with NIP-17 randomized created_at
+                let sinceTwoDaysAgo: NTimestamp = NTimestamp(timestamp: Int(Date.now.addingTimeInterval(-2 * 24 * 60 * 60).timeIntervalSince1970))
+                req(RM.getMentions(pubkeys: [accountPubkey], kinds: [4,1059], subscriptionId: "NotificationsDM-CATCHUP-\(self.id)", since: sinceTwoDaysAgo))
             }
         }
     }

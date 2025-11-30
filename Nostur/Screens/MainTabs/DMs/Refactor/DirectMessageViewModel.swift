@@ -472,9 +472,9 @@ class DirectMessageViewModel: ObservableObject {
                     type: .REQ,
                     filters: [
                         // DMs sent
-                        Filters(authors: Set([pubkey]), kinds: [4], since: ago.since, until: ago.until),
+                        Filters(authors: Set([pubkey]), kinds: [4,1059], since: ago.since, until: ago.until),
                         // DMs received
-                        Filters(kinds: [4], tagFilter: TagFilter(tag: "p", values: [pubkey]), since: ago.since, until: ago.until)
+                        Filters(kinds: [4,1059], tagFilter: TagFilter(tag: "p", values: [pubkey]), since: ago.since, until: ago.until)
                     ]
                 ).json() {
                     req(message)

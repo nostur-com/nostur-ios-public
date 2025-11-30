@@ -321,7 +321,7 @@ public struct RequestMessage {
     
     static func getAuthorDMs(pubkey:String, limit:Int = 1000, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}, {"authors": ["\(pubkey)"], "kinds": [4], "limit": \(limit)}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"#p": ["\(pubkey)"], "kinds": [4,1059], "limit": \(limit)}, {"authors": ["\(pubkey)"], "kinds": [4,1059], "limit": \(limit)}]
 """
     }
     

@@ -323,9 +323,10 @@ func checkForDMNotifications(accountData: AccountData) async {
 #if DEBUG
                     L.og.debug("checkForDMNotifications.reqCommand")
 #endif
-                    let since = NTimestamp(timestamp: Int(accountData.lastSeenPostCreatedAt))
+                    // 2 days ago to deal with NIP-17 randomized created_at
+                    let since: NTimestamp = NTimestamp(timestamp: Int(Date.now.addingTimeInterval(-2 * 24 * 60 * 60).timeIntervalSince1970))
                     bg().perform {
-                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[4], subscriptionId: taskId, since: since))
+                        req(RM.getMentions(pubkeys: [accountData.publicKey], kinds:[4,1059], subscriptionId: taskId, since: since))
                     }
                 },
                 processResponseCommand: { taskId, relayMessage, event in
