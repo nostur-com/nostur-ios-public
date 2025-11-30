@@ -9,6 +9,7 @@ import Foundation
 import CoreData
 
 // Returns inner reposted Event or nil`
+// This is Before .saveEvent()
 func handleRepost(_ event: NEvent, relays: String, bgContext: NSManagedObjectContext) throws -> Event? {
     if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
         if event.content == "" {
@@ -38,6 +39,63 @@ func handleRepost(_ event: NEvent, relays: String, bgContext: NSManagedObjectCon
         }
     }
     return nil
+}
+
+// This is in .saveEvent()
+// // kind6 - repost, the reposted post is put in as .firstQuote
+func handleRepost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
+    guard nEvent.kind == .repost else { return }
+    
+    savedEvent.firstQuoteId = kind6firstQuote?.id ?? nEvent.firstE()
+    
+    if let firstQuoteId = savedEvent.firstQuoteId, nEvent.publicKey == AccountsState.shared.activeAccountPublicKey {
+        // Update own reposted cache
+        Task { @MainActor in
+            accountCache()?.addReposted(firstQuoteId)
+            sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: firstQuoteId))
+        }
+    }
+    
+    if let kind6firstQuote {
+        CoreDataRelationFixer.shared.addTask({
+            guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: ".repost savedEvent.firstQuote = kind6firstQuote") else { return }
+            savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
+            
+            // if we already have the firstQuote (reposted post), we use that .pubkey
+            savedEvent.otherPubkey = kind6firstQuote.pubkey
+            
+            if let repostedEvent = savedEvent.firstQuote { // we already got firstQuote passed in as param
+                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+//                repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+            }
+            else {
+                // We need to get firstQuote from db or cache
+                if let firstE = nEvent.firstE() {
+                    if let repostedEvent = EventRelationsQueue.shared.getAwaitingBgEvent(byId: firstE) {
+                        if contextWontCrash([savedEvent, repostedEvent], debugInfo: "X savedEvent.firstQuote = repostedEvent") {
+                            savedEvent.firstQuote = repostedEvent // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
+                            repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                            //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                        }
+                    }
+                    else if let repostedEvent = Event.fetchEvent(id: firstE, context: context) {
+                        if contextWontCrash([savedEvent, repostedEvent], debugInfo: "X2 savedEvent.firstQuote = repostedEvent") {
+                            savedEvent.firstQuote = repostedEvent
+                            repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                            //                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
+                            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+                        }
+                    }
+                }
+            }
+        })
+    }
+    else if savedEvent.firstQuoteId != nil, let firstP = nEvent.firstP() { // or lastP?
+        // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+        savedEvent.otherPubkey = firstP
+    }
 }
 
 public enum ImportErrors: Error {

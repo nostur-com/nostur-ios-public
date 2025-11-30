@@ -1,5 +1,5 @@
 //
-//  PinnedPostsHandler.swift
+//  ZapHandler.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 30/11/2025.
