@@ -907,6 +907,7 @@ extension Event {
             QueuedFetcher.shared.addRecentId(id: event.id)
         }
         
+        // Generic handling for all events
         let savedEvent = Event(context: context)
         savedEvent.insertedAt = Date.now
         savedEvent.id = event.id
@@ -928,20 +929,8 @@ extension Event {
         }
         updateEventCache(event.id, status: .SAVED, relays: relays)
         
-        if event.kind == .profileBadges {
-            savedEvent.contact?.objectWillChange.send()
-        }
+        // Specific handling per kind
         
-        //        if event.kind == .badgeAward {
-        //            // find and notify all kind 30008 where serialized tags contains
-        //            // ["a","30009:aa77d356ac5a59dbedc78f0da17c6bdd3ae315778b5c78c40a718b5251391da6:test_badge"]
-        //            // notify any related profile badge
-        //            let profileBadges = Event.fetchProfileBadgesByATag(event.badgeA, context:context)
-        //            for pb in profileBadges {
-        //                pb.objectWillChange.send()
-        //            }
-        ////            sendNotification(.badgeAwardFetched)
-        //        }
         if event.kind == .badgeDefinition {
             // notify any related profile badge
             savedEvent.contact?.objectWillChange.send()

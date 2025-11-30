@@ -138,7 +138,9 @@ class Importer {
                     dict[event.id] = EventState(status: .SAVED, relays: event.relays)
                 }
                 self.existingIds = existingIds
+#if DEBUG
                 L.og.debug("\(self.existingIds.count) existing ids added to cache")
+#endif
             }
         }
     }
@@ -146,7 +148,9 @@ class Importer {
     // 876.00 ms    5.3%    0 s                   closure #1 in Importer.importEvents()
     public func importEvents() {
         guard !shouldBeDelaying else {
+#if DEBUG
             L.og.debug("🏎️🏎️ importEvents -- delaying")
+#endif
             return
         }
         bgContext.perform { [unowned self] in
@@ -193,7 +197,9 @@ class Importer {
                     
                     if (MessageParser.shared.isSignatureVerificationEnabled) {
                         guard try event.verified() else {
+#if DEBUG
                             L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
+#endif
                             continue
                         }
                     }
@@ -201,9 +207,11 @@ class Importer {
                     if message.subscriptionId == "Profiles" && event.kind == .setMetadata {
                         account()?.lastProfileReceivedAt = Date.now
                     }
-                                        
+                                     
+                    // Event should not already be .SAVED, else we skip. But do check for our own contact list received to enable Follow buttons
                     guard existingIds[event.id]?.status != .SAVED else {
                         alreadyInDBskipped = alreadyInDBskipped + 1
+                        // TODO: This needs improvement for multi-account handling
                         if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
                             DispatchQueue.main.async {
                                 FollowingGuardian.shared.didReceiveContactListThisSession = true
@@ -219,6 +227,7 @@ class Importer {
                         }
                         self.importedMessagesFromSubscriptionIds.send(alreadySavedSubs)
                         
+                        // For live chat rooms
                         if event.kind == .zapNote || event.kind == .chatMessage {
                             DispatchQueue.main.async {
                                 sendNotification(.receivedMessage, message)
