@@ -253,83 +253,16 @@ class Importer {
                     }
                     
                     var kind6firstQuote: Event?
-                    if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
-                        if event.content == "" {
-                            if let firstE = event.firstE() {
-                                kind6firstQuote = Event.fetchEvent(id: firstE, context: bgContext)
-                            }
-                        }
-                        else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: bgContext) {
-                                
-                                guard try noteInNote.verified() else {
-        #if DEBUG
-                                    L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
-        #endif
-                                    continue
-                                }
-                                kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
-                                
-                                if let kind6firstQuote = kind6firstQuote {
-                                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
-                                        NeedsUpdateInfo(event: kind6firstQuote)
-                                    )
-                                }
-                            }
-                            else {
-                                Event.updateRelays(noteInNote.id, relays: message.relays, context: bgContext)
-                            }
-                        }
-                    }
-                    
-                    if event.kind == .latestPinned, let firstE = event.firstE() {
-                        // if we don't already have the to be pinned post (in .content), we decode and save it
-                        if !Event.eventExists(id: firstE, context: bgContext) && event.content.prefix(2) == #"{""# {
-                            if let toBePinnedPost = try? Importer.shared.decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                                
-                                guard try toBePinnedPost.verified() else  {
-#if DEBUG
-                                    L.importing.info("🔴🔴😡😡 hey invalid sig yo 😡😡")
-#endif
-                                    continue
-                                }
-                                
-                                
-                                let toBePinnedPostEvent = Event.saveEvent(event: toBePinnedPost, relays: message.relays, context: bgContext)
-                                FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
-                                    NeedsUpdateInfo(event: toBePinnedPostEvent)
-                                )
-                                Event.updateRelays(toBePinnedPost.id, relays: message.relays, context: bgContext)
-                            }
-                        }
-                    }
-                    
-                    if event.kind == .contactList {
-                        if event.publicKey == EXPLORER_PUBKEY {
-                            // use explorer account p's for "Explorer" feed
-                            let pTags = event.pTags()
-                            Task { @MainActor in
-                                AppState.shared.rawExplorePubkeys = Set(pTags)
-                            }
-                        }
-                        if event.publicKey == AccountsState.shared.activeAccountPublicKey { // To enable Follow button we need to have received a contact list
-                            DispatchQueue.main.async {
-                                FollowingGuardian.shared.didReceiveContactListThisSession = true
-#if DEBUG
-                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
-#endif
-                            }
-                        }
-
+                    do {
+                        kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext)
                         
-                        // Send new following list notification, but skip if it is for building the Web of Trust
-                        if let subId = message.subscriptionId, subId.prefix(7) != "WoTFol-" {
-                            let n = event
-                            DispatchQueue.main.async {
-                                sendNotification(.newFollowingListFromRelay, n)
-                            }
-                        }
+                        try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext)
                     }
+                    catch ImportErrors.InvalidSignature {
+                        continue
+                    }
+
+                    handleContactList(event, subscriptionId: message.subscriptionId)
                     
                     // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
@@ -530,54 +463,16 @@ class Importer {
                     }
                     
                     var kind6firstQuote: Event?
-                    if event.kind == .repost && (event.content.prefix(2) == #"{""# || event.content == "") {
-                        if event.content == "" {
-                            if let firstE = event.firstE() {
-                                kind6firstQuote = Event.fetchEvent(id: firstE, context: bgContext)
-                            }
-                        }
-                        else if let noteInNote = try? decoder.decode(NEvent.self, from: event.content.data(using: .utf8, allowLossyConversion: false)!) {
-                            if !Event.eventExists(id: noteInNote.id, context: bgContext) {
-                                kind6firstQuote = Event.saveEvent(event: noteInNote, relays: message.relays, context: bgContext)
-                                
-                                if let kind6firstQuote = kind6firstQuote {
-                                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
-                                        NeedsUpdateInfo(event: kind6firstQuote)
-                                    )
-                                }
-                            }
-                            else {
-                                Event.updateRelays(noteInNote.id, relays: message.relays, context: bgContext)
-                            }
-                        }
+                    do {
+                        kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext)
+                        
+                        try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext)
+                    }
+                    catch ImportErrors.InvalidSignature {
+                        continue
                     }
                     
-                    if event.kind == .contactList {
-                        if event.publicKey == EXPLORER_PUBKEY {
-                            // use explorer account p's for "Explorer" feed
-                            let pTags = event.pTags()
-                            Task { @MainActor in
-                                AppState.shared.rawExplorePubkeys = Set(pTags)
-                            }
-                        }
-                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
-                            DispatchQueue.main.async {
-                                FollowingGuardian.shared.didReceiveContactListThisSession = true
-#if DEBUG
-                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
-#endif
-                            }
-                        }
-
-                        
-                        // Send new following list notification, but skip if it is for building the Web of Trust
-                        if let subId = message.subscriptionId, subId.prefix(7) != "WoTFol-" {
-                            let n = event
-                            DispatchQueue.main.async {
-                                sendNotification(.newFollowingListFromRelay, n)
-                            }
-                        }
-                    }
+                    handleContactList(event, subscriptionId: message.subscriptionId)
                     
                     // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
                     let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext)
