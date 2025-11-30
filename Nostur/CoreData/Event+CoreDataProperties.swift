@@ -230,11 +230,9 @@ extension Event {
 
 extension Event {
     
-    var shortId: String {
-        String(id.prefix(8))
-    }
+    var shortId: String { String(id.prefix(8)) }
     
-    var isSpam:Bool {
+    var isSpam: Bool {
         // combine all the checks here
         
         if kind == 9735, let zapReq = zapFromRequest, zapReq.naiveSats >= 250 { // TODO: Make amount configurable
@@ -279,17 +277,11 @@ extension Event {
         return NRTextParser.shared.copyPasteText(fastTags: self.fastTags, event: self, text: self.content ?? "").text
     }
     
-    var date: Date {
-        get {
-            Date(timeIntervalSince1970: Double(created_at))
-        }
-    }
+    var date: Date { Date(timeIntervalSince1970: Double(created_at)) }
     
     var ago: String { date.agoString }
     
-    var authorKey: String {
-        String(pubkey.prefix(5))
-    }
+    var authorKey: String { String(pubkey.prefix(5)) }
     
     var noteText: String {
         if kind == 4 {
@@ -323,13 +315,13 @@ extension Event {
         return newText
     }
     
-    var noteId:String {
+    var noteId: String {
         try! NIP19(prefix: "note", hexString: id).displayString
     }
     
-    var npub:String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
+    var npub: String { try! NIP19(prefix: "npub", hexString: pubkey).displayString }
     
-    var via:String? { fastTags.first(where: { $0.0 == "client" })?.1 }
+    var via: String? { fastTags.first(where: { $0.0 == "client" })?.1 }
     
     static func textNotes(byAuthorPubkey:String? = nil) -> NSFetchRequest<Event> {
         
@@ -971,7 +963,7 @@ extension Event {
         }
     }
     
-    static func zapsForEvent(_ id:String, context:NSManagedObjectContext) -> [Event] {
+    static func zapsForEvent(_ id: String, context: NSManagedObjectContext) -> [Event] {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = NSPredicate(format: "zappedEventId == %@ AND kind == 9735", id)
