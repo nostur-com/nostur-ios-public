@@ -30,9 +30,9 @@ struct NotificationsMentions: View {
     }
     
     var body: some View {
-        #if DEBUG
+#if DEBUG
         let _ = Self._printChanges()
-        #endif
+#endif
         ScrollViewReader { proxy in
             List {
                 ForEach (model.mentions) { nrPost in
