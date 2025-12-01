@@ -641,6 +641,13 @@ extension Event {
         return (try? context.fetch(fr)) ?? []
     }
     
+    static func fetchEventsBy(pubkey: String, andKinds kinds: Set<Int>, context: NSManagedObjectContext) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN %@", pubkey, kinds)
+        return (try? context.fetch(fr)) ?? []
+    }
+    
     static func fetchEventsBy(kind: Int, context: NSManagedObjectContext) -> [Event] {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -654,6 +661,17 @@ extension Event {
         fr.predicate = otherPubkey != nil
             ? NSPredicate(format: "pubkey == %@ AND otherPubkey == %@ AND kind == %d", pubkey, otherPubkey!, kind)
             : NSPredicate(format: "pubkey == %@ AND kind == %d", pubkey, kind)
+        fr.fetchLimit = 1
+        fr.fetchBatchSize = 1
+        return try? context.fetch(fr).first
+    }
+    
+    static func fetchMostRecentEventBy(pubkey: String, andOtherPubkey otherPubkey: String? = nil, andKinds kinds: Set<Int>, context: NSManagedObjectContext) -> Event? {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = otherPubkey != nil
+            ? NSPredicate(format: "pubkey == %@ AND otherPubkey == %@ AND kind IN %@", pubkey, otherPubkey!, kinds)
+            : NSPredicate(format: "pubkey == %@ AND kind IN %d", pubkey, kinds)
         fr.fetchLimit = 1
         fr.fetchBatchSize = 1
         return try? context.fetch(fr).first

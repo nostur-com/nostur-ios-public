@@ -985,7 +985,7 @@ struct Maintenance {
         
         // Find DMs sent to our full account pubkeys
         let fr1 = Event.fetchRequest()
-        fr1.predicate = NSPredicate(format: "kind == 4 AND NOT otherPubkey == nil AND otherPubkey IN %@", fullAccountPubkeys)
+        fr1.predicate = NSPredicate(format: "kind IN {4,14} AND NOT otherPubkey == nil AND otherPubkey IN %@", fullAccountPubkeys)
         guard let dmsReceived = try? context.fetch(fr1) else { return }
         
         // Which DM states do we already have?

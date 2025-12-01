@@ -8,8 +8,9 @@
 import Foundation
 import CoreData
 
+// Kind 4 handling, for now we can reuse for kind 14
 func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext) {
-    guard nEvent.kind == .directMessage else { return }
+    guard nEvent.kind == .legacyDirectMessage || nEvent.kind == .directMessage else { return }
     
     // needed to fetch contact in DMS: so event.firstP is in event.contacts
     savedEvent.otherPubkey = nEvent.firstP()

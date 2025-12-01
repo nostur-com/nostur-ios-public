@@ -34,7 +34,7 @@ struct NewDMComposer: View {
                 guard let pk = la.account.privateKey else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
                 guard let theirPubkey = toPubkey else { return }
                 var nEvent = NEvent(content: message)
-                nEvent.kind = .directMessage
+                nEvent.kind = .legacyDirectMessage
                 if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                     nEvent.content = replaceNsecWithHunter2(nEvent.content)
                 }

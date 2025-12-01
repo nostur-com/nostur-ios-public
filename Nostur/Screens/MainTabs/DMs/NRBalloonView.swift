@@ -46,7 +46,7 @@ struct NRBalloonView: View {
                         Text(time)
                             .frame(alignment: isSentByCurrentUser ? .leading : .trailing)
                             .font(.footnote)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(event.kind == 4 ? .secondary : .primary)
                             .padding(.bottom, 8)
                             .padding(isSentByCurrentUser ? .leading : .trailing, 5)
                     }

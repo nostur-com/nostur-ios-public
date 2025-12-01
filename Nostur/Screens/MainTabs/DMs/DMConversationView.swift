@@ -108,14 +108,14 @@ struct DMConversationView: View {
         let theirs = Event.fetchRequest()
         
         theirs.predicate = NSPredicate(
-            format: "kind == 4 AND pubkey == %@ AND tagsSerialized CONTAINS %@", theirPubkey ?? "ERROR", serializedP(pubkey))
+            format: "kind IN {4,14} AND pubkey == %@ AND tagsSerialized CONTAINS %@", theirPubkey ?? "ERROR", serializedP(pubkey))
         theirs.fetchLimit = 500
         theirs.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _theirs = FetchRequest(fetchRequest: theirs)
         
         let mine = Event.fetchRequest()
         mine.predicate = NSPredicate(
-            format: "kind == 4 AND pubkey == %@ AND tagsSerialized CONTAINS %@", pubkey, serializedP(theirPubkey ?? "ERROR"))
+            format: "kind IN {4,14} AND pubkey == %@ AND tagsSerialized CONTAINS %@", pubkey, serializedP(theirPubkey ?? "ERROR"))
         mine.fetchLimit = 500
         mine.sortDescriptors = [NSSortDescriptor(keyPath:\Event.created_at, ascending: false)]
         _mine = FetchRequest(fetchRequest: mine)
@@ -286,7 +286,7 @@ struct DMConversationView: View {
                                     if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
                                         nEvent.content = replaceNsecWithHunter2(nEvent.content)
                                     }
-                                    nEvent.kind = .directMessage
+                                    nEvent.kind = .legacyDirectMessage
                                     guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
                                         L.og.error("🔴🔴 Could encrypt content")
                                         return

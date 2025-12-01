@@ -217,12 +217,12 @@ class DirectMessageViewModel: ObservableObject {
             let accepted = conv.accepted
             
             bg().perform {
-                let mostRecentSent = Event.fetchMostRecentEventBy(pubkey: accountPubkey, andOtherPubkey: contactPubkey, andKind: 4, context: bg())
+                let mostRecentSent = Event.fetchMostRecentEventBy(pubkey: accountPubkey, andOtherPubkey: contactPubkey, andKinds: [4,14], context: bg())
                 
                 let unreadSince = (convMarkedReadAt ?? (mostRecentSent?.date ?? Date(timeIntervalSince1970: 0)))
                 
                 // Not just most recent, but all so we can also count unread
-                let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKind: 4, context: bg())
+                let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKinds: [4,14], context: bg())
                     .filter { $0.pTags().contains(where: { $0 == pubkey }) }
                 
                 let mostRecent = ([mostRecentSent] + allReceived)
@@ -305,7 +305,7 @@ class DirectMessageViewModel: ObservableObject {
             
             bg().perform {
                 // Not just most recent, but all so we can also count unread
-                let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKind: 4, context: bg())
+                let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKinds: [4,14], context: bg())
                     .filter { $0.pTags().contains(where: { $0 == pubkey }) }
 
                 let mostRecent = allReceived.first
@@ -378,7 +378,7 @@ class DirectMessageViewModel: ObservableObject {
             
             bg().perform {
                 // Not just most recent, but all so we can also count unread
-                let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKind: 4, context: bg())
+                let allReceived = Event.fetchEventsBy(pubkey: contactPubkey, andKinds: [4,14], context: bg())
                     .filter { $0.pTags().contains(where: { $0 == pubkey }) }
 
                 let mostRecent = allReceived.first
