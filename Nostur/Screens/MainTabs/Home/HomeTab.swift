@@ -35,6 +35,7 @@ struct HomeTab: View {
         #endif
         NBNavigationStack(path: $navPath) {
             MainFeedsScreen(showingOtherContact: $showingOtherContact)
+                .environmentObject(VideoPostPlaybackCoordinator())
                 .background(theme.listBackground)
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()

@@ -91,6 +91,8 @@ struct NXColumnView<HeaderContent: View>: View {
             }
         }
         
+        .environmentObject(VideoPostPlaybackCoordinator())
+        
         .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
 //            LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)

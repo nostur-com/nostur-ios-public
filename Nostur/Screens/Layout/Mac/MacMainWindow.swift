@@ -38,6 +38,7 @@ struct MacMainWindow: View {
                     // Main list (following/notifications/bookmarks)
                     TabView(selection: $vm.selectedTab) {
                             PhoneViewIsh()
+                                .environmentObject(VideoPostPlaybackCoordinator())
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Main")

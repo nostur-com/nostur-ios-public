@@ -26,6 +26,7 @@ struct NotificationsContainer: View {
                     AppState.shared.containerIDTapped = "Notifications"
                 }))
                 .background(theme.listBackground)
+                .environmentObject(VideoPostPlaybackCoordinator())
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
                 .withNavigationDestinations()
                 .environment(\.containerID, "Notifications")

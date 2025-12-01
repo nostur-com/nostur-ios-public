@@ -66,6 +66,7 @@ struct BookmarksTab: View {
                 }
                 AudioOnlyBarSpace()
             }
+            .environmentObject(VideoPostPlaybackCoordinator())
             .background(theme.listBackground) // screen / toolbar background
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()

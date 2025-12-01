@@ -9,14 +9,11 @@ import SwiftUI
 
 class VideoPostPlaybackCoordinator: ObservableObject {
     
-    static let shared = VideoPostPlaybackCoordinator()
-    
-    private init() { }
-    
     @Published var mostVisiblePostID: String? = nil
     private var visibilities: [String: CGFloat] = [:]
     
     func reportVisibility(postID: String, visibility: CGFloat) {
+        guard visibility > 0.2 else { return }
         visibilities[postID] = visibility
         updateMostVisible()
     }
@@ -156,13 +153,15 @@ struct VideoPost: View {
     @Previewable @State var nrPost3 = testNRPost(###"{"pubkey":"9f47da7bd83fd1012912d622a76b91404d48460713bcbd412d22d751cd4af6a9","id":"5f1cf60afbe9c3c5272b7a8b9f14901dde5818b8037de8e73a4354c87efa2fd5","sig":"cdf9240a5e4df33e8927acfe4b436513668436d240fd5f65037e787e2bce9788809c59c6f94e8e159c1e5885eb216b531726f5cde63d41820f12b451549c5880","created_at":1763542742,"kind":34236,"content":"","tags":[["d","24f4575762bf45c9c56bdbf84e9c3e6c69cba0a4989d097b5916c98b634dd9d6"],["imeta","url https://stream.divine.video/f44dd1ab-5143-49be-982e-2cfce708b275/play_480p.mp4","url https://cdn.divine.video/24f4575762bf45c9c56bdbf84e9c3e6c69cba0a4989d097b5916c98b634dd9d6.mp4","url https://stream.divine.video/f44dd1ab-5143-49be-982e-2cfce708b275/playlist.m3u8","m video/mp4","image https://stream.divine.video/f44dd1ab-5143-49be-982e-2cfce708b275/thumbnail.jpg","size 329039","x 24f4575762bf45c9c56bdbf84e9c3e6c69cba0a4989d097b5916c98b634dd9d6","blurhash L7Eo_A.9ty4ULVkWx:D%9vxt$*-;"],["title","🪿"],["summary",""],["client","openvine"],["published_at","1763542772"],["duration","1"],["alt","🪿"]]}"###)
     @Previewable @State var nrPost4 = testNRPost(###"{"created_at":1763524451,"kind":34236,"id":"aa7babce662cf7e37f54fb003cf1281cd6531281d61cedf70b69f5923785e472","tags":[["d","6853b35c3f1ca34ef645f0422f7f12a0fc2e41c2d6843f5bfdd792c54e142d05"],["imeta","url https://stream.divine.video/98e3775b-da5b-4334-a77d-5fdaae43b752/play_480p.mp4","url https://cdn.divine.video/6853b35c3f1ca34ef645f0422f7f12a0fc2e41c2d6843f5bfdd792c54e142d05.mp4","url https://stream.divine.video/98e3775b-da5b-4334-a77d-5fdaae43b752/playlist.m3u8","m video/mp4","image https://stream.divine.video/98e3775b-da5b-4334-a77d-5fdaae43b752/thumbnail.jpg","size 1790038","x 6853b35c3f1ca34ef645f0422f7f12a0fc2e41c2d6843f5bfdd792c54e142d05","blurhash LUJHEls8ozNd4TxZofE2xuWCV@of"],["title",""],["summary",""],["client","openvine"],["published_at","1763524481"],["duration","6"],["alt",""]],"sig":"82542fb2f27c373d55d923a1a7f1095e7d81f804227e647f70a5b5b7beb3a1c6c0c9ffe274ceab62677b0d76bcef2dab25910bc065447ab8452b9f3da1d7a173","pubkey":"963368c4f9c0cf140daab566d293530661c4d7d67d03802ba4a5a83fe57964b3","content":""}"###)
     @Previewable @State var nrPost1 = testNRPost(###"{"pubkey":"d95aa8fc0eff8e488952495b8064991d27fb96ed8652f12cdedc5a4e8b5ae540","id":"aee89fd7513f8d47521af565f74b07f5d03b0c4c6fcf1849288486039d702a8f","created_at":1763516777,"kind":34236,"sig":"7709c27a2d88886d0631fd597b444df1092ffc778a369f055c13bba3a75c2092fd0ae89086bf6dd4b4227ca0e0ac945a8239309d11ab19f4626fab8529e4b96a","tags":[["d","8e97d65e2119b013e8a08edbd5ad873a19e334b6832a77687d070d812fc021d4"],["imeta","url https://stream.divine.video/23923e2c-4cc4-4179-95c3-484910983162/play_480p.mp4","url https://cdn.divine.video/8e97d65e2119b013e8a08edbd5ad873a19e334b6832a77687d070d812fc021d4.mp4","url https://stream.divine.video/23923e2c-4cc4-4179-95c3-484910983162/playlist.m3u8","m video/mp4","image https://stream.divine.video/23923e2c-4cc4-4179-95c3-484910983162/thumbnail.jpg","size 2128663","x 8e97d65e2119b013e8a08edbd5ad873a19e334b6832a77687d070d812fc021d4","blurhash L26*H,%50$R%Hqs5J%IXz?o59vt5"],["title",""],["summary",""],["client","openvine"],["published_at","1763516807"],["duration","6"],["alt",""]],"content":""}"###)
+    
+    @Previewable @State var nrPost0 = testNRPost(###"{"sig":"d2a31097744da5d832eae04ebfc7a34550734a3cce2c8dcd3d80cdcc6e6e3514b1c6aec8c375f5ce0570f3f3dce2c2676c6417d745459ad1183656da99b9be60","id":"3aae55dda8447723201b0004cd499805f35aa65922539814a26dced9ad3f901d","kind":34236,"created_at":1764602437,"tags":[["d","dbe0753abb1d456f24f22a6b76fe8486ea4ade3cdb9f13a794425a5859fe2b75"],["title","Vine test"],["summary","Fire"],["published_at","1764602437"],["duration","2"],["client","damus"],["url","https://cdn.divine.video/dbe0753abb1d456f24f22a6b76fe8486ea4ade3cdb9f13a794425a5859fe2b75.mp4"],["imeta","url https://cdn.divine.video/dbe0753abb1d456f24f22a6b76fe8486ea4ade3cdb9f13a794425a5859fe2b75.mp4","hls https://cdn.divine.video/dbe0753abb1d456f24f22a6b76fe8486ea4ade3cdb9f13a794425a5859fe2b75.mp4","fallback https://cdn.divine.video/dbe0753abb1d456f24f22a6b76fe8486ea4ade3cdb9f13a794425a5859fe2b75.mp4","m video/mp4","dim 1080x1920","x dbe0753abb1d456f24f22a6b76fe8486ea4ade3cdb9f13a794425a5859fe2b75"]],"content":"Fire","pubkey":"17538dc2a62769d09443f18c37cbe358fab5bbf981173542aa7c5ff171ed77c4"}"###)
 
     PreviewContainer({ pe in
         
     }) {
         PreviewApp {
             GeometryReader { geo in
-                let posts = [nrPost1, nrPost2, nrPost3, nrPost4, nrPost5]
+                let posts = [nrPost0, nrPost1, nrPost2, nrPost3, nrPost4, nrPost5]
                 if #available(iOS 17.0, *) {
                     ScrollView(.vertical, showsIndicators: false) {
                         LazyVStack(spacing: 0, pinnedViews: []) {
@@ -186,7 +185,7 @@ struct VideoPost: View {
                 }
             }
         }
-        .environmentObject(VideoPostPlaybackCoordinator.shared)
+        .environmentObject(VideoPostPlaybackCoordinator())
     }
 }
 

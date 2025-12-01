@@ -112,10 +112,12 @@ struct NavigationDestinationsModifier: ViewModifier {
                 case 30023:
                     ArticleView(nrPost, isDetail: true, fullWidth: SettingsStore.shared.fullWidthImages, hideFooter: false)
                         .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
                 case 30311:
                     if let nrLiveEvent = nrPost.nrLiveEvent {
                         LiveEventDetail(liveEvent: nrLiveEvent)
                             .environment(\.containerID, self.containerID)
+                            .environmentObject(VideoPostPlaybackCoordinator())
                     }
                     else {
                         Text("Missing nrLiveEvent")
@@ -123,6 +125,7 @@ struct NavigationDestinationsModifier: ViewModifier {
                 default:
                     PostDetailView(nrPost: nrPost)
                         .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
 //                        .equatable()
 //                        .debugDimensions("nbNavigationDestination.PostDetailView", alignment: .topLeading)
                 }
@@ -132,52 +135,64 @@ struct NavigationDestinationsModifier: ViewModifier {
                 case 30311:
                     LiveEventByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
                         .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
                 default:
                     ArticleByNaddr(naddr1: path.naddr1, navigationTitle: path.navigationTitle)
                         .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
                 }
             }
             .nbNavigationDestination(for: NRLiveEvent.self) { nrLiveEvent in
                 LiveEventDetail(liveEvent: nrLiveEvent)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: ArticlePath.self) { path in
                 ArticleById(id: path.id, navigationTitle: path.navigationTitle)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: ArticleCommentsPath.self) { articleCommentsPath in
                 ArticleCommentsView(article: articleCommentsPath.article)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: NotePath.self) { path in
                 NoteById(id: path.id)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: ContactPath.self) { path in
                 ProfileByPubkey(pubkey: path.key, tab: path.tab)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: NRContactPath.self) { path in
                 ProfileView(nrContact: path.nrContact, tab: path.tab)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: NRContact.self) { nrContact in
                 ProfileView(nrContact: nrContact)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: Badge.self) { badge in
                 BadgeDetailView(badge: badge.badge)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: CloudFeed.self) { feed in
                 FeedSettings(feed: feed)
                     .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: ViewPath.self) { path in
                 switch (path) {
                     case .Post(let post):
                         PostDetailView(nrPost: post)
                             .environment(\.containerID, self.containerID)
+                            .environmentObject(VideoPostPlaybackCoordinator())
                     case .Blocklist:
                         BlockListScreen()
                             .tabBarSpaceCompat()

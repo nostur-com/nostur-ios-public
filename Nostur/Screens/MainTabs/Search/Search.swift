@@ -136,6 +136,7 @@ struct Search: View {
                 }
             }
             .background(theme.listBackground)
+            .environmentObject(VideoPostPlaybackCoordinator())
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
             .withNavigationDestinations()
             .environment(\.containerID, "Search")

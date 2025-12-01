@@ -276,6 +276,7 @@ struct DMContainer: View {
             }
             else {
                 DMs(pubkey: la.account.publicKey)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             
             AudioOnlyBarSpace()

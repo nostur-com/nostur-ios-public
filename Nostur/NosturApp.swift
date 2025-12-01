@@ -66,7 +66,6 @@ struct iOSApp: App {
     private let backlog: Backlog = .shared
     private let cloudSyncManager: CloudSyncManager = .shared
     private let vmc: ViewModelCache = .shared
-    private let vppc: VideoPostPlaybackCoordinator = .shared
     
     private let puc: LRUCache2<String, String> = PubkeyUsernameCache.shared
     private let nrcc: LRUCache2<String, NRContact> = NRContactCache.shared
