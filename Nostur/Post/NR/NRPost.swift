@@ -118,6 +118,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var groupedReplies = [NRPost]()
     
     let isRepost: Bool
+    let isRumor: Bool // no sig and .otherId not nil means rumor. .otherId is from the outer giftwrap id
 
     var threadPostsCount: Int
     var isTruncated: Bool = false
@@ -365,6 +366,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self._repliesToRoot = []
         self.threadPostsCount = 1 + event.parentEvents.count
         self.isRepost = event.kind == 6 || (event.kind == 1 && event.content == "#[0]" && event.firstE() != nil)
+        self.isRumor = event.otherId != nil && event.sig == nil
         
         self.firstQuoteId = event.firstQuoteId
         if let firstQuote = event.firstQuote, let firstQuoteId = event.firstQuoteId {
