@@ -1023,8 +1023,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         sendNotification(.postAction, PostActionNotification(type: .reacted(uuid, reactionContent), eventId: self.id))
         bg().perform { [weak self] in
             guard let event = self?.event else { return }
-            event.likesCount += 1
-
             if let accountCache = accountCache() {
                 accountCache.addReaction(event.id, reactionType: reactionContent)
             }
@@ -1037,9 +1035,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.footerAttributes.ourReactions.remove(reactionContent)
         sendNotification(.postAction, PostActionNotification(type: .unreacted(reactionContent), eventId: self.id))
         bg().perform { [weak self] in
-            guard let event = self?.event else { return }
-            event.likesCount -= 1
-            
+            guard let event = self?.event else { return }            
             if let accountCache = accountCache() {
                 accountCache.removeReaction(event.id, reactionType: reactionContent)
             }
