@@ -309,7 +309,7 @@ struct Maintenance {
         
         // CLEAN UP EVENTS WITHOUT SIG (BUG FROM PostPreview)
         let frNoSig = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-        frNoSig.predicate = NSPredicate(format: "sig == nil AND flags != \"nsecbunker_unsigned\"")
+        frNoSig.predicate = NSPredicate(format: "(sig == nil OR sig == \"\") AND flags != \"nsecbunker_unsigned\" AND otherId == nil")
         
         let frNoSigbatchDelete = NSBatchDeleteRequest(fetchRequest: frNoSig)
         frNoSigbatchDelete.resultType = .resultTypeCount

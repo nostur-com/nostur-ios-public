@@ -25,9 +25,9 @@ class OfflinePosts {
                                             "created_at > %i " +
                                             "AND pubkey = %@ " +
                                             "AND kind IN {0,1,1111,1222,1244,3,4,5,6,7,20,9802,34235} " +
-                                            "AND relays = \"\"" +
+                                            "AND (relays = \"\" OR relays = nil)" +
                                             "AND NOT flags IN {\"nsecbunker_unsigned\",\"awaiting_send\",\"draft\"}" +
-                                            "AND sig != nil",
+                                            "AND sig != nil AND sig != \"\"",
                                             Int64(xDaysAgo.timeIntervalSince1970),
                                             pubkey)
                 r1.fetchLimit = 100 // sanity
