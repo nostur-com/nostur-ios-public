@@ -32,7 +32,7 @@ public class CloudAccount: NSManagedObject {
         })
     }
     
-    public func getFollowingPublicKeys(includeBlocked:Bool = false) -> Set<String> {
+    public func getFollowingPublicKeys(includeBlocked: Bool = false) -> Set<String> {
         let withSelfIncluded = Set([publicKey]).union(followingPubkeys)
         if includeBlocked {
             return withSelfIncluded
