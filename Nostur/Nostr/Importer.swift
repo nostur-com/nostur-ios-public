@@ -131,11 +131,17 @@ class Importer {
             
             let fr = Event.fetchRequest()
             fr.fetchLimit = 1_000_000
-            fr.propertiesToFetch = ["id", "relays"]
+            fr.propertiesToFetch = ["id", "relays", "otherId", "kind"]
             
             if let results = try? bgContext.fetch(fr) {
                 let existingIds = results.reduce(into: [String: EventState]()) { (dict, event) in
-                    dict[event.id] = EventState(status: .SAVED, relays: event.relays)
+                    if event.kind == 1059, let otherId = event.otherId { // Rumor events we store the outer wrap id as .SAVED so we don't unwrap again
+                        dict[otherId] = EventState(status: .SAVED, relays: event.relays)
+                    }
+                    else {
+                        dict[event.id] = EventState(status: .SAVED, relays: event.relays)
+                    }
+                    
                 }
                 self.existingIds = existingIds
 #if DEBUG
@@ -220,7 +226,7 @@ class Importer {
 #endif
                             }
                         }
-                        Event.updateRelays(event.id, relays: message.relays, context: bgContext)
+                        Event.updateRelays(event.id, relays: message.relays, isWrapId: event.kind.id == 1059, context: bgContext)
                         var alreadySavedSubs = Set<String>()
                         if let subscriptionId = message.subscriptionId {
                             alreadySavedSubs.insert(subscriptionId)
@@ -364,7 +370,7 @@ class Importer {
 #endif
                             }
                         }
-                        Event.updateRelays(event.id, relays: message.relays, context: bgContext)
+                        Event.updateRelays(event.id, relays: message.relays, isWrapId: event.kind.id == 1059, context: bgContext)
                         var alreadySavedSubs = Set<String>()
                         if let subscriptionId = message.subscriptionId {
                             alreadySavedSubs.insert(subscriptionId)

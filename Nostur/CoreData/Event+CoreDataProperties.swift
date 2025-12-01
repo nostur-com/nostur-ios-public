@@ -882,7 +882,7 @@ extension Event {
             let uniqueRelays = Set(relays)
             savedEvent.relays = uniqueRelays.joined(separator: " ")
         }
-        updateEventCache(event.id, status: .SAVED, relays: relays)
+        updateEventCache(wrapId ?? event.id, status: .SAVED, relays: relays)
         
         if (event.kind == .shortVoiceMessage || event.kind == .textNote || NIP22_COMMENT_KINDS.contains(event.kind.id)) {
             EventCache.shared.setObject(for: event.id, value: savedEvent)
