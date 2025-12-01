@@ -154,7 +154,7 @@ struct KindResolver: View {
                 .onDisappear { self.dequeue() }
             
         case 22,34236: // Short videos
-            VideoPost(nrPost: nrPost, isDetail: isDetail, isVisible: isVisible, theme: theme)
+            VideoPost(nrPost: nrPost, isDetail: isDetail, isEmbedded: isEmbedded, isVisible: isVisible, theme: theme)
                 .onAppear { self.enqueue() }
                 .onDisappear { self.dequeue() }
 //            if let eventUrl = nrPost.eventUrl {

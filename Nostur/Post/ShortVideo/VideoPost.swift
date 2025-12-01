@@ -34,13 +34,14 @@ class VideoPostPlaybackCoordinator: ObservableObject {
 }
 
 struct VideoPost: View {
-    
+    @Environment(\.nxViewingContext) private var nxViewingContext
     @Environment(\.availableHeight) private var availableHeight: CGFloat
     @Environment(\.availableWidth) private var availableWidth: CGFloat
     @EnvironmentObject private var coordinator: VideoPostPlaybackCoordinator
     
     public let nrPost: NRPost
     public var isDetail: Bool = false
+    public var isEmbedded: Bool = false
     public var isVisible: Bool = true
     public let theme: Theme
     
@@ -50,14 +51,21 @@ struct VideoPost: View {
     
     @State var canPlay = true
     
+    private var videoWidth: CGFloat {
+        if nxViewingContext.contains(.postParent) {
+            return availableWidth - 20
+        }
+        return availableWidth
+    }
+    
     var body: some View {
         VideoPostLayout(nrPost: nrPost, theme: theme) {
             if let videoURL = nrPost.eventUrl {
                 if #available(iOS 16.0, *) {
                     ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying)
-                        .frame(width: availableWidth, height: min((availableWidth*3), availableHeight))
+                        .frame(width: videoWidth, height: min((videoWidth*3), availableHeight))
                         .background(Color.black)
-                        .frame(width: availableWidth, height: availableHeight)
+                        .frame(width: videoWidth, height: availableHeight)
                         .onTapGesture { isPlaying.toggle() }
                         .modifier {
                             if !isDetail {
@@ -93,9 +101,9 @@ struct VideoPost: View {
                 } else {
                     GeometryReader { geo in
                         ShortVideoPlayer(url: videoURL, isPlaying: $isPlaying)
-                            .frame(width: availableWidth, height: min((availableWidth*3), availableHeight))
+                            .frame(width: videoWidth, height: min((videoWidth*3), availableHeight))
                             .background(Color.black)
-                            .frame(width: availableWidth, height: availableHeight)
+                            .frame(width: videoWidth, height: availableHeight)
                             .onTapGesture { isPlaying.toggle() }
                             .modifier {
                                 if !isDetail {
@@ -123,7 +131,7 @@ struct VideoPost: View {
                                 else { $0 }
                             }
                     }
-                    .frame(width: availableWidth, height: availableHeight)
+                    .frame(width: videoWidth, height: availableHeight)
                 }
             }
         }
