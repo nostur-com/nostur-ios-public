@@ -33,6 +33,9 @@ struct LightningWalletPicker: View {
                         else {
                             settings.defaultLightningWallet = LightningWallet(name: "Custom Nostr Wallet Connect...", scheme: "nostur:nwc:custom:")
                         }
+                        Task {
+                            await initializeNWCConnection()
+                        }
                     }
             }
         } label: {
