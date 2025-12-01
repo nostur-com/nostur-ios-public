@@ -97,4 +97,46 @@ func handleComment(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectCo
             sendNotification(.postAction, PostActionNotification(type: .replied, eventId: replyToId))
         }
     }
+    
+    // If still nothing, check for reply to A/a tag
+    guard savedEvent.replyToId == nil else { return }
+    
+    if let replyToAtag = nEvent.replyToAtag() { // Comment on article
+        if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
+            savedEvent.replyToId = dbArticle.id
+            CoreDataRelationFixer.shared.addTask({
+                guard contextWontCrash([savedEvent, dbArticle], debugInfo: "HH savedEvent.replyTo = dbArticle") else { return }
+                savedEvent.replyTo = dbArticle
+            })
+            
+            dbArticle.addToReplies(savedEvent)
+            dbArticle.repliesCount += 1
+//                    dbArticle.repliesUpdated.send(dbArticle.replies_)
+            ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: dbArticle.id, replies: dbArticle.replies_))
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: dbArticle.id, replies: dbArticle.repliesCount))
+        }
+        else {
+            // we don't have the article yet, store aTag in replyToId
+            savedEvent.replyToId = replyToAtag.value
+        }
+    }
+    else if let replyToRootAtag = nEvent.replyToRootAtag() {
+        // Comment has article as root, but replying to other comment, not to article.
+        if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
+            savedEvent.replyToRootId = dbArticle.id
+            CoreDataRelationFixer.shared.addTask({
+                guard contextWontCrash([savedEvent, dbArticle], debugInfo: "GG savedEvent.replyToRoot = dbArticle") else { return }
+                savedEvent.replyToRoot = dbArticle
+            })
+        }
+        else {
+            // we don't have the article yet, store aTag in replyToRootId
+            savedEvent.replyToRootId = replyToRootAtag.value
+        }
+        
+        // if there is no replyTo (e or a) then the replyToRoot is the replyTo
+        // but check first if we maybe have replyTo from e tags
+        savedEvent.replyToId = replyToRootAtag.value
+    }
+    
 }

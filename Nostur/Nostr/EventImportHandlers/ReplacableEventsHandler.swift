@@ -63,7 +63,7 @@ func handleAddressableReplacableEvent(nEvent: NEvent, savedEvent: Event, context
             
             // Find existing replies referencing this event (can only be replyToRootId = "3XXXX:pubkey:dTag", or replyToRootId = "<older article ids>")
             // also do for replyToId
-            if savedEvent.kind == 30023 { // Only do this for articles
+            if Set([30023, 34236]).contains(savedEvent.kind) { // Only do this for articles, diVines
                 existingEventIds.insert(savedEvent.aTag)
                 let fr = Event.fetchRequest()
                 fr.predicate = NSPredicate(format: "kind IN {1,1111,1244} AND replyToRootId IN %@", existingEventIds)
