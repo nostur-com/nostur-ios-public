@@ -116,7 +116,6 @@ func createPreviewEvent(_ event: NEvent) -> Event {
     previewEvent.content = event.content
     previewEvent.pubkey = event.publicKey
     previewEvent.likesCount = 0
-    previewEvent.isRepost = event.kind == .repost
     previewEvent.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
             
     if (event.kind == .textNote || event.kind == .comment) {

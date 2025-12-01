@@ -389,16 +389,6 @@ struct DMConversationView: View {
                         }
                     }
                 }
-                .onAppear {
-                    // Update lastSeenDMCreatedAt, which updates unread count
-                    if let root = allMessagesSorted.first {
-                        
-                        root.objectWillChange.send()
-                        root.lastSeenDMCreatedAt = allMessagesSorted.last!.created_at
-                        // Save context here? or on go to background
-                        DataProvider.shared().saveToDiskNow(.viewContext)
-                    }
-                }
                 .toolbarNavigationBackgroundVisible()
                 .toolbar {
                     ToolbarItem(placement: .principal) {

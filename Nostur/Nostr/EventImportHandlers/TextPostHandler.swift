@@ -12,7 +12,6 @@ func handleTextPost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? =
     guard nEvent.kind == .textNote else { return }
     
     if nEvent.content == "#[0]", let firstE = nEvent.firstE() {
-        savedEvent.isRepost = true
         
         savedEvent.firstQuoteId = firstE
         

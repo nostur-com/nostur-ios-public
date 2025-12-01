@@ -2334,7 +2334,7 @@ extension NXColumnViewModel {
         let seenFilteredEvents: [Event] = wotFilteredEvents
             .filter { // Apply (app wide) already-seen filter
                 if allShortIdsSeen.contains($0.shortId) { return false } // remove already seen normal posts
-                if $0.isRepost, let firstQuoteId = $0.firstQuoteId, allShortIdsSeen.contains(String(firstQuoteId.prefix(8))) { // remove already seen reposted posts
+                if $0.kind == 6, let firstQuoteId = $0.firstQuoteId, allShortIdsSeen.contains(String(firstQuoteId.prefix(8))) { // remove already seen reposted posts
                     return false
                 }
                 return true
@@ -2679,7 +2679,7 @@ extension NXColumnViewModel {
     
     private func getAllEventIds(_ events: [Event]) -> Set<String> {
         return events.reduce(Set<String>()) { partialResult, event in
-            if event.isRepost, let firstQuoteId = event.firstQuoteId {
+            if event.kind == 6, let firstQuoteId = event.firstQuoteId {
                 // for repost add post + reposted post
                 return partialResult.union(Set([event.id, firstQuoteId]))
             }

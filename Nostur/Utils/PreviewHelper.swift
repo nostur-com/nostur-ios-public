@@ -1117,7 +1117,6 @@ func testEvent(_ eventJsonString: String? = nil, nEvent: NEvent? = nil) -> Event
     savedEvent.sig = nEvent.signature
     savedEvent.pubkey = nEvent.publicKey
     savedEvent.likesCount = 0
-    savedEvent.isRepost = nEvent.kind == .repost
     savedEvent.otherAtag = savedEvent.firstA()
     savedEvent.tagsSerialized = TagSerializer.shared.encode(tags: nEvent.tags) // TODO: why encode again, need to just store what we received before (performance)
     return savedEvent

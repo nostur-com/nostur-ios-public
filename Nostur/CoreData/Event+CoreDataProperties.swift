@@ -33,9 +33,7 @@ extension Event {
     @NSManaged public var replyToRootId: String?
     @NSManaged public var replyToId: String?
     @NSManaged public var firstQuoteId: String?
-    
-    @NSManaged public var isRepost: Bool // Cache
-    
+        
     // Counters (cached)
     @NSManaged public var likesCount: Int64 // Cache
     @NSManaged public var repostsCount: Int64 // Cache
@@ -981,7 +979,6 @@ extension Event {
         savedEvent.sig = nEvent.signature
         savedEvent.pubkey = nEvent.publicKey
         savedEvent.likesCount = 0
-        savedEvent.isRepost = nEvent.kind == .repost
         savedEvent.flags = flags
         savedEvent.otherAtag = savedEvent.firstA()
 
