@@ -10,6 +10,7 @@ import Collections
 import NostrEssentials
 import Combine
 
+// Normal id here is event.id. In case of giftwrap/rumor, the id is giftwrap id, never use rumor id.
 func updateEventCache(_ id: String, status: ProcessStatus, relays: String? = nil) {
     if let existing = Importer.shared.existingIds[id], let relays {
         let existingRelays = (existing.relays ?? "").split(separator: " ").map { String($0) }
@@ -173,7 +174,12 @@ class MessageParser {
                     }
                 default:
                     if (message.type == .EVENT) {
-                        guard let nEvent = message.event else { L.sockets.info("🔴🔴 uhh, where is nEvent "); return }
+                        guard let nEvent = message.event else {
+#if DEBUG
+                            L.sockets.info("🔴🔴 uhh, where is nEvent ");
+#endif
+                            return
+                        }
                         
                         // If a sub is prefixed with "-DB-" never hit db.
                         if let subscriptionId = message.subscriptionId, subscriptionId.prefix(4) == "-DB-", nEvent.kind != .zapNote {
@@ -256,7 +262,7 @@ class MessageParser {
             }
         }
         // Don't save to database, just handle response directly
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { // TODO: Need to check how to handle .receivedMessage in case of GiftWrap (so far not needed, yet)
             sendNotification(.receivedMessage, message)
         }
     }    

@@ -860,7 +860,7 @@ extension Event {
     }
     
     // TODO: .saveEvent() and .importEvents() needs a refactor, to cleanly handle each kind in a reusable/maintainable way, this long list of if statements is becoming a mess.
-    static func saveEvent(event: NEvent, relays: String? = nil, flags: String = "", kind6firstQuote: Event? = nil, context: NSManagedObjectContext) -> Event {
+    static func saveEvent(event: NEvent, relays: String? = nil, flags: String = "", kind6firstQuote: Event? = nil, wrapId: String? = nil, context: NSManagedObjectContext) -> Event {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -872,6 +872,7 @@ extension Event {
         
         // Save basic event info to DB
         let savedEvent = Event.fromNEvent(nEvent: event, flags: flags, context: context)
+        savedEvent.otherId = wrapId // store outer wrap id on rumor
         
         // backwards compatible tag (used for kind 20 for now)
         if event.kind == .textNote, let kTag = event.fastTags.first(where: { $0.0 == "k" })?.1, let kTagInt = Int64(kTag) {

@@ -102,6 +102,7 @@ public enum NEventKind: Codable, Equatable {
     case repost
     case chatMessage
     case reaction
+    case giftWrap
     case picture
     case comment
     case shortVoiceMessage
@@ -142,6 +143,7 @@ public enum NEventKind: Codable, Equatable {
         case     6: self = .repost
         case     7: self = .reaction
         case    20: self = .picture
+        case  1059: self = .giftWrap
         case  1111: self = .comment
         case  1222: self = .shortVoiceMessage
         case  1244: self = .shortVoiceMessageComment
@@ -185,6 +187,7 @@ public enum NEventKind: Codable, Equatable {
         case .chatMessage:              return 1311
         case .reaction:                 return 7
         case .picture:                  return 20
+        case .giftWrap:                 return 1059
         case .comment:                  return 1111
         case .shortVoiceMessage:        return 1222
         case .shortVoiceMessageComment: return 1244
@@ -319,14 +322,14 @@ public struct NEvent: Codable {
         self.signature = ""
     }
     
-    init(content: String = "", kind: NEventKind, tags: [NostrTag] = []) {
+    init(id: String = "", publicKey: String = "", createdAt: NTimestamp = NTimestamp.init(date: Date()), content: String = "", kind: NEventKind, tags: [NostrTag] = [], signature: String = "") {
         self.kind = kind
-        self.createdAt = NTimestamp.init(date: Date())
+        self.createdAt = createdAt
         self.content = content
-        self.id = ""
+        self.id = id
         self.tags = tags
-        self.publicKey = ""
-        self.signature = ""
+        self.publicKey = publicKey
+        self.signature = signature
     }
     
     mutating func withId() -> NEvent {
@@ -595,6 +598,20 @@ extension NEvent {
             return nil
         }
         return try? JSONDecoder().decode(NEvent.self, from: dataFromString)
+    }
+    
+    static public func fromNostrEssentialsEvent(_ event: NostrEssentials.Event) -> NEvent {
+        return NEvent(
+            id: event.id,
+            publicKey: event.pubkey,
+            createdAt: NTimestamp(timestamp: event.created_at),
+            content: event.content,
+            kind: NEventKind(id: event.kind),
+            tags: event.tags.map {
+                NostrTag($0.tag)
+            },
+            signature: event.sig
+        )
     }
 }
 

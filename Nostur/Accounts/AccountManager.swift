@@ -32,7 +32,7 @@ class AccountManager {
         return account
     }
     
-    func getPrivateKeyHex(pubkey: String, account: CloudAccount) -> String? {
+    func getPrivateKeyHex(pubkey: String, account: CloudAccount? = nil) -> String? {
         let keychain = Keychain(service: "nostur.com.Nostur")
             .synchronizable(true)
         do {
@@ -41,7 +41,7 @@ class AccountManager {
             return privateKeyHex
         }
         catch Status.itemNotFound {
-            account.noPrivateKey = true
+            account?.noPrivateKey = true
             return nil
         }
         catch {

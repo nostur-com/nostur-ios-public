@@ -9,6 +9,7 @@ import Foundation
 import OSLog
 import CoreData
 import Combine
+import NostrEssentials
 
 struct EventState {
     let status: ProcessStatus
@@ -235,52 +236,39 @@ class Importer {
                         
                         // For live chat rooms
                         if event.kind == .zapNote || event.kind == .chatMessage {
-                            DispatchQueue.main.async {
+                            DispatchQueue.main.async { // TODO: Need to check how to handle .receivedMessage in case of GiftWrap (so far not needed, yet)
                                 sendNotification(.receivedMessage, message)
                             }
                         }
                         continue
                     }                    
-                    
-                    // Skip if we already have a newer kind 3
-                    if  event.kind == .contactList,
-                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),
-                        existingKind3.created_at > Int64(event.createdAt.timestamp)
-                    {
-                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
-                            DispatchQueue.main.async {
-                                FollowingGuardian.shared.didReceiveContactListThisSession = true
-#if DEBUG
-                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
-#endif
-                            }
-                        }
-                        continue
-                    }
-                    
-                    var kind6firstQuote: Event?
-                    do { kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext) }
-                    catch ImportErrors.InvalidSignature { continue }
-                    
-                    do { try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext) }
-                    catch ImportErrors.InvalidSignature { continue }
 
-                    handleContactList(event, subscriptionId: message.subscriptionId)
-                    
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext)
-                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
-                        NeedsUpdateInfo(event: savedEvent)
-                    )
-                    saved = saved + 1
-                    if let subscriptionId = message.subscriptionId {
-                        subscriptionIds.insert(subscriptionId)
-                    }
-                                        
-                    // FOR LIVE CHATS THAT ARE NOT IN DB
-                    if event.kind == .zapNote {
-                        DispatchQueue.main.async {
-                            sendNotification(.receivedMessage, message)
+                    do {
+                        if event.kind == .giftWrap { // TODO: Need to check how to handle .receivedMessage in case of GiftWrap (so far not needed, yet)
+                            // Can we decrypt? (Do we have account with private key?)
+                            guard let targetPubkey = event.firstP(), AccountsState.shared.bgFullAccountPubkeys.contains(targetPubkey) else { continue }
+                            guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: targetPubkey), let keys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { continue }
+                            
+                
+                            // Unwrap then handle rumor like normal event
+                            let (rumor, seal) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            
+                            // Do we support the rumor kind?
+                            guard SUPPORTED_RUMOR_KINDS.contains(rumor.kind) else { continue }
+                            
+                            // Import rumor
+                            _ = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)
                         }
+                        else {
+                            // handle like normal
+                            _ = try importEvent(event: event, message: message)
+                        }
+                        saved = saved + 1
+                        if let subscriptionId = message.subscriptionId {
+                            subscriptionIds.insert(subscriptionId)
+                        }
+                    } catch { // Continue with next event
+                        continue
                     }
                     
                     if count % 100 == 0 {
@@ -377,39 +365,41 @@ class Importer {
                         }
                         continue
                     }
-                    // Skip if we already have a newer kind 3
-                    if  event.kind == .contactList,
-                        let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),
-                        existingKind3.created_at > Int64(event.createdAt.timestamp)
-                    {
-                        if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
-                            DispatchQueue.main.async {
-                                FollowingGuardian.shared.didReceiveContactListThisSession = true
-#if DEBUG
-                                L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
-#endif
+                    
+                    do {
+                        if event.kind == .giftWrap { // TODO: Need to check how to handle .receivedMessage in case of GiftWrap (so far not needed, yet)
+                            // Can we decrypt? (Do we have account with private key?)
+                            guard let targetPubkey = event.firstP(), AccountsState.shared.bgFullAccountPubkeys.contains(targetPubkey) else { continue }
+                            guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: targetPubkey), let keys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { continue }
+                            
+                
+                            // Unwrap then handle rumor like normal event
+                            let (rumor, seal) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            
+                            // Do we support the rumor kind?
+                            guard SUPPORTED_RUMOR_KINDS.contains(rumor.kind) else { continue }
+                            
+                            // Import rumor
+                            let savedEvent = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)
+                            
+                            // Immediately notify (prio)
+                            if let subscriptionId = message.subscriptionId {
+                                importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
                             }
                         }
+                        else {
+                            // handle like normal
+                            let savedEvent = try importEvent(event: event, message: message)
+                            
+                            // Immediately notify (prio)
+                            if let subscriptionId = message.subscriptionId {
+                                importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
+                            }
+                        }
+                        saved = saved + 1
+                    } catch { // Continue with next event
                         continue
                     }
-                    
-                    var kind6firstQuote: Event?
-                    do { kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext) }
-                    catch ImportErrors.InvalidSignature { continue }
-                    
-                    do { try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext) }
-                    catch ImportErrors.InvalidSignature { continue }
-
-                    handleContactList(event, subscriptionId: message.subscriptionId)
-                    
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext)
-                    FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
-                        NeedsUpdateInfo(event: savedEvent)
-                    )
-                    saved = saved + 1
-                    if let subscriptionId = message.subscriptionId {
-                        importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
-                    }                    
                 }
             }
             catch {
@@ -419,4 +409,44 @@ class Importer {
             DataProvider.shared().saveToDisk()
         }
     }
+    
+    
+    private func importEvent(event: NEvent, wrapId: String? = nil, message: RelayMessage) throws -> Event {
+        // Skip if we already have a newer kind 3
+        if  event.kind == .contactList,
+            let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),
+            existingKind3.created_at > Int64(event.createdAt.timestamp)
+        {
+            if event.publicKey == AccountsState.shared.activeAccountPublicKey && event.kind == .contactList { // To enable Follow button we need to have received a contact list
+                DispatchQueue.main.async {
+                    FollowingGuardian.shared.didReceiveContactListThisSession = true
+#if DEBUG
+                    L.og.info("🙂🙂 FollowingGuardian.didReceiveContactListThisSession")
+#endif
+                }
+            }
+            throw ImportErrors.AlreadyHaveNewerReplacableEvent
+        }
+        
+        var kind6firstQuote: Event?
+        kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext)
+        try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext)
+
+        handleContactList(event, subscriptionId: message.subscriptionId)
+        
+        let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, wrapId: wrapId, context: bgContext)
+        FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+            NeedsUpdateInfo(event: savedEvent)
+        )
+                     
+        // FOR LIVE CHATS THAT ARE NOT IN DB
+        if event.kind == .zapNote {
+            DispatchQueue.main.async { // TODO: Need to check how to handle .receivedMessage in case of GiftWrap (so far not needed, yet)
+                sendNotification(.receivedMessage, message)
+            }
+        }
+        return savedEvent
+    }
 }
+
+let SUPPORTED_RUMOR_KINDS = Set<Int>([1,20,9802,1111,1222,1244,14,7,30311])
