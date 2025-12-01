@@ -63,6 +63,9 @@ extension Event {
     // This makes it easy to query for the most recent event (mostRecentId = nil)
     @NSManaged public var mostRecentId: String?
     
+    // For other related Ids. eg Giftwrap ID
+    @NSManaged public var otherId: String?
+    
     
     // Can be used for anything
     // Now we use it for:
@@ -603,7 +606,7 @@ extension Event {
         return try? context.fetch(request).first
     }
     
-    static func fetchEvent(id: String, context: NSManagedObjectContext) -> Event? {
+    static func fetchEvent(id: String, isWrapId: Bool = false, context: NSManagedObjectContext) -> Event? {
         if !Thread.isMainThread {
             guard Importer.shared.existingIds[id]?.status == .SAVED else { return nil }
         }
@@ -621,7 +624,11 @@ extension Event {
         }
                 
         let request = NSFetchRequest<Event>(entityName: "Event")
-        request.predicate = NSPredicate(format: "id == %@", id)
+        request.predicate = if !isWrapId {
+            NSPredicate(format: "id == %@", id)
+        } else {
+            NSPredicate(format: "otherId == %@", id)
+        }
         request.fetchLimit = 1
         request.fetchBatchSize = 1
         return try? context.fetch(request).first
@@ -834,7 +841,7 @@ extension Event {
     }
     
     // TODO: 115.00 ms    1.0%    0 s          closure #1 in static Event.updateRelays(_:relays:)
-    static func updateRelays(_ id: String, relays: String, context: NSManagedObjectContext) {
+    static func updateRelays(_ id: String, relays: String, isWrapId: Bool = false, context: NSManagedObjectContext) {
         #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
                 fatalError("Should only be called from bg()")
@@ -847,7 +854,7 @@ extension Event {
             safeUpdateRelays(for: event, relays: relays)
         }
         // Fallback to fetching from context
-        else if let event = Event.fetchEvent(id: id, context: context) {
+        else if let event = Event.fetchEvent(id: id, isWrapId: isWrapId, context: context) {
             safeUpdateRelays(for: event, relays: relays)
         }
     }

@@ -125,7 +125,7 @@ class RelayMessage {
                 if eventState.status == .SAVED {
                     let bgContext = bg()
                     if mMessage.subscriptionId.prefix(5) == "prio-" {
-                        if let savedEvent = Event.fetchEvent(id: mMessage.id, context: bgContext) {
+                        if let savedEvent = Event.fetchEvent(id: mMessage.id, isWrapId: mMessage.kind == 1059, context: bgContext) {
                             Importer.shared
                                 .importedPrioMessagesFromSubscriptionId.send(
                                     ImportedPrioNotification(subscriptionId: mMessage.subscriptionId, event: savedEvent)
@@ -141,7 +141,7 @@ class RelayMessage {
                     // update from which relays an event id was received, or relay feeds won't work.
                     if let relays = eventState.relays, !relays.contains(relay) {
                         updateEventCache(mMessage.id, status: .SAVED, relays: relay)
-                        Event.updateRelays(mMessage.id, relays: relay, context: bgContext)
+                        Event.updateRelays(mMessage.id, relays: relay, isWrapId: mMessage.kind == 1059, context: bgContext)
                     }
                 }
                 

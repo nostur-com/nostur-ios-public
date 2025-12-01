@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="24G325" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="kindsFeed">
+    <entity name="Bookmark" representedClassName="Bookmark" versionHashModifier="add kTag" syncable="YES">
+        <attribute name="color_" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eventId" optional="YES" attributeType="String"/>
+        <attribute name="json" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="CloudAccount" representedClassName="CloudAccount" syncable="YES">
+        <attribute name="about_" optional="YES" attributeType="String"/>
+        <attribute name="accountRelays_" optional="YES" attributeType="String"/>
+        <attribute name="banner_" optional="YES" attributeType="String"/>
+        <attribute name="blockedPubkeys" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="display_name_" optional="YES" attributeType="String"/>
+        <attribute name="flags" optional="YES" attributeType="String"/>
+        <attribute name="followingHashtags_" optional="YES" attributeType="String"/>
+        <attribute name="followingPubkeys_" optional="YES" attributeType="String"/>
+        <attribute name="isNC" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastFollowerCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastLoginAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastProfileReceivedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastRead_" optional="YES" attributeType="String"/>
+        <attribute name="lastSeenDMRequestCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenPostCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenReactionCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenRepostCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lastSeenZapCreatedAt" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lud06_" optional="YES" attributeType="String"/>
+        <attribute name="lud16_" optional="YES" attributeType="String"/>
+        <attribute name="mutedRootIds" optional="YES" attributeType="String"/>
+        <attribute name="name_" optional="YES" attributeType="String"/>
+        <attribute name="ncClientPubkey_" optional="YES" attributeType="String"/>
+        <attribute name="ncRelay_" optional="YES" attributeType="String"/>
+        <attribute name="ncRemoteSignerPubkey_" optional="YES" attributeType="String"/>
+        <attribute name="nip05_" optional="YES" attributeType="String"/>
+        <attribute name="picture_" optional="YES" attributeType="String"/>
+        <attribute name="privateFollowingPubkeys_" optional="YES" attributeType="String"/>
+        <attribute name="publicKey_" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="CloudBlocked" representedClassName="CloudBlocked" syncable="YES">
+        <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eventId_" optional="YES" attributeType="String"/>
+        <attribute name="fixedName_" optional="YES" attributeType="String"/>
+        <attribute name="pubkey_" optional="YES" attributeType="String"/>
+        <attribute name="type_" optional="YES" attributeType="String"/>
+        <attribute name="word_" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="CloudDMState" representedClassName="CloudDMState" syncable="YES">
+        <attribute name="accepted" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="accountPubkey_" optional="YES" attributeType="String"/>
+        <attribute name="contactPubkey_" optional="YES" attributeType="String"/>
+        <attribute name="isHidden" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="isPinned" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="markedReadAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CloudFeed" representedClassName="CloudFeed" syncable="YES">
+        <attribute name="accountPubkey" optional="YES" attributeType="String"/>
+        <attribute name="continue" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="followingHashtags_" optional="YES" attributeType="String"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="kinds_" optional="YES" attributeType="String"/>
+        <attribute name="lastRead_" optional="YES" attributeType="String"/>
+        <attribute name="listId" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="order" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="profilesFetchedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="pubkeys" optional="YES" attributeType="String"/>
+        <attribute name="refreshedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="relays" optional="YES" attributeType="String"/>
+        <attribute name="repliesEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="sharedList" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="sharedTitle" optional="YES" attributeType="String"/>
+        <attribute name="showAsTab" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="useOutbox" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="wotEnabled" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CloudPrivateNote" representedClassName="CloudPrivateNote" syncable="YES">
+        <attribute name="content" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="eventId" optional="YES" attributeType="String"/>
+        <attribute name="json" optional="YES" attributeType="String"/>
+        <attribute name="pubkey" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="CloudRelay" representedClassName="CloudRelay" syncable="YES">
+        <attribute name="auth" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="excludedPubkeys_" optional="YES" attributeType="String"/>
+        <attribute name="read" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="search" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="updatedAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="url_" optional="YES" attributeType="String"/>
+        <attribute name="write" optional="YES" attributeType="Boolean" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="CloudTask" representedClassName="CloudTask" syncable="YES">
+        <attribute name="accountPubkey_" optional="YES" attributeType="String"/>
+        <attribute name="createdAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="date_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="type_" optional="YES" attributeType="String"/>
+        <attribute name="value_" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Contact" representedClassName=".Contact" versionHashModifier="add pinned" syncable="YES">
+        <attribute name="about" optional="YES" attributeType="String"/>
+        <attribute name="banner" optional="YES" attributeType="String"/>
+        <attribute name="couldBeImposter" attributeType="Integer 16" defaultValueString="-1" usesScalarValueType="YES"/>
+        <attribute name="display_name" optional="YES" attributeType="String"/>
+        <attribute name="fixedName" optional="YES" attributeType="String"/>
+        <attribute name="fixedPfp" optional="YES" attributeType="String"/>
+        <attribute name="lastPinAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lud06" optional="YES" attributeType="String"/>
+        <attribute name="lud16" optional="YES" attributeType="String"/>
+        <attribute name="metadata_created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="nip05" optional="YES" attributeType="String"/>
+        <attribute name="nip05verifiedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="picture" optional="YES" attributeType="String"/>
+        <attribute name="privateFollow" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="pubkey" attributeType="String"/>
+        <attribute name="similarToPubkey" optional="YES" attributeType="String"/>
+        <attribute name="updated_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zapperPubkey" optional="YES" attributeType="String"/>
+        <fetchIndex name="byPubkey">
+            <fetchIndexElement property="pubkey" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="pubkey"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="Event" representedClassName=".Event" elementID="mentionsCount" versionHashModifier="add-otherId" syncable="YES">
+        <attribute name="content" optional="YES" attributeType="String"/>
+        <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="deletedById" optional="YES" attributeType="String"/>
+        <attribute name="dTag" attributeType="String" defaultValueString=""/>
+        <attribute name="firstQuoteId" optional="YES" attributeType="String"/>
+        <attribute name="flags" attributeType="String" defaultValueString=""/>
+        <attribute name="id" attributeType="String"/>
+        <attribute name="insertedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
+        <attribute name="kind" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="kTag" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="likesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="likesCount"/>
+        <attribute name="mentionsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="mentionsCount"/>
+        <attribute name="mostRecentId" optional="YES" attributeType="String"/>
+        <attribute name="otherAtag" optional="YES" attributeType="String"/>
+        <attribute name="otherId" optional="YES" attributeType="String"/>
+        <attribute name="otherPubkey" optional="YES" attributeType="String" elementID="otherPubkey"/>
+        <attribute name="pubkey" attributeType="String"/>
+        <attribute name="reactionToId" optional="YES" attributeType="String"/>
+        <attribute name="relays" attributeType="String" defaultValueString=""/>
+        <attribute name="repliesCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES" elementID="repliesCount"/>
+        <attribute name="replyToId" optional="YES" attributeType="String"/>
+        <attribute name="replyToRootId" optional="YES" attributeType="String"/>
+        <attribute name="repostsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sig" optional="YES" attributeType="String"/>
+        <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
+        <attribute name="zapFromRequestId" optional="YES" attributeType="String"/>
+        <attribute name="zappedEventId" optional="YES" attributeType="String"/>
+        <attribute name="zapsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="zapState" optional="YES" attributeType="String"/>
+        <attribute name="zapTally" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="firstQuote" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
+        <relationship name="reactionTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
+        <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="replyTo" inverseEntity="Event" elementID="repliesRelation"/>
+        <relationship name="replyTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" inverseName="replies" inverseEntity="Event" elementID="replyToRelation"/>
+        <relationship name="replyToRoot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" elementID="replyToRootRelation"/>
+        <relationship name="zapFromRequest" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
+        <relationship name="zappedContact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
+        <relationship name="zappedEvent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
+        <fetchIndex name="byKindAndPubkey">
+            <fetchIndexElement property="kind" type="Binary" order="ascending"/>
+            <fetchIndexElement property="pubkey" type="Binary" order="ascending"/>
+        </fetchIndex>
+        <fetchIndex name="byCreatedAt">
+            <fetchIndexElement property="created_at" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="byId">
+            <fetchIndexElement property="id" type="Binary" order="descending"/>
+        </fetchIndex>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="Migration" representedClassName="Migration" syncable="YES">
+        <attribute name="migrationCode" attributeType="String" defaultValueString=""/>
+    </entity>
+    <entity name="MutedWords" representedClassName="MutedWords" syncable="YES">
+        <attribute name="enabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="words" attributeType="String" defaultValueString=""/>
+    </entity>
+    <entity name="NWCConnection" representedClassName="NWCConnection" syncable="YES">
+        <attribute name="connectionId" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="methods" attributeType="String" defaultValueString=""/>
+        <attribute name="pubkey" attributeType="String"/>
+        <attribute name="relay" optional="YES" attributeType="String"/>
+        <attribute name="type" optional="YES" attributeType="String"/>
+        <attribute name="walletPubkey" attributeType="String"/>
+    </entity>
+    <entity name="PersistentNotification" representedClassName="PersistentNotification" syncable="YES">
+        <attribute name="content" attributeType="String" defaultValueString=""/>
+        <attribute name="createdAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" defaultValueString="11111111-1111-1111-1111-111111111111" usesScalarValueType="NO"/>
+        <attribute name="pubkey" attributeType="String"/>
+        <attribute name="readAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="since" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="type_" attributeType="String"/>
+    </entity>
+    <configuration name="Cloud" usedWithCloudKit="YES">
+        <memberEntity name="Bookmark"/>
+        <memberEntity name="CloudPrivateNote"/>
+        <memberEntity name="CloudFeed"/>
+        <memberEntity name="CloudBlocked"/>
+        <memberEntity name="CloudAccount"/>
+        <memberEntity name="CloudDMState"/>
+        <memberEntity name="CloudRelay"/>
+        <memberEntity name="CloudTask"/>
+    </configuration>
+    <configuration name="Local">
+        <memberEntity name="Contact"/>
+        <memberEntity name="Event"/>
+        <memberEntity name="Migration"/>
+        <memberEntity name="MutedWords"/>
+        <memberEntity name="NWCConnection"/>
+        <memberEntity name="PersistentNotification"/>
+    </configuration>
+</model>
