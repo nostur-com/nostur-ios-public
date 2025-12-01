@@ -116,7 +116,13 @@ struct MacColumn: View {
                 case .following:
                     Text("following")
                     
-                case .photos(let accountPubkey), .yaks(let accountPubkey), .vines(let accountPubkey):
+                case .photos(let accountPubkey):
+                    self.renderContentTypeColumn(accountPubkey, columnType: $columnType)
+                    
+                case .yaks(let accountPubkey):
+                    self.renderContentTypeColumn(accountPubkey, columnType: $columnType)
+                    
+                case .vines(let accountPubkey):
                     self.renderContentTypeColumn(accountPubkey, columnType: $columnType)
                     
                 case .mentions:
