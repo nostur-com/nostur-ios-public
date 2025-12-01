@@ -421,20 +421,6 @@ extension Event {
         }
     }
     
-    static func updateRepostsCountCache(_ repost: Event, context: NSManagedObjectContext)  {
-        if let firstQuote = repost.firstQuote {
-            firstQuote.repostsCount = (firstQuote.repostsCount + 1)
-            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
-        }
-        else if let firstQuoteId = repost.firstQuoteId {
-            guard let firstQuote = Event.fetchEvent(id: firstQuoteId, context: context) else { return }
-            CoreDataRelationFixer.shared.addTask({
-                firstQuote.repostsCount = (firstQuote.repostsCount + 1)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
-            })
-        }
-    }
-    
     // To fix event.reactionTo but not count+1, because +1 is instant at tap, but this relation happens after 8 sec (unpublisher)
     static func updateReactionTo(_ event: Event, context: NSManagedObjectContext) {
         guard let lastEtag = event.lastE() else { return }
@@ -524,22 +510,6 @@ extension Event {
                 zap.flags = "zpk_mismatch_event"
             }
         }
-    }
-    
-    // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-    // TODO: REPLACE WITH q tag handling (NIP-18
-    static func updateMentionsCountCache(_ tags:[NostrTag], context: NSManagedObjectContext) {
-        // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-        guard let mentionEtags = TagsHelpers(tags).newerMentionEtags() else { return }
-        
-        CoreDataRelationFixer.shared.addTask({
-            for etag in mentionEtags {
-                if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
-                    guard contextWontCrash([mentioningEvent], debugInfo: "updateMentionsCountCache") else { return }
-                    mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
-                }
-            }
-        })
     }
     
     var fastEs: [FastTag] {
@@ -928,6 +898,7 @@ extension Event {
         handleAddressableReplacableEvent(nEvent: event, savedEvent: savedEvent, context: context)
         handleDelete(nEvent: event, context: context)
         handleComment(nEvent: event, savedEvent: savedEvent, context: context)
+        handleProfileUpdate(nEvent: event, savedEvent: savedEvent, context: context)
         
         return savedEvent
     }

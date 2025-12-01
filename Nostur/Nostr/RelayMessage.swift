@@ -118,9 +118,6 @@ class RelayMessage {
                 }
             }
 
-            // TODO: CHECK HOW TO HANDLE FOR RELAY FEEDS ALSO
-                
-                
             updateConnectionStats(receivedPubkey: mMessage.pubkey, fromRelay: relay)
             
             if let eventState = Importer.shared.existingIds[mMessage.id] {

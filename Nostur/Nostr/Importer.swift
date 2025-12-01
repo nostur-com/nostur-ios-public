@@ -253,20 +253,15 @@ class Importer {
                     }
                     
                     var kind6firstQuote: Event?
-                    do {
-                        kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext)
-                        
-                        try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext)
-                    }
-                    catch ImportErrors.InvalidSignature {
-                        continue
-                    }
+                    do { kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext) }
+                    catch ImportErrors.InvalidSignature { continue }
+                    
+                    do { try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext) }
+                    catch ImportErrors.InvalidSignature { continue }
 
                     handleContactList(event, subscriptionId: message.subscriptionId)
                     
-                    // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext) // Thread 927: "Illegal attempt to establish a relationship 'reactionTo' between objects in different contexts
-                        // "Illegal attempt to establish a relationship 'firstQuote' between objects in different contexts
+                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext)
                     FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
                         NeedsUpdateInfo(event: savedEvent)
                     )
@@ -274,81 +269,11 @@ class Importer {
                     if let subscriptionId = message.subscriptionId {
                         subscriptionIds.insert(subscriptionId)
                     }
-                    if let kind6firstQuote {
-                        CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: "savedEvent.firstQuote = kind6firstQuote (not prio)") else { return }
-                            savedEvent.firstQuote = kind6firstQuote
-                        })
-                    }
-                    
-                    if event.kind == .setMetadata {
-                        Contact.saveOrUpdateContact(event: event, context: bgContext)
-                    }
-                    
-                    
-                    
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                    if event.kind == .reaction {
-                        Event.updateLikeCountCache(savedEvent, content: event.content, context: bgContext)
-                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
-                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
-                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
-                        }
-                        if let reactionToId = savedEvent.reactionToId {
-                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reactions, eventId: reactionToId))
-                            
-                            // Update own reactions cache
-                            if event.publicKey == AccountsState.shared.activeAccountPublicKey {
-                                let reactionContent = event.content
-                                Task { @MainActor in
-                                    accountCache()?.addReaction(reactionToId, reactionType: reactionContent)
-                                    sendNotification(.postAction, PostActionNotification(type: .reacted(nil, reactionContent), eventId: reactionToId))
-                                }
-                            }
-                        }
-                    }
-                    
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+                                        
+                    // FOR LIVE CHATS THAT ARE NOT IN DB
                     if event.kind == .zapNote {
-                        Event.updateZapTallyCache(savedEvent, context: bgContext)
-                        
-                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
-                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
-                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
-                        }
-                        
-                        if let zappedEventId = savedEvent.zappedEventId {
-                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Zaps, eventId: zappedEventId))
-                        }
-                        
                         DispatchQueue.main.async {
                             sendNotification(.receivedMessage, message)
-                        }
-                    }
-                    
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO (MENTIONS)
-                    if event.kind == .textNote {
-                        // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-                        Event.updateMentionsCountCache(event.tags, context: bgContext)
-                    }
-                    
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPOSTS)
-                    if event.kind == .repost {
-                        Event.updateRepostsCountCache(savedEvent, context: bgContext)
-                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
-                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
-                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reposts, accountPubkey: otherPubkey))
-                        }
-                        if let repostedId = savedEvent.firstQuoteId {
-                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reposts, eventId: repostedId))
-                            
-                            // Update own reposted cache
-                            if event.publicKey == AccountsState.shared.activeAccountPublicKey {
-                                Task { @MainActor in
-                                    accountCache()?.addReposted(repostedId)
-                                    sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: repostedId))
-                                }
-                            }
                         }
                     }
                     
@@ -463,69 +388,22 @@ class Importer {
                     }
                     
                     var kind6firstQuote: Event?
-                    do {
-                        kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext)
-                        
-                        try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext)
-                    }
-                    catch ImportErrors.InvalidSignature {
-                        continue
-                    }
+                    do { kind6firstQuote = try handleRepost(event, relays: message.relays, bgContext: bgContext) }
+                    catch ImportErrors.InvalidSignature { continue }
                     
+                    do { try handlePinnedPosts(event, relays: message.relays, bgContext: bgContext) }
+                    catch ImportErrors.InvalidSignature { continue }
+
                     handleContactList(event, subscriptionId: message.subscriptionId)
                     
-                    // 493.00 ms    3.0%    1.00 ms specialized static Event.saveEvent(event:relays:flags:kind6firstQuote:context:)
-                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote:kind6firstQuote, context: bgContext)
+                    let savedEvent = Event.saveEvent(event: event, relays: message.relays, kind6firstQuote: kind6firstQuote, context: bgContext)
                     FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
                         NeedsUpdateInfo(event: savedEvent)
                     )
                     saved = saved + 1
                     if let subscriptionId = message.subscriptionId {
                         importedPrioMessagesFromSubscriptionId.send(ImportedPrioNotification(subscriptionId: subscriptionId, event: savedEvent))
-                    }
-                    if let kind6firstQuote {
-                        CoreDataRelationFixer.shared.addTask({
-                            guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: "savedEvent.firstQuote = kind6firstQuote (prio)") else { return }
-                            savedEvent.firstQuote = kind6firstQuote
-                        })
-                    }
-                    
-                    if event.kind == .setMetadata {
-                        Contact.saveOrUpdateContact(event: event, context: bgContext)
-                    }
-                    
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                    if event.kind == .reaction {
-                        Event.updateLikeCountCache(savedEvent, content:event.content, context: bgContext)
-                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
-                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
-                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reactions, accountPubkey: otherPubkey))
-                        }
-                        
-                        if let reactionToId = savedEvent.reactionToId {
-                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reactions, eventId: reactionToId))
-                        }
-                    }
-                    
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
-                    if event.kind == .zapNote {
-                        Event.updateZapTallyCache(savedEvent, context: bgContext)
-                        
-                        if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
-                            // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
-                            ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
-                        }
-                        
-                        if let zappedEventId = savedEvent.zappedEventId {
-                            ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Zaps, eventId: zappedEventId))
-                        }
-                    }
-                    
-                    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REPLIES, MENTIONS)
-                    if event.kind == .textNote || event.kind == .repost {
-                        // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-                        Event.updateMentionsCountCache(event.tags, context: bgContext)
-                    }
+                    }                    
                 }
             }
             catch {

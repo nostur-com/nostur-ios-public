@@ -169,6 +169,19 @@ func handleTextPost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? =
         }
     }
     
+    // UPDATE THINGS THAT THIS EVENT RELATES TO (MENTIONS)
+    // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
+    // TODO: REPLACE WITH q tag handling (NIP-18)
+    guard let mentionEtags = TagsHelpers(nEvent.tags).newerMentionEtags() else { return }
+    CoreDataRelationFixer.shared.addTask({
+        for etag in mentionEtags {
+            if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
+                guard contextWontCrash([mentioningEvent], debugInfo: "updateMentionsCountCache") else { return }
+                mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
+            }
+        }
+    })
+    
     handleRepostInKind1(nEvent: nEvent, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
 }
 

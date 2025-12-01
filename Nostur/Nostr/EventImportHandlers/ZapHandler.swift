@@ -104,4 +104,16 @@ func handleZap(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContex
     //                    savedEvent.cachedSats = Double((parsedInvoice.amountMilliSatoshis() ?? 0) / 1000)
     //                }
     //            }
+    
+    // UPDATE THINGS THAT THIS EVENT RELATES TO. LIKES CACHE ETC (REACTIONS)
+    Event.updateZapTallyCache(savedEvent, context: context)
+    
+    if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
+        // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
+        ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Zaps, accountPubkey: otherPubkey))
+    }
+    
+    if let zappedEventId = savedEvent.zappedEventId {
+        ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Zaps, eventId: zappedEventId))
+    }
 }

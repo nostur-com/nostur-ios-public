@@ -92,9 +92,34 @@ func handleRepost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = n
             }
         })
     }
-    else if savedEvent.firstQuoteId != nil, let firstP = nEvent.firstP() { // or lastP?
-        // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
-        savedEvent.otherPubkey = firstP
+    else if let firstQuoteId = savedEvent.firstQuoteId {
+        if let firstP = nEvent.firstP() { // or lastP?
+            // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+            savedEvent.otherPubkey = firstP
+        }
+        
+        guard let firstQuote = Event.fetchEvent(id: firstQuoteId, context: context) else { return }
+        CoreDataRelationFixer.shared.addTask({
+            firstQuote.repostsCount = (firstQuote.repostsCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
+        })
+    }
+    
+    if let otherPubkey = savedEvent.otherPubkey, AccountsState.shared.bgAccountPubkeys.contains(otherPubkey) {
+        // TODO: Check if this works for own accounts, because import doesn't happen when saved local first?
+        ViewUpdates.shared.feedUpdates.send(FeedUpdate(type: .Reposts, accountPubkey: otherPubkey))
+    }
+    
+    if let repostedId = savedEvent.firstQuoteId {
+        ViewUpdates.shared.relatedUpdates.send(RelatedUpdate(type: .Reposts, eventId: repostedId))
+        
+        // Update own reposted cache
+        if nEvent.publicKey == AccountsState.shared.activeAccountPublicKey {
+            Task { @MainActor in
+                accountCache()?.addReposted(repostedId)
+                sendNotification(.postAction, PostActionNotification(type: .reposted, eventId: repostedId))
+            }
+        }
     }
 }
 
