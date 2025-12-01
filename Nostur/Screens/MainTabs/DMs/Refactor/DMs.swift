@@ -114,7 +114,7 @@ struct DMs: View {
                 }
             }
             if vm.scanningMonthsAgo != 0 {
-                Text("Scanning relays for messages \(vm.scanningMonthsAgo)/12 months ago...")
+                Text("Scanning relays for messages \(vm.scanningMonthsAgo)/36 months ago...")
                     .italic()
                     .hCentered()
             }

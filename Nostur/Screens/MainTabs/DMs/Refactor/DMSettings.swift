@@ -34,7 +34,7 @@ struct DMSettings: View {
                         HStack {
                             Text("Missing messages?")
                             Button("Rescan") {
-                                DirectMessageViewModel.default.rescanForMissingDMs(12)
+                                DirectMessageViewModel.default.rescanForMissingDMs(36)
                                 showDMToggles = false
                             }
                         }

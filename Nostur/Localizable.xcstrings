@@ -8828,6 +8828,7 @@
       }
     },
     "Scanning relays for messages %lld/12 months ago..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -8836,6 +8837,9 @@
           }
         }
       }
+    },
+    "Scanning relays for messages %lld/36 months ago..." : {
+
     },
     "Schedule" : {
       "localizations" : {
