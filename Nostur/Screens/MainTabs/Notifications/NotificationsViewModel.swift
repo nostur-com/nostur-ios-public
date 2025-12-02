@@ -145,7 +145,7 @@ class NotificationsViewModel: ObservableObject {
         if self.isMain { // New Posts is no longer account based. 
             return unreadNewPosts_
         }
-        return NotificationsViewModel.shared.unreadNewPosts
+        return 0 // New Posts is no longer account based.
     }
         
     public var unreadNewFollowers: Int {
@@ -184,9 +184,6 @@ class NotificationsViewModel: ObservableObject {
     }
     @Published var unreadNewPosts_: Int = 0 {      // 1,20,9802,30023,34235
         didSet {
-            if unreadNewPosts_ > oldValue, let accountPubkey = self.pubkey {
-                sendNotification(.newNotification, NewNotification(type: .newUnreadNewPosts, pubkey: accountPubkey))
-            }
             if self.id == NotificationsViewModel.shared.id {
                 unreadPublisher.send(unread)
             }
@@ -777,6 +774,21 @@ class NotificationsViewModel: ObservableObject {
             DispatchQueue.main.async { [weak self] in // Maybe another query was running in parallel, so set to 0 again here.
                 self?.unreadNewPosts_ = 0
             }
+        }
+    }
+    
+    @MainActor public func markNewPostsAsRead(before: Int64) {
+        bg().perform { [weak self] in
+            guard let self = self else { return }
+            let beforeDate = NSDate(timeIntervalSince1970: TimeInterval(before))
+            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
+            r3.propertiesToUpdate = ["readAt": NSDate()]
+            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil AND createdAt < %@", PNType.newPosts.rawValue, beforeDate)
+            r3.resultType = .updatedObjectIDsResultType
+
+            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
+            
+            self.checkForUnreadNewPosts()
         }
     }
     

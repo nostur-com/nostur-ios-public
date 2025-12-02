@@ -14,6 +14,7 @@ struct NewPostsBy: View {
     @Environment(\.theme) private var theme
     @ObservedObject private var settings: SettingsStore = .shared
     @StateObject private var vm: NewPostsVM
+    private var since: Int64
     
     private var selectedNotificationsTab: String {
         get { UserDefaults.standard.string(forKey: "selected_notifications_tab") ?? "New Posts" }
@@ -22,6 +23,7 @@ struct NewPostsBy: View {
     
     init(pubkeys: Set<String>, since: Int64) {
         _vm = StateObject(wrappedValue: NewPostsVM(pubkeys: pubkeys, since: since))
+        self.since = since
     }
     
     var body: some View {
@@ -86,6 +88,7 @@ struct NewPostsBy: View {
         .onAppear {
             guard IS_DESKTOP_COLUMNS() || (selectedTab() == "Notifications" && selectedNotificationsTab == "New Posts") else { return }
             vm.load()
+            NotificationsViewModel.shared.markNewPostsAsRead(before: since)
         }
         .onChange(of: selectedNotificationsTab) { newValue in
             guard newValue == "New Posts" else { return }
