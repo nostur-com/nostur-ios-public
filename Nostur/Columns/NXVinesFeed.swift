@@ -44,6 +44,7 @@ struct NXVinesFeed: View {
                                         .background(
                                             Color.clear
                                                 .onAppear {
+                                                    guard IS_DESKTOP_COLUMNS() else { return }
                                                     // Optionally, try to update currentIndex when page changes
                                                     // This is a naive approach; for full reliability use a PreferenceKey-based solution
                                                     if currentIndex != idx {
@@ -56,6 +57,7 @@ struct NXVinesFeed: View {
                         }
                         .scrollTargetBehavior(.paging)
                         .onChange(of: currentIndex) { newIdx in
+                            guard IS_DESKTOP_COLUMNS() else { return }
                             // Scroll to the post with the new index (animated)
                             if posts.indices.contains(newIdx) {
                                 withAnimation {
