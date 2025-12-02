@@ -783,7 +783,7 @@ class NotificationsViewModel: ObservableObject {
             let beforeDate = NSDate(timeIntervalSince1970: TimeInterval(before))
             let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
             r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil AND createdAt < %@", PNType.newPosts.rawValue, beforeDate)
+            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil AND createdAt <= %@", PNType.newPosts.rawValue, beforeDate)
             r3.resultType = .updatedObjectIDsResultType
 
             let _ = try? bg().execute(r3) as? NSBatchUpdateResult
