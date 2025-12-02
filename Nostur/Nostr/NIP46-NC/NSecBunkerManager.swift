@@ -42,7 +42,7 @@ class NSecBunkerManager: ObservableObject {
         receiveNotification(.receivedMessage)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let message = notification.object as! RelayMessage
+                let message = notification.object as! NXRelayMessage
                 guard let event = message.event else { return }
                 guard event.kind == .ncMessage else { return }
                 guard let account = self.account else { return }

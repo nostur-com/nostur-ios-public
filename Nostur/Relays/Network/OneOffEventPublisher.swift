@@ -169,7 +169,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
         L.og.debug("🟠 Received: \(text)")
 #endif
         do {
-            let message = try RelayMessage.parseRelayMessage(text: text, relay: self.url.absoluteString)
+            let message = try nxParseRelayMessage(text: text, relay: self.url.absoluteString)
             
             switch message.type {
             case .AUTH:

@@ -95,7 +95,7 @@ func awaitWithRunLoop<T>(
 
 struct ReqReturn {
     let taskId: String
-    var relayMessage: Nostur.RelayMessage?
+    var relayMessage: Nostur.NXRelayMessage?
     var event: Nostur.Event?
 }
 

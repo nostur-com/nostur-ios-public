@@ -232,7 +232,7 @@ class Backlog {
             
             receiveNotification(.receivedMessage)
                 .sink { [weak self] notification in
-                    let receivedMessage = notification.object as! RelayMessage
+                    let receivedMessage = notification.object as! NXRelayMessage
                     guard let subscriptionId = receivedMessage.subscriptionId else { return }
                     bg().perform { [weak self] in
                         guard let self = self else { return }
@@ -385,7 +385,7 @@ class ReqTask: Identifiable, Hashable {
     }
     
     private let reqCommand:(_ taskId: String) -> Void
-    public let processResponseCommand:(_: String, _:RelayMessage?, _:Event?) -> Void
+    public let processResponseCommand:(_: String, _: NXRelayMessage?, _:Event?) -> Void
     private let timeoutCommand:((_ taskId: String) -> Void)?
     private var didProcess = false
     private var skipTimeout = false
@@ -404,7 +404,7 @@ class ReqTask: Identifiable, Hashable {
     init(prio: Bool = false, debounceTime: Double = 0.1, timeout: Double? = nil, prefix: String? = nil,
          subscriptionId: String? = nil,
          reqCommand: @escaping (_: String) -> Void,
-         processResponseCommand: @escaping (_: String, _:RelayMessage?, _:Event?) -> Void,
+         processResponseCommand: @escaping (_: String, _: NXRelayMessage?, _:Event?) -> Void,
          timeoutCommand: ( (_: String) -> Void)? = nil) {
         self.prio = prio
         self.prefix = prefix
@@ -432,9 +432,9 @@ class ReqTask: Identifiable, Hashable {
     }
     
     private var subscriptions = Set<AnyCancellable>()
-    private var processSubject = PassthroughSubject<RelayMessage?, Never>()
+    private var processSubject = PassthroughSubject<NXRelayMessage?, Never>()
     
-    public func process(_ message: RelayMessage? = nil) {
+    public func process(_ message: NXRelayMessage? = nil) {
         self.skipTimeout = true
         self.processSubject.send(message)
     }

@@ -154,7 +154,7 @@ struct CreateNest: View {
                     subscriptionId: subId,
                     reqCommand: { (taskId) in
                         Unpublisher.shared.publishNow(signedNestsEvent, skipDB: true)
-                        MessageParser.shared.handlePrioMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", subscriptionId: taskId, event: signedNestsEvent), nEvent: signedNestsEvent, relayUrl: "local")
+                        MessageParser.shared.handlePrioMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", subscriptionId: taskId, event: signedNestsEvent), nEvent: signedNestsEvent, relayUrl: "local")
                     },
                     processResponseCommand: { (taskId, _, event) in
                         bg().perform {
@@ -310,7 +310,7 @@ struct ScheduleNestSheet: View {
                     subscriptionId: subId,
                     reqCommand: { (taskId) in
                         Unpublisher.shared.publishNow(signedNestsEvent, skipDB: true)
-                        MessageParser.shared.handlePrioMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", subscriptionId: taskId, event: signedNestsEvent), nEvent: signedNestsEvent, relayUrl: "local")
+                        MessageParser.shared.handlePrioMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", subscriptionId: taskId, event: signedNestsEvent), nEvent: signedNestsEvent, relayUrl: "local")
                     },
                     processResponseCommand: { (taskId, _, event) in
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

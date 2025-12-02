@@ -437,7 +437,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         listenForPresenceSub = receiveNotification(.receivedMessage)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let message = notification.object as! RelayMessage
+                let message = notification.object as! NXRelayMessage
                 guard let event = message.event else { return }
                 guard event.kind == .custom(10312) else { return }
                 
@@ -520,14 +520,14 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         if account.isNC {
             NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedNEvent in
                 Unpublisher.shared.publishNow(signedNEvent, skipDB: true)
-                MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedNEvent), nEvent: signedNEvent, relayUrl: "local")
+                MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedNEvent), nEvent: signedNEvent, relayUrl: "local")
                 self.status = "live"
             }
         }
         else {
             if let signedNEvent = try? account.signEvent(nEvent) {
                 Unpublisher.shared.publishNow(signedNEvent, skipDB: true)
-                MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedNEvent), nEvent: signedNEvent, relayUrl: "local")
+                MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedNEvent), nEvent: signedNEvent, relayUrl: "local")
                 self.status = "live"
             }
         }

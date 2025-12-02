@@ -209,7 +209,7 @@ class ChatRoomViewModel: ObservableObject {
         receiveNotification(.receivedMessage)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let message = notification.object as! RelayMessage
+                let message = notification.object as! NXRelayMessage
                 
                 if (state == .initializing || state == .loading) && message.type == .EOSE, let subscriptionId = message.subscriptionId, (subscriptionId == subId || subscriptionId == realTimeSubId) {
                     DispatchQueue.main.async { [weak self] in

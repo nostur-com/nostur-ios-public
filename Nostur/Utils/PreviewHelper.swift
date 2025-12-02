@@ -49,7 +49,7 @@ public class PreviewEnvironment {
         // TODO: Should reuse Importer.shared
         context.performAndWait {
             for text in messages {
-                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory") else { continue }
+                guard let message = try? nxParseRelayMessage(text: text, relay: "wss://memory") else { continue }
                 guard var event = message.event else { continue }
                 
                 // FIX FOR KIND 6 WITH JSON STRING OF ANOTHER EVENT IN EVENT.CONTENT. WTF
@@ -91,7 +91,7 @@ public class PreviewEnvironment {
     public func parseNoDbMessages(_ messages: [String]) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             for text in messages {
-                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory") else { continue }
+                guard let message = try? nxParseRelayMessage(text: text, relay: "wss://memory") else { continue }
                 guard message.event != nil else { continue }
 
                 DispatchQueue.main.async {
@@ -477,7 +477,7 @@ extension PreviewEnvironment {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             let messages = testChatsNzaps()
             for text in messages {
-                guard let message = try? RelayMessage.parseRelayMessage(text: text, relay: "wss://memory") else { continue }
+                guard let message = try? nxParseRelayMessage(text: text, relay: "wss://memory") else { continue }
                 guard message.event != nil else { continue }
 
                 DispatchQueue.main.async {

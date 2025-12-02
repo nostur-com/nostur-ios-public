@@ -103,7 +103,7 @@ class NRContact: ObservableObject, Identifiable, Hashable, IdentifiableDestinati
         presenceSubscription = receiveNotification(.receivedMessage)
             .sink { [weak self] notification in
                 guard let self = self else { return }
-                let message = notification.object as! RelayMessage
+                let message = notification.object as! NXRelayMessage
                 guard let event = message.event else { return }
                 guard event.kind == .custom(10312) else { return }
                 

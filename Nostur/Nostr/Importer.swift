@@ -411,7 +411,7 @@ class Importer {
     }
     
     
-    private func importEvent(event: NEvent, wrapId: String? = nil, message: RelayMessage) throws -> Event {
+    private func importEvent(event: NEvent, wrapId: String? = nil, message: NXRelayMessage) throws -> Event {
         // Skip if we already have a newer kind 3
         if  event.kind == .contactList,
             let existingKind3 = Event.fetchReplacableEvent(3, pubkey: event.publicKey, context: bgContext),

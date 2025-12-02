@@ -38,8 +38,8 @@ class MessageParser {
     
     private var bgQueue = bg()
     private var poolQueue = ConnectionPool.shared.queue
-    public var messageBucket = Deque<RelayMessage>()
-    public var priorityBucket = Deque<RelayMessage>()
+    public var messageBucket = Deque<NXRelayMessage>()
+    public var priorityBucket = Deque<NXRelayMessage>()
     public var isSignatureVerificationEnabled = true
     
     public let tagSerializer: TagSerializer
@@ -58,7 +58,7 @@ class MessageParser {
     func socketReceivedMessage(text: String, relayUrl: String, client: RelayConnection) {
         bgQueue.perform { [unowned self] in
             do {
-                let message = try RelayMessage.parseRelayMessage(text: text, relay: relayUrl)
+                let message = try nxParseRelayMessage(text: text, relay: relayUrl)
                 
                 switch message.type {
                 case .AUTH:
@@ -211,7 +211,7 @@ class MessageParser {
                     }
                 }
             }
-            catch RelayMessage.error.NOT_IN_WOT {
+            catch NXRelayMessageError.NOT_IN_WOT {
 #if DEBUG
                 L.sockets.debug("🟠 \(relayUrl) Not in WoT, skipped: \(text)")
 #endif
@@ -220,27 +220,27 @@ class MessageParser {
 //                    // client.stats.addNotInWoT...
 //                }
             }
-            catch RelayMessage.error.UNKNOWN_MESSAGE_TYPE {
+            catch NXRelayMessageError.UNKNOWN_MESSAGE_TYPE {
 #if DEBUG
                 L.sockets.notice("🟠 \(relayUrl) Unknown message type: \(text)")
 #endif
             }
-            catch RelayMessage.error.FAILED_TO_PARSE {
+            catch NXRelayMessageError.FAILED_TO_PARSE {
 #if DEBUG
                 L.sockets.notice("🟠 \(relayUrl) Could not parse text received: \(text)")
 #endif
             }
-            catch RelayMessage.error.FAILED_TO_PARSE_EVENT {
+            catch NXRelayMessageError.FAILED_TO_PARSE_EVENT {
 #if DEBUG
                 L.sockets.notice("🟠 \(relayUrl) Could not parse EVENT: \(text)")
 #endif
             }
-            catch RelayMessage.error.DUPLICATE_ALREADY_SAVED, RelayMessage.error.DUPLICATE_ALREADY_PARSED {
+            catch NXRelayMessageError.DUPLICATE_ALREADY_SAVED, NXRelayMessageError.DUPLICATE_ALREADY_PARSED {
 #if DEBUG
 //                L.sockets.debug("🟡🟡 \(relayUrl) already SAVED/PARSED ")
 #endif
             }
-            catch RelayMessage.error.INVALID_SIGNATURE {
+            catch NXRelayMessageError.INVALID_SIGNATURE {
 #if DEBUG
                 L.sockets.notice("🔴🔴 \(relayUrl) invalid signature \(text)")
 #endif
@@ -255,10 +255,10 @@ class MessageParser {
     
     // MARK: Handle directly without touching db
     
-    func handleNoDbMessage(message: RelayMessage, nEvent: NEvent? = nil) throws {
+    func handleNoDbMessage(message: NXRelayMessage, nEvent: NEvent? = nil) throws {
         if let nEvent {
             guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
-                throw RelayMessage.error.INVALID_SIGNATURE
+                throw NXRelayMessageError.INVALID_SIGNATURE
             }
         }
         // Don't save to database, just handle response directly
@@ -267,9 +267,9 @@ class MessageParser {
         }
     }    
     
-    func handleNWCResponse(message: RelayMessage, nEvent: NEvent) throws {
+    func handleNWCResponse(message: NXRelayMessage, nEvent: NEvent) throws {
         guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
-            throw RelayMessage.error.INVALID_SIGNATURE
+            throw NXRelayMessageError.INVALID_SIGNATURE
         }
         
         let decoder = JSONDecoder()
@@ -396,9 +396,9 @@ class MessageParser {
 #endif
     }
     
-    func handleNWCInfoResponse(message: RelayMessage, nEvent: NEvent) throws {
+    func handleNWCInfoResponse(message: NXRelayMessage, nEvent: NEvent) throws {
         guard try !self.isSignatureVerificationEnabled || nEvent.verified() else {
-            throw RelayMessage.error.INVALID_SIGNATURE
+            throw NXRelayMessageError.INVALID_SIGNATURE
         }
         
         guard let nwcConnection = Importer.shared.nwcConnection else { return }
@@ -412,13 +412,13 @@ class MessageParser {
         }
     }
     
-    func handlePrioMessage(message: RelayMessage, nEvent: NEvent, relayUrl: String) {
-        let sameMessageInQueue = self.priorityBucket.first(where: {
+    func handlePrioMessage(message: NXRelayMessage, nEvent: NEvent, relayUrl: String) {
+        var sameMessageInQueue = self.priorityBucket.first(where: {
              nEvent.id == $0.event?.id && $0.type == .EVENT
         })
         
-        if let sameMessageInQueue {
-            sameMessageInQueue.relays = sameMessageInQueue.relays + " " + message.relays
+        if let relays = sameMessageInQueue?.relays {
+            sameMessageInQueue?.setRelays(relays + " " + message.relays)
             return
         }
         else {
@@ -432,13 +432,13 @@ class MessageParser {
     
     
     // MARK: Goes to importer/db
-    func handleNormalMessage(message: RelayMessage, nEvent: NEvent, relayUrl: String) {
-        let sameMessageInQueue = self.messageBucket.first(where: { // TODO: Instruments: slow here...
+    func handleNormalMessage(message: NXRelayMessage, nEvent: NEvent, relayUrl: String) {
+        var sameMessageInQueue = self.messageBucket.first(where: { // TODO: Instruments: slow here...
              nEvent.id == $0.event?.id && $0.type == .EVENT
         })
         
-        if let sameMessageInQueue {
-            sameMessageInQueue.relays = sameMessageInQueue.relays + " " + message.relays
+        if let relays = sameMessageInQueue?.relays {
+            sameMessageInQueue?.setRelays(relays + " " + message.relays)
             return
         }
         else {

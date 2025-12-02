@@ -147,7 +147,7 @@ struct ChatRoom: View {
             nEvent = nEvent.withId()
             NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                 Unpublisher.shared.publishNow(signedEvent, skipDB: true)
-                sendNotification(.receivedMessage, RelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
+                sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
                 bg().perform {
                     Importer.shared.existingIds[signedEvent.id] = EventState(status: .RECEIVED, relays: "self")
                 }
@@ -158,7 +158,7 @@ struct ChatRoom: View {
         else {
             guard let signedEvent = try? account.signEvent(nEvent) else { return }
             Unpublisher.shared.publishNow(signedEvent, skipDB: true)
-            sendNotification(.receivedMessage, RelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
+            sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
             bg().perform {
                 Importer.shared.existingIds[signedEvent.id] = EventState(status: .RECEIVED, relays: "self")
             }

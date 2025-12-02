@@ -658,14 +658,14 @@
 //                    if account.isNC {
 //                        NSecBunkerManager.shared.requestSignature(forEvent: closedNEvent, usingAccount: account) { signedClosedNEvent in
 //                            Unpublisher.shared.publishNow(signedClosedNEvent, skipDB: true)
-//                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
+//                            MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
 //                            liveEvent.status = "ended"
 //                        }
 //                    }
 //                    else {
 //                        if let signedClosedNEvent = try? account.signEvent(closedNEvent) {
 //                            Unpublisher.shared.publishNow(signedClosedNEvent, skipDB: true)
-//                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
+//                            MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
 //                            liveEvent.status = "ended"
 //                        }
 //                    }
@@ -691,14 +691,14 @@
 //                    if account.isNC {
 //                        NSecBunkerManager.shared.requestSignature(forEvent: restartedNEvent, usingAccount: account) { signedRestartedNEvent in
 //                            Unpublisher.shared.publishNow(signedRestartedNEvent, skipDB: true)
-//                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
+//                            MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
 //                            liveEvent.status = "live"
 //                        }
 //                    }
 //                    else {
 //                        if let signedRestartedNEvent = try? account.signEvent(restartedNEvent) {
 //                            Unpublisher.shared.publishNow(signedRestartedNEvent, skipDB: true)
-//                            MessageParser.shared.handleNormalMessage(message: RelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
+//                            MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
 //                            liveEvent.status = "live"
 //                        }
 //                    }
