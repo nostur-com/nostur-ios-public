@@ -31,6 +31,8 @@ struct ProfileFollowingCount: View {
                         onComplete: { [weak vm] relayMessage, _ in
                             bg().perform { [weak vm] in // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
+                                if case .ready(_) = vm.state { return }
+                                
                                 if let clEvent = Event.fetchReplacableEvent(3, pubkey: pubkey, context: bg()) {
                                     vm.ready(clEvent.pTags().count)
                                 }

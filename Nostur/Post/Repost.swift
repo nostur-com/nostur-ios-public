@@ -99,7 +99,6 @@ struct Repost: View {
                                 }
                             },
                             onComplete: { relayMessage, event in
-                                if let event = event {
                                 if let event = event, event.id == firstQuoteId {
                                     let nrFirstQuote = NRPost(event: event, withFooter: false)
                                     Task { @MainActor in

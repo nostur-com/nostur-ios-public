@@ -62,7 +62,8 @@ struct NaddrView: View {
                     },
                     onComplete: { [weak vm] relayMessage, event in
                         guard let vm else { return }
-                        if let event = event {
+                        if case .ready(_) = vm.state { return }
+                        
                         if let event = event, event.aTag == naddr.aTag {
                             vm.ready(NRPost(event: event))
                         }

@@ -36,6 +36,8 @@ struct ProfileByPubkey: View {
                         req: { taskId in
                             bg().perform { // 1. FIRST CHECK LOCAL DB
                                 guard let vm else { return }
+                                if case .ready(_) = vm.state { return }
+                                
                                 if let nrContact = NRContact.fetch(pubkey) {
                                     vm.ready(nrContact) // 2A. DONE
                                 }
@@ -47,6 +49,8 @@ struct ProfileByPubkey: View {
                         onComplete: { relayMessage, _ in
                             bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
                                 guard let vm else { return }
+                                if case .ready(_) = vm.state { return }
+                                
                                 if let nrContact = NRContact.fetch(pubkey) {
                                     vm.ready(nrContact)
                                 }

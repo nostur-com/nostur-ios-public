@@ -36,6 +36,8 @@ struct ProfileCardByPubkey: View {
                             onComplete: { [weak vm] relayMessage, _ in // TODO: Should make compatible with Contact also instead of just Event
                                 DispatchQueue.main.async {
                                     guard let vm else { return }
+                                    if case .ready(_) = vm.state { return }
+                                    
                                     if let contact = Contact.fetchByPubkey(pubkey, context: DataProvider.shared().viewContext) { // 3. WE FOUND IT ON RELAY
                                         vm.ready(contact)
                                     }
