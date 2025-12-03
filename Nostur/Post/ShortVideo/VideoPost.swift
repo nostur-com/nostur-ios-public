@@ -132,6 +132,11 @@ struct VideoPost: View {
                 }
             }
         }
+        .onValueChange(isVisible) { wasVisible, isVisibleNow in
+            // When changing feed, don't continue playing
+            guard isPlaying && !isVisibleNow else { return }
+            isPlaying = false
+        }
     }
     
     private func updateVisibilityPreiOS16(geo: GeometryProxy) {
