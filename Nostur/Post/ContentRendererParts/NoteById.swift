@@ -36,6 +36,7 @@ struct NoteById: View {
                         onComplete: { [weak vm] relayMessage, event in
                             guard let vm else { return }
                             if let event = event {
+                            if let event = event, event.id == self.id {
                                 vm.ready(NRPost(event: event, withFooter: false))
                             }
                             else if let event = Event.fetchEvent(id: self.id, context: bg()) {

@@ -180,8 +180,8 @@ struct ImportedNotification {
 
 struct ImportedPrioNotification {
     let id = UUID()
-    let subscriptionId:String
-    let event:Event
+    let subscriptionId: String
+    let event: Event
 }
 
 class Backlog {
@@ -408,7 +408,7 @@ class ReqTask: Identifiable, Hashable {
          timeoutCommand: ( (_: String) -> Void)? = nil) {
         self.prio = prio
         self.prefix = prefix
-        self.id = subscriptionId ?? String(UUID().uuidString.prefix(18))
+        self.id = subscriptionId ?? String(UUID().uuidString.prefix(48))
         self.reqCommand = reqCommand
         self.processResponseCommand = processResponseCommand
         self.timeoutCommand = timeoutCommand

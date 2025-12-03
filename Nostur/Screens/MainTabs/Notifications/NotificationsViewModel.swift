@@ -15,7 +15,7 @@ class NotificationsViewModel: ObservableObject {
     public var didLoad = false
     
     // Short uuid
-    let id: String = String(UUID().uuidString.prefix(16))
+    let id: String = String(UUID().uuidString.prefix(48))
     
     public var isMain: Bool {
         self.id == Self.shared.id

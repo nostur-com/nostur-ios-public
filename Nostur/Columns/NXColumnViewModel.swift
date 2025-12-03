@@ -2894,7 +2894,7 @@ extension NXColumnViewModel {
                     L.og.debug("🟪 Processing clEvent response from relays")
 #endif
                     var updatedConfig = config
-                    if let clEvent = clEvent {
+                    if let clEvent = clEvent, clEvent.pubkey == pubkey && clEvent.kind == 3 {
                         updatedConfig.setPubkeys(Set(clEvent.fastPs.map { $0.1 }.filter { isValidPubkey($0) }))
                         
                         updatedConfig.setHashtags(Set(clEvent.fastTs.map { $0.1.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }))

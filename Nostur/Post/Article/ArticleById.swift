@@ -45,7 +45,7 @@ struct ArticleById: View {
                                     processResponseCommand: { taskId, _, article in
                                         bg().perform {
                                             guard let backlog else { return }
-                                            if let article = article {
+                                            if let article = article, article.id == self.id {
                                                 let article = NRPost(event: article)
                                                 DispatchQueue.main.async {
                                                     self.article = article

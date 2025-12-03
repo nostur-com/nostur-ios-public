@@ -74,6 +74,7 @@ struct EmbedById: View {
             onComplete: { [weak vm = self.vm] relayMessage, event in
                 guard let vm else { return }
                 if let event = event {
+                if let event = event, event.id == self.id {
                     vm.ready(NRPost(event: event, withFooter: false))
                 }
                 else if let event = Event.fetchEvent(id: id, context: bg()) {

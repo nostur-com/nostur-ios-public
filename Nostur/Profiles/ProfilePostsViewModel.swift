@@ -97,7 +97,7 @@ class ProfilePostsViewModel: ObservableObject {
     private func fetchPostsFromRelays(_ onComplete: (() -> ())? = nil) {
         let reqTask = ReqTask(
             debounceTime: 0.1,
-            subscriptionId: String("PROFILEPOSTS" + UUID().uuidString.suffix(11)),
+            subscriptionId: String("PROFILEPOSTS-" + UUID().uuidString.suffix(36)),
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 

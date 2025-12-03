@@ -62,6 +62,8 @@ struct ArticleByNaddr: View {
                             onComplete: { [weak vm] relayMessage, event in
                                 guard let vm else { return }
                                 if let event = event {
+                                
+                                if let event = event, event.aTag == naddr.aTag {
                                     vm.ready(NRPost(event: event, withFooter: false))
                                 }
                                 else if let event = Event.fetchReplacableEvent(kind,
@@ -200,6 +202,7 @@ struct ArticleTitleByNaddr: View {
                     onComplete: { [weak vm] relayMessage, event in
                         guard let vm else { return }
                         if let event = event {
+                        if let event = event, event.aTag == naddr.aTag {
                             if let title = NRPost(event: event, withFooter: false).eventTitle {
                                 vm.ready(title)
                             }
