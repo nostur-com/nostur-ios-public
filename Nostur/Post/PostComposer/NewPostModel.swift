@@ -885,16 +885,14 @@ public final class NewPostModel: ObservableObject {
         requiredP = replyTo.nrPost.pubkey
         var newReply = NEvent(content: typingTextModel.text)
         
-        // TODO: enable 1111 for 20,30023 after a few months
-//        if Set([20,30023]).contains(replyTo.nrPost.kind) {
-//            newReply.kind = .comment
-//        }
-//        else if Set([1222,1244]).contains(replyTo.nrPost.kind) {
         if Set([1222,1244]).contains(replyTo.nrPost.kind) {
-            newReply.kind = .shortVoiceMessageComment
+            newReply.kind = .shortVoiceMessageComment // 1244
+        }
+        else if NIP22_ROOT_KINDS.contains(Int(replyTo.nrPost.kind)) {
+            newReply.kind = .comment // 1111
         }
         else {
-            newReply.kind = .textNote
+            newReply.kind = .textNote // 1
         }
         bg().perform {
             guard let replyToEvent = replyTo.nrPost.event else { return }
@@ -1197,7 +1195,7 @@ public enum UploadMethod {
 let NIP22_COMMENT_KINDS: Set<Int> = [1111,1244] // default and voice message comment
 
 // All roots that use NIP22 replies/comments
-let NIP22_ROOT_KINDS: Set<Int> = [1222,20,30023] // voice messages / pictures / articles
+let NIP22_ROOT_KINDS: Set<Int> = [1222,20,30023,34236] // voice messages / pictures / articles / vines
 
 // NIP-22
 // Comments MUST point to the root scope using uppercase tag names (e.g. K, E, A or I)
