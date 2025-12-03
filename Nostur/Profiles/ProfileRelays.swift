@@ -35,7 +35,7 @@ struct ProfileRelays: View {
     
     
     var body: some View {
-        Form {
+        NXForm {
             if loading {
                 ProgressView()
                     .hCentered()

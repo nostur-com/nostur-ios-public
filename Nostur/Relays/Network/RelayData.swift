@@ -66,22 +66,28 @@ struct AccountRelayData: Codable, Identifiable, Hashable, Equatable {
     public var url: String // should be lowercased, without trailing slash
     public var read: Bool
     public var write: Bool
+    public var dm: Bool = false
     
-    init(url: String, read: Bool, write: Bool) {
+    init(url: String, read: Bool, write: Bool, dm: Bool? = nil) {
         self.url = normalizeRelayUrl(url)
         self.read = read
         self.write = write
+        self.dm = dm ?? false
     }
     
-    mutating func setRead(_ newValue:Bool) {
+    mutating func setRead(_ newValue: Bool) {
         self.read = newValue
     }
     
-    mutating func setWrite(_ newValue:Bool) {
+    mutating func setWrite(_ newValue: Bool) {
         self.write = newValue
     }
     
-    mutating func setUrl(_ newValue:String) {
+    mutating func setDM(_ newValue: Bool) {
+        self.dm = newValue
+    }
+    
+    mutating func setUrl(_ newValue: String) {
         self.url = normalizeRelayUrl(newValue)
     }
 }

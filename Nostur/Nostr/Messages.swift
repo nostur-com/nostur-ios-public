@@ -325,9 +325,9 @@ public struct RequestMessage {
 """
     }
     
-    static func getRelays(pubkeys:[String], subscriptionId:String? = nil) -> String {
+    static func getRelays(pubkeys: [String], subscriptionId: String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [3,10002] }]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": \(JSON.shared.toString(pubkeys)), "kinds": [3,10002,10050] }]
 """
     }
     

@@ -123,7 +123,7 @@ struct AccountRelaySettings: View {
     
     @State private var showWizard = false
     
-    @StateObject private var vm = FetchVM<[AccountRelayData]>(timeout: 1.5, debounceTime: 0.05)
+    @StateObject private var vm = FetchVM<[AccountRelayData]>(timeout: 5.5, debounceTime: 1.0)
     
     var body: some View {
         NXForm {
@@ -133,29 +133,14 @@ struct AccountRelaySettings: View {
             case .ready(let accountRelays):
                 Section("Announced relays for \(account.anyName)") {
                     ForEach(accountRelays) { relay in
-                        if (relay.read && relay.write) {
-                            HStack {
-                                Text(relay.url)
-                                Spacer()
-                                Text("read + write")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        else if (relay.read) {
-                            HStack {
-                                Text(relay.url)
-                                Spacer()
-                                Text("read")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        else if (relay.write) {
-                            HStack {
-                                Text(relay.url)
-                                Spacer()
-                                Text("write")
-                                    .foregroundColor(.secondary)
-                            }
+                        HStack {
+                            Text(relay.url)
+                            Spacer()
+                            Text([relay.read ? "read" : nil,
+                                  relay.write ? "write" : nil,
+                                  relay.dm ? "dm" : nil].compactMap { $0 }
+                                      .joined(separator: " + "))
+                                .foregroundColor(.secondary)
                         }
                     }
                     
@@ -186,75 +171,83 @@ struct AccountRelaySettings: View {
             Text("\(Image(systemName: "hourglass.circle.fill")) Checking relays...")
                 .onAppear { [weak vm, weak account] in
                     guard let vm, let account else { return }
-                    if !account.accountRelays.isEmpty {
-                        vm.ready(Array(account.accountRelays))
-                    }
-                    else {
-                        vm.setFetchParams((
-                            prio: false,
-                            req: { [weak vm] _ in
-                                bg().perform { // 1. FIRST CHECK LOCAL DB
-                                    guard let vm else { return }
-                                    if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
-                                        
-                                        let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
-                                            if (tag.type != "r") { return nil }
-                                            if (tag.tag.count == 2) {
-                                                return AccountRelayData(url: tag.value, read: true, write: true)
-                                            }
-                                            else if (tag.tag.count >= 3) {
-                                                if tag.tag[2] == "read" {
-                                                    return AccountRelayData(url: tag.value, read: true, write: false)
-                                                }
-                                                else if tag.tag[2] == "write" {
-                                                    return AccountRelayData(url: tag.value, read: false, write: true)
-                                                }
-                                            }
-                                            return nil
+                    vm.setFetchParams((
+                        prio: false,
+                        req: { taskId in
+                            req(RM.getRelays(pubkeys: [accountPubkey], subscriptionId: taskId))
+                        },
+                        onComplete: { [weak vm] relayMessage, _ in
+                            bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
+                                guard let vm else { return }
+                                
+                                var rwRelays: [AccountRelayData] = []
+                                var dmRelays: [AccountRelayData] = []
+                                
+                                if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
+                                    let relays: [AccountRelayData] = kind10002.tags().compactMap { tag in
+                                        if (tag.type != "r") { return nil }
+                                        if (tag.tag.count == 2) {
+                                            return AccountRelayData(url: tag.value, read: true, write: true)
                                         }
-                                        vm.ready(relays)
-                                        DispatchQueue.main.async { [weak account] in
-                                            guard let account else { return }
-                                            account.accountRelays = Set(relays)
-                                            DataProvider.shared().saveToDiskNow(.viewContext)
+                                        else if (tag.tag.count >= 3) {
+                                            if tag.tag[2] == "read" {
+                                                return AccountRelayData(url: tag.value, read: true, write: false)
+                                            }
+                                            else if tag.tag[2] == "write" {
+                                                return AccountRelayData(url: tag.value, read: false, write: true)
+                                            }
+                                        }
+                                        return nil
+                                    }
+                                    rwRelays.append(contentsOf: relays)
+                                }
+                                
+                                if let kind10050 = Event.fetchReplacableEvent(10050, pubkey: accountPubkey, context: bg()) {
+                                    let relays: [AccountRelayData] = kind10050.tags().compactMap { tag in
+                                        if (tag.type != "relay") { return nil }
+                                        if (tag.tag.count >= 2) {
+                                            return AccountRelayData(url: tag.value, read: false, write: false, dm: true)
+                                        }
+                                        return nil
+                                    }
+                                    dmRelays.append(contentsOf: relays)
+                                }
+                                
+                                let rwAndDmRelays: [AccountRelayData] =
+                                    rwRelays.map { rwRelay in
+                                        // on rw relays, set dm to true if rwRelay is also in dmRelays
+                                        AccountRelayData(url: rwRelay.url,
+                                                         read: rwRelay.read,
+                                                         write: rwRelay.write,
+                                                         dm: dmRelays.contains(where: { dmRelay in dmRelay.url == rwRelay.url })
+                                        )
+                                    } + dmRelays.filter { dmRelay in // merge remaining dmRelays that are not in rwRelays
+                                        return !rwRelays.contains(where: { rwRelay in rwRelay.url == dmRelay.url } )
+                                    }
+                                
+                                if !rwAndDmRelays.isEmpty {
+                                    DispatchQueue.main.async { [weak account] in
+                                        guard let account else { return }
+                                        account.accountRelays = Set(rwAndDmRelays)
+                                        DataProvider.shared().saveToDiskNow(.viewContext)
+                                        vm.ready(rwAndDmRelays)
+                                    }
+                                } else {
+                                    DispatchQueue.main.async { [weak account] in
+                                        guard let account else { vm.timeout(); return }
+                                        if !account.accountRelays.isEmpty {
+                                            vm.ready(Array(account.accountRelays))
+                                        }
+                                        else {
+                                            vm.timeout()
                                         }
                                     }
-                                    else { req(RM.getRelays(pubkeys: [accountPubkey])) }
                                 }
-                            },
-                            onComplete: { [weak vm] relayMessage, _ in
-                                bg().perform { // 3. WE SHOULD HAVE IT IN LOCAL DB NOW
-                                    guard let vm else { return }
-                                    if let kind10002 = Event.fetchReplacableEvent(10002, pubkey: accountPubkey, context: bg()) {
-                                        let relays:[AccountRelayData] = kind10002.tags().compactMap { tag in
-                                            if (tag.type != "r") { return nil }
-                                            if (tag.tag.count == 2) {
-                                                return AccountRelayData(url: tag.value, read: true, write: true)
-                                            }
-                                            else if (tag.tag.count >= 3) {
-                                                if tag.tag[2] == "read" {
-                                                    return AccountRelayData(url: tag.value, read: true, write: false)
-                                                }
-                                                else if tag.tag[2] == "write" {
-                                                    return AccountRelayData(url: tag.value, read: false, write: true)
-                                                }
-                                            }
-                                            return nil
-                                        }
-                                        vm.ready(relays)
-                                        DispatchQueue.main.async { [weak account] in
-                                            guard let account else { return }
-                                            account.accountRelays = Set(relays)
-                                            DataProvider.shared().saveToDiskNow(.viewContext)
-                                        }
-                                    }
-                                    else { vm.timeout() }
-                                }
-                            },
-                            altReq: nil
-                        ))
-                        vm.fetch()
-                    }
+                            }
+                        },
+                        altReq: nil
+                    ))
+                    vm.fetch()
                 }
         }
     }

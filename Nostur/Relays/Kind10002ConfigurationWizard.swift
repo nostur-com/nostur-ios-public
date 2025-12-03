@@ -33,23 +33,30 @@ struct Kind10002ConfigurationWizard: View {
         relays.filter { $0.read }
     }
     
+    private var dmRelays: [CloudRelay] {
+        relays.filter { $0.auth }
+    }
+    
     @State private var selectedReadRelays: Set<CloudRelay> = []
     @State private var selectedWriteRelays: Set<CloudRelay> = []
+    @State private var selectedDMRelays: Set<CloudRelay> = []
     
     private var allSelectedRelays: [CloudRelay] {
-        Array(selectedReadRelays.union(selectedWriteRelays))
+        Array(selectedReadRelays.union(selectedWriteRelays).union(selectedDMRelays))
     }
     
     enum Step {
         case intro
         case selectWrite
         case selectRead
+        case selectDM
         case confirm
     }
     
     @Namespace private var intro
-    @Namespace private var selecteWrite
+    @Namespace private var selectWrite
     @Namespace private var selectRead
+    @Namespace private var selectDM
     @Namespace private var confirm
     
     
@@ -113,7 +120,7 @@ struct Kind10002ConfigurationWizard: View {
                         }
                     }
                 }
-                .id(selecteWrite)
+                .id(selectWrite)
                 .transition(AnyTransition.asymmetric(
                                 insertion:.move(edge: isBack ? .leading : .trailing),
                                 removal: .move(edge: isBack ? .trailing : .leading))
@@ -144,7 +151,7 @@ struct Kind10002ConfigurationWizard: View {
                         Button("Next") {
                             isBack = false
                             withAnimation {
-                                step = .confirm
+                                step = .selectDM
                             }
                         }
                     }
@@ -154,12 +161,18 @@ struct Kind10002ConfigurationWizard: View {
                                 insertion:.move(edge: isBack ? .leading : .trailing),
                                 removal: .move(edge: isBack ? .trailing : .leading))
                             )
-            case .confirm:
+            case .selectDM:
                 NXForm {
-                    Text("Based on your selection, the following relay set will be published so others can reach account: \(account.anyName).")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    PublishedRelaySet(allSelectedRelays: allSelectedRelays, readRelays: selectedReadRelays, writeRelays: selectedWriteRelays)
+                    Section("Relays to receive private message") {
+                        Text("Which relays should others use to send private messages to \(account.anyName)? (choose 3 max)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        RelaySelector(availableRelays: allRelays, selectedRelays: $selectedDMRelays)
+                    }
+                    
+                    Section("Tip") {
+                        Text("Choose a relay that requires authentication to receive private messages.")
+                    }
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -167,6 +180,48 @@ struct Kind10002ConfigurationWizard: View {
                             isBack = true
                             withAnimation {
                                 step = .selectRead
+                            }
+                        }
+                    }
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Next") {
+                            isBack = false
+                            withAnimation {
+                                step = .confirm
+                            }
+                        }
+                    }
+                }
+                .id(selectDM)
+                .transition(AnyTransition.asymmetric(
+                                insertion:.move(edge: isBack ? .leading : .trailing),
+                                removal: .move(edge: isBack ? .trailing : .leading))
+                            )
+            case .confirm:
+                NXForm {
+                    Section {
+                        PublishedRelaySet(allSelectedRelays: allSelectedRelays, readRelays: selectedReadRelays, writeRelays: selectedWriteRelays, dmRelays: selectedDMRelays)
+                    } header: {
+                        Text("Based on your selection, the following relay set will be published so others can reach account: \(account.anyName).")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } footer: {
+                        VStack(alignment: .leading) {
+                            Text("read: you read from this relay, so others should post there.")
+                                .font(.footnote)
+                            Text("write: you post to this relay, so others read from there.")
+                                .font(.footnote)
+                            Text("dm: you receive private message from this relay, so others should send private messages there.")
+                                .font(.footnote)
+                        }
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Back") {
+                            isBack = true
+                            withAnimation {
+                                step = .selectDM
                             }
                         }
                         .disabled(publishing)
@@ -193,9 +248,11 @@ struct Kind10002ConfigurationWizard: View {
         account.accountRelays = Set(allSelectedRelays.map {
             AccountRelayData(url: ($0.url_ ?? ""),
                              read: selectedReadRelays.contains($0),
-                             write: selectedWriteRelays.contains($0)
+                             write: selectedWriteRelays.contains($0),
+                             dm: selectedDMRelays.contains($0)
             )}
         )
+        
         var kind10002 = NEvent(content: "")
         kind10002.kind = .relayList
         
@@ -213,43 +270,81 @@ struct Kind10002ConfigurationWizard: View {
                 return nil
             }
         
+        var kind10050 = NEvent(content: "")
+        kind10050.kind = .dmRelayList
+        
+        kind10050.tags = account.accountRelays
+            .compactMap { relay in
+                if relay.dm {
+                    return NostrTag(["relay", relay.url])
+                }
+                return nil
+            }
+        
         if account.isNC {
             kind10002.publicKey = account.publicKey
             kind10002 = kind10002.withId()
             
+            kind10050.publicKey = account.publicKey
+            kind10050 = kind10050.withId()
+            
             // Save unsigned event:
             let bgContext = bg()
             bgContext.perform {
-                let savedEvent = Event.saveEvent(event: kind10002, flags: "nsecbunker_unsigned", context: bgContext)
+                let savedEvent10002 = Event.saveEvent(event: kind10002, flags: "nsecbunker_unsigned", context: bgContext)
+                let savedEvent10050 = Event.saveEvent(event: kind10050, flags: "nsecbunker_unsigned", context: bgContext)
                 DataProvider.shared().saveToDiskNow(.bgContext)
                 onDismiss()
                 dismiss()
                 DispatchQueue.main.async {
-                    NSecBunkerManager.shared.requestSignature(forEvent: kind10002, usingAccount: account, whenSigned: { signedEvent in
+                    NSecBunkerManager.shared.requestSignature(forEvent: kind10002, usingAccount: account, whenSigned: { signedEvent10002 in
                         bgContext.perform {
-                            savedEvent.sig = signedEvent.signature
-                            savedEvent.flags = ""
+                            savedEvent10002.sig = signedEvent10002.signature
+                            savedEvent10002.flags = ""
                             DispatchQueue.main.async {
-                                Unpublisher.shared.publishNow(signedEvent)
+                                Unpublisher.shared.publishNow(signedEvent10002)
+                            }
+                        }
+                    })
+                    NSecBunkerManager.shared.requestSignature(forEvent: kind10050, usingAccount: account, whenSigned: { signedEvent10050 in
+                        bgContext.perform {
+                            savedEvent10050.sig = signedEvent10050.signature
+                            savedEvent10050.flags = ""
+                            DispatchQueue.main.async {
+                                Unpublisher.shared.publishNow(signedEvent10050)
                             }
                         }
                     })
                 }
             }
         }
-        else if let signedEvent = try? account.signEvent(kind10002) {
-            let bgContext = bg()
-            bgContext.perform {
-                _ = Event.saveEvent(event: signedEvent, context: bgContext)
-                DataProvider.shared().saveToDiskNow(.bgContext)
-                onDismiss()
-                dismiss()
-                DispatchQueue.main.async {
-                    Unpublisher.shared.publishNow(signedEvent)
+        else {
+            if let signedEvent10002 = try? account.signEvent(kind10002) {
+                let bgContext = bg()
+                bgContext.perform {
+                    _ = Event.saveEvent(event: signedEvent10002, context: bgContext)
+                    DataProvider.shared().saveToDiskNow(.bgContext)
+                    onDismiss()
+                    dismiss()
+                    DispatchQueue.main.async {
+                        Unpublisher.shared.publishNow(signedEvent10002)
+                    }
+                }
+            }
+            
+            if let signedEvent10050 = try? account.signEvent(kind10050) {
+                let bgContext = bg()
+                bgContext.perform {
+                    _ = Event.saveEvent(event: signedEvent10050, context: bgContext)
+                    DataProvider.shared().saveToDiskNow(.bgContext)
+                    onDismiss()
+                    dismiss()
+                    DispatchQueue.main.async {
+                        Unpublisher.shared.publishNow(signedEvent10050)
+                    }
                 }
             }
         }
-        
     }
 }
 
@@ -303,35 +398,21 @@ struct RelaySelector: View {
 }
 
 struct PublishedRelaySet: View {
-    public var allSelectedRelays:[CloudRelay]
-    public var readRelays:Set<CloudRelay>
-    public var writeRelays:Set<CloudRelay>
+    public var allSelectedRelays: [CloudRelay]
+    public var readRelays: Set<CloudRelay>
+    public var writeRelays: Set<CloudRelay>
+    public var dmRelays: Set<CloudRelay>
     
     var body: some View {
         ForEach(allSelectedRelays) { selectedRelay in
-            if readRelays.contains(selectedRelay) && writeRelays.contains(selectedRelay) {
-                HStack {
-                    Text(selectedRelay.url_ ?? "(no relay url)")
-                    Spacer()
-                    Text("read + write")
-                        .foregroundColor(.secondary)
-                }
-            }
-            else if readRelays.contains(selectedRelay) {
-                HStack {
-                    Text(selectedRelay.url_ ?? "(no relay url)")
-                    Spacer()
-                    Text("read")
-                        .foregroundColor(.secondary)
-                }
-            }
-            else if writeRelays.contains(selectedRelay) {
-                HStack {
-                    Text(selectedRelay.url_ ?? "(no relay url)")
-                    Spacer()
-                    Text("write")
-                        .foregroundColor(.secondary)
-                }
+            HStack {
+                Text(selectedRelay.url_ ?? "(no relay url)")
+                Spacer()
+                Text([readRelays.contains(selectedRelay) ? "read" : nil,
+                      writeRelays.contains(selectedRelay) ? "write" : nil,
+                       dmRelays.contains(selectedRelay) ? "dm" : nil].compactMap { $0 }
+                          .joined(separator: " + "))
+                    .foregroundColor(.secondary)
             }
         }
     }

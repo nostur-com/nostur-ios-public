@@ -113,6 +113,7 @@ public enum NEventKind: Codable, Equatable {
     case zapNote
     case highlight
     case relayList
+    case dmRelayList
     case pinnedList
     case latestPinned
     case blossomServerList
@@ -156,6 +157,7 @@ public enum NEventKind: Codable, Equatable {
         case  9802: self = .highlight
         case 10001: self = .pinnedList
         case 10002: self = .relayList
+        case 10050: self = .dmRelayList
         case 10601: self = .latestPinned
         case 10063: self = .blossomServerList
         case 13194: self = .nwcInfo
@@ -200,6 +202,7 @@ public enum NEventKind: Codable, Equatable {
         case .highlight:                return 9802
         case .pinnedList:               return 10001
         case .relayList:                return 10002
+        case .dmRelayList:              return 10050
         case .latestPinned:             return 10601
         case .blossomServerList:        return 10063
         case .nwcInfo:                  return 13194
