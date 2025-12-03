@@ -821,6 +821,7 @@ struct PreviewContainer<Content: View>: View {
                     .environmentObject(pe.cp)
                     .environmentObject(pe.dm)
                     .environmentObject(NetworkMonitor.shared)
+                    .environmentObject(VideoPostPlaybackCoordinator())
                     .buttonStyle(NRButtonStyle())
                     .tint(Themes.GREEN.accent)
             }

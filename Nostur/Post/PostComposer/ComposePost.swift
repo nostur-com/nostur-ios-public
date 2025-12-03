@@ -447,6 +447,7 @@ struct ComposePost: View {
             ConnectionPool.shared.connectAllWrite()
         }
         .background(theme.listBackground)
+        .environmentObject(VideoPostPlaybackCoordinator())
     }
     
     @ViewBuilder
