@@ -65,7 +65,7 @@ struct VideoPost: View {
                         .frame(width: videoWidth, height: availableHeight)
                         .onTapGesture { isPlaying.toggle() }
                         .modifier {
-                            if !isDetail {
+                            if !isDetail && !nxViewingContext.contains(.preview) {
                                 $0.onGeometryChange(for: CGFloat.self) { proxy in
                                     let globalFrame = proxy.frame(in: .global)
                                     let mainScreen = UIScreen.main.bounds
@@ -103,7 +103,7 @@ struct VideoPost: View {
                             .frame(width: videoWidth, height: availableHeight)
                             .onTapGesture { isPlaying.toggle() }
                             .modifier {
-                                if !isDetail {
+                                if !isDetail && !nxViewingContext.contains(.preview) {
                                     $0.onAppear {
                                         canPlay = true
                                         guard isVisible else { return }
