@@ -20,16 +20,17 @@ struct NoteById: View {
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .onBecomingVisible { [weak vm] in
+                    let eventId = self.id
                     let fetchParams: FetchVM.FetchParams = (
                         prio: true,
                         req: { [weak vm] taskId in
                             bg().perform {
                                 guard let vm else { return }
-                                if let event = Event.fetchEvent(id: self.id, context: bg()) {
+                                if let event = Event.fetchEvent(id: eventId, context: bg()) {
                                     vm.ready(NRPost(event: event, withFooter: false))
                                 }
                                 else {
-                                    req(RM.getEvent(id: self.id, subscriptionId: taskId))
+                                    req(RM.getEvent(id: eventId, subscriptionId: taskId))
                                 }
                             }
                         },
@@ -37,12 +38,13 @@ struct NoteById: View {
                             guard let vm else { return }
                             if case .ready(_) = vm.state { return }
                             
-                            if let event = event, event.id == self.id {
+                            if let event = event, event.id == eventId {
                                 vm.ready(NRPost(event: event, withFooter: false))
                             }
-                            else if let event = Event.fetchEvent(id: self.id, context: bg()) {
+                            else if let event = Event.fetchEvent(id: eventId, context: bg()) {
                                 vm.ready(NRPost(event: event, withFooter: false))
                             }
+                            // This is skipped if we are .altLoading, goes to .timeout()
                             else if [.initializing, .loading].contains(vm.state) {
                                 // try search relays
                                 vm.altFetch()
@@ -53,7 +55,7 @@ struct NoteById: View {
                         },
                         altReq: { taskId in
                             // Try search relays
-                            req(RM.getEvent(id: self.id, subscriptionId: taskId), relayType: .SEARCH)
+                            req(RM.getEvent(id: eventId, subscriptionId: taskId), relayType: .SEARCH)
                         }
                     )
                     vm?.setFetchParams(fetchParams)

@@ -107,9 +107,11 @@ struct Repost: View {
                                     }
                                 }
                                 else if let event = Event.fetchEvent(id: firstQuoteId, context: bg()) { // 3. WE FOUND IT ON RELAY
+#if DEBUG
                                     if vm.state == .altLoading, let relay = self.relayHint {
                                         L.og.debug("Event found on using relay hint: \(firstQuoteId) - \(relay)")
                                     }
+#endif
                                     let nrFirstQuote = NRPost(event: event, withFooter: false)
                                     Task { @MainActor in
                                         guard noteRowAttributes.firstQuote == nil else { return }
@@ -118,6 +120,7 @@ struct Repost: View {
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set
+                                // This is skipped if we are .altLoading, goes to .timeout()
                                 else if (SettingsStore.shared.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
                                     // try search relays and relay hint
                                     vm.altFetch()
@@ -126,15 +129,20 @@ struct Repost: View {
                                     vm.timeout()
                                 }
                             },
-                            altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                            altReq: { taskId in
                                 // Try search relays
                                 req(RM.getEvent(id: firstQuoteId, subscriptionId: taskId), relayType: .SEARCH)
+                                
+                                // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
                                 guard let relayHint = nrPost.fastTags.first(where: {
                                     $0.0 == "e" && $0.1 == firstQuoteId && $0.2 != ""
                                 })?.2 else { return }
+                                
                                 self.relayHint = relayHint
                                 
+#if DEBUG
                                 L.og.debug("FetchVM.3 HINT \(firstQuoteId) \(relayHint)")
+#endif
                                 ConnectionPool.shared.sendEphemeralMessage(
                                     RM.getEvent(id: firstQuoteId, subscriptionId: taskId),
                                     relay: relayHint

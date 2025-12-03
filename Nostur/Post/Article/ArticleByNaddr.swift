@@ -70,13 +70,16 @@ struct ArticleByNaddr: View {
                                                                                     pubkey: pubkey,
                                                                                     definition: definition,
                                                                                     context: bg()) { // 3. WE FOUND IT ON RELAY
+#if DEBUG
                                     if vm.state == .altLoading, let relay = naddr.relays.first {
                                         L.og.debug("Event found on using relay hint: \(event.id) - \(relay)")
                                     }
+#endif
                                     vm.ready(NRPost(event: event, withFooter: false))
                                 }
                                 // Still don't have the event? try to fetch from relay hint
                                 // TODO: Should try a relay we don't already have in our relay set
+                                // This is skipped if we are .altLoading, goes to .timeout()
                                 else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
                                     // try search relays and relay hint
                                     vm.altFetch()
@@ -85,12 +88,16 @@ struct ArticleByNaddr: View {
                                     vm.timeout()
                                 }
                             },
-                            altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                            altReq: { taskId in
                                 // Try search relays
                                 req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId), relayType: .SEARCH)
-                                guard let relay = naddr.relays.first else { return }
                                 
+                                // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                                guard let relay = naddr.relays.first else { return }
+                               
+#if DEBUG
                                 L.og.debug("FetchVM.3 HINT \(relay)")
+#endif
                                 ConnectionPool.shared.sendEphemeralMessage(
                                     RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId),
                                     relay: relay
@@ -215,9 +222,16 @@ struct ArticleTitleByNaddr: View {
                                                                             pubkey: pubkey,
                                                                             definition: definition,
                                                                             context: bg()) { // 3. WE FOUND IT ON RELAY
-                            if vm.state == .altLoading, let relay = naddr.relays.first {
-                                L.og.debug("Event found on using relay hint: \(event.id) - \(relay)")
+#if DEBUG
+                            if vm.state == .altLoading {
+                                if let relay = naddr.relays.first {
+                                    L.og.debug("Event found on using search relays or relay hint: \(event.id) - \(relay)")
+                                }
+                                else {
+                                    L.og.debug("Event found on using search relays")
+                                }
                             }
+#endif
                             if let title = NRPost(event: event, withFooter: false).eventTitle {
                                 vm.ready(title)
                             }
@@ -227,6 +241,7 @@ struct ArticleTitleByNaddr: View {
                         }
                         // Still don't have the event? try to fetch from relay hint
                         // TODO: Should try a relay we don't already have in our relay set
+                        // This is skipped if we are .altLoading, goes to .timeout()
                         else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
                             // try search relays and relay hint
                             vm.altFetch()
@@ -235,12 +250,16 @@ struct ArticleTitleByNaddr: View {
                             vm.timeout()
                         }
                     },
-                    altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                    altReq: { taskId in
                         // Try search relays
                         req(RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId), relayType: .SEARCH)
+                        
+                        // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
                         guard let relay = naddr.relays.first else { return }
                         
+#if DEBUG
                         L.og.debug("FetchVM.4 HINT \(relay)")
+#endif
                         ConnectionPool.shared.sendEphemeralMessage(
                             RM.getArticle(pubkey: pubkey, kind:Int(kind), definition: definition, subscriptionId: taskId),
                             relay: relay

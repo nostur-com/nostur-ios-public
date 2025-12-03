@@ -57,15 +57,21 @@ struct NEventView: View {
                             vm.ready(NRPost(event: event, withFooter: false))
                         }
                         else if let event = Event.fetchEvent(id: eventId, context: bg()) { // 3. WE FOUND IT ON RELAY
-                            if vm.state == .altLoading, let relay = identifier.relays.first {
 #if DEBUG
-                                L.og.debug("Event found on using relay hint: \(eventId) - \(relay)")
-#endif
+                            if vm.state == .altLoading {
+                                if let relay = identifier.relays.first {
+                                    L.og.debug("Event found on using search relays or relay hint: \(eventId) - \(relay)")
+                                }
+                                else {
+                                    L.og.debug("Event found on using search relays")
+                                }
                             }
+#endif
                             vm.ready(NRPost(event: event, withFooter: false))
                         }
                         // Still don't have the event? try to fetch from relay hint
                         // TODO: Should try a relay we don't already have in our relay set
+                        // This is skipped if we are .altLoading, goes to .timeout()
                         else if (settings.followRelayHints && vpnGuardOK()) && [.initializing, .loading].contains(vm.state) {
                             // try search relays and relay hint
                             vm.altFetch()
@@ -74,9 +80,11 @@ struct NEventView: View {
                             vm.timeout()
                         }
                     },
-                    altReq: { taskId in // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
+                    altReq: { taskId in
                         // Try search relays
                         req(RM.getEvent(id: eventId, subscriptionId: taskId), relayType: .SEARCH)
+                        
+                        // IF WE HAVE A RELAY HINT WE USE THIS REQ, TRIGGERED BY vm.altFetch()
                         guard let relay = identifier.relays.first else { return }
                         
 #if DEBUG

@@ -77,6 +77,7 @@ class FetchVM<T: Equatable>: ObservableObject {
         }
     }
     
+    @MainActor
     public func fetch() {
         guard let _fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
         let reqTask = ReqTask(
@@ -101,6 +102,7 @@ class FetchVM<T: Equatable>: ObservableObject {
             })
 
         self.backlog.add(reqTask)
+        self.state = .loading
         reqTask.fetch()
     }
     
