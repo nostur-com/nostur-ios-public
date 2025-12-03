@@ -777,21 +777,6 @@ class NotificationsViewModel: ObservableObject {
         }
     }
     
-    @MainActor public func markNewPostsAsRead(before: Int64) {
-        bg().perform { [weak self] in
-            guard let self = self else { return }
-            let beforeDate = NSDate(timeIntervalSince1970: TimeInterval(before))
-            let r3 = NSBatchUpdateRequest(entityName: "PersistentNotification")
-            r3.propertiesToUpdate = ["readAt": NSDate()]
-            r3.predicate = NSPredicate(format: "readAt == nil AND type_ == %@ AND NOT id == nil AND createdAt <= %@", PNType.newPosts.rawValue, beforeDate)
-            r3.resultType = .updatedObjectIDsResultType
-
-            let _ = try? bg().execute(r3) as? NSBatchUpdateResult
-            
-            self.checkForUnreadNewPosts()
-        }
-    }
-    
     @MainActor public func markRepostsAsRead() {
         self.unreadReposts_ = 0
         guard let account = self.account else { return }

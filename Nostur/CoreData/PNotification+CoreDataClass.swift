@@ -89,14 +89,9 @@ public class PersistentNotification: NSManagedObject {
         return newPostNotification
     }
     
-    static func fetchUnreadNewPostNotifications(accountPubkey: String? = nil) -> [PersistentNotification] {
+    static func fetchUnreadNewPostNotifications() -> [PersistentNotification] {
         let fr = PersistentNotification.fetchRequest()
-        if let accountPubkey {
-            fr.predicate = NSPredicate(format: "pubkey = %@ AND readAt = nil AND type_ = %@ AND NOT id = nil", accountPubkey, PersistentNotificationType.newPosts.rawValue)
-        }
-        else {
-            fr.predicate = NSPredicate(format: "readAt = nil AND type_ = %@ AND NOT id = nil", PersistentNotificationType.newPosts.rawValue)
-        }
+        fr.predicate = NSPredicate(format: "readAt = nil AND type_ = %@ AND NOT id = nil", PersistentNotificationType.newPosts.rawValue)
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \PersistentNotification.createdAt, ascending: false)]
         guard let existing = (try? context().fetch(fr)) else { return [] }
         return existing

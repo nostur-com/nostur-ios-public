@@ -88,7 +88,7 @@ struct NewPostsBy: View {
         .onAppear {
             guard IS_DESKTOP_COLUMNS() || (selectedTab() == "Notifications" && selectedNotificationsTab == "New Posts") else { return }
             vm.load()
-            NotificationsViewModel.shared.markNewPostsAsRead(before: since)
+            NotificationsViewModel.shared.markNewPostsAsRead()
         }
         .onChange(of: selectedNotificationsTab) { newValue in
             guard newValue == "New Posts" else { return }
