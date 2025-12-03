@@ -24,7 +24,7 @@ struct VideoPostLayout<Content: View>: View {
                             .lineLimit(2)
                             .layoutPriority(1)
                             .fontWeightBold()
-                            .padding(5)
+                            .padding(.vertical, 5)
                     }
                     
                     MinimalNoteTextRenderView(nrPost: nrPost, textColor: Color.white)
@@ -34,7 +34,7 @@ struct VideoPostLayout<Content: View>: View {
                             .foregroundColor(Color.white)
                             .lineLimit(30)
                             .font(.caption)
-                            .padding(5)
+                            .padding(.vertical, 5)
                     }
                 }
                 .padding(10)
