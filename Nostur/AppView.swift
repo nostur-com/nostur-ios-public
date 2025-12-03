@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Nuke
+import AVKit
 
 struct AppView: View {
     @Environment(\.scenePhase) private var scenePhase
@@ -108,6 +109,8 @@ extension AppView {
                     FeedsCoordinator.shared.resumeFeeds()
                     NotificationsViewModel.restoreSubscriptions()
                     AppState.shared.startTaskTimers()
+                    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+                    try? AVAudioSession.sharedInstance().setActive(true)
                 }
             }
             else {

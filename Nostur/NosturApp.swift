@@ -8,6 +8,7 @@
 import SwiftUI
 import NostrEssentials
 import NavigationBackport
+import AVKit
 
 @main
 struct AppLoader {
@@ -84,7 +85,8 @@ struct iOSApp: App {
                 .environmentObject(themes)
                 .environmentObject(accountsState)
                 .environment(\.managedObjectContext, DataProvider.shared().container.viewContext)
-                .onAppear { 
+                .onAppear {
+                    enableAudioPlayback()
                     hideTitleBarOnCatalyst()
 #if DEBUG
                     // Log connection counts after a short delay to see startup state
@@ -99,6 +101,11 @@ struct iOSApp: App {
                 }
         }
     }
+}
+
+func enableAudioPlayback() {
+    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+    try? AVAudioSession.sharedInstance().setActive(true)
 }
 
 func hideTitleBarOnCatalyst() {
