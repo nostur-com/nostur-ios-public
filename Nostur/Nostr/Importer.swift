@@ -228,12 +228,9 @@ class Importer {
                             }
                         }
                         Event.updateRelays(event.id, relays: message.relays, isWrapId: event.kind.id == 1059, context: bgContext)
-                        var alreadySavedSubs = Set<String>()
                         if let subscriptionId = message.subscriptionId {
-                            alreadySavedSubs.insert(subscriptionId)
+                            self.importedMessagesFromSubscriptionIds.send([subscriptionId])
                         }
-                        self.importedMessagesFromSubscriptionIds.send(alreadySavedSubs)
-                        
                         // For live chat rooms
                         if event.kind == .zapNote || event.kind == .chatMessage {
                             DispatchQueue.main.async { // TODO: Need to check how to handle .receivedMessage in case of GiftWrap (so far not needed, yet)
@@ -359,10 +356,6 @@ class Importer {
                             }
                         }
                         Event.updateRelays(event.id, relays: message.relays, isWrapId: event.kind.id == 1059, context: bgContext)
-                        var alreadySavedSubs = Set<String>()
-                        if let subscriptionId = message.subscriptionId {
-                            alreadySavedSubs.insert(subscriptionId)
-                        }
                         continue
                     }
                     
