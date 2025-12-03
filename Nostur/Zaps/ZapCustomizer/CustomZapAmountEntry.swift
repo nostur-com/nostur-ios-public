@@ -31,7 +31,7 @@ struct CustomZapAmountEntry: View {
     }
     
     var body: some View {
-        Form {
+        NXForm {
                 Section(header: Text("Amount (satoshis)")) {
                     TextField("Zap custom amount", text: $enteredAmount, prompt: Text("0"))
                         .keyboardType(.numberPad)
@@ -42,7 +42,6 @@ struct CustomZapAmountEntry: View {
                     }
                 }
         }
-        .formStyleGrouped()
         .onAppear {
             customAmount = 0
             focusedField = .amount

@@ -229,12 +229,9 @@ struct ZapCustomizerSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(role: .cancel) {
+                    Button("Cancel", systemImage: "xmark") {
                         dismiss()
-                    } label: {
-                        Text("Cancel")
                     }
-                    
                 }
             }
             .sheet(isPresented: $showCustomAmountsheet) {
