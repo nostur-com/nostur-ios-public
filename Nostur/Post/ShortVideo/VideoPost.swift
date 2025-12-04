@@ -83,7 +83,7 @@ struct VideoPost: View {
                                 }
                                 .onDisappear {
                                     canPlay = false
-                                    guard isVisible else { return }
+                                    //guard isVisible else { return }
                                     coordinator.removeVisibility(postID: postID)
                                     isPlaying = false
                                 }

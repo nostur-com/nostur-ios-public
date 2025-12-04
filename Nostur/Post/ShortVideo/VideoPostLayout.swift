@@ -12,7 +12,6 @@ struct VideoPostLayout<Content: View>: View {
     let theme: Theme
     @ViewBuilder var content: Content
 
-    
     var body: some View {
         self.content
             // Post info
@@ -38,7 +37,7 @@ struct VideoPostLayout<Content: View>: View {
                     }
                 }
                 .padding(10)
-                .offset(y: -65.0)
+                .offset(y: -95.0)
             }
         
             // Buttons
