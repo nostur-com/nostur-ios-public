@@ -104,7 +104,7 @@ struct iOSApp: App {
 }
 
 func enableAudioPlayback() {
-    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+    try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
     try? AVAudioSession.sharedInstance().setActive(true)
 }
 
