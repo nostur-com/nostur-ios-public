@@ -58,9 +58,13 @@ class FetchVM<T: Equatable>: ObservableObject {
                 _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
             })
-        self.state = .altLoading
-        self.backlog.add(altReqTask)
-        altReqTask.fetch()
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.state = .altLoading
+            self.backlog.add(altReqTask)
+            altReqTask.fetch()
+        }
     }
     
     public func timeout() {

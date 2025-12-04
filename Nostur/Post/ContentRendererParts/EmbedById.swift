@@ -13,7 +13,7 @@ struct EmbedById: View {
     public let id: String
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
-    @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
+    @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05, backlogDebugName: "EmbedById")
     @State private var nevent: String? = nil
     
     var body: some View {
