@@ -155,7 +155,14 @@ struct MainTabsDesktop: View {
                 .padding(.bottom, 4)
                 
                 Button(action: {
-                    sendNotification(.newPost)
+                    let newPostKind: NEventKind = if selectedSubTab() == "Picture" {
+                        .picture
+                    } else if selectedSubTab() == "Yak" {
+                        .shortVoiceMessage
+                    } else {
+                        .textNote
+                    }
+                    AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: newPostKind)
                 }, label: {
                     Label("New Post", systemImage: "plus")
                         .labelStyle(.iconOnly)
