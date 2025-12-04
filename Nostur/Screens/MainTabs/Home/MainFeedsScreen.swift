@@ -88,6 +88,9 @@ struct MainFeedsScreen: View {
     @State private var showLiveEventsBanner = false
     
     var body: some View {
+#if DEBUG
+        let _ = Self._printChanges()
+#endif
         VStack(spacing: 0) {
             if #available(iOS 26.0, *) {
                 // Moved to .toolbar in iOS 26
