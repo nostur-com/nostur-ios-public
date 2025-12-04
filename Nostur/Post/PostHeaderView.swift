@@ -65,6 +65,7 @@ struct PostHeaderView: View {
     public let displayUserAgentEnabled: Bool
     public let singleLine: Bool
     public var restricted: Bool = false
+    public var isPrivate: Bool = false
     
     public var nrContact: NRContact? = nil
 
@@ -83,8 +84,12 @@ struct PostHeaderView: View {
                     guard !nxViewingContext.contains(.preview) else { return }
                     onTap?()
                 }
-            
-            if restricted {
+            if isPrivate {
+                PrivateLabel()
+                    .lineLimit(1)
+                    .infoText("This is a private post. Only you can see it.")
+            }
+            else if restricted {
                 RestrictedLabel()
                     .lineLimit(1)
                     .infoText("The author has marked this post as restricted.\n\nA restricted post is intended to be sent only to specific relays and should not be rebroadcasted to other relays.")
@@ -161,6 +166,21 @@ struct RestrictedLabel: View {
         Text("restricted", comment: "Label shown on a restricted post").font(.system(size: 12.0))
             .padding(.horizontal, 8)
             .background(theme.accent.opacity(0.8))
+            .foregroundColor(.white)
+            .cornerRadius(8)
+            .padding(.top, 3)
+            .layoutPriority(2)
+    }
+}
+
+struct PrivateLabel: View {
+    @Environment(\.theme) private var theme
+    
+    var body: some View {
+        Image(systemName: "lock.fill")
+            .font(.system(size: 12.0))
+            .padding(.horizontal, 8)
+            .background(theme.accent)
             .foregroundColor(.white)
             .cornerRadius(8)
             .padding(.top, 3)
