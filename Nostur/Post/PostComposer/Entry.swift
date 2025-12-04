@@ -441,7 +441,7 @@ struct Entry: View {
         }
         else {
             Button(String(localized:"Include author", comment: "Button to include author in Highlight"), systemImage: "person.crop.circle.badge.plus") { isAuthorSelectionShown = true }
-                .help("Include column")
+                .help("Include author")
         }
     }
     
