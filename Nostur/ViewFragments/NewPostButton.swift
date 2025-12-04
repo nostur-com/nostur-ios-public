@@ -1,5 +1,5 @@
 //
-//  NewNoteButton.swift
+//  NewPostButton.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 24/02/2023.
@@ -7,15 +7,18 @@
 
 import SwiftUI
 
-struct NewNoteButton: View {
+struct NewPostButton: View {
     @Environment(\.theme) private var theme
-    @Binding var showingNewNote: Bool
+    private var action: () -> Void
+    
+    init(action: @escaping () -> Void) {
+        self.action = action
+    }
     
     var body: some View {
-        
         Button {
             guard isFullAccount() else { showReadOnlyMessage(); return }
-            showingNewNote = true
+            action()
         } label: {
             Label(String(localized:"New post", comment: "Button to create a new post"), systemImage: "plus")
                 .font(.title)
@@ -29,7 +32,7 @@ struct NewNoteButton: View {
     }
 }
 
-struct NewNoteButton_Previews: PreviewProvider {
+struct NewPostButton_Previews: PreviewProvider {
     
     @State static var showingNewNote = false
     
@@ -70,12 +73,14 @@ struct NewNoteButton_Previews: PreviewProvider {
                 .font(.title2)
             }
             .overlay {
-                NewNoteButton(showingNewNote: $showingNewNote)
-                    .sheet(isPresented: $showingNewNote) {
-                        ComposePost(onDismiss: { })
-                    }
-                    .buttonStyleGlass()
-                    .padding(30)
+                NewPostButton(action: {
+                    showingNewNote = true
+                })
+                .sheet(isPresented: $showingNewNote) {
+                    ComposePost(onDismiss: { })
+                }
+                .buttonStyleGlass()
+                .padding(30)
             }
         }
     }

@@ -98,7 +98,7 @@ struct SideTabs: View {
             
             Spacer()
             
-            Button { sendNotification(.newPost) } label: {
+            Button { AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote) } label: {
                 Image(systemName: "square.and.pencil.circle.fill")
             }
             .help("New Post")

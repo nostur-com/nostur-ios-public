@@ -54,7 +54,6 @@ struct MainFeedsScreen: View {
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
 
-    @State private var showingNewNote = false
     @State private var didSend = false
     
     @State private var columnConfigs: [NXColumnConfig] = []
@@ -377,10 +376,19 @@ struct MainFeedsScreen: View {
                 // On 26.0 the new post button is integrated in the new tab bar (or in the custom tabbar on Tahoe)
                 if !AVAILABLE_26 {
                     $0.overlay(alignment: .bottomTrailing) {
-                        NewNoteButton(showingNewNote: $showingNewNote)
-                            .padding([.top, .leading, .bottom], 10)
-                            .padding([.trailing], 25)
-                            .buttonStyleGlassProminent()
+                        NewPostButton(action: {
+                            let newPostKind: NEventKind = if selectedSubTab == "Picture" {
+                                .picture
+                            } else if selectedSubTab == "Yak" {
+                                .shortVoiceMessage
+                            } else {
+                                .textNote
+                            }
+                            AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: newPostKind)
+                        })
+                        .padding([.top, .leading, .bottom], 10)
+                        .padding([.trailing], 25)
+                        .buttonStyleGlassProminent()
                     }
                 }
                 else {
@@ -485,30 +493,6 @@ struct MainFeedsScreen: View {
                 }
             }
         }
-        
-        .sheet(isPresented: $showingNewNote) {
-            NRNavigationStack {
-                if la.account.isNC {
-                    WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                        ComposePost(onDismiss: { showingNewNote = false }, kind: self.postType)
-                    }
-                    .environment(\.theme, theme)
-                }
-                else {
-                    ComposePost(onDismiss: { showingNewNote = false }, kind: self.postType)
-                        .environment(\.theme, theme)
-                }
-            }
-            .presentationBackgroundCompat(theme.listBackground)
-            .environmentObject(la)
-        }
-        .onReceive(receiveNotification(.newPost)) { _ in
-            showingNewNote = true
-        }
-        .onReceive(receiveNotification(.newTemplatePost)) { _ in
-            // Note: use  Drafts.shared.draft = ...
-            showingNewNote = true
-        }
         .modifier {
             if #available(iOS 26.0, *) {
                 $0.toolbar {
@@ -587,16 +571,7 @@ struct MainFeedsScreen: View {
             }
         }
     }
-    
-    private var postType: NEventKind {
-        if #available(iOS 16.0,* ), selectedTab == "Main" && selectedSubTab == "Picture" {
-            return .picture
-        }
-        if #available(iOS 16.0,* ), selectedTab == "Main" && selectedSubTab == "Yak" {
-            return .shortVoiceMessage
-        }
-        return .textNote
-    }
+
     
     private func removeDuplicateLists() {
         var uniqueLists = Set<UUID>()

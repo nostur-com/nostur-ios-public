@@ -418,8 +418,13 @@ struct ComposePost: View {
             guard !didLoad else { return }
             didLoad = true
             vm.activeAccount = account()
-            
-            if #available(iOS 16.0, *), kind == .picture {
+            if #available(iOS 16.0, *), kind == .shortVoiceMessage {
+                var voiceMessageNEvent = NEvent(content: "")
+                voiceMessageNEvent.kind = .shortVoiceMessage
+                vm.nEvent = voiceMessageNEvent
+                showAudioRecorder = true
+            }
+            else if #available(iOS 16.0, *), kind == .picture {
                 var pictureEvent = NEvent(content: "")
                 pictureEvent.kind = .picture
                 vm.nEvent = pictureEvent

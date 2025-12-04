@@ -30,7 +30,6 @@ struct ProfileView: View {
     @State private var selectedSubTab = "Posts"
 
     @State private var editingAccount: CloudAccount?
-    @State private var showingNewNote = false
     
     @State private var scrollPosition = NXScrollPosition()
     
@@ -177,7 +176,7 @@ struct ProfileView: View {
         .listRowInsets(EdgeInsets())
         .listStyle(.plain)
         .modifier {
-            if #available(iOS 26.0, *) {
+            if AVAILABLE_26 {
                 $0.overlay(alignment: .top) {
                     ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount)
                         .frame(height: 51)
@@ -191,13 +190,16 @@ struct ProfileView: View {
             else {
                 $0.toolbar {
                     ProfileToolbar(pubkey: nrContact.pubkey, nrContact: nrContact, scrollPosition: scrollPosition, editingAccount: $editingAccount)
-                }
+                  }
+                  .overlay(alignment: .bottomTrailing) { // On 26.0 the new post button is integrated in the new tab bar (or in the custom tabbar on Tahoe)
+                      NewPostButton(action: {
+                          AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote, directMention: nrContact)
+                      })
+                      .padding([.top, .leading, .bottom], 10)
+                      .padding([.trailing], 25)
+                      .buttonStyleGlassProminent()
+                   }
             }
-        }
-        .overlay(alignment: .bottomTrailing) {
-            NewNoteButton(showingNewNote: $showingNewNote)
-                .padding([.top, .leading, .bottom], 10)
-                .padding([.trailing], 25)
         }
         .sheet(item: $editingAccount) { account in
             NBNavigationStack {
@@ -207,28 +209,7 @@ struct ProfileView: View {
             .nbUseNavigationStack(.never)
             .presentationBackgroundCompat(theme.listBackground)
         }
-        .sheet(isPresented: $showingNewNote) {
-            NBNavigationStack {
-                if let account = Nostur.account() {
-                    if account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
-                            ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
-                                .environment(\.theme, theme)
-                                .environmentObject(la)
-//                                .environmentObject(screenSpace)
-                        }
-                    }
-                    else {
-                        ComposePost(directMention: nrContact, onDismiss: { showingNewNote = false })
-                            .environment(\.theme, theme)
-                            .environmentObject(la)
-//                            .environmentObject(screenSpace)
-                    }
-                }
-            }
-            .nbUseNavigationStack(.never)
-            .presentationBackgroundCompat(theme.listBackground)
-        }
+
         
         .nbNavigationDestination(isPresented: $showFollowing) {
             NXList(plain: true) {

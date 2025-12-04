@@ -243,8 +243,16 @@ struct MainTabs26: View {
         if tabName == "New Post" {
             selectedTab = oldTab
             guard isFullAccount() else { showReadOnlyMessage(); return }
-            sendNotification(.newPost)
-            return
+            
+            if oldTab == "Main" && selectedSubTab == "Picture" {
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .picture)
+            }
+            else if oldTab == "Main" && selectedSubTab == "Yak" {
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVoiceMessage)
+            }
+            else {
+                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote)
+            }
         }
         
         // Only do something if we are already on same the tab

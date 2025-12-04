@@ -445,6 +445,12 @@ struct MiniProfileSheetInfo: Identifiable, Equatable {
     }
 }
 
+struct NewPostInfo: Identifiable, Hashable {
+    let id = UUID()
+    let kind: NEventKind
+    var directMention: NRContact? = nil
+}
+
 struct ReplyTo: Identifiable, Hashable {
     let id = UUID()
     let nrPost: NRPost

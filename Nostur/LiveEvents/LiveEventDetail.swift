@@ -343,7 +343,7 @@ struct LiveEventDetail: View {
                             }
                             Drafts.shared.draft = "\(liveEvent.title ?? "Join") 👇\n\n" + "nostr:" + roomAddress
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                sendNotification(.newTemplatePost)
+                                AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .textNote)
                             }
                         }
                     }

@@ -23,6 +23,7 @@ class AppSheetsModel: ObservableObject {
     @Published var emojiRR: EmojiPickerFor? = nil
     @Published var feedSettingsFeed: CloudFeed? = nil
     @Published var showReplyToSheet: ReplyTo? = nil
+    @Published var newPostInfo: NewPostInfo? = nil
     
     // Workaround because .sheet / .fullScreenCover has some issues with NavigationBackPort where dismiss() doesn't work
     @MainActor func dismiss() {
@@ -35,6 +36,7 @@ class AppSheetsModel: ObservableObject {
         emojiRR = nil
         feedSettingsFeed = nil
         showReplyToSheet = nil
+        newPostInfo = nil
     }
 }
 
@@ -69,6 +71,27 @@ struct WithAppSheets: ViewModifier {
                 }
                 .nbUseNavigationStack(.never)
                 .presentationDetents250medium()
+                .presentationBackgroundCompat(theme.listBackground)
+            })
+        
+            .sheet(item: $asm.newPostInfo, content: { newPostInfo in
+                NBNavigationStack {
+                    if la.account.isNC {
+                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                            ComposePost(directMention: newPostInfo.directMention, onDismiss: { asm.newPostInfo = nil }, kind: newPostInfo.kind)
+                                .environmentObject(la)
+                                .presentationBackgroundCompat(theme.listBackground)
+                        }
+                        .environment(\.theme, theme)
+                    }
+                    else {
+                        ComposePost(directMention: newPostInfo.directMention, onDismiss: { asm.newPostInfo = nil }, kind: newPostInfo.kind)
+                            .environmentObject(la)
+                            .environment(\.theme, theme)
+                            .presentationBackgroundCompat(theme.listBackground)
+                    }
+                }
+                .nbUseNavigationStack(.never)
                 .presentationBackgroundCompat(theme.listBackground)
             })
         

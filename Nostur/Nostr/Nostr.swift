@@ -92,7 +92,7 @@ public struct NTimestamp: Codable {
     }
 }
 
-public enum NEventKind: Codable, Equatable {
+public enum NEventKind: Codable, Equatable, Hashable {
     case setMetadata
     case textNote
     case recommendServer
