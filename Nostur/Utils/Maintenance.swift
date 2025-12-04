@@ -261,6 +261,7 @@ struct Maintenance {
         }
     }
     
+    // TODO: NEED TO INVERT, DELETE ALL EXCEPT.. (instead of now: delete only *these*)
     static func databaseCleanUp(_ context: NSManagedObjectContext) {
         let pfr = NSFetchRequest<NSFetchRequestResult>(entityName: "PersistentNotification")
         let fiveDaysAgo = Date.now.addingTimeInterval(-432_000)
@@ -326,7 +327,7 @@ struct Maintenance {
         
         
         
-        // KIND 1,1111,1222,1244,4,5,6,20,9802,30023,34235
+        // KIND 1,1111,1222,1244,4,14,5,6,20,9802,30023,34235,34236
         // OLDER THAN X DAYS
         // IS NOT BOOKMARKED
         // IS NOT OWN EVENT
@@ -342,7 +343,7 @@ struct Maintenance {
         let mergedIds = Set(ownAccountBookmarkIds).union(Set(ownAccountPrivateNoteEventIds)).union(feedStateIdsToKeep)
         
         let fr16 = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
-        fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,1111,1222,1244,4,5,6,20,9802,30023,34235} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
+        fr16.predicate = NSPredicate(format: "created_at < %i AND kind IN {1,1111,1222,1244,4,14,5,6,20,9802,30311,30023,34235,34236} AND NOT id IN %@ AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), mergedIds, ownAccountPubkeys, regex)
         
         let fr16batchDelete = NSBatchDeleteRequest(fetchRequest: fr16)
         fr16batchDelete.resultType = .resultTypeCount
@@ -350,10 +351,10 @@ struct Maintenance {
         do {
             let result = try context.execute(fr16batchDelete) as! NSBatchDeleteResult
             if let count = result.result as? Int, count > 0 {
-                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,1111,1222,1244,4,5,6,20,9802,30023,34235} events - keeping \(mergedIds.count) ids")
+                L.maintenance.info("🧹🧹 Deleted \(count) kind {1,1111,1222,1244,4,14,5,6,20,9802,30311,30023,34235} events - keeping \(mergedIds.count) ids")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete {1,1111,1222,1244,4,5,6,20,9802,30023,34235} data")
+            L.maintenance.info("🔴🔴 Failed to delete {1,1111,1222,1244,4,14,5,6,20,9802,30311,30023,34235,34236} data")
         }
         
         
@@ -417,7 +418,7 @@ struct Maintenance {
         }
 
         
-        // DELETE OLDER KIND 3 + 10002 EVENTS
+        // DELETE OLDER KIND 3 + 10002 + 10050 EVENTS
         // BUT NOT OUR OWN OR THOSE WE ARE FOLLOWING (FOR WoT follows-follows)
         // AND NOT OUR PUBKEY IN p (is following us, for following notifications)
         
@@ -429,7 +430,7 @@ struct Maintenance {
         }
         
         let r = NSFetchRequest<Event>(entityName: "Event")
-        r.predicate = NSPredicate(format: "kind IN {3,10002} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", followingPubkeys, regex)
+        r.predicate = NSPredicate(format: "kind IN {3,10002,10050} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", followingPubkeys, regex)
         r.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         let kind3or10002 = try! context.fetch(r)
         
@@ -457,10 +458,27 @@ struct Maintenance {
         }
         
         if !forDeletion.isEmpty {
-            L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) duplicate kind 3,10002 events")
+            L.maintenance.info("🧹🧹 Deleted \(forDeletion.count) duplicate kind 3,10002,10050 events")
         }
         if olderKind3DeletedCount > 0 {
-            L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002 events")
+            L.maintenance.info("🧹🧹 Deleted \(olderKind3DeletedCount) older kind 3,10002,10050 events")
+        }
+        
+        // DELETE ALL REPLACEABLE EVENTS THAT ARE NOT THE MOST RECENT
+        let frReplaceableDelete = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        
+        frReplaceableDelete.predicate = NSPredicate(format: "kind >= 30000 AND kind < 40000 AND NOT mostRecentId = nil")
+        
+        let frReplaceableBatchDelete = NSBatchDeleteRequest(fetchRequest: frReplaceableDelete)
+        frReplaceableBatchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(frReplaceableBatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) replaceable events")
+            }
+        } catch {
+            L.maintenance.info("🔴🔴 Failed to delete replaceable events")
         }
         
         // ALL OTHER UNKNOWN KINDS
@@ -469,7 +487,7 @@ struct Maintenance {
         // OR PUBKEY OF OWN ACCOUNTS NOT IN SERIALIZED TAGS
         let frOther = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
         
-        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,1111,1222,1244,3,4,5,6,7,8,20,9734,9735,9802,10002,30023,34235} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
+        frOther.predicate = NSPredicate(format: "created_at < %i AND NOT kind IN {0,1,1111,1222,1244,3,4,14,5,6,7,8,20,9734,9735,9802,10002,10050,30311,30023,34235,34236} AND NOT (pubkey IN %@ OR tagsSerialized MATCHES %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys, regex)
         
         let frOtherbatchDelete = NSBatchDeleteRequest(fetchRequest: frOther)
         frOtherbatchDelete.resultType = .resultTypeCount
