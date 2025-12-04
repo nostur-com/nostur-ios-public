@@ -2497,6 +2497,9 @@
         }
       }
     },
+    "Choose a relay that requires authentication to receive private messages." : {
+
+    },
     "Choose account" : {
       "localizations" : {
         "nl" : {
@@ -3784,6 +3787,9 @@
           }
         }
       }
+    },
+    "dm: you receive private message from this relay, so others should send private messages there." : {
+
     },
     "DMs" : {
       "localizations" : {
@@ -6363,6 +6369,9 @@
         }
       }
     },
+    "New Voice Message" : {
+
+    },
     "New zaps" : {
       "localizations" : {
         "nl" : {
@@ -7227,6 +7236,9 @@
         }
       }
     },
+    "Post New Photo" : {
+
+    },
     "Post preview" : {
       "comment" : "Navigation title for Post Preview screen",
       "extractionState" : "stale",
@@ -7799,6 +7811,7 @@
       }
     },
     "read + write" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7829,6 +7842,9 @@
           }
         }
       }
+    },
+    "read: you read from this relay, so others should post there." : {
+
     },
     "Reads" : {
       "comment" : "Feed title\nTab title for feed of articles\nTab title for the Reads (Articles) feed"
@@ -8193,6 +8209,9 @@
           }
         }
       }
+    },
+    "Relays to receive private message" : {
+
     },
     "Relays you post to" : {
       "localizations" : {
@@ -11193,6 +11212,9 @@
         }
       }
     },
+    "Which relays should others use to send private messages to %@? (choose 3 max)" : {
+
+    },
     "Will not download media and previews" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -11286,6 +11308,9 @@
           }
         }
       }
+    },
+    "write: you post to this relay, so others read from there." : {
+
     },
     "wss://" : {
       "localizations" : {

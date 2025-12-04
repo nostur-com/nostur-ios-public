@@ -37,14 +37,11 @@ class FetchVM<T: Equatable>: ObservableObject {
     public func altFetch() {
         guard let _fetchParams = self.fetchParams else { L.og.error("🔴🔴 FetchVM: missing fetchParams"); return }
         guard let _altReq = _fetchParams.altReq else { L.og.error("🔴🔴 FetchVM: missing fetchParams.altReq"); return }
-        let reqTask = ReqTask(
+        let altReqTask = ReqTask(
             prio: _fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
             prefix: "altFetch-",
             reqCommand: { [weak self] taskId in
-                DispatchQueue.main.async {
-                    self?.state = .altLoading
-                }
                 _altReq(taskId)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
@@ -61,9 +58,9 @@ class FetchVM<T: Equatable>: ObservableObject {
                 _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
             })
-
-        self.backlog.add(reqTask)
-        reqTask.fetch()
+        self.state = .altLoading
+        self.backlog.add(altReqTask)
+        altReqTask.fetch()
     }
     
     public func timeout() {

@@ -518,12 +518,16 @@ struct MainFeedsScreen: View {
                               }
                           }
                           
+                          Divider()
+                          
                           ForEach(lists) { list in
                               Button(list.name ?? "(no title)", systemImage: "star") {
                                   selectedSubTab = "List"
                                   selectedList = list
                                   selectedListId = list.subscriptionId }
                           }
+                          
+                          Divider()
                           
                           if la.viewFollowingPublicKeys.count > 10 && enableEmojiFeed {
                               Button { selectedSubTab = "Emoji" } label: {
