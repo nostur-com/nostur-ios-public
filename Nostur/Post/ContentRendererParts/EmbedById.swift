@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import NostrEssentials
 
 struct EmbedById: View {
     @Environment(\.theme) private var theme
@@ -13,6 +14,7 @@ struct EmbedById: View {
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
+    @State private var nevent: String? = nil
     
     var body: some View {
         switch vm.state {
@@ -33,11 +35,20 @@ struct EmbedById: View {
             
         case .timeout:
             VStack {
-                Text("Unable to fetch content")
+                Text("Unable to fetch content:")
+                    .onAppear {
+                        nevent = (try? NostrEssentials.ShareableIdentifier("nevent", id: id))?.identifier
+                    }
+                if let nevent {
+                    CopyableTextView(text: nevent, copyText: nevent)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
                 Button("Retry") { [weak vm] in
-                    vm?.state = .loading
+                    vm?.state = .initializing
                     vm?.fetch()
                 }
+                .foregroundStyle(theme.accent)
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .center)

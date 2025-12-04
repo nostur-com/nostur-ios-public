@@ -17,10 +17,10 @@ class FetchVM<T: Equatable>: ObservableObject {
     private let debounceTime: Double
     private var fetchParams: FetchParams? = nil
     
-    init(timeout: Double = 4.0, debounceTime: Double = 0.25) {
+    init(timeout: Double = 4.0, debounceTime: Double = 0.25, backlogDebugName: String? = nil) {
         self.state = .initializing
         self.debounceTime = debounceTime
-        self.backlog = Backlog(timeout: timeout, auto: true, backlogDebugName: "FetchVM")
+        self.backlog = Backlog(timeout: timeout, auto: true, backlogDebugName: backlogDebugName ?? "FetchVM")
     }
     
     public func setFetchParams(_ fetchParams: FetchParams) {
@@ -40,6 +40,7 @@ class FetchVM<T: Equatable>: ObservableObject {
         let reqTask = ReqTask(
             prio: _fetchParams.prio ?? false,
             debounceTime: self.debounceTime,
+            prefix: "altFetch-",
             reqCommand: { [weak self] taskId in
                 DispatchQueue.main.async {
                     self?.state = .altLoading
@@ -48,14 +49,14 @@ class FetchVM<T: Equatable>: ObservableObject {
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
 #if DEBUG
-                L.og.info("FetchVM: ready to process relay response - \(taskId)")
+                L.og.info("FetchVM: ready to process relay response - \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
                 _fetchParams.onComplete(relayMessage, event)
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
 #if DEBUG
-                L.og.info("FetchVM: timeout (altFetch)- \(taskId)")
+                L.og.info("FetchVM: timeout (altFetch)- \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
                 _fetchParams.onComplete(nil, nil)
                 self?.backlog.clear()
@@ -88,16 +89,18 @@ class FetchVM<T: Equatable>: ObservableObject {
             },
             processResponseCommand: { [weak self] taskId, relayMessage, event in
 #if DEBUG
-                L.og.info("FetchVM: ready to process relay response - \(taskId)")
+                L.og.info("FetchVM: ready to process relay response - \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
                 _fetchParams.onComplete(relayMessage, event)
                 self?.backlog.clear()
             },
             timeoutCommand: { [weak self] taskId in
 #if DEBUG
-                L.og.info("FetchVM: timeout (fetch) - \(taskId)")
+                L.og.info("FetchVM: timeout (fetch) - \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
-                self?.backlog.clear()
+                if _fetchParams.altReq == nil {
+                    self?.backlog.clear()
+                }
                 _fetchParams.onComplete(nil, nil)
             })
 

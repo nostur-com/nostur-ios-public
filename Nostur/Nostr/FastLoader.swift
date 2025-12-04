@@ -192,7 +192,7 @@ class Backlog {
     private var tasks = Set<ReqTask>()
     private var timer: Timer?
     private var subscriptions = Set<AnyCancellable>()
-    private var backlogDebugName: String
+    public var backlogDebugName: String
     
     // With auto: true we don't need receiveNotification(.importedMessagesFromSubscriptionIds) on a View's .onReceive
     // the Backlog itself will listen for .importedMessagesFromSubscriptionIds notifications and
@@ -298,8 +298,12 @@ class Backlog {
         
         if self.tasks.isEmpty {
             DispatchQueue.main.async { [weak self] in // needs to be from main
+                guard self?.tasks.isEmpty ?? false else { return }
                 self?.timer?.invalidate()
                 self?.timer = nil
+#if DEBUG
+                L.og.debug("⏳⏳ \(self?.backlogDebugName) removeOldTasks(): cleanup timer removed")
+#endif
             }
         }
 #if DEBUG
@@ -325,8 +329,8 @@ class Backlog {
             L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId))")
 #endif
             self.tasks.insert(task)
+            self.startCleanUpTimer()
         }
-        self.startCleanUpTimer()
     }
     
     public func remove(_ task: ReqTask) {

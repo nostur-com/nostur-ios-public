@@ -15,7 +15,7 @@ struct NEventView: View {
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
     
-    @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05)
+    @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05, backlogDebugName: "NEventView")
         
     var body: some View {
         switch vm.state {
@@ -108,13 +108,22 @@ struct NEventView: View {
             KindResolver(nrPost: nrPost, fullWidth: fullWidth, hideFooter: true, isDetail: false, isEmbedded: true)
 
         case .timeout:
-            Text("Unable to fetch content")
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(theme.lineColor, lineWidth: 1)
-                )
+            VStack {
+                Text("Unable to fetch content:")
+                CopyableTextView(text: identifier.id, copyText: identifier.id)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                Button("Retry") { [weak vm] in
+                    vm?.state = .initializing
+                }
+                .foregroundStyle(theme.accent)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(theme.lineColor, lineWidth: 1)
+            )
             
         case .error(let error):
             Text(error)
