@@ -82,6 +82,7 @@ class AnyPlayerModel: ObservableObject {
 
         NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)
             .sink { [weak self] _ in
+                guard !(self?.didFinishPlaying ?? false) else { return }
                 self?.didFinishPlaying = true
             }
             .store(in: &cancellables)
