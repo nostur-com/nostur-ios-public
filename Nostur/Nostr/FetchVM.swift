@@ -61,6 +61,7 @@ class FetchVM<T: Equatable>: ObservableObject {
         
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+            if case .ready(_) = self.state { return }
             self.state = .altLoading
             self.backlog.add(altReqTask)
             altReqTask.fetch()
@@ -69,7 +70,9 @@ class FetchVM<T: Equatable>: ObservableObject {
     
     public func timeout() {
         DispatchQueue.main.async { [weak self] in
-            self?.state = .timeout
+            guard let self else { return }
+            if case .ready(_) = self.state { return }
+            self.state = .timeout
         }
     }
     
@@ -99,13 +102,14 @@ class FetchVM<T: Equatable>: ObservableObject {
 #if DEBUG
                 L.og.info("FetchVM: timeout (fetch) - \(taskId) \(self?.backlog.backlogDebugName)")
 #endif
+                _fetchParams.onComplete(nil, nil)
                 if _fetchParams.altReq == nil {
                     self?.backlog.clear()
                 }
-                _fetchParams.onComplete(nil, nil)
             })
 
         self.backlog.add(reqTask)
+        if case .ready(_) = self.state { return }
         self.state = .loading
         reqTask.fetch()
     }
