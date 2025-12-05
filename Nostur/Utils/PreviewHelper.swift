@@ -832,6 +832,7 @@ struct PreviewContainer<Content: View>: View {
         .onAppear {
 //            pe.themes.loadGreen()
             if pe.loadAccount() {
+                AccountsState.shared.bgAccountPubkeys = ["9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
                 if let setup {
                     setup(pe)
                 }

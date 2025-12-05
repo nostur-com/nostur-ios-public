@@ -531,7 +531,12 @@ class WebOfTrust: ObservableObject {
 }
 
 func WOT_FILTER_ENABLED() -> Bool {
+#if DEBUG
     if NSClassFromString("XCTestCase") != nil { return false }
+    if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+        return false
+    }
+#endif
     return WebOfTrust.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue
 }
 
