@@ -237,7 +237,7 @@ class ProfilePostsViewModel: ObservableObject {
     
     // Fetch post stats (if enabled)
     // And: after user scrolls we prefetch the next 50 posts
-    // We detect this by using .onBecomingVisible on the 6th post
+    // We detect this by using .task on the 6th post
     public func prefetch(_ post: NRPost) {
         guard let index = self.posts.firstIndex(of: post) else { return }
         

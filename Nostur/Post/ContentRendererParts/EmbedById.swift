@@ -23,7 +23,7 @@ struct EmbedById: View {
                 .frame(height: 250)
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .onBecomingVisible {
+                .task {
                     self.load()
                 }
                 .overlay(

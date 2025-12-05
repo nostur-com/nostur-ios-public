@@ -81,7 +81,7 @@ struct Repost: View {
         .overlay {
             if let firstQuoteId = nrPost.firstQuoteId, noteRowAttributes.firstQuote == nil {
                 CenteredProgressView()
-                    .onBecomingVisible {
+                    .task {
                         let fetchParams: FetchVM.FetchParams = (
                             prio: true,
                             req: { taskId in

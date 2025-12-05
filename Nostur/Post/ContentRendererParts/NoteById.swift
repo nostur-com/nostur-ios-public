@@ -19,7 +19,7 @@ struct NoteById: View {
             ProgressView()
                 .padding(10)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .onBecomingVisible { [weak vm] in
+                .task { [weak vm] in
                     let eventId = self.id
                     let fetchParams: FetchVM.FetchParams = (
                         prio: true,

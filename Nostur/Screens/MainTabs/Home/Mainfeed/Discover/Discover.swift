@@ -50,7 +50,7 @@ struct Discover: View {
                     ForEach(discoverVM.discoverPosts) { nrPost in
                         ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                             PostOrThread(nrPost: nrPost, theme: theme)
-                                .onBecomingVisible {
+                                .task {
                                     // SettingsStore.shared.fetchCounts should be true for below to work
                                     discoverVM.prefetch(nrPost)
                                 }

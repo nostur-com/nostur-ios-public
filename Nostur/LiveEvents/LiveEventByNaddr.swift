@@ -30,7 +30,7 @@ struct LiveEventByNaddr: View {
                 }
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .onAppear { [weak vm] in
+                    .task {
                         guard let naddr = try? ShareableIdentifier(naddr1),
                               let kind = naddr.kind,
                               let pubkey = naddr.pubkey,
@@ -38,7 +38,6 @@ struct LiveEventByNaddr: View {
                         else {
                             return
                         }
-                        
                         
                         let fetchParams: FetchVM.FetchParams = (
                             prio: true,
@@ -108,8 +107,8 @@ struct LiveEventByNaddr: View {
                             }
                             
                         )
-                        vm?.setFetchParams(fetchParams)
-                        vm?.fetch()
+                        vm.setFetchParams(fetchParams)
+                        vm.fetch()
                     }
             case .ready(let nrLiveEvent):
                 LiveEventDetail(liveEvent: nrLiveEvent)

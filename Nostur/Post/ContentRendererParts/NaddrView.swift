@@ -33,7 +33,7 @@ struct NaddrView: View {
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .center)
-            .onBecomingVisible { [weak vm] in
+            .task { [weak vm] in
                 guard let naddr = try? ShareableIdentifier(naddr1),
                         let kind = naddr.kind,
                         let pubkey = naddr.pubkey,

@@ -52,7 +52,7 @@ struct ProfileReactionsView: View {
                     }
                 }
 //                    .id(nrPost.id)
-                .onBecomingVisible {
+                .task {
                     // SettingsStore.shared.fetchCounts should be true for below to work
                     vm.prefetch(nrPost)
                 }

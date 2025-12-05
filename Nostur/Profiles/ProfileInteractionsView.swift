@@ -57,7 +57,7 @@ struct ProfileInteractionsView: View {
                             }
                         }
                         //                    .id(nrPost.id)
-                        .onBecomingVisible {
+                        .onAppear {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             conversationsVM.prefetch(nrPost)
                         }
@@ -100,7 +100,7 @@ struct ProfileInteractionsView: View {
                             }
                         }
                         //                    .id(nrPost.id)
-                        .onBecomingVisible {
+                        .onAppear {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             reactionsVM.prefetch(nrPost)
                         }
@@ -150,7 +150,7 @@ struct ProfileInteractionsView: View {
                             }
                         }
                         //                    .id(nrPost.id)
-                        .onBecomingVisible {
+                        .onAppear {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             repostsVM.prefetch(nrPost)
                         }
@@ -194,7 +194,7 @@ struct ProfileInteractionsView: View {
                             }
                         }
                         //                    .id(nrPost.id)
-                        .onBecomingVisible {
+                        .task {
                             // SettingsStore.shared.fetchCounts should be true for below to work
                             zapsVM.prefetch(nrPost)
                         }

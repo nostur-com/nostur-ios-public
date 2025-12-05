@@ -56,7 +56,7 @@ struct ProfileHighlights: View {
                             PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: theme)
                         }
                     }
-                    .onBecomingVisible {
+                    .task {
                         prefetch(nrPost)
                     }
                     .frame(maxHeight: DIMENSIONS.POST_MAX_ROW_HEIGHT)

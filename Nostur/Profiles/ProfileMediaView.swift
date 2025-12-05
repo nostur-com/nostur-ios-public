@@ -44,7 +44,7 @@ struct ProfileMediaView: View {
                     HStack(spacing: GUTTER) {
                         Group {
                             GalleryGridItemView(size: ((availableWidth - GUTTER*2) / 3.0), items: vm.items, currentIndex: index)
-                                .onBecomingVisible {
+                                .task {
                                     vm.fetchMoreIfNeeded(index)
                                 }
                             

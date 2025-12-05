@@ -58,7 +58,7 @@ struct PostAndParent: View {
             }
             else if let replyToId = nrPost.replyToId {
                 CenteredProgressView()
-                    .onBecomingVisible {
+                    .onAppear {
                         guard !didFetchParent else { return }
                         didFetchParent = true
                         

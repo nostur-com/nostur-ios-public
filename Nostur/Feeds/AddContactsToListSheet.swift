@@ -45,7 +45,7 @@ struct AddContactsToListSheet: View {
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(theme.lineColor, lineWidth: 1)
                 )
-                .onBecomingVisible {
+                .task {
                     load()
                 }
                 

@@ -52,7 +52,7 @@ struct ArticlesFeed: View {
 //                            .transaction { t in
 //                                t.animation = nil
 //                            }
-                            .onBecomingVisible {
+                            .task {
                                 // SettingsStore.shared.fetchCounts should be true for below to work
                                 vm.prefetch(post)
                             }

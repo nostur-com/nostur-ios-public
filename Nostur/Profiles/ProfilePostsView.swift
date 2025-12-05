@@ -46,7 +46,7 @@ struct ProfilePostsView: View {
                         PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, ignoreBlock: true, theme: theme)
                     }
                 }
-                .onBecomingVisible {
+                .task {
                     // SettingsStore.shared.fetchCounts should be true for below to work
                     vm.prefetch(nrPost)
                     
