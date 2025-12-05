@@ -30,13 +30,13 @@ extension CloudDMState {
 }
 
 extension CloudDMState : Identifiable {
-    static func fetchByAccount(_ accountPubkey:String, context: NSManagedObjectContext) -> [CloudDMState] {
+    static func fetchByAccount(_ accountPubkey: String, context: NSManagedObjectContext) -> [CloudDMState] {
         let fr = CloudDMState.fetchRequest()
         fr.predicate = NSPredicate(format: "accountPubkey_ == %@", accountPubkey)
         return (try? context.fetch(fr)) ?? []
     }
     
-    static func fetchExisting(_ accountPubkey:String, contactPubkey:String, context: NSManagedObjectContext) -> CloudDMState? {
+    static func fetchExisting(_ accountPubkey: String, contactPubkey: String, context: NSManagedObjectContext) -> CloudDMState? {
         let fr = CloudDMState.fetchRequest()
         fr.predicate = NSPredicate(format: "accountPubkey_ == %@ AND contactPubkey_ == %@", accountPubkey, contactPubkey)
         return try? context.fetch(fr).first

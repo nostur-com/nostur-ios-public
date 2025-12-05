@@ -65,7 +65,7 @@ public class PreviewEnvironment {
                     }
                 }
                 
-                let savedEvent = Event.saveEvent(event: event, context: context)
+                let savedEvent = Event.saveEvent(event: event, relays: "previewcanvas", context: context)
                 
                 if event.kind == .setMetadata {
                     Contact.saveOrUpdateContact(event: event, context: context)
@@ -79,7 +79,7 @@ public class PreviewEnvironment {
         context.performAndWait {
             for text in messages {
                 guard let nEvent = NEvent.fromString(text) else { continue }
-                let savedEvent = Event.saveEvent(event: nEvent, context: context)
+                let savedEvent = Event.saveEvent(event: nEvent, relays: "previewcanvas", context: context)
                 
                 if nEvent.kind == .setMetadata {
                     Contact.saveOrUpdateContact(event: nEvent, context: context)

@@ -422,9 +422,17 @@ class DirectMessageViewModel: ObservableObject {
     }
     
     public func newMessage() {
-        reloadAccepted()
-        reloadMessageRequests()
-        reloadMessageRequestsNotWot()
+        guard let pubkey = self.pubkey else { return }
+        bg().perform { [weak self] in
+            guard let self else { return }
+            dmStates = CloudDMState.fetchByAccount(pubkey, context: bg())
+            
+            Task { @MainActor in
+                self.reloadAccepted()
+                self.reloadMessageRequests()
+                self.reloadMessageRequestsNotWot()
+            }
+        }
     }
     
     public func checkNeedsNotification(_ event: Event) {

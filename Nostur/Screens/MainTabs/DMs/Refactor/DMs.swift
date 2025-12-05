@@ -207,7 +207,7 @@ struct DMs: View {
         }
         .onAppear {
             // do 2 month scan if we have no messages (probably first time)
-            // longer 12 month scan is in settings
+            // longer 36 month scan is in settings
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 if (DirectMessageViewModel.default.conversationRows.count == 0 && DirectMessageViewModel.default.requestRows.count == 0) {
                     DirectMessageViewModel.default.rescanForMissingDMs(2)
@@ -256,11 +256,16 @@ struct DMNavigationStack<Content: View>: View {
 struct DirectMessagesX_Previews: PreviewProvider {
     static var previews: some View {
         PreviewContainer({ pe in
+            pe.loadContacts()
+            pe.loadAccount()
             pe.loadDMs()
             pe.loadDMs2()
+            DirectMessageViewModel.default.load()
         }) {
-            DMContainer()
-                .environmentObject(DirectMessageViewModel.default)
+            DMNavigationStack {
+                DMContainer()
+                    .environmentObject(DirectMessageViewModel.default)
+            }
         }
     }
 }

@@ -443,17 +443,33 @@ struct DMConversationView: View {
     }
 }
 
+struct DMConversationView17: View {
+    var body: some View {
+        Text("Hello, World!")
+    }
+}
+
 import NavigationBackport
 
-struct Previews_DMConversationView_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        PreviewContainer({ pe in pe.loadDMs() }) {
-            NBNavigationStack {
-                let preston = "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204"
-                let recentDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
-                if let recent = recentDM {
-                    let conv = Conversation(contactPubkey: "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204", mostRecentMessage: "what", mostRecentDate: .now, mostRecentEvent: recent, unread: 3, dmState: CloudDMState(context: context()), accepted: true)
+
+#Preview {
+    PreviewContainer({ pe in
+        pe.loadDMs()
+        DirectMessageViewModel.default.load()
+    }) {
+        NBNavigationStack {
+            
+            
+            
+            let preston = "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204"
+            let recentDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
+            if let recent = recentDM {
+                let conv = Conversation(contactPubkey: "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204", mostRecentMessage: "what", mostRecentDate: .now, mostRecentEvent: recent, unread: 3, dmState: CloudDMState(context: context()), accepted: true)
+                
+                if #available(iOS 17.0, *) {
+                    DMConversationView17() //(recentDM: recent, pubkey: preston, conv: conv)
+                }
+                else {
                     DMConversationView(recentDM: recent, pubkey: preston, conv: conv)
                 }
             }
