@@ -23,13 +23,16 @@ extension CloudDMState {
     @NSManaged public var isPinned: Bool
     @NSManaged public var isHidden: Bool
     
-    public var conversionId:String {
+    public var conversationId: String {
         return ((accountPubkey_ ?? "") + "-" + (contactPubkey_ ?? ""))
     }
     
+    static public func getConversationId(from pubkeys: Set<String>) -> String {
+        return ("-" + (pubkeys.sorted().joined(separator: "")))
+    }
 }
 
-extension CloudDMState : Identifiable {
+extension CloudDMState: Identifiable {
     static func fetchByAccount(_ accountPubkey: String, context: NSManagedObjectContext) -> [CloudDMState] {
         let fr = CloudDMState.fetchRequest()
         fr.predicate = NSPredicate(format: "accountPubkey_ == %@", accountPubkey)
@@ -40,6 +43,20 @@ extension CloudDMState : Identifiable {
         let fr = CloudDMState.fetchRequest()
         fr.predicate = NSPredicate(format: "accountPubkey_ == %@ AND contactPubkey_ == %@", accountPubkey, contactPubkey)
         return try? context.fetch(fr).first
+    }
+    
+    static func fetchGroup(pubkeys: Set<String>, context: NSManagedObjectContext) -> CloudDMState? {
+        let groupPubkeys = pubkeys.sorted().joined(separator: "")
+        let fr = CloudDMState.fetchRequest()
+        fr.predicate = NSPredicate(format: "accountPubkey_ = nil AND contactPubkey_ == %@", groupPubkeys)
+        return try? context.fetch(fr).first
+    }
+    
+    static func create(pubkeys: Set<String>, context: NSManagedObjectContext) -> CloudDMState {
+        let newGroupDMSstate = CloudDMState(context: context)
+        let groupPubkeys = pubkeys.sorted().joined(separator: "")
+        newGroupDMSstate.contactPubkey_ = groupPubkeys
+        return newGroupDMSstate
     }
     
     var unread: Int {

@@ -66,6 +66,8 @@ extension Event {
     // For other related Ids. eg Giftwrap ID
     @NSManaged public var otherId: String?
     
+    // Link to CloudDMState.conversionId
+    @NSManaged public var groupId: String?
     
     // Can be used for anything
     // Now we use it for:

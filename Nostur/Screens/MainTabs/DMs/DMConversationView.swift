@@ -478,4 +478,113 @@ import NavigationBackport
 }
 
 
+// INFO
+// CloudDMState
+// OLD DMS (1 on 1): accountPubkey_: A and contactPubkey_: B
+// NEW DMS (2 or more): accountPubkey_: nil, and contactPubkey: concat(A,B,C) (sorted)
+import CoreData
 
+class ConversionVM: ObservableObject {
+    private let participantPs: Set<String>
+    private let ourAccountPubkey: String
+    
+    @Published var visibleMessages: [NRChatRow] = []
+    
+    // bg
+    private var cloudDMState: CloudDMState? = nil
+    
+    init(participantPs: Set<String>, ourAccountPubkey: String) {
+        self.participantPs = participantPs
+        self.ourAccountPubkey = ourAccountPubkey
+    }
+    
+    @MainActor
+    public func load() async {
+        self.cloudDMState = await getGroupState()
+        
+        if let cloudDMState {
+            self.visibleMessages = await getMessages(cloudDMState)
+        }
+
+        self.fetchDMrelays()
+    }
+    
+    private func getGroupState() async -> CloudDMState {
+        // Get existing or create new
+        let participantPs = self.participantPs
+        return await withBgContext { bgContext in
+            if let groupDMState = CloudDMState.fetchGroup(pubkeys: participantPs, context: bgContext) {
+                return groupDMState
+            }
+            return CloudDMState.create(pubkeys: participantPs, context: bgContext)
+        }
+    }
+    
+    private func getMessages(_ cloudDMState: CloudDMState) async -> [NRChatRow] {
+
+        let dmEvents = await withBgContext { bgContext in
+            let request = NSFetchRequest<Event>(entityName: "Event")
+            request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14}", cloudDMState.conversationId)
+            request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            return (try? bgContext.fetch(request)) ?? []
+        }
+        
+
+        return []
+    }
+    
+    private func sendMessage(_ message: String, ourkeys: Keys) {
+        let recipientPubkeys = participantPs.subtracting([ourAccountPubkey])
+        let content = message
+        var messageEvent =  NostrEssentials.Event(
+            pubkey: ourAccountPubkey,
+            content: content,
+            kind: 14,
+            created_at: Int(Date().timeIntervalSince1970),
+            tags: []
+        )
+
+        // Wrap and send to receiver DM relays, also our own. (we can't unwrap sent, only received to our pubkey)
+        for receiverPubkey in participantPs {
+            // wrap message
+            messageEvent.tags = recipientPubkeys.map { Tag(["p", $0]) }
+            do {
+                let giftWrap = try createGiftWrap(messageEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                sendToDMRelay(giftWrap)
+            }
+            catch {
+                
+            }
+        }
+    }
+    
+    private func sendToDMRelay(_ wrappedEvent: NostrEssentials.Event) {
+        
+    }
+    
+    private func fetchDMrelays() {
+        let reqFilters = Filters(
+            authors: participantPs,
+            kinds: [10050],
+            limit: 200
+        )
+        nxReq(
+            reqFilters,
+            subscriptionId: "DM-" + UUID().uuidString.prefix(48),
+            relayType: .READ
+        )
+        nxReq(
+            reqFilters,
+            subscriptionId: "DM-" + UUID().uuidString.prefix(48),
+            relayType: .SEARCH
+        )
+    }
+}
+
+func fetchDMrelays(for pubkeys: Set<String>) {
+    
+}
+
+func getDMrelay(for pubkey: String) {
+    
+}

@@ -50,7 +50,7 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             .filter { dmState in
                 guard dmState.contactPubkey_ != nil else { return false }
                 guard dmState.accountPubkey_ != nil else { return false }
-                return !uniqueDMStates.insert(dmState.conversionId).inserted
+                return !uniqueDMStates.insert(dmState.conversationId).inserted
             }
 #if DEBUG
         L.cloud.debug("CloudDMStateFetchRequest: \(duplicates.count) duplicate DM conversation states")
