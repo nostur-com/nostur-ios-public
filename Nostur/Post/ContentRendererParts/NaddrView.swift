@@ -122,9 +122,10 @@ struct NaddrView: View {
                 CopyableTextView(text: naddr1, copyText: naddr1)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Button("Retry") { [weak vm] in
-                    vm?.state = .initializing
-                }
+                Text("Retry")
+                    .highPriorityGesture(TapGesture().onEnded({ [weak vm] _ in
+                        vm?.state = .initializing
+                    }))
                 .foregroundStyle(theme.accent)
             }
             .padding(10)

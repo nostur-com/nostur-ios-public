@@ -44,10 +44,11 @@ struct EmbedById: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
-                Button("Retry") { [weak vm] in
-                    vm?.state = .initializing
-                    vm?.fetch()
-                }
+                Text("Retry")
+                    .highPriorityGesture(TapGesture().onEnded({ [weak vm] _ in
+                        vm?.state = .initializing
+                        vm?.fetch()
+                    }))
                 .foregroundStyle(theme.accent)
             }
             .padding(10)
