@@ -447,7 +447,7 @@ class ReqTask: Identifiable, Hashable {
 #if DEBUG
         L.og.debug("⏳⏳ ReqTask.onTimout: \(self.subscriptionId)")
 #endif
-        guard !didProcess && !skipTimeout else { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
+        if didProcess || skipTimeout { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
 #if DEBUG
             L.og.debug("⏳⏳ ReqTask: didProcess or skipTimeout, timeout not needed \(self.subscriptionId)")
 #endif
