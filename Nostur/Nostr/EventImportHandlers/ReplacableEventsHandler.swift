@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 
 func handleReplacableEvent(nEvent: NEvent, context: NSManagedObjectContext) {
-    guard (nEvent.kind.id >= 10000 && nEvent.kind.id < 20000) else { return }
+    guard (nEvent.kind.id >= 10000 && nEvent.kind.id < 20000) || nEvent.kind == .setMetadata || nEvent.kind == .contactList else { return }
     
     // delete older events
     let r = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")

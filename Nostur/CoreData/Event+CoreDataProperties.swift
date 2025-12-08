@@ -918,10 +918,8 @@ extension Event {
         
         handleTextPost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
         handlePostRelations(nEvent: event, savedEvent: savedEvent, context: context)
-        
         handleRepost(nEvent: event, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
         handleDM(nEvent: event, savedEvent: savedEvent, context: context)
-        handleContactList(nEvent: event, context: context)
         handleReplacableEvent(nEvent: event, context: context)
         handleAddressableReplacableEvent(nEvent: event, savedEvent: savedEvent, context: context)
         handleDelete(nEvent: event, context: context)
