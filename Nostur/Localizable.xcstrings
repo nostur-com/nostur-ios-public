@@ -8363,6 +8363,7 @@
       }
     },
     "Reload" : {
+      "comment" : "Reload button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
