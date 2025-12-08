@@ -49,6 +49,19 @@ struct NotificationsColumnInner: View {
     @Binding var navPath: NBNavigationPath
     @Binding var columnType: MacColumnType
     
+    fileprivate func toolbarItem() -> ToolbarItem<(), ModifiedContent<Button<PFP>, AccessibilityAttachmentModifier>?> {
+        return ToolbarItem(placement: .topBarTrailing) {
+            if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+                Button {
+                    columnType = .notifications(nil)
+                } label: {
+                    PFP(pubkey: accountPubkey, account: account, size: 30)
+                }
+                .accessibilityLabel("Account menu")
+            }
+        }
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
@@ -124,15 +137,16 @@ struct NotificationsColumnInner: View {
         }
         .background(theme.listBackground)
         
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
-                    Button {
-                        columnType = .notifications(nil)
-                    } label: {
-                        PFP(pubkey: accountPubkey, account: account, size: 30)
-                    }
-                    .accessibilityLabel("Account menu")
+        .modifier { // need to hide glass bg in 26+
+            if #available(iOS 26.0, *) {
+                $0.toolbar {
+                    toolbarItem()
+                    .sharedBackgroundVisibility(.hidden)
+                }
+            }
+            else {
+                $0.toolbar {
+                    toolbarItem()
                 }
             }
         }
