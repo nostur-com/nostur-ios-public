@@ -25,7 +25,9 @@ class DirectMessageViewModel: ObservableObject {
                 // Once we loaded once, didLoad is set, and then we can reload on
                 // .dmStates being set (which only happens after external iCloud sync on AppView)
                 // so this .load() updates the unread counts after sync
-                self.load()
+                Task { @MainActor in
+                    self.load()
+                }
             }
             allowedWoT = Set(dmStates.filter { $0.accepted }.compactMap { $0.contactPubkey_ })
         }
@@ -143,6 +145,7 @@ class DirectMessageViewModel: ObservableObject {
     // .load is called from:
     // NRState on startup if WoT is disabled
     // receiveNotification(.WoTReady) if WoT is enabled, after WoT has loaded
+    @MainActor
     public func load() {
         guard !AccountsState.shared.activeAccountPublicKey.isEmpty else { return }
         conversationRows = []
@@ -160,7 +163,9 @@ class DirectMessageViewModel: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.load()
+                Task { @MainActor in
+                    self.load()
+                }
             }
             .store(in: &self.subscriptions)
     }
@@ -423,15 +428,11 @@ class DirectMessageViewModel: ObservableObject {
     
     public func newMessage() {
         guard let pubkey = self.pubkey else { return }
-        bg().perform { [weak self] in
-            guard let self else { return }
-            dmStates = CloudDMState.fetchByAccount(pubkey, context: bg())
-            
-            Task { @MainActor in
-                self.reloadAccepted()
-                self.reloadMessageRequests()
-                self.reloadMessageRequestsNotWot()
-            }
+        Task { @MainActor in
+            self.dmStates = CloudDMState.fetchByAccount(pubkey, context: viewContext())
+            self.reloadAccepted()
+            self.reloadMessageRequests()
+            self.reloadMessageRequestsNotWot()
         }
     }
     

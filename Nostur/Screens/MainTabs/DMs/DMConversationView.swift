@@ -444,34 +444,70 @@ struct DMConversationView: View {
 }
 
 struct DMConversationView17: View {
+    private let participantPs: Set<String>
+    private let ourAccountPubkey: String
+    
+    @StateObject private var vm: ConversionVM
+    
+    init(participantPs: Set<String>, ourAccountPubkey: String) {
+        self.participantPs = participantPs
+        self.ourAccountPubkey = ourAccountPubkey
+        _vm = StateObject(wrappedValue: ConversionVM(participantPs: participantPs, ourAccountPubkey: ourAccountPubkey))
+    }
+    
     var body: some View {
-        Text("Hello, World!")
+        Container {
+            switch vm.viewState {
+            case .initializing, .loading:
+                ProgressView()
+            case .ready(let nrChats):
+                Text("nrChats here: \(nrChats.count)")
+            case .timeout:
+                Text("Unable to load conversation")
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            case .error(let error):
+                Text(error)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
+        .task {
+            await vm.load()
+        }
     }
 }
 
 import NavigationBackport
 
+@available(iOS 17.0, *)
+#Preview("New DM") {
+    PreviewContainer({ pe in
+        pe.parseEventJSON([
+            ###"{"content": "Heb veel performance problemen met Nostur de laatste dagen, enig idee waar dat aan kan liggen?", "created_at": 1726123083, "id": "72cffcb18b0c2ccc12947e6788160c79cd8b28231c762124dee35068ea1a0a15", "kind": 14, "pubkey": "06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71", "tags": [["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]], "sig": "edad"}"###,
+            ###"{"content":"Testing","created_at":1726126083,"id":"72cffcb18b0c2ccc12947e6788160c79cd8b28231c762124dee35068ea1a0a15","kind":14,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]], "sig": "uhh"}"###
+        ])
+    }) {
+        NBNavigationStack {
+            let participantPs: Set<String> = ["06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
+            let ourAccountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
+            
+            DMConversationView17(participantPs: participantPs, ourAccountPubkey: ourAccountPubkey)
+        }
+    }
+}
 
-#Preview {
+#Preview("Old DM") {
     PreviewContainer({ pe in
         pe.loadDMs()
         DirectMessageViewModel.default.load()
     }) {
         NBNavigationStack {
-            
-            
-            
             let preston = "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204"
             let recentDM = PreviewFetcher.fetchEvent("96500cec51f30a7bee4bf15984f574550064913ec8d00e164e9efad34a989236")
             if let recent = recentDM {
                 let conv = Conversation(contactPubkey: "85080d3bad70ccdcd7f74c29a44f55bb85cbcd3dd0cbb957da1d215bdb931204", mostRecentMessage: "what", mostRecentDate: .now, mostRecentEvent: recent, unread: 3, dmState: CloudDMState(context: context()), accepted: true)
-                
-                if #available(iOS 17.0, *) {
-                    DMConversationView17() //(recentDM: recent, pubkey: preston, conv: conv)
-                }
-                else {
-                    DMConversationView(recentDM: recent, pubkey: preston, conv: conv)
-                }
+                DMConversationView(recentDM: recent, pubkey: preston, conv: conv)
             }
         }
     }
@@ -485,10 +521,10 @@ import NavigationBackport
 import CoreData
 
 class ConversionVM: ObservableObject {
-    private let participantPs: Set<String>
-    private let ourAccountPubkey: String
+    private var participantPs: Set<String>
+    private var ourAccountPubkey: String
     
-    @Published var visibleMessages: [NRChatRow] = []
+    @Published var viewState: ConversionVMViewState = .initializing
     
     // bg
     private var cloudDMState: CloudDMState? = nil
@@ -498,16 +534,29 @@ class ConversionVM: ObservableObject {
         self.ourAccountPubkey = ourAccountPubkey
     }
     
+    private var didLoad = false
+    
     @MainActor
-    public func load() async {
+    public func load(force: Bool = false) async {
+        guard force || !didLoad else { return }
+        self.didLoad = true
         self.cloudDMState = await getGroupState()
         
         if let cloudDMState {
-            self.visibleMessages = await getMessages(cloudDMState)
+            let visibleMessages = await getMessages(cloudDMState)
+            viewState = .ready(visibleMessages)
         }
-
+        
         self.fetchDMrelays()
     }
+    
+    @MainActor
+    public func reload(participantPs: Set<String>, ourAccountPubkey: String) async {
+        self.participantPs = participantPs
+        self.ourAccountPubkey = ourAccountPubkey
+        await self.load(force: true)
+    }
+
     
     private func getGroupState() async -> CloudDMState {
         // Get existing or create new
@@ -579,6 +628,14 @@ class ConversionVM: ObservableObject {
             relayType: .SEARCH
         )
     }
+}
+
+enum ConversionVMViewState {
+    case initializing
+    case loading
+    case ready([NRChatRow])
+    case timeout
+    case error(String)
 }
 
 func fetchDMrelays(for pubkeys: Set<String>) {
