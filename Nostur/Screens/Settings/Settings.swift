@@ -59,9 +59,9 @@ struct Settings: View {
     @AppStorage("wotDunbarNumber") private var wotDunbarNumber: Int = 1000
 
     var body: some View {
-    #if DEBUG
-    let _ = Self._printChanges()
-    #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         NXForm {
             Section(header: Text("Display", comment:"Setting heading on settings screen")) {
                 Group {

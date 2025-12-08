@@ -32,7 +32,7 @@ struct SideBar: View {
     
     var body: some View {
 #if DEBUG
-        let _ = Self._printChanges()
+        let _ = nxLogChanges(of: Self.self)
 #endif
         VStack(alignment: .leading) {
             ProfileBanner(banner: account.banner, width: NOSTUR_SIDEBAR_WIDTH)

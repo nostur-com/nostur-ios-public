@@ -28,9 +28,9 @@ struct ArticlesFeed: View {
     @Namespace var top
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         ScrollViewReader { proxy in
             if vm.nothingFound {
                 Text("No articles found from your follow list in selected time frame.")

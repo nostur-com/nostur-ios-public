@@ -48,7 +48,9 @@ struct BadgesReceivedView: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         VStack {
             List(Array(Set(badgeAwardsToMe.compactMap { $0.badgeDefinition }).sorted(by: { $0.created_at > $1.created_at })), id:\.self) { badge in
                 BadgeReceivedRow(badge: badge, selectedBadges: $selection)

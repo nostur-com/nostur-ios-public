@@ -55,7 +55,6 @@ class HotViewModel: ObservableObject {
     
     @AppStorage("feed_hot_ago") var ago:Int = 12 {
         didSet {
-            logAction("Hot feed time frame changed to \(self.ago)h")
             backlog.timeout = max(Double(ago / 4), 5.0)
             if ago < oldValue {
                 self.state  = .loading

@@ -67,9 +67,9 @@ struct Kind30023: View {
     
     @ViewBuilder
     private var normalView: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         if isDetail {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {

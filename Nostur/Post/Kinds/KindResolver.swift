@@ -29,9 +29,9 @@ struct KindResolver: View {
     }
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         switch nrPost.kind {
             
         case 0: // .kind 0 happens somehow when events are deleted (Core Data) but still on screen, so not actually kind:0 but missing event, refetch event as workaround:

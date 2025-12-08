@@ -53,9 +53,9 @@ struct LiveEventDetail: View {
     @State private var moreChatSpace: Bool = false
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         Zoomable(id: "liveEvent") {
             GeometryReader { geo in
                 ScrollView {

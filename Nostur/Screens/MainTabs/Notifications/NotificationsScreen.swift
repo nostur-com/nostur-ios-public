@@ -18,7 +18,7 @@ struct NotificationsContainer: View {
     
     var body: some View {
 #if DEBUG
-        let _ = Self._printChanges()
+        let _ = nxLogChanges(of: Self.self)
 #endif
         NBNavigationStack(path: $navPath) {
             NotificationsScreen(account: la.account, navPath: $navPath)
@@ -65,9 +65,9 @@ struct NotificationsScreen: View {
     @AppStorage("notifications_mute_zaps") private var muteZaps: Bool = false
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         VStack(spacing: 0) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {

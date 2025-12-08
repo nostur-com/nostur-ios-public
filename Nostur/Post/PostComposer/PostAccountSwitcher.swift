@@ -106,9 +106,9 @@ struct InlineAccountSwitcher: View, Equatable {
 //    }
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         Color.clear
             .frame(width: size, height: size)
             .overlay(alignment: .topLeading) {

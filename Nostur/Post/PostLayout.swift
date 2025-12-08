@@ -69,9 +69,9 @@ struct PostLayout<Content: View, TitleContent: View>: View {
     }
     
     var body: some View {
-        //        #if DEBUG
-        //        let _ = Self._printChanges()
-        //        #endif
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         if isDetail || fullWidth {
             fullWidthLayout
 //                .background(theme.listBackground)

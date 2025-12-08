@@ -34,7 +34,9 @@ struct BadgeDetailView: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         ScrollView {
             HStack(alignment: .top) {
                 VStack(alignment: .center) {

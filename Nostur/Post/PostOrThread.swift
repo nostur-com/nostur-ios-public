@@ -29,9 +29,9 @@ struct PostOrThread: View { //, Equatable {
     }
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         if postOrThreadAttributes.parentPosts.isEmpty { // Single Post
             Box(nrPost: nrPost) {
                 PostRowDeletable(nrPost: nrPost, missingReplyTo: nrPost.replyToId != rootId && nrPost.replyToId != nil && postOrThreadAttributes.parentPosts.isEmpty, connect: nrPost.replyToId != nil ? .top : nil, fullWidth: settings.fullWidthImages, isDetail: false, theme: theme)

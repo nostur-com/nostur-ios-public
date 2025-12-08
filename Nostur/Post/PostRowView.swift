@@ -38,9 +38,9 @@ struct PostRowDeletable: View {
     }
     
     var body: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         if !ignoreBlock && postRowDeletableAttributes.blocked {
             HStack {
                 Text("_Post from blocked account hidden_", comment: "Message shown when a post is from a blocked account")

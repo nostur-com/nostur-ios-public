@@ -121,9 +121,9 @@ struct Kind30000: View {
     
     @ViewBuilder
     private var normalView: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
 //        PostEmbeddedLayout(nrPost: nrPost, authorAtBottom: true) {
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect,
                    isReply: isReply, isDetail: isDetail, fullWidth: true, forceAutoload: forceAutoload, isItem: true, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) {

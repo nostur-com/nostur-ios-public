@@ -33,9 +33,9 @@ struct PrivateNotesScreen: View {
     @State private var noContacts = false
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         ScrollViewReader { proxy in
             if !privateNotes.isEmpty && (!events.isEmpty || noEvents) && (!contacts.isEmpty || noContacts) {
                 List(privateNotes) { pn in
@@ -205,9 +205,9 @@ struct LazyPrivateNote: View {
     }
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         Box(nrPost: nrPost) {
             VStack(spacing: 0) {
                 

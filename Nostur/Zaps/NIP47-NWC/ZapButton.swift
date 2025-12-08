@@ -45,7 +45,7 @@ struct ZapButton: View {
     
     var body: some View {
 //#if DEBUG
-//        let _ = Self._printChanges()
+//        let _ = nxLogChanges(of: Self.self)
 //#endif
         Image(systemName: icon)
             .overlay(alignment: .leading) {
@@ -288,7 +288,7 @@ struct VideoZapButton: View {
     
     var body: some View {
 //#if DEBUG
-//        let _ = Self._printChanges()
+//        let _ = nxLogChanges(of: Self.self)
 //#endif
         VStack {
             Image(systemName: icon)

@@ -28,9 +28,9 @@ struct PhoneViewIsh: View {
     @State private var showLiveEventsBanner = false
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         NBNavigationStack(path: $navPath) {
             VStack(spacing: 0) {
                 ZStack {

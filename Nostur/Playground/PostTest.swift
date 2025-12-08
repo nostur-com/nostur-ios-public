@@ -62,9 +62,9 @@ struct PreviewFeed<Content: View>: View {
     }
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         AvailableWidthContainer {
             ScrollViewReader { proxy in
                 List {

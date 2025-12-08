@@ -5,7 +5,7 @@
 //  Created by Fabian Lachman on 22/09/2025.
 //
 
-import Foundation
+import SwiftUI
 
 func selectedTab() -> String {
     UserDefaults.standard.string(forKey: "selected_tab") ?? "Main"
@@ -87,5 +87,13 @@ func goToDMs() {
     
     else { // older iOS, or catalyst (both pre/post 26)
         setSelectedTab("Messages")
+    }
+}
+
+func nxLogChanges<T: View>(of viewType: T.Type) {
+    if #available(iOS 17.1, *) {
+        viewType._logChanges()
+    } else {
+        viewType._printChanges()
     }
 }

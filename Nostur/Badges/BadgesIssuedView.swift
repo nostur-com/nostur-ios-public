@@ -40,7 +40,9 @@ struct BadgesIssuedView: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         VStack {
             List(badges) { badge in
                 NBNavigationLink(value: Badge(badge)) {

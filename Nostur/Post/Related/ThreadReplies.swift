@@ -15,9 +15,9 @@ struct ThreadReplies: View {
     @State private var didLoad = false
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         LazyVStack(spacing: GUTTER) {
             if didLoad {
                 ForEach(nrPost.groupedRepliesSorted) { reply in

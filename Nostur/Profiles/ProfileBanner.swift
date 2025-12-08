@@ -17,9 +17,9 @@ struct ProfileBanner: View {
     public let BANNER_HEIGHT = 150.0
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         GeometryReader { geoBanner in
             if !settings.lowDataMode, let banner {
                 if (banner.suffix(4) == ".gif") { // NO ENCODING FOR GIF (OR ANIMATION GETS LOST)

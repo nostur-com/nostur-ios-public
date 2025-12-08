@@ -20,7 +20,7 @@ struct MainTabsDesktop: View {
     
     var body: some View {
 #if DEBUG
-        let _ = Self._printChanges()
+        let _ = nxLogChanges(of: Self.self)
 #endif
         VStack {
             NoInternetConnectionBanner()

@@ -21,9 +21,9 @@ struct RelayRowView: View {
     @State private var connection: RelayConnection? = nil
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         HStack {
             if (isConnected) {
                 Image(systemName: "circle.fill").foregroundColor(.green)

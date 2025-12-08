@@ -57,21 +57,21 @@ public class ConnectionPool: ObservableObject {
                 let ephemeralConnected = self.ephemeralConnections.values.count { $0.isConnected }
                 
 #if DEBUG
-                L.og.info("🔢 CONNECTION COUNTS:")
-                L.og.info("  Regular: \(regularCount) total, \(totalConnected) connected")
-                L.og.info("  Outbox: \(outboxCount) total, \(outboxConnected) connected") 
-                L.og.info("  Ephemeral: \(ephemeralCount) total, \(ephemeralConnected) connected")
-                L.og.info("  TOTAL: \(regularCount + outboxCount + ephemeralCount) connections")
+                L.sockets.debug("🔢 CONNECTION COUNTS:")
+                L.sockets.debug("  Regular: \(regularCount) total, \(totalConnected) connected")
+                L.sockets.debug("  Outbox: \(outboxCount) total, \(outboxConnected) connected")
+                L.sockets.debug("  Ephemeral: \(ephemeralCount) total, \(ephemeralConnected) connected")
+                L.sockets.debug("  TOTAL: \(regularCount + outboxCount + ephemeralCount) connections")
                 
                 // Also log URLSession/thread info per connection
                 self.queue.async {
                     for (url, conn) in self.connections {
                         let sessionExists = conn.session != nil ? "✅" : "❌"
-                        L.og.info("  Regular [\(url.prefix(25))]: connected=\(conn.isConnected), session=\(sessionExists)")
+                        L.sockets.debug("  Regular [\(url.prefix(25))]: connected=\(conn.isConnected), session=\(sessionExists)")
                     }
                     for (url, conn) in self.outboxConnections {
                         let sessionExists = conn.session != nil ? "✅" : "❌"
-                        L.og.info("  Outbox [\(url.prefix(25))]: connected=\(conn.isConnected), session=\(sessionExists)")
+                        L.sockets.debug("  Outbox [\(url.prefix(25))]: connected=\(conn.isConnected), session=\(sessionExists)")
                     }
                 }
 #endif
@@ -161,7 +161,7 @@ public class ConnectionPool: ObservableObject {
     public func addEphemeralConnection(_ relayData: RelayData) -> RelayConnection {
         if let existingConnection = ephemeralConnections[relayData.id] {
 #if DEBUG
-            L.og.debug("addEphemeralConnection: reusing existing \(relayData.id)")
+            L.sockets.debug("addEphemeralConnection: reusing existing \(relayData.id)")
 #endif
             return existingConnection
         }
@@ -170,7 +170,7 @@ public class ConnectionPool: ObservableObject {
             ephemeralConnections[relayData.id] = newConnection
             removeAfterDelay(relayData.id)
 #if DEBUG
-            L.og.debug("addEphemeralConnection: adding new connection \(relayData.id)")
+            L.sockets.debug("addEphemeralConnection: adding new connection \(relayData.id)")
 #endif
             return newConnection
         }
@@ -235,7 +235,7 @@ public class ConnectionPool: ObservableObject {
     
     public func connectAll(resetExpBackOff: Bool = false) {
 #if DEBUG
-        L.og.debug("ConnectionPool.shared.connectAll()")
+        L.sockets.debug("ConnectionPool.shared.connectAll()")
         // Log connection counts before connecting
         self.logConnectionCounts()
 #endif
@@ -353,7 +353,7 @@ public class ConnectionPool: ObservableObject {
     @MainActor
     func disconnectAll() {
 #if DEBUG
-        L.og.debug("ConnectionPool.disconnectAll")
+        L.sockets.debug("ConnectionPool.disconnectAll")
         // Log connection counts before disconnecting
         self.logConnectionCounts()
 #endif

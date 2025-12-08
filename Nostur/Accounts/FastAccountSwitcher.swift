@@ -28,7 +28,13 @@ struct FastAccountSwitcher: View, Equatable {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+#if DEBUG
+//        if #available(iOS 17.1, *) {
+//            let _ = Self._logChanges()
+//        } else {
+//            let _ = Self._printChanges()
+//        }
+#endif
         HStack(spacing:5) {
             ForEach(fewAccounts.indices, id:\.self) { index in
                 PFP(pubkey: fewAccounts[index].publicKey, account: fewAccounts[index], size: 25)

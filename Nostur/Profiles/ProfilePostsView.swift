@@ -19,9 +19,9 @@ struct ProfilePostsView: View {
     }
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         switch vm.state {
         case .initializing, .loading:
             ProgressView()

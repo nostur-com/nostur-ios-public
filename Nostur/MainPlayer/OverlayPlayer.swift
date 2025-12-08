@@ -98,9 +98,9 @@ struct OverlayPlayer: View {
     @State private var bookmarkState = false
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         GeometryReader { geometry in
             if vm.isShown {
                 ZStack(alignment: videoAlignment) {

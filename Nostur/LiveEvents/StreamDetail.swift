@@ -52,9 +52,9 @@ struct StreamDetail: View {
     @ObservedObject private var apm: AnyPlayerModel = .shared
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         if apm.viewMode == .detailstream {
             GeometryReader { geo in
                 VStack(spacing: 0) {

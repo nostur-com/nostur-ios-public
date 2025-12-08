@@ -79,9 +79,9 @@ struct Kind1: View {
     
     @ViewBuilder
     private var normalView: some View {
-//        #if DEBUG
-//        let _ = Self._printChanges()
-//        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         PostLayout(nrPost: nrPost, hideFooter: hideFooter, missingReplyTo: missingReplyTo, connect: connect, isReply: isReply,
                    isDetail: isDetail, fullWidth: fullWidth || isOlasGeneric, forceAutoload: forceAutoload, nxViewingContext: nxViewingContext, containerID: containerID, theme: theme, availableWidth: availableWidth) {
             if (isDetail) {

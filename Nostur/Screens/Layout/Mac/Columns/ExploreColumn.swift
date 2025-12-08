@@ -20,7 +20,7 @@ struct ExploreColumn: View {
     
     var body: some View {
 #if DEBUG
-        let _ = Self._printChanges()
+        let _ = nxLogChanges(of: Self.self)
 #endif
         ZStack {
             theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes

@@ -17,7 +17,7 @@ struct MainTabs15: View {
     
     var body: some View {
 #if DEBUG
-        let _ = Self._printChanges()
+        let _ = nxLogChanges(of: Self.self)
 #endif
         VStack {
             NoInternetConnectionBanner()
@@ -139,7 +139,7 @@ struct MainTabs26: View {
     
     var body: some View {
 #if DEBUG
-        let _ = Self._printChanges()
+        let _ = nxLogChanges(of: Self.self)
 #endif
         VStack {
             NoInternetConnectionBanner()

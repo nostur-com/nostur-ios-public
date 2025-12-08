@@ -34,7 +34,9 @@ struct ProfileBadgesContainer: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         if let first = profileBadgesSorted.first  {
             ProfileBadgesView(verifiedBadges:first.verifiedBadges)
                 .task {
@@ -112,7 +114,9 @@ struct ProfileBadgesView: View {
     @State var refreshHack = false
     
     var body: some View {
-//        let _ = Self._printChanges()
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         HStack {
             ForEach(Array(verifiedBadges.prefix(3))) { profileBadge in
                 BadgeIcon(badge: profileBadge.badge)

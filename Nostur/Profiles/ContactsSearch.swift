@@ -57,7 +57,9 @@ struct ContactsSearch: View, Equatable {
     @State private var contactFilter = "All"
     
     var body: some View {
-//        let _ = Self._printChanges()
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         VStack {
             Group {
                 SearchBox(prompt: prompt, text: $searchText)

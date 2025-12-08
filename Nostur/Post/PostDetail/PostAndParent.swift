@@ -34,7 +34,9 @@ struct PostAndParent: View {
     }
     
     var body: some View {
-//        let _ = Self._printChanges()
+//#if DEBUG
+//        let _ = nxLogChanges(of: Self.self)
+//#endif
         VStack(spacing: 10) {
             // MARK: PARENT POST WITH POTENTIALLY ANOTHER PARENT
             // We have the event: replyTo_ = already .replyTo or lazy fetched with .replyToId

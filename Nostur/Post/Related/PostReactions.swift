@@ -19,9 +19,9 @@ struct PostReactions: View {
     @Namespace private var top
     
     var body: some View {
-        #if DEBUG
-        let _ = Self._printChanges()
-        #endif
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         ScrollViewReader { proxy in
             ZStack {
                 theme.listBackground // list background
