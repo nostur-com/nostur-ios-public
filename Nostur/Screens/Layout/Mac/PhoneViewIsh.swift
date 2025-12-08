@@ -39,10 +39,16 @@ struct PhoneViewIsh: View {
                     if let followingConfig {
                         AvailableWidthContainer {
                             NXColumnView(config: followingConfig, isVisible: true)
-                                .toolbar {
-                                    ToolbarItem(placement: .navigationBarTrailing) {
-                                        Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-                                            AppSheetsModel.shared.feedSettingsFeed = followingConfig.feed
+                                .modifier {
+                                    if #available(iOS 26.0, *) {
+                                        $0.toolbar {
+                                            settingsButton(followingConfig)
+                                            .sharedBackgroundVisibility(.hidden)
+                                        }
+                                    }
+                                    else {
+                                        $0.toolbar {
+                                            settingsButton(followingConfig)
                                         }
                                     }
                                 }
@@ -106,6 +112,15 @@ struct PhoneViewIsh: View {
             if (type(of: destination.destination) == NRPost.self) {
                 let lastPath = destination.destination as! NRPost
                 lastPathPostId = lastPath.id
+            }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private func settingsButton(_ config: NXColumnConfig) -> some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                AppSheetsModel.shared.feedSettingsFeed = config.feed
             }
         }
     }

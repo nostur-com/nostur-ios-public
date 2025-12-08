@@ -28,10 +28,16 @@ struct ExploreColumn: View {
             if let exploreConfig {
                 AvailableWidthContainer {
                     NXColumnView(config: exploreConfig, isVisible: true)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-                                    AppSheetsModel.shared.feedSettingsFeed = exploreConfig.feed
+                        .modifier {
+                            if #available(iOS 26.0, *) {
+                                $0.toolbar {
+                                    settingsButton(exploreConfig)
+                                    .sharedBackgroundVisibility(.hidden)
+                                }
+                            }
+                            else {
+                                $0.toolbar {
+                                    settingsButton(exploreConfig)
                                 }
                             }
                         }
@@ -44,6 +50,15 @@ struct ExploreColumn: View {
             createExploreFeed()
         }
         .background(theme.listBackground)
+    }
+    
+    @ToolbarContentBuilder
+    private func settingsButton(_ config: NXColumnConfig) -> some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                AppSheetsModel.shared.feedSettingsFeed = config.feed
+            }
+        }
     }
 
     private func createExploreFeed() {

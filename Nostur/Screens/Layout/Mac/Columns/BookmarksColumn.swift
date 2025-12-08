@@ -49,6 +49,25 @@ struct BookmarksColumn: View {
         }
         return theme.accent
     }
+    
+    @ToolbarContentBuilder
+    private var filtersButtonAndBookmarksCount: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            HStack {
+                if vm.nrLazyBookmarks.count > 0 {
+                    Text(vm.nrLazyBookmarks.count.description).lineLimit(1)
+                        .font(.caption)
+                        .foregroundColor(theme.accent.opacity(0.5))
+                }
+                
+                Button("Filter", systemImage: bookmarkFilters.count < BOOKMARK_COLORS.count ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
+                    showBookmarkFilterOptions = true
+                }
+                .foregroundStyle(filterColor)
+                .help("Toggle filters...")
+            }
+        }
+    }
 
     var body: some View {
 #if DEBUG
@@ -130,26 +149,19 @@ struct BookmarksColumn: View {
                 }
             }
         }
-        
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                
-                HStack {
-                    if vm.nrLazyBookmarks.count > 0 {
-                        Text(vm.nrLazyBookmarks.count.description).lineLimit(1)
-                            .font(.caption)
-                            .foregroundColor(theme.accent.opacity(0.5))
-                    }
-                    
-                    Button("Filter", systemImage: bookmarkFilters.count < BOOKMARK_COLORS.count ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle") {
-                        showBookmarkFilterOptions = true
-                    }
-                    .foregroundStyle(filterColor)
-                    .help("Toggle filters...")
+        .modifier { // need to hide glass bg in 26+
+            if #available(iOS 26.0, *) {
+                $0.toolbar {
+                    filtersButtonAndBookmarksCount
+                    .sharedBackgroundVisibility(.hidden)
+                }
+            }
+            else {
+                $0.toolbar {
+                    filtersButtonAndBookmarksCount
                 }
             }
         }
-        
         .sheet(isPresented: $showBookmarkFilterOptions, onDismiss: {
             showBookmarkFilterOptions = false
         }, content: {

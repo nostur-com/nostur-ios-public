@@ -49,8 +49,9 @@ struct NotificationsColumnInner: View {
     @Binding var navPath: NBNavigationPath
     @Binding var columnType: MacColumnType
     
-    fileprivate func toolbarItem() -> ToolbarItem<(), ModifiedContent<Button<PFP>, AccessibilityAttachmentModifier>?> {
-        return ToolbarItem(placement: .topBarTrailing) {
+    @ToolbarContentBuilder
+    private var accountsButton: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
             if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
                 Button {
                     columnType = .notifications(nil)
@@ -140,13 +141,13 @@ struct NotificationsColumnInner: View {
         .modifier { // need to hide glass bg in 26+
             if #available(iOS 26.0, *) {
                 $0.toolbar {
-                    toolbarItem()
+                    accountsButton
                     .sharedBackgroundVisibility(.hidden)
                 }
             }
             else {
                 $0.toolbar {
-                    toolbarItem()
+                    accountsButton
                 }
             }
         }

@@ -30,31 +30,18 @@ struct ContentTypeColumn: View {
             if let config {
                 AvailableWidthContainer {
                     NXColumnView(config: config, isVisible: true)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                if case .picture(_) = config.columnType { // No settings for .picture
-                                    Button("Post New Photo", systemImage: "square.and.pencil") {
-                                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                                        AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .picture)
-                                    }
-                                }
-                                
-                                if case .yak(_) = config.columnType { // No settings for .yak
-                                    Button("New Voice Message", systemImage: "square.and.pencil") {
-                                        guard isFullAccount() else { showReadOnlyMessage(); return }
-                                        AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVoiceMessage)
-                                    }
+                        .modifier {
+                            if #available(iOS 26.0, *) {
+                                $0.toolbar {
+                                    newPostButton(config)
+                                    settingsButton(config)
+                                        .sharedBackgroundVisibility(.hidden)
                                 }
                             }
-                            
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                if case .vine(_) = config.columnType { // No settings for .vine
-                                   
-                                }
-                                else { // Settings on every feed type except .vine
-                                    Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-                                        AppSheetsModel.shared.feedSettingsFeed = config.feed
-                                    }
+                            else {
+                                $0.toolbar {
+                                    newPostButton(config)
+                                    settingsButton(config)
                                 }
                             }
                         }
@@ -70,6 +57,39 @@ struct ContentTypeColumn: View {
         .onValueChange(pubkey) { oldPubkey, newPubkey in
             guard oldPubkey != newPubkey else { return }
             createFeed(pubkey)
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private func newPostButton(_ config: NXColumnConfig) -> some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            if case .picture(_) = config.columnType { // No settings for .picture
+                Button("Post New Photo", systemImage: "square.and.pencil") {
+                    guard isFullAccount() else { showReadOnlyMessage(); return }
+                    AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .picture)
+                }
+            }
+            
+            if case .yak(_) = config.columnType { // No settings for .yak
+                Button("New Voice Message", systemImage: "square.and.pencil") {
+                    guard isFullAccount() else { showReadOnlyMessage(); return }
+                    AppSheetsModel.shared.newPostInfo = NewPostInfo(kind: .shortVoiceMessage)
+                }
+            }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private func settingsButton(_ config: NXColumnConfig) -> some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            if case .vine(_) = config.columnType { // No settings for .vine
+               
+            }
+            else { // Settings on every feed type except .vine
+                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                    AppSheetsModel.shared.feedSettingsFeed = config.feed
+                }
+            }
         }
     }
 

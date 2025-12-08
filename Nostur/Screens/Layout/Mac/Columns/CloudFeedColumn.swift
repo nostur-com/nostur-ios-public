@@ -25,10 +25,16 @@ struct CloudFeedColumn: View {
             else if let columnConfig {
                 AvailableWidthContainer {
                     NXColumnView(config: columnConfig, isVisible: true)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-                                    AppSheetsModel.shared.feedSettingsFeed = feed
+                        .modifier { // need to hide glass bg in 26+
+                            if #available(iOS 26.0, *) {
+                                $0.toolbar {
+                                    settingsButton
+                                    .sharedBackgroundVisibility(.hidden)
+                                }
+                            }
+                            else {
+                                $0.toolbar {
+                                    settingsButton
                                 }
                             }
                         }
@@ -47,7 +53,12 @@ struct CloudFeedColumn: View {
         })
     }
     
-    func load() {
-        
+    @ToolbarContentBuilder
+    private var settingsButton: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                AppSheetsModel.shared.feedSettingsFeed = feed
+            }
+        }
     }
 }

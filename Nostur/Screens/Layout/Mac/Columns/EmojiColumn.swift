@@ -17,10 +17,16 @@ struct EmojiColumn: View {
     var body: some View {
         EmojiFeed()
             .environmentObject(vm)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
-                        showSettings = true
+            .modifier { // need to hide glass bg in 26+
+                if #available(iOS 26.0, *) {
+                    $0.toolbar {
+                        settingsButton
+                        .sharedBackgroundVisibility(.hidden)
+                    }
+                }
+                else {
+                    $0.toolbar {
+                        settingsButton
                     }
                 }
             }
@@ -39,6 +45,15 @@ struct EmojiColumn: View {
                 .nbUseNavigationStack(.whenAvailable) // .never is broken on macCatalyst, showSettings = false will not dismiss  .sheet(isPresented: $showSettings) ..
                 .presentationBackgroundCompat(theme.listBackground)
             }
+    }
+    
+    @ToolbarContentBuilder
+    private var settingsButton: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(String(localized: "Feed Settings", comment: "Menu item for toggling feed settings"), systemImage: "gearshape") {
+                showSettings = true
+            }
+        }
     }
 }
 
