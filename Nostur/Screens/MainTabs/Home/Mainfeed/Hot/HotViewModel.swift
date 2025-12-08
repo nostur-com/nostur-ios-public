@@ -434,7 +434,11 @@ class HotViewModel: ObservableObject {
     }
     
     // pull to refresh
-    public func refresh() async {
+    @MainActor
+    public func refresh(showLoading: Bool = false) async {
+        if showLoading { // Pull to refresh hash own spinner (in the pull thing) so no need to loading screen
+            self.state = .loading
+        }
         self.lastFetch = nil
         self.posts = [PostID: RecommendedBy<Pubkey>]()
         self.backlog.clear()
