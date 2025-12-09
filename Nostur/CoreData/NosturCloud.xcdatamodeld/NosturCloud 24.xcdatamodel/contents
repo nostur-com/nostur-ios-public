@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="24G325" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="kindsFeed">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24411" systemVersion="25B78" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="kindsFeed">
     <entity name="Bookmark" representedClassName="Bookmark" versionHashModifier="add kTag" syncable="YES">
         <attribute name="color_" optional="YES" attributeType="String"/>
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
@@ -49,11 +49,12 @@
     <entity name="CloudDMState" representedClassName="CloudDMState" versionHashModifier="add-initiator-pubkey" syncable="YES">
         <attribute name="accepted" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="accountPubkey_" optional="YES" attributeType="String"/>
-        <attribute name="blurb_" optional="YES" attributeType="String"/>
+        <attribute name="blurb_" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="contactPubkey_" optional="YES" attributeType="String"/>
         <attribute name="initiatorPubkey_" optional="YES" attributeType="String"/>
         <attribute name="isHidden" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="isPinned" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lastMessageTimestamp_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="markedReadAt_" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
     </entity>
     <entity name="CloudFeed" representedClassName="CloudFeed" syncable="YES">

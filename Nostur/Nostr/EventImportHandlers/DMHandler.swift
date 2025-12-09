@@ -116,3 +116,11 @@ func allDMparticipants(_ nEvent: NEvent) -> Set<String> {
 func dmConversationId(nEvent: NEvent) -> String {
     return CloudDMState.getConversationId(for: allDMparticipants(nEvent))
 }
+
+func allDMparticipants(_ event: Event) -> Set<String> {
+    return Set(event.pTags() + [event.pubkey])
+}
+
+func dmConversationId(event: Event) -> String {
+    return CloudDMState.getConversationId(for: allDMparticipants(event))
+}

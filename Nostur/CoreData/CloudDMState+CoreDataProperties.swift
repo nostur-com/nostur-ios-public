@@ -25,6 +25,7 @@ extension CloudDMState {
     @NSManaged public var initiatorPubkey_: String? // sender of first received message,e for WoT filtering
     @NSManaged public var blurb_: String? // cache last message text for preview
     @NSManaged public var markedReadAt_: Date?
+    @NSManaged public var lastMessageTimestamp_: Date?
     @NSManaged public var isPinned: Bool
     @NSManaged public var isHidden: Bool
     
@@ -67,6 +68,14 @@ extension CloudDMState {
         }
     }
     
+    var senderPubkey: String {
+        accountPubkey_ ?? ""
+    }
+    
+    var receiverPubkeys: Set<String> {
+        participantPubkeys.subtracting([senderPubkey])
+    }
+    
     var blurb: String {
         get {
             blurb_ ?? ""
@@ -81,26 +90,23 @@ extension CloudDMState: Identifiable {
     static func fetchByAccount(_ accountPubkey: String, context: NSManagedObjectContext) -> [CloudDMState] {
         let fr = CloudDMState.fetchRequest()
         fr.predicate = NSPredicate(format: "accountPubkey_ == %@", accountPubkey)
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.lastMessageTimestamp_, ascending: false)]
         return (try? context.fetch(fr)) ?? []
     }
     
     static func fetchByParticipants(participants: Set<String>, context: NSManagedObjectContext) -> [CloudDMState] {
         let fr = CloudDMState.fetchRequest()
         fr.predicate = NSPredicate(format: "contactPubkey_ == %@", participants.sorted().joined(separator: ""))
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.lastMessageTimestamp_, ascending: false)]
         return (try? context.fetch(fr)) ?? []
     }
     
     static func fetchByParticipants(participants: Set<String>, andAccountPubkey accountPubkey: String, context: NSManagedObjectContext) -> CloudDMState? {
         let fr = CloudDMState.fetchRequest()
         fr.predicate = NSPredicate(format: "accountPubkey_ == %@ AND contactPubkey_ == %@", accountPubkey, CloudDMState.getConversationId(for: participants))
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.lastMessageTimestamp_, ascending: false)]
         return try? context.fetch(fr).first
     }
-
-//    static func fetchExisting(_ accountPubkey: String, participants: Set<String>, context: NSManagedObjectContext) -> CloudDMState? {
-//        let fr = CloudDMState.fetchRequest()
-//        fr.predicate = NSPredicate(format: "accountPubkey_ == %@ AND contactPubkey_ == %@", accountPubkey, participants.sorted().joined(separator: ""))
-//        return try? context.fetch(fr).first
-//    }
     
     static func create(accountPubkey: String, participants: Set<String>, context: NSManagedObjectContext) -> CloudDMState {
         let newGroupDMSstate = CloudDMState(context: context)
@@ -112,7 +118,13 @@ extension CloudDMState: Identifiable {
     var unread: Int {
         guard let contactPubkey_ else { return 0 }
         guard let managedObjectContext else { return 0 }
-        let allReceived = Event.fetchEventsBy(pubkey: contactPubkey_, andKinds: [1,14], context: managedObjectContext)
+
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@", [4,14], self.conversationId)
+        let allReceived = (try? managedObjectContext.fetch(fr)) ?? []
+        
+        
         let unreadSince = markedReadAt_ ?? Date.distantPast
         
         return allReceived.count { $0.date > unreadSince }
