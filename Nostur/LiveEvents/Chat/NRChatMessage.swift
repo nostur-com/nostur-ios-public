@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import NostrEssentials
 
 // NRChatMessage SHOULD BE CREATED IN BACKGROUND THREAD
 class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
@@ -63,13 +64,25 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     
     var sats: Double?
     
-    init(nEvent: NEvent) {
+    init(nEvent: NEvent, keyPair: (publicKey: String, privateKey: String)? = nil) {
         self.nEvent = nEvent
         
         let fastTags: [FastTag] = nEvent.tags.map { ($0.type, $0.value, $0.tag[safe: 2], $0.tag[safe: 3], $0.tag[safe: 4], $0.tag[safe: 5], $0.tag[safe: 6], $0.tag[safe: 7], $0.tag[safe: 8], $0.tag[safe: 9]) }
         let fastPs: [FastTag] = fastTags.filter { $0.0 == "p" }
         
-        let (contentElementsDetail, linkPreviewURLs, galleryItems) = NRContentElementBuilder.shared.buildElements(input: nEvent.content, fastTags: fastTags, primaryColor: Themes.default.theme.primary)
+        let content: String = if nEvent.kind == .legacyDirectMessage {
+            if let keyPair {
+                if nEvent.publicKey == keyPair.publicKey, let firstP = nEvent.firstP() {
+                    Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: firstP, content: nEvent.content) ?? "(Encrypted content)"
+                }
+                else {
+                    Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: nEvent.publicKey, content: nEvent.content) ?? "(Encrypted content)"
+                }
+            }
+            else { convertToHieroglyphs(text: "(Encrypted content)") }
+        } else { nEvent.content }
+        
+        let (contentElementsDetail, linkPreviewURLs, galleryItems) = NRContentElementBuilder.shared.buildElements(input: content, fastTags: fastTags, primaryColor: Themes.default.theme.primary)
         self.linkPreviewURLs = linkPreviewURLs
         self.galleryItems = galleryItems
         

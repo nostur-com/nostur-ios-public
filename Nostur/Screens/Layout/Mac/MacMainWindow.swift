@@ -79,10 +79,17 @@ struct MacMainWindow: View {
                             .environment(\.availableWidth, columnSize(geo.size.width))
                             .environment(\.containerID, columnConfig.id.uuidString)
                             .modifier {
-                                if case .notifications(let pubkey) = columnConfig.type, pubkey == nil {
-                                    $0
-                                }
-                                else {
+                                switch columnConfig.type {
+                                case .notifications(let pubkey), .DMs(let pubkey), .vines(let pubkey), .yaks(let pubkey), .photos(let pubkey):
+                                    if pubkey == nil {
+                                        $0
+                                    }
+                                    else {
+                                        $0.simultaneousGesture(TapGesture().onEnded({ _ in
+                                            AppState.shared.containerIDTapped = columnConfig.id.uuidString
+                                        }))
+                                    }
+                                default:
                                     $0.simultaneousGesture(TapGesture().onEnded({ _ in
                                         AppState.shared.containerIDTapped = columnConfig.id.uuidString
                                     }))

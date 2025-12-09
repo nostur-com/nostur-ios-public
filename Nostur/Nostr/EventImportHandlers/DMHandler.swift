@@ -14,23 +14,85 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     
     // needed to fetch contact in DMS: so event.firstP is in event.contacts
     
-    print(111111)
-    guard let contactPubkey = nEvent.firstP() else { return } // if we have no p, something is wrong
-    savedEvent.otherPubkey = contactPubkey
+    guard let receiverPubkey = nEvent.firstP() else { return } // if we have no p, something is wrong
+    let sender = nEvent.publicKey
+    let participants = allDMparticipants(nEvent) // including sender (.pubkey)
     
-    if nEvent.kind == .legacyDirectMessage { // Legacy DM is 1 on 1
-        savedEvent.groupId = CloudDMState.getConversationId(from: [contactPubkey, nEvent.publicKey])
+    savedEvent.otherPubkey = receiverPubkey // TODO: Check do we still need this here?
+    
+    savedEvent.groupId = dmConversationId(nEvent: nEvent)
+    
+    let existingDMStates = CloudDMState.fetchByParticipants(participants: participants, context: context)
+    
+    // Create new DM states if we have none yet
+    guard !existingDMStates.isEmpty else {
+        var didAddAsSender = false
+        var addedAsReceiverPubkeys: Set<String> = []
+        // if we are sender with full account
+        if AccountsState.shared.bgFullAccountPubkeys.contains(sender) {
+            let savedEventDate = savedEvent.date
+            let dmState = CloudDMState(context: context)
+            dmState.accountPubkey_ = sender
+            dmState.participantPubkeys = participants
+            dmState.accepted = true
+            dmState.markedReadAt_ = savedEventDate
+            DataProvider.shared().saveToDiskNow {
+                DirectMessageViewModel.default.newMessage()
+            }
+            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
+            didAddAsSender = true
+        }
+        
+        // if we are one of the receivers with full account
+        for participant in participants {
+            if AccountsState.shared.bgFullAccountPubkeys.contains(participant) {
+                let dmState = CloudDMState(context: context)
+                dmState.accountPubkey_ = participant
+                dmState.participantPubkeys = participants
+                dmState.accepted = false
+                DataProvider.shared().saveToDiskNow {
+                    DirectMessageViewModel.default.newMessage()
+                }
+                DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
+                addedAsReceiverPubkeys.insert(participant)
+            }
+        }
+
+        // if we are sender with read only account (and did not already add with full account
+        if !didAddAsSender && AccountsState.shared.bgAccountPubkeys.contains(sender) {
+            let savedEventDate = savedEvent.date
+            let dmState = CloudDMState(context: context)
+            dmState.accountPubkey_ = sender
+            dmState.participantPubkeys = participants
+            dmState.accepted = true
+            dmState.markedReadAt_ = savedEventDate
+            DataProvider.shared().saveToDiskNow {
+                DirectMessageViewModel.default.newMessage()
+            }
+            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
+        }
+        
+        // if we are one of the receivers with read only account
+        for participant in participants {
+            if addedAsReceiverPubkeys.contains(participant) { continue }  // skip if already added
+            if AccountsState.shared.bgAccountPubkeys.contains(participant) {
+                let dmState = CloudDMState(context: context)
+                dmState.accountPubkey_ = participant
+                dmState.participantPubkeys = participants
+                dmState.accepted = false
+                DataProvider.shared().saveToDiskNow {
+                    DirectMessageViewModel.default.newMessage()
+                }
+                DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
+            }
+        }
+        return
     }
-    else if nEvent.kind == .directMessage { // 2 or more (all P tags + .pubkey)
-        savedEvent.groupId = CloudDMState.getConversationId(from: Set(nEvent.pTags()).union([nEvent.publicKey]))
-    }
     
-    print(11111122222)
-    
-    
-    if let dmState = CloudDMState.fetchExisting(nEvent.publicKey, contactPubkey: contactPubkey, context: context) {
-        // if we already track the conversation, consider accepted if we replied to the DM
-        // DM is sent from one of our current logged in pubkey
+    // Update existing DM states
+    for dmState in existingDMStates {
+        // Consider accepted if we replied to the DM
+        // DM is sent from one of our account pubkeys
         if !dmState.accepted && AccountsState.shared.bgAccountPubkeys.contains(nEvent.publicKey) {
             dmState.accepted = true
             
@@ -45,67 +107,12 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
         DirectMessageViewModel.default.newMessage()
         DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
     }
-    // Same but account / contact switched, because we support multiple accounts so we need to be able to track both ways
-    else if let dmState = CloudDMState.fetchExisting(contactPubkey, contactPubkey: nEvent.publicKey, context: context) {
-        // if we already track the conversation, consider accepted if we replied to the DM
-        if !dmState.accepted && AccountsState.shared.bgAccountPubkeys.contains(nEvent.publicKey) {
-            dmState.accepted = true
-        }
-        // Let DirectMessageViewModel handle view updates
-        DirectMessageViewModel.default.newMessage()
-        DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
-    }
-    else {
-        // if we are sender with full account
-        if AccountsState.shared.bgFullAccountPubkeys.contains(nEvent.publicKey) {
-            let savedEventDate = savedEvent.date
-            let dmState = CloudDMState(context: context)
-            dmState.accountPubkey_ = nEvent.publicKey
-            dmState.contactPubkey_ = contactPubkey
-            dmState.accepted = true
-            dmState.markedReadAt_ = savedEventDate
-            DataProvider.shared().saveToDiskNow {
-                DirectMessageViewModel.default.newMessage()
-            }
-            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
-        }
-        
-        // if we are receiver with full account
-        else if AccountsState.shared.bgFullAccountPubkeys.contains(contactPubkey) {
-            let dmState = CloudDMState(context: context)
-            dmState.accountPubkey_ = contactPubkey
-            dmState.contactPubkey_ = nEvent.publicKey
-            dmState.accepted = false
-            DataProvider.shared().saveToDiskNow {
-                DirectMessageViewModel.default.newMessage()
-            }
-            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
-        }
-        
-        // if we are sender with read only account
-        else if AccountsState.shared.bgAccountPubkeys.contains(nEvent.publicKey) {
-            let savedEventDate = savedEvent.date
-            let dmState = CloudDMState(context: context)
-            dmState.accountPubkey_ = nEvent.publicKey
-            dmState.contactPubkey_ = contactPubkey
-            dmState.accepted = true
-            dmState.markedReadAt_ = savedEventDate
-            DataProvider.shared().saveToDiskNow {
-                DirectMessageViewModel.default.newMessage()
-            }
-            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
-        }
-        
-        // if we are receiver with read only account
-        else if AccountsState.shared.bgAccountPubkeys.contains(contactPubkey) {
-            let dmState = CloudDMState(context: context)
-            dmState.accountPubkey_ = contactPubkey
-            dmState.contactPubkey_ = nEvent.publicKey
-            dmState.accepted = false
-            DataProvider.shared().saveToDiskNow {
-                DirectMessageViewModel.default.newMessage()
-            }
-            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
-        }
-    }
+}
+
+func allDMparticipants(_ nEvent: NEvent) -> Set<String> {
+    return Set(nEvent.pTags() + [nEvent.publicKey])
+}
+
+func dmConversationId(nEvent: NEvent) -> String {
+    return CloudDMState.getConversationId(for: allDMparticipants(nEvent))
 }

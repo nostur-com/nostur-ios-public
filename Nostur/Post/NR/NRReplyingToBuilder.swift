@@ -106,9 +106,9 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil, relays: [St
         L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey !Thread.isMainThread \(pubkey)")
 #endif
         if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
-            #if DEBUG
+#if DEBUG
             L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey \(pubkey) - \(contact.anyName)")
-            #endif
+#endif
             PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
             return contact.anyName
         }

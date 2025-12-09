@@ -80,6 +80,10 @@ public struct NTimestamp: Codable {
     public init(timestamp: Int) {
         self.timestamp = timestamp
     }
+    
+    public init(timestamp: Int64) {
+        self.timestamp = Int(timestamp)
+    }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -177,6 +181,10 @@ public enum NEventKind: Codable, Equatable, Hashable {
         case 24242: self = .blossomAuth
         default   : self = .custom(id)
         }
+    }
+    
+    init(id: Int64) {
+        self.init(id: Int(id))
     }
 
     var id: Int {

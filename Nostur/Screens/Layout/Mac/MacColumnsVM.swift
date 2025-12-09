@@ -137,6 +137,11 @@ struct MacColumnConfig: Codable, Equatable, Identifiable {
     }
 }
 
+struct DMConversationInfo: Codable, Equatable {
+    let participants: Set<String>
+    let ourAccountPubkey: String
+}
+
 enum MacColumnType: Codable, Equatable {
     case unconfigured
     case cloudFeed(String)
@@ -156,7 +161,8 @@ enum MacColumnType: Codable, Equatable {
     case vines(String?) // .vines(accountPubkey)
     case mentions
     case bookmarks(Set<String>)
-    case DMs
+    case DMs(String?) // .DMs(accountPubkey)
+    case DMConversation(DMConversationInfo)
     case newPosts
     
     var displayName: String {
@@ -192,9 +198,11 @@ enum MacColumnType: Codable, Equatable {
         case .mentions:
             return "mentions"
         case .bookmarks(let filters):
-            return "bookmarks\(filters.sorted().joined(separator: ","))"
-        case .DMs:
-            return "DMs"
+            return "bookmarks(\(filters.sorted().joined(separator: ",")))"
+        case .DMs(let accountPubkey):
+            return "dms(\(accountPubkey ?? "nil"))"
+        case .DMConversation(let dmConversationInfo):
+            return "dmconversation(\(dmConversationInfo.participants.sorted().joined(separator: ",")))(\(dmConversationInfo.ourAccountPubkey)"
         case .newPosts:
             return "newPosts"
         }

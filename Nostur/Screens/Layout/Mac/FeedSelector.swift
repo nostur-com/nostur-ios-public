@@ -153,6 +153,10 @@ struct ColumnConfigToolbarMenu: ViewModifier {
             columnType = .notifications(nil)
         }
         
+        Button("DMs", systemImage: "envelope") {
+            columnType = .DMs(nil)
+        }
+        
         Button("New Posts", systemImage: "bell") {
             columnType = .newPosts
         }

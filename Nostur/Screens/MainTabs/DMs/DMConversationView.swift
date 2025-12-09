@@ -444,15 +444,15 @@ struct DMConversationView: View {
 }
 
 struct DMConversationView17: View {
-    private let participantPs: Set<String>
+    private let participants: Set<String>
     private let ourAccountPubkey: String
     
     @StateObject private var vm: ConversionVM
     
-    init(participantPs: Set<String>, ourAccountPubkey: String) {
-        self.participantPs = participantPs
+    init(participants: Set<String>, ourAccountPubkey: String) {
+        self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
-        _vm = StateObject(wrappedValue: ConversionVM(participantPs: participantPs, ourAccountPubkey: ourAccountPubkey))
+        _vm = StateObject(wrappedValue: ConversionVM(participants: participants, ourAccountPubkey: ourAccountPubkey))
     }
     
     var body: some View {
@@ -462,6 +462,11 @@ struct DMConversationView17: View {
                 ProgressView()
             case .ready(let nrChats):
                 Text("nrChats here: \(nrChats.count)")
+                LazyVStack {
+                    ForEach(nrChats) { nrChat in
+                        ChatMessageRow(nrChat: nrChat, zoomableId: "", selectedContact: .constant(nil))
+                    }
+                }
             case .timeout:
                 Text("Unable to load conversation")
                     .padding(10)
@@ -475,6 +480,54 @@ struct DMConversationView17: View {
         .task {
             await vm.load()
         }
+        .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
+    }
+}
+
+@available(iOS 17.0, * )
+struct BalloonView17: View {
+    public var isSentByCurrentUser: Bool
+    public var time: String
+    @ObservedObject public var nrChatMessage: NRChatMessage
+    @Environment(\.theme) private var theme
+    @Environment(\.availableWidth) private var availableWidth
+    
+    var body: some View {
+        HStack {
+            if isSentByCurrentUser {
+                Spacer()
+            }
+            
+            DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
+//                    .debugDimensions("DMContentRenderer")
+                .padding(10)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(isSentByCurrentUser ? theme.accent : theme.background)
+                )
+                .background(alignment: isSentByCurrentUser ? .bottomTrailing : .bottomLeading) {
+                    Image(systemName: "moon.fill")
+                        .foregroundColor(isSentByCurrentUser ? theme.accent : theme.background)
+                        .scaleEffect(x: isSentByCurrentUser ? 1 : -1)
+                        .rotationEffect(.degrees(isSentByCurrentUser ? 35 : -35))
+                        .offset(x: isSentByCurrentUser ? 10 : -10, y: 0)
+                        .font(.system(size: 25))
+                }
+                .padding(.horizontal, 10)
+                .padding(isSentByCurrentUser ? .leading : .trailing, 50)
+                .overlay(alignment: isSentByCurrentUser ? .bottomLeading : .bottomTrailing) {
+                    Text(time)
+                        .frame(alignment: isSentByCurrentUser ? .leading : .trailing)
+                        .font(.footnote)
+                        .foregroundColor(nrChatMessage.nEvent.kind == .legacyDirectMessage ? .secondary : .primary)
+                        .padding(.bottom, 8)
+                        .padding(isSentByCurrentUser ? .leading : .trailing, 5)
+                }
+            
+            if !isSentByCurrentUser {
+                Spacer()
+            }
+        }
     }
 }
 
@@ -485,14 +538,14 @@ import NavigationBackport
     PreviewContainer({ pe in
         pe.parseEventJSON([
             ###"{"content": "Heb veel performance problemen met Nostur de laatste dagen, enig idee waar dat aan kan liggen?", "created_at": 1726123083, "id": "72cffcb18b0c2ccc12947e6788160c79cd8b28231c762124dee35068ea1a0a15", "kind": 14, "pubkey": "06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71", "tags": [["p","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]], "sig": "edad"}"###,
-            ###"{"content":"Testing","created_at":1726126083,"id":"72cffcb18b0c2ccc12947e6788160c79cd8b28231c762124dee35068ea1a0a15","kind":14,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]], "sig": "uhh"}"###
+            ###"{"content":"Testing","created_at":1726126083,"id":"82cffcb18b0c2ccc12947e6788160c79cd8b28231c762124dee35068ea1a0a15","kind":14,"pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]], "sig": "uhh"}"###
         ])
     }) {
         NBNavigationStack {
-            let participantPs: Set<String> = ["06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
+            let participants: Set<String> = ["06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
             let ourAccountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
             
-            DMConversationView17(participantPs: participantPs, ourAccountPubkey: ourAccountPubkey)
+            DMConversationView17(participants: participants, ourAccountPubkey: ourAccountPubkey)
         }
     }
 }
@@ -513,24 +566,22 @@ import NavigationBackport
     }
 }
 
-
-// INFO
-// CloudDMState
-// OLD DMS (1 on 1): accountPubkey_: A and contactPubkey_: B
-// NEW DMS (2 or more): accountPubkey_: nil, and contactPubkey: concat(A,B,C) (sorted)
 import CoreData
 
 class ConversionVM: ObservableObject {
-    private var participantPs: Set<String>
+    private var participants: Set<String> // all participants (including sender)
     private var ourAccountPubkey: String
+    private var receivers: Set<String> {
+        participants.subtracting([ourAccountPubkey])
+    }
     
     @Published var viewState: ConversionVMViewState = .initializing
     
     // bg
     private var cloudDMState: CloudDMState? = nil
     
-    init(participantPs: Set<String>, ourAccountPubkey: String) {
-        self.participantPs = participantPs
+    init(participants: Set<String>, ourAccountPubkey: String) {
+        self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
     }
     
@@ -540,10 +591,15 @@ class ConversionVM: ObservableObject {
     public func load(force: Bool = false) async {
         guard force || !didLoad else { return }
         self.didLoad = true
+        self.viewState = .loading
         self.cloudDMState = await getGroupState()
+        guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }), let privateKey = account.privateKey else {
+            viewState = .error("Missing private key for account: \(self.ourAccountPubkey)")
+            return
+        }
         
         if let cloudDMState {
-            let visibleMessages = await getMessages(cloudDMState)
+            let visibleMessages = await getMessages(cloudDMState, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
             viewState = .ready(visibleMessages)
         }
         
@@ -551,39 +607,52 @@ class ConversionVM: ObservableObject {
     }
     
     @MainActor
-    public func reload(participantPs: Set<String>, ourAccountPubkey: String) async {
-        self.participantPs = participantPs
+    public func reload(participants: Set<String>, ourAccountPubkey: String) async {
+        self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
         await self.load(force: true)
     }
-
     
     private func getGroupState() async -> CloudDMState {
         // Get existing or create new
-        let participantPs = self.participantPs
+        let participants = self.participants
         return await withBgContext { bgContext in
-            if let groupDMState = CloudDMState.fetchGroup(pubkeys: participantPs, context: bgContext) {
+            if let groupDMState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: self.ourAccountPubkey, context: bgContext) {
                 return groupDMState
             }
-            return CloudDMState.create(pubkeys: participantPs, context: bgContext)
+            return CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: bgContext)
         }
     }
     
-    private func getMessages(_ cloudDMState: CloudDMState) async -> [NRChatRow] {
-
+    private func getMessages(_ cloudDMState: CloudDMState, keyPair: (publicKey: String, privateKey: String)) async -> [NRChatMessage] {
+        
         let dmEvents = await withBgContext { bgContext in
             let request = NSFetchRequest<Event>(entityName: "Event")
             request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14}", cloudDMState.conversationId)
             request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-            return (try? bgContext.fetch(request)) ?? []
+            
+            
+            return ((try? bgContext.fetch(request)) ?? [])
+                .map {
+                    NEvent(id: $0.id,
+                           publicKey: $0.pubkey,
+                           createdAt: NTimestamp(timestamp: $0.created_at),
+                           content: $0.content ?? "",
+                           kind: NEventKind(id: $0.kind),
+                           tags: $0.tags(),
+                           signature: ""
+                    )
+                }
+                .map {
+                    NRChatMessage(nEvent: $0, keyPair: keyPair)
+                }
         }
         
-
-        return []
+        return dmEvents
     }
     
     private func sendMessage(_ message: String, ourkeys: Keys) {
-        let recipientPubkeys = participantPs.subtracting([ourAccountPubkey])
+        let recipientPubkeys = participants.subtracting([ourAccountPubkey])
         let content = message
         var messageEvent =  NostrEssentials.Event(
             pubkey: ourAccountPubkey,
@@ -592,9 +661,9 @@ class ConversionVM: ObservableObject {
             created_at: Int(Date().timeIntervalSince1970),
             tags: []
         )
-
+        
         // Wrap and send to receiver DM relays, also our own. (we can't unwrap sent, only received to our pubkey)
-        for receiverPubkey in participantPs {
+        for receiverPubkey in participants {
             // wrap message
             messageEvent.tags = recipientPubkeys.map { Tag(["p", $0]) }
             do {
@@ -611,9 +680,35 @@ class ConversionVM: ObservableObject {
         
     }
     
+    private func fetchDMs() {
+        if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first {
+            nxReq(
+                Filters(
+                    authors: [ourAccountPubkey],
+                    kinds: [4],
+                    tagFilter: TagFilter(tag: "p", values: [receiver]),
+                    limit: 1000
+                ),
+                subscriptionId: "DM-S"
+            )
+            
+            nxReq(
+                Filters(
+                    authors: [receiver],
+                    kinds: [4],
+                    tagFilter: TagFilter(tag: "p", values: [ourAccountPubkey]),
+                    limit: 1000
+                ),
+                subscriptionId: "DM-R"
+            )
+        }
+        
+        // Make sure main giftwraps receive subscription is active
+    }
+    
     private func fetchDMrelays() {
         let reqFilters = Filters(
-            authors: participantPs,
+            authors: receivers,
             kinds: [10050],
             limit: 200
         )
@@ -633,7 +728,7 @@ class ConversionVM: ObservableObject {
 enum ConversionVMViewState {
     case initializing
     case loading
-    case ready([NRChatRow])
+    case ready([NRChatMessage])
     case timeout
     case error(String)
 }

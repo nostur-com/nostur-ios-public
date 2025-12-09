@@ -61,6 +61,8 @@ struct MacColumn: View {
             return String(localized: "Booksmarks", comment: "Feed title")
         case .DMs:
             return String(localized: "Messages", comment: "Feed title")
+        case .DMConversation:
+            return String(localized: "Conversation", comment: "Feed title")
         case .newPosts:
             return String(localized: "New Posts", comment: "Feed title")
         }
@@ -131,8 +133,11 @@ struct MacColumn: View {
                 case .bookmarks(_):
                     BookmarksColumn(columnType: $columnType)
                     
-                case .DMs:
-                    Text("DMs")
+                case .DMs(let accountPubkey):
+                    self.renderDMsColumn(accountPubkey, columnType: $columnType)
+                    
+                case .DMConversation(let dmConversationInfo):
+                    DMConversationView17(participants: dmConversationInfo.participants, ourAccountPubkey: dmConversationInfo.ourAccountPubkey)
                 }
             }
             
@@ -215,6 +220,26 @@ struct MacColumn: View {
                         MacColumnConfig(id: config.id, type: .photos(pubkey))
                     )
                 }
+            }
+        }
+    }
+    
+    
+    @ViewBuilder
+    private func renderDMsColumn(_ accountPubkey: String?, columnType: Binding<MacColumnType>) -> some View {
+        if let accountPubkey {
+            DMsColumn(pubkey: accountPubkey, navPath: $navPath, columnType: $columnType)
+        }
+        else {
+            NXForm { // Needs to be wrapped in
+                AccountPicker(selectedAccount: $selectedAccount)
+            }
+            .onValueChange(selectedAccount) { oldValue, newValue in
+                guard oldValue != newValue, let pubkey = newValue?.publicKey else { return }
+                
+                vm.updateColumn(
+                    MacColumnConfig(id: config.id, type: .DMs(pubkey))
+                )
             }
         }
     }
