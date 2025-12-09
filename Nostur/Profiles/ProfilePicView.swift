@@ -279,8 +279,6 @@ struct ProfilePicView_Previews: PreviewProvider {
     }
 }
 
-
-
 struct MiniPFP: View {
     public var pictureUrl: URL?
     public var size: CGFloat = 20.0
@@ -321,6 +319,30 @@ struct MiniPFP: View {
                 .strokeBorder(.regularMaterial, lineWidth: 3)
                 .background(Circle().fill(fallBackColor ?? Color.defaultSecondaryBackground))
                 .frame(width: size, height: size)
+        }
+    }
+}
+
+struct MultiPFPs: View {
+    
+    public var nrContacts: [NRContact]
+    
+    var body: some View {
+        ZStack(alignment:.leading) {
+            ForEach(nrContacts.prefix(10).indices, id:\.self) { index in
+                PFP(pubkey: nrContacts[index].pubkey, pictureUrl: nrContacts[index].pictureUrl, forceFlat: true)
+                    .id(nrContacts[index].pubkey)
+                    .zIndex(-Double(index))
+                    .offset(x:Double(0 + (25*index)))
+            }
+        }
+        .drawingGroup()
+        .onAppear {
+            for nrContact in nrContacts {
+                if nrContact.metadata_created_at == 0 {
+                    QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
+                }
+            }
         }
     }
 }

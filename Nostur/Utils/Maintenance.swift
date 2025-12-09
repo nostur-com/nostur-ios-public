@@ -106,6 +106,7 @@ struct Maintenance {
             Self.runUpdateKeychainInfo(context: context)
             Self.runSaveFullAccountFlag(context: context)
             Self.runFixMissingDMStates(context: context)
+            Self.runUpgradeDMformat(context: context)
             Self.runInsertFixedPfps(context: context)
             Self.runPutReferencedAtag(context: context)
             Self.runSetCloudFeedOrder(context: context)
@@ -1049,6 +1050,61 @@ struct Maintenance {
         migration.migrationCode = migrationCode.fixMissingDMStatesAgain.rawValue
     }
     
+    // Upgrade to new DM format
+    static func runUpgradeDMformat(context: NSManagedObjectContext, firstRun: Bool = true) {
+        
+        // Run at one time at startup, or again if firstRun is false
+        guard !Self.didRun(migrationCode: migrationCode.upgradeDMformat, context: context) else { return }
+        
+        
+        // track timestamps and initiatorPubkey
+        var earliestAndNewestByGroupId: [String: (earliest: Int64, initiatorPubkey: String?, newest: Int64)] = [:]
+        
+        // set .groupId on all kind 4, 14
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == nil", [4,14])
+        let allDMs = (try? context.fetch(fr)) ?? []
+        
+        var groupIdsSetCounter = 0
+        
+        for dmEvent in allDMs {
+            groupIdsSetCounter += 1
+            let groupId = dmConversationId(event: dmEvent)
+            dmEvent.groupId = groupId
+            
+            // newest for last message timestamp
+            if let timestamps = earliestAndNewestByGroupId[groupId], dmEvent.created_at > timestamps.newest {
+                earliestAndNewestByGroupId[groupId] = (earliest: timestamps.earliest, initiatorPubkey: timestamps.initiatorPubkey, newest: dmEvent.created_at)
+            }
+            
+            // earliest for iniatorPubkey
+            if let timestamps = earliestAndNewestByGroupId[groupId], dmEvent.created_at < timestamps.earliest {
+                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: timestamps.newest)
+            }
+        }
+        
+        // update last received timestamp and set initiator pubkey
+        let fr2 = CloudDMState.fetchRequest()
+        fr2.predicate = NSPredicate(value: true)
+        let dmStates = (try? context.fetch(fr2)) ?? []
+        
+        var dmStatesUpdatedCounter = 0
+        
+        for dmState in dmStates {
+            dmStatesUpdatedCounter += 1
+            if let timestamps = earliestAndNewestByGroupId[dmState.conversationId] {
+                dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(timestamps.newest))
+                dmState.initiatorPubkey_ = timestamps.initiatorPubkey
+            }
+        }
+       
+        L.maintenance.info("runUpgradeDMformat: \(groupIdsSetCounter) dm groupIds set.  \(dmStatesUpdatedCounter) DM states updated.")
+       
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.upgradeDMformat.rawValue
+    }
+    
     // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
     static func runUpdateKeychainInfo(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.updateKeychainInfo, context: context) else { return }
@@ -1214,6 +1270,9 @@ struct Maintenance {
         
         // Fix missing DM States (again)
         case fixMissingDMStatesAgain = "fixMissingDMStatesAgain"
+        
+        // Upgrade to new DM format
+        case upgradeDMformat = "upgradeDMformat"
         
         // Put first A tag in .otherAtag
         case putReferencedAtag = "putReferencedAtag"

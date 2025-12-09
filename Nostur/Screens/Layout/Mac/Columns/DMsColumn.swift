@@ -16,38 +16,155 @@ struct DMsColumn: View {
     @Binding var navPath: NBNavigationPath
     @Binding var columnType: MacColumnType
     
-    @StateObject private var vm: DMsColumnVM
+    @StateObject private var vm: DMsVM
     
     public init(pubkey: String, navPath: Binding<NBNavigationPath>, columnType: Binding<MacColumnType>) {
         self.pubkey = pubkey
         _navPath = navPath
         _columnType = columnType
-        _vm = StateObject(wrappedValue: DMsColumnVM(accountPubkey: pubkey))
+        _vm = StateObject(wrappedValue: DMsVM(accountPubkey: pubkey))
     }
     
     var body: some View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
-        ZStack {
-            theme.listBackground // needed to give this ZStack and parents size, else weird startup animation sometimes
-            
-            LazyVStack {
-                ForEach(vm.dmStates) { dmState in
-                    Text(dmState.participantPubkeys.description)
-                }
+        ScrollView {
+            VStack {
+                self.dmAcceptedAndRequesTabs
                 
-                // FOLLOWING
-                Text("List DMs for \(pubkey) here")
-                    .onTapGesture {
-                        // Change columnType to DMConversationColumn...
+                switch (vm.tab) {
+                case "Accepted":
+                    if !vm.conversationRows.isEmpty {
+                        LazyVStack(alignment: .leading) {
+                            ForEach(vm.conversationRows) { row in
+                                DMStateRow(dmState: row)
+                            }
+                        }
                     }
-                    .task {
-                        await vm.load()
+                    else {
+                        Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
+                            .centered()
                     }
+                case "Requests":
+                    if !vm.requestRows.isEmpty || vm.showNotWoT {
+                        LazyVStack(alignment: .leading) {
+                            ForEach(vm.requestRows) { row in
+                                Text(row.participantPubkeys.description)
+                            }
+                        }
+                    }
+                    else {
+                        Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
+                            .centered()
+                    }
+                default:
+                    EmptyView()
+                }
+                Spacer()
             }
         }
         .background(theme.listBackground)
+        .task {
+            await vm.load()
+        }
+        .modifier { // need to hide glass bg in 26+
+            if #available(iOS 26.0, *) {
+                $0.toolbar {
+                    accountsButton
+                    .sharedBackgroundVisibility(.hidden)
+                }
+            }
+            else {
+                $0.toolbar {
+                    accountsButton
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var dmAcceptedAndRequesTabs: some View {
+        HStack {
+            Button {
+                withAnimation {
+                    vm.tab = "Accepted"
+                }
+            } label: {
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Accepted", comment: "Tab title for accepted DMs (Direct Messages)").lineLimit(1)
+                            .font(.subheadline)
+                            .foregroundColor(theme.accent)
+                        if vm.unread > 0 {
+                            Menu {
+                                Button {
+                                    vm.markAcceptedAsRead()
+                                } label: {
+                                    Label(String(localized: "Mark all as read", comment:"Menu action to mark all messages as read"), systemImage: "envelope.open")
+                                }
+                            } label: {
+                                Text("\(vm.unread)")
+                                    .font(.footnote)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal,6)
+                                    .background(Capsule().foregroundColor(.red))
+                                    .offset(x:-4, y: 0)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 5)
+                    .frame(height: 41)
+                    .fixedSize()
+                    theme.accent
+                        .frame(height: 3)
+                        .opacity(vm.tab == "Accepted" ? 1 : 0.15)
+                }
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+            }
+            
+            Button {
+                withAnimation {
+                    vm.tab = "Requests"
+                }
+            } label: {
+                VStack(spacing: 0) {
+                    HStack {
+                        Text("Requests", comment: "Tab title for DM (Direct Message) requests").lineLimit(1)
+                            .font(.subheadline)
+                            .foregroundColor(theme.accent)
+                        //                                    .frame(maxWidth: .infinity)
+                        //                                    .padding(.top, 8)
+                        //                                    .padding(.bottom, 5)
+                        if vm.newRequests > 0 {
+                            Menu {
+                                Button {
+                                    vm.markRequestsAsRead()
+                                } label: {
+                                    Label(String(localized: "Mark all as read", comment:"Menu action to mark all dm requests as read"), systemImage: "envelope.open")
+                                }
+                            } label: {
+                                Text("\(vm.newRequests)")
+                                    .font(.footnote)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal,6)
+                                    .background(Capsule().foregroundColor(.red))
+                                    .offset(x:-4, y: 0)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 5)
+                    .frame(height: 41)
+                    .fixedSize()
+                    theme.accent
+                        .frame(height: 3)
+                        .opacity(vm.tab == "Requests" ? 1 : 0.15)
+                }
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+            }
+        }
     }
     
 //    @ToolbarContentBuilder
@@ -82,194 +199,77 @@ struct DMsColumn: View {
 //            }
 //        }
 //    }
+    
+    @ToolbarContentBuilder
+    private var accountsButton: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+                Button {
+                    columnType = .notifications(nil)
+                } label: {
+                    PFP(pubkey: accountPubkey, account: account, size: 30)
+                }
+                .accessibilityLabel("Account menu")
+            }
+        }
+    }
 }
 
-
-import Combine
-
-class DMsColumnVM: ObservableObject {
+struct DMStateRow: View {
+    @ObservedObject private var dmState: CloudDMState
+    @State var nrContacts: [NRContact]
+    @State var nrContact: NRContact?
+    private var unread: Int { dmState.unread }
     
-    public var dmStates: [CloudDMState] = []
-//    {
-//        didSet {
-//            allowedWoT = Set(dmStates.filter { $0.accepted }.compactMap { $0.contactPubkey_ })
-//        }
-//    }
-    
-    // pubkeys we started a conv with (but maybe not in WoT), should be allowed in DM WoT
-    // Add this to WoT
-//    public var allowedWoT: Set<String> = []
-    
-    var accountPubkey: String
-    var didLoad = false
-    
-    @Published var conversationRows: [CloudDMState] = []
-    @Published var requestRows: [CloudDMState] = []
-    @Published var requestRowsNotWoT: [CloudDMState] = []
-    
-    @Published var showNotWoT = false {
-        didSet {
-            if showNotWoT {
-                requestRows = requestRows + requestRowsNotWoT
-            }
-            else {
-                self.reloadConversations()
-            }
+    init(dmState: CloudDMState) {
+        self.dmState = dmState
+        nrContacts = dmState.receiverPubkeys.map { NRContact.instance(of: $0) }
+        if nrContacts.count == 1 {
+            nrContact = if let dmStateReceiverPubkey = dmState.receiverPubkeys.first {
+                NRContact.instance(of: dmStateReceiverPubkey)
+            } else { nil }
         }
     }
-     
-    var unread: Int {
-        conversationRows.reduce(0) { $0 + $1.unread }
-    }
-    var newRequests: Int {
-        requestRows.reduce(0) { $0 + $1.unread }
-    }
-    
-    var newRequestsNotWoT: Int {
-        requestRowsNotWoT.count
-    }
-    
-    public var hiddenDMs: Int {
-        dmStates.count { $0.isHidden }
-    }
-    
-    private var subscriptions = Set<AnyCancellable>()
-    
-    init(accountPubkey: String) {
-        self.accountPubkey = accountPubkey
-        self._reloadConversations
-            .debounce(for: 1.5, scheduler: RunLoop.main)
-            .sink { [weak self] _ in
-                Task { @MainActor in
-                    self?.loadConversations()
-                }
-            }
-            .store(in: &self.subscriptions)
-        
-        receiveNotification(.blockListUpdated)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                Task { @MainActor in
-                    self?.showNotWoT = false
-                    self?.loadConversations()
-                }
-            }
-            .store(in: &self.subscriptions)
-    }
-    // .load is called from:
-    // NRState on startup if WoT is disabled
-    // receiveNotification(.WoTReady) if WoT is enabled, after WoT has loaded
-    @MainActor
-    public func load(force: Bool = false) async {
-        guard force || !didLoad else { return }
-        conversationRows = []
-        requestRows = []
-        requestRowsNotWoT = []
-        
-        self.loadDMStates()
-        self.loadConversations()
-        didLoad = true
-    }
-    
-    @MainActor
-    private func loadDMStates() {
-        self.dmStates = CloudDMState.fetchByAccount(self.accountPubkey, context: viewContext())
-    }
-    
-    @MainActor
-    public func reload(accountPubkey: String) async {
-        self.accountPubkey = accountPubkey
-        await self.load(force: true)
-    }
-    
-    @MainActor
-    public func markAcceptedAsRead() {
-        objectWillChange.send()
-        
-    }
-    
-    @MainActor
-    public func markRequestsAsRead() {
-        objectWillChange.send()
-    }
-    
-    
-    public func reloadConversations() { _reloadConversations.send() }
-    private var _reloadConversations = PassthroughSubject<Void, Never>()
-    
-    @MainActor
-    private func loadConversations() {
-        let blockedPubkeys = blocks()
-        
-        let accepted = dmStates
-            .filter { dmState in
-                
-                if !dmState.accepted && !dmState.isHidden { return false } // only accepted and not hidden
-                
-                // not blocked (for 1 on 1). In group conversations need to block in the detail view
-                if dmState.participantPubkeys.count == 2, let contactPubkey = dmState.participantPubkeys.subtracting([accountPubkey]).first, blockedPubkeys.contains(contactPubkey) {
-                    return false
-                }
-                
-                return true
-            }
-        
-        let requests = dmStates
-            .filter { dmState in
-                if dmState.accepted || dmState.isHidden { return false } // only requests (not accepted), or not hidden
-                
-                
-                if dmState.participantPubkeys.count == 2, let contactPubkey = dmState.participantPubkeys.subtracting([accountPubkey]).first {
-                    
-                    // not blocked (for 1 on 1). In group conversations need to block in the detail view
-                    if blockedPubkeys.contains(contactPubkey) {
-                        return false
-                    }
-                   
-                    // only in WoT (if WoT is enabled)
-                    if (!WOT_FILTER_ENABLED()) { return true }
-                    return WebOfTrust.shared.isAllowed(contactPubkey)
-                }
-                
-                return true
-            }
-        
-        conversationRows = accepted
-        requestRows = requests
-        
-        guard WOT_FILTER_ENABLED() else { return }
-        
-        let outsideWoT = dmStates
-            .filter { dmState in
-                if dmState.accepted || dmState.isHidden { return false } // only requests (not accepted), or not hidden
-                
-                if dmState.participantPubkeys.count == 2, let contactPubkey = dmState.participantPubkeys.subtracting([accountPubkey]).first {
-                    // not blocked
-                    if blockedPubkeys.contains(contactPubkey) {
-                        return false
-                    }
-                   
-                    // only not in WoT
-                    return !WebOfTrust.shared.isAllowed(contactPubkey)
-                }
-                
-                return true
-            }
 
-        requestRowsNotWoT = outsideWoT
-    }
-    
-    public func unhideAll() {
-        for dmState in dmStates {
-            if dmState.isHidden {
-                dmState.isHidden = false
+    var body: some View {
+        HStack(alignment: .top) {
+            MultiPFPs(nrContacts: nrContacts)
+                .overlay(alignment: .topTrailing) {
+                    if unread > 0 {
+                        Text("\(unread)")
+                            .font(.footnote)
+                            .foregroundColor(.white)
+                            .padding(.horizontal,6)
+                            .background(Capsule().foregroundColor(.red))
+//                                .offset(x:15, y: -20)
+                    }
+                }
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(alignment: .top, spacing: 5) {
+                    if let nrContact {
+                        Group {
+                            Text(nrContact.anyName)
+                                .foregroundColor(.primary)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                            
+                            PossibleImposterLabelView(nrContact: nrContact)
+                        }
+                    }
+                    else {
+                        ForEach(nrContacts) { nrContact in
+                            Text(nrContact.anyName)
+                                .foregroundColor(.primary)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                        }
+                    }
+                }
+
+                Text(dmState.blurb).foregroundColor(.primary)
+                    .lineLimit(3)
+                    .multilineTextAlignment(.leading)
             }
-        }
-    }
-    
-    public func newMessage() {
-        Task { @MainActor in
-            self.loadDMStates()
         }
     }
 }
