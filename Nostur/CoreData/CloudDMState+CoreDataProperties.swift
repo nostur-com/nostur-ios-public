@@ -19,9 +19,10 @@ extension CloudDMState {
     @NSManaged public var accepted: Bool
     @NSManaged public var accountPubkey_: String? // Who is viewing this conversation
     
-    // old dms: single key (length 64) (after migrations should always be minimum 64+64)
-    // new dms: concat(pubkey,pubkey,pubkey,...) including sender!
-    @NSManaged public var contactPubkey_: String? // Who is part of this conversation (old: just receiver pubkey, new: .pubkey + p tags) (NIP-17 chat room)
+    // old dms: contactPubkey_: single key (length 64)
+    // new dms: participantPubkeys_: concat(pubkey,pubkey,pubkey,...) including sender!
+    @NSManaged public var contactPubkey_: String? // old: just receiver pubkey
+    @NSManaged public var participantPubkeys_: String? // NEW: Who is part of this conversation  (.pubkey + p tags) (NIP-17 chat room)
     @NSManaged public var initiatorPubkey_: String? // sender of first received message,e for WoT filtering
     @NSManaged public var blurb_: String? // cache last message text for preview
     @NSManaged public var markedReadAt_: Date?
@@ -40,18 +41,18 @@ extension CloudDMState {
     // Should include sender pubkey, not just receivers
     var participantPubkeys: Set<String> {
         get {
-            if let contactPubkey = contactPubkey_ {
-                if contactPubkey.count == 64 {
-                    return [contactPubkey]
+            if let participantPubkeys = participantPubkeys_ {
+                if participantPubkeys.count == 64 {
+                    return [participantPubkeys]
                 }
-                if contactPubkey.count % 64 == 0 {
+                if participantPubkeys.count % 64 == 0 {
                     // split every 64 characters
                     var result = Set<String>()
-                    var start = contactPubkey.startIndex
+                    var start = participantPubkeys.startIndex
 
-                    while start < contactPubkey.endIndex {
-                        let end = contactPubkey.index(start, offsetBy: 64)
-                        let chunk = String(contactPubkey[start..<end])
+                    while start < participantPubkeys.endIndex {
+                        let end = participantPubkeys.index(start, offsetBy: 64)
+                        let chunk = String(participantPubkeys[start..<end])
                         if isValidPubkey(chunk) {
                             result.insert(chunk)
                         }
@@ -64,7 +65,7 @@ extension CloudDMState {
             return []
         }
         set {
-            contactPubkey_ = newValue.sorted().joined(separator: "")
+            participantPubkeys_ = newValue.sorted().joined(separator: "")
         }
     }
     
@@ -96,14 +97,14 @@ extension CloudDMState: Identifiable {
     
     static func fetchByParticipants(participants: Set<String>, context: NSManagedObjectContext) -> [CloudDMState] {
         let fr = CloudDMState.fetchRequest()
-        fr.predicate = NSPredicate(format: "contactPubkey_ == %@", participants.sorted().joined(separator: ""))
+        fr.predicate = NSPredicate(format: "participantPubkeys_ == %@", participants.sorted().joined(separator: ""))
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.lastMessageTimestamp_, ascending: false)]
         return (try? context.fetch(fr)) ?? []
     }
     
     static func fetchByParticipants(participants: Set<String>, andAccountPubkey accountPubkey: String, context: NSManagedObjectContext) -> CloudDMState? {
         let fr = CloudDMState.fetchRequest()
-        fr.predicate = NSPredicate(format: "accountPubkey_ == %@ AND contactPubkey_ == %@", accountPubkey, CloudDMState.getConversationId(for: participants))
+        fr.predicate = NSPredicate(format: "accountPubkey_ == %@ AND participantPubkeys_ == %@", accountPubkey, CloudDMState.getConversationId(for: participants))
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.lastMessageTimestamp_, ascending: false)]
         return try? context.fetch(fr).first
     }

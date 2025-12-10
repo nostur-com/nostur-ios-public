@@ -48,7 +48,7 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
 
         let duplicates = sortedDMStates
             .filter { dmState in
-                guard dmState.contactPubkey_ != nil else { return false }
+                guard dmState.contactPubkey_ != nil || dmState.participantPubkeys_ != nil else { return false }
                 guard dmState.accountPubkey_ != nil else { return false }
                 return !uniqueDMStates.insert(dmState.conversationId).inserted
             }
