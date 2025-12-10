@@ -1021,11 +1021,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.footerAttributes.objectWillChange.send()
         self.footerAttributes.ourReactions.insert(reactionContent)
         sendNotification(.postAction, PostActionNotification(type: .reacted(uuid, reactionContent), eventId: self.id))
-        bg().perform { [weak self] in
-            guard let event = self?.event else { return }
-            if let accountCache = accountCache() {
-                accountCache.addReaction(event.id, reactionType: reactionContent)
-            }
+        if let accountCache = accountCache() {
+            accountCache.addReaction(self.id, reactionType: reactionContent)
         }
         return EventMessageBuilder.makeReactionEvent(reactingToId: id, reactingToPubkey: pubkey, reactionContent: reactionContent)
     }
@@ -1034,11 +1031,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.footerAttributes.objectWillChange.send()
         self.footerAttributes.ourReactions.remove(reactionContent)
         sendNotification(.postAction, PostActionNotification(type: .unreacted(reactionContent), eventId: self.id))
-        bg().perform { [weak self] in
-            guard let event = self?.event else { return }            
-            if let accountCache = accountCache() {
-                accountCache.removeReaction(event.id, reactionType: reactionContent)
-            }
+        if let accountCache = accountCache() {
+            accountCache.removeReaction(self.id, reactionType: reactionContent)
         }
     }
     

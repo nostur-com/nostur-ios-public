@@ -49,15 +49,12 @@ class AccountCache {
     // For every post render we need to hit the database to see if we have bookmarked, reacted, replied or zapped. Better cache that here.
     
     public let pubkey: String
-    
     private var bookmarkedIds: [String: Color] = [:]
     private var repostedIds: Set<String> = []
     private var repliedToIds: Set<String> = []
     private var zappedIds: Set<String> = []
     private var reactionIds: [String: Set<String>] = [:] // emoji -> reaction ids
-    
     private var reactions: [String: Set<String>] = [:] // id -> reaction emoji
-    
     private var initializedCaches: Set<String> = []
     
     init(_ pubkey: String) {
@@ -74,16 +71,16 @@ class AccountCache {
     }
     
     
-    
-    
     public func getBookmarkColor(_ eventId: String) -> Color? {
         return bookmarkedIds[eventId]
     }
     
+    @MainActor
     public func addBookmark(_ eventId: String, color: Color) {
         bookmarkedIds[eventId] = color
     }
     
+    @MainActor
     public func removeBookmark(_ eventId: String) {
         bookmarkedIds[eventId] = nil
     }
@@ -95,11 +92,11 @@ class AccountCache {
         return []
     }
         
-    
     public func hasReaction(_ eventId: String, reactionType: String) -> Bool {
         return reactionIds[reactionType]?.contains(eventId) ?? false
     }
     
+    @MainActor
     public func addReaction(_ eventId: String, reactionType: String) {
         if reactionIds[reactionType] == nil {
             reactionIds[reactionType] = [eventId]
@@ -112,56 +109,54 @@ class AccountCache {
             reactions[eventId] = [reactionType]
         }
         else {
-            reactions[eventId]?.insert(reactionType)
+            reactions[eventId]?.insert(reactionType) // Task 10633: EXC_BAD_ACCESS (code=1, address=0x10)
         }
     }
     
+    @MainActor
     public func removeReaction(_ eventId: String, reactionType: String) {
         reactionIds[reactionType]?.remove(eventId)
         reactions[eventId] = nil
     }
     
-    
-    
-    
     public func isRepliedTo(_ eventId: String) -> Bool {
         return repliedToIds.contains(eventId)
     }
     
+    @MainActor
     public func addRepliedTo(_ eventId: String) {
         repliedToIds.insert(eventId)
     }
     
+    @MainActor
     public func removeRepliedTo(_ eventId: String) {
         repliedToIds.remove(eventId)
     }
-    
-    
-    
     
     public func isReposted(_ eventId: String) -> Bool {
         return repostedIds.contains(eventId)
     }
     
+    @MainActor
     public func addReposted(_ eventId: String) {
         repostedIds.insert(eventId)
     }
     
+    @MainActor
     public func removeReposted(_ eventId: String) {
         repostedIds.remove(eventId)
     }
-    
-    
-    
     
     public func isZapped(_ eventId: String) -> Bool {
         return zappedIds.contains(eventId)
     }
     
+    @MainActor
     public func addZapped(_ eventId: String) {
         zappedIds.insert(eventId)
     }
     
+    @MainActor
     public func removeZapped(_ eventId: String) {
         zappedIds.remove(eventId)
     }
@@ -172,12 +167,16 @@ class AccountCache {
     
     
     private func initBookmarked() {
-        let bookmarks = Bookmark.fetchAll(context: bg())
-        for bookmark in bookmarks {
-            guard let eventId = bookmark.eventId else { continue }
-            self.bookmarkedIds[eventId] = bookmark.color
+        let bookmarks: [(eventId: String, color: Color)] = Bookmark.fetchAll(context: bg()).compactMap {
+            guard let eventId = $0.eventId else { return nil }
+            return (eventId: eventId, color: $0.color)
         }
-        self.initializedCaches.insert("bookmarks")
+        Task { @MainActor in
+            for bookmark in bookmarks {
+                self.bookmarkedIds[bookmark.eventId] = bookmark.color
+            }
+            self.initializedCaches.insert("bookmarks")
+        }
     }
     
     private func initReactions(_ pubkey: String) {
@@ -209,17 +208,21 @@ class AccountCache {
             }
         }
 
-        self.reactions = reactions
-        self.reactionIds = reactionIds
-        self.initializedCaches.insert("reactions")
+        Task { @MainActor in
+            self.reactions = reactions
+            self.reactionIds = reactionIds
+            self.initializedCaches.insert("reactions")
+        }
     }
     
     private func initReplied(_ pubkey: String) {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "pubkey == %@ AND kind IN {1,1111,1244}", pubkey)
         let allRepliedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.replyToId })
-        self.repliedToIds = allRepliedIds
-        self.initializedCaches.insert("replies")
+        Task { @MainActor in
+            self.repliedToIds = allRepliedIds
+            self.initializedCaches.insert("replies")
+        }
     }
     
     private func initReposted(_ pubkey: String) {
@@ -227,8 +230,10 @@ class AccountCache {
         fr.predicate = NSPredicate(format: "kind == 6 AND pubkey == %@", pubkey)
         let allRepostedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.firstQuoteId })
     
-        self.repostedIds = allRepostedIds
-        self.initializedCaches.insert("reposts")
+        Task { @MainActor in
+            self.repostedIds = allRepostedIds
+            self.initializedCaches.insert("reposts")
+        }
     }
     
     private func initZapped(_ pubkey: String) {
@@ -236,8 +241,10 @@ class AccountCache {
         fr.predicate = NSPredicate(format: "kind == 9734 AND pubkey == %@", pubkey)
         let allZappedIds = Set(((try? bg().fetch(fr)) ?? []).compactMap { $0.firstE() })
 
-        self.zappedIds = allZappedIds
-        self.initializedCaches.insert("zaps")
+        Task { @MainActor in
+            self.zappedIds = allZappedIds
+            self.initializedCaches.insert("zaps")
+        }
     }
     
 }
