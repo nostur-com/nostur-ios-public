@@ -128,4 +128,19 @@ extension CloudDMState: Identifiable {
         
         return allReceived.count { $0.date > unreadSince }
     }
+    
+    func unread(for accountPubkey: String) -> Int {
+        guard contactPubkey_ != nil || participantPubkeys_ != nil else { return 0 }
+        guard let managedObjectContext else { return 0 }
+
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@ AND NOT pubkey = %@", [4,14], self.conversationId, accountPubkey)
+        let allReceived = (try? managedObjectContext.fetch(fr)) ?? []
+        
+        
+        let unreadSince = markedReadAt_ ?? Date.distantPast
+        
+        return allReceived.count { $0.date > unreadSince }
+    }
 }

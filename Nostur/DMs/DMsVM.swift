@@ -41,10 +41,10 @@ class DMsVM: ObservableObject {
     }
      
     var unread: Int {
-        conversationRows.reduce(0) { $0 + $1.unread }
+        conversationRows.reduce(0) { $0 + $1.unread(for: self.accountPubkey) }
     }
     var newRequests: Int {
-        requestRows.reduce(0) { $0 + $1.unread }
+        requestRows.reduce(0) { $0 + $1.unread(for: self.accountPubkey) }
     }
     
     var newRequestsNotWoT: Int {
