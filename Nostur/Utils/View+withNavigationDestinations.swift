@@ -107,6 +107,11 @@ struct NavigationDestinationsModifier: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
         content
+            .nbNavigationDestination(for: CloudDMState.self) { dmState in
+                Text("CloudDMState \(dmState.conversationId)")
+                    .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
+            }
             .nbNavigationDestination(for: NRPost.self) { nrPost in
                 switch nrPost.kind {
                 case 30023:
