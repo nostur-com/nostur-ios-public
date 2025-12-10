@@ -41,26 +41,24 @@ extension CloudDMState {
     // Should include sender pubkey, not just receivers
     var participantPubkeys: Set<String> {
         get {
-            if let participantPubkeys = participantPubkeys_ {
-                if participantPubkeys.count == 64 {
-                    return [participantPubkeys]
-                }
-                if participantPubkeys.count % 64 == 0 {
-                    // split every 64 characters
-                    var result = Set<String>()
-                    var start = participantPubkeys.startIndex
+            if let participantPubkeys = participantPubkeys_, participantPubkeys.count % 64 == 0 {
+                // split every 64 characters
+                var result = Set<String>()
+                var start = participantPubkeys.startIndex
 
-                    while start < participantPubkeys.endIndex {
-                        let end = participantPubkeys.index(start, offsetBy: 64)
-                        let chunk = String(participantPubkeys[start..<end])
-                        if isValidPubkey(chunk) {
-                            result.insert(chunk)
-                        }
-                        start = end
+                while start < participantPubkeys.endIndex {
+                    let end = participantPubkeys.index(start, offsetBy: 64)
+                    let chunk = String(participantPubkeys[start..<end])
+                    if isValidPubkey(chunk) {
+                        result.insert(chunk)
                     }
-
-                    return result
+                    start = end
                 }
+
+                return result
+            }
+            else if let contactPubkey = contactPubkey_, isValidPubkey(contactPubkey) {
+                return Set([accountPubkey_,contactPubkey].compactMap { $0 })
             }
             return []
         }

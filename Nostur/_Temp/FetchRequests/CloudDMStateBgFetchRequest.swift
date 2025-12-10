@@ -48,10 +48,12 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             .sorted {
                 (max($0.markedReadAt_ ?? .distantPast, $0.lastMessageTimestamp_ ?? .distantPast)) > (max($1.markedReadAt_ ?? .distantPast, $1.lastMessageTimestamp_ ?? .distantPast))
             }
+            .sorted {
+                $0.participantPubkeys_ != nil && $1.participantPubkeys_ == nil
+            }
 
         let duplicates = sortedDMStates
             .filter { dmState in
-                guard dmState.contactPubkey_ != nil || dmState.participantPubkeys_ != nil else { return false }
                 guard let accountPubkey = dmState.accountPubkey_ else { return false }
                 return !uniqueDMStates.insert(accountPubkey + "-" + dmState.conversationId).inserted
             }

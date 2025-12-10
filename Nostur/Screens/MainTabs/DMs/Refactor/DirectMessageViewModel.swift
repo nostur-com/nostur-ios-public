@@ -489,8 +489,11 @@ class DirectMessageViewModel: ObservableObject {
                     req(message)
                 }
                 
-                if i == monthsAgo {
-                    Maintenance.runFixMissingDMStates(context: viewContext())
+                if i+1 == monthsAgo {
+#if DEBUG
+                    L.maintenance.info("Running Manual DM fix")
+#endif
+                    Maintenance.runFixMissingDMStates(context: viewContext(), firstRun: false)
                     Maintenance.runUpgradeDMformat(force: true, context: viewContext())
                     try? viewContext().save()
                 }
