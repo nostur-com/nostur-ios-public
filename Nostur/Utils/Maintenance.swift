@@ -8,6 +8,7 @@
 import Foundation
 import CoreData
 import KeychainAccess
+import NostrEssentials
 
 struct Maintenance {
     
@@ -146,6 +147,7 @@ struct Maintenance {
             Self.audioDownloadCacheCleanUp()
             Self.databaseCleanUp(context)
             Self.runFixMissingDMStates(context: context, firstRun: false)
+            Self.runUpgradeDMformat(force: true, context: context)
             try? context.save()
             return true
         }
@@ -1051,51 +1053,97 @@ struct Maintenance {
     }
     
     // Upgrade to new DM format
-    static func runUpgradeDMformat(context: NSManagedObjectContext, firstRun: Bool = true) {
+    static func runUpgradeDMformat(force: Bool = false, context: NSManagedObjectContext) {
+        guard force || !Self.didRun(migrationCode: migrationCode.upgradeDMformat, context: context) else { return }
         
-        // Run at one time at startup, or again if firstRun is false
-        guard !Self.didRun(migrationCode: migrationCode.upgradeDMformat, context: context) else { return }
-        
-        
-        // track timestamps and initiatorPubkey
-        var earliestAndNewestByGroupId: [String: (earliest: Int64, initiatorPubkey: String?, newest: Int64)] = [:]
+        // track timestamps and initiatorPubkey, newestId to make blurb
+        var earliestAndNewestByGroupId: [String: (earliest: Int64, initiatorPubkey: String?, newest: Int64, newestId: String, didSend: Bool)] = [:]
         
         // set .groupId on all kind 4, 14
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == nil", [4,14])
+        fr.predicate = NSPredicate(format: "kind IN %@", [4,14])
         let allDMs = (try? context.fetch(fr)) ?? []
         
         var groupIdsSetCounter = 0
+        
+        // Our full account pubkeys
+        let accounts = CloudAccount.fetchAccounts(context: context)
+        let fullAccountPubkeys = accounts.map { $0.publicKey }
         
         for dmEvent in allDMs {
             groupIdsSetCounter += 1
             let groupId = dmConversationId(event: dmEvent)
             dmEvent.groupId = groupId
             
-            // newest for last message timestamp
+            // update newest for last message timestamp
             if let timestamps = earliestAndNewestByGroupId[groupId], dmEvent.created_at > timestamps.newest {
-                earliestAndNewestByGroupId[groupId] = (earliest: timestamps.earliest, initiatorPubkey: timestamps.initiatorPubkey, newest: dmEvent.created_at)
+                let didSend = fullAccountPubkeys.contains(dmEvent.pubkey) || timestamps.didSend
+                earliestAndNewestByGroupId[groupId] = (earliest: timestamps.earliest, initiatorPubkey: timestamps.initiatorPubkey, newest: dmEvent.created_at, newestId: dmEvent.id, didSend: didSend)
             }
             
-            // earliest for iniatorPubkey
+            // update earliest for iniatorPubkey
             if let timestamps = earliestAndNewestByGroupId[groupId], dmEvent.created_at < timestamps.earliest {
-                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: timestamps.newest)
+                let didSend = fullAccountPubkeys.contains(dmEvent.pubkey) || timestamps.didSend
+                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: timestamps.newest, newestId: timestamps.newestId, didSend: didSend)
+            }
+            
+            // insert there wasn't any match before
+            if earliestAndNewestByGroupId[groupId] == nil {
+                let didSend = fullAccountPubkeys.contains(dmEvent.pubkey)
+                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: dmEvent.created_at, newestId: dmEvent.id, didSend: didSend)
             }
         }
         
-        // update last received timestamp and set initiator pubkey
+        // update participants and update last received timestamp and set initiator pubkey
         let fr2 = CloudDMState.fetchRequest()
         fr2.predicate = NSPredicate(value: true)
         let dmStates = (try? context.fetch(fr2)) ?? []
         
         var dmStatesUpdatedCounter = 0
-        
         for dmState in dmStates {
-            dmStatesUpdatedCounter += 1
+            var didUpdate = false
+            // update participants
+            if let contactPubkey = dmState.contactPubkey_, contactPubkey.count == 64, let accountPubkey = dmState.accountPubkey_ {
+                dmState.participantPubkeys = [contactPubkey, accountPubkey]
+                didUpdate = true
+            }
+            
             if let timestamps = earliestAndNewestByGroupId[dmState.conversationId] {
                 dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(timestamps.newest))
                 dmState.initiatorPubkey_ = timestamps.initiatorPubkey
+                
+                // get blurb
+                if let mostRecent = allDMs.first(where: { $0.id == timestamps.newestId }) {
+                    let anyName = mostRecent.contact?.anyName ?? String(mostRecent.pubkey.prefix(8))
+                    
+                    if mostRecent.kind == 4, let accountPubkey = dmState.accountPubkey_ {
+                        if let account = try? CloudAccount.fetchAccount(publicKey: accountPubkey, context: context), let privateKey = account.privateKey {
+                            let keyPair = (publicKey: account.publicKey, privateKey: privateKey)
+                            
+                            let content = if mostRecent.pubkey == keyPair.publicKey, let firstP = mostRecent.firstP() {
+                                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: firstP, content: mostRecent.content ?? "") ?? "(Encrypted content)"
+                            }
+                            else {
+                                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: mostRecent.pubkey, content: mostRecent.content ?? "") ?? "(Encrypted content)"
+                            }
+                            let fromName = accountPubkey == mostRecent.pubkey ? "You: " : ""
+                            dmState.blurb = "\(fromName)\(content)"
+                        }
+                    }
+                    else { // kind 14
+                        let fromName = dmState.accountPubkey_ == mostRecent.pubkey ? "You: " : ""
+                        dmState.blurb = "\(fromName)\(mostRecent.content ?? "")"
+                    }
+                }
+                
+                
+                dmState.accepted = timestamps.didSend || dmState.accepted
+                didUpdate = true
+            }
+            
+            if didUpdate {
+                dmStatesUpdatedCounter += 1
             }
         }
        
