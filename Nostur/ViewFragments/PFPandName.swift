@@ -55,6 +55,27 @@ struct PFPandName: View {
     }
 }
 
+struct ContactName: View {
+    @ObservedObject public var nrContact: NRContact
+    
+    init(nrContact: NRContact) {
+        self.nrContact = nrContact
+    }
+    
+    init(pubkey: String) {
+        self.nrContact = NRContact.instance(of: pubkey)
+    }
+    
+    var body: some View {
+        Text(nrContact.anyName)
+        .onAppear {
+            if nrContact.metadata_created_at == 0 {
+                QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
+            }
+        }
+    }
+}
+
 #Preview {
     PFPandName(pubkey: "")
 }
