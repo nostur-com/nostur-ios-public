@@ -107,12 +107,25 @@ class DMsVM: ObservableObject {
     @MainActor
     public func markAcceptedAsRead() {
         objectWillChange.send()
-        
+        for dmState in conversationRows {
+            dmState.markedReadAt_ = Date.now
+            dmState.didUpdate.send()
+        }
     }
     
     @MainActor
     public func markRequestsAsRead() {
         objectWillChange.send()
+        for dmState in requestRows {
+            dmState.markedReadAt_ = Date.now
+            dmState.didUpdate.send()
+        }
+        if showNotWoT {
+            for dmState in requestRowsNotWoT {
+                dmState.markedReadAt_ = Date.now
+                dmState.didUpdate.send()
+            }
+        }
     }
     
     

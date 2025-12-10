@@ -186,6 +186,14 @@ class DirectMessageViewModel: ObservableObject {
             conv.dmState.markedReadAt_ = Date.now
             conv.dmState.didUpdate.send()
         }
+        if showNotWoT {
+            for conv in requestRowsNotWoT {
+                conv.unread = 0
+                conv.dmState.markedReadAt_ = Date.now
+                conv.dmState.didUpdate.send()
+            }
+        }
+            
     }
     
     
