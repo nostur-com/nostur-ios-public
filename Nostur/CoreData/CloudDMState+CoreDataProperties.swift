@@ -117,7 +117,7 @@ extension CloudDMState: Identifiable {
     }
     
     var unread: Int {
-        guard let contactPubkey_ else { return 0 }
+        guard contactPubkey_ != nil || participantPubkeys_ != nil else { return 0 }
         guard let managedObjectContext else { return 0 }
 
         let fr = Event.fetchRequest()
