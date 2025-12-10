@@ -103,6 +103,10 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
                 dmState.markedReadAt_ = savedEvent.date
             }
         }
+        
+        if nEvent.createdAt.timestamp > Int(dmState.lastMessageTimestamp_?.timeIntervalSince1970 ?? 0) {
+            dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+        }
         // Let DirectMessageViewModel handle view updates
         DirectMessageViewModel.default.newMessage()
         DirectMessageViewModel.default.checkNeedsNotification(savedEvent)

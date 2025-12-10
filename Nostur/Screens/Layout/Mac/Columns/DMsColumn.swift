@@ -36,9 +36,16 @@ struct DMsColumn: View {
                 switch (vm.tab) {
                 case "Accepted":
                     if !vm.conversationRows.isEmpty {
-                        LazyVStack(alignment: .leading) {
+                        LazyVStack(alignment: .leading, spacing: GUTTER) {
                             ForEach(vm.conversationRows) { row in
-                                DMStateRow(dmState: row)
+                                Box {
+                                    DMStateRow(dmState: row)
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    L.og.info(" DMStateRow 🟠🟠🟠🟠🟠🟠 🟠🟠🟠🟠 🟠🟠🟠🟠 🟠🟠🟠🟠🟠🟠")
+                                    navPath.append(row)
+                                }
                             }
                         }
                     }
@@ -48,11 +55,29 @@ struct DMsColumn: View {
                     }
                 case "Requests":
                     if !vm.requestRows.isEmpty || vm.showNotWoT {
-                        LazyVStack(alignment: .leading) {
+                        LazyVStack(alignment: .leading, spacing: GUTTER) {
                             ForEach(vm.requestRows) { row in
-                                Text(row.participantPubkeys.description)
+                                Box {
+                                    DMStateRow(dmState: row)
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    navPath.append(row)
+                                }
+                            }
+                            
+                            if !vm.showNotWoT && !vm.requestRowsNotWoT.isEmpty {
+                                Text("\(vm.requestRowsNotWoT.count) requests not shown")
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(5)
+                                    .onTapGesture {
+                                        vm.showNotWoT = true
+                                    }
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.secondary)
                             }
                         }
+                        .padding(5)
                     }
                     else {
                         Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
@@ -203,9 +228,9 @@ struct DMsColumn: View {
     @ToolbarContentBuilder
     private var accountsButton: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            if case .notifications(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+            if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
                 Button {
-                    columnType = .notifications(nil)
+                    columnType = .DMs(nil)
                 } label: {
                     PFP(pubkey: accountPubkey, account: account, size: 30)
                 }
@@ -244,31 +269,32 @@ struct DMStateRow: View {
 //                                .offset(x:15, y: -20)
                     }
                 }
+            
             VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .top, spacing: 5) {
                     if let nrContact {
-                        Group {
-                            Text(nrContact.anyName)
-                                .foregroundColor(.primary)
-                                .fontWeight(.bold)
-                                .lineLimit(1)
-                            
-                            PossibleImposterLabelView(nrContact: nrContact)
-                        }
+                        ContactName(nrContact: nrContact)
+                            .foregroundColor(.primary)
+                            .fontWeightBold()
+                            .lineLimit(1)
+                        
+                        PossibleImposterLabelView(nrContact: nrContact)
                     }
                     else {
                         ForEach(nrContacts) { nrContact in
-                            Text(nrContact.anyName)
+                            ContactName(nrContact: nrContact)
                                 .foregroundColor(.primary)
-                                .fontWeight(.bold)
+                                .fontWeightBold()
                                 .lineLimit(1)
                         }
                     }
                 }
 
-                Text(dmState.blurb).foregroundColor(.primary)
+                Text(dmState.blurb)
+                    .foregroundColor(.secondary)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }

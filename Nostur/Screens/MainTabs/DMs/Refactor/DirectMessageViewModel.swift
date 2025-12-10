@@ -29,7 +29,7 @@ class DirectMessageViewModel: ObservableObject {
                     self.load()
                 }
             }
-            allowedWoT = Set(dmStates.filter { $0.accepted }.compactMap { $0.contactPubkey_ })
+            allowedWoT = Set(dmStates.filter { $0.accepted }.compactMap { $0.receiverPubkeys.first })
         }
     }
     
@@ -205,7 +205,7 @@ class DirectMessageViewModel: ObservableObject {
         
         let conversations = dmStates
             .filter { !$0.isHidden && $0.accountPubkey_ == pubkey }
-            .filter { $0.accepted && !blockedPubkeys.contains($0.contactPubkey_ ?? "HMMICECREAMSOGOOD") }
+            .filter { $0.accepted && !blockedPubkeys.contains($0.receiverPubkeys.first ?? "HMMICECREAMSOGOOD") }
         
         var lastNotificationReceivedAt: Date? = nil
         
@@ -213,7 +213,7 @@ class DirectMessageViewModel: ObservableObject {
         
         
         for conv in conversations {
-            guard let accountPubkey = conv.accountPubkey_, let contactPubkey = conv.contactPubkey_
+            guard let accountPubkey = conv.accountPubkey_, let contactPubkey = conv.receiverPubkeys.first
             else {
                 L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
                 continue
@@ -287,10 +287,10 @@ class DirectMessageViewModel: ObservableObject {
         
         let conversations = dmStates
             .filter { !$0.isHidden && $0.accountPubkey_ == pubkey }
-            .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey_ ?? "HMMICECREAMSOGOOD") }
+            .filter { !$0.accepted && !blockedPubkeys.contains($0.receiverPubkeys.first ?? "HMMICECREAMSOGOOD") }
             .filter { dmState in
                 if (!WOT_FILTER_ENABLED()) { return true }
-                guard let contactPubkey = dmState.contactPubkey_ else { return false }
+                guard let contactPubkey = dmState.receiverPubkeys.first else { return false }
                 return WebOfTrust.shared.isAllowed(contactPubkey)
             }
             
@@ -299,7 +299,7 @@ class DirectMessageViewModel: ObservableObject {
         var conversationRows = [Conversation]()
         
         for conv in conversations {
-            guard let contactPubkey = conv.contactPubkey_
+            guard let contactPubkey = conv.receiverPubkeys.first
             else {
                 L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
                 continue
@@ -363,16 +363,16 @@ class DirectMessageViewModel: ObservableObject {
         
         let conversations = dmStates
             .filter { !$0.isHidden && $0.accountPubkey_ == pubkey }
-            .filter { !$0.accepted && !blockedPubkeys.contains($0.contactPubkey_ ?? "HMMICECREAMSOGOOD") }
+            .filter { !$0.accepted && !blockedPubkeys.contains($0.receiverPubkeys.first ?? "HMMICECREAMSOGOOD") }
             .filter { dmState in
-                guard let contactPubkey = dmState.contactPubkey_ else { return false }
+                guard let contactPubkey = dmState.receiverPubkeys.first else { return false }
                 return !WebOfTrust.shared.isAllowed(contactPubkey)
             }
         
         var conversationRows = [Conversation]()
         
         for conv in conversations {
-            guard let contactPubkey = conv.contactPubkey_
+            guard let contactPubkey = conv.receiverPubkeys.first
             else {
                 L.og.error("Conversation is missing account or contact pubkey, something wrong \(conv.debugDescription)")
                 continue

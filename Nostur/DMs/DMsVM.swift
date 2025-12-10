@@ -175,7 +175,7 @@ class DMsVM: ObservableObject {
                     return !WebOfTrust.shared.isAllowed(contactPubkey)
                 }
                 
-                return true
+                return false
             }
 
         requestRowsNotWoT = outsideWoT
