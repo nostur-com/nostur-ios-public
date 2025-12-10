@@ -39,7 +39,7 @@ struct DMsColumn: View {
                         LazyVStack(alignment: .leading, spacing: GUTTER) {
                             ForEach(vm.conversationRows) { row in
                                 Box {
-                                    DMStateRow(dmState: row)
+                                    DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
@@ -58,7 +58,7 @@ struct DMsColumn: View {
                         LazyVStack(alignment: .leading, spacing: GUTTER) {
                             ForEach(vm.requestRows) { row in
                                 Box {
-                                    DMStateRow(dmState: row)
+                                    DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
@@ -244,10 +244,12 @@ struct DMStateRow: View {
     @ObservedObject private var dmState: CloudDMState
     @State var nrContacts: [NRContact]
     @State var nrContact: NRContact?
-    private var unread: Int { dmState.unread }
+    private var unread: Int { dmState.unread(for: accountPubkey) }
+    private let accountPubkey: String
     
-    init(dmState: CloudDMState) {
+    init(dmState: CloudDMState, accountPubkey: String) {
         self.dmState = dmState
+        self.accountPubkey = accountPubkey
         nrContacts = dmState.receiverPubkeys.map { NRContact.instance(of: $0) }
         if nrContacts.count == 1 {
             nrContact = if let dmStateReceiverPubkey = dmState.receiverPubkeys.first {
