@@ -488,6 +488,12 @@ class DirectMessageViewModel: ObservableObject {
                 ).json() {
                     req(message)
                 }
+                
+                if i == monthsAgo {
+                    Maintenance.runFixMissingDMStates(context: viewContext())
+                    Maintenance.runUpgradeDMformat(force: true, context: viewContext())
+                    try? viewContext().save()
+                }
             }
         }
     }

@@ -1056,10 +1056,10 @@ struct Maintenance {
     static func runUpgradeDMformat(force: Bool = false, context: NSManagedObjectContext) {
         guard force || !Self.didRun(migrationCode: migrationCode.upgradeDMformat, context: context) else { return }
         
-        // track timestamps and initiatorPubkey, newestId to make blurb
-        var earliestAndNewestByGroupId: [String: (earliest: Int64, initiatorPubkey: String?, newest: Int64, newestId: String, didSend: Bool)] = [:]
+        // track timestamps and initiatorPubkey, newestId to make blurb, ourNewest to set markedReadAt
+        var earliestAndNewestByGroupId: [String: (earliest: Int64, initiatorPubkey: String?, newest: Int64, newestId: String, didSend: Bool, ourNewest: Int64?)] = [:]
         
-        // set .groupId on all kind 4, 14
+        // get all kind 4 + 14
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = NSPredicate(format: "kind IN %@", [4,14])
@@ -1069,29 +1069,48 @@ struct Maintenance {
         
         // Our full account pubkeys
         let accounts = CloudAccount.fetchAccounts(context: context)
+            .filter { $0.flagsSet.contains("full_account") }
         let fullAccountPubkeys = accounts.map { $0.publicKey }
         
+        // set .groupId on all kind 4, 14
+        // track earliest and newest message for
+        // 1) initiator pubkey (for WoT)
+        // 2) newest for last received message and blurb
+        // also track did we send (to auto .accept = true) and set markReadAt to at least .created_at of our own messagfe
         for dmEvent in allDMs {
             groupIdsSetCounter += 1
             let groupId = dmConversationId(event: dmEvent)
             dmEvent.groupId = groupId
             
-            // update newest for last message timestamp
-            if let timestamps = earliestAndNewestByGroupId[groupId], dmEvent.created_at > timestamps.newest {
+            // track earliest timestamp and initiatorPubkey, and newest timestamp for last message received blurb
+            if let timestamps = earliestAndNewestByGroupId[groupId] {
+                // did we send from our account?
                 let didSend = fullAccountPubkeys.contains(dmEvent.pubkey) || timestamps.didSend
-                earliestAndNewestByGroupId[groupId] = (earliest: timestamps.earliest, initiatorPubkey: timestamps.initiatorPubkey, newest: dmEvent.created_at, newestId: dmEvent.id, didSend: didSend)
+                
+                // update newest for last message timestamp
+                let newest = dmEvent.created_at > timestamps.newest ? dmEvent.created_at : timestamps.newest
+                
+                // update newest id for blurb
+                let newestId = dmEvent.created_at > timestamps.newest ? dmEvent.id : timestamps.newestId
+                
+                // update our newest for markedReadAt
+                let ourNewest: Int64? = fullAccountPubkeys.contains(dmEvent.pubkey) && (dmEvent.created_at > timestamps.ourNewest ?? 0) ? dmEvent.created_at : timestamps.ourNewest
+                
+                // update earliest for iniatorPubkey
+                let earliest = dmEvent.created_at < timestamps.earliest ? dmEvent.created_at : timestamps.earliest
+                
+                // update earliest initiatorPubkey
+                let initiatorPubkey = dmEvent.created_at < timestamps.earliest ? dmEvent.pubkey : timestamps.initiatorPubkey
+                
+                // store results as tuple in dict
+                earliestAndNewestByGroupId[groupId] = (earliest: earliest, initiatorPubkey: initiatorPubkey, newest: newest, newestId: newestId, didSend: didSend, ourNewest: ourNewest)
             }
             
-            // update earliest for iniatorPubkey
-            if let timestamps = earliestAndNewestByGroupId[groupId], dmEvent.created_at < timestamps.earliest {
-                let didSend = fullAccountPubkeys.contains(dmEvent.pubkey) || timestamps.didSend
-                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: timestamps.newest, newestId: timestamps.newestId, didSend: didSend)
-            }
-            
-            // insert there wasn't any match before
+            // insert new if there wasn't any match before
             if earliestAndNewestByGroupId[groupId] == nil {
                 let didSend = fullAccountPubkeys.contains(dmEvent.pubkey)
-                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: dmEvent.created_at, newestId: dmEvent.id, didSend: didSend)
+                let ourNewest: Int64? = didSend ? dmEvent.created_at : nil
+                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: dmEvent.created_at, newestId: dmEvent.id, didSend: didSend, ourNewest: ourNewest)
             }
         }
         
@@ -1103,7 +1122,7 @@ struct Maintenance {
         var dmStatesUpdatedCounter = 0
         for dmState in dmStates {
             var didUpdate = false
-            // update participants
+            // set participants (.pubkey + P tags)
             if let contactPubkey = dmState.contactPubkey_, contactPubkey.count == 64, let accountPubkey = dmState.accountPubkey_ {
                 dmState.participantPubkeys = [contactPubkey, accountPubkey]
                 didUpdate = true
@@ -1112,11 +1131,14 @@ struct Maintenance {
             if let timestamps = earliestAndNewestByGroupId[dmState.conversationId] {
                 dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(timestamps.newest))
                 dmState.initiatorPubkey_ = timestamps.initiatorPubkey
+                if let ourNewest = timestamps.ourNewest {
+                    dmState.markedReadAt_ = Date(timeIntervalSince1970: TimeInterval(ourNewest))
+                }
                 
                 // get blurb
                 if let mostRecent = allDMs.first(where: { $0.id == timestamps.newestId }) {
-                    let anyName = mostRecent.contact?.anyName ?? String(mostRecent.pubkey.prefix(8))
                     
+                    // decrypt if kind 4
                     if mostRecent.kind == 4, let accountPubkey = dmState.accountPubkey_ {
                         if let account = try? CloudAccount.fetchAccount(publicKey: accountPubkey, context: context), let privateKey = account.privateKey {
                             let keyPair = (publicKey: account.publicKey, privateKey: privateKey)
@@ -1127,11 +1149,13 @@ struct Maintenance {
                             else {
                                 Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: mostRecent.pubkey, content: mostRecent.content ?? "") ?? "(Encrypted content)"
                             }
+                            // prefix blurb with "You: " if we sent it
                             let fromName = accountPubkey == mostRecent.pubkey ? "You: " : ""
                             dmState.blurb = "\(fromName)\(content)"
                         }
                     }
-                    else { // kind 14
+                    else { // kind 14 is already decrypted rumor
+                        // prefix blurb with "You: " if we sent it
                         let fromName = dmState.accountPubkey_ == mostRecent.pubkey ? "You: " : ""
                         dmState.blurb = "\(fromName)\(mostRecent.content ?? "")"
                     }

@@ -44,13 +44,16 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
     
     private func removeDuplicateDMStates(dmStates: [CloudDMState]) {
         var uniqueDMStates = Set<String>()
-        let sortedDMStates = dmStates.sorted { ($0.markedReadAt_ ?? .distantPast) > ($1.markedReadAt_ ?? .distantPast) }
+        let sortedDMStates = dmStates
+            .sorted {
+                (max($0.markedReadAt_ ?? .distantPast, $0.lastMessageTimestamp_ ?? .distantPast)) > (max($1.markedReadAt_ ?? .distantPast, $1.lastMessageTimestamp_ ?? .distantPast))
+            }
 
         let duplicates = sortedDMStates
             .filter { dmState in
                 guard dmState.contactPubkey_ != nil || dmState.participantPubkeys_ != nil else { return false }
-                guard dmState.accountPubkey_ != nil else { return false }
-                return !uniqueDMStates.insert(dmState.conversationId).inserted
+                guard let accountPubkey = dmState.accountPubkey_ else { return false }
+                return !uniqueDMStates.insert(accountPubkey + "-" + dmState.conversationId).inserted
             }
 #if DEBUG
         L.cloud.debug("CloudDMStateFetchRequest: \(duplicates.count) duplicate DM conversation states")

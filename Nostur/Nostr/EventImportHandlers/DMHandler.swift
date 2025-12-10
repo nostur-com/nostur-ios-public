@@ -48,6 +48,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
             if AccountsState.shared.bgFullAccountPubkeys.contains(participant) {
                 let dmState = CloudDMState(context: context)
                 dmState.accountPubkey_ = participant
+                dmState.contactPubkey_ = receiverPubkey // for non-updated clients
                 dmState.participantPubkeys = participants
                 dmState.accepted = false
                 DataProvider.shared().saveToDiskNow {
@@ -63,6 +64,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
             let savedEventDate = savedEvent.date
             let dmState = CloudDMState(context: context)
             dmState.accountPubkey_ = sender
+            dmState.contactPubkey_ = receiverPubkey // for non-updated clients
             dmState.participantPubkeys = participants
             dmState.accepted = true
             dmState.markedReadAt_ = savedEventDate
@@ -78,6 +80,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
             if AccountsState.shared.bgAccountPubkeys.contains(participant) {
                 let dmState = CloudDMState(context: context)
                 dmState.accountPubkey_ = participant
+                dmState.contactPubkey_ = receiverPubkey // for non-updated clients
                 dmState.participantPubkeys = participants
                 dmState.accepted = false
                 DataProvider.shared().saveToDiskNow {
