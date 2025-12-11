@@ -38,12 +38,11 @@ struct DMsColumn: View {
                     if !vm.conversationRows.isEmpty {
                         LazyVStack(alignment: .leading, spacing: GUTTER) {
                             ForEach(vm.conversationRows) { row in
-                                Box {
+                                Box(navMode: .noNavigation) {
                                     DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
-                                    L.og.info(" DMStateRow 🟠🟠🟠🟠🟠🟠 🟠🟠🟠🟠 🟠🟠🟠🟠 🟠🟠🟠🟠🟠🟠")
                                     navPath.append(row)
                                 }
                             }
@@ -57,7 +56,7 @@ struct DMsColumn: View {
                     if !vm.requestRows.isEmpty || vm.showNotWoT {
                         LazyVStack(alignment: .leading, spacing: GUTTER) {
                             ForEach(vm.requestRows) { row in
-                                Box {
+                                Box(navMode: .noNavigation) {
                                     DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
                                 }
                                 .contentShape(Rectangle())

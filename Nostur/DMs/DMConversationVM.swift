@@ -17,6 +17,8 @@ class ConversionVM: ObservableObject {
     }
     
     @Published var viewState: ConversionVMViewState = .initializing
+    @Published var navigationTitle = "To: ..."
+    @Published var receiverContacts: [NRContact] = []
     
     // bg
     private var cloudDMState: CloudDMState? = nil
@@ -33,15 +35,47 @@ class ConversionVM: ObservableObject {
         guard force || !didLoad else { return }
         self.didLoad = true
         self.viewState = .loading
+        self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
         self.cloudDMState = await getGroupState()
+//#if DEBUG
+//        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+//            guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }) else {
+//                viewState = .error("Missing private key for account: \(self.ourAccountPubkey)")
+//                return
+//            }
+//        }
+//        let privateKey = "mock-private-key"
+//#else
         guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }), let privateKey = account.privateKey else {
             viewState = .error("Missing private key for account: \(self.ourAccountPubkey)")
             return
         }
-        
+//#endif
+
         if let cloudDMState {
             let visibleMessages = await getMessages(cloudDMState, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
-            viewState = .ready(visibleMessages)
+            
+            let calendar = Calendar.current
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"          // note: lowercase yyyy
+            formatter.locale = Locale(identifier: "en_US_POSIX") // ensures consistent format
+            formatter.timeZone = TimeZone(secondsFromGMT: 0)      // optional: use UTC
+            
+            var messagesByDay: [Date: [NRChatMessage]] {
+                return Dictionary(grouping: visibleMessages) { nrChatMessage in
+                    calendar.startOfDay(for: nrChatMessage.createdAt)
+                }
+            }
+            
+            let days = messagesByDay.map { (date, messages) in
+                ConversationDay(
+                    dayId: formatter.string(from: date),
+                    date: date,
+                    messages: messages // .sorted(by: { $0.createdAt < $1.createdAt })
+                )
+            }.sorted(by: { $0.id < $1.id })
+            
+            viewState = .ready(days)
         }
         
         self.fetchDMrelays()
@@ -70,7 +104,7 @@ class ConversionVM: ObservableObject {
         let dmEvents = await withBgContext { bgContext in
             let request = NSFetchRequest<Event>(entityName: "Event")
             request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14}", cloudDMState.conversationId)
-            request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
             
             
             return ((try? bgContext.fetch(request)) ?? [])
@@ -169,9 +203,16 @@ class ConversionVM: ObservableObject {
 enum ConversionVMViewState {
     case initializing
     case loading
-    case ready([NRChatMessage])
+    case ready([ConversationDay])
     case timeout
     case error(String)
+}
+
+struct ConversationDay: Identifiable, Hashable, Equatable {
+    var id: String { dayId }
+    let dayId: String // 2025-12-10
+    let date: Date
+    let messages: [NRChatMessage]
 }
 
 func fetchDMrelays(for pubkeys: Set<String>) {

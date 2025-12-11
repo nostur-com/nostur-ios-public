@@ -53,8 +53,15 @@ struct Box<Content: View>: View {
             .padding(padding)
             .background {
                 backgroundColor
-                    .onTapGesture(perform: navigate)
-            }            
+                    .modifier {
+                        if navMode != .noNavigation {
+                            $0.onTapGesture(perform: navigate)
+                        }
+                        else {
+                            $0
+                        }
+                    }
+            }
             .overlay(alignment: .bottom) {
                 if showGutter {
                     theme.background.frame(height: GUTTER)

@@ -110,7 +110,8 @@ extension CloudDMState: Identifiable {
     static func create(accountPubkey: String, participants: Set<String>, context: NSManagedObjectContext) -> CloudDMState {
         let newGroupDMSstate = CloudDMState(context: context)
         newGroupDMSstate.accountPubkey_ = accountPubkey
-        newGroupDMSstate.contactPubkey_ = participants.sorted().joined(separator: "")
+        newGroupDMSstate.participantPubkeys = participants
+        newGroupDMSstate.contactPubkey_ = participants.subtracting([accountPubkey]).first
         return newGroupDMSstate
     }
     

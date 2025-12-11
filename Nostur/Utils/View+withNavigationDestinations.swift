@@ -108,9 +108,14 @@ struct NavigationDestinationsModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .nbNavigationDestination(for: CloudDMState.self) { dmState in
-                Text("CloudDMState \(dmState.conversationId)")
-                    .environment(\.containerID, self.containerID)
-                    .environmentObject(VideoPostPlaybackCoordinator())
+                if #available(iOS 17.1, *), let accountPubkey = dmState.accountPubkey_ {
+                    DMConversationView17(participants: dmState.participantPubkeys, ourAccountPubkey: accountPubkey)
+                        .environment(\.containerID, self.containerID)
+                        .environmentObject(VideoPostPlaybackCoordinator())
+                }
+                else {
+                    Text("Unavailable")
+                }
             }
             .nbNavigationDestination(for: NRPost.self) { nrPost in
                 switch nrPost.kind {

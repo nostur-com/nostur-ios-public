@@ -80,7 +80,8 @@ struct MacMainWindow: View {
                             .environment(\.containerID, columnConfig.id.uuidString)
                             .modifier {
                                 switch columnConfig.type {
-                                case .notifications(let pubkey), .DMs(let pubkey), .vines(let pubkey), .yaks(let pubkey), .photos(let pubkey):
+                                case .DMs(_), .DMConversation(_):
+                                case .notifications(let pubkey), .vines(let pubkey), .yaks(let pubkey), .photos(let pubkey):
                                     if pubkey == nil {
                                         $0
                                     }
