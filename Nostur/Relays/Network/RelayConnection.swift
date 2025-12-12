@@ -332,7 +332,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
             if self.webSocketTask == nil || !self.isSocketConnected {
 #if DEBUG
                 if self.exponentialReconnectBackOff <= 2 {
-                    L.sockets.debug("🔴🔴 Not connected. Did not sendMessage \(self.url). (Message queued): \(text.prefix(155))")
+                    L.sockets.debug("🔴🔴 Not connected. \(self.url) (queued): \(text.prefix(215))")
                 }
 #endif
                 return
