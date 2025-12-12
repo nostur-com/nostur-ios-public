@@ -213,7 +213,7 @@ class MessageParser {
             }
             catch NXRelayMessageError.NOT_IN_WOT {
 #if DEBUG
-                L.sockets.debug("🟠 \(relayUrl) Not in WoT, skipped: \(text)")
+                L.sockets.debug("🟠 \(relayUrl) Not in WoT, skipped: \(text) -[LOG]-")
 #endif
                 ConnectionPool.shared.notInWoTcount += 1
 //                poolQueue.async(flags: .barrier) { // TODO: Track spam per relay?

@@ -2308,7 +2308,7 @@ extension NXColumnViewModel {
             Task { @MainActor in
                 if let speedTest, !speedTest.relaysFinishedAt.isEmpty {
 #if DEBUG
-                    L.og.debug("🏁🏁 \(config.name) processToScreen loadingBarViewState = .finalLoad")
+                    L.og.debug("🏁🏁 \(config.name) processToScreen loadingBarViewState = .finalLoad -[LOG]-")
 #endif
                     if speedTest.loadingBarViewState != .finished && speedTest.loadingBarViewState != .finalLoad {
                         speedTest.loadingBarViewState = .finalLoad

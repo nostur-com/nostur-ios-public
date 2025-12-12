@@ -276,7 +276,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     public func sendAfterAuth() {
 #if DEBUG
-        L.sockets.debug("\(self.url) sendAfterAuth()")
+        L.sockets.debug("\(self.url) sendAfterAuth() -[LOG]-")
 #endif
         queue.async(flags: .barrier) { [weak self] in
             guard let self = self else { return }
@@ -388,7 +388,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
     
     deinit {
 #if DEBUG
-        L.og.debug("🗑️ Deinitializing RelayConnection: \(self.url)")
+        L.og.debug("🗑️ Deinitializing RelayConnection: \(self.url) -[LOG]-")
 #endif
         // Ensure cleanup even if disconnect() wasn't called
         webSocketTask?.cancel(with: .normalClosure, reason: nil)
@@ -478,7 +478,10 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 self.isSocketConnected = true
             }
 #if DEBUG
-            L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(string)")
+            let noLog = if string.contains("\"EOSE\"") || (string.contains("\"RM.getAuthorContactsList")) || (string.contains("\"CLOSE\"")) || (string.contains("\"Following-")) || (string.contains("\"List-")) || (string.contains("\"RESUME-")) || (string.contains("\"UM-")) || (string.contains("\"AC-")) || (string.contains("\"PAGE-")) || (string.contains("\"VIEWING-")) || (string.contains("\"Notifications")) {
+                "-[LOG]-"
+            } else { "" }
+            L.sockets.debug("🟠🟠🏎️🔌 RECEIVED: \(self.url.replacingOccurrences(of: "wss://", with: "").replacingOccurrences(of: "ws://", with: "").prefix(25)): \(noLog) \(string)")
 #endif
             MessageParser.shared.socketReceivedMessage(text: string, relayUrl: self.url, client: self)
             self.lastMessageReceivedAt = .now

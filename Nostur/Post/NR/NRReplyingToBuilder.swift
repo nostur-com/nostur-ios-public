@@ -90,11 +90,11 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil, relays: [St
     if let event {
         if let context = event.managedObjectContext {
 #if DEBUG
-            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey event.managedObjectContext \(pubkey)")
+            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey event.managedObjectContext \(pubkey) -[LOG]-")
 #endif
             if let contact = Contact.fetchByPubkey(pubkey, context: context) {
 #if DEBUG
-                L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey \(pubkey) - \(contact.anyName)")
+                L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey \(pubkey) - \(contact.anyName) -[LOG]-")
 #endif
                 PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
                 return contact.anyName
@@ -103,11 +103,11 @@ func contactUsername(fromPubkey pubkey: String, event: Event? = nil, relays: [St
     }
     else if !Thread.isMainThread {
 #if DEBUG
-        L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey !Thread.isMainThread \(pubkey)")
+        L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey !Thread.isMainThread \(pubkey) -[LOG]-")
 #endif
         if let contact = Contact.fetchByPubkey(pubkey, context: bg()) {
 #if DEBUG
-            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey \(pubkey) - \(contact.anyName)")
+            L.og.debug("🔴🔴 Expensive Contact.fetchByPubkey \(pubkey) - \(contact.anyName) -[LOG]-")
 #endif
             PubkeyUsernameCache.shared.setObject(for: pubkey, value: contact.anyName)
             return contact.anyName

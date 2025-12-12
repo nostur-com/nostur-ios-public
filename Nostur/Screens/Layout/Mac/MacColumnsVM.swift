@@ -113,7 +113,7 @@ class MacColumnsVM: ObservableObject {
         let encoder = JSONEncoder()
         if let encodedState = try? encoder.encode(state) {
             macListstateSerialized = String(data: encodedState, encoding: .utf8) ?? ""
-            L.og.info("MacListState: saving state \(self.macListstateSerialized)")
+            L.og.debug("MacListState: saving state \(self.macListstateSerialized) -[LOG]-")
         }
         else {
             L.og.error("MacListState problem encoding macListstateSerialized")

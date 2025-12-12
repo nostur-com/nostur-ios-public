@@ -88,7 +88,7 @@ public final class LocalFeedStateManager {
         }
         UserDefaults.standard.set(encoded, forKey: userDefaultsKey)
 #if DEBUG
-        L.og.debug("💾 Feed states: saveToDisk() - feeds: \(states.localFeedStates.count)")
+        L.og.debug("💾 Feed states: saveToDisk() - feeds: \(states.localFeedStates.count) -[LOG]-")
 #endif
     }
     

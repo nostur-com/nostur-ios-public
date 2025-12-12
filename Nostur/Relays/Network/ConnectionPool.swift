@@ -45,6 +45,9 @@ public class ConnectionPool: ObservableObject {
     
     // Connection tracking for debugging
     public func logConnectionCounts() {
+        return
+        
+        let _ = ""
         queue.async { [weak self] in
             guard let self = self else { return }
             let regularCount = self.connections.count
@@ -726,7 +729,7 @@ public class ConnectionPool: ObservableObject {
         else { // no new kind 10002s, so probably update because new relays in penalty box
             self.preferredRelays = pubkeysByRelay(self.kind10002s, ignoringRelays: SPECIAL_PURPOSE_RELAYS.union(self.penaltybox))
 #if DEBUG
-            L.sockets.debug("📤📤 Outbox .preferredRelays reloaded (B)")
+            L.sockets.debug("📤📤 Outbox .preferredRelays reloaded (B) -[LOG]-")
 #endif
         }
     }
