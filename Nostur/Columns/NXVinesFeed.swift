@@ -10,7 +10,6 @@ import SwiftUI
 import Combine
 
 struct NXVinesFeed: View {
-    @AppStorage("enable_live_events") private var enableLiveEvents: Bool = true
     @Environment(\.theme) private var theme
 
     private var vm: NXColumnViewModel

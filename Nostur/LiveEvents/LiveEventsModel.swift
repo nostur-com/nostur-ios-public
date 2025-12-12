@@ -205,6 +205,7 @@ class LiveEventsModel: ObservableObject {
     }
     
     private func updateLiveSubscription() {
+        guard SettingsStore.shared.enableLiveEvents else { return }
         guard !nrLiveEvents.isEmpty else {
             req(NostrEssentials.ClientMessage(type: .CLOSE, subscriptionId: "LIVEEVENTS").json()!)
             return
@@ -225,6 +226,7 @@ class LiveEventsModel: ObservableObject {
     private func listenForReplacableEventUpdates() {
         ViewUpdates.shared.replacableEventUpdate
             .sink { [weak self] event in
+                guard SettingsStore.shared.enableLiveEvents else { return }
                 guard let self else { return }
                 // We should be in bg() already, here (?)
                 let nEvent = event.toNEvent() // TODO: This is NEvent (MessageParser) to Event (Importer) to NEvent (here), need to fix better
