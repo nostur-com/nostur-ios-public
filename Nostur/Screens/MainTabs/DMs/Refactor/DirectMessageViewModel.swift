@@ -481,7 +481,7 @@ class DirectMessageViewModel: ObservableObject {
         
         for i in 0...monthsAgo {
             let ago = monthsAgoRange(monthsAgo - i)
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(5 * i)) { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(3 * i)) { [weak self] in
                 guard let self else { return }
                 self.scanningMonthsAgo = i+1 == (monthsAgo + 1) ? 0 : i+1
                 
