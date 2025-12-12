@@ -1132,7 +1132,15 @@ struct Maintenance {
                 dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(timestamps.newest))
                 dmState.initiatorPubkey_ = timestamps.initiatorPubkey
                 if let ourNewest = timestamps.ourNewest {
-                    dmState.markedReadAt_ = Date(timeIntervalSince1970: TimeInterval(ourNewest))
+                    let ourNewestDate = Date(timeIntervalSince1970: TimeInterval(ourNewest))
+                    if let existingMarkedReadAt = dmState.markedReadAt_ { // if we have existing
+                        if ourNewestDate > existingMarkedReadAt { // only set if newer
+                            dmState.markedReadAt_ = ourNewestDate
+                        }
+                    }
+                    else { // always set if there is no existing
+                        dmState.markedReadAt_ = ourNewestDate
+                    }
                 }
                 
                 // get blurb
