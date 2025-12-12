@@ -146,41 +146,56 @@ class ConversionVM: ObservableObject {
     }
     
     @MainActor
-    public func sendMessage(_ message: String, ourkeys: Keys) async throws {
+    public func sendMessage(_ message: String) async throws {
+        guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey), let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { throw DMError.PrivateKeyMissing }
+        
+        
         let recipientPubkeys = participants.subtracting([ourAccountPubkey])
         let content = message
-        var messageEvent =  NostrEssentials.Event(
+        let message = NostrEssentials.Event(
             pubkey: ourAccountPubkey,
             content: content,
             kind: 14,
             created_at: Int(Date().timeIntervalSince1970),
             tags: recipientPubkeys.map { Tag(["p", $0]) }
         )
+        let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
         
+        // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
+        let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourAccountPubkey, keys: ourkeys)
+        await bg().perform {
+            Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
+        }
+        let relays = await getDMrelays(for: ourAccountPubkey)
+        // send to to relays..
+        
+        
+        
+        // send to other participants
         var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>?)]
         
-        // Wrap and send to receiver DM relays, also our own. (we can't unwrap sent, only received to our pubkey)
-        for receiverPubkey in participants {
+        // Wrap and send to receiver DM relays
+        for receiverPubkey in recipientPubkeys {
             // wrap message
             do {
-                let giftWrap = try createGiftWrap(messageEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
                 let relays = await getDMrelays(for: receiverPubkey)
-                
-                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
+                // send to to relays..
+//                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
             }
             catch {
                 
             }
         }
         
-        var results = []
-        for job in sendJobs {
-            results.append(async let sendToDMRelays(job.wrappedEvent, relays: job.relays))
-        }
-        async let a = taskA()
-        async let b = taskB()
-
-        await print(a + b)
+//        var results = []
+//        for job in sendJobs {
+//            results.append(async let sendToDMRelays(job.wrappedEvent, relays: job.relays))
+//        }
+//        async let a = taskA()
+//        async let b = taskB()
+//
+//        await print(a + b)
     }
     
     private func sendToDMRelays(_ wrappedEvent: NostrEssentials.Event, relays: Set<String>) async throws {
@@ -230,6 +245,16 @@ class ConversionVM: ObservableObject {
             relayType: .SEARCH
         )
     }
+    
+    // DM sending queue, status, errors
+    
+    private var sendJobs: [String: OutgoingDM] = [:] // rumor.id: sada s
+    private var sendErrors: [String: String] = [:] // rumor.id: fsdfdsd
+}
+
+public enum DMError: Error {
+
+    case PrivateKeyMissing
 }
 
 enum ConversionVMViewState {
@@ -252,8 +277,10 @@ func fetchDMrelays(for pubkeys: Set<String>) {
 }
 
 class OutgoingDM: ObservableObject {
-    let nrChatMessage: NRChatMessage
-    
+    let nrChatMessage: NRChatMessage // rumor
+    init(nrChatMessage: NRChatMessage) {
+        self.nrChatMessage = nrChatMessage
+    }
     
 }
 

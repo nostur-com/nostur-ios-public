@@ -253,6 +253,9 @@ class Importer {
                             // Do we support the rumor kind?
                             guard SUPPORTED_RUMOR_KINDS.contains(rumor.kind) else { continue }
                             
+                            // check if rumor id matches computed id and sig should be empty
+                            guard rumor.isRumor() else { continue }
+                            
                             // Import rumor
                             _ = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)
                         }
@@ -368,9 +371,12 @@ class Importer {
                 
                             // Unwrap then handle rumor like normal event
                             let (rumor, seal) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
-                            
+
                             // Do we support the rumor kind?
                             guard SUPPORTED_RUMOR_KINDS.contains(rumor.kind) else { continue }
+                            
+                            // check if rumor id matches computed id and sig should be empty
+                            guard rumor.isRumor() else { continue }
                             
                             // Import rumor
                             let savedEvent = try importEvent(event: NEvent.fromNostrEssentialsEvent(rumor), wrapId: event.id, message: message)

@@ -879,6 +879,10 @@ extension Event {
         }
     }
     
+    static func saveEvent(event: NostrEssentials.Event, relays: String? = nil, flags: String = "", kind6firstQuote: Event? = nil, wrapId: String? = nil, context: NSManagedObjectContext) -> Event {
+        return Self.saveEvent(event: NEvent.fromNostrEssentialsEvent(event), relays: relays, flags: flags, kind6firstQuote: kind6firstQuote, wrapId: wrapId, context: context)
+    }
+    
     // TODO: .saveEvent() and .importEvents() needs a refactor, to cleanly handle each kind in a reusable/maintainable way, this long list of if statements is becoming a mess.
     static func saveEvent(event: NEvent, relays: String? = nil, flags: String = "", kind6firstQuote: Event? = nil, wrapId: String? = nil, context: NSManagedObjectContext) -> Event {
         #if DEBUG

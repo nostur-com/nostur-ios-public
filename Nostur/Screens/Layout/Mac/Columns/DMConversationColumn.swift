@@ -114,13 +114,21 @@ struct DMConversationView17: View {
                     Group {
                         if vm.isAccepted {
                             ChatInputField(message: $text) {
-                                do {
-                                    errorText = nil
-//                                    try vm.sendMessage(text)
-                                    text = ""
-                                }
-                                catch {
-                                    errorText = "Could not send message"
+                                Task { @MainActor in
+                                    let restoreText = text
+                                    do {
+                                        errorText = nil
+                                        text = ""
+                                        try await vm.sendMessage(text)
+                                    }
+                                    catch DMError.PrivateKeyMissing {
+                                        AppSheetsModel.shared.readOnlySheetVisible = true
+                                        text = restoreText
+                                    }
+                                    catch {
+                                        errorText = "Could not send message"
+                                        text = restoreText
+                                    }
                                 }
                             }
                         }
