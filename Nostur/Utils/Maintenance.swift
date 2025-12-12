@@ -146,7 +146,7 @@ struct Maintenance {
         return await context.perform {
             Self.audioDownloadCacheCleanUp()
             Self.databaseCleanUp(context)
-            Self.runFixMissingDMStates(context: context, firstRun: false)
+            Self.runFixMissingDMStates(force: true, context: context)
             Self.runUpgradeDMformat(force: true, context: context)
             try? context.save()
             return true
@@ -990,10 +990,10 @@ struct Maintenance {
     
     // Fix missing Cloud DM States: A received DM could be saved under a read-only alt account (as sender), if that account is the sender.
     // Here we create the missing DM state for the receiver
-    static func runFixMissingDMStates(context: NSManagedObjectContext, firstRun: Bool = true) {
+    static func runFixMissingDMStates(force: Bool = false, context: NSManagedObjectContext) {
         
-        // Run at one time at startup, or again if firstRun is false
-        guard !firstRun || !Self.didRun(migrationCode: migrationCode.fixMissingDMStatesAgain, context: context) else { return }
+        // Run at one time at startup, or again if force is true
+        guard force || !Self.didRun(migrationCode: migrationCode.fixMissingDMStatesAgain, context: context) else { return }
         
         // Find all DMs sent to full accounts as receiver
         

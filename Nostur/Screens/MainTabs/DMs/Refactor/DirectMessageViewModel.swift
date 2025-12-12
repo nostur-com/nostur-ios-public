@@ -501,7 +501,7 @@ class DirectMessageViewModel: ObservableObject {
 #if DEBUG
                     L.maintenance.info("Running Manual DM fix")
 #endif
-                    Maintenance.runFixMissingDMStates(context: viewContext(), firstRun: false)
+                    Maintenance.runFixMissingDMStates(force: true, context: viewContext())
                     Maintenance.runUpgradeDMformat(force: true, context: viewContext())
                     try? viewContext().save()
                 }
