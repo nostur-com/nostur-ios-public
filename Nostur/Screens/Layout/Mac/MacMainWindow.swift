@@ -81,6 +81,7 @@ struct MacMainWindow: View {
                             .modifier {
                                 switch columnConfig.type {
                                 case .DMs(_), .DMConversation(_):
+                                    $0
                                 case .notifications(let pubkey), .vines(let pubkey), .yaks(let pubkey), .photos(let pubkey):
                                     if pubkey == nil {
                                         $0

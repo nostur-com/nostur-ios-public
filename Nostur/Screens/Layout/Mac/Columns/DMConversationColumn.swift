@@ -69,6 +69,8 @@ struct DMConversationView17: View {
     private let ourAccountPubkey: String
     
     @StateObject private var vm: ConversionVM
+    @State private var text = ""
+    @State private var errorText: String? = nil
     
     init(participants: Set<String>, ourAccountPubkey: String) {
         self.participants = participants
@@ -112,39 +114,22 @@ struct DMConversationView17: View {
                     Group {
                         if vm.isAccepted {
                             ChatInputField(message: $text) {
-                                // Create and send DM (via unpublisher?)
-                                guard let pk = la.account.privateKey else { AppSheetsModel.shared.readOnlySheetVisible = true; return }
-                                guard let theirPubkey = self.theirPubkey else { return }
-                                var nEvent = NEvent(content: text)
-                                if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
-                                    nEvent.content = replaceNsecWithHunter2(nEvent.content)
-                                }
-                                nEvent.kind = .legacyDirectMessage
-                                guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: pk, pubkey: theirPubkey, content: nEvent.content) else {
-                                    L.og.error("🔴🔴 Could encrypt content")
-                                    return
-                                }
-                                
-                                nEvent.content = encrypted
-                                nEvent.tags.append(NostrTag(["p", theirPubkey]))
-                                
-                                
-                                if let signedEvent = try? la.account.signEvent(nEvent) {
-                                    //                        print(signedEvent.wrappedEventJson())
-                                    Unpublisher.shared.publishNow(signedEvent)
-                                    //                        noteCancellationId = up.publish(signedEvent)
+                                do {
+                                    errorText = nil
+//                                    try vm.sendMessage(text)
                                     text = ""
+                                }
+                                catch {
+                                    errorText = "Could not send message"
                                 }
                             }
                         }
-                        else if rootDM != nil {
+                        else {
                             Divider()
                             Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
-                                conv.accepted = true
-                                conv.dmState.accepted = true
-                                conv.dmState.didUpdate.send()
-                                DataProvider.shared().saveToDiskNow(.viewContext)
-                                DirectMessageViewModel.default.reloadAccepted()
+                                vm.isAccepted = true
+//                                DataProvider.shared().saveToDiskNow(.viewContext)
+//                                DirectMessageViewModel.default.reloadAccepted()
                                 
                             }
                             .buttonStyle(NRButtonStyle(style: .borderedProminent))

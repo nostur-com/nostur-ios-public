@@ -11,7 +11,11 @@ import NostrEssentials
 
 class ConversionVM: ObservableObject {
     private var participants: Set<String> // all participants (including sender)
-    private var ourAccountPubkey: String
+    private var ourAccountPubkey: String {
+        didSet {
+            self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == ourAccountPubkey })
+        }
+    }
     private var receivers: Set<String> {
         participants.subtracting([ourAccountPubkey])
     }
@@ -19,6 +23,18 @@ class ConversionVM: ObservableObject {
     @Published var viewState: ConversionVMViewState = .initializing
     @Published var navigationTitle = "To: ..."
     @Published var receiverContacts: [NRContact] = []
+    
+    @Published var isAccepted = false {
+        didSet {
+            let isAccepted = isAccepted
+            bg().perform { [weak self] in
+                self?.cloudDMState?.accepted = isAccepted
+            }
+        }
+    }
+    
+    public var account: CloudAccount? = nil
+    
     
     // bg
     private var cloudDMState: CloudDMState? = nil
@@ -37,6 +53,9 @@ class ConversionVM: ObservableObject {
         self.viewState = .loading
         self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
         self.cloudDMState = await getGroupState()
+        self.isAccepted = await withBgContext { _ in
+            return self.cloudDMState?.accepted ?? false
+        }
 //#if DEBUG
 //        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
 //            guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }) else {
@@ -126,7 +145,8 @@ class ConversionVM: ObservableObject {
         return dmEvents
     }
     
-    private func sendMessage(_ message: String, ourkeys: Keys) {
+    @MainActor
+    public func sendMessage(_ message: String, ourkeys: Keys) async throws {
         let recipientPubkeys = participants.subtracting([ourAccountPubkey])
         let content = message
         var messageEvent =  NostrEssentials.Event(
@@ -134,24 +154,36 @@ class ConversionVM: ObservableObject {
             content: content,
             kind: 14,
             created_at: Int(Date().timeIntervalSince1970),
-            tags: []
+            tags: recipientPubkeys.map { Tag(["p", $0]) }
         )
+        
+        var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>?)]
         
         // Wrap and send to receiver DM relays, also our own. (we can't unwrap sent, only received to our pubkey)
         for receiverPubkey in participants {
             // wrap message
-            messageEvent.tags = recipientPubkeys.map { Tag(["p", $0]) }
             do {
                 let giftWrap = try createGiftWrap(messageEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
-                sendToDMRelay(giftWrap)
+                let relays = await getDMrelays(for: receiverPubkey)
+                
+                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
             }
             catch {
                 
             }
         }
+        
+        var results = []
+        for job in sendJobs {
+            results.append(async let sendToDMRelays(job.wrappedEvent, relays: job.relays))
+        }
+        async let a = taskA()
+        async let b = taskB()
+
+        await print(a + b)
     }
     
-    private func sendToDMRelay(_ wrappedEvent: NostrEssentials.Event) {
+    private func sendToDMRelays(_ wrappedEvent: NostrEssentials.Event, relays: Set<String>) async throws {
         
     }
     
@@ -219,6 +251,25 @@ func fetchDMrelays(for pubkeys: Set<String>) {
     
 }
 
-func getDMrelay(for pubkey: String) {
+class OutgoingDM: ObservableObject {
+    let nrChatMessage: NRChatMessage
+    
     
 }
+
+func getDMrelays(for pubkey: String) async -> Set<String>? {
+    let relays: Set<String>? = await withBgContext { bgContext in
+        if let dmRelaysEvent = Event.fetchEventsBy(pubkey: pubkey, andKind: 10050, context: bgContext).first {
+            let relays = dmRelaysEvent.fastTags.filter { $0.0 == "relay" }
+                .compactMap { $0.1 }
+                .map { normalizeRelayUrl($0) }
+            if !relays.isEmpty {
+                return Set(relays)
+            }
+            return nil
+        }
+        return nil
+    }
+    return relays
+}
+
