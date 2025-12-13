@@ -45,6 +45,7 @@ struct ChatInputField: View {
             .tint(theme.accent)
             .fontWeightBold()
             .keyboardShortcut(.defaultAction)
+            .disabled(message.isEmpty)
             .onSubmit {
                 if let onSubmit {
                     onSubmit()
@@ -52,6 +53,7 @@ struct ChatInputField: View {
             }
             .padding(.trailing, 8)
             .padding(.bottom, 5)
+            .opacity(message.isEmpty ? 0.5 : 1.0)
             
         }
         .background(theme.listBackground)
