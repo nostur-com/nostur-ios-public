@@ -106,8 +106,9 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         let cachedContactPubkeys = Set(cachedContacts.map { $0.pubkey })
         let uncachedPtags = pTags.filter { !cachedContactPubkeys.contains($0)  }
         
-        let contactsFromDb: [NRContact] = Contact.fetchByPubkeys(uncachedPtags)
-            .map { NRContact.instance(of: $0.pubkey, contact: $0) }
+        let contactsFromDb: [NRContact] = if !Thread.isMainThread { Contact.fetchByPubkeys(uncachedPtags)
+                .map { NRContact.instance(of: $0.pubkey, contact: $0) }
+        } else { [] }
         
         let referencedContacts = cachedContacts + contactsFromDb
         
