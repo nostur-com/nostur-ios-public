@@ -144,10 +144,10 @@ struct BlossomServerList: View {
         }
         
         .onReceive(MessageParser.shared.okSub.receive(on: RunLoop.main)) { okMessage in
-            // okMessage = (id, relay)
+            // okMessage = (id: String, relay: String)
             guard let okId else { return }
-            if okMessage.0 == okId {
-                publishedToRelays.append(okMessage.1)
+            if okMessage.id == okId {
+                publishedToRelays.append(okMessage.relay)
                 isPublishing = false
             }
         }

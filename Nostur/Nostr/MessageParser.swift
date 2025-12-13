@@ -45,8 +45,10 @@ class MessageParser {
     public let tagSerializer: TagSerializer
     
     // (id, relay)
-    public let okSub = PassthroughSubject<(String, String), Never>()
+    public let okSub = PassthroughSubject<(id: String, relay: String), Never>()
     
+    // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
+    public var pendingOkWrapIds: Set<String> = []
     
     init() {
         tagSerializer = TagSerializer.shared
@@ -72,8 +74,16 @@ class MessageParser {
 #endif
                     if message.success ?? false {
                         if let id = message.id {
-                            okSub.send((id, relayUrl))
-                            Event.updateRelays(id, relays: message.relays, context: bgQueue)
+                            okSub.send((id: id, relay: relayUrl))
+                            
+                            // if "OK" comes back, .updateRelays should update the rumor (.otherId), not the wrap
+                            if pendingOkWrapIds.contains(id) {
+                                Event.updateRelays(id, relays: message.relays, isWrapId: true, context: bgQueue)
+                                pendingOkWrapIds.remove(id)
+                            }
+                            else {
+                                Event.updateRelays(id, relays: message.relays, context: bgQueue)
+                            }
                         }
                     }
                     else if message.message.prefix(14) == "auth-required:", client.relayData.auth, let id = message.id {

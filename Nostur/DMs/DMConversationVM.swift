@@ -8,6 +8,7 @@
 import SwiftUI
 import CoreData
 import NostrEssentials
+import Combine
 
 class ConversionVM: ObservableObject {
     private var participants: Set<String> // all participants (including sender)
@@ -37,6 +38,7 @@ class ConversionVM: ObservableObject {
     
     private let dayIdFormatter: DateFormatter
     
+    private var subscriptions: Set<AnyCancellable> = []
     
     // bg
     private var cloudDMState: CloudDMState? = nil
@@ -200,6 +202,7 @@ class ConversionVM: ObservableObject {
         let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourAccountPubkey, keys: ourkeys)
         await bg().perform {
             Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
+            MessageParser.shared.pendingOkWrapIds.insert(giftWrap.id) // When "OK" comes back, "relays" on rumor need to be updated, not on wrap.
         }
         let relays = await getDMrelays(for: ourAccountPubkey)
         
