@@ -252,17 +252,12 @@ class Backlog {
     }
     
     private func startCleanUpTimer() {
+        let interval = timeout/22
         DispatchQueue.main.async { [weak self] in // timer needs to run on main
-            guard let self, self.timer == nil else { return }
-            timer = Timer.scheduledTimer(withTimeInterval: self.timeout/22, repeats: true) { [weak self] timer in
-                guard let self = self else { return }
+            guard self?.timer == nil else { return }
+            self?.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] timer in
                 bg().perform { [weak self] in
-                    guard let self = self else { return }
-                    guard !self.tasks.isEmpty else { return }
-//    #if DEBUG
-//                    L.og.debug("⏳⏳ \(self.backlogDebugName) withTimeInterval: \(self.timeout/22) -> \(self.timeout) --> tasks: \(self.tasks.count) -[LOG]-")
-//    #endif
-                    self.removeOldTasks()
+                    self?.removeOldTasks()
                 }
             }
         }
