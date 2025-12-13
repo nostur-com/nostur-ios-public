@@ -35,6 +35,8 @@ class ConversionVM: ObservableObject {
     
     public var account: CloudAccount? = nil
     
+    private let dayIdFormatter: DateFormatter
+    
     
     // bg
     private var cloudDMState: CloudDMState? = nil
@@ -42,6 +44,12 @@ class ConversionVM: ObservableObject {
     init(participants: Set<String>, ourAccountPubkey: String) {
         self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
+        
+        let dayIdFormatter = DateFormatter()
+        dayIdFormatter.dateFormat = "yyyy-MM-dd"          // note: lowercase yyyy
+        dayIdFormatter.locale = Locale(identifier: "en_US_POSIX") // ensures consistent format
+        dayIdFormatter.timeZone = TimeZone(secondsFromGMT: 0)      // optional: use UTC
+        self.dayIdFormatter = dayIdFormatter
     }
     
     private var didLoad = false
@@ -75,10 +83,6 @@ class ConversionVM: ObservableObject {
             let visibleMessages = await getMessages(cloudDMState, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
             
             let calendar = Calendar.current
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd"          // note: lowercase yyyy
-            formatter.locale = Locale(identifier: "en_US_POSIX") // ensures consistent format
-            formatter.timeZone = TimeZone(secondsFromGMT: 0)      // optional: use UTC
             
             var messagesByDay: [Date: [NRChatMessage]] {
                 return Dictionary(grouping: visibleMessages) { nrChatMessage in
@@ -88,7 +92,7 @@ class ConversionVM: ObservableObject {
             
             let days = messagesByDay.map { (date, messages) in
                 ConversationDay(
-                    dayId: formatter.string(from: date),
+                    dayId: dayIdFormatter.string(from: date),
                     date: date,
                     messages: messages // .sorted(by: { $0.createdAt < $1.createdAt })
                 )
@@ -145,6 +149,12 @@ class ConversionVM: ObservableObject {
         return dmEvents
     }
     
+    
+    
+    private var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>?)] = []
+    @Published var balloonErrors: [BalloonError] = []
+    @Published var balloonSuccesses: [BalloonSuccess] = []
+    
     @MainActor
     public func sendMessage(_ message: String) async throws {
         guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey), let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { throw DMError.PrivateKeyMissing }
@@ -152,14 +162,39 @@ class ConversionVM: ObservableObject {
         
         let recipientPubkeys = participants.subtracting([ourAccountPubkey])
         let content = message
+        let messageDate = Date()
         let message = NostrEssentials.Event(
             pubkey: ourAccountPubkey,
             content: content,
             kind: 14,
-            created_at: Int(Date().timeIntervalSince1970),
+            created_at: Int(messageDate.timeIntervalSince1970),
             tags: recipientPubkeys.map { Tag(["p", $0]) }
         )
         let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
+        
+        // add to view
+        if case .ready(let days) = self.viewState {
+            let newChatMessage = NRChatMessage(
+                nEvent: NEvent.fromNostrEssentialsEvent(rumorEvent),
+                keyPair: (publicKey: ourkeys.publicKeyHex, privateKey: ourkeys.privateKeyHex)
+            )
+            if let day = days.first(where: { $0.dayId == dayIdFormatter.string(from: messageDate) }) {
+                withAnimation {
+                    day.messages.append(
+                        newChatMessage
+                    )
+                }
+            }
+            else {
+                withAnimation {
+                    self.viewState = .ready(days + [ConversationDay(
+                        dayId: dayIdFormatter.string(from: messageDate),
+                        date: messageDate,
+                        messages: [newChatMessage]
+                    )])
+                }
+            }
+        }
         
         // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
         let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourAccountPubkey, keys: ourkeys)
@@ -167,39 +202,106 @@ class ConversionVM: ObservableObject {
             Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
         }
         let relays = await getDMrelays(for: ourAccountPubkey)
+        
         // send to to relays..
+#if DEBUG
+        L.og.debug("💌💌 1. Sending to own relays: \(relays)")
+#endif
         
         
         
         // send to other participants
-        var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>?)]
         
         // Wrap and send to receiver DM relays
-        for receiverPubkey in recipientPubkeys {
+        for (n, receiverPubkey) in recipientPubkeys.enumerated() {
             // wrap message
             do {
                 let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
                 let relays = await getDMrelays(for: receiverPubkey)
                 // send to to relays..
-//                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
+#if DEBUG
+                L.og.debug("💌💌 2. (\(n+1)/\(recipientPubkeys.count)) Sending to \(receiverPubkey) relays: \(relays)")
+#endif
+                
+                if relays.isEmpty {
+                    balloonErrors.append(BalloonError(messageId: rumorEvent.id, receiverPubkey: receiverPubkey, relay: "Missing: ", errorText: "relays for \(receiverPubkey)"))
+                }
+                
+                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
             }
             catch {
-                
+#if DEBUG
+                L.og.debug("🔴🔴 💌💌 error while trying to wrap \(error)")
+#endif
             }
         }
         
 //        var results = []
-//        for job in sendJobs {
-//            results.append(async let sendToDMRelays(job.wrappedEvent, relays: job.relays))
-//        }
-//        async let a = taskA()
-//        async let b = taskB()
-//
-//        await print(a + b)
+        for job in sendJobs {
+            try await sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: relays, rumorId: rumorEvent.id)
+        }
+
     }
     
-    private func sendToDMRelays(_ wrappedEvent: NostrEssentials.Event, relays: Set<String>) async throws {
+    @Published var relayLogs: String = ""
+    
+    private func sendToDMRelays(receiverPubkey: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, rumorId: String) async throws {
+//        if ConnectionPool.shared.connections
+//        ConnectionPool.shared.sendEphemeralMessage(
+//            RM.getEvent(id: eventId, subscriptionId: taskId),
+//            relay: relay
+//        )
         
+        // Publish to all relays simultaneously
+        await withTaskGroup(of: (String, RelayState).self) { group in
+            for relay in relays {
+                group.addTask {
+                    do {
+                        // TODO: don't need OneOffEventPublisher for already connected write relays
+                        
+                        let connection = OneOffEventPublisher(relay, allowAuth: false, signNEventHandler: { ignore in
+                            return ignore
+                        })
+                        
+                        try await connection.connect(timeout: 6)
+                        try await connection.publish(NEvent.fromNostrEssentialsEvent(wrappedEvent), timeout: 6)
+                        
+                        return (relay, RelayState.published)
+                    } catch let myError as SendMessageError {
+                        if case .sendFailed(let reason) = myError {
+                            if let reason {
+                                self.relayLogs = self.relayLogs + "\(reason)\n"
+                            }
+                            return (relay, RelayState.error)
+                        }
+                        else if case .authRequired = myError {
+                            return (relay, RelayState.authRequired)
+                        }
+                        return (relay, RelayState.error)
+                    }
+                    catch {
+                        return (relay, RelayState.error)
+                    }
+                }
+            }
+            
+            
+            // Update relay states as tasks complete
+            for await (relay, state) in group {
+                Task { @MainActor in
+                    switch state {
+                        case .published:
+                            balloonSuccesses.append(BalloonSuccess(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay))
+                        case .error:
+                            balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay, errorText: "failed (1)"))
+                        case .authRequired:
+                            balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay, errorText: "needs auth"))
+                        default:
+                            balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay, errorText: "failed (2)"))
+                    }
+                }
+            }
+        }
     }
     
     private func fetchDMs() {
@@ -248,13 +350,42 @@ class ConversionVM: ObservableObject {
     
     // DM sending queue, status, errors
     
-    private var sendJobs: [String: OutgoingDM] = [:] // rumor.id: sada s
+//    private var sendJobs: [String: OutgoingDM] = [:] // rumor.id: sada s
     private var sendErrors: [String: String] = [:] // rumor.id: fsdfdsd
+    
+    
+    @MainActor
+    public func markAsRead() {
+        bg().perform { [weak self] in
+            self?.cloudDMState?.markedReadAt_ = Date.now
+            DataProvider.shared().saveToDisk(.bgContext)
+        }
+    }
+}
+
+struct BalloonError: Identifiable {
+    var id: String { messageId }
+    let messageId: String
+    let receiverPubkey: String
+    let relay: String
+    let errorText: String
+}
+
+struct BalloonSuccess: Identifiable {
+    var id: String { messageId }
+    let messageId: String
+    let receiverPubkey: String
+    let relay: String
 }
 
 public enum DMError: Error {
 
     case PrivateKeyMissing
+}
+
+enum DMSendResult {
+    case success
+    case error
 }
 
 enum ConversionVMViewState {
@@ -265,11 +396,24 @@ enum ConversionVMViewState {
     case error(String)
 }
 
-struct ConversationDay: Identifiable, Hashable, Equatable {
+class ConversationDay: Identifiable, Equatable, ObservableObject {
+    
+    static func == (lhs: ConversationDay, rhs: ConversationDay) -> Bool {
+        lhs.dayId == rhs.dayId && lhs.messages.count == rhs.messages.count
+    }
+    
     var id: String { dayId }
     let dayId: String // 2025-12-10
     let date: Date
-    let messages: [NRChatMessage]
+    @Published var messages: [NRChatMessage]
+    
+    init(dayId: String, date: Date, messages: [NRChatMessage]) {
+        self.dayId = dayId
+        self.date = date
+        self.messages = messages
+    }
+    
+    
 }
 
 func fetchDMrelays(for pubkeys: Set<String>) {
@@ -284,8 +428,8 @@ class OutgoingDM: ObservableObject {
     
 }
 
-func getDMrelays(for pubkey: String) async -> Set<String>? {
-    let relays: Set<String>? = await withBgContext { bgContext in
+func getDMrelays(for pubkey: String) async -> Set<String> {
+    let relays: Set<String> = await withBgContext { bgContext in
         if let dmRelaysEvent = Event.fetchEventsBy(pubkey: pubkey, andKind: 10050, context: bgContext).first {
             let relays = dmRelaysEvent.fastTags.filter { $0.0 == "relay" }
                 .compactMap { $0.1 }
@@ -293,9 +437,9 @@ func getDMrelays(for pubkey: String) async -> Set<String>? {
             if !relays.isEmpty {
                 return Set(relays)
             }
-            return nil
+            return []
         }
-        return nil
+        return []
     }
     return relays
 }

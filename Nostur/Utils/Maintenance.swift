@@ -146,8 +146,6 @@ struct Maintenance {
         return await context.perform {
             Self.audioDownloadCacheCleanUp()
             Self.databaseCleanUp(context)
-            Self.runFixMissingDMStates(force: true, context: context)
-            Self.runUpgradeDMformat(force: true, context: context)
             try? context.save()
             return true
         }

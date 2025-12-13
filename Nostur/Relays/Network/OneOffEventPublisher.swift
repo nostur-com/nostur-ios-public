@@ -166,7 +166,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
     
     private func handleIncomingMessage(_ text: String) async {
 #if DEBUG
-        L.og.debug("🟠 Received: \(text)")
+        L.og.debug("🟠 Received: \(self.url.absoluteString) \(text)")
 #endif
         do {
             let message = try nxParseRelayMessage(text: text, relay: self.url.absoluteString)
@@ -342,7 +342,7 @@ class OneOffEventPublisher: NSObject, URLSessionWebSocketDelegate {
         switch response {
         case .ok:
 #if DEBUG
-            L.og.debug("✅✅ One Shotted! ✅✅")
+            L.og.debug("✅✅ One Shotted! ✅✅ \(self.url.absoluteString) id: \(nEvent.id)")
 #endif
             break
         case .authRequired(let eventId):

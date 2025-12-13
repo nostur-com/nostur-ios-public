@@ -71,6 +71,7 @@ struct DMConversationView17: View {
     @StateObject private var vm: ConversionVM
     @State private var text = ""
     @State private var errorText: String? = nil
+    @Namespace private var bottomAnchor
     
     init(participants: Set<String>, ourAccountPubkey: String) {
         self.participants = participants
@@ -86,48 +87,46 @@ struct DMConversationView17: View {
             case .initializing, .loading:
                 ProgressView()
             case .ready(let days):
-                ScrollView {
-                    LazyVStack {
-                        ForEach(days) { day in
-                            // day header
-                            Text(day.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
-                                .fontWeightBold()
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .padding(.top, 20)
-                            
-                            // messagess
-                            ForEach(day.messages) { message in
-    //                            ChatMessageRow(nrChat: message, zoomableId: "", selectedContact: .constant(nil))
-                                BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey)
-                                
+                ScrollViewReader { scrollProxy in
+                    ScrollView {
+                        LazyVStack {
+                            ForEach(days) { day in
+                                DayView(ourAccountPubkey: ourAccountPubkey, day: day, balloonErrors: vm.balloonErrors, balloonSuccesses: vm.balloonSuccesses)
                             }
+                            Color.clear
+                                .frame(height: 0)
+                                .id(bottomAnchor)
                         }
                     }
-                }
-                .defaultScrollAnchor(.bottom)
-                .onTapGesture {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                                        to: nil, from: nil, for: nil)
+                    .defaultScrollAnchor(.bottom)
+                    .onTapGesture {
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                            to: nil, from: nil, for: nil)
+                    }
+                    .onAppear {
+                        scrollProxy.scrollTo(bottomAnchor, anchor: .bottom)
+                        vm.markAsRead()
+                    }
                 }
                 .safeAreaInset(edge: .bottom) {
                     Group {
                         if vm.isAccepted {
                             ChatInputField(message: $text) {
                                 Task { @MainActor in
-                                    let restoreText = text
+                                    guard !text.isEmpty else { return }
+                                    let textToSend = text
                                     do {
                                         errorText = nil
                                         text = ""
-                                        try await vm.sendMessage(text)
+                                        try await vm.sendMessage(textToSend)
                                     }
                                     catch DMError.PrivateKeyMissing {
                                         AppSheetsModel.shared.readOnlySheetVisible = true
-                                        text = restoreText
+                                        text = textToSend
                                     }
                                     catch {
                                         errorText = "Could not send message"
-                                        text = restoreText
+                                        text = textToSend
                                     }
                                 }
                             }
@@ -170,6 +169,48 @@ struct DMConversationView17: View {
             await vm.load()
         }
         .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
+    }
+}
+
+struct DayView: View {
+    public let ourAccountPubkey: String
+    @ObservedObject public var day: ConversationDay
+    public let balloonErrors: [BalloonError]
+    public let balloonSuccesses: [BalloonSuccess]
+    
+    var body: some View {
+        // day header
+        Text(day.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
+            .fontWeightBold()
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(.top, 20)
+        
+        // messagess
+        ForEach(day.messages) { message in
+//                            ChatMessageRow(nrChat: message, zoomableId: "", selectedContact: .constant(nil))
+            BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey)
+                .overlay(alignment: .bottom) {
+                    HStack {
+                        ForEach(self.balloonSuccesses.filter { $0.messageId == message.id }) { success in
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(Color.green)
+                                .infoText("Succesfully sent to \(success.receiverPubkey)'s relay: \(success.relay)")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                        
+                        ForEach(self.balloonErrors.filter { $0.messageId == message.id }) { error in
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(Color.red)
+                                .infoText("\(error.relay): \(error.errorText)")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            
+        }
     }
 }
 
