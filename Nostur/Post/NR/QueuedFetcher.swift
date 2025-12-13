@@ -14,10 +14,12 @@ class QueuedFetcher {
     
     private var pQueue = Set<String>()
     private var idQueue = Set<String>()
+    private var aTagQueue = Set<String>()
     
     // TODO: finish recent cache - add recently tried queue, to not retry the same over and over..
     private var recentPs = OrderedSet<String>()
     private var recentIds = OrderedSet<String>()
+    private var recentATags = OrderedSet<String>()
     static let RECENT_LIMIT: Int = 300
     
     private var fetchSubscription: AnyCancellable?
@@ -44,6 +46,14 @@ class QueuedFetcher {
         recentIds.append(id)
         if recentIds.count > Self.RECENT_LIMIT {
             recentIds.removeFirst(100)
+        }
+    }    
+    // call from bg context!
+    public func addRecentATag(aTag: String) {
+        guard !recentATags.contains(aTag) else { return }
+        recentATags.append(aTag)
+        if recentATags.count > Self.RECENT_LIMIT {
+            recentATags.removeFirst(100)
         }
     }
     
@@ -109,6 +119,14 @@ class QueuedFetcher {
         }
     }
     
+    public func enqueue(aTag: String) {
+        guard !recentATags.contains(aTag) else { return }
+        ctx.perform { [weak self] in
+            self?.aTagQueue.insert(aTag)
+            self?.fetchSubject.send()
+        }
+    }
+    
     public func enqueue(ids: [String]) {
         guard !ids.isEmpty else { return }
         let newIds = Set(ids).subtracting(recentIds)
@@ -145,6 +163,7 @@ class QueuedFetcher {
         fetchSubscription = fetchSubject
             .debounce(for: .seconds(0.05), scheduler: RunLoop.main)
             .sink { [weak self] _ in
+                // id or p tags
                 self?.ctx.perform { [weak self] in
                     guard let self else { return }
                     guard !self.pQueue.isEmpty || !self.idQueue.isEmpty else { return }
@@ -176,6 +195,17 @@ class QueuedFetcher {
                         self.pQueue.removeAll()
                         self.idQueue.removeAll()
                     }
+                }
+                
+                // aTag
+                self?.ctx.perform { [weak self] in
+                    guard let self else { return }
+                    guard !self.aTagQueue.isEmpty else { return }
+                    for aTagString in self.aTagQueue {
+                        guard let aTag = try? ATag(aTagString) else { continue }
+                        req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition, subscriptionId: "AT-\(UUID().uuidString)"))
+                    }
+                    self.aTagQueue.removeAll()
                 }
             }
     }

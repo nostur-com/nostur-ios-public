@@ -916,7 +916,7 @@ public class ConnectionPool: ObservableObject {
     }
 }
 
-@MainActor func fetchEventFromRelayHint(_ eventId:String, fastTags: [FastTag]) {
+@MainActor func fetchEventFromRelayHint(_ eventId: String, fastTags: [FastTag]) {
     // EventRelationsQueue.shared.addAwaitingEvent(event) <-- not needed, should already be awaiting
     //    [
     //      "e",
@@ -926,10 +926,18 @@ public class ConnectionPool: ObservableObject {
     //    ],
     if let relay = fastTags.filter({ $0.0 == "e" && $0.1 == eventId }).first?.2 {
         if relay.prefix(6) == "wss://" || relay.prefix(5) == "ws://" {
-            ConnectionPool.shared.sendEphemeralMessage(
-                RM.getEvent(id: eventId),
-                relay: relay
-            )
+            if eventId.count > 64, eventId.contains(":"), let aTag = try? ATag(eventId) {
+                ConnectionPool.shared.sendEphemeralMessage(
+                    RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition),
+                    relay: relay
+                )
+            }
+            else {
+                ConnectionPool.shared.sendEphemeralMessage(
+                    RM.getEvent(id: eventId),
+                    relay: relay
+                )
+            }
         }
     }
 }

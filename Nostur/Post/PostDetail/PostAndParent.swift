@@ -67,7 +67,13 @@ struct PostAndParent: View {
                         bg().perform {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
                         }
-                        QueuedFetcher.shared.enqueue(id: replyToId)
+                        
+                        if replyToId.count > 64, replyToId.contains(":") {
+                            QueuedFetcher.shared.enqueue(aTag: replyToId)
+                        }
+                        else {
+                            QueuedFetcher.shared.enqueue(id: replyToId)
+                        }
                         
                         timerTask = Task {
                             do {
@@ -75,7 +81,12 @@ struct PostAndParent: View {
                                 nrPost.loadReplyTo()
                                 if nrPost.replyTo == nil {
                                     // try search relays
-                                    req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+                                    if replyToId.count > 64, replyToId.contains(":"), let aTag = try? ATag(replyToId) {
+                                        req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition))
+                                    }
+                                    else {
+                                        req(RM.getEvent(id: replyToId), relayType: .SEARCH)
+                                    }
                                     
                                     // try relay hint
                                     guard vpnGuardOK() else { return }

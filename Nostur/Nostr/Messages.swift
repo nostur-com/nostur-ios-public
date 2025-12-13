@@ -162,6 +162,18 @@ public struct RequestMessage {
 """
     }
     
+    static func getAddressableEvent(aTag: String, limit:Int = 5000, subscriptionId:String? = nil, kinds:[Int]? = nil, since:NTimestamp? = nil) -> String {
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [1,6,7,9735])
+        if let since {
+            return """
+    ["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": ["\(aTag)"], "kinds":\(kindsJsonArr), "limit": \(limit), "since": \(since.timestamp)}]
+    """
+        }
+        return """
+["REQ", "\(subscriptionId ?? ("REF-A-"+UUID().uuidString))", {"#a": ["\(aTag)"], "kinds":\(kindsJsonArr), "limit": \(limit)}]
+"""
+    }
+    
     
     // Fetch anything in the tags (only e -> "ids" and p -> "authors" kind=0  (for now))
     // For when you have 1 event, and want to fetch, reply to, mentions, contacts
