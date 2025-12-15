@@ -2142,7 +2142,10 @@ class NXColumnViewModel: ObservableObject {
             debounceTime: 1.0, // getting all missing replyTo's in 1 req, so can debounce a bit longer
             timeout: 6.0,
             reqCommand: { (taskId) in
-                let danglerIds = danglers.compactMap { $0.replyToId }
+                let danglerIds = danglers
+                    // less than 2 days ago
+                    .filter { $0.createdAt.timeIntervalSince1970 > (Date.now.timeIntervalSince1970 - 172_800) }
+                    .compactMap { $0.replyToId }
                     .filter { postId in
                         Importer.shared.existingIds[postId] == nil && postId.range(of: ":") == nil // @TODO: <-- Workaround for aTag instead of e here, need to handle some other way
                     }
@@ -2182,7 +2185,10 @@ class NXColumnViewModel: ObservableObject {
             },
             timeoutCommand: { (taskId) in
                 bg().perform { [weak self]  in
-                    let danglingEvents: [Event] = danglers.compactMap { $0.event }
+                    let danglingEvents: [Event] = danglers
+                    // less than 2 days ago
+                        .filter { $0.createdAt.timeIntervalSince1970 > (Date.now.timeIntervalSince1970 - 172_800) }
+                        .compactMap { $0.event }
 #if DEBUG
                     L.og.debug("☘️☘️ \(config.name) fetchParents.timeoutCommand")
 #endif
