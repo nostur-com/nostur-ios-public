@@ -70,12 +70,12 @@ struct Kind10002ConfigurationWizard: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") {
+                        Button("Cancel", systemImage: "xmark") {
                             dismiss()
                         }
                     }
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Next") {
+                        Button("Next", systemImage: "chevron.right") {
                             isBack = false
                             withAnimation {
                                 step = .selectWrite
@@ -104,7 +104,7 @@ struct Kind10002ConfigurationWizard: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Back") {
+                        Button("Back", systemImage: "chevron.left") {
                             isBack = true
                             withAnimation {
                                 step = .intro
@@ -112,7 +112,7 @@ struct Kind10002ConfigurationWizard: View {
                         }
                     }
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Next") {
+                        Button("Next", systemImage: "chevron.right") {
                             isBack = false
                             withAnimation {
                                 step = .selectRead
@@ -140,7 +140,7 @@ struct Kind10002ConfigurationWizard: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Back") {
+                        Button("Back", systemImage: "chevron.left") {
                             isBack = true
                             withAnimation {
                                 step = .selectWrite
@@ -148,7 +148,7 @@ struct Kind10002ConfigurationWizard: View {
                         }
                     }
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Next") {
+                        Button("Next", systemImage: "chevron.right") {
                             isBack = false
                             withAnimation {
                                 step = .selectDM
@@ -176,7 +176,7 @@ struct Kind10002ConfigurationWizard: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Back") {
+                        Button("Back", systemImage: "chevron.left") {
                             isBack = true
                             withAnimation {
                                 step = .selectRead
@@ -184,7 +184,7 @@ struct Kind10002ConfigurationWizard: View {
                         }
                     }
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Next") {
+                        Button("Next", systemImage: "chevron.right") {
                             isBack = false
                             withAnimation {
                                 step = .confirm
@@ -218,7 +218,7 @@ struct Kind10002ConfigurationWizard: View {
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
-                        Button("Back") {
+                        Button("Back", systemImage: "chevron.left") {
                             isBack = true
                             withAnimation {
                                 step = .selectDM
@@ -228,7 +228,7 @@ struct Kind10002ConfigurationWizard: View {
                         .opacity(publishing ? 0.5 : 1.0)
                     }
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Publish") {
+                        Button("Publish", systemImage: "checkmark") {
                             publish()
                         }
                         .disabled(publishing)
@@ -295,8 +295,8 @@ struct Kind10002ConfigurationWizard: View {
                 let savedEvent10050 = Event.saveEvent(event: kind10050, flags: "nsecbunker_unsigned", context: bgContext)
                 DataProvider.shared().saveToDiskNow(.bgContext)
                 onDismiss()
-                dismiss()
                 DispatchQueue.main.async {
+                    dismiss()
                     NSecBunkerManager.shared.requestSignature(forEvent: kind10002, usingAccount: account, whenSigned: { signedEvent10002 in
                         bgContext.perform {
                             savedEvent10002.sig = signedEvent10002.signature
@@ -325,8 +325,8 @@ struct Kind10002ConfigurationWizard: View {
                     _ = Event.saveEvent(event: signedEvent10002, context: bgContext)
                     DataProvider.shared().saveToDiskNow(.bgContext)
                     onDismiss()
-                    dismiss()
                     DispatchQueue.main.async {
+                        dismiss()
                         Unpublisher.shared.publishNow(signedEvent10002)
                     }
                 }
@@ -338,8 +338,8 @@ struct Kind10002ConfigurationWizard: View {
                     _ = Event.saveEvent(event: signedEvent10050, context: bgContext)
                     DataProvider.shared().saveToDiskNow(.bgContext)
                     onDismiss()
-                    dismiss()
                     DispatchQueue.main.async {
+                        dismiss()
                         Unpublisher.shared.publishNow(signedEvent10050)
                     }
                 }
@@ -397,6 +397,40 @@ struct RelaySelector: View {
     }
 }
 
+struct RelayDataSelector: View {
+    @Environment(\.theme) private var theme
+    public var availableRelays: [RelayData]
+    @Binding public var selectedRelays: Set<RelayData>
+    
+    var body: some View {
+        ForEach(availableRelays) { relay in
+            Button {
+                if selectedRelays.contains(relay) {
+                    selectedRelays.remove(relay)
+                }
+                else {
+                    selectedRelays.insert(relay)
+                }
+            } label: {
+                HStack(alignment: .top) {
+                    if selectedRelays.contains(relay) {
+                        Image(systemName:  "checkmark.circle.fill")
+                    }
+                    else {
+                        Image(systemName:  "circle")
+                            .foregroundColor(Color.secondary)
+                    }
+                    Text(relay.url)
+//                                .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundColor(selectedRelays.count >= 3 && !selectedRelays.contains(relay) ? .secondary : .primary)
+                }
+                .contentShape(Rectangle())
+            }
+            .disabled(selectedRelays.count >= 3 && !selectedRelays.contains(relay))
+        }
+    }
+}
+
 struct PublishedRelaySet: View {
     public var allSelectedRelays: [CloudRelay]
     public var readRelays: Set<CloudRelay>
@@ -413,6 +447,228 @@ struct PublishedRelaySet: View {
                        dmRelays.contains(selectedRelay) ? "dm" : nil].compactMap { $0 }
                           .joined(separator: " + "))
                     .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+
+
+
+struct UpgradeDMsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.theme) private var theme
+    public var accountPubkey: String
+    @State public var account: CloudAccount?
+    public var onDismiss: () -> Void
+    
+    @State private var step: Step = .intro
+    @State private var isBack = false
+    @State private var publishing = false
+    
+    @State private var relayOptions: [RelayData] = []
+    @State private var selectedRelays: Set<RelayData> = []
+    
+    enum Step {
+        case intro
+        case selectDM
+    }
+    
+    @Namespace private var intro
+    @Namespace private var selectDM
+    
+    
+    var body: some View {
+        ZStack {
+            theme.listBackground
+            
+            if let account {
+                switch step {
+                case .intro:
+                    NXForm {
+                        Text("Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis allows you to use a more private format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04).")
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel", systemImage: "xmark") {
+                                dismiss()
+                            }
+                        }
+                        ToolbarItem(placement: .primaryAction) {
+                            Button("Next", systemImage: "chevron.right") {
+                                isBack = false
+                                withAnimation {
+                                    step = .selectDM
+                                }
+                            }
+                        }
+                    }
+                    .id(intro)
+                    .transition(AnyTransition.asymmetric(
+                                    insertion:.move(edge: isBack ? .leading : .trailing),
+                                    removal: .move(edge: isBack ? .trailing : .leading))
+                                )
+                case .selectDM:
+                    NXForm {
+                        Section("Choose relays for private messages") {
+                            Text("Which relays should others use to send private messages to \(account.anyName)? (choose 3 max)")
+    //                            .font(.caption)
+    //                            .foregroundColor(.secondary)
+                            RelayDataSelector(availableRelays: relayOptions, selectedRelays: $selectedRelays)
+                            
+                            NavigationLink {
+                                EnterRelayAddressSheet(onAdd: { relayUrlString in
+                                    self.addRelay(relayUrlString)
+                                })
+                            } label: {
+                                HStack {
+                                    Image(systemName: "plus.circle")
+                                    Text("Enter new relay address...")
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .foregroundColor(theme.accent)
+                            }
+                        }
+                        
+                        Section("Tips") {
+                            Text("- Choose a relay that requires authentication to receive private messages.\n- You can choose public relays, messages will be scrambled and anonymized.")
+                        }
+                    }
+                    .id(selectDM)
+                    .transition(AnyTransition.asymmetric(
+                                    insertion:.move(edge: isBack ? .leading : .trailing),
+                                    removal: .move(edge: isBack ? .trailing : .leading))
+                                )
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel", systemImage: "chevron.left") {
+                                isBack = true
+                                withAnimation {
+                                    step = .intro
+                                }
+                            }
+                            .disabled(publishing)
+                            .opacity(publishing ? 0.5 : 1.0)
+                        }
+                        ToolbarItem(placement: .primaryAction) {
+                            Button("Publish", systemImage: "checkmark") {
+                                publish()
+                            }
+                            .disabled(publishing)
+                            .opacity(publishing ? 0.5 : 1.0)
+                        }
+                    }
+                }
+            }
+            else {
+                CenteredProgressView()
+            }
+        }
+        .onAppear {
+            guard !didLoad else { return } // or NavigateLink and back will reload
+            relayOptions = CloudRelay.fetchAll()
+                .filter { $0.read }
+                .map { $0.toStruct() }
+                .uniqued(on: \.url)
+            account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey })
+            didLoad = true
+        }
+    }
+    
+    @State private var didLoad = false
+    
+    private func publish() {
+        guard let account else { return }
+        account.accountRelays = Set(account.accountRelays
+            .map { r in
+                AccountRelayData(
+                    url: r.url, read: r.read, write: r.write,
+                    dm: selectedRelays.contains(where: { selected in
+                        r.url == selected.url
+                    })
+                )
+            }
+        )
+        
+        for selectedRelay in selectedRelays {
+            if !account.accountRelays.contains(where: { $0.url == selectedRelay.url }) {
+                account.accountRelays.insert(
+                    AccountRelayData(url: selectedRelay.url, read: true, write: false, dm: true)
+                )
+            }
+        }
+        
+        var kind10050 = NEvent(content: "")
+        kind10050.kind = .dmRelayList
+        
+        kind10050.tags = account.accountRelays
+            .compactMap { relay in
+                if relay.dm {
+                    return NostrTag(["relay", relay.url])
+                }
+                return nil
+            }
+        
+        if account.isNC {
+            kind10050.publicKey = account.publicKey
+            kind10050 = kind10050.withId()
+            
+            // Save unsigned event:
+            let bgContext = bg()
+            bgContext.perform {
+                let savedEvent10050 = Event.saveEvent(event: kind10050, flags: "nsecbunker_unsigned", context: bgContext)
+                DataProvider.shared().saveToDiskNow(.bgContext)
+                onDismiss()
+                DispatchQueue.main.async {
+                    dismiss()
+                    NSecBunkerManager.shared.requestSignature(forEvent: kind10050, usingAccount: account, whenSigned: { signedEvent10050 in
+                        bgContext.perform {
+                            savedEvent10050.sig = signedEvent10050.signature
+                            savedEvent10050.flags = ""
+                            DispatchQueue.main.async {
+                                Unpublisher.shared.publishNow(signedEvent10050)
+                            }
+                        }
+                    })
+                }
+            }
+        }
+        else {
+            if let signedEvent10050 = try? account.signEvent(kind10050) {
+                let bgContext = bg()
+                bgContext.perform {
+                    _ = Event.saveEvent(event: signedEvent10050, context: bgContext)
+                    DataProvider.shared().saveToDiskNow(.bgContext)
+                    onDismiss()
+                    DispatchQueue.main.async {
+                        dismiss()
+                        Unpublisher.shared.publishNow(signedEvent10050)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func addRelay(_ relayUrlString: String) {
+        let relayData = RelayData.new(url: relayUrlString, read: true, write: false, search: false, auth: true, excludedPubkeys: [])
+        
+        var updatedRelays = self.relayOptions
+        updatedRelays.append(relayData)
+        
+        withAnimation {
+            self.relayOptions = updatedRelays
+            self.selectedRelays.insert(relayData)
+        }
+    }
+}
+
+#Preview("UpgradeDMsSheet") {
+    PreviewContainer({ pe in
+        pe.loadRelays()
+    }) {
+        if let account = PreviewFetcher.fetchAccount() {
+            NBNavigationStack {
+                UpgradeDMsSheet(accountPubkey: account.publicKey, onDismiss: { })
             }
         }
     }

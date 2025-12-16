@@ -120,6 +120,9 @@
         }
       }
     },
+    "- Choose a relay that requires authentication to receive private messages.\n- You can choose public relays, messages will be scrambled and anonymized." : {
+
+    },
     "!" : {
       "shouldTranslate" : false
     },
@@ -2451,6 +2454,9 @@
         }
       }
     },
+    "Change account" : {
+
+    },
     "Checked" : {
       "shouldTranslate" : false
     },
@@ -2575,6 +2581,9 @@
           }
         }
       }
+    },
+    "Choose relays for private messages" : {
+
     },
     "Choose to tag:" : {
       "localizations" : {
@@ -3112,6 +3121,9 @@
     "Conversation" : {
       "comment" : "Feed title"
     },
+    "Conversation details" : {
+
+    },
     "Conversation for %@ - ourAccountPubkey: %@ here" : {
       "localizations" : {
         "en" : {
@@ -3153,7 +3165,7 @@
       }
     },
     "Copy npub" : {
-      "comment" : "Menu action\nMenu action to copy a contacts public key in npub format to clipboard",
+      "comment" : "Menu action",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3210,6 +3222,7 @@
     },
     "Copy public key hex" : {
       "comment" : "Menu action to copy to a contacts public key in hex format to clipboard",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3717,7 +3730,11 @@
         }
       }
     },
+    "Direct Message Settings" : {
+
+    },
     "Direct Messages using a nsecBunker login are not available yet" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3726,6 +3743,9 @@
           }
         }
       }
+    },
+    "Direct Messages using a remote signer are not available yet" : {
+
     },
     "Disable to improve scrolling performance" : {
       "comment" : "Setting on settings screen",
@@ -3838,6 +3858,7 @@
     },
     "DM" : {
       "comment" : "Navigation title for a DM conversation screen (Direct Message)",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4247,6 +4268,7 @@
     },
     "Error: could not find contact pubkey" : {
       "comment" : "Error shown on DM conversation screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -4723,7 +4745,7 @@
       }
     },
     "Follows you" : {
-      "comment" : "Label shown when someone follows you\nLabel that shows if someone is following you",
+      "comment" : "Label shown when someone follows you",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -5994,7 +6016,7 @@
       }
     },
     "Messages" : {
-      "comment" : "Feed title\nNavigation title for DMs (Direct Messages)\nSide bar navigation button",
+      "comment" : "Feed title\nSide bar navigation button",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6721,6 +6743,7 @@
     },
     "Note: The contents of DMs is encrypted but the metadata is not. Who you send a message to and when is public." : {
       "comment" : "Informational message on the DM screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9334,6 +9357,7 @@
       }
     },
     "Settings..." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -10678,6 +10702,9 @@
         }
       }
     },
+    "Tips" : {
+
+    },
     "Title" : {
       "comment" : "Header for entering title of a feed\nPlaceholder for input field to enter title of a shared list",
       "localizations" : {
@@ -11013,6 +11040,7 @@
       }
     },
     "Unpin" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -11074,6 +11102,12 @@
           }
         }
       }
+    },
+    "Upgrade your DMs" : {
+
+    },
+    "Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis allows you to use a more private format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04)." : {
+
     },
     "Upload method" : {
       "comment" : "Setting on settings screen",
@@ -11154,6 +11188,9 @@
           }
         }
       }
+    },
+    "Using NIP-04" : {
+
     },
     "Verify again" : {
       "localizations" : {
