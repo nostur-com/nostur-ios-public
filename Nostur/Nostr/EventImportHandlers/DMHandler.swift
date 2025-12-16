@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import NostrEssentials
 
 // Kind 4 handling, for now we can reuse for kind 14
 func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext) {
@@ -20,7 +21,8 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     
     savedEvent.otherPubkey = receiverPubkey // TODO: Check do we still need this here?
     
-    savedEvent.groupId = dmConversationId(nEvent: nEvent)
+    let groupId = dmConversationId(nEvent: nEvent)
+    savedEvent.groupId = groupId
     
     let existingDMStates = CloudDMState.fetchByParticipants(participants: participants, context: context)
     
@@ -33,13 +35,15 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
             let savedEventDate = savedEvent.date
             let dmState = CloudDMState(context: context)
             dmState.accountPubkey_ = sender
+            dmState.contactPubkey_ = receiverPubkey // for non-updated clients
             dmState.participantPubkeys = participants
             dmState.accepted = true
             dmState.markedReadAt_ = savedEventDate
+            dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+            updateBlurb(dmState, event: savedEvent, context: context)
             DataProvider.shared().saveToDiskNow {
-                DirectMessageViewModel.default.newMessage()
+                Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
             }
-            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
             didAddAsSender = true
         }
         
@@ -51,10 +55,11 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
                 dmState.contactPubkey_ = receiverPubkey // for non-updated clients
                 dmState.participantPubkeys = participants
                 dmState.accepted = false
+                dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+                updateBlurb(dmState, event: savedEvent, context: context)
                 DataProvider.shared().saveToDiskNow {
-                    DirectMessageViewModel.default.newMessage()
+                    Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
                 }
-                DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
                 addedAsReceiverPubkeys.insert(participant)
             }
         }
@@ -69,9 +74,8 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
             dmState.accepted = true
             dmState.markedReadAt_ = savedEventDate
             DataProvider.shared().saveToDiskNow {
-                DirectMessageViewModel.default.newMessage()
+                Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
             }
-            DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
         }
         
         // if we are one of the receivers with read only account
@@ -84,9 +88,8 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
                 dmState.participantPubkeys = participants
                 dmState.accepted = false
                 DataProvider.shared().saveToDiskNow {
-                    DirectMessageViewModel.default.newMessage()
+                    Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
                 }
-                DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
             }
         }
         return
@@ -110,9 +113,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
         if nEvent.createdAt.timestamp > Int(dmState.lastMessageTimestamp_?.timeIntervalSince1970 ?? 0) {
             dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
         }
-        // Let DirectMessageViewModel handle view updates
-        DirectMessageViewModel.default.newMessage()
-        DirectMessageViewModel.default.checkNeedsNotification(savedEvent)
+        Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: false))
     }
 }
 

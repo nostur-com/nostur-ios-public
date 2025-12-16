@@ -676,14 +676,14 @@ public class ConnectionPool: ObservableObject {
     }
     
     @MainActor
-    func sendEphemeralMessage(_ message: String, relay: String) {
+    func sendEphemeralMessage(_ message: String, relay: String, write: Bool = false) {
         guard vpnGuardOK() else {
 #if DEBUG
             L.sockets.debug("📡📡 No VPN: Connection cancelled (\(relay)")
 #endif
             return
         }
-        let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: false, search: true, auth: false, excludedPubkeys: []))
+        let connection = addEphemeralConnection(RelayData.new(url: relay, read: true, write: write, search: true, auth: false, excludedPubkeys: []))
         if !connection.isConnected {
             connection.connect()
         }

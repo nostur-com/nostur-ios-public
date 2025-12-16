@@ -35,6 +35,9 @@ class ConversionVM: ObservableObject {
         }
     }
     
+    // 0 = NIP-04, 1 = NIP-17
+    @Published var conversionVersion: Int = 0
+    
     public var account: CloudAccount? = nil
     
     private let dayIdFormatter: DateFormatter
@@ -47,6 +50,7 @@ class ConversionVM: ObservableObject {
     init(participants: Set<String>, ourAccountPubkey: String) {
         self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
+        self.conversationId = CloudDMState.getConversationId(for: participants)
         
         let dayIdFormatter = DateFormatter()
         dayIdFormatter.dateFormat = "yyyy-MM-dd"          // note: lowercase yyyy
@@ -60,6 +64,7 @@ class ConversionVM: ObservableObject {
     @MainActor
     public func load(force: Bool = false) async {
         guard force || !didLoad else { return }
+        self.subscriptions.removeAll()
         self.didLoad = true
         self.viewState = .loading
         self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
@@ -77,13 +82,15 @@ class ConversionVM: ObservableObject {
 //        let privateKey = "mock-private-key"
 //#else
         guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }), let privateKey = account.privateKey else {
-            viewState = .error("Missing private key for account: \(self.ourAccountPubkey)")
+            viewState = .error("Missing private key for account: \(nameOrPubkey(self.ourAccountPubkey))")
             return
         }
 //#endif
 
         if let cloudDMState {
             let visibleMessages = await getMessages(cloudDMState, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
+            
+            await self.resolveConversationVersion(participants, messages: visibleMessages)
             
             let calendar = Calendar.current
             
@@ -99,18 +106,76 @@ class ConversionVM: ObservableObject {
                     date: date,
                     messages: messages // .sorted(by: { $0.createdAt < $1.createdAt })
                 )
-            }.sorted(by: { $0.id < $1.id })
+            }.sorted(by: { $0.dayId < $1.dayId })
             
             viewState = .ready(days)
         }
         
         self.fetchDMrelays()
+        self.listenForNewMessages()
+    }
+    
+    private func listenForNewMessages() {
+        Importer.shared.importedDMSub
+            .filter { $0.conversationId == self.conversationId }
+            .sink { (_, event, nEvent, newDMStateCreated) in
+#if DEBUG
+                    L.og.debug("💌💌 Calling self.addToView from importedDMsub: rumor.id: \(nEvent.id)")
+#endif
+                if nEvent.kind == .directMessage { // already decrypted by unwrap, don't need keypair here
+                    self.addToView(nEvent, nil, event.createdAt)
+                } else {
+                    guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: self.ourAccountPubkey), let ourKeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { return }
+                    self.addToView(nEvent, ourKeys, event.createdAt)
+                }
+                
+                
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func resolveConversationVersion(_ participants: Set<String>, messages: [NRChatMessage]) async {
+        // More than 2 participants = NIP-17
+        if participants.count > 2 {
+            Task { @MainActor in
+                self.conversionVersion = 1 // NIP-17
+            }
+            return
+        }
+        
+        // Last received message is kind 14? = NIP17
+        if messages.filter({ $0.pubkey != ourAccountPubkey }).last?.nEvent.kind == .directMessage {
+            Task { @MainActor in
+                self.conversionVersion = 1 // NIP-17
+            }
+            return
+        }
+        
+        // no messages yet, but has DM relay? NIP-17
+        if messages.isEmpty, let receiverPubkey = participants.subtracting([ourAccountPubkey]).first {
+            let relays = await getDMrelays(for: receiverPubkey)
+            if !relays.isEmpty {
+                Task { @MainActor in
+                    self.conversionVersion = 1 // NIP-17
+                }
+                return
+            }
+        }
+        
+        
+        // No indication of NIP-17 support so fall back to NIP-04
+        Task { @MainActor in
+            self.conversionVersion = 0 // NIP-04
+        }
+        return
     }
     
     @MainActor
     public func reload(participants: Set<String>, ourAccountPubkey: String) async {
         self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
+        self.conversationId = CloudDMState.getConversationId(for: participants)
+        
         await self.load(force: true)
     }
     
@@ -152,45 +217,59 @@ class ConversionVM: ObservableObject {
         return dmEvents
     }
     
-    
-    
-    private var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>?)] = []
+    private var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>)] = []
     @Published var balloonErrors: [BalloonError] = []
     @Published var balloonSuccesses: [BalloonSuccess] = []
+        
+    private var lastAddedIds: RecentSet<String> = .init(capacity: 10)
     
-    @MainActor
-    public func sendMessage(_ message: String) async throws {
-        guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey), let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { throw DMError.PrivateKeyMissing }
+    private func addToView(_ rumorNEvent: NEvent, _ ourkeys: Keys? = nil, _ messageDate: Date) {
+        if lastAddedIds.contains(rumorNEvent.id) {
+            // rumorId (if added from local submit, don't add again when receiving from relay)
+#if DEBUG
+            L.og.debug("💌💌 Don't add to view again rumor.id: \(rumorNEvent.id) ")
+#endif
+            return
+        }
+        lastAddedIds.insert(rumorNEvent.id)
         
+        let keyPair: (publicKey: String, privateKey: String)? = if let ourkeys {
+            (publicKey: ourkeys.publicKeyHex, privateKey: ourkeys.privateKeyHex)
+        } else {
+            nil
+        }
         
-        let recipientPubkeys = participants.subtracting([ourAccountPubkey])
-        let content = message
-        let messageDate = Date()
-        let message = NostrEssentials.Event(
-            pubkey: ourAccountPubkey,
-            content: content,
-            kind: 14,
-            created_at: Int(messageDate.timeIntervalSince1970),
-            tags: recipientPubkeys.map { Tag(["p", $0]) }
+        let newChatMessage = NRChatMessage(
+            nEvent: rumorNEvent,
+            keyPair: keyPair
         )
-        let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
         
-        // add to view
         if case .ready(let days) = self.viewState {
-            let newChatMessage = NRChatMessage(
-                nEvent: NEvent.fromNostrEssentialsEvent(rumorEvent),
-                keyPair: (publicKey: ourkeys.publicKeyHex, privateKey: ourkeys.privateKeyHex)
-            )
             if let day = days.first(where: { $0.dayId == dayIdFormatter.string(from: messageDate) }) {
-                withAnimation {
-                    day.messages.append(
-                        newChatMessage
-                    )
+                Task { @MainActor in
+                    withAnimation {
+                        day.messages.append(
+                            newChatMessage
+                        )
+                    }
                 }
             }
             else {
+                Task { @MainActor in
+                    withAnimation {
+                        self.viewState = .ready(days + [ConversationDay(
+                            dayId: dayIdFormatter.string(from: messageDate),
+                            date: messageDate,
+                            messages: [newChatMessage]
+                        )])
+                    }
+                }
+            }
+        }
+        else {
+            Task { @MainActor in
                 withAnimation {
-                    self.viewState = .ready(days + [ConversationDay(
+                    self.viewState = .ready([ConversationDay(
                         dayId: dayIdFormatter.string(from: messageDate),
                         date: messageDate,
                         messages: [newChatMessage]
@@ -198,37 +277,87 @@ class ConversionVM: ObservableObject {
                 }
             }
         }
+    }
+    
+    @MainActor public func sendMessage(_ message: String) async throws {
+        if self.conversionVersion == 1 {
+            try await self.sendMessage17(message)
+        }
+        else {
+            try await self.sendMessage04(message)
+        }
+    }
+    
+    @MainActor private func sendMessage04(_ message: String) async throws {
+        guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey) else { throw DMError.PrivateKeyMissing }
+        guard let theirPubkey = participants.subtracting([ourAccountPubkey]).first else { throw DMError.Unknown }
+        let keys = try Keys(privateKeyHex: privKey)
+        let messageDate = Date()
+        var nEvent = NEvent(content: message)
+        if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+            nEvent.content = replaceNsecWithHunter2(nEvent.content)
+        }
+        nEvent.kind = .legacyDirectMessage
+        guard let encrypted = Keys.encryptDirectMessageContent(withPrivatekey: privKey, pubkey: theirPubkey, content: nEvent.content) else {
+            L.og.error("🔴🔴 Could encrypt content")
+            throw DMError.Unknown
+        }
+        
+        nEvent.content = encrypted
+        nEvent.tags.append(NostrTag(["p", theirPubkey]))
+        
+        if let signedEvent = try? nEvent.sign(keys) {
+            Unpublisher.shared.publishNow(signedEvent)
+            addToView(signedEvent, keys, messageDate)
+            return
+        }
+        throw DMError.Unknown
+    }
+    
+    @MainActor
+    private func sendMessage17(_ message: String) async throws {
+        guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey), let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { throw DMError.PrivateKeyMissing }
+        
+        
+        let recipientPubkeys = participants.subtracting([ourAccountPubkey])
+        let content = if (SettingsStore.shared.replaceNsecWithHunter2Enabled) {
+            replaceNsecWithHunter2(message)
+        }
+        else { message }
+        
+        let messageDate = Date()
+        let message = NostrEssentials.Event(
+            pubkey: ourAccountPubkey,
+            content: content,
+            kind: 14,
+            created_at: Int(messageDate.timeIntervalSince1970),
+            tags: recipientPubkeys.map { Tag(["p", $0]) } // not ourselves
+        )
+        let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
+        
+        let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
+        addToView(rumorNEvent, ourkeys, messageDate)
         
         // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
         let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourAccountPubkey, keys: ourkeys)
         await bg().perform {
-            Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
+            _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
             MessageParser.shared.pendingOkWrapIds.insert(giftWrap.id) // When "OK" comes back, "relays" on rumor need to be updated, not on wrap.
         }
-        let relays = await getDMrelays(for: ourAccountPubkey)
-        
-        // send to to relays..
-#if DEBUG
-        L.og.debug("💌💌 1. Sending to own relays: \(relays)")
-#endif
-        
-        
-        
-        // send to other participants
-        
-        // Wrap and send to receiver DM relays
-        for (n, receiverPubkey) in recipientPubkeys.enumerated() {
+
+        // Wrap and send to all (including self)
+        for (n, receiverPubkey) in participants.enumerated() {
             // wrap message
             do {
                 let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
                 let relays = await getDMrelays(for: receiverPubkey)
                 // send to to relays..
 #if DEBUG
-                L.og.debug("💌💌 2. (\(n+1)/\(recipientPubkeys.count)) Sending to \(receiverPubkey) relays: \(relays)")
+                L.og.debug("💌💌 1. (\(n+1)/\(recipientPubkeys.count)) Preparing sendJobs. To: \(nameOrPubkey(receiverPubkey)) relays: \(relays)")
 #endif
                 
                 if relays.isEmpty {
-                    balloonErrors.append(BalloonError(messageId: rumorEvent.id, receiverPubkey: receiverPubkey, relay: "Missing: ", errorText: "relays for \(receiverPubkey)"))
+                    balloonErrors.append(BalloonError(messageId: rumorEvent.id, receiverPubkey: receiverPubkey, relay: "Missing", errorText: "relays for \(nameOrPubkey(receiverPubkey))"))
                 }
                 
                 sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
@@ -240,68 +369,72 @@ class ConversionVM: ObservableObject {
             }
         }
         
-//        var results = []
         for job in sendJobs {
-            try await sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: relays, rumorId: rumorEvent.id)
+            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEvent.id)
         }
-
     }
     
     @Published var relayLogs: String = ""
+    private var nxJobs: [NXJob] = []
     
-    private func sendToDMRelays(receiverPubkey: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, rumorId: String) async throws {
-//        if ConnectionPool.shared.connections
-//        ConnectionPool.shared.sendEphemeralMessage(
-//            RM.getEvent(id: eventId, subscriptionId: taskId),
-//            relay: relay
-//        )
-        
-        // Publish to all relays simultaneously
-        await withTaskGroup(of: (String, RelayState).self) { group in
-            for relay in relays {
-                group.addTask {
-                    do {
-                        // TODO: don't need OneOffEventPublisher for already connected write relays
-                        
-                        let connection = OneOffEventPublisher(relay, allowAuth: false, signNEventHandler: { ignore in
-                            return ignore
-                        })
-                        
-                        try await connection.connect(timeout: 6)
-                        try await connection.publish(NEvent.fromNostrEssentialsEvent(wrappedEvent), timeout: 6)
-                        
-                        return (relay, RelayState.published)
-                    } catch let myError as SendMessageError {
-                        if case .sendFailed(let reason) = myError {
-                            if let reason {
-                                self.relayLogs = self.relayLogs + "\(reason)\n"
-                            }
-                            return (relay, RelayState.error)
+    private func sendToDMRelays(receiverPubkey: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, rumorId: String) {
+        let nxJob = NXJob(
+            timeout: 4.0,
+            setup: { [weak self] job in
+                MessageParser.shared.okSub
+                    .filter { !job.didSucceed && $0.id == wrappedEvent.id }
+                    .sink { [weak self] message in
+#if DEBUG
+                        L.og.debug("✅✅ 💌💌 3.A message.id: \(message.id) message.relayId: \(message.relay) - receiverPubkey: \(nameOrPubkey(receiverPubkey))")
+#endif
+                        job.onDidSucceed()
+                        Task { @MainActor in
+                            self?.balloonSuccesses.append(BalloonSuccess(messageId: rumorId, receiverPubkey: receiverPubkey, relay: message.relay))
                         }
-                        else if case .authRequired = myError {
-                            return (relay, RelayState.authRequired)
-                        }
-                        return (relay, RelayState.error)
                     }
-                    catch {
-                        return (relay, RelayState.error)
-                    }
-                }
-            }
-            
-            
-            // Update relay states as tasks complete
-            for await (relay, state) in group {
+                    .store(in: &job.subscriptions)
+            },
+            onTimeout: { [weak self] job in
+#if DEBUG
+                L.og.debug("🔴🔴 💌💌 3.B TIMEOUT wrapped.id: \(wrappedEvent.id) receiverPubkey: \(nameOrPubkey(receiverPubkey))")
+#endif
                 Task { @MainActor in
-                    switch state {
-                        case .published:
-                            balloonSuccesses.append(BalloonSuccess(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay))
-                        case .error:
-                            balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay, errorText: "failed (1)"))
-                        case .authRequired:
-                            balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay, errorText: "needs auth"))
-                        default:
-                            balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: relay, errorText: "failed (2)"))
+                    self?.balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: "\(relays.description)", errorText: "timeout"))
+                }
+            },
+            onFinally: { job in
+                Task {
+                    self.nxJobs.removeAll(where: { $0 == job })
+                }
+            })
+        
+        self.nxJobs.append(nxJob)
+        
+        for relay in relays {
+            if ConnectionPool.shared.connections[relay] != nil {
+#if DEBUG
+                L.og.debug("💌💌 2.A Sending to \(relay) for pubkey: \(nameOrPubkey(receiverPubkey)) - wrapped.id: \(wrappedEvent.id)")
+#endif
+                ConnectionPool.shared.sendMessage(
+                    NosturClientMessage(
+                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent),
+                        relayType: .WRITE,
+                        nEvent: NEvent.fromNostrEssentialsEvent(wrappedEvent)
+                    ),
+                    relays: [RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: [])]
+                )
+            }
+            else {
+                if let msg = NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent).json() {
+#if DEBUG
+                L.og.debug("💌💌 2.B Sending to ephemeral \(relay) for pubkey: \(nameOrPubkey(receiverPubkey)) - wrapped.id: \(wrappedEvent.id)")
+#endif
+                    Task { @MainActor in
+                        ConnectionPool.shared.sendEphemeralMessage(
+                            msg,
+                            relay: relay,
+                            write: true
+                        )
                     }
                 }
             }
@@ -309,13 +442,13 @@ class ConversionVM: ObservableObject {
     }
     
     private func fetchDMs() {
-        if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first {
+        if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
             nxReq(
                 Filters(
                     authors: [ourAccountPubkey],
                     kinds: [4],
                     tagFilter: TagFilter(tag: "p", values: [receiver]),
-                    limit: 1000
+                    limit: 999
                 ),
                 subscriptionId: "DM-S"
             )
@@ -325,7 +458,7 @@ class ConversionVM: ObservableObject {
                     authors: [receiver],
                     kinds: [4],
                     tagFilter: TagFilter(tag: "p", values: [ourAccountPubkey]),
-                    limit: 1000
+                    limit: 999
                 ),
                 subscriptionId: "DM-R"
             )
@@ -338,7 +471,7 @@ class ConversionVM: ObservableObject {
         let reqFilters = Filters(
             authors: receivers,
             kinds: [10050],
-            limit: 200
+            limit: 199
         )
         nxReq(
             reqFilters,
@@ -367,31 +500,6 @@ class ConversionVM: ObservableObject {
     }
 }
 
-struct BalloonError: Identifiable {
-    var id: String { messageId }
-    let messageId: String
-    let receiverPubkey: String
-    let relay: String
-    let errorText: String
-}
-
-struct BalloonSuccess: Identifiable {
-    var id: String { messageId }
-    let messageId: String
-    let receiverPubkey: String
-    let relay: String
-}
-
-public enum DMError: Error {
-
-    case PrivateKeyMissing
-}
-
-enum DMSendResult {
-    case success
-    case error
-}
-
 enum ConversionVMViewState {
     case initializing
     case loading
@@ -403,48 +511,38 @@ enum ConversionVMViewState {
 class ConversationDay: Identifiable, Equatable, ObservableObject {
     
     static func == (lhs: ConversationDay, rhs: ConversationDay) -> Bool {
-        lhs.dayId == rhs.dayId && lhs.messages.count == rhs.messages.count
+        lhs.id == rhs.id && lhs.messages.count == rhs.messages.count
     }
     
-    var id: String { dayId }
+    var id: UUID
     let dayId: String // 2025-12-10
     let date: Date
     @Published var messages: [NRChatMessage]
     
     init(dayId: String, date: Date, messages: [NRChatMessage]) {
+        self.id = UUID()
         self.dayId = dayId
         self.date = date
         self.messages = messages
     }
-    
-    
 }
 
-func fetchDMrelays(for pubkeys: Set<String>) {
-    
+struct BalloonError: Identifiable, Equatable, Hashable {
+    var id: String { messageId + receiverPubkey + relay }
+    let messageId: String
+    let receiverPubkey: String
+    let relay: String
+    let errorText: String
 }
 
-class OutgoingDM: ObservableObject {
-    let nrChatMessage: NRChatMessage // rumor
-    init(nrChatMessage: NRChatMessage) {
-        self.nrChatMessage = nrChatMessage
-    }
-    
+struct BalloonSuccess: Identifiable, Equatable, Hashable {
+    var id: String { messageId + receiverPubkey + relay }
+    let messageId: String
+    let receiverPubkey: String
+    let relay: String
 }
 
-func getDMrelays(for pubkey: String) async -> Set<String> {
-    let relays: Set<String> = await withBgContext { bgContext in
-        if let dmRelaysEvent = Event.fetchEventsBy(pubkey: pubkey, andKind: 10050, context: bgContext).first {
-            let relays = dmRelaysEvent.fastTags.filter { $0.0 == "relay" }
-                .compactMap { $0.1 }
-                .map { normalizeRelayUrl($0) }
-            if !relays.isEmpty {
-                return Set(relays)
-            }
-            return []
-        }
-        return []
-    }
-    return relays
+public enum DMError: Error {
+    case Unknown
+    case PrivateKeyMissing
 }
-
