@@ -1141,32 +1141,10 @@ struct Maintenance {
                     }
                 }
                 
-                // get blurb
+                // update blurb
                 if let mostRecent = allDMs.first(where: { $0.id == timestamps.newestId }) {
-                    
-                    // decrypt if kind 4
-                    if mostRecent.kind == 4, let accountPubkey = dmState.accountPubkey_ {
-                        if let account = try? CloudAccount.fetchAccount(publicKey: accountPubkey, context: context), let privateKey = account.privateKey {
-                            let keyPair = (publicKey: account.publicKey, privateKey: privateKey)
-                            
-                            let content = if mostRecent.pubkey == keyPair.publicKey, let firstP = mostRecent.firstP() {
-                                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: firstP, content: mostRecent.content ?? "") ?? "(Encrypted content)"
-                            }
-                            else {
-                                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: mostRecent.pubkey, content: mostRecent.content ?? "") ?? "(Encrypted content)"
-                            }
-                            // prefix blurb with "You: " if we sent it
-                            let fromName = accountPubkey == mostRecent.pubkey ? "You: " : ""
-                            dmState.blurb = "\(fromName)\(content)"
-                        }
-                    }
-                    else { // kind 14 is already decrypted rumor
-                        // prefix blurb with "You: " if we sent it
-                        let fromName = dmState.accountPubkey_ == mostRecent.pubkey ? "You: " : ""
-                        dmState.blurb = "\(fromName)\(mostRecent.content ?? "")"
-                    }
+                    updateBlurb(dmState, event: mostRecent, context: context)
                 }
-                
                 
                 dmState.accepted = timestamps.didSend || dmState.accepted
                 didUpdate = true

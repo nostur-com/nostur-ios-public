@@ -112,6 +112,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
         
         if nEvent.createdAt.timestamp > Int(dmState.lastMessageTimestamp_?.timeIntervalSince1970 ?? 0) {
             dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+            updateBlurb(dmState, event: savedEvent, context: context)
         }
         Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: false))
     }
@@ -131,4 +132,28 @@ func allDMparticipants(_ event: Event) -> Set<String> {
 
 func dmConversationId(event: Event) -> String {
     return CloudDMState.getConversationId(for: allDMparticipants(event))
+}
+
+func updateBlurb(_ dmState: CloudDMState, event: Event, context: NSManagedObjectContext) {
+    // decrypt if kind 4
+    if event.kind == 4, let accountPubkey = dmState.accountPubkey_ {
+        if let account = try? CloudAccount.fetchAccount(publicKey: accountPubkey, context: context), let privateKey = account.privateKey {
+            let keyPair = (publicKey: account.publicKey, privateKey: privateKey)
+            
+            let content = if event.pubkey == keyPair.publicKey, let firstP = event.firstP() {
+                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: firstP, content: event.content ?? "") ?? "(Encrypted content)"
+            }
+            else {
+                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: event.pubkey, content: event.content ?? "") ?? "(Encrypted content)"
+            }
+            // prefix blurb with "You: " if we sent it
+            let fromName = accountPubkey == event.pubkey ? "You: " : ""
+            dmState.blurb = "\(fromName)\(content)"
+        }
+    }
+    else { // kind 14 is already decrypted rumor
+        // prefix blurb with "You: " if we sent it
+        let fromName = dmState.accountPubkey_ == event.pubkey ? "You: " : ""
+        dmState.blurb = "\(fromName)\(event.content ?? "")"
+    }
 }
