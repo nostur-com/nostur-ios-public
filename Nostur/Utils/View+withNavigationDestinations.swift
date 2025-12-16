@@ -103,6 +103,7 @@ enum ViewPath: IdentifiableDestination {
 
 struct NavigationDestinationsModifier: ViewModifier {
     @Environment(\.containerID) var containerID
+    @Binding var navPath: NBNavigationPath
     
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -232,7 +233,7 @@ struct NavigationDestinationsModifier: ViewModifier {
                             .tabBarSpaceCompat()
                             .environment(\.containerID, self.containerID)
                     case .DMs:
-                        DMContainer()
+                        MainDMs(navPath: $navPath)
                             .environment(\.containerID, self.containerID)
                     case .ProfileReactionList(let pubkey):
                         ProfileReactionList(pubkey: pubkey)
@@ -246,8 +247,8 @@ struct NavigationDestinationsModifier: ViewModifier {
 }
 
 extension View {
-    func withNavigationDestinations() -> some View {
-        modifier(NavigationDestinationsModifier())
+    func withNavigationDestinations(navPath: Binding<NBNavigationPath>) -> some View {
+        modifier(NavigationDestinationsModifier(navPath: navPath))
     }
 }
 

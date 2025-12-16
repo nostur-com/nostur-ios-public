@@ -141,7 +141,7 @@ class DMsVM: ObservableObject {
             }
         }
         ready = true
-        showUpgradeNotice = await shouldShowUpgradeNotice()
+        showUpgradeNotice = await shouldShowUpgradeNotice(accountPubkey: self.accountPubkey)
         self.listenForNewMessages()
     }
     
@@ -201,14 +201,6 @@ class DMsVM: ObservableObject {
                 }
             }
             .store(in: &subscriptions)
-    }
-    
-    private func shouldShowUpgradeNotice() async -> Bool {
-        let dmRelays = await getDMrelays(for: self.accountPubkey)
-        if !dmRelays.isEmpty {
-            return false
-        }
-        return true
     }
     
     @MainActor

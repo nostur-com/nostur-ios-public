@@ -159,18 +159,3 @@ struct ContentTypesPicker: View {
         }
     }
 }
-
-@available(iOS 17.0, *)
-#Preview {
-    @Previewable @State var selectedRelays: Set<CloudRelay> = []
-    PreviewContainer({ pe in
-        pe.loadRelays()
-    }) {
-        NBNavigationStack {
-            if let feed = PreviewFetcher.fetchCloudFeed() {
-                FeedRelaysPicker(selectedRelays: $selectedRelays)
-                .withNavigationDestinations()
-            }
-        }
-    }
-}

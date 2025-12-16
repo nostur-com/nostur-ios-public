@@ -486,7 +486,7 @@ struct UpgradeDMsSheet: View {
                 switch step {
                 case .intro:
                     NXForm {
-                        Text("Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis allows you to use a more private format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04).")
+                        Text("Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04).")
                     }
                     .toolbar {
                         ToolbarItem(placement: .cancellationAction) {

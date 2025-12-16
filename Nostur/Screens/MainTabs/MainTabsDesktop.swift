@@ -60,9 +60,7 @@ struct MainTabsDesktop: View {
                     .tag("Notifications")
                     .opacity(selectedTab == "Notifications" ? 1 : 0)
 
-//                DMNavigationStack {
-                    DMContainer()
-//                }
+               MainDMsTab()
                     .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "envelope.fill")

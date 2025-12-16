@@ -138,7 +138,7 @@ struct Search: View {
             .background(theme.listBackground)
             .environmentObject(VideoPostPlaybackCoordinator())
             .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
-            .withNavigationDestinations()
+            .withNavigationDestinations(navPath: $navPath)
             .environment(\.containerID, "Search")
             .simultaneousGesture(TapGesture().onEnded({ _ in
                 AppState.shared.containerIDTapped = "Search"

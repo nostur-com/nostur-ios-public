@@ -42,33 +42,27 @@ struct MacMainWindow: View {
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Main")
-//                                .toolbar(.hidden, for: .tabBar)
                             
                             NotificationsContainer()
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Notifications")
-//                                .toolbar(.hidden, for: .tabBar)
 
                             Search()
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Search")
-//                                .toolbar(.hidden, for: .tabBar)
                             
                             BookmarksTab()
                                 .environment(\.horizontalSizeClass, .compact)
                                 .environment(\.availableWidth, columnWidth)
                                 .tag("Bookmarks")
-//                                .toolbar(.hidden, for: .tabBar)
                         
-//                            DMNavigationStack {
-                                DMContainer()
-//                            }
-                            .environment(\.horizontalSizeClass, .compact)
-                            .environment(\.availableWidth, columnWidth)
-                            .tag("Messages")
-//                            .toolbar(.hidden, for: .tabBar)
+                            MainDMsTab()
+                                .environment(\.horizontalSizeClass, .compact)
+                                .environment(\.availableWidth, columnWidth)
+                                .tag("Messages")
+
                         }
                         .frame(width: columnWidth)
                         .debugDimensions()

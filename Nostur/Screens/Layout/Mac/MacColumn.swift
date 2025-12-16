@@ -167,7 +167,7 @@ struct MacColumn: View {
             }
             
             .environmentObject(VideoPostPlaybackCoordinator())
-            .withNavigationDestinations()
+            .withNavigationDestinations(navPath: $navPath)
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination
                 guard destination.context == containerID else { return }

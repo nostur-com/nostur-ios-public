@@ -279,7 +279,7 @@ struct StreamDetail: View {
             }
             .background(.ultraThinMaterial)
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
-            .withNavigationDestinations()
+//            .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
                 if let zapCustomizerSheetInfo {
                     ZapCustomizerSheet(name: zapCustomizerSheetInfo.name, customZapId: zapCustomizerSheetInfo.customZapId, supportsZap: true)

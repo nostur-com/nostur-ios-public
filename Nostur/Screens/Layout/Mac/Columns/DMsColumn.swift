@@ -409,7 +409,6 @@ struct DMStateRow: View {
     }
 }
 
-
 struct DMSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var vm: DMsVM

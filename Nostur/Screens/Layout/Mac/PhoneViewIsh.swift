@@ -64,7 +64,7 @@ struct PhoneViewIsh: View {
             }))
             .navigationTitle("Following")
             .navigationBarTitleDisplayMode(.inline)
-            .withNavigationDestinations()
+            .withNavigationDestinations(navPath: $navPath)
             .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
                 if #available(iOS 26.0, *) {
                     LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)

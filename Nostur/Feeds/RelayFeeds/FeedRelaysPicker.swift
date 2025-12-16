@@ -45,9 +45,6 @@ struct FeedRelaysPicker: View {
                 }
             }
         }
-//        .scrollContentBackgroundCompat(.hidden)
-//        .background(theme.listBackground)
-//         .nosturNavBgCompat(theme: theme)
         .navigationTitle("Select relay(s)")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -62,7 +59,6 @@ struct FeedRelaysPicker: View {
         NBNavigationStack {
             if let feed = PreviewFetcher.fetchCloudFeed() {
                 FeedRelaysPicker(selectedRelays: $selectedRelays)
-                .withNavigationDestinations()
             }
         }
     }

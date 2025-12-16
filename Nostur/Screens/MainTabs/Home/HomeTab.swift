@@ -38,7 +38,7 @@ struct HomeTab: View {
                 .environmentObject(VideoPostPlaybackCoordinator())
                 .background(theme.listBackground)
                 .nosturNavBgCompat(theme: theme) // <-- Needs to be inside navigation stack
-                .withNavigationDestinations()
+                .withNavigationDestinations(navPath: $navPath)
                 .overlay(alignment: .bottom) {
                     VStack {
                         AnyStatus(filter: "APP_NOTICE")

@@ -140,7 +140,7 @@ struct LiveEventDetail: View {
             }
             .background(theme.listBackground)
             .preference(key: TabTitlePreferenceKey.self, value: liveEvent.title ?? "(Stream)")
-            .withNavigationDestinations()
+//            .withNavigationDestinations()
             .nbNavigationDestination(isPresented: $showZapSheet, destination: {
                 if let zapCustomizerSheetInfo {
                     AppEnvironment(la: la) {

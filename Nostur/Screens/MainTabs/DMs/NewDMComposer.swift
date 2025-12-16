@@ -18,14 +18,23 @@ struct NewDMComposer: View {
     @Binding var tab: String
     public var preloaded = false
     
+    @State var hasDMrelays: Bool = true
+    @State var weHaveDMrelays: Bool = false
+    
     var body: some View {
         VStack {
             // TO (pubkey or contact)
             if let toContact {
                 NRContactSearchResultRow(nrContact: toContact)
+                    .task {
+                        self.hasDMrelays = await Nostur.hasDMrelays(pubkey: toContact.pubkey)
+                    }
             }
             else if let toPubkey {
                 Text("Sending to: \(try! NIP19(prefix: "npub", hexString: toPubkey).displayString)")
+                    .task {
+                        self.hasDMrelays = await Nostur.hasDMrelays(pubkey: toPubkey)
+                    }
             }
             Spacer()
             // the message
@@ -52,8 +61,21 @@ struct NewDMComposer: View {
                     message = ""
                     
                     showingNewDM = false
-                    setSelectedTab("Messages")
-                    tab = "Accepted" // Set tab to accepted so we can see our just sent message
+                    
+                    // Only on iPhone/iPad 26.0, never on macOS
+                    // (macOS 26 has own custom tabbar with DM button still)
+                    // (pre-26.0 has old tabbar with DM button still)
+                    if #available(iOS 26.0, *), !IS_CATALYST {
+                        if selectedTab() != "Main" {
+                            setSelectedTab("Main")
+                        }
+                        navigateToOnMain(ViewPath.DMs)
+                    }
+                    else {
+                        setSelectedTab("Messages")
+                        tab = "Accepted" // Set tab to accepted so we can see our just sent message
+                    }
+                    
                     dismiss()
                     // spinner
                     // then go to saved event from db after 1 second

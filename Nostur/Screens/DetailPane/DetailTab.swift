@@ -23,7 +23,7 @@ struct DetailTab: View {
                         .ignoresSafeArea()
                     PostDetailView(nrPost: nrPost, navTitleHidden: true)
 //                        .debugDimensions("DetailTab.PostDetailView", alignment: .topLeading)
-                        .withNavigationDestinations()
+                        .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
             }
@@ -32,7 +32,7 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     LiveEventDetail(liveEvent: nrLiveEvent)
-                        .withNavigationDestinations()
+                        .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
             }
@@ -41,7 +41,7 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
-                        .withNavigationDestinations()
+                        .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
             }
@@ -50,7 +50,7 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     NoteById(id: notePathId, navTitleHidden: true)//.opacity(tm.selected == tab ? 1 : 0)
-                        .withNavigationDestinations()
+                        .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
                 
@@ -62,11 +62,11 @@ struct DetailTab: View {
                     switch naddr1.kind {
                     case 30311:
                         LiveEventByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
-                            .withNavigationDestinations()
+                            .withNavigationDestinations(navPath: $navPath)
                             .environment(\.containerID, containerID)
                     default:
                         ArticleByNaddr(naddr1: naddr1.naddr1, navTitleHidden: true)
-                            .withNavigationDestinations()
+                            .withNavigationDestinations(navPath: $navPath)
                             .environment(\.containerID, containerID)
                     }
                 }
@@ -77,7 +77,7 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     ArticleById(id: articleId, navTitleHidden: true)
-                        .withNavigationDestinations()
+                        .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
                 
@@ -87,7 +87,7 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     ProfileByPubkey(pubkey: contactPubkey, tab: tab.contactPath?.tab)//.opacity(tm.selected == tab ? 1 : 0)
-                        .withNavigationDestinations()
+                        .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
                 
@@ -97,7 +97,7 @@ struct DetailTab: View {
                     theme.listBackground
                         .ignoresSafeArea()
                     ProfileView(nrContact:nrContact, tab: tab.profileTab)
-                        .withNavigationDestinations()
+                        .withNavigationDestinations(navPath: $navPath)
                         .environment(\.containerID, containerID)
                 }
                 

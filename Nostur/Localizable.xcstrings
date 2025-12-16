@@ -3124,16 +3124,6 @@
     "Conversation details" : {
 
     },
-    "Conversation for %@ - ourAccountPubkey: %@ here" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Conversation for %1$@ - ourAccountPubkey: %2$@ here"
-          }
-        }
-      }
-    },
     "Conversations" : {
       "localizations" : {
         "nl" : {
@@ -11106,7 +11096,7 @@
     "Upgrade your DMs" : {
 
     },
-    "Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis allows you to use a more private format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04)." : {
+    "Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04)." : {
 
     },
     "Upload method" : {

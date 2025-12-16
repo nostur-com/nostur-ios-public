@@ -60,9 +60,7 @@ struct MainTabs15: View {
                     .badge(unread)
                     .nosturTabsCompat(theme: theme)
 
-//                DMNavigationStack {
-                    DMContainer()
-//                }
+                MainDMsTab()
                     .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "envelope.fill")
