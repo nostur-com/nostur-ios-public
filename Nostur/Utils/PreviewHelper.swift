@@ -19,7 +19,7 @@ public class PreviewEnvironment {
     let themes:Themes = .default
     let npn:NewPostNotifier = NewPostNotifier.shared
     let cp:ConnectionPool = ConnectionPool.shared
-    let dm:DirectMessageViewModel = .default
+    let dm:DMsVM = .shared
     
     static let shared = PreviewEnvironment()
         

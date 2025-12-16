@@ -7,23 +7,45 @@
 
 import SwiftUI
 import Combine
+import NostrEssentials
 
 class DMsVM: ObservableObject {
     
+    @Published var ncNotSupported = false
+    @Published var ready = false
+    
     @Published var tab = "Accepted"
+    
+    // Short uuid
+    let id: String = String(UUID().uuidString.prefix(48))
+    
+    public var isMain: Bool {
+        self.id == Self.shared.id
+    }
+    
+    // Only for main
+    private var lastDMLocalNotifcationAt: Int {
+        get { UserDefaults.standard.integer(forKey: "last_dm_local_notification_timestamp") }
+        set { UserDefaults.standard.setValue(newValue, forKey: "last_dm_local_notification_timestamp") }
+    }
+    var lastNotificationReceivedAt: Date? = nil
+    
+    // Shared is for the main / currently logged in account
+    static let shared = DMsVM()
+    
     public var dmStates: [CloudDMState] = []
-//    {
-//        didSet {
-//            allowedWoT = Set(dmStates.filter { $0.accepted }.compactMap { $0.contactPubkey_ })
-//        }
-//    }
+    {
+        didSet {
+            allowedWoT = Set(dmStates.filter { $0.accepted }.compactMap { $0.contactPubkey_ })
+        }
+    }
     
     // pubkeys we started a conv with (but maybe not in WoT), should be allowed in DM WoT
     // Add this to WoT
-//    public var allowedWoT: Set<String> = []
+    public var allowedWoT: Set<String> = []
     
-    var accountPubkey: String
-    var didLoad = false
+    public var accountPubkey: String
+
     
     @Published var conversationRows: [CloudDMState] = []
     @Published var requestRows: [CloudDMState] = []
@@ -39,6 +61,8 @@ class DMsVM: ObservableObject {
             }
         }
     }
+    
+    @Published var showUpgradeNotice = false
      
     var unread: Int {
         conversationRows.reduce(0) { $0 + $1.unread(for: self.accountPubkey) }
@@ -57,8 +81,8 @@ class DMsVM: ObservableObject {
     
     private var subscriptions = Set<AnyCancellable>()
     
-    init(accountPubkey: String) {
-        self.accountPubkey = accountPubkey
+    init(accountPubkey: String? = nil) {
+        self.accountPubkey = accountPubkey ?? AccountsState.shared.activeAccountPublicKey
         self._reloadConversations
             .debounce(for: 1.5, scheduler: RunLoop.main)
             .sink { [weak self] _ in
@@ -77,20 +101,114 @@ class DMsVM: ObservableObject {
                 }
             }
             .store(in: &self.subscriptions)
+        
+        Task { @MainActor [weak self] in
+            if IS_CATALYST {
+                self?.setupBadgeNotifications()
+            }
+        }
     }
+    
+    // For .shared/main account
     // .load is called from:
-    // NRState on startup if WoT is disabled
+    // AccountsState on startup if WoT is disabled
     // receiveNotification(.WoTReady) if WoT is enabled, after WoT has loaded
+    
+    // For per account columns: .onAppear/.task of column
     @MainActor
     public func load(force: Bool = false) async {
-        guard force || !didLoad else { return }
+        guard force || !ready else { return }
+        if let account = AccountsState.shared.accounts.first(where: { $0.publicKey == self.accountPubkey }) {
+            ncNotSupported = account.isNC
+        }
+        
+        showUpgradeNotice = false
         conversationRows = []
         requestRows = []
         requestRowsNotWoT = []
         
+        if ncNotSupported {
+            return
+        }
+        
         self.loadDMStates()
         self.loadConversations()
-        didLoad = true
+        // do 3 month scan if we have no messages (probably first time)
+        // longer 36 month scan is in settings
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            if (self.conversationRows.count == 0 && self.requestRows.count == 0) {
+                self.rescanForMissingDMs(3)
+            }
+        }
+        ready = true
+        showUpgradeNotice = await shouldShowUpgradeNotice()
+        self.listenForNewMessages()
+    }
+    
+    private var accountChangedSubscription: AnyCancellable?
+    
+    private func setupAccountChangedListener() {
+        guard isMain && accountChangedSubscription == nil else { return }
+        accountChangedSubscription = receiveNotification(.activeAccountChanged)
+            .sink { [weak self] notification in
+                Task { @MainActor in
+                    let account = notification.object as! CloudAccount
+                    await self?.reload(accountPubkey: account.publicKey)
+                }
+            }
+    }
+    
+    public func loadAfterWoT() {
+        guard isMain else { return }
+        receiveNotification(.WoTReady)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in
+                    await self.load()
+                }
+            }
+            .store(in: &self.subscriptions)
+    }
+    
+    private func listenForNewMessages() {
+        guard isMain else { return }
+        Importer.shared.importedDMSub // (conversationId: groupId, event: savedEvent, nEvent: nEvent)
+            .filter { $0.nEvent.createdAt.timestamp > self.lastDMLocalNotifcationAt && $0.nEvent.pTags().contains(self.accountPubkey) }
+            .sink { (_, event, nEvent, newDMStateCreated) in
+                
+                let followingPubkeys = AccountsState.shared.accounts.first(where: { $0.publicKey == self.accountPubkey })?.followingPubkeys ?? []
+                
+                // Only continue if either limit to follows is not enabled, or if we are following the sender
+                guard !SettingsStore.shared.receiveLocalNotificationsLimitToFollows || followingPubkeys.contains(event.pubkey) else { return }
+                
+                // Only continue if sender is in WoT, or if WoT is disabled
+                guard (!WOT_FILTER_ENABLED()) || WebOfTrust.shared.isAllowed(nEvent.publicKey) else {
+                    return
+                }
+                
+                if newDMStateCreated {
+                    Task { @MainActor in
+                        self.loadDMStates()
+                    }
+                }
+                        
+                // Show notification on Mac: ALWAYS
+                // On iOS: Only if app is in background
+                if (IS_CATALYST || AppState.shared.appIsInBackground)  {
+                    let name = contactUsername(fromPubkey: event.pubkey, event: event)
+                    scheduleDMNotification(name: name)
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    private func shouldShowUpgradeNotice() async -> Bool {
+        let dmRelays = await getDMrelays(for: self.accountPubkey)
+        if !dmRelays.isEmpty {
+            return false
+        }
+        return true
     }
     
     @MainActor
@@ -200,11 +318,72 @@ class DMsVM: ObservableObject {
                 dmState.isHidden = false
             }
         }
+        self.reloadConversations()
     }
     
-    public func newMessage() {
-        Task { @MainActor in
-            self.loadDMStates()
+    @Published var scanningMonthsAgo: Int = 0
+    
+    public func rescanForMissingDMs(_ monthsAgo: Int) {
+        guard scanningMonthsAgo == 0 else { return }
+        
+        for i in 0...monthsAgo {
+            let ago = monthsAgoRange(monthsAgo - i)
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(3 * i)) { [weak self] in
+                guard let self else { return }
+                self.scanningMonthsAgo = i+1 == (monthsAgo + 1) ? 0 : i+1
+                
+                if let message = CM(
+                    type: .REQ,
+                    filters: [
+                        // DMs sent
+                        Filters(authors: Set([accountPubkey]), kinds: [4,1059], since: ago.since, until: ago.until),
+                        // DMs received
+                        Filters(kinds: [4,1059], tagFilter: TagFilter(tag: "p", values: [accountPubkey]), since: ago.since, until: ago.until)
+                    ]
+                ).json() {
+                    req(message)
+                }
+                
+                if i+1 == monthsAgo {
+#if DEBUG
+                    L.maintenance.info("Running Manual DM fix")
+#endif
+                    Maintenance.runFixMissingDMStates(force: true, context: viewContext())
+                    Maintenance.runUpgradeDMformat(force: true, context: viewContext())
+                    try? viewContext().save()
+                    
+                    self.reloadConversations()
+                }
+            }
+        }
+    }
+    
+    private func monthsAgoRange(_ months:Int) -> (since: Int, until: Int) {
+        return (
+            since: NTimestamp(date: Date().addingTimeInterval(Double(months + 1) * -2_592_000)).timestamp,
+            until: NTimestamp(date: Date().addingTimeInterval(Double(months) * -2_592_000)).timestamp
+        )
+    }
+    
+    private func setupBadgeNotifications() { // Copy pasta from NotificationsViewModel
+        guard self.isMain else { return }
+        
+        let center = UNUserNotificationCenter.current()
+        center.requestAuthorization(options: [.badge, .provisional]) { [weak self] granted, error in
+            guard let self else { return }
+            if error == nil {
+                // Provisional authorization granted.
+                self.objectWillChange
+                    .sink { [weak self] _ in
+                        guard let self else { return }
+                        let notificationsCount = NotificationsViewModel.shared.unread
+                        setAppIconBadgeCount((self.unread + self.newRequests) + notificationsCount, center: center)
+                    }
+                    .store(in: &self.subscriptions)
+                
+                let notificationsCount = NotificationsViewModel.shared.unread
+                setAppIconBadgeCount((self.unread + self.newRequests) + notificationsCount)
+            }
         }
     }
 }

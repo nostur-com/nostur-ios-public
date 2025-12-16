@@ -62,9 +62,9 @@ struct MacMainWindow: View {
                                 .tag("Bookmarks")
 //                                .toolbar(.hidden, for: .tabBar)
                         
-                            DMNavigationStack {
+//                            DMNavigationStack {
                                 DMContainer()
-                            }
+//                            }
                             .environment(\.horizontalSizeClass, .compact)
                             .environment(\.availableWidth, columnWidth)
                             .tag("Messages")

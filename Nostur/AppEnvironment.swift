@@ -24,7 +24,7 @@ struct AppEnvironment<Content: View>: View {
             .environmentObject(AppState.shared)
             .environmentObject(AccountsState.shared)
             .environmentObject(NewPostNotifier.shared)
-            .environmentObject(DirectMessageViewModel.default)
+            .environmentObject(DMsVM.shared)
             .environmentObject(NetworkMonitor.shared)
             .environmentObject(SettingsStore.shared)
             .environmentObject(la)

@@ -273,11 +273,12 @@ extension LoggedInAccount {
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 if SettingsStore.shared.webOfTrustLevel == SettingsStore.WebOfTrustLevel.off.rawValue {
-//                    WebOfTrust.shared.loadWoT()
-                    DirectMessageViewModel.default.load()
+                    Task { @MainActor in
+                        await DMsVM.shared.reload(accountPubkey: self.pubkey)
+                    }
                 }
                 else {
-                    DirectMessageViewModel.default.loadAfterWoT()
+                    DMsVM.shared.loadAfterWoT()
                     WebOfTrust.shared.loadWoT()
                 }
                 

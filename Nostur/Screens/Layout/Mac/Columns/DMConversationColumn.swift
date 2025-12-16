@@ -62,7 +62,7 @@ struct DMConversationColumn: View {
 //    }
 }
 
-@available(iOS 17.1, *)
+@available(iOS 17.1, *) //  .defaultScrollAnchor(.bottom)
 struct DMConversationView17: View {
     @Environment(\.theme) private var theme
     private let participants: Set<String>
@@ -111,23 +111,30 @@ struct DMConversationView17: View {
                 .safeAreaInset(edge: .bottom) {
                     Group {
                         if vm.isAccepted {
-                            ChatInputField(message: $text) {
-                                Task { @MainActor in
-                                    guard !text.isEmpty else { return }
-                                    let textToSend = text
-                                    do {
-                                        errorText = nil
-                                        text = ""
-                                        try await vm.sendMessage(textToSend)
+                            VStack {
+                                ChatInputField(message: $text) {
+                                    Task { @MainActor in
+                                        guard !text.isEmpty else { return }
+                                        let textToSend = text
+                                        do {
+                                            errorText = nil
+                                            text = ""
+                                            try await vm.sendMessage(textToSend)
+                                        }
+                                        catch DMError.PrivateKeyMissing {
+                                            AppSheetsModel.shared.readOnlySheetVisible = true
+                                            text = textToSend
+                                        }
+                                        catch {
+                                            errorText = "Could not send message"
+                                            text = textToSend
+                                        }
                                     }
-                                    catch DMError.PrivateKeyMissing {
-                                        AppSheetsModel.shared.readOnlySheetVisible = true
-                                        text = textToSend
-                                    }
-                                    catch {
-                                        errorText = "Could not send message"
-                                        text = textToSend
-                                    }
+                                }
+                                if vm.conversionVersion == 0 {
+                                    Label("Using NIP-04", systemImage: "exclamationmark.lock")
+                                        .infoText("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
+                                        .font(.footnote)
                                 }
                             }
                         }
@@ -152,6 +159,13 @@ struct DMConversationView17: View {
                         }
                     }
                     .background(theme.listBackground)
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Conversation details", systemImage: "info.circle") {
+                            
+                        }
+                    }
                 }
             case .timeout:
                 Text("Unable to load conversation")
@@ -188,14 +202,16 @@ struct DayView: View {
         
         // messagess
         ForEach(day.messages) { message in
-//                            ChatMessageRow(nrChat: message, zoomableId: "", selectedContact: .constant(nil))
             BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey)
                 .overlay(alignment: .bottom) {
-                    HStack {
+                    HStack(spacing: 2) {
+                       
+                        Spacer()
+                        
                         ForEach(self.balloonSuccesses.filter { $0.messageId == message.id }) { success in
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundColor(Color.green)
-                                .infoText("Succesfully sent to \(success.receiverPubkey)'s relay: \(success.relay)")
+                                .infoText("Succesfully sent to \(nameOrPubkey(success.receiverPubkey))'s relay: \(success.relay)")
                                 .font(.caption)
                                 .foregroundColor(.red)
                         }
@@ -208,8 +224,8 @@ struct DayView: View {
                                 .foregroundColor(.red)
                         }
                     }
+                    .padding(.trailing, 25)
                 }
-            
         }
     }
 }
@@ -233,7 +249,6 @@ struct BalloonView17: View {
             }
             
             DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
-//                    .debugDimensions("DMContentRenderer")
                 .padding(10)
                 .background(
                     RoundedRectangle(cornerRadius: 16)

@@ -281,6 +281,7 @@ extension Event {
     }
     
     var date: Date { Date(timeIntervalSince1970: Double(created_at)) }
+    var createdAt: Date { Date(timeIntervalSince1970: Double(created_at)) }
     
     var ago: String { date.agoString }
     

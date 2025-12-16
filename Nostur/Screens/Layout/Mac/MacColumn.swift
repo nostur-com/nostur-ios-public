@@ -233,7 +233,7 @@ struct MacColumn: View {
     @ViewBuilder
     private func renderDMsColumn(_ accountPubkey: String?, columnType: Binding<MacColumnType>) -> some View {
         if let accountPubkey {
-            DMsColumn(pubkey: accountPubkey, navPath: $navPath, columnType: $columnType)
+            DMsColumn(pubkey: accountPubkey, navPath: $navPath, columnType: $columnType, config: config)
         }
         else {
             NXForm { // Needs to be wrapped in

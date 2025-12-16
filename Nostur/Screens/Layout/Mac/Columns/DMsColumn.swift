@@ -15,95 +15,182 @@ struct DMsColumn: View {
     public let pubkey: String
     @Binding var navPath: NBNavigationPath
     @Binding var columnType: MacColumnType
+    public var config: MacColumnConfig
     
     @StateObject private var vm: DMsVM
     
-    public init(pubkey: String, navPath: Binding<NBNavigationPath>, columnType: Binding<MacColumnType>) {
+    @State private var showSettingsSheet = false
+
+    public init(pubkey: String, navPath: Binding<NBNavigationPath>, columnType: Binding<MacColumnType>, config: MacColumnConfig) {
         self.pubkey = pubkey
+        self.config = config
         _navPath = navPath
         _columnType = columnType
         _vm = StateObject(wrappedValue: DMsVM(accountPubkey: pubkey))
     }
     
     var body: some View {
+        DMsInnerList(pubkey: pubkey, navPath: $navPath, vm: vm)
+            .modifier { // need to hide glass bg in 26+
+                if #available(iOS 26.0, *) {
+                    $0.toolbar {
+                        self.toolbarMenu
+                        .sharedBackgroundVisibility(.hidden)
+                    }
+                }
+                else {
+                    $0.toolbar {
+                        self.toolbarMenu
+                    }
+                }
+            }
+            .background(theme.listBackground)
+            .sheet(isPresented: $showSettingsSheet) {
+                NBNavigationStack {
+                    DMSettingsSheet(vm: vm)
+                        .environment(\.theme, theme)
+                }
+                .nbUseNavigationStack(.whenAvailable) // .never is broken on macCatalyst, showSettings = false will not dismiss  .sheet(isPresented: $showSettings) ..
+                .presentationBackgroundCompat(theme.listBackground)
+            }
+    }
+        
+    @ToolbarContentBuilder
+    private var toolbarMenu: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+                    Button("Change account", systemImage: "person.crop.circle") {
+                        columnType = .DMs(nil)
+                    }
+                }
+                Button("Settings", systemImage: "gearshape") {
+                    showSettingsSheet = true
+                }
+            } label: {
+                if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+                    PFP(pubkey: accountPubkey, account: account, size: 30)
+                    .accessibilityLabel("Account menu")
+                }
+            }
+        }
+    }
+}
+
+struct DMsInnerList: View {
+    @Environment(\.availableWidth) private var availableWidth
+    @Environment(\.theme) private var theme
+    
+    public let pubkey: String
+    @Binding var navPath: NBNavigationPath
+    @ObservedObject var vm: DMsVM
+    
+    @State private var showUpgradeDMsSheet = false
+    
+    var body: some View {
 #if DEBUG
         let _ = nxLogChanges(of: Self.self)
 #endif
-        ScrollView {
-            VStack {
-                self.dmAcceptedAndRequesTabs
-                
-                switch (vm.tab) {
-                case "Accepted":
-                    if !vm.conversationRows.isEmpty {
-                        LazyVStack(alignment: .leading, spacing: GUTTER) {
-                            ForEach(vm.conversationRows) { row in
-                                Box(navMode: .noNavigation) {
-                                    DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    navPath.append(row)
-                                }
-                            }
-                        }
+        if vm.ncNotSupported {
+            Text("Direct Messages using a remote signer are not available yet")
+                .centered()
+        }
+        else if vm.ready {
+            ScrollView {
+                VStack {
+                    self.dmAcceptedAndRequesTabs
+                    
+                    self.updateNotice
+                    
+                    if vm.scanningMonthsAgo != 0 {
+                        Text("Scanning relays for messages \(vm.scanningMonthsAgo)/36 months ago...")
+                            .italic()
+                            .hCentered()
                     }
-                    else {
-                        Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
-                            .centered()
-                    }
-                case "Requests":
-                    if !vm.requestRows.isEmpty || vm.showNotWoT {
-                        LazyVStack(alignment: .leading, spacing: GUTTER) {
-                            ForEach(vm.requestRows) { row in
-                                Box(navMode: .noNavigation) {
-                                    DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    navPath.append(row)
-                                }
-                            }
-                            
-                            if !vm.showNotWoT && !vm.requestRowsNotWoT.isEmpty {
-                                Text("\(vm.requestRowsNotWoT.count) requests not shown")
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(5)
-                                    .onTapGesture {
-                                        vm.showNotWoT = true
+                    
+                    switch (vm.tab) {
+                    case "Accepted":
+                        if !vm.conversationRows.isEmpty {
+                            LazyVStack(alignment: .leading, spacing: GUTTER) {
+                                ForEach(vm.conversationRows) { row in
+                                    Box(navMode: .noNavigation) {
+                                        DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
                                     }
-                                    .font(.footnote)
-                                    .foregroundStyle(Color.secondary)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        navPath.append(row)
+                                    }
+                                }
                             }
                         }
-                        .padding(5)
+                        else {
+                            Text("You have not received any messages", comment: "Shown on the DM view when there aren't any direct messages to show")
+                                .centered()
+                        }
+                    case "Requests":
+                        if !vm.requestRows.isEmpty || vm.showNotWoT {
+                            LazyVStack(alignment: .leading, spacing: GUTTER) {
+                                ForEach(vm.requestRows) { row in
+                                    Box(navMode: .noNavigation) {
+                                        DMStateRow(dmState: row, accountPubkey: vm.accountPubkey)
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        navPath.append(row)
+                                    }
+                                }
+                                
+                                if !vm.showNotWoT && !vm.requestRowsNotWoT.isEmpty {
+                                    Text("\(vm.requestRowsNotWoT.count) requests not shown")
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                        .padding(5)
+                                        .onTapGesture {
+                                            vm.showNotWoT = true
+                                        }
+                                        .font(.footnote)
+                                        .foregroundStyle(Color.secondary)
+                                }
+                            }
+                            .padding(5)
+                        }
+                        else {
+                            Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
+                                .centered()
+                        }
+                    default:
+                        EmptyView()
                     }
-                    else {
-                        Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
-                            .centered()
-                    }
-                default:
-                    EmptyView()
+                    Spacer()
                 }
-                Spacer()
             }
+            .background(theme.listBackground)
+            .sheet(isPresented: $showUpgradeDMsSheet) {
+                NBNavigationStack {
+                    UpgradeDMsSheet(accountPubkey: pubkey, onDismiss: {
+                        Task { @MainActor [weak vm] in
+                            showUpgradeDMsSheet = false
+                            vm?.showUpgradeNotice = false
+                        }
+                    })
+                    .environment(\.theme, theme)
+                }
+                .nbUseNavigationStack(.whenAvailable) // .never is broken on macCatalyst, showSettings = false will not dismiss  .sheet(isPresented: $showSettings) ..
+                .presentationBackgroundCompat(theme.listBackground)
+            }
+    //        .sheet(isPresented: $showSettingsSheet) {
+    //            NBNavigationStack {
+    //                DMSettingsSheet(vm: vm)
+    //                    .environment(\.theme, theme)
+    //            }
+    //            .nbUseNavigationStack(.whenAvailable) // .never is broken on macCatalyst, showSettings = false will not dismiss  .sheet(isPresented: $showSettings) ..
+    //            .presentationBackgroundCompat(theme.listBackground)
+    //        }
         }
-        .background(theme.listBackground)
-        .task {
-            await vm.load()
-        }
-        .modifier { // need to hide glass bg in 26+
-            if #available(iOS 26.0, *) {
-                $0.toolbar {
-                    accountsButton
-                    .sharedBackgroundVisibility(.hidden)
+        else {
+            CenteredProgressView()
+                .task {
+                    await vm.load()
                 }
-            }
-            else {
-                $0.toolbar {
-                    accountsButton
-                }
-            }
         }
     }
     
@@ -191,6 +278,19 @@ struct DMsColumn: View {
         }
     }
     
+    @ViewBuilder
+    private var updateNotice: some View {
+        if vm.showUpgradeNotice {
+            Button("Upgrade your DMs") {
+                showUpgradeDMsSheet = true
+            }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .controlSize(.small)
+            .tint(theme.accent)  // Matches your app's accent
+        }
+    }
+    
 //    @ToolbarContentBuilder
 //    private func newPostButton(_ config: NXColumnConfig) -> some ToolbarContent {
 //        ToolbarItem(placement: .navigationBarTrailing) {
@@ -224,19 +324,28 @@ struct DMsColumn: View {
 //        }
 //    }
     
-    @ToolbarContentBuilder
-    private var accountsButton: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
-                Button {
-                    columnType = .DMs(nil)
-                } label: {
-                    PFP(pubkey: accountPubkey, account: account, size: 30)
-                }
-                .accessibilityLabel("Account menu")
-            }
-        }
-    }
+//    @State private var showSettingsSheet = false
+    
+//    @ToolbarContentBuilder
+//    private var accountsButton: some ToolbarContent {
+//        ToolbarItem(placement: .topBarTrailing) {
+//            Menu {
+//                if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+//                    Button("Change account", systemImage: "person.crop.circle") {
+//                        columnType = .DMs(nil)
+//                    }
+//                }
+//                Button("Settings", systemImage: "gearshape") {
+//                    showSettingsSheet = true
+//                }
+//            } label: {
+//                if case .DMs(let accountPubkey) = columnType, let accountPubkey, let account = AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) {
+//                    PFP(pubkey: accountPubkey, account: account, size: 30)
+//                    .accessibilityLabel("Account menu")
+//                }
+//            }
+//        }
+//    }
 }
 
 struct DMStateRow: View {
@@ -267,7 +376,6 @@ struct DMStateRow: View {
                             .foregroundColor(.white)
                             .padding(.horizontal,6)
                             .background(Capsule().foregroundColor(.red))
-//                                .offset(x:15, y: -20)
                     }
                 }
             
@@ -299,4 +407,80 @@ struct DMStateRow: View {
             }
         }
     }
+}
+
+
+struct DMSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var vm: DMsVM
+    
+    var body: some View {
+        NXForm {
+            if (vm.unread + vm.newRequests) > 0 {
+                Button("Mark all as read") {
+                    vm.markAcceptedAsRead()
+                    vm.markRequestsAsRead()
+                    dismiss()
+                }
+                .hCentered()
+            }
+   
+            Section {
+                HStack {
+                    Text("Missing messages?")
+                    Button("Rescan") {
+                        vm.rescanForMissingDMs(36)
+                        dismiss()
+                    }
+                }
+                .hCentered()
+            }
+
+            if (vm.newRequestsNotWoT > 0) {
+                Section {
+                    HStack {
+                        Text("\(vm.newRequestsNotWoT) requests outside Web of Trust")
+                        if vm.showNotWoT {
+                            Button("Hide") {
+                                vm.showNotWoT = false
+                                dismiss()
+                            }
+                        }
+                        else {
+                            Button("Show") {
+                                vm.showNotWoT = true
+                                vm.tab = "Requests"
+                                dismiss()
+                            }
+                        }
+                    }
+                    .hCentered()
+                }
+            }
+            
+            if (vm.hiddenDMs > 0) {
+                Section {
+                    HStack {
+                        Text("\(vm.hiddenDMs) conversation(s) hidden by you")
+                        Button("Unhide") {
+                            vm.unhideAll()
+                            dismiss()
+                        }
+                    }
+                    .hCentered()
+                }
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Direct Message Settings")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                    dismiss()
+                }
+            }
+        }
+    }
+    
+    @State private var didLoad = false
 }

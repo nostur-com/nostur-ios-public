@@ -291,7 +291,7 @@ class WebOfTrust: ObservableObject {
         }
         
         // Also allow outgoing DM conv pubkeys we initiated
-        if DirectMessageViewModel.default.allowedWoT.contains(pubkey) {
+        if DMsVM.shared.allowedWoT.contains(pubkey) {
             return true
         }
         

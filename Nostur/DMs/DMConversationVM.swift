@@ -20,6 +20,7 @@ class ConversionVM: ObservableObject {
     private var receivers: Set<String> {
         participants.subtracting([ourAccountPubkey])
     }
+    private var conversationId: String
     
     @Published var viewState: ConversionVMViewState = .initializing
     @Published var navigationTitle = "To: ..."

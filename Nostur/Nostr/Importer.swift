@@ -40,6 +40,8 @@ class Importer {
     public var importedPrioMessagesFromSubscriptionId = PassthroughSubject<ImportedPrioNotification, Never>()
     public var listStatus = PassthroughSubject<String, Never>()
     
+    public var importedDMSub = PassthroughSubject<(conversationId: String, event: Event, nEvent: NEvent, newDMStateCreated: Bool), Never>()
+    
     var existingIds: [String: EventState] = [:]
     var didPreload = false // Main context
     

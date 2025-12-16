@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SideTabs: View {
-    @EnvironmentObject private var dm: DirectMessageViewModel
+    @EnvironmentObject private var dm: DMsVM
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @Environment(\.theme) private var theme
     @ObservedObject var vm: MacColumnsVM

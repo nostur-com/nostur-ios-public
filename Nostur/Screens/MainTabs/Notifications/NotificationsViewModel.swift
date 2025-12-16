@@ -318,11 +318,11 @@ class NotificationsViewModel: ObservableObject {
                 badgeSubcription = self.unreadPublisher // TODO: Also do .unreadPublisher for DMs to fix badge/unread mismatch
                     .sink { [weak self] _ in
                         guard let self else { return }
-                        let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
+                        let dmsCount = (DMsVM.shared.unread + DMsVM.shared.newRequests)
                         setAppIconBadgeCount(self.unread + dmsCount, center: center)
                     }
                 
-                let dmsCount = (DirectMessageViewModel.default.unread + DirectMessageViewModel.default.newRequests)
+                let dmsCount = (DMsVM.shared.unread + DMsVM.shared.newRequests)
                 setAppIconBadgeCount(self.unread + dmsCount)
             }
         }
@@ -359,7 +359,7 @@ class NotificationsViewModel: ObservableObject {
             account.lastSeenPostCreatedAt,
             account.lastSeenZapCreatedAt,
             account.lastSeenReactionCreatedAt,
-            (DirectMessageViewModel.default.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? oneWeekAgo
+            (DMsVM.shared.lastNotificationReceivedAt?.timeIntervalSince1970 as? Int64) ?? oneWeekAgo
         ].sorted(by: >).first!
     }
     

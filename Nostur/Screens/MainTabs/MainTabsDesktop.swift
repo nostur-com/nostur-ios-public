@@ -14,7 +14,7 @@ struct MainTabsDesktop: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.theme) private var theme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var dm: DirectMessageViewModel
+    @EnvironmentObject private var dm: DMsVM
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @State private var unread: Int = 0
     
@@ -60,9 +60,9 @@ struct MainTabsDesktop: View {
                     .tag("Notifications")
                     .opacity(selectedTab == "Notifications" ? 1 : 0)
 
-                DMNavigationStack {
+//                DMNavigationStack {
                     DMContainer()
-                }
+//                }
                     .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "envelope.fill")

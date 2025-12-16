@@ -31,7 +31,9 @@ struct WebOfTrustLevelPicker: View {
                 }
             }
             else if newValue == SettingsStore.WebOfTrustLevel.off.rawValue {
-                DirectMessageViewModel.default.load()
+                Task { @MainActor in
+                    await DMsVM.shared.load(force: true)
+                }
             }
             else {
                 wot.updateViewData()

@@ -9,7 +9,7 @@ import SwiftUI
 import NavigationBackport
 
 struct HomeTab: View {
-    @EnvironmentObject private var dm: DirectMessageViewModel
+    @EnvironmentObject private var dm: DMsVM
     @Environment(\.showSidebar) @Binding var showSidebar: Bool
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme

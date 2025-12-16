@@ -13,7 +13,7 @@ let NOSTUR_SIDEBAR_WIDTH = 310.0
 struct SideBar: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var loggedInAccount: LoggedInAccount
-    @EnvironmentObject private var dm: DirectMessageViewModel
+    @EnvironmentObject private var dm: DMsVM
     @Binding var showSidebar: Bool
     
     @State private var accountsSheetIsShown = false

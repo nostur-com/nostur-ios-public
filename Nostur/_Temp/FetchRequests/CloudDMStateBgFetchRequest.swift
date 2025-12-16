@@ -34,7 +34,7 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
     
     func onChange(_ dmStates: [CloudDMState]) {
         removeDuplicateDMStates(dmStates: dmStates)
-        DirectMessageViewModel.default.dmStates = dmStates
+        DMsVM.shared.dmStates = dmStates.filter { $0.accountPubkey_ == DMsVM.shared.accountPubkey }
     }
     
     func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {

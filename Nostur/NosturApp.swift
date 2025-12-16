@@ -61,7 +61,7 @@ struct iOSApp: App {
     // But this .shared is the main one for the currently logged in account
     private let nvm: NotificationsViewModel = .shared
     
-    private let dm: DirectMessageViewModel = .default
+    private let mainDMsVM: DMsVM = .shared
     private let networkMonitor: NetworkMonitor = .shared
     private let importer: Importer = .shared
     private let backlog: Backlog = .shared

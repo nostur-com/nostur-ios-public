@@ -11,7 +11,7 @@ import NavigationBackport
 struct MainTabs15: View {
     @Environment(\.theme) private var theme
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @EnvironmentObject private var dm: DirectMessageViewModel
+    @EnvironmentObject private var dm: DMsVM
     @AppStorage("selected_tab") private var selectedTab = "Main"
     @State private var unread: Int = 0
     
@@ -60,9 +60,9 @@ struct MainTabs15: View {
                     .badge(unread)
                     .nosturTabsCompat(theme: theme)
 
-                DMNavigationStack {
+//                DMNavigationStack {
                     DMContainer()
-                }
+//                }
                     .environment(\.horizontalSizeClass, horizontalSizeClass)
                     .tabItem {
                         Image(systemName: "envelope.fill")

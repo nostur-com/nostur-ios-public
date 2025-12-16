@@ -9,14 +9,14 @@ import SwiftUI
 import NostrEssentials
 import Combine
 
-class DirectMessageViewModel: ObservableObject {
+class DirectMessageViewModelOld: ObservableObject {
     
     private var lastDMLocalNotifcationAt: Int {
         get { UserDefaults.standard.integer(forKey: "last_dm_local_notification_timestamp") }
         set { UserDefaults.standard.setValue(newValue, forKey: "last_dm_local_notification_timestamp") }
     }
     
-    static public let `default` = DirectMessageViewModel()
+    static public let `default` = DirectMessageViewModelOld()
     
     public var dmStates: [CloudDMState] = [] {
         didSet {

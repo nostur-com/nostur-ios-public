@@ -52,6 +52,7 @@ struct NewDMComposer: View {
                     message = ""
                     
                     showingNewDM = false
+                    setSelectedTab("Messages")
                     tab = "Accepted" // Set tab to accepted so we can see our just sent message
                     dismiss()
                     // spinner
