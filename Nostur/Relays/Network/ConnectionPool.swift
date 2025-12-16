@@ -926,7 +926,7 @@ public class ConnectionPool: ObservableObject {
     //    ],
     if let relay = fastTags.filter({ $0.0 == "e" && $0.1 == eventId }).first?.2 {
         if relay.prefix(6) == "wss://" || relay.prefix(5) == "ws://" {
-            if eventId.count > 64, eventId.contains(":"), let aTag = try? ATag(eventId) {
+            if eventId.count > 64 && eventId.contains(":"), let aTag = try? ATag(eventId) {
                 ConnectionPool.shared.sendEphemeralMessage(
                     RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition),
                     relay: relay

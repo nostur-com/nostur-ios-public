@@ -68,7 +68,7 @@ struct PostAndParent: View {
                             EventRelationsQueue.shared.addAwaitingEvent(nrPost.event, debugInfo: "PostDetailView.001")
                         }
                         
-                        if replyToId.count > 64, replyToId.contains(":") {
+                        if replyToId.count > 64 && replyToId.contains(":") {
                             QueuedFetcher.shared.enqueue(aTag: replyToId)
                         }
                         else {
@@ -81,7 +81,7 @@ struct PostAndParent: View {
                                 nrPost.loadReplyTo()
                                 if nrPost.replyTo == nil {
                                     // try search relays
-                                    if replyToId.count > 64, replyToId.contains(":"), let aTag = try? ATag(replyToId) {
+                                    if replyToId.count > 64 && replyToId.contains(":"), let aTag = try? ATag(replyToId) {
                                         req(RM.getArticle(pubkey: aTag.pubkey, kind: Int(aTag.kind), definition: aTag.definition))
                                     }
                                     else {
