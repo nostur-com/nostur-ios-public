@@ -14,7 +14,7 @@ struct EmbedById: View {
     public var fullWidth: Bool = false
     public var forceAutoload: Bool = false
     @StateObject private var vm = FetchVM<NRPost>(timeout: 1.5, debounceTime: 0.05, backlogDebugName: "EmbedById")
-    @State private var nevent: String? = nil
+    @State private var note1: String? = nil
     
     var body: some View {
         switch vm.state {
@@ -37,10 +37,10 @@ struct EmbedById: View {
             VStack {
                 Text("Unable to fetch content:")
                     .onAppear {
-                        nevent = (try? NostrEssentials.ShareableIdentifier("nevent", id: id))?.identifier
+                        note1 = (try? NostrEssentials.ShareableIdentifier("note", id: id))?.identifier
                     }
-                if let nevent {
-                    CopyableTextView(text: nevent, copyText: nevent)
+                if let note1 {
+                    CopyableTextView(text: note1, copyText: note1)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
