@@ -16,6 +16,10 @@ struct PubkeyUsernameCache {
     }()
 }
 
+func nameOrPubkey(_ pubkey: String) -> String {
+    return PubkeyUsernameCache.shared.retrieveObject(at: pubkey) ?? pubkey
+}
+
 struct NRContactCache {
     static let shared: LRUCache2<String, NRContact> = {
         let cache = LRUCache2<String, NRContact>(countLimit: 3000)

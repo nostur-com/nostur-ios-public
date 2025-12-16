@@ -289,7 +289,7 @@ struct EnterRelayAddressSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Add") {
+                Button("Add", systemImage: "checkmark") {
                     // TODO: add validation
                     onAdd(relayAddress)
                     dismiss()

@@ -330,7 +330,7 @@ struct MultiPFPs: View {
     var body: some View {
         ZStack(alignment:.leading) {
             ForEach(nrContacts.prefix(10).indices, id:\.self) { index in
-                PFP(pubkey: nrContacts[index].pubkey, pictureUrl: nrContacts[index].pictureUrl, forceFlat: true)
+                ObservedPFP(nrContact: nrContacts[index], forceFlat: true)
                     .id(nrContacts[index].pubkey)
                     .zIndex(-Double(index))
                     .offset(x:Double(0 + (25*index)))
