@@ -250,7 +250,7 @@ class Importer {
                             
                 
                             // Unwrap then handle rumor like normal event
-                            let (rumor, seal) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
+                            let (rumor, _) = try unwrapGift(event.toNostrEssentialsEvent(), ourKeys: keys)
                             
                             // Do we support the rumor kind?
                             guard SUPPORTED_RUMOR_KINDS.contains(rumor.kind) else { continue }

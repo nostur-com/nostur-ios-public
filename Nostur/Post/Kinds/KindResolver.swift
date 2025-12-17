@@ -44,6 +44,7 @@ struct KindResolver: View {
                 .onDisappear { self.dequeue() }
                 .padding(.top, 10)
                 .padding(.bottom, 5)
+                .padding(.horizontal, 10)
                 .background(
                     theme.listBackground
                         .cornerRadius(8)

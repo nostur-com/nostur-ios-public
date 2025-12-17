@@ -32,7 +32,7 @@ class MessageParser {
     
     static let shared = MessageParser()
 
-    // Subscriptions that will be kept open after EOSE
+    // Subscriptions that will be kept open after EOSE (can also use prefix -OPEN-)
     static let ACTIVE_SUBSCRIPTIONS = Set(
         ["Following","Explore","Notifications","Notifications-A","REALTIME-DETAIL", "REALTIME-DETAIL-A", "REALTIME-DETAIL-22", "NWC", "NC", "LIVEEVENTS", "-DB-ROOMPRESENCE", "-DB-CHAT-"])
     
