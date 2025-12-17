@@ -236,7 +236,6 @@ struct ProfileView: View {
             }
             vm.load(nrContact)
             lastSeenVM.checkLastSeen(nrContact.pubkey)
-//            imposterVM.runCheck(nrContact)
         }
         
         .task {

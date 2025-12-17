@@ -29,7 +29,7 @@ class ProfileViewModel: ObservableObject {
     
     public init() {}
     
-    public func load(_ nrContact: NRContact) {
+    public func load(_ nrContact: NRContact, loadLess: Bool = false) {
         let pubkey = nrContact.pubkey
         self.pubkey = pubkey
         
@@ -45,17 +45,20 @@ class ProfileViewModel: ObservableObject {
                 self?.npub = npub
             }
         }
-        self.loadOldPFP(nrContact)
-        self.loadArticles(nrContact)
+        
+        if !loadLess {
+            self.loadOldPFP(nrContact)
+            self.loadArticles(nrContact)
 #if DEBUG
-        Task.detached {
-            await self.loadPinned(nrContact)
-        }
-        Task.detached {
-            await self.loadHighlights(nrContact)
-        }
+            Task.detached {
+                await self.loadPinned(nrContact)
+            }
+            Task.detached {
+                await self.loadHighlights(nrContact)
+            }
 #endif
-        self.loadLists(nrContact)
+            self.loadLists(nrContact)
+        }
         
         bg().perform { [weak self] in
             guard let contact: Contact = Contact.fetchByPubkey(pubkey, context: bg()) else { return }
@@ -77,8 +80,10 @@ class ProfileViewModel: ObservableObject {
             }
         }
         
-        listenForDeletedPosts()
-        listenForDidPin()
+        if !loadLess {
+            listenForDeletedPosts()
+            listenForDidPin()
+        }
     }
     
     private func listenForDidPin() {
@@ -139,7 +144,7 @@ class ProfileViewModel: ObservableObject {
     public func loadProfileKinds(_ contact: Contact) {
         let task = ReqTask(
             reqCommand: { (taskId) in
-                let filters = [Filters(authors: [contact.pubkey], kinds: [0,3,30008,10002,10063], limit: 25)]
+                let filters = [Filters(authors: [contact.pubkey], kinds: [0,3,30008,10002,10050,10063], limit: 25)]
                 outboxReq(NostrEssentials.ClientMessage(type: .REQ, subscriptionId: taskId, filters: filters))
             },
             processResponseCommand: { (taskId, _, _) in

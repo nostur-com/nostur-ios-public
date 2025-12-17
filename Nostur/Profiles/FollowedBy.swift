@@ -24,7 +24,10 @@ struct FollowedBy: View {
         if alignment == HorizontalAlignment.leading {
             return Alignment.leading
         }
-        return Alignment.trailing
+        else if alignment == HorizontalAlignment.trailing {
+            return Alignment.trailing
+        }
+        return Alignment.center
     }
     
     private var firstRow: ArraySlice<(Pubkey, URL)> {
