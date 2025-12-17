@@ -21,10 +21,10 @@ struct ChatInputField: View {
     @FocusState private var focusedField: FocusedField?
     
     var body: some View {
-        HStack(alignment: .bottom) {
+        HStack(alignment: .center) {
             self.textField
-                .textInputAutocapitalization(.never)
-                .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 0))
+                .textInputAutocapitalization(.sentences)
+                .padding(10)
                 .background(Color.clear)
                 .focused($focusedField, equals: .message)
                 .submitLabel(.send)
@@ -34,33 +34,35 @@ struct ChatInputField: View {
                     }
                 }
             
-            Button("Send", systemImage: "arrow.up") {
-                if let onSubmit {
-                    onSubmit()
-                }
-                focusedField = nil
-            }
-            .buttonStyleGlassProminent()
-            .labelStyle(.iconOnly)
-            .tint(theme.accent)
-            .fontWeightBold()
-            .keyboardShortcut(.defaultAction)
-            .disabled(message.isEmpty)
-            .onSubmit {
-                if let onSubmit {
-                    onSubmit()
-                }
-            }
-            .padding(.trailing, 8)
-            .padding(.bottom, 5)
-            .opacity(message.isEmpty ? 0.5 : 1.0)
             
+                .overlay(alignment: .bottomTrailing) {
+                    Button("Send", systemImage: "arrow.up") {
+                        if let onSubmit {
+                            onSubmit()
+                        }
+                        focusedField = nil
+                    }
+                    .buttonStyleGlassProminent()
+                    .labelStyle(.iconOnly)
+                    .tint(theme.accent)
+                    .fontWeightBold()
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(message.isEmpty)
+                    .onSubmit {
+                        if let onSubmit {
+                            onSubmit()
+                        }
+                    }
+                    .opacity(message.isEmpty ? 0.5 : 1.0)
+                    .padding(.trailing, 5)
+                    .padding(.bottom, 5)
+                }
         }
         .background(theme.listBackground)
-        .cornerRadius(25)
+        .cornerRadius(22)
         .overlay(
-            RoundedRectangle(cornerRadius: 25)
-                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 22)
+                .stroke(theme.lineColor, lineWidth: 1)
         )
         .padding([.leading, .trailing], 10)
         .onAppear {
@@ -86,7 +88,7 @@ struct ChatInputField: View {
     VStack {
         Spacer()
         ChatInputField(message: $text)
-            .padding(.bottom, 10)
+            .padding(5)
     }
     .environment(\.theme, Themes.DEFAULT)
 }

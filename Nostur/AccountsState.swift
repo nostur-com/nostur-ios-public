@@ -153,12 +153,22 @@ func followingPFP(_ pubkey: String) -> URL? {
     AccountsState.shared.loggedInAccount?.followingCache[pubkey]?.pfpURL
 }
 
-func account() -> CloudAccount? {
+func account(by accountPubkey: String? = nil) -> CloudAccount? {
+    if let accountPubkey {
+        if Thread.isMainThread {
+            return AccountsState.shared.accounts.first(where: { $0.publicKey == accountPubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: accountPubkey, context: context()))
+        }
+        else {
+            return try? CloudAccount.fetchAccount(publicKey: accountPubkey, context: context())
+        }
+    }
+    
+    
     if Thread.isMainThread {
-        AccountsState.shared.loggedInAccount?.account ?? (try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context()))
+        return AccountsState.shared.loggedInAccount?.account ?? (try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context()))
     }
     else {
-        AccountsState.shared.loggedInAccount?.bgAccount ?? (try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context()))
+        return AccountsState.shared.loggedInAccount?.bgAccount ?? (try? CloudAccount.fetchAccount(publicKey: AccountsState.shared.activeAccountPublicKey, context: context()))
     }
 }
 
