@@ -88,7 +88,7 @@ extension CloudDMState {
 extension CloudDMState: Identifiable {
     static func fetchByAccount(_ accountPubkey: String, context: NSManagedObjectContext) -> [CloudDMState] {
         let fr = CloudDMState.fetchRequest()
-        fr.predicate = NSPredicate(format: "accountPubkey_ == %@", accountPubkey)
+        fr.predicate = NSPredicate(format: "accountPubkey_ = %@ AND NOT contactPubkey_ = nil AND NOT contactPubkey_ = %@", accountPubkey, accountPubkey)
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.lastMessageTimestamp_, ascending: false)]
         return (try? context.fetch(fr)) ?? []
     }

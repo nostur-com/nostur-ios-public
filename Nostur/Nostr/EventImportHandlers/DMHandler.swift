@@ -24,77 +24,39 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     let groupId = dmConversationId(nEvent: nEvent)
     savedEvent.groupId = groupId
     
+    // existing DMStates (as receiver to ourAccountPubkey)
     let existingDMStates = CloudDMState.fetchByParticipants(participants: participants, context: context)
     
-    // Create new DM states if we have none yet
-    guard !existingDMStates.isEmpty else {
-        var didAddAsSender = false
-        var addedAsReceiverPubkeys: Set<String> = []
-        // if we are sender with full account
-        if AccountsState.shared.bgFullAccountPubkeys.contains(sender) {
-            let savedEventDate = savedEvent.date
-            let dmState = CloudDMState(context: context)
-            dmState.accountPubkey_ = sender
-            dmState.contactPubkey_ = receiverPubkey // for non-updated clients
-            dmState.participantPubkeys = participants
-            dmState.accepted = true
-            dmState.markedReadAt_ = savedEventDate
-            dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
-            updateBlurb(dmState, event: savedEvent, context: context)
-            DataProvider.shared().saveToDiskNow {
-                Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
-            }
-            didAddAsSender = true
-        }
-        
-        // if we are one of the receivers with full account
-        for participant in participants {
-            if AccountsState.shared.bgFullAccountPubkeys.contains(participant) {
-                let dmState = CloudDMState(context: context)
-                dmState.accountPubkey_ = participant
-                dmState.contactPubkey_ = receiverPubkey // for non-updated clients
-                dmState.participantPubkeys = participants
-                dmState.accepted = false
-                dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
-                updateBlurb(dmState, event: savedEvent, context: context)
-                DataProvider.shared().saveToDiskNow {
-                    Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
-                }
-                addedAsReceiverPubkeys.insert(participant)
+    // add any missing DMState (as receiver to ourAccountPubkey)
+    let receiversWithMissingDMStates: Set<String> = AccountsState.shared.bgAccountPubkeys
+        .filter { accountPubkey in
+            return participants.contains(accountPubkey) && !existingDMStates.contains { dmState in
+                return (dmState.accountPubkey_ == accountPubkey && dmState.conversationId == dmConversationId(nEvent: nEvent))
             }
         }
-
-        // if we are sender with read only account (and did not already add with full account
-        if !didAddAsSender && AccountsState.shared.bgAccountPubkeys.contains(sender) {
-            let savedEventDate = savedEvent.date
-            let dmState = CloudDMState(context: context)
-            dmState.accountPubkey_ = sender
-            dmState.contactPubkey_ = receiverPubkey // for non-updated clients
-            dmState.participantPubkeys = participants
-            dmState.accepted = true
-            dmState.markedReadAt_ = savedEventDate
-            DataProvider.shared().saveToDiskNow {
-                Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
-            }
-        }
-        
-        // if we are one of the receivers with read only account
-        for participant in participants {
-            if addedAsReceiverPubkeys.contains(participant) { continue }  // skip if already added
-            if AccountsState.shared.bgAccountPubkeys.contains(participant) {
-                let dmState = CloudDMState(context: context)
-                dmState.accountPubkey_ = participant
-                dmState.contactPubkey_ = receiverPubkey // for non-updated clients
-                dmState.participantPubkeys = participants
-                dmState.accepted = false
-                DataProvider.shared().saveToDiskNow {
-                    Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
-                }
-            }
-        }
-        return
-    }
     
+    // Create new DM states if we have missing
+    for accountPubkey in receiversWithMissingDMStates {
+        let dmState = CloudDMState(context: context)
+        dmState.accountPubkey_ = accountPubkey
+        dmState.contactPubkey_ = receiverPubkey // for non-updated clients
+        dmState.participantPubkeys = participants
+        if AccountsState.shared.bgAccountPubkeys.contains(sender) {
+            dmState.accepted = true
+            let savedEventDate = savedEvent.date
+            dmState.markedReadAt_ = savedEventDate
+        }
+        else {
+            dmState.accepted = false
+            dmState.initiatorPubkey_ = sender
+        }
+        dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+        updateBlurb(dmState, event: savedEvent, context: context)
+        DataProvider.shared().saveToDiskNow {
+            Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
+        }
+    }
+        
     // Update existing DM states
     for dmState in existingDMStates {
         // Consider accepted if we replied to the DM
