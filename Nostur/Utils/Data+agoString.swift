@@ -8,8 +8,7 @@
 import Foundation
 
 extension Date {
-    
-    static let yearString = String(localized: "y", comment: "short for year (ago), appended to number. Example: 1y")
+
     static let dayString = String(localized: "d", comment: "short for days (ago), appended to number. Example: 2d")
     static let hourString = String(localized: "h", comment: "short for hours (ago), appended to number. Example: 7h")
     static let minuteString = String(localized: "m", comment: "short for minutes (ago), appended to number. Example: 3m")
@@ -21,9 +20,7 @@ extension Date {
     static let secondsInYear = 31_536_000.0
     
     var agoString: String {
-        if -timeIntervalSinceNow >= Self.secondsInYear {
-            return (String(Int(-timeIntervalSinceNow / Self.secondsInYear)) + Self.yearString)
-        } else if -timeIntervalSinceNow >= Self.secondsInDay {
+        if -timeIntervalSinceNow >= Self.secondsInDay {
             return (String(Int(-timeIntervalSinceNow / Self.secondsInDay)) + Self.dayString)
         } else if -timeIntervalSinceNow >= Self.secondsInHour {
             return (String(Int(-timeIntervalSinceNow / Self.secondsInHour)) + Self.hourString)

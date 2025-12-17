@@ -41,15 +41,16 @@ struct Ago: View, Equatable {
     }
 }
 
-struct Ago_Previews: PreviewProvider {
-    static var previews: some View {
-        VStack {
-            Ago(Date.now - 45)
-            Ago(Date.now - (2 * 60))
-            Ago(Date.now - (2 * 3600))
-            Ago(Date.now - (48 * 3600))
-            Ago(Date.now - (148 * 3600))
-        }
-        .previewDevice(PreviewDevice(rawValue: PREVIEW_DEVICE))
+#Preview {
+    VStack {
+        Ago(Date.now - 45)
+        Ago(Date.now - (2 * 60))
+        Ago(Date.now - (2 * 3600))
+        Ago(Date.now - (48 * 3600))
+        Ago(Date.now - (148 * 3600))
+        Ago(Date.now - (7 * 148 * 3600))
+        Ago(Date.now - (28 * 148 * 3600))
+        Ago(Date.now - (3 * 28 * 148 * 3600))
+        Ago(Date.now - (8 * 28 * 148 * 3600))
     }
 }
