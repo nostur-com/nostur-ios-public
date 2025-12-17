@@ -17,7 +17,7 @@ class ConversionVM: ObservableObject {
             self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == ourAccountPubkey })
         }
     }
-    private var receivers: Set<String> {
+    public var receivers: Set<String> {
         participants.subtracting([ourAccountPubkey])
     }
     private var conversationId: String
@@ -87,7 +87,7 @@ class ConversionVM: ObservableObject {
         }
 //#endif
 
-        if let cloudDMState {
+        if let cloudDMState { // Should always exists because getGroupState() gets existing or creates new
             let visibleMessages = await getMessages(cloudDMState, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
             
             await self.resolveConversationVersion(participants, messages: visibleMessages)
@@ -186,7 +186,10 @@ class ConversionVM: ObservableObject {
             if let groupDMState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: self.ourAccountPubkey, context: bgContext) {
                 return groupDMState
             }
-            return CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: bgContext)
+            let newDMState = CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: bgContext)
+            newDMState.accepted = true
+            newDMState.initiatorPubkey_ = self.ourAccountPubkey
+            return newDMState
         }
     }
     

@@ -6272,6 +6272,7 @@
     },
     "New direct message" : {
       "comment" : "Navigation title for a new Direct Message",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6366,6 +6367,7 @@
     },
     "New message" : {
       "comment" : "Navigation title for a new Direct Message",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6374,6 +6376,9 @@
           }
         }
       }
+    },
+    "New Message" : {
+
     },
     "New post" : {
       "comment" : "Button to create a new post",
@@ -9243,6 +9248,7 @@
       }
     },
     "Send to: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9253,6 +9259,7 @@
       }
     },
     "Sending to: %@" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

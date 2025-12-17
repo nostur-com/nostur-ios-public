@@ -7,6 +7,7 @@
 
 import SwiftUI
 import NavigationBackport
+import NostrEssentials
 
 @available(iOS 17.1, *) //  .defaultScrollAnchor(.bottom)
 struct DMConversationView17: View {
@@ -20,7 +21,7 @@ struct DMConversationView17: View {
     @State private var didLoad = false
     @Namespace private var bottomAnchor
     
-    init(participants: Set<String>, ourAccountPubkey: String) {
+    init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false) {
         self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
         _vm = StateObject(wrappedValue: ConversionVM(participants: participants, ourAccountPubkey: ourAccountPubkey))
@@ -37,6 +38,10 @@ struct DMConversationView17: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView {
                         LazyVStack {
+                            if let receiverPubkey = vm.receivers.first {
+                                DMProfileInfo(nrContact: NRContact.instance(of: receiverPubkey))
+                                Spacer()
+                            }
                             ForEach(days) { day in
                                 DayView(ourAccountPubkey: ourAccountPubkey, day: day, balloonErrors: vm.balloonErrors, balloonSuccesses: vm.balloonSuccesses)
                             }
@@ -230,7 +235,7 @@ struct BalloonView17: View {
 }
 
 @available(iOS 17.1, *)
-#Preview("New DM") {
+#Preview("DMConversationView17") {
     PreviewContainer({ pe in
         pe.parseEventJSON([
             ###"{"kind":4,"id":"fff8c33ce14af29921a6d737e6fe7f4be7eb6689f8c22468111fc4b813c7f6ee","pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1732966153,"tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]],"content":"cywUqdpmxTx7ycOlwREYWHNRPVrmcFHHwANXsO0Hx9j7UaTIsDoyNjjP/N75xz7A?iv=vZR3gyFrDniX3o3K+wOWkQ==","sig":"0a1da8058667aaf501a2fa0ca61f506ee0f9f849d94dbb7355d75956baa62b991333fb3c9d1be46e47613ef76bf1aff5a352a34ae88a47f543faa1f21d5d3bed"}"###,
@@ -303,4 +308,156 @@ struct BalloonView17: View {
             DMConversationView17(participants: participants, ourAccountPubkey: ourAccountPubkey)
         }
     }
+}
+
+
+
+// Copy paste from ProfileView
+struct DMProfileInfo: View {
+    @StateObject private var vm = ProfileViewModel()
+    @StateObject private var lastSeenVM = LastSeenViewModel()
+    
+    @ObservedObject public var nrContact: NRContact
+    
+    @Environment(\.theme) private var theme
+    @Environment(\.containerID) private var containerID
+
+    @EnvironmentObject private var la: LoggedInAccount
+    
+    @ObservedObject private var settings: SettingsStore = .shared
+
+    var body: some View {
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
+        VStack(alignment: .center) {
+            ObservedPFP(nrContact: nrContact, size: 100)
+
+            HStack(spacing: 0) {
+                Text("\(nrContact.anyName) ")
+                    .font(.title)
+                    .fontWeightBold()
+                    .lineLimit(1)
+                PossibleImposterLabelView2(nrContact: nrContact)
+                if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
+                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
+                        .layoutPriority(3)
+                }
+            }
+            
+            if let fixedName = nrContact.fixedName, fixedName != nrContact.anyName {
+                HStack {
+                    Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
+                        .lineLimit(1)
+                    Image(systemName: "multiply.circle.fill")
+                        .onTapGesture {
+                            nrContact.setFixedName(nrContact.anyName)
+                        }
+                }
+            }
+            
+            HStack {
+                CopyableTextView(text: vm.npub)
+                    .lineLimit(1)
+                    .frame(width: 140, alignment: .leading)
+                
+                if let mainContact = Contact.fetchByPubkey(nrContact.pubkey, context: viewContext())  {
+                    ContactPrivateNoteToggle(contact: mainContact)
+                }
+                Menu {
+                    Button {
+                        UIPasteboard.general.string = vm.npub
+                    } label: {
+                        Label(String(localized:"Copy npub", comment:"Menu action"), systemImage: "doc.on.clipboard")
+                    }
+                    Button {
+                        sendNotification(.addRemoveToListsheet, nrContact)
+                    } label: {
+                        Label(String(localized:"Add/Remove from Lists", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
+                    }
+                    
+                    if vm.isBlocked {
+                        Button(action: {
+                            unblock(pubkey: nrContact.pubkey)
+                            vm.isBlocked = false // TODO: Add listener on vm instead of this
+                        }) {
+                            Label("Unblock", systemImage: "circle.slash")
+                        }
+                    }
+                    else {
+                        Button {
+                            block(pubkey: nrContact.pubkey, name: nrContact.anyName)
+                            vm.isBlocked = true // TODO: Add listener on vm instead of this
+                        } label: {
+                            Label(
+                                String(localized:"Block \(nrContact.anyName)", comment: "Menu action"), systemImage: "circle.slash")
+                        }
+                    }
+                    Button {
+                        sendNotification(.reportContact, ReportContact(nrContact: nrContact))
+                    } label: {
+                        Label(String(localized:"Report \(nrContact.anyName)", comment:"Menu action"), systemImage: "flag")
+                    }
+                    
+                    Button {
+                        vm.copyProfileSource(nrContact)
+                    } label: {
+                        Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .fontWeightBold()
+                        .padding(5)
+                }
+            }
+            
+            if (vm.isFollowingYou) {
+                Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(Color.secondary)
+                    .opacity(0.7)
+                    .cornerRadius(13)
+                    .offset(y: -4)
+            }
+            
+            Text(verbatim: lastSeenVM.lastSeen ?? "Last seen:")
+                .font(.caption).foregroundColor(.primary)
+                .lineLimit(1)
+                .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
+            
+            HStack {
+                Spacer()
+                if nrContact.anyLud {
+                    ProfileLightningButton(nrContact: nrContact)
+                }
+                
+                FollowButton(pubkey: nrContact.pubkey)
+                    .buttonStyle(.borderless)
+                Spacer()
+            }
+            
+            NRTextDynamic("\(String(nrContact.about ?? ""))\n")
+
+            FollowedBy(pubkey: nrContact.pubkey, alignment: .center, showZero: true)
+         //
+        }
+        .padding([.top, .leading, .trailing], 10.0)
+        .onTapGesture { }
+        
+
+        .onAppear {
+            vm.load(nrContact, loadLess: true)
+            lastSeenVM.checkLastSeen(nrContact.pubkey)
+        }
+        
+        .task {
+            try? await Task.sleep(nanoseconds: 5_100_000_000) // Try .SEARCH relays if we don't have info
+            if nrContact.metadata_created_at == 0 {
+                nxReq(Filters(authors: [nrContact.pubkey], kinds: [0]), subscriptionId: UUID().uuidString, relayType: .SEARCH)
+            }
+        }
+    }
+
 }

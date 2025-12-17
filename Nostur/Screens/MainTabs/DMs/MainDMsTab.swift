@@ -15,8 +15,7 @@ struct MainDMsTab: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @ObservedObject private var vm: DMsVM = .shared
     @State private var showSettingsSheet = false
-    @State private var showingNewDM = false
-    @State private var preloadNewDMInfo: (String, NRContact)? = nil // pubkey and Contact
+    @State private var showNewDMSheet = false
     
     var body: some View {
 #if DEBUG
@@ -28,8 +27,10 @@ struct MainDMsTab: View {
                     .modifier { // need to hide glass bg in 26+
                         if #available(iOS 26.0, *) {
                             $0.toolbar {
+                                self.newDMbutton
+                                    .sharedBackgroundVisibility(.hidden)
                                 self.toolbarMenu
-                                .sharedBackgroundVisibility(.hidden)
+                                    .sharedBackgroundVisibility(.hidden)
                             }
                         }
                         else {
@@ -46,27 +47,20 @@ struct MainDMsTab: View {
                         .nbUseNavigationStack(.whenAvailable) // .never is broken on macCatalyst, showSettings = false will not dismiss  .sheet(isPresented: $showSettings) ..
                         .presentationBackgroundCompat(theme.listBackground)
                     }
-                    .sheet(isPresented: $showingNewDM) {
+                    .sheet(isPresented: $showNewDMSheet) {
                         NBNavigationStack {
-                            NewDM(showingNewDM: $showingNewDM, tab: $vm.tab)
-                                .nosturNavBgCompat(theme: theme)
-                                .onAppear {
-                                    if let preloadNewDMInfo {
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
-                                            sendNotification(.preloadNewDMInfo, preloadNewDMInfo)
-                                        }
-                                    }
-                                }
-                                .environment(\.theme, theme)
-                                .environmentObject(la)
+                            SelectDMRecipientSheet(accountPubkey: la.pubkey, onSelect: { selectedContactPubkey in
+                                navPath.append(NewDMConversation(accountPubkey: la.pubkey, participants: Set([la.pubkey,selectedContactPubkey])))
+                            })
+                            .nosturNavBgCompat(theme: theme)
+                            .environment(\.theme, theme)
                         }
                         .nbUseNavigationStack(.never)
                         .presentationBackgroundCompat(theme.listBackground)
                     }
                     .onReceive(receiveNotification(.triggerDM)) { notification in
-                        let preloadNewDMInfo = notification.object as! (String, NRContact)
-                        self.preloadNewDMInfo = preloadNewDMInfo
-                        showingNewDM = true
+                        let newDMConversation = notification.object as! NewDMConversation
+                        navPath.append(newDMConversation)
                     }
                     .environmentObject(VideoPostPlaybackCoordinator())
                 
@@ -101,6 +95,19 @@ struct MainDMsTab: View {
         ToolbarItem(placement: .topBarTrailing) {
             Button("Settings", systemImage: "gearshape") {
                 showSettingsSheet = true
+            }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var newDMbutton: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("New Message", systemImage: "square.and.pencil") {
+                guard AccountsState.shared.fullAccounts.contains(where: { $0.publicKey == la.pubkey }) else {
+                    showReadOnlyMessage()
+                    return
+                }
+                showNewDMSheet = true
             }
         }
     }

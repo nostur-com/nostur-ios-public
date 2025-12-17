@@ -341,8 +341,9 @@ struct ProfileView: View {
             if account()?.isFullAccount ?? false {
                 Button {
                     goToDMs()
+                    guard let account = account() else { return }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        sendNotification(.triggerDM, (nrContact.pubkey, nrContact))
+                        sendNotification(.triggerDM, NewDMConversation(accountPubkey: account.publicKey, participants: Set([account.publicKey,nrContact.pubkey])))
                     }
                 } label: { Image(systemName: "envelope.fill") }
                     .buttonStyle(NosturButton())
