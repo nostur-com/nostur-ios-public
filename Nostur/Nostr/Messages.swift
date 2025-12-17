@@ -363,12 +363,12 @@ public struct RequestMessage {
     
     static func getUserMetadataAndContactList(pubkey:String, subscriptionId:String? = nil) -> String {
         return """
-["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,3,10002,10063], "limit": 25}]
+["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": [0,3,10002,10050,10063], "limit": 25}]
 """
     }
     
     static func getUserProfileKinds(pubkey:String, subscriptionId:String? = nil, kinds:[Int]? = nil) -> String {
-        let kindsJsonArr = JSON.shared.toString(kinds ?? [0,3,30008,10002,10063])
+        let kindsJsonArr = JSON.shared.toString(kinds ?? [0,3,30008,10002,10050,10063])
         return """
 ["REQ", "\(subscriptionId ?? UUID().uuidString)", {"authors": ["\(pubkey)"], "kinds": \(kindsJsonArr), "limit": 25}]
 """
