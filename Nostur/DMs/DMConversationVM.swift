@@ -55,7 +55,6 @@ class ConversionVM: ObservableObject {
         let dayIdFormatter = DateFormatter()
         dayIdFormatter.dateFormat = "yyyy-MM-dd"          // note: lowercase yyyy
         dayIdFormatter.locale = Locale(identifier: "en_US_POSIX") // ensures consistent format
-        dayIdFormatter.timeZone = TimeZone(secondsFromGMT: 0)      // optional: use UTC
         self.dayIdFormatter = dayIdFormatter
     }
     
@@ -123,10 +122,10 @@ class ConversionVM: ObservableObject {
                     L.og.debug("💌💌 Calling self.addToView from importedDMsub: rumor.id: \(nEvent.id)")
 #endif
                 if nEvent.kind == .directMessage { // already decrypted by unwrap, don't need keypair here
-                    self.addToView(nEvent, nil, event.createdAt)
+                    _ = self.addToView(nEvent, nil, Date(timeIntervalSince1970: Double(nEvent.createdAt.timestamp)))
                 } else {
                     guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: self.ourAccountPubkey), let ourKeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { return }
-                    self.addToView(nEvent, ourKeys, event.createdAt)
+                    _ = self.addToView(nEvent, ourKeys, Date(timeIntervalSince1970: Double(nEvent.createdAt.timestamp)))
                 }
                 
                 
@@ -226,13 +225,13 @@ class ConversionVM: ObservableObject {
         
     private var lastAddedIds: RecentSet<String> = .init(capacity: 10)
     
-    private func addToView(_ rumorNEvent: NEvent, _ ourkeys: Keys? = nil, _ messageDate: Date) {
+    private func addToView(_ rumorNEvent: NEvent, _ ourkeys: Keys? = nil, _ messageDate: Date) -> NRChatMessage? {
         if lastAddedIds.contains(rumorNEvent.id) {
             // rumorId (if added from local submit, don't add again when receiving from relay)
 #if DEBUG
             L.og.debug("💌💌 Don't add to view again rumor.id: \(rumorNEvent.id) ")
 #endif
-            return
+            return nil
         }
         lastAddedIds.insert(rumorNEvent.id)
         
@@ -280,6 +279,8 @@ class ConversionVM: ObservableObject {
                 }
             }
         }
+        
+        return newChatMessage
     }
     
     @MainActor public func sendMessage(_ message: String) async throws {
@@ -311,7 +312,7 @@ class ConversionVM: ObservableObject {
         
         if let signedEvent = try? nEvent.sign(keys) {
             Unpublisher.shared.publishNow(signedEvent)
-            addToView(signedEvent, keys, messageDate)
+            _ = addToView(signedEvent, keys, messageDate)
             return
         }
         throw DMError.Unknown
@@ -339,7 +340,7 @@ class ConversionVM: ObservableObject {
         let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
         
         let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
-        addToView(rumorNEvent, ourkeys, messageDate)
+        let addedChatMessage = addToView(rumorNEvent, ourkeys, messageDate)
         
         // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
         let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourAccountPubkey, keys: ourkeys)
@@ -538,7 +539,7 @@ enum ConversionVMViewState {
 class ConversationDay: Identifiable, Equatable, ObservableObject {
     
     static func == (lhs: ConversationDay, rhs: ConversationDay) -> Bool {
-        lhs.id == rhs.id && lhs.messages.count == rhs.messages.count
+        lhs.id == rhs.id
     }
     
     var id: UUID
