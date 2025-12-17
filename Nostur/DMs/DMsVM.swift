@@ -131,6 +131,7 @@ class DMsVM: ObservableObject {
             return
         }
         
+        self.fetchDMrelays()
         self.loadDMStates()
         self.loadConversations()
         // do 3 month scan if we have no messages (probably first time)
@@ -143,6 +144,19 @@ class DMsVM: ObservableObject {
         ready = true
         showUpgradeNotice = await shouldShowUpgradeNotice(accountPubkey: self.accountPubkey)
         self.listenForNewMessages()
+    
+    private func fetchDMrelays() {
+        let reqFilters = Filters(
+            authors: [accountPubkey],
+            kinds: [10050],
+            limit: 1
+        )
+        nxReq(
+            reqFilters,
+            subscriptionId: "DM-DMsVM" + UUID().uuidString.prefix(48),
+            relayType: .READ
+        )
+    }
     }
     
     private var accountChangedSubscription: AnyCancellable?

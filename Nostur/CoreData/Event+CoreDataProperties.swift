@@ -930,6 +930,8 @@ extension Event {
         handleDelete(nEvent: event, context: context)
         handleComment(nEvent: event, savedEvent: savedEvent, context: context)
         handleProfileUpdate(nEvent: event, savedEvent: savedEvent, context: context)
+        handleRelaySets(nEvent: event, savedEvent: savedEvent, context: context)
+        
         
         return savedEvent
     }
