@@ -43,7 +43,7 @@ struct PhoneViewIsh: View {
                                     if #available(iOS 26.0, *) {
                                         $0.toolbar {
                                             settingsButton(followingConfig)
-                                            .sharedBackgroundVisibility(.hidden)
+                                                .sharedBackgroundVisibility(.hidden)
                                         }
                                     }
                                     else {

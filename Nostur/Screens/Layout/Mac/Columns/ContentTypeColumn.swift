@@ -34,6 +34,7 @@ struct ContentTypeColumn: View {
                             if #available(iOS 26.0, *) {
                                 $0.toolbar {
                                     newPostButton(config)
+                                        .sharedBackgroundVisibility(.hidden)
                                     settingsButton(config)
                                         .sharedBackgroundVisibility(.hidden)
                                 }

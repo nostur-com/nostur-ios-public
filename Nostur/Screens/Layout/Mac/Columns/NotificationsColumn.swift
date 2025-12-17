@@ -142,7 +142,7 @@ struct NotificationsColumnInner: View {
             if #available(iOS 26.0, *) {
                 $0.toolbar {
                     accountsButton
-                    .sharedBackgroundVisibility(.hidden)
+                        .sharedBackgroundVisibility(.hidden)
                 }
             }
             else {

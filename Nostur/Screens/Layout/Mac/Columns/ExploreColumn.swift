@@ -32,7 +32,7 @@ struct ExploreColumn: View {
                             if #available(iOS 26.0, *) {
                                 $0.toolbar {
                                     settingsButton(exploreConfig)
-                                    .sharedBackgroundVisibility(.hidden)
+                                        .sharedBackgroundVisibility(.hidden)
                                 }
                             }
                             else {

@@ -20,7 +20,7 @@ struct HotColumn: View {
                 if #available(iOS 26.0, *) {
                     $0.toolbar {
                         settingsButton
-                        .sharedBackgroundVisibility(.hidden)
+                            .sharedBackgroundVisibility(.hidden)
                     }
                 }
                 else {

@@ -153,7 +153,7 @@ struct BookmarksColumn: View {
             if #available(iOS 26.0, *) {
                 $0.toolbar {
                     filtersButtonAndBookmarksCount
-                    .sharedBackgroundVisibility(.hidden)
+                        .sharedBackgroundVisibility(.hidden)
                 }
             }
             else {
