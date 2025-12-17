@@ -72,9 +72,9 @@ class NewPostNotifier: ObservableObject {
                         filters: [
                             Filters(
                                 authors: self.enabledPubkeys,
-                                kinds: PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([6])), // not reposts
+                                kinds: PROFILE_KINDS.union(PROFILE_KINDS_REPLIES).union(ARTICLE_KINDS).subtracting(Set([6,5])), // not reposts or deletes (too many deletes???)
                                 since: Int(since),
-                                limit: 250
+                                limit: 458
                             )
                         ]
                     ),
