@@ -11,6 +11,7 @@ import SwiftUI
 import NostrEssentials
 import Combine
 
+// Partial Copy Paste from DMsVM
 class GiftWrapsManager: ObservableObject {
     
     private var lastLocalGiftWrapTimestampAt: Int {
@@ -19,55 +20,56 @@ class GiftWrapsManager: ObservableObject {
     }
     
     private var accountPubkey: String
-    private var didLoad = false
+    @Published var ready = false
+    @Published var ncNotSupported = false
        
     private var subscriptions = Set<AnyCancellable>()
     
-    init(accountPubkey: String) {
-        self.accountPubkey = accountPubkey
+    init(accountPubkey: String? = nil) {
+        self.accountPubkey = accountPubkey ?? AccountsState.shared.activeAccountPublicKey
     }
 
-    public func load() {
+    @MainActor
+    public func load(force: Bool = false) async {
+        guard force || !ready else { return }
+        
+        if let account = AccountsState.shared.accounts.first(where: { $0.publicKey == self.accountPubkey }) {
+            ncNotSupported = account.isNC
+        }
+        
+        if ncNotSupported {
+            
+            return
+        }
 
-
-        didLoad = true
-    }
-     
-    public func processGiftWrap(_ event: Event) {
-        // Should already be kind 1059 here, with our acountPubkey as recipient (p tag)
-        guard event.pTags().contains(where: { $0 == self.accountPubkey }) else { return }
+        ready = true
         
-        // Decrypt the seal
-        
+        // 10050 is already fetched from DMsVM.shared so no need here
+        // fetch since last timestamp minus 48 hours ago
+        self.fetchGiftWraps()
     }
     
-    private func monthsAgoRange(_ months:Int) -> (since: Int, until: Int) {
-        return (
-            since: NTimestamp(date: Date().addingTimeInterval(Double(months + 1) * -2_592_000)).timestamp,
-            until: NTimestamp(date: Date().addingTimeInterval(Double(months) * -2_592_000)).timestamp
-        )
+    private func fetchGiftWraps() {
+        DMsVM.shared.fetchGiftWraps()
     }
     
-    @Published var scanningMonthsAgo = 0
+    private var accountChangedSubscription: AnyCancellable?
     
-    public func rescanForMissingDMs(_ monthsAgo: Int) {
-        guard scanningMonthsAgo == 0 else { return }
-        
-        for i in 0...monthsAgo {
-            let ago = monthsAgoRange(monthsAgo - i)
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(5 * i)) { [weak self] in
-                guard let self else { return }
-                self.scanningMonthsAgo = i+1 == (monthsAgo + 1) ? 0 : i+1
-                
-                if let message = CM(
-                    type: .REQ,
-                    filters: [
-                        Filters(kinds: [1059], tagFilter: TagFilter(tag: "p", values: [accountPubkey]), since: ago.since, until: ago.until)
-                    ]
-                ).json() {
-                    req(message)
+    private func setupAccountChangedListener() {
+        guard accountChangedSubscription == nil else { return }
+        accountChangedSubscription = receiveNotification(.activeAccountChanged)
+            .sink { [weak self] notification in
+                Task { @MainActor in
+                    let account = notification.object as! CloudAccount
+                    await self?.reload(accountPubkey: account.publicKey)
                 }
             }
-        }
     }
+    
+    @MainActor
+    public func reload(accountPubkey: String) async {
+        self.accountPubkey = accountPubkey
+        await self.load(force: true)
+    }
+
 }

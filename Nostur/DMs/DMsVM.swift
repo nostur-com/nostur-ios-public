@@ -144,6 +144,8 @@ class DMsVM: ObservableObject {
         ready = true
         showUpgradeNotice = await shouldShowUpgradeNotice(accountPubkey: self.accountPubkey)
         self.listenForNewMessages()
+        self.fetchGiftWraps()
+    }
     
     private func fetchDMrelays() {
         let reqFilters = Filters(
@@ -157,6 +159,31 @@ class DMsVM: ObservableObject {
             relayType: .READ
         )
     }
+    
+    private var lastGiftWrapAt = Int(Date().timeIntervalSince1970) - (48 * 60 * 60)  // 48
+    
+    private var giftWrapsTimer: Timer? = nil
+    private func startGiftWrapsTimer() {
+        guard giftWrapsTimer == nil else { return }
+        self.giftWrapsTimer?.invalidate()
+        self.giftWrapsTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: true) { [weak self] _ in
+            self?.fetchGiftWraps()
+        }
+        self.giftWrapsTimer?.tolerance = 15.0
+    }
+    
+    public func fetchGiftWraps() {
+        let reqFilters = Filters(
+            kinds: [1059],
+            tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
+            since: lastGiftWrapAt,
+            limit: 500
+        )
+        nxReq(
+            reqFilters,
+            subscriptionId: "-OPEN-59-" + self.id,
+            relayType: .READ
+        )
     }
     
     private var accountChangedSubscription: AnyCancellable?
