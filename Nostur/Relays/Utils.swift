@@ -9,9 +9,9 @@ import Foundation
 import Combine
 //import Playgrounds
 
-class NXJob: Equatable {
+class DMSendJob: Equatable {
     
-    static func == (lhs: NXJob, rhs: NXJob) -> Bool {
+    static func == (lhs: DMSendJob, rhs: DMSendJob) -> Bool {
         lhs.id == rhs.id
     }
     
@@ -19,11 +19,11 @@ class NXJob: Equatable {
     public var subscriptions: Set<AnyCancellable> = []
     private let timeout: Double
     public var didSucceed = false
-    private var onTimeout: (NXJob) -> Void
-    private var onFinally: ((NXJob) -> Void)?
+    private var onTimeout: (DMSendJob) -> Void
+    private var onFinally: ((DMSendJob) -> Void)?
     private var timer: Timer? = nil
     
-    init(timeout: Double = 5.0, setup: @escaping (NXJob) -> Void, onTimeout: @escaping (NXJob) -> Void, onFinally: ((NXJob) -> Void)? = nil) {
+    init(timeout: Double = 5.0, setup: @escaping (DMSendJob) -> Void, onTimeout: @escaping (DMSendJob) -> Void, onFinally: ((DMSendJob) -> Void)? = nil) {
         self.id = UUID()
         self.timeout = timeout
         self.onTimeout = onTimeout
@@ -61,3 +61,10 @@ class NXJob: Equatable {
 //    MessageParser.shared.okSub.send((id: "2", relay: "test"))
 //    MessageParser.shared.okSub.send((id: "3", relay: "test"))
 //}
+
+
+enum DMSendResult {
+    case sending
+    case success
+    case timeout
+}

@@ -157,29 +157,6 @@ struct DayView: View {
         // messagess
         ForEach(day.messages) { message in
             BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey)
-                .overlay(alignment: .bottom) {
-                    HStack(spacing: 2) {
-                       
-                        Spacer()
-                        
-                        ForEach(self.balloonSuccesses.filter { $0.messageId == message.id }) { success in
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(Color.green)
-                                .infoText("Succesfully sent to \(nameOrPubkey(success.receiverPubkey))'s relay: \(success.relay)")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                        
-                        ForEach(self.balloonErrors.filter { $0.messageId == message.id }) { error in
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(Color.red)
-                                .infoText("\(error.relay): \(error.errorText)")
-                                .font(.caption)
-                                .foregroundColor(.red)
-                        }
-                    }
-                    .padding(.trailing, 25)
-                }
         }
     }
 }
@@ -195,6 +172,8 @@ struct BalloonView17: View {
     
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
+    
+    @State private var showDMSendResult: RecipientResult? = nil
     
     var body: some View {
         HStack {
@@ -229,6 +208,28 @@ struct BalloonView17: View {
             
             if !isSentByCurrentUser {
                 Spacer()
+            }
+        }
+        .overlay(alignment: .bottom) {
+            HStack(spacing: 2) {
+               
+                Spacer()
+                
+                ForEach(Array(nrChatMessage.dmSendResult.keys).sorted(), id: \.self) { pubkey in
+                    RecipientResultView(result: nrChatMessage.dmSendResult[pubkey]!)
+                        .onTapGesture {
+                            showDMSendResult = nrChatMessage.dmSendResult[pubkey]!
+                        }
+                }
+            }
+            .padding(.trailing, 25)
+        }
+        .sheet(item: $showDMSendResult) { dmSendResult in
+            NBNavigationStack {
+                DMSendResultDetail(
+                    dmSentResult: dmSendResult,
+                    isOwnRelays: accountPubkey == dmSendResult.recipientPubkey
+                )
             }
         }
     }
@@ -460,4 +461,118 @@ struct DMProfileInfo: View {
         }
     }
 
+}
+
+
+struct DMSendResultDetail: View {
+    @Environment(\.dismiss) var dismiss
+    let dmSentResult: RecipientResult
+    let isOwnRelays: Bool
+    
+    var body: some View {
+        VStack {
+            if isOwnRelays {
+                Text("Sent to your DM relays:")
+            }
+            else {
+                HStack(spacing: 3) {
+                    Text("Sent to relays of")
+                    ContactName(pubkey: dmSentResult.recipientPubkey)
+                }
+            }
+            ForEach(dmSentResult.relayResults.keys.sorted(), id: \.self) { key in
+                HStack {
+                    Image(systemName: iconName(for: dmSentResult.relayResults[key]!))
+                        .foregroundStyle(color(for: dmSentResult.relayResults[key]!))
+                        .frame(width: 24, alignment: .center)
+                    
+                    Text(key)
+                    
+                    Spacer()
+                }
+            }
+        }
+        .padding(20)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close", systemImage: "xmark") {
+                    dismiss()
+                }
+            }
+        }
+    }
+    
+    private func iconName(for result: DMSendResult) -> String {
+        switch result {
+        case .success:
+            return "checkmark.circle.fill"
+        case .timeout:
+            return "exclamationmark.triangle.fill"
+        case .sending:
+            return "hourglass.tophalf.filled"
+        }
+    }
+    
+    private func color(for result: DMSendResult) -> Color {
+        switch result {
+        case .success:
+            return Color.green
+        case .timeout:
+            return Color.red
+        case .sending:
+            return Color.gray
+        }
+    }
+}
+
+#Preview("DMSendResultDetail") {
+    VStack {
+        DMSendResultDetail(
+            dmSentResult: RecipientResult(
+                recipientPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33",
+                relayResults: [
+                    "wss://nos.lol": DMSendResult.sending,
+                    "wss://relay.nostr.band": DMSendResult.timeout,
+                    "wss://nostr.wine":DMSendResult.success
+                ]
+            ),
+            isOwnRelays: false
+        )
+        
+        DMSendResultDetail(
+            dmSentResult: RecipientResult(
+                recipientPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
+                relayResults: [
+                    "wss://nos.lol": DMSendResult.timeout,
+                    "wss://relay.nostr.band": DMSendResult.timeout,
+                    "wss://nostr.wine":DMSendResult.sending
+                ]
+            ),
+            isOwnRelays: true
+        )
+    }
+}
+
+
+struct RecipientResultView: View {
+    @ObservedObject var result: RecipientResult
+    
+    var body: some View {
+        Image(systemName: iconName(for: result))
+            .foregroundStyle(iconColor(for: result))
+    }
+    
+    func iconName(for result: RecipientResult) -> String {
+        if result.anySuccess {
+            return "checkmark.circle.fill"
+        }
+        return "checkmark.circle"
+    }
+    
+    func iconColor(for result: RecipientResult) -> Color {
+        if result.anySuccess {
+            return Color.green
+        }
+        return Color.gray
+    }
 }

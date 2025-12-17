@@ -9280,6 +9280,12 @@
         }
       }
     },
+    "Sent to relays of" : {
+
+    },
+    "Sent to your DM relays:" : {
+
+    },
     "Sent to:" : {
       "comment" : "Heading for list of relays sent to",
       "localizations" : {
@@ -11618,6 +11624,7 @@
     },
     "y" : {
       "comment" : "short for year (ago), appended to number. Example: 1y",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

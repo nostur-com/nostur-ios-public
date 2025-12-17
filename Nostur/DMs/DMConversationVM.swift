@@ -372,37 +372,59 @@ class ConversionVM: ObservableObject {
             }
         }
         
+        addedChatMessage?.dmSendResult = sendJobs.reduce(into: [:]) { dmSendJobs, sendJob in
+            dmSendJobs[sendJob.receiver] = RecipientResult(
+                recipientPubkey: sendJob.receiver,
+                relayResults: sendJob.relays.reduce(into: [:]) { relays, relay in
+                    relays[relay] = .sending
+                }
+            )
+        }
+        
+        guard let addedChatMessage else { return }
+        
         for job in sendJobs {
-            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEvent.id)
+            sendToDMRelays(receiverPubkey: job.receiver, wrappedEvent: job.wrappedEvent, relays: job.relays, rumorId: rumorEvent.id, addedChatMessage: addedChatMessage)
         }
     }
     
     @Published var relayLogs: String = ""
-    private var nxJobs: [NXJob] = []
+    private var nxJobs: [DMSendJob] = []
     
-    private func sendToDMRelays(receiverPubkey: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, rumorId: String) {
-        let nxJob = NXJob(
+    private func sendToDMRelays(receiverPubkey: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, rumorId: String, addedChatMessage: NRChatMessage) {
+        let nxJob = DMSendJob(
             timeout: 4.0,
-            setup: { [weak self] job in
+            setup: { job in
                 MessageParser.shared.okSub
                     .filter { !job.didSucceed && $0.id == wrappedEvent.id }
-                    .sink { [weak self] message in
+                    .sink { message in
 #if DEBUG
                         L.og.debug("✅✅ 💌💌 3.A message.id: \(message.id) message.relayId: \(message.relay) - receiverPubkey: \(nameOrPubkey(receiverPubkey))")
 #endif
-                        job.onDidSucceed()
-                        Task { @MainActor in
-                            self?.balloonSuccesses.append(BalloonSuccess(messageId: rumorId, receiverPubkey: receiverPubkey, relay: message.relay))
+                        if let recipientResult = addedChatMessage.dmSendResult[receiverPubkey] {
+                            recipientResult.relayResults[message.relay] = DMSendResult.success
+                            Task { @MainActor in
+                                addedChatMessage.objectWillChange.send()
+                            }
                         }
                     }
                     .store(in: &job.subscriptions)
             },
-            onTimeout: { [weak self] job in
+            onTimeout: { job in
 #if DEBUG
                 L.og.debug("🔴🔴 💌💌 3.B TIMEOUT wrapped.id: \(wrappedEvent.id) receiverPubkey: \(nameOrPubkey(receiverPubkey))")
 #endif
+                
+                if let recipientResult: RecipientResult = addedChatMessage.dmSendResult[receiverPubkey] {
+                    for (relay, result) in recipientResult.relayResults {
+                        if result != .success {
+                            recipientResult.relayResults[relay] = .timeout
+                        }
+                    }
+                }
+                
                 Task { @MainActor in
-                    self?.balloonErrors.append(BalloonError(messageId: rumorId, receiverPubkey: receiverPubkey, relay: "\(relays.description)", errorText: "timeout"))
+                    addedChatMessage.objectWillChange.send()
                 }
             },
             onFinally: { job in
@@ -466,6 +488,8 @@ class ConversionVM: ObservableObject {
                 subscriptionId: "DM-R"
             )
         }
+        
+        
         
         // Make sure main giftwraps receive subscription is active
     }

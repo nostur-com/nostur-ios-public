@@ -64,6 +64,9 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     
     var sats: Double?
     
+    // to show success/error in chat bubble
+    public var dmSendResult: [String: RecipientResult] = [:] // [pubkey: RecipientResult]
+    
     init(nEvent: NEvent, keyPair: (publicKey: String, privateKey: String)? = nil) {
         self.nEvent = nEvent
         
@@ -166,5 +169,30 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
                 self?.contentElementsDetail = contentElementsDetail
             }
         }
+    }
+}
+
+
+class RecipientResult: ObservableObject, Identifiable {
+    let id: UUID
+    @Published var anySuccess = false
+    public var recipientPubkey: String
+    public var relayResults: [String: DMSendResult] = [:]  { // [pubkey: [relay: DMSendResult]]
+        didSet {
+            for (_, sendResult) in relayResults {
+                if sendResult == .success {
+                    Task { @MainActor in
+                        anySuccess = true
+                    }
+                    break
+                }
+            }
+        }
+    }
+    
+    init(recipientPubkey: String, relayResults: [String : DMSendResult]) {
+        self.id = UUID()
+        self.recipientPubkey = recipientPubkey
+        self.relayResults = relayResults
     }
 }
