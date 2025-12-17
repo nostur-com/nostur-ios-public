@@ -218,7 +218,7 @@ class DMsVM: ObservableObject {
             .filter { $0.nEvent.createdAt.timestamp > self.lastDMLocalNotifcationAt && $0.nEvent.pTags().contains(self.accountPubkey) }
             .sink { (_, event, nEvent, newDMStateCreated) in
                 
-                let followingPubkeys = AccountsState.shared.accounts.first(where: { $0.publicKey == self.accountPubkey })?.followingPubkeys ?? []
+                let followingPubkeys = account(by: self.accountPubkey)?.followingPubkeys ?? []
                 
                 // Only continue if either limit to follows is not enabled, or if we are following the sender
                 guard !SettingsStore.shared.receiveLocalNotificationsLimitToFollows || followingPubkeys.contains(event.pubkey) else { return }
@@ -369,7 +369,7 @@ class DMsVM: ObservableObject {
                     type: .REQ,
                     filters: [
                         // DMs sent
-                        Filters(authors: Set([accountPubkey]), kinds: [4,1059], since: ago.since, until: ago.until),
+                        Filters(authors: Set([accountPubkey]), kinds: [4], since: ago.since, until: ago.until),
                         // DMs received
                         Filters(kinds: [4,1059], tagFilter: TagFilter(tag: "p", values: [accountPubkey]), since: ago.since, until: ago.until)
                     ]

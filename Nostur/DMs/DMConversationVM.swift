@@ -142,8 +142,8 @@ class ConversionVM: ObservableObject {
             return
         }
         
-        // Last received message is kind 14? = NIP17
-        if messages.filter({ $0.pubkey != ourAccountPubkey }).last?.nEvent.kind == .directMessage {
+        // Last message is kind 14? = NIP17
+        if messages.last?.nEvent.kind == .directMessage {
             Task { @MainActor in
                 self.conversionVersion = 1 // NIP-17
             }
@@ -342,20 +342,20 @@ class ConversionVM: ObservableObject {
         let rumorNEvent = NEvent.fromNostrEssentialsEvent(rumorEvent)
         let addedChatMessage = addToView(rumorNEvent, ourkeys, messageDate)
         
-        // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
-        let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: ourAccountPubkey, keys: ourkeys)
-        await bg().perform {
-            _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
-            MessageParser.shared.pendingOkWrapIds.insert(giftWrap.id) // When "OK" comes back, "relays" on rumor need to be updated, not on wrap.
-        }
-
-        // Wrap and send to all (including self)
+        // Wrap and create send jobs for all receivers (including self)
         for (n, receiverPubkey) in participants.enumerated() {
             // wrap message
             do {
                 let giftWrap = try createGiftWrap(rumorEvent, receiverPubkey: receiverPubkey, keys: ourkeys)
+                if receiverPubkey == ourAccountPubkey {
+                    // save message to local db and giftwrap to ourselve (relay backup)  (we can't unwrap sent to receipents, can only unwrap received to our pubkey)
+                    await bg().perform {
+                        _ = Event.saveEvent(event: rumorEvent, wrapId: giftWrap.id, context: bg())
+                        MessageParser.shared.pendingOkWrapIds.insert(giftWrap.id) // When "OK" comes back, "relays" on rumor need to be updated, not on wrap.
+                    }
+                }
+
                 let relays = await getDMrelays(for: receiverPubkey)
-                // send to to relays..
 #if DEBUG
                 L.og.debug("💌💌 1. (\(n+1)/\(recipientPubkeys.count)) Preparing sendJobs. To: \(nameOrPubkey(receiverPubkey)) relays: \(relays)")
 #endif
