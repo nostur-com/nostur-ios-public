@@ -131,7 +131,7 @@ struct NavigationDestinationsModifier: ViewModifier {
                         .environmentObject(VideoPostPlaybackCoordinator())
                 }
                 else {
-                    Text("Unavailable")
+                    Text("Unavailable: accountPubkey missing")
                 }
             }
             .nbNavigationDestination(for: NRPost.self) { nrPost in
