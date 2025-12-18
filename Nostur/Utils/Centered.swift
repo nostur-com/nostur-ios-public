@@ -8,12 +8,18 @@
 import SwiftUI
 
 struct CenteredProgressView: View {
+    var message: String?
+    
     var body: some View {
         VStack {
             Spacer()
             HStack {
                 Spacer()
-                ProgressView()
+                ProgressView(label: {
+                    if let message {
+                        Text(message)
+                    }
+                })
                 Spacer()
             }
             Spacer()
@@ -21,8 +27,11 @@ struct CenteredProgressView: View {
     }
 }
 
-struct Centered_Previews: PreviewProvider {
-    static var previews: some View {
-        CenteredProgressView()
-    }
+#Preview {
+    CenteredProgressView()
+}
+
+
+#Preview("with text") {
+    CenteredProgressView(message: "Waiting for something...")
 }
