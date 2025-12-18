@@ -126,18 +126,18 @@ struct DMsInnerList: View {
                 .centered()
         }
         else if vm.ready {
-            ScrollView {
-                VStack {
-                    self.dmAcceptedAndRequesTabs
-                    
-                    self.updateNotice
-                    
-                    if vm.scanningMonthsAgo != 0 {
-                        Text("Scanning relays for messages \(vm.scanningMonthsAgo)/36 months ago...")
-                            .italic()
-                            .hCentered()
-                    }
-                    
+            VStack {
+                self.dmAcceptedAndRequesTabs
+                
+                self.updateNotice
+                
+                if vm.scanningMonthsAgo != 0 {
+                    Text("Scanning relays for messages \(vm.scanningMonthsAgo)/36 months ago...")
+                        .italic()
+                        .hCentered()
+                }
+                
+                ScrollView {
                     switch (vm.tab) {
                     case "Accepted":
                         if !vm.conversationRows.isEmpty {
