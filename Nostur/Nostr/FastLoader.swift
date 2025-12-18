@@ -310,10 +310,20 @@ class Backlog {
     
     public func clear() {
         bg().perform { [weak self] in
+            guard let self = self else { return }
 #if DEBUG
-            L.og.debug("⏳⏳ \(self?.backlogDebugName ?? "") Backlog.clear() - \((self?.tasks.map { $0.subscriptionId })?.description ?? "")")
+            L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.clear() - \((self.tasks.map { $0.subscriptionId }).description)")
 #endif
-            self?.tasks.removeAll()
+            // Clean up subscriptions in each task before removing
+            let tasksToRemove = Array(self.tasks)
+            self.tasks.removeAll()
+            
+            // Explicitly cancel subscriptions on a separate queue to avoid retain cycles
+            DispatchQueue.global(qos: .utility).async {
+                tasksToRemove.forEach { task in
+                    task.cleanup()
+                }
+            }
         }
     }
     
@@ -451,7 +461,12 @@ class ReqTask: Identifiable, Hashable {
         self.timeoutCommand?(subscriptionId)
     }
     
-    deinit {
+    public func cleanup() {
+        subscriptions.forEach { $0.cancel() }
         subscriptions.removeAll()
+    }
+    
+    deinit {
+        cleanup()
     }
 }
