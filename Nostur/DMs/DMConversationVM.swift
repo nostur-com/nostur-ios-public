@@ -359,6 +359,7 @@ class ConversionVM: ObservableObject {
 #endif
                 
                 if relays.isEmpty {
+                    addedChatMessage?.dmSendResult[receiverPubkey] = RecipientResult(recipientPubkey: receiverPubkey, relayResults: [:])
                 }
                 
                 sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
@@ -409,18 +410,20 @@ class ConversionVM: ObservableObject {
                     .store(in: &job.subscriptions)
             },
             onTimeout: { job in
-#if DEBUG
-                L.og.debug("🔴🔴 💌💌 3.B TIMEOUT wrapped.id: \(wrappedEvent.id) receiverPubkey: \(nameOrPubkey(receiverPubkey))")
-#endif
-                
+                var didActuallyTimeout = false
                 if let recipientResult: RecipientResult = addedChatMessage.dmSendResult[receiverPubkey] {
                     for (relay, result) in recipientResult.relayResults {
                         if result != .success {
                             recipientResult.relayResults[relay] = .timeout
+                            didActuallyTimeout = true
+#if DEBUG
+                            L.og.debug("🔴🔴 💌💌 3.B TIMEOUT wrapped.id: \(wrappedEvent.id) receiverPubkey: \(nameOrPubkey(receiverPubkey)) - \(relay)")
+#endif
                         }
                     }
                 }
                 
+                guard didActuallyTimeout else { return }
                 Task { @MainActor in
                     addedChatMessage.objectWillChange.send()
                 }

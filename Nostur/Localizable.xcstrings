@@ -146,6 +146,9 @@
         }
       }
     },
+    "(Timeout or other error)" : {
+
+    },
     "[__Source code__](https://github.com/nostur-com/nostur-ios-public)" : {
       "localizations" : {
         "nl" : {
@@ -519,6 +522,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : ""
+          }
+        }
+      }
+    },
+    "%@ (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$lld)"
           }
         }
       }
@@ -1753,6 +1766,9 @@
           }
         }
       }
+    },
+    "All participants need to have their DM relays published to start a group chat." : {
+
     },
     "Amount (satoshis)" : {
       "localizations" : {
@@ -3285,6 +3301,9 @@
         }
       }
     },
+    "Could not find DM relays for:" : {
+
+    },
     "Could not find latest user profile (kind-0)" : {
       "localizations" : {
         "nl" : {
@@ -3698,6 +3717,12 @@
           }
         }
       }
+    },
+    "Delivery to relays of" : {
+
+    },
+    "Delivery to your DM relays (back-up):" : {
+
     },
     "describe" : {
       "localizations" : {
@@ -5994,6 +6019,9 @@
         }
       }
     },
+    "Message Delivery" : {
+
+    },
     "Message verification" : {
       "comment" : "Setting heading on settings screen",
       "localizations" : {
@@ -6548,6 +6576,9 @@
           }
         }
       }
+    },
+    "No DM relays found for" : {
+
     },
     "No message requests" : {
       "comment" : "Shown on the DM requests view when there aren't any message requests to show",
@@ -7597,6 +7628,9 @@
           }
         }
       }
+    },
+    "Private conversation" : {
+      "comment" : "Navigation title for screen to select a contact to send a Direct Message to"
     },
     "Private key copied to clipboard" : {
       "comment" : "Notification shown after user tapped to copy",
@@ -9056,6 +9090,7 @@
     },
     "Search contact" : {
       "comment" : "Placeholder in contact search field",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9207,6 +9242,7 @@
     },
     "Send DM to" : {
       "comment" : "Navigation title for screen to select a contact to send a Direct Message to",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9279,12 +9315,6 @@
           }
         }
       }
-    },
-    "Sent to relays of" : {
-
-    },
-    "Sent to your DM relays:" : {
-
     },
     "Sent to:" : {
       "comment" : "Heading for list of relays sent to",
@@ -10951,6 +10981,9 @@
       }
     },
     "Unavailable" : {
+
+    },
+    "Unavailable: accountPubkey missing" : {
 
     },
     "Unblock" : {

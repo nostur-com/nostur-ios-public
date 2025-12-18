@@ -218,7 +218,9 @@ struct BalloonView17: View {
                         }
                 }
             }
+            .frame(height: 12)
             .padding(.trailing, 25)
+            .padding(.bottom, 2)
         }
         .sheet(item: $showDMSendResult) { dmSendResult in
             NBNavigationStack {
@@ -467,15 +469,27 @@ struct DMSendResultDetail: View {
     
     var body: some View {
         VStack {
-            if isOwnRelays {
-                Text("Sent to your DM relays:")
+            if dmSentResult.relayResults.isEmpty {
+                HStack(spacing: 3) {
+                    Text("No DM relays found for")
+                    ContactName(pubkey: dmSentResult.recipientPubkey)
+                }
+                .fontWeightBold()
+            }
+            else if isOwnRelays {
+                Text("Delivery to your DM relays (back-up):")
+                    .fontWeightBold()
             }
             else {
                 HStack(spacing: 3) {
-                    Text("Sent to relays of")
+                    Text("Delivery to relays of")
                     ContactName(pubkey: dmSentResult.recipientPubkey)
                 }
+                .fontWeightBold()
             }
+            
+            Color.clear.frame(height: 20)
+            
             ForEach(dmSentResult.relayResults.keys.sorted(), id: \.self) { key in
                 HStack {
                     Image(systemName: iconName(for: dmSentResult.relayResults[key]!))
@@ -483,6 +497,10 @@ struct DMSendResultDetail: View {
                         .frame(width: 24, alignment: .center)
                     
                     Text(key)
+                    
+                    if dmSentResult.relayResults[key]! == .timeout {
+                        Text("(Timeout or other error)")
+                    }
                     
                     Spacer()
                 }
@@ -496,6 +514,8 @@ struct DMSendResultDetail: View {
                 }
             }
         }
+        .navigationTitle("Message Delivery")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     private func iconName(for result: DMSendResult) -> String {
@@ -555,6 +575,8 @@ struct RecipientResultView: View {
     
     var body: some View {
         Image(systemName: iconName(for: result))
+            .resizable()
+            .scaledToFit()
             .foregroundStyle(iconColor(for: result))
     }
     
