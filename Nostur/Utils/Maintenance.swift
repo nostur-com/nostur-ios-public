@@ -108,6 +108,7 @@ struct Maintenance {
             Self.runSaveFullAccountFlag(context: context)
             Self.runFixMissingDMStates(context: context)
             Self.runUpgradeDMformat(context: context)
+            Self.runDmStateCleanUp(context: context)
             Self.runInsertFixedPfps(context: context)
             Self.runPutReferencedAtag(context: context)
             Self.runSetCloudFeedOrder(context: context)
@@ -1161,6 +1162,47 @@ struct Maintenance {
         migration.migrationCode = migrationCode.upgradeDMformat.rawValue
     }
     
+    // Final DM states clean up
+    static func runDmStateCleanUp(force: Bool = false, context: NSManagedObjectContext) {
+        guard force || !Self.didRun(migrationCode: migrationCode.dmStateCleanUp, context: context) else { return }
+                
+        // Our account pubkeys
+        let accountPubkeys: Set<String> = Set(CloudAccount.fetchAccounts(context: context).map { $0.publicKey })
+
+        let fr2 = CloudDMState.fetchRequest()
+        fr2.predicate = NSPredicate(value: true)
+        let dmStates = (try? context.fetch(fr2)) ?? []
+        
+        var dmStatesUpdatedCounter = 0
+        for dmState in dmStates {
+      
+            if let accountPubkey = dmState.accountPubkey_ {
+                
+                // Remove DM states where accountPubkey_ is not even part of participants (accidentally added in buggy build)
+                if !dmState.participantPubkeys.contains(accountPubkey) {
+                    dmStatesUpdatedCounter += 1
+                    context.delete(dmState)
+                }
+                
+                // Remove DM state where accountPubkey is not any of our accounts
+                if !accountPubkeys.contains(accountPubkey) {
+                    dmStatesUpdatedCounter += 1
+                    context.delete(dmState)
+                }
+                
+            }
+            else if dmState.accountPubkey_ == nil { // Remove DM states where accountPubkey_ is empty (shouldn't exist)
+                dmStatesUpdatedCounter += 1
+                context.delete(dmState)
+            }
+        }
+       
+        L.maintenance.info("🧹🧹 dmStateCleanUp: \(dmStatesUpdatedCounter) states removed.")
+       
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.dmStateCleanUp.rawValue
+    }
+    
     // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
     static func runUpdateKeychainInfo(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.updateKeychainInfo, context: context) else { return }
@@ -1329,6 +1371,9 @@ struct Maintenance {
         
         // Upgrade to new DM format
         case upgradeDMformat = "upgradeDMformat"
+        
+        // Clean up mess from before
+        case dmStateCleanUp = "dmStateCleanUp"
         
         // Put first A tag in .otherAtag
         case putReferencedAtag = "putReferencedAtag"
