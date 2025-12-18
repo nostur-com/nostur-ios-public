@@ -26,7 +26,7 @@ struct Maintenance {
             
             if let result = try? context.execute(frBatchDelete) as? NSBatchDeleteResult {
                 if let count = result.result as? Int, count > 0 {
-                    L.maintenance.info("🧹🧹🧹🧹 Deleted \(count) events")
+                    L.maintenance.info("🧹🧹 Deleted \(count) events")
                 }
             }
             
@@ -38,7 +38,7 @@ struct Maintenance {
             
             if let result2 = try? context.execute(fr2BatchDelete) as? NSBatchDeleteResult {
                 if let count = result2.result as? Int, count > 0 {
-                    L.maintenance.info("🧹🧹🧹🧹 Deleted \(count) contacts")
+                    L.maintenance.info("🧹🧹 Deleted \(count) contacts")
                 }
             }
         }
@@ -89,7 +89,7 @@ struct Maintenance {
     // Runs on viewContext. Must finish before app can continue launch
     static func upgradeDatabase(context: NSManagedObjectContext) async {
 #if DEBUG
-        L.maintenance.info("Starting version based maintenance")
+        L.maintenance.info("🧹🧹 Starting version based maintenance")
 #endif
         await context.perform {
             Self.upgradeToFullWidth(context: context)
@@ -137,11 +137,11 @@ struct Maintenance {
         let lastMaintenanceTimestamp = Date(timeIntervalSince1970: TimeInterval(SettingsStore.shared.lastMaintenanceTimestamp))
         let hoursAgo = Date(timeIntervalSinceNow: -86_400)
         guard force || (lastMaintenanceTimestamp < hoursAgo) else { // don't do maintenance more than once every 24 hours
-            L.maintenance.info("Skipping maintenance");
+            L.maintenance.info("🧹🧹 Skipping maintenance");
             return false
         }
         SettingsStore.shared.lastMaintenanceTimestamp = Int(Date.now.timeIntervalSince1970)
-        L.maintenance.info("Starting time based maintenance")
+        L.maintenance.info("🧹🧹 Starting time based maintenance")
         
         return await context.perform {
             Self.audioDownloadCacheCleanUp()
@@ -175,7 +175,7 @@ struct Maintenance {
                         }
                         if metaData.banner != nil {
                             contact.banner = metaData.banner!
-                            L.maintenance.info("🟡🟡 Updated banner \(metaData.banner!) for \(contact.pubkey)")
+                            L.maintenance.info("🧹🧹  Updated banner \(metaData.banner!) for \(contact.pubkey)")
                         }
                     }
                 }
@@ -184,7 +184,7 @@ struct Maintenance {
             }
             
             catch let error {
-                L.maintenance.info("😢😢😢 XX \(error)")
+                L.maintenance.info("🧹🧹 🔴🔴 😢😢😢 XX \(error)")
             }
         }
     }
@@ -237,7 +237,7 @@ struct Maintenance {
                     }
                 }
             } catch {
-                L.maintenance.error("Error cleaning own recordings cache: \(error)")
+                L.maintenance.error("🧹🧹 🔴🔴 Error cleaning own recordings cache: \(error)")
             }
         }
         
@@ -257,7 +257,7 @@ struct Maintenance {
                     }
                 }
             } catch {
-                L.maintenance.error("Error cleaning other audio files cache: \(error)")
+                L.maintenance.error("🧹🧹 🔴🔴 Error cleaning other audio files cache: \(error)")
             }
         }
     }
@@ -278,7 +278,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) old notifications")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete old notifications")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete old notifications")
         }
         
         let frA = CloudAccount.fetchRequest()
@@ -322,7 +322,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) events without signature")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete events without signature")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete events without signature")
         }
         
         
@@ -355,7 +355,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) kind {1,1111,1222,1244,4,14,5,6,20,9802,30311,30023,34235} events - keeping \(mergedIds.count) ids")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete {1,1111,1222,1244,4,14,5,6,20,9802,30311,30023,34235,34236} data")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete {1,1111,1222,1244,4,14,5,6,20,9802,30311,30023,34235,34236} data")
         }
         
         
@@ -376,7 +376,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) kind {8,7} events")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete 8,7 data")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete 8,7 data")
         }
         
         // KIND 9735
@@ -415,7 +415,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) kind=0 events")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete kind=0 data")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete kind=0 data")
         }
 
         
@@ -479,7 +479,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) replaceable events")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete replaceable events")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete replaceable events")
         }
         
         // ALL OTHER UNKNOWN KINDS
@@ -499,7 +499,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) unknown kind events")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete unknown kind data")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete unknown kind data")
         }
         
         
@@ -519,7 +519,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) replies/reactions/zaps to our accounts")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete replies/reactions/zaps to our accounts")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete replies/reactions/zaps to our accounts")
         }
                 
         // Keep imposter cache
@@ -538,7 +538,7 @@ struct Maintenance {
                 L.maintenance.info("🧹🧹 Deleted \(count) contacts without metadata")
             }
         } catch {
-            L.maintenance.info("🔴🔴 Failed to delete contacts without metadata")
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete contacts without metadata")
         }
         
         
@@ -588,11 +588,11 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "kind == 1")
         
         guard let kind1s = try? context.fetch(fr) else {
-            L.maintenance.error("runAddKtag: Could not fetch (runAddKtag)")
+            L.maintenance.error("🧹🧹 🔴🔴 runAddKtag: Could not fetch (runAddKtag)")
             return
         }
         
-        L.maintenance.info("runAddKtag: Found \(kind1s.count) events")
+        L.maintenance.info("🧹🧹 runAddKtag: Found \(kind1s.count) events")
         
         var countKtags = 0
         for event in kind1s {
@@ -603,7 +603,7 @@ struct Maintenance {
         }
         
         if countKtags > 0 {
-            L.maintenance.info("runAddKtag: kTag updated for \(countKtags) events")
+            L.maintenance.info("🧹🧹 runAddKtag: kTag updated for \(countKtags) events")
         }
         
         let migration = Migration(context: context)
@@ -631,16 +631,16 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "kind >= 30000 AND kind < 40000")
         
         guard let replacableEvents = try? context.fetch(fr) else {
-            L.maintenance.error("runUseDtagForReplacableEvents: Could not fetch replacable events")
+            L.maintenance.error("🧹🧹 🔴🔴 runUseDtagForReplacableEvents: Could not fetch replacable events")
             return
         }
         
-        L.maintenance.info("runUseDtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
+        L.maintenance.info("🧹🧹 runUseDtagForReplacableEvents: Found \(replacableEvents.count) replacable events")
         
         for event in replacableEvents {
             event.dTag = event.fastTags.first(where: { $0.0 == "d" })?.1 ?? ""
             if event.dTag != "" {
-                L.maintenance.info("runUseDtagForReplacableEvents: dTag set to: \(event.dTag) for \(event.id)")
+                L.maintenance.info("🧹🧹 runUseDtagForReplacableEvents: dTag set to: \(event.dTag) for \(event.id)")
             }
         }
         
@@ -670,11 +670,11 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "id == \"\"")
         
         guard let eventsWithoutId = try? context.fetch(fr) else {
-            L.maintenance.error("runDeleteEventsWithoutId: Could not fetch eventsWithoutId")
+            L.maintenance.error("🧹🧹 🔴🔴 runDeleteEventsWithoutId: Could not fetch eventsWithoutId")
             return
         }
         
-        L.maintenance.info("eventsWithoutId: Found \(eventsWithoutId.count) eventsWithoutId")
+        L.maintenance.info("🧹🧹 eventsWithoutId: Found \(eventsWithoutId.count) eventsWithoutId")
         
         for event in eventsWithoutId {
             context.delete(event)
@@ -692,11 +692,11 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "fixedName == nil")
         
         guard let contacts = try? context.fetch(fr) else {
-            L.maintenance.error("runInsertFixedNames: Could not fetch")
+            L.maintenance.error("🧹🧹 🔴🔴 runInsertFixedNames: Could not fetch")
             return
         }
         
-        L.maintenance.info("runInsertFixedNames: Found \(contacts.count) contacts")
+        L.maintenance.info("🧹🧹 runInsertFixedNames: Found \(contacts.count) contacts")
         
         for contact in contacts {
             if contact.anyName != contact.authorKey {
@@ -716,11 +716,11 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "fixedPfp == nil")
         
         guard let contacts = try? context.fetch(fr) else {
-            L.maintenance.error("runInsertFixedPfps: Could not fetch")
+            L.maintenance.error("🧹🧹 🔴🔴 runInsertFixedPfps: Could not fetch")
             return
         }
         
-        L.maintenance.info("runInsertFixedPfps: Found \(contacts.count) contacts")
+        L.maintenance.info("🧹🧹 runInsertFixedPfps: Found \(contacts.count) contacts")
         
         for contact in contacts {
             contact.fixedPfp = contact.picture
@@ -739,7 +739,7 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "kind == 1 AND tagsSerialized CONTAINS %@", "[\"a\",\"30023:")
         
         if let articleReplies = try? context.fetch(fr) {
-            L.maintenance.info("runFixArticleReplies: Found \(articleReplies.count) article replies")
+            L.maintenance.info("🧹🧹 runFixArticleReplies: Found \(articleReplies.count) article replies")
             for reply in articleReplies {
                 let event = reply.toNEvent()
                 
@@ -748,12 +748,12 @@ struct Maintenance {
                     if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
                         reply.replyToId = dbArticle.id
                         reply.replyTo = dbArticle
-                        L.maintenance.info("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article already in DB)")
+                        L.maintenance.info("🧹🧹 runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article already in DB)")
                     }
                     else {
                         // we don't have the article yet, store aTag in replyToId
                         reply.replyToId = replyToAtag.value
-                        L.maintenance.info("runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article not in DB)")
+                        L.maintenance.info("🧹🧹 runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article not in DB)")
                     }
                 }
                 else if let replyToRootAtag = event.replyToRootAtag() {
@@ -761,12 +761,12 @@ struct Maintenance {
                     if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
                         reply.replyToRootId = dbArticle.id
                         reply.replyToRoot = dbArticle
-                        L.maintenance.info("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article already in DB)")
+                        L.maintenance.info("🧹🧹 runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article already in DB)")
                     }
                     else {
                         // we don't have the article yet, store aTag in replyToRootId
                         reply.replyToRootId = replyToRootAtag.value
-                        L.maintenance.info("runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article not in DB)")
+                        L.maintenance.info("🧹🧹 runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article not in DB)")
                     }
                 }
                 
@@ -814,7 +814,7 @@ struct Maintenance {
             }
         }
         
-        L.maintenance.info("fixImposterFalsePositivesAgain: Fixed \(imposterCacheFixedCount) false positives, preset-to-0 \(imposterCacheFollowCount) contacts")
+        L.maintenance.info("🧹🧹 fixImposterFalsePositivesAgain: Fixed \(imposterCacheFixedCount) false positives, preset-to-0 \(imposterCacheFollowCount) contacts")
                 
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.fixImposterFalsePositivesAgainAgain.rawValue
@@ -838,7 +838,7 @@ struct Maintenance {
         
         var fixed = 0
         if let zaps = try? context.fetch(fr) {
-            L.maintenance.info("runFixZappedContactPubkey: Found \(zaps.count) zaps without otherPubkey")
+            L.maintenance.info("🧹🧹 runFixZappedContactPubkey: Found \(zaps.count) zaps without otherPubkey")
             for zap in zaps {
                 if let firstP = zap.firstP() {
                     zap.otherPubkey = firstP
@@ -846,7 +846,7 @@ struct Maintenance {
                     fixed += 1
                 }
             }
-            L.maintenance.info("runFixZappedContactPubkey: Fixed \(fixed) otherPubkey in zaps")
+            L.maintenance.info("🧹🧹 runFixZappedContactPubkey: Fixed \(fixed) otherPubkey in zaps")
         }
                 
         let migration = Migration(context: context)
@@ -866,7 +866,7 @@ struct Maintenance {
         
         var fixed = 0
         if let reposts = try? context.fetch(fr) {
-            L.maintenance.info("runPutRepostedPubkeyInOtherPubkey: Found \(reposts.count) reposts without otherPubkey")
+            L.maintenance.info("🧹🧹 runPutRepostedPubkeyInOtherPubkey: Found \(reposts.count) reposts without otherPubkey")
             for repost in reposts {
                 
                 // Same code as in saveEvent():
@@ -881,7 +881,7 @@ struct Maintenance {
                     fixed += 1
                 }
             }
-            L.maintenance.info("runPutRepostedPubkeyInOtherPubkey: Fixed \(fixed) otherPubkey in reposts")
+            L.maintenance.info("🧹🧹 runPutRepostedPubkeyInOtherPubkey: Fixed \(fixed) otherPubkey in reposts")
         }
                 
         let migration = Migration(context: context)
@@ -901,7 +901,7 @@ struct Maintenance {
         
         var fixed = 0
         if let reactions = try? context.fetch(fr) {
-            L.maintenance.info("runPutReactionToPubkeyInOtherPubkey: Found \(reactions.count) reactions without otherPubkey")
+            L.maintenance.info("🧹🧹 runPutReactionToPubkeyInOtherPubkey: Found \(reactions.count) reactions without otherPubkey")
             for reaction in reactions {
                 
                 // Similar as in saveEvent()
@@ -914,7 +914,7 @@ struct Maintenance {
                     fixed += 1
                 }
             }
-            L.maintenance.info("runPutReactionToPubkeyInOtherPubkey: Fixed \(fixed) otherPubkey in reactions")
+            L.maintenance.info("🧹🧹 runPutReactionToPubkeyInOtherPubkey: Fixed \(fixed) otherPubkey in reactions")
         }
                 
         let migration = Migration(context: context)
@@ -932,14 +932,14 @@ struct Maintenance {
         
         var fixed = 0
         if let items = try? context.fetch(fr) {
-            L.maintenance.info("runPutReferencedAtag: Found \(items.count) items with possible a tag")
+            L.maintenance.info("🧹🧹 runPutReferencedAtag: Found \(items.count) items with possible a tag")
             for item in items {
                 if let firstA = item.firstA() {
                     item.otherAtag = firstA
                     fixed += 1
                 }
             }
-            L.maintenance.info("runPutReferencedAtag: Fixed \(fixed) otherAtag in items")
+            L.maintenance.info("🧹🧹 runPutReferencedAtag: Fixed \(fixed) otherAtag in items")
         }
                 
         let migration = Migration(context: context)
@@ -957,13 +957,13 @@ struct Maintenance {
         
         var fixed:Int = 0
         if let accounts = try? context.fetch(fr) {
-            L.maintenance.info("fixPrivateFollows: Found \(accounts.count) accounts")
+            L.maintenance.info("🧹🧹 fixPrivateFollows: Found \(accounts.count) accounts")
             for account in accounts {
                 let privateFollows = Set(account.follows.filter { $0.privateFollow }.map { $0.pubkey })
                 account.privateFollowingPubkeys = privateFollows
                 fixed += 1
             }
-            L.maintenance.info("fixPrivateFollows: Fixed \(fixed) accounts")
+            L.maintenance.info("🧹🧹 fixPrivateFollows: Fixed \(fixed) accounts")
         }
                 
         let migration = Migration(context: context)
@@ -1155,7 +1155,7 @@ struct Maintenance {
             }
         }
        
-        L.maintenance.info("runUpgradeDMformat: \(groupIdsSetCounter) dm groupIds set.  \(dmStatesUpdatedCounter) DM states updated.")
+        L.maintenance.info("🧹🧹 runUpgradeDMformat: \(groupIdsSetCounter) dm groupIds set.  \(dmStatesUpdatedCounter) DM states updated.")
        
         let migration = Migration(context: context)
         migration.migrationCode = migrationCode.upgradeDMformat.rawValue
@@ -1184,9 +1184,9 @@ struct Maintenance {
                     .accessibility(.afterFirstUnlock)
                     .set(pk, key: pubkey)
                 
-                L.maintenance.info("updateKeychainInfo: updated \(nameOrNpub)")
+                L.maintenance.info("🧹🧹 updateKeychainInfo: updated \(nameOrNpub)")
             } catch {
-                L.og.error("🔴🔴🔴 Could not update keychain")
+                L.og.error("🧹🧹 🔴🔴 Could not update keychain")
             }
         }
         
@@ -1253,11 +1253,11 @@ struct Maintenance {
         fr.predicate = NSPredicate(value: true)
         
         guard let feeds = try? context.fetch(fr).reversed() else {
-            L.maintenance.error("runSetCloudFeedOrder: Could not fetch")
+            L.maintenance.error("🧹🧹 🔴🔴 runSetCloudFeedOrder: Could not fetch")
             return
         }
         
-        L.maintenance.info("runSetCloudFeedOrder: Setting order for \(feeds.count) feeds")
+        L.maintenance.info("🧹🧹 runSetCloudFeedOrder: Setting order for \(feeds.count) feeds")
         
         var index = 0
         for feed in feeds {
