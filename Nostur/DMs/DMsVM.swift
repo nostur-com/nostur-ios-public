@@ -102,7 +102,10 @@ class DMsVM: ObservableObject {
             }
             .store(in: &self.subscriptions)
         
+        
+        
         Task { @MainActor [weak self] in
+            self?.setupAccountChangedListener()
             if IS_CATALYST {
                 self?.setupBadgeNotifications()
             }
@@ -215,8 +218,16 @@ class DMsVM: ObservableObject {
     private func listenForNewMessages() {
         guard isMain else { return }
         Importer.shared.importedDMSub // (conversationId: groupId, event: savedEvent, nEvent: nEvent)
-            .filter { $0.nEvent.createdAt.timestamp > self.lastDMLocalNotifcationAt && $0.nEvent.pTags().contains(self.accountPubkey) }
+            .filter { $0.nEvent.pTags().contains(self.accountPubkey) }
             .sink { (_, event, nEvent, newDMStateCreated) in
+                
+                if newDMStateCreated {
+                    Task { @MainActor in
+                        self.loadDMStates()
+                    }
+                }
+                
+                guard nEvent.createdAt.timestamp > self.lastDMLocalNotifcationAt else { return }
                 
                 let followingPubkeys = account(by: self.accountPubkey)?.followingPubkeys ?? []
                 
@@ -228,11 +239,7 @@ class DMsVM: ObservableObject {
                     return
                 }
                 
-                if newDMStateCreated {
-                    Task { @MainActor in
-                        self.loadDMStates()
-                    }
-                }
+                
                         
                 // Show notification on Mac: ALWAYS
                 // On iOS: Only if app is in background

@@ -39,7 +39,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     for accountPubkey in receiversWithMissingDMStates {
         let dmState = CloudDMState(context: context)
         dmState.accountPubkey_ = accountPubkey
-        dmState.contactPubkey_ = receiverPubkey // for non-updated clients
+        dmState.contactPubkey_ = participants.subtracting([accountPubkey]).first
         dmState.participantPubkeys = participants
         if AccountsState.shared.bgAccountPubkeys.contains(sender) {
             dmState.accepted = true
