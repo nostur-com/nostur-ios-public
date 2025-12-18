@@ -34,7 +34,9 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
                 return (dmState.accountPubkey_ == accountPubkey && dmState.conversationId == dmConversationId(nEvent: nEvent))
             }
         }
-    
+
+    var didCreateNewDMState = false
+
     // Create new DM states if we have missing
     for accountPubkey in receiversWithMissingDMStates {
         let dmState = CloudDMState(context: context)
@@ -52,9 +54,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
         }
         dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
         updateBlurb(dmState, event: savedEvent, context: context)
-        DataProvider.shared().saveToDiskNow {
-            Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
-        }
+        didCreateNewDMState = true
     }
         
     // Update existing DM states
@@ -76,6 +76,14 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
             dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
             updateBlurb(dmState, event: savedEvent, context: context)
         }
+    }
+    
+    // Notify views or whatever needs to know
+    if didCreateNewDMState {
+        DataProvider.shared().saveToDiskNow {
+            Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
+        }
+    } else {
         Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: false))
     }
 }

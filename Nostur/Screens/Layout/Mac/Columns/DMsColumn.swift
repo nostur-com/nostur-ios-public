@@ -148,7 +148,10 @@ struct DMsInnerList: View {
                                     }
                                     .contentShape(Rectangle())
                                     .onTapGesture {
+                                        // mark as read
                                         navPath.append(row)
+                                        row.markedReadAt_ = .now
+                                        vm.updateUnreads()
                                     }
                                 }
                             }
@@ -167,6 +170,8 @@ struct DMsInnerList: View {
                                     .contentShape(Rectangle())
                                     .onTapGesture {
                                         navPath.append(row)
+                                        row.markedReadAt_ = .now
+                                        vm.updateUnreads()
                                     }
                                 }
                                 

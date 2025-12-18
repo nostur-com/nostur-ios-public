@@ -47,9 +47,15 @@ class DMsVM: ObservableObject {
     public var accountPubkey: String
 
     
-    @Published var conversationRows: [CloudDMState] = []
-    @Published var requestRows: [CloudDMState] = []
-    @Published var requestRowsNotWoT: [CloudDMState] = []
+    @Published var conversationRows: [CloudDMState] = [] {
+        didSet { self.unread = self.unread_ }
+    }
+    @Published var requestRows: [CloudDMState] = [] {
+        didSet { self.newRequests = self.newRequests_ }
+    }
+    @Published var requestRowsNotWoT: [CloudDMState] = [] {
+        didSet { self.newRequestsNotWoT = self.newRequestsNotWoT_ }
+    }
     
     @Published var showNotWoT = false {
         didSet {
@@ -64,15 +70,24 @@ class DMsVM: ObservableObject {
     
     @Published var showUpgradeNotice = false
      
-    var unread: Int {
+    @Published var unread: Int = 0
+    @Published var newRequests: Int = 0
+    @Published var newRequestsNotWoT: Int = 0
+    
+    var unread_: Int {
         conversationRows.reduce(0) { $0 + $1.unread(for: self.accountPubkey) }
     }
-    var newRequests: Int {
+    var newRequests_: Int {
         requestRows.reduce(0) { $0 + $1.unread(for: self.accountPubkey) }
     }
-    
-    var newRequestsNotWoT: Int {
+    var newRequestsNotWoT_: Int {
         requestRowsNotWoT.count
+    }
+    
+    public func updateUnreads() {
+        self.unread = self.unread_
+        self.newRequests = self.newRequests_
+        self.newRequestsNotWoT = self.newRequestsNotWoT_
     }
     
     public var hiddenDMs: Int {
@@ -216,16 +231,25 @@ class DMsVM: ObservableObject {
     }
     
     private func listenForNewMessages() {
-        guard isMain else { return }
         Importer.shared.importedDMSub // (conversationId: groupId, event: savedEvent, nEvent: nEvent)
             .filter { $0.nEvent.pTags().contains(self.accountPubkey) }
             .sink { (_, event, nEvent, newDMStateCreated) in
                 
                 if newDMStateCreated {
                     Task { @MainActor in
+#if DEBUG
+                        L.og.debug("💌💌 DMsVM.loadDMStates() (newDMStateCreated)")
+#endif
                         self.loadDMStates()
                     }
                 }
+                
+                Task { @MainActor in
+                    self.updateUnreads()
+                }
+                
+                // Only do notifications for logged in account
+                guard self.isMain else { return }
                 
                 guard nEvent.createdAt.timestamp > self.lastDMLocalNotifcationAt else { return }
                 
@@ -238,9 +262,7 @@ class DMsVM: ObservableObject {
                 guard (!WOT_FILTER_ENABLED()) || WebOfTrust.shared.isAllowed(nEvent.publicKey) else {
                     return
                 }
-                
-                
-                        
+        
                 // Show notification on Mac: ALWAYS
                 // On iOS: Only if app is in background
                 if (IS_CATALYST || AppState.shared.appIsInBackground)  {
@@ -268,6 +290,7 @@ class DMsVM: ObservableObject {
         for dmState in conversationRows {
             dmState.markedReadAt_ = Date.now
         }
+        self.unread = self.unread_
     }
     
     @MainActor
@@ -281,6 +304,8 @@ class DMsVM: ObservableObject {
                 dmState.markedReadAt_ = Date.now
             }
         }
+        self.newRequests = self.newRequests_
+        self.newRequestsNotWoT = self.newRequestsNotWoT_
     }
     
     
