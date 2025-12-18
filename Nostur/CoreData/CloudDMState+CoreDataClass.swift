@@ -11,6 +11,4 @@ import CoreData
 import Combine
 
 @objc(CloudDMState)
-public class CloudDMState: NSManagedObject {
-    var didUpdate = PassthroughSubject<Void, Never>()
-}
+public class CloudDMState: NSManagedObject { }

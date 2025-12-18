@@ -220,8 +220,6 @@ class ConversionVM: ObservableObject {
     }
     
     private var sendJobs: [(receiver: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>)] = []
-    @Published var balloonErrors: [BalloonError] = []
-    @Published var balloonSuccesses: [BalloonSuccess] = []
         
     private var lastAddedIds: RecentSet<String> = .init(capacity: 10)
     
@@ -361,7 +359,6 @@ class ConversionVM: ObservableObject {
 #endif
                 
                 if relays.isEmpty {
-                    balloonErrors.append(BalloonError(messageId: rumorEvent.id, receiverPubkey: receiverPubkey, relay: "Missing", errorText: "relays for \(nameOrPubkey(receiverPubkey))"))
                 }
                 
                 sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))

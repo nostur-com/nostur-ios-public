@@ -43,7 +43,7 @@ struct DMConversationView17: View {
                                 Spacer()
                             }
                             ForEach(days) { day in
-                                DayView(ourAccountPubkey: ourAccountPubkey, day: day, balloonErrors: vm.balloonErrors, balloonSuccesses: vm.balloonSuccesses)
+                                DayView(ourAccountPubkey: ourAccountPubkey, day: day)
                             }
                             Color.clear
                                 .frame(height: 0)
@@ -143,8 +143,6 @@ struct DMConversationView17: View {
 struct DayView: View {
     public let ourAccountPubkey: String
     @ObservedObject public var day: ConversationDay
-    public let balloonErrors: [BalloonError]
-    public let balloonSuccesses: [BalloonSuccess]
     
     var body: some View {
         // day header
@@ -164,8 +162,6 @@ struct DayView: View {
 struct BalloonView17: View {
     @ObservedObject public var nrChatMessage: NRChatMessage
     public var accountPubkey: String
-    
-    
     private var isSentByCurrentUser: Bool {
         nrChatMessage.pubkey == accountPubkey
     }
