@@ -19,6 +19,8 @@ struct ContactsSearch: View, Equatable {
 
     public let followingPubkeys: Set<String>
     public var prompt: String
+    public var doneButtonText: String = "Add"
+    public var disabledPubkeys: Set<String> = []
     public var onSelectContacts: ((Set<Contact>) -> Void)?
     public var onSelectContact: ((Contact) -> Void)?
     
@@ -82,6 +84,7 @@ struct ContactsSearch: View, Equatable {
                         HStack(alignment: .top) {
                             if onSelectContacts != nil {
                                 Button {
+                                    guard !disabledPubkeys.contains(contact.pubkey) else { return }
                                     if selectedContacts.contains(contact) {
                                         selectedContacts.remove(contact)
                                     }
@@ -99,9 +102,11 @@ struct ContactsSearch: View, Equatable {
                                             .padding(.top, 18)
                                     }
                                 }
+                                .opacity(disabledPubkeys.contains(contact.pubkey) ? 0 : 1.0)
                             }
                             VStack {
                                 ContactSearchResultRow(contact: contact) {
+                                    guard !disabledPubkeys.contains(contact.pubkey) else { return }
                                     if let onSelectContact {
                                         onSelectContact(contact)
                                     }
@@ -118,6 +123,15 @@ struct ContactsSearch: View, Equatable {
                             }
                         }
                         Divider()
+                    }
+                    
+                    if onSelectContacts != nil {
+                        if selectedContacts.count > 0 {
+                            Text("\(selectedContacts.count) contacts selected")
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .font(.footnote)
+                                .foregroundColor(Color.gray)
+                        }
                     }
                 }
             }
@@ -152,22 +166,14 @@ struct ContactsSearch: View, Equatable {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if onSelectContacts != nil {
-                    if !selectedContacts.isEmpty {
-                        Button(String(localized:"Add (\(selectedContacts.count))", comment: "Button to 'Add (amount)' contacts")) {
-                            guard let onSelectContacts = onSelectContacts else { return }
-                            onSelectContacts(selectedContacts)
-                        }
+                    Button(selectedContacts.count > 1 ? "\(doneButtonText) (\(selectedContacts.count))" : doneButtonText) {
+                        guard let onSelectContacts = onSelectContacts else { return }
+                        onSelectContacts(selectedContacts)
                     }
-                    else {
-                        Button("Done", systemImage: "checkmark") {
-                            guard let onSelectContacts = onSelectContacts else { return }
-                            onSelectContacts(selectedContacts)
-                        }
-                        .buttonStyleGlassProminent()
-                    }
+                    .disabled(selectedContacts.isEmpty)
                 }
                 else {
-                    EmptyView()
+                    EmptyView() // No button, tap on row is already "select"
                 }
             }
         }
