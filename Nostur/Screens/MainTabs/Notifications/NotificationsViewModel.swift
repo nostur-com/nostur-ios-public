@@ -322,8 +322,10 @@ class NotificationsViewModel: ObservableObject {
                         setAppIconBadgeCount(self.unread + dmsCount, center: center)
                     }
                 
-                let dmsCount = (DMsVM.shared.unread + DMsVM.shared.newRequests)
-                setAppIconBadgeCount(self.unread + dmsCount)
+                Task { @MainActor in
+                    let dmsCount = (DMsVM.shared.unread + DMsVM.shared.newRequests)
+                    setAppIconBadgeCount(self.unread + dmsCount)
+                }
             }
         }
     }
