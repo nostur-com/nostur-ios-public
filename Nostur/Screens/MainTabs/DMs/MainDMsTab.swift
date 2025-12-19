@@ -35,6 +35,7 @@ struct MainDMsTab: View {
                         }
                         else {
                             $0.toolbar {
+                                self.newDMbutton
                                 self.toolbarMenu
                             }
                         }
