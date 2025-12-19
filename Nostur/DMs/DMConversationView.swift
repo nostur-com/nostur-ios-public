@@ -56,7 +56,7 @@ struct DMConversationView17: View {
                                 Spacer()
                             }
                             ForEach(days) { day in
-                                DayView(ourAccountPubkey: ourAccountPubkey, day: day)
+                                DayView(ourAccountPubkey: ourAccountPubkey, day: day, showPFP: vm.receivers.count > 1)
                             }
                             Color.clear
                                 .frame(height: 0)

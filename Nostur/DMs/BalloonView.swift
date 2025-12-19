@@ -11,6 +11,7 @@ import NavigationBackport
 struct BalloonView17: View {
     @ObservedObject public var nrChatMessage: NRChatMessage
     public var accountPubkey: String
+    public var showPFP: Bool = false
     private var isSentByCurrentUser: Bool {
         nrChatMessage.pubkey == accountPubkey
     }
@@ -25,7 +26,10 @@ struct BalloonView17: View {
             if isSentByCurrentUser {
                 Spacer()
             }
-            
+            else if showPFP {
+                ObservedPFP(nrContact: nrChatMessage.nrContact, size: 20)
+                    .offset(x: 5, y: 5)
+            }
             DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
                 .padding(10)
                 .background(

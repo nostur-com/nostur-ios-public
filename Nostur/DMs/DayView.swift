@@ -10,6 +10,7 @@ import SwiftUI
 struct DayView: View {
     public let ourAccountPubkey: String
     @ObservedObject public var day: ConversationDay
+    public var showPFP: Bool = false
     
     var body: some View {
         // day header
@@ -21,7 +22,7 @@ struct DayView: View {
         
         // messagess
         ForEach(day.messages) { message in
-            BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey)
+            BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey, showPFP: showPFP)
         }
     }
 }
