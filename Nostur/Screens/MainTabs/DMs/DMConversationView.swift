@@ -12,6 +12,7 @@ import NostrEssentials
 @available(iOS 17.1, *) //  .defaultScrollAnchor(.bottom)
 struct DMConversationView17: View {
     @Environment(\.theme) private var theme
+    @EnvironmentObject private var la: LoggedInAccount
     private let participants: Set<String>
     private let ourAccountPubkey: String
     
@@ -19,6 +20,7 @@ struct DMConversationView17: View {
     @State private var text = ""
     @State private var errorText: String? = nil
     @State private var didLoad = false
+    @State private var selectedContact: NRContact?
     @Namespace private var bottomAnchor
     
     init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false) {
@@ -38,7 +40,14 @@ struct DMConversationView17: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView {
                         LazyVStack {
-                            if let receiverPubkey = vm.receivers.first {
+                            if vm.receivers.count > 1 {
+                                MultiPFPs(nrContacts: vm.receiverContacts, size: 75, onTap: { nrContact in
+                                    
+                                    // TODO: use sheet or navigate to...?
+                                    selectedContact = nrContact
+                                })
+                            }
+                            else if let receiverPubkey = vm.receivers.first {
                                 DMProfileInfo(nrContact: NRContact.instance(of: receiverPubkey))
                                 Spacer()
                             }
@@ -137,6 +146,22 @@ struct DMConversationView17: View {
             await vm.load()
         }
         .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
+        .sheet(item: $selectedContact) { selectedContact in
+            NBNavigationStack {
+                VStack(alignment: .center) {
+                    DMProfileInfo(nrContact: selectedContact)
+                    Spacer()
+                }
+                .environmentObject(la)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Close", systemImage: "xmark") {
+                            self.selectedContact = nil
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
