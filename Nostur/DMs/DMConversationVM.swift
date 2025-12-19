@@ -388,6 +388,8 @@ class ConversionVM: ObservableObject {
     }
     
     @Published var relayLogs: String = ""
+    
+    @MainActor
     private var nxJobs: [DMSendJob] = []
     
     private func sendToDMRelays(receiverPubkey: String, wrappedEvent: NostrEssentials.Event, relays: Set<String>, rumorId: String, addedChatMessage: NRChatMessage) {
@@ -429,38 +431,40 @@ class ConversionVM: ObservableObject {
                 }
             },
             onFinally: { job in
-                Task {
+                Task { @MainActor in
                     self.nxJobs.removeAll(where: { $0 == job })
                 }
             })
         
-        self.nxJobs.append(nxJob)
-        
-        for relay in relays {
-            if ConnectionPool.shared.connections[relay] != nil {
-#if DEBUG
-                L.og.debug("💌💌 2.A Sending to \(relay) for pubkey: \(nameOrPubkey(receiverPubkey)) - wrapped.id: \(wrappedEvent.id)")
-#endif
-                ConnectionPool.shared.sendMessage(
-                    NosturClientMessage(
-                        clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent),
-                        relayType: .WRITE,
-                        nEvent: NEvent.fromNostrEssentialsEvent(wrappedEvent)
-                    ),
-                    relays: [RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: [])]
-                )
-            }
-            else {
-                if let msg = NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent).json() {
-#if DEBUG
-                L.og.debug("💌💌 2.B Sending to ephemeral \(relay) for pubkey: \(nameOrPubkey(receiverPubkey)) - wrapped.id: \(wrappedEvent.id)")
-#endif
-                    Task { @MainActor in
-                        ConnectionPool.shared.sendEphemeralMessage(
-                            msg,
-                            relay: relay,
-                            write: true
-                        )
+        Task { @MainActor in
+            self.nxJobs.append(nxJob)
+            
+            for relay in relays {
+                if ConnectionPool.shared.connections[relay] != nil {
+    #if DEBUG
+                    L.og.debug("💌💌 2.A Sending to \(relay) for pubkey: \(nameOrPubkey(receiverPubkey)) - wrapped.id: \(wrappedEvent.id)")
+    #endif
+                    ConnectionPool.shared.sendMessage(
+                        NosturClientMessage(
+                            clientMessage: NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent),
+                            relayType: .WRITE,
+                            nEvent: NEvent.fromNostrEssentialsEvent(wrappedEvent)
+                        ),
+                        relays: [RelayData(read: false, write: true, search: false, auth: false, url: relay, excludedPubkeys: [])]
+                    )
+                }
+                else {
+                    if let msg = NostrEssentials.ClientMessage(type: .EVENT, event: wrappedEvent).json() {
+    #if DEBUG
+                    L.og.debug("💌💌 2.B Sending to ephemeral \(relay) for pubkey: \(nameOrPubkey(receiverPubkey)) - wrapped.id: \(wrappedEvent.id)")
+    #endif
+                        Task { @MainActor in
+                            ConnectionPool.shared.sendEphemeralMessage(
+                                msg,
+                                relay: relay,
+                                write: true
+                            )
+                        }
                     }
                 }
             }
