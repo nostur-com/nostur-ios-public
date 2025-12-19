@@ -21,6 +21,7 @@ struct DMConversationView17: View {
     @State private var errorText: String? = nil
     @State private var didLoad = false
     @State private var selectedContact: NRContact?
+    @State private var showConversationInfoSheet = false
     @Namespace private var bottomAnchor
     
     init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false) {
@@ -97,10 +98,12 @@ struct DMConversationView17: View {
                                         }
                                     }
                                 }
-                                if vm.conversionVersion == 0 {
+                                if vm.conversionVersion == 4 {
                                     Label("Using NIP-04", systemImage: "exclamationmark.lock")
-                                        .infoText("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
                                         .font(.footnote)
+                                        .onTapGesture {
+                                            showConversationInfoSheet = true
+                                        }
                                 }
                             }
                         }
@@ -129,8 +132,13 @@ struct DMConversationView17: View {
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Conversation details", systemImage: "info.circle") {
-                            
+                            showConversationInfoSheet = true
                         }
+                    }
+                }
+                .sheet(isPresented: $showConversationInfoSheet) {
+                    NBNavigationStack {
+                        DMConversationInfoSheet(vm: vm)
                     }
                 }
             case .timeout:
@@ -163,99 +171,6 @@ struct DMConversationView17: View {
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-struct DayView: View {
-    public let ourAccountPubkey: String
-    @ObservedObject public var day: ConversationDay
-    
-    var body: some View {
-        // day header
-        Text(day.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
-            .fontWeightBold()
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-            .padding(.top, 20)
-        
-        // messagess
-        ForEach(day.messages) { message in
-            BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey)
-        }
-    }
-}
-
-struct BalloonView17: View {
-    @ObservedObject public var nrChatMessage: NRChatMessage
-    public var accountPubkey: String
-    private var isSentByCurrentUser: Bool {
-        nrChatMessage.pubkey == accountPubkey
-    }
-    
-    @Environment(\.theme) private var theme
-    @Environment(\.availableWidth) private var availableWidth
-    
-    @State private var showDMSendResult: RecipientResult? = nil
-    
-    var body: some View {
-        HStack {
-            if isSentByCurrentUser {
-                Spacer()
-            }
-            
-            DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(isSentByCurrentUser ? theme.accent : theme.background)
-                )
-                .background(alignment: isSentByCurrentUser ? .bottomTrailing : .bottomLeading) {
-                    Image(systemName: "moon.fill")
-                        .foregroundColor(isSentByCurrentUser ? theme.accent : theme.background)
-                        .scaleEffect(x: isSentByCurrentUser ? 1 : -1)
-                        .rotationEffect(.degrees(isSentByCurrentUser ? 35 : -35))
-                        .offset(x: isSentByCurrentUser ? 10 : -10, y: 0)
-                        .font(.system(size: 25))
-                }
-                .padding(.horizontal, 10)
-                .padding(isSentByCurrentUser ? .leading : .trailing, 50)
-                .overlay(alignment: isSentByCurrentUser ? .bottomLeading : .bottomTrailing) {
-                    Text(nrChatMessage.createdAt, format: .dateTime.hour().minute())
-                        .frame(alignment: isSentByCurrentUser ? .leading : .trailing)
-                        .font(.footnote)
-                        .foregroundColor(nrChatMessage.nEvent.kind == .legacyDirectMessage ? .secondary : .primary)
-                        .padding(.bottom, 8)
-                        .padding(isSentByCurrentUser ? .leading : .trailing, 5)
-                }
-            
-            if !isSentByCurrentUser {
-                Spacer()
-            }
-        }
-        .overlay(alignment: .bottom) {
-            HStack(spacing: 2) {
-               
-                Spacer()
-                
-                ForEach(Array(nrChatMessage.dmSendResult.keys).sorted(), id: \.self) { pubkey in
-                    RecipientResultView(result: nrChatMessage.dmSendResult[pubkey]!)
-                        .onTapGesture {
-                            showDMSendResult = nrChatMessage.dmSendResult[pubkey]!
-                        }
-                }
-            }
-            .frame(height: 12)
-            .padding(.trailing, 25)
-            .padding(.bottom, 2)
-        }
-        .sheet(item: $showDMSendResult) { dmSendResult in
-            NBNavigationStack {
-                DMSendResultDetail(
-                    dmSentResult: dmSendResult,
-                    isOwnRelays: accountPubkey == dmSendResult.recipientPubkey
-                )
             }
         }
     }
@@ -334,291 +249,5 @@ struct BalloonView17: View {
             
             DMConversationView17(participants: participants, ourAccountPubkey: ourAccountPubkey)
         }
-    }
-}
-
-
-
-// Copy paste from ProfileView
-struct DMProfileInfo: View {
-    @StateObject private var vm = ProfileViewModel()
-    @StateObject private var lastSeenVM = LastSeenViewModel()
-    
-    @ObservedObject public var nrContact: NRContact
-    
-    @Environment(\.theme) private var theme
-    @Environment(\.containerID) private var containerID
-
-    @EnvironmentObject private var la: LoggedInAccount
-    
-    @ObservedObject private var settings: SettingsStore = .shared
-
-    var body: some View {
-#if DEBUG
-        let _ = nxLogChanges(of: Self.self)
-#endif
-        VStack(alignment: .center) {
-            ObservedPFP(nrContact: nrContact, size: 100)
-
-            HStack(spacing: 0) {
-                Text("\(nrContact.anyName) ")
-                    .font(.title)
-                    .fontWeightBold()
-                    .lineLimit(1)
-                PossibleImposterLabelView2(nrContact: nrContact)
-                if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
-                    NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
-                        .layoutPriority(3)
-                }
-            }
-            
-            if let fixedName = nrContact.fixedName, fixedName != nrContact.anyName {
-                HStack {
-                    Text("Previously known as: \(fixedName)").font(.caption).foregroundColor(.primary)
-                        .lineLimit(1)
-                    Image(systemName: "multiply.circle.fill")
-                        .onTapGesture {
-                            nrContact.setFixedName(nrContact.anyName)
-                        }
-                }
-            }
-            
-            HStack {
-                CopyableTextView(text: vm.npub)
-                    .lineLimit(1)
-                    .frame(width: 140, alignment: .leading)
-                
-                if let mainContact = Contact.fetchByPubkey(nrContact.pubkey, context: viewContext())  {
-                    ContactPrivateNoteToggle(contact: mainContact)
-                }
-                Menu {
-                    Button {
-                        UIPasteboard.general.string = vm.npub
-                    } label: {
-                        Label(String(localized:"Copy npub", comment:"Menu action"), systemImage: "doc.on.clipboard")
-                    }
-                    Button {
-                        sendNotification(.addRemoveToListsheet, nrContact)
-                    } label: {
-                        Label(String(localized:"Add/Remove from Lists", comment:"Menu action"), systemImage: "person.2.crop.square.stack")
-                    }
-                    
-                    if vm.isBlocked {
-                        Button(action: {
-                            unblock(pubkey: nrContact.pubkey)
-                            vm.isBlocked = false // TODO: Add listener on vm instead of this
-                        }) {
-                            Label("Unblock", systemImage: "circle.slash")
-                        }
-                    }
-                    else {
-                        Button {
-                            block(pubkey: nrContact.pubkey, name: nrContact.anyName)
-                            vm.isBlocked = true // TODO: Add listener on vm instead of this
-                        } label: {
-                            Label(
-                                String(localized:"Block \(nrContact.anyName)", comment: "Menu action"), systemImage: "circle.slash")
-                        }
-                    }
-                    Button {
-                        sendNotification(.reportContact, ReportContact(nrContact: nrContact))
-                    } label: {
-                        Label(String(localized:"Report \(nrContact.anyName)", comment:"Menu action"), systemImage: "flag")
-                    }
-                    
-                    Button {
-                        vm.copyProfileSource(nrContact)
-                    } label: {
-                        Label(String(localized:"Copy profile source", comment:"Menu action"), systemImage: "doc.on.clipboard")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .fontWeightBold()
-                        .padding(5)
-                }
-            }
-            
-            if (vm.isFollowingYou) {
-                Text("Follows you", comment: "Label shown when someone follows you").font(.system(size: 12))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 2)
-                    .background(Color.secondary)
-                    .opacity(0.7)
-                    .cornerRadius(13)
-                    .offset(y: -4)
-            }
-            
-            Text(verbatim: lastSeenVM.lastSeen ?? "Last seen:")
-                .font(.caption).foregroundColor(.primary)
-                .lineLimit(1)
-                .opacity(lastSeenVM.lastSeen != nil ? 1.0 : 0)
-            
-            HStack {
-                Spacer()
-                if nrContact.anyLud {
-                    ProfileLightningButton(nrContact: nrContact)
-                }
-                
-                FollowButton(pubkey: nrContact.pubkey)
-                    .buttonStyle(.borderless)
-                Spacer()
-            }
-            
-            NRTextDynamic("\(String(nrContact.about ?? ""))\n")
-
-            FollowedBy(pubkey: nrContact.pubkey, alignment: .center, showZero: true)
-         //
-        }
-        .padding([.top, .leading, .trailing], 10.0)
-        .onTapGesture { }
-        
-
-        .onAppear {
-            vm.load(nrContact, loadLess: true)
-            lastSeenVM.checkLastSeen(nrContact.pubkey)
-        }
-        
-        .task {
-            try? await Task.sleep(nanoseconds: 5_100_000_000) // Try .SEARCH relays if we don't have info
-            if nrContact.metadata_created_at == 0 {
-                nxReq(Filters(authors: [nrContact.pubkey], kinds: [0]), subscriptionId: UUID().uuidString, relayType: .SEARCH)
-            }
-        }
-    }
-
-}
-
-
-struct DMSendResultDetail: View {
-    @Environment(\.dismiss) var dismiss
-    let dmSentResult: RecipientResult
-    let isOwnRelays: Bool
-    
-    var body: some View {
-        VStack {
-            if dmSentResult.relayResults.isEmpty {
-                HStack(spacing: 3) {
-                    Text("No DM relays found for")
-                    ContactName(pubkey: dmSentResult.recipientPubkey)
-                }
-                .fontWeightBold()
-            }
-            else if isOwnRelays {
-                Text("Delivery to your DM relays (back-up):")
-                    .fontWeightBold()
-            }
-            else {
-                HStack(spacing: 3) {
-                    Text("Delivery to relays of")
-                    ContactName(pubkey: dmSentResult.recipientPubkey)
-                }
-                .fontWeightBold()
-            }
-            
-            Color.clear.frame(height: 20)
-            
-            ForEach(dmSentResult.relayResults.keys.sorted(), id: \.self) { key in
-                HStack {
-                    Image(systemName: iconName(for: dmSentResult.relayResults[key]!))
-                        .foregroundStyle(color(for: dmSentResult.relayResults[key]!))
-                        .frame(width: 24, alignment: .center)
-                    
-                    Text(key)
-                    
-                    if dmSentResult.relayResults[key]! == .timeout {
-                        Text("(Timeout or other error)")
-                    }
-                    
-                    Spacer()
-                }
-            }
-        }
-        .padding(20)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close", systemImage: "xmark") {
-                    dismiss()
-                }
-            }
-        }
-        .navigationTitle("Message Delivery")
-        .navigationBarTitleDisplayMode(.inline)
-    }
-    
-    private func iconName(for result: DMSendResult) -> String {
-        switch result {
-        case .success:
-            return "checkmark.circle.fill"
-        case .timeout:
-            return "exclamationmark.triangle.fill"
-        case .sending:
-            return "hourglass.tophalf.filled"
-        }
-    }
-    
-    private func color(for result: DMSendResult) -> Color {
-        switch result {
-        case .success:
-            return Color.green
-        case .timeout:
-            return Color.red
-        case .sending:
-            return Color.gray
-        }
-    }
-}
-
-#Preview("DMSendResultDetail") {
-    VStack {
-        DMSendResultDetail(
-            dmSentResult: RecipientResult(
-                recipientPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33",
-                relayResults: [
-                    "wss://nos.lol": DMSendResult.sending,
-                    "wss://relay.nostr.band": DMSendResult.timeout,
-                    "wss://nostr.wine":DMSendResult.success
-                ]
-            ),
-            isOwnRelays: false
-        )
-        
-        DMSendResultDetail(
-            dmSentResult: RecipientResult(
-                recipientPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
-                relayResults: [
-                    "wss://nos.lol": DMSendResult.timeout,
-                    "wss://relay.nostr.band": DMSendResult.timeout,
-                    "wss://nostr.wine":DMSendResult.sending
-                ]
-            ),
-            isOwnRelays: true
-        )
-    }
-}
-
-
-struct RecipientResultView: View {
-    @ObservedObject var result: RecipientResult
-    
-    var body: some View {
-        Image(systemName: iconName(for: result))
-            .resizable()
-            .scaledToFit()
-            .foregroundStyle(iconColor(for: result))
-    }
-    
-    func iconName(for result: RecipientResult) -> String {
-        if result.anySuccess {
-            return "checkmark.circle.fill"
-        }
-        return "checkmark.circle"
-    }
-    
-    func iconColor(for result: RecipientResult) -> Color {
-        if result.anySuccess {
-            return Color.green
-        }
-        return Color.gray
     }
 }

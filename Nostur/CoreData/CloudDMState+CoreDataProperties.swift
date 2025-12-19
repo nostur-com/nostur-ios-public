@@ -29,6 +29,7 @@ extension CloudDMState {
     @NSManaged public var lastMessageTimestamp_: Date?
     @NSManaged public var isPinned: Bool
     @NSManaged public var isHidden: Bool
+    @NSManaged public var version: Int
     
     public var conversationId: String {
         return Self.getConversationId(for: self.participantPubkeys)

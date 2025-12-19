@@ -11,8 +11,8 @@ import NostrEssentials
 import Combine
 
 class ConversionVM: ObservableObject {
-    private var participants: Set<String> // all participants (including sender)
-    private var ourAccountPubkey: String {
+    public var participants: Set<String> // all participants (including sender)
+    public var ourAccountPubkey: String {
         didSet {
             self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == ourAccountPubkey })
         }
@@ -35,8 +35,8 @@ class ConversionVM: ObservableObject {
         }
     }
     
-    // 0 = NIP-04, 1 = NIP-17
-    @Published var conversionVersion: Int = 0
+    // 4 = NIP-04, 17 = NIP-17
+    @Published var conversionVersion: Int = 17
     
     public var account: CloudAccount? = nil
     
@@ -45,7 +45,7 @@ class ConversionVM: ObservableObject {
     private var subscriptions: Set<AnyCancellable> = []
     
     // bg
-    private var cloudDMState: CloudDMState? = nil
+    public var cloudDMState: CloudDMState? = nil
     
     init(participants: Set<String>, ourAccountPubkey: String) {
         self.participants = participants
@@ -89,7 +89,9 @@ class ConversionVM: ObservableObject {
         if let cloudDMState { // Should always exists because getGroupState() gets existing or creates new
             let visibleMessages = await getMessages(cloudDMState, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
             
-            await self.resolveConversationVersion(participants, messages: visibleMessages)
+            if self.conversionVersion == 0 {
+                await self.resolveConversationVersion(participants, messages: visibleMessages)
+            }
             
             let calendar = Calendar.current
             
@@ -137,7 +139,7 @@ class ConversionVM: ObservableObject {
         // More than 2 participants = NIP-17
         if participants.count > 2 {
             Task { @MainActor in
-                self.conversionVersion = 1 // NIP-17
+                self.conversionVersion = 17 // NIP-17
             }
             return
         }
@@ -145,7 +147,7 @@ class ConversionVM: ObservableObject {
         // Last message is kind 14? = NIP17
         if messages.last?.nEvent.kind == .directMessage {
             Task { @MainActor in
-                self.conversionVersion = 1 // NIP-17
+                self.conversionVersion = 17 // NIP-17
             }
             return
         }
@@ -155,7 +157,7 @@ class ConversionVM: ObservableObject {
             let relays = await getDMrelays(for: receiverPubkey)
             if !relays.isEmpty {
                 Task { @MainActor in
-                    self.conversionVersion = 1 // NIP-17
+                    self.conversionVersion = 17 // NIP-17
                 }
                 return
             }
@@ -164,7 +166,7 @@ class ConversionVM: ObservableObject {
         
         // No indication of NIP-17 support so fall back to NIP-04
         Task { @MainActor in
-            self.conversionVersion = 0 // NIP-04
+            self.conversionVersion = 4 // NIP-04
         }
         return
     }
@@ -183,11 +185,19 @@ class ConversionVM: ObservableObject {
         let participants = self.participants
         return await withBgContext { bgContext in
             if let groupDMState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: self.ourAccountPubkey, context: bgContext) {
+                let version = groupDMState.version
+                Task { @MainActor in
+                    self.conversionVersion = version
+                }
                 return groupDMState
             }
             let newDMState = CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: bgContext)
             newDMState.accepted = true
             newDMState.initiatorPubkey_ = self.ourAccountPubkey
+            newDMState.version = participants.count > 2 ? 17 : 0
+            Task { @MainActor in
+                self.conversionVersion = participants.count > 2 ? 17 : 0
+            }
             return newDMState
         }
     }
@@ -282,7 +292,7 @@ class ConversionVM: ObservableObject {
     }
     
     @MainActor public func sendMessage(_ message: String) async throws {
-        if self.conversionVersion == 1 {
+        if self.conversionVersion == 17 {
             try await self.sendMessage17(message)
         }
         else {

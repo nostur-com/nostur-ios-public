@@ -3140,6 +3140,9 @@
     "Conversation details" : {
 
     },
+    "Conversation info" : {
+      "comment" : "Navigation title for screen with DM conversation info"
+    },
     "Conversations" : {
       "localizations" : {
         "nl" : {
@@ -3882,6 +3885,9 @@
           }
         }
       }
+    },
+    "DM relays" : {
+
     },
     "dm: you receive private message from this relay, so others should send private messages there." : {
       "localizations" : {
@@ -6022,6 +6028,9 @@
     "Message Delivery" : {
 
     },
+    "Message format" : {
+
+    },
     "Message verification" : {
       "comment" : "Setting heading on settings screen",
       "localizations" : {
@@ -6043,6 +6052,9 @@
           }
         }
       }
+    },
+    "Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found." : {
+
     },
     "Mic is off" : {
       "localizations" : {
@@ -10086,6 +10098,9 @@
           }
         }
       }
+    },
+    "Switch to a more private DM format (NIP-17)" : {
+
     },
     "Tab" : {
       "shouldTranslate" : false
