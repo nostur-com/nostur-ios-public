@@ -17,11 +17,20 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     
     guard let receiverPubkey = nEvent.firstP() else { return } // if we have no p, something is wrong
     let sender = nEvent.publicKey
-    let participants = allDMparticipants(nEvent) // including sender (.pubkey)
+    let participants = if nEvent.kind == .directMessage {
+        allDMparticipants(nEvent) // including sender (.pubkey)
+    } else { // .legacyDirectMessage
+        Set([sender,receiverPubkey]) // just 1 sender and 1 receveiver
+    }
+    
     
     savedEvent.otherPubkey = receiverPubkey // TODO: Check do we still need this here?
     
-    let groupId = dmConversationId(nEvent: nEvent)
+    let groupId = if nEvent.kind == .directMessage {
+        dmConversationId(nEvent: nEvent) // based on all participants
+    } else { // .legacyDirectMessage
+        CloudDMState.getConversationId(for: [sender,receiverPubkey]) // just 1 sender and 1 receveiver
+    }
     savedEvent.groupId = groupId
     
     // existing DMStates (as receiver to ourAccountPubkey)
