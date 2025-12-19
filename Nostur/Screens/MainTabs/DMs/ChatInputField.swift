@@ -32,6 +32,9 @@ struct ChatInputField: View {
                     if let onSubmit {
                         onSubmit()
                     }
+                    if IS_CATALYST {
+                        focusedField = .message
+                    }
                 }
             
             
@@ -51,6 +54,9 @@ struct ChatInputField: View {
                     .onSubmit {
                         if let onSubmit {
                             onSubmit()
+                        }
+                        if IS_CATALYST {
+                            focusedField = .message
                         }
                     }
                     .opacity(message.isEmpty ? 0.5 : 1.0)
