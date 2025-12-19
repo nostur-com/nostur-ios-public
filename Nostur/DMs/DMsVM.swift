@@ -313,13 +313,16 @@ class DMsVM: ObservableObject {
     private var _reloadConversations = PassthroughSubject<Void, Never>()
     
     @MainActor
-    private func loadConversations() {
+    public func loadConversations(fullReload: Bool = false) {
+        if fullReload {
+            self.loadDMStates()
+        }
         let blockedPubkeys = blocks()
         
         let accepted = dmStates
             .filter { dmState in
                 
-                if !dmState.accepted && !dmState.isHidden { return false } // only accepted and not hidden
+                if !dmState.accepted || dmState.isHidden { return false } // only accepted and not hidden
                 
                 // not blocked (for 1 on 1). In group conversations need to block in the detail view
                 if dmState.participantPubkeys.count == 2, let contactPubkey = dmState.participantPubkeys.subtracting([accountPubkey]).first, blockedPubkeys.contains(contactPubkey) {
@@ -350,7 +353,9 @@ class DMsVM: ObservableObject {
             }
         
         conversationRows = accepted
+            .sorted(by: { $0.isPinned != $1.isPinned })
         requestRows = requests
+            .sorted(by: { $0.isPinned != $1.isPinned })
         
         guard WOT_FILTER_ENABLED() else { return }
         
@@ -372,6 +377,7 @@ class DMsVM: ObservableObject {
             }
 
         requestRowsNotWoT = outsideWoT
+            .sorted(by: { $0.isPinned != $1.isPinned })
     }
     
     public func unhideAll() {
