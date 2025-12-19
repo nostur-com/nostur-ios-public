@@ -30,6 +30,9 @@ struct DMConversationView17: View {
     }
     
     var body: some View {
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         ZStack(alignment: .center) {
             theme.listBackground
             

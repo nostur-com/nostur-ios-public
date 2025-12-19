@@ -71,6 +71,9 @@ struct MacColumn: View {
     @State private var navPath = NBNavigationPath()
     
     var body: some View {
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         NBNavigationStack(path: $navPath) {
             ZStack {
                 theme.listBackground
