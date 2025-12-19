@@ -66,19 +66,15 @@ struct DMConversationInfoSheet: View {
 
                 case .missingDMRelays(let pubkeys):
                     Section {
-                        Text("Using NIP-04")
-                        
-                        Text("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
-                            .font(.footnote)
-                        
-                        
                         VStack(alignment: .leading) {
                             Text("Using NIP-04")
                             
                             Text("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
                                 .font(.footnote)
-                            
-                            
+                        }
+                        
+                        
+                        VStack(alignment: .leading) {
                             Text("Could not find DM relays for:")
                                 .padding(.top, 10)
                             
@@ -91,18 +87,17 @@ struct DMConversationInfoSheet: View {
                     }
                 case .offerUpgrade:
                     Section {
-                        Text("Using NIP-04")
-                        
-                        Text("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
+                        VStack(alignment: .leading) {
+                            Text("Using NIP-04")
+                            
+                            Text("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
+                        }
                         
                         Toggle("Switch to a more private DM format (NIP-17)", isOn: $useImprovedFormat)
                     } header: {
                         Text("Message format")
                     }
                 }
-            }
-            else {
-                Text(vm.conversionVersion.description)
             }
         }
         .onAppear {
