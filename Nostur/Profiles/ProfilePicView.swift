@@ -324,23 +324,146 @@ struct MiniPFP: View {
 }
 
 struct MultiPFPs: View {
+    @Environment(\.theme) private var theme
     
     public var nrContacts: [NRContact]
+    public var size: Double = 50.0
+    public var onTap: ((NRContact) -> Void)?
+    
+    private var count: Double { Double(nrContacts.count) }
+    
+    private var prefix: Int {
+        return count > 5 ? 4 : 5
+    }
+    
+    private var pfpSize: Double {
+        if count == 1 { return size }
+        if count == 2 { return size * 0.75 }
+        if count == 3 { return size * 0.60 }
+        if count >= 4 { return size * 0.55 }
+        return size
+    }
+    
+    private func alignment(for index: Int) -> Alignment {
+        if count == 1 { return .center }
+        if count == 2 {
+            if index == 0 { return .topLeading }
+            if index == 1 { return .bottomTrailing }
+        }
+        if count == 3 {
+            if index == 0 { return .top }
+            if index == 1 { return .bottomLeading }
+            if index == 2 { return .bottomTrailing }
+        }
+        if count == 4 {
+            if index == 0 { return .topLeading }
+            if index == 1 { return .topTrailing }
+            if index == 2 { return .bottomLeading }
+            if index == 3 { return .bottomTrailing }
+        }
+        if count == 5 {
+            if index == 0 { return .topLeading }
+            if index == 1 { return .topTrailing }
+            if index == 2 { return .bottomLeading }
+            if index == 3 { return .bottom }
+            if index == 4 { return .bottomTrailing }
+            return .center
+        }
+        if count >= 6 {
+            if index == 0 { return .topLeading }
+            if index == 1 { return .topTrailing }
+            if index == 2 { return .bottomLeading }
+            if index == 3 { return .bottom }
+            return .center
+        }
+        return .center
+    }
     
     var body: some View {
-        ZStack(alignment:.leading) {
-            ForEach(nrContacts.prefix(10).indices, id:\.self) { index in
-                ObservedPFP(nrContact: nrContacts[index], forceFlat: true)
+        ZStack(alignment: .leading) {
+            ForEach(nrContacts.prefix(prefix).indices, id:\.self) { index in
+                ObservedPFP(nrContact: nrContacts[index], size: pfpSize, forceFlat: true)
+                    .frame(width: size, height: size, alignment: self.alignment(for: index))
                     .id(nrContacts[index].pubkey)
-                    .zIndex(-Double(index))
-                    .offset(x:Double(0 + (25*index)))
+                    .zIndex(Double(index))
+                    .onTapGesture {
+                        onTap?(nrContacts[index])
+                    }
+            }
+            if count > 5 {
+                Text("+\(Int(count - 4))")
+                    .font(.system(size: pfpSize/3, weight: .bold))
+                    .foregroundStyle(Color.white)
+                    .frame(width: pfpSize, height: pfpSize)  // Adjust size as needed
+                    .background(theme.accent)
+                    .clipShape(Circle())
+                    .frame(width: size, height: size, alignment: .bottomTrailing)
+                    .zIndex(100)
             }
         }
+        .frame(width: size, height: size, alignment: .topLeading)
         .drawingGroup()
         .onAppear {
             for nrContact in nrContacts {
                 if nrContact.metadata_created_at == 0 {
                     QueuedFetcher.shared.enqueue(pTag: nrContact.pubkey)
+                }
+            }
+        }
+    }
+}
+
+
+@available(iOS 18.0, *)
+#Preview("Multiple PFPs") {
+    @Previewable @State var nrContacts2: [NRContact] = []
+    @Previewable @State var nrContacts3: [NRContact] = []
+    @Previewable @State var nrContacts4: [NRContact] = []
+    @Previewable @State var nrContacts5: [NRContact] = []
+    @Previewable @State var nrContacts6: [NRContact] = []
+    PreviewContainer({ pe in
+        pe.loadContacts()
+    }) {
+        
+        Container {
+            VStack {
+                MultiPFPs(nrContacts: nrContacts6, size: 150)
+                
+                MultiPFPs(nrContacts: nrContacts5, size: 150)
+                
+                MultiPFPs(nrContacts: nrContacts2, size: 150)
+                
+                MultiPFPs(nrContacts: nrContacts3, size: 150)
+                
+                MultiPFPs(nrContacts: nrContacts4, size: 150)
+                
+                Spacer()
+            }
+        }
+        .onAppear {
+            for _ in 0..<2 {
+                if let nrContact = PreviewFetcher.fetchNRContact() {
+                    nrContacts2.append(nrContact)
+                }
+            }
+            for _ in 0..<3 {
+                if let nrContact = PreviewFetcher.fetchNRContact() {
+                    nrContacts3.append(nrContact)
+                }
+            }
+            for _ in 0..<4 {
+                if let nrContact = PreviewFetcher.fetchNRContact() {
+                    nrContacts4.append(nrContact)
+                }
+            }
+            for _ in 0..<5 {
+                if let nrContact = PreviewFetcher.fetchNRContact() {
+                    nrContacts5.append(nrContact)
+                }
+            }
+            for _ in 0..<6 {
+                if let nrContact = PreviewFetcher.fetchNRContact() {
+                    nrContacts6.append(nrContact)
                 }
             }
         }
