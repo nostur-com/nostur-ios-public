@@ -444,7 +444,9 @@ struct MainFeedsScreen: View {
         }
         .onChange(of: la.account) { [oldAccount = la.account] newAccount in
             guard oldAccount != newAccount else { return }
+#if DEBUG
             L.og.info("Account changed from: \(oldAccount.name)/\(oldAccount.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+#endif
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
             }

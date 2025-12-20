@@ -51,8 +51,8 @@ struct RelayEditView: View {
                     .disableAutocorrection(true)
                     .textInputAutocapitalization(.never)
             }
-            .onChange(of: relayUrl) { newValue in
-                guard relayUrl != newValue else { return } // same url
+            .onChange(of: relayUrl) { [oldValue = self.relayUrl] newValue in
+                guard oldValue != newValue else { return } // same url
                 guard newValue != connection?.url else { return } // init from "" to socket.url
                 connection?.disconnect()
             }

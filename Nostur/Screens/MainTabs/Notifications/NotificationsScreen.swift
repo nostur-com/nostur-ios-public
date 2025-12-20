@@ -146,12 +146,12 @@ struct NotificationsScreen: View {
                 markActiveTabAsRead(tab)
             }
         }
-        .onChange(of: tab, perform: { newValue in
-            guard tab != newValue else { return }
+        .onChange(of: tab) { [oldValue = self.tab] newValue in
+            guard oldValue != newValue else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 markActiveTabAsRead(newValue)
             }
-        })
+        }
         .overlay(alignment: .bottom) {
             if settings.statusBubble {
                 ProcessingStatus()

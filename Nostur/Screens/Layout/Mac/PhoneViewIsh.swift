@@ -80,14 +80,16 @@ struct PhoneViewIsh: View {
             didCreate = true
             createFollowingFeed(la.account)
         }
-        .onChange(of: la.account, perform: { newAccount in
-            guard la.account != newAccount else { return }
-            L.og.info("Account changed from: \(la.account.name)/\(la.account.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+        .onChange(of: la.account) { [oldAccount = la.account] newAccount in
+            guard oldAccount != newAccount else { return }
+#if DEBUG
+            L.og.info("Account changed from: \(oldAccount.name)/\(oldAccount.publicKey) to \(newAccount.name)/\(newAccount.publicKey)")
+#endif
             if SettingsStore.shared.appWideSeenTracker {
                 Deduplicator.shared.onScreenSeen = []
             }
             createFollowingFeed(newAccount)
-        })
+        }
         .onReceive(receiveNotification(.navigateTo)) { notification in
             let destination = notification.object as! NavigationDestination
 //            guard selectedTab() == "Main" else { return }
