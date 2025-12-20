@@ -195,6 +195,7 @@ class ConversionVM: ObservableObject {
             newDMState.accepted = true
             newDMState.initiatorPubkey_ = self.ourAccountPubkey
             newDMState.version = participants.count > 2 ? 17 : 0
+            DataProvider.shared().saveToDisk(.bgContext)
             Task { @MainActor in
                 self.conversionVersion = participants.count > 2 ? 17 : 0
             }
