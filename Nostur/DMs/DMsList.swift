@@ -360,7 +360,9 @@ struct DMSettingsSheet: View {
                     HStack {
                         Text("\(vm.hiddenDMs) conversation(s) hidden by you")
                         Button("Unhide") {
-                            vm.unhideAll()
+                            withAnimation {
+                                vm.unhideAll()
+                            }
                             dismiss()
                         }
                     }
