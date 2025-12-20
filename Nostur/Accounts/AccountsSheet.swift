@@ -111,7 +111,7 @@ struct AccountRow: View {
                                 .cornerRadius(8)
                         }
                         if (account.isNC) {
-                            Text(verbatim: "nsecBunker").font(.system(size: 12.0))
+                            Text(verbatim: "remote signer").font(.system(size: 12.0))
                                 .padding(.horizontal, 8)
                                 .background(.indigo)
                                 .foregroundColor(.white)

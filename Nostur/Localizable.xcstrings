@@ -121,7 +121,14 @@
       }
     },
     "- Choose a relay that requires authentication to receive private messages.\n- You can choose public relays, messages will be scrambled and anonymized." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "- Kies een relay waar authenticatie vereist is om privéberichten te downloaden\n- Je kan openbare relays kiezen. Je berichten worden anoniem en versleuteld verzonden."
+          }
+        }
+      }
     },
     "!" : {
       "shouldTranslate" : false
@@ -147,7 +154,14 @@
       }
     },
     "(Timeout or other error)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(Time-out of andere fout)"
+          }
+        }
+      }
     },
     "[__Source code__](https://github.com/nostur-com/nostur-ios-public)" : {
       "localizations" : {
@@ -534,7 +548,8 @@
             "value" : "%1$@ (%2$lld)"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%@ %@" : {
       "localizations" : {
@@ -835,7 +850,14 @@
       }
     },
     "%lld requests not shown" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld berichtverzoeken niet zichtbaar"
+          }
+        }
+      }
     },
     "%lld requests outside Web of Trust" : {
       "localizations" : {
@@ -1388,13 +1410,13 @@
         }
       }
     },
-    "Add (nsecBunker)" : {
+    "Add (remote signer)" : {
       "extractionState" : "manual",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Voeg toe (nsecBunker)"
+            "value" : "Voeg toe (remote signer)"
           }
         }
       }
@@ -1768,7 +1790,14 @@
       }
     },
     "All participants need to have their DM relays published to start a group chat." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iedereen in het gesprek moet privéberichten-relays gepubliceerd hebben om een groepsgesprek te starten."
+          }
+        }
+      }
     },
     "Amount (satoshis)" : {
       "localizations" : {
@@ -2471,7 +2500,14 @@
       }
     },
     "Change account" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account wisselen"
+          }
+        }
+      }
     },
     "Checked" : {
       "shouldTranslate" : false
@@ -2599,7 +2635,14 @@
       }
     },
     "Choose relays for private messages" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kies relays voor privéberichten"
+          }
+        }
+      }
     },
     "Choose to tag:" : {
       "localizations" : {
@@ -3135,13 +3178,36 @@
       }
     },
     "Conversation" : {
-      "comment" : "Feed title"
+      "comment" : "Feed title",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesprek"
+          }
+        }
+      }
     },
     "Conversation details" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespreksdetails"
+          }
+        }
+      }
     },
     "Conversation info" : {
-      "comment" : "Navigation title for screen with DM conversation info"
+      "comment" : "Navigation title for screen with DM conversation info",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespreksinfo"
+          }
+        }
+      }
     },
     "Conversations" : {
       "localizations" : {
@@ -3305,7 +3371,14 @@
       }
     },
     "Could not find DM relays for:" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan DM relays niet vinden van:"
+          }
+        }
+      }
     },
     "Could not find latest user profile (kind-0)" : {
       "localizations" : {
@@ -3722,10 +3795,24 @@
       }
     },
     "Delivery to relays of" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzending naar relays van"
+          }
+        }
+      }
     },
     "Delivery to your DM relays (back-up):" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzending naar jouw privé berichten relays (back-up):"
+          }
+        }
+      }
     },
     "describe" : {
       "localizations" : {
@@ -3749,7 +3836,14 @@
       }
     },
     "Direct Message Settings" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé Berichten instellingen"
+          }
+        }
+      }
     },
     "Direct Messages using a nsecBunker login are not available yet" : {
       "extractionState" : "stale",
@@ -3763,7 +3857,14 @@
       }
     },
     "Direct Messages using a remote signer are not available yet" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privé berichten met een remote signer werkt nog niet."
+          }
+        }
+      }
     },
     "Disable to improve scrolling performance" : {
       "comment" : "Setting on settings screen",
@@ -3887,7 +3988,14 @@
       }
     },
     "DM relays" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten relays"
+          }
+        }
+      }
     },
     "dm: you receive private message from this relay, so others should send private messages there." : {
       "localizations" : {
@@ -6026,10 +6134,24 @@
       }
     },
     "Message Delivery" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verzendstatus"
+          }
+        }
+      }
     },
     "Message format" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type berichten"
+          }
+        }
+      }
     },
     "Message verification" : {
       "comment" : "Setting heading on settings screen",
@@ -6054,7 +6176,14 @@
       }
     },
     "Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten worden verzonden via een oudere methode omdat de privéberichten-relays van de ontvanger niet gevonden kunnen worden."
+          }
+        }
+      }
     },
     "Mic is off" : {
       "localizations" : {
@@ -6418,7 +6547,14 @@
       }
     },
     "New Message" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuw bericht"
+          }
+        }
+      }
     },
     "New post" : {
       "comment" : "Button to create a new post",
@@ -6590,7 +6726,14 @@
       }
     },
     "No DM relays found for" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geen privéberichten-relays gevonden van"
+          }
+        }
+      }
     },
     "No message requests" : {
       "comment" : "Shown on the DM requests view when there aren't any message requests to show",
@@ -6896,6 +7039,7 @@
       }
     },
     "nsecBunker appears offline, post will be saved but not published" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7642,7 +7786,15 @@
       }
     },
     "Private conversation" : {
-      "comment" : "Navigation title for screen to select a contact to send a Direct Message to"
+      "comment" : "Navigation title for screen to select a contact to send a Direct Message to",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privégesprek"
+          }
+        }
+      }
     },
     "Private key copied to clipboard" : {
       "comment" : "Notification shown after user tapped to copy",
@@ -8480,6 +8632,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Herinnering ingesteld!"
+          }
+        }
+      }
+    },
+    "Remote signer appears offline, post will be saved but not published" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remote Signer lijkt offline, je bericht wordt opgeslagen maar niet verstuurd"
           }
         }
       }
@@ -10100,7 +10262,14 @@
       }
     },
     "Switch to a more private DM format (NIP-17)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer verbeterde communicatie methode (NIP-17)"
+          }
+        }
+      }
     },
     "Tab" : {
       "shouldTranslate" : false
@@ -10751,7 +10920,14 @@
       }
     },
     "Tips" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tips"
+          }
+        }
+      }
     },
     "Title" : {
       "comment" : "Header for entering title of a feed\nPlaceholder for input field to enter title of a shared list",
@@ -10786,7 +10962,14 @@
       }
     },
     "To: %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aan: %@"
+          }
+        }
+      }
     },
     "TODO PLAINTEXTONLY" : {
       "shouldTranslate" : false
@@ -10982,7 +11165,14 @@
       }
     },
     "Unable to load conversation" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kan gesprek niet laden"
+          }
+        }
+      }
     },
     "Unable to load stream" : {
       "extractionState" : "stale",
@@ -10996,10 +11186,24 @@
       }
     },
     "Unavailable" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet beschikbaar"
+          }
+        }
+      }
     },
     "Unavailable: accountPubkey missing" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Niet beschikbaar: accountPubkey missing"
+          }
+        }
+      }
     },
     "Unblock" : {
       "localizations" : {
@@ -11154,10 +11358,24 @@
       }
     },
     "Upgrade your DMs" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privéberichten upgraden"
+          }
+        }
+      }
     },
     "Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04)." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publiceer de relays waarmee je privéberichten wilt ontvangen.\n\nHierdoor kan je communiceren via een beter beveiligde methode (NIP-17).\n\nAnderen die nog niet van deze methode gebruik maken kunnen nog steeds met je communiceren via de oude methode (NIP-04)."
+          }
+        }
+      }
     },
     "Upload method" : {
       "comment" : "Setting on settings screen",
@@ -11240,7 +11458,14 @@
       }
     },
     "Using NIP-04" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "via NIP-04"
+          }
+        }
+      }
     },
     "Verify again" : {
       "localizations" : {

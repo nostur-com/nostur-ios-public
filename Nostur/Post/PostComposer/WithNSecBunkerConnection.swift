@@ -22,7 +22,7 @@ struct WithNSecBunkerConnection<Content: View>: View {
                 Divider()
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
-                    Text("nsecBunker appears offline, post will be saved but not published")
+                    Text("Remote signer appears offline, post will be saved but not published")
                         .fontWeight(.bold)
                 }
                 .padding(.horizontal, 10)
