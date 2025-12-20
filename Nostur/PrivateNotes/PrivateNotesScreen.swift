@@ -118,7 +118,7 @@ struct PrivateNotesScreen: View {
             ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
         }
         
-        let duplicates = sortedPrivateNotes
+        let toDelete = sortedPrivateNotes
             .filter { pn in
                 if let eventId = pn.eventId {
                     return !uniqueEventIds.insert(eventId).inserted
@@ -128,12 +128,13 @@ struct PrivateNotesScreen: View {
                 }
                 return false
             }
-        
-        L.cloud.debug("Deleting: \(duplicates.count) duplicate private notes")
-        duplicates.forEach {
+#if DEBUG
+        L.cloud.debug("Deleting: \(toDelete.count) duplicate private notes")
+#endif
+        toDelete.forEach {
             DataProvider.shared().viewContext.delete($0)
         }
-        if !duplicates.isEmpty {
+        if !toDelete.isEmpty {
             DataProvider.shared().saveToDiskNow(.viewContext)
         }
         

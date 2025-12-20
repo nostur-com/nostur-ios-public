@@ -131,17 +131,19 @@ struct BlockedContactsView: View {
             ($0.createdAt_ as Date?) ?? Date.distantPast > ($1.createdAt_ as Date?) ?? Date.distantPast
         }
         
-        let duplicates = sortedBlockedPubkeys
+        let toDelete = sortedBlockedPubkeys
             .filter { blockedPubkey in
-                guard let pubkey = blockedPubkey.pubkey_ else { return false }
+                guard let pubkey = blockedPubkey.pubkey_ else { return true }
                 return !uniqueBlockedPubkeys.insert(pubkey).inserted
             }
         
-        L.cloud.debug("Deleting: \(duplicates.count) duplicate blocked contacts")
-        duplicates.forEach {
+#if DEBUG
+        L.cloud.debug("Deleting: \(toDelete.count) duplicate blocked contacts")
+#endif
+        toDelete.forEach {
             DataProvider.shared().viewContext.delete($0)
         }
-        if !duplicates.isEmpty {
+        if !toDelete.isEmpty {
             DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
@@ -229,17 +231,18 @@ struct MutedConversationsView: View {
             ($0.createdAt_ as Date?) ?? Date.distantPast > ($1.createdAt_ as Date?) ?? Date.distantPast
         }
         
-        let duplicates = sortedMutedRootIds
+        let toDelete = sortedMutedRootIds
             .filter { mutedRootId in
-                guard let eventId = mutedRootId.eventId_ else { return false }
+                guard let eventId = mutedRootId.eventId_ else { return true }
                 return !uniqueMutedRootIds.insert(eventId).inserted
             }
-        
-        L.cloud.debug("Deleting: \(duplicates.count) duplicate muted conversations")
-        duplicates.forEach {
+#if DEBUG
+        L.cloud.debug("Deleting: \(toDelete.count) duplicate muted conversations")
+#endif
+        toDelete.forEach {
             DataProvider.shared().viewContext.delete($0)
         }
-        if !duplicates.isEmpty {
+        if !toDelete.isEmpty {
             DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }

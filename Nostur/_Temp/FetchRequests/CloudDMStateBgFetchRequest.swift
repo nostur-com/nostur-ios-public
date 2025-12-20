@@ -51,19 +51,22 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
             .sorted {
                 $0.participantPubkeys_ != nil && $1.participantPubkeys_ == nil
             }
+            .sorted {
+                $0.accountPubkey_ != nil && $1.accountPubkey_ == nil
+            }
 
-        let duplicates = sortedDMStates
+        let toDelete = sortedDMStates
             .filter { dmState in
-                guard let accountPubkey = dmState.accountPubkey_ else { return false }
+                guard let accountPubkey = dmState.accountPubkey_ else { return true }
                 return !uniqueDMStates.insert(accountPubkey + "-" + dmState.conversationId).inserted
             }
 #if DEBUG
-        L.cloud.debug("CloudDMStateFetchRequest: \(duplicates.count) duplicate DM conversation states")
+        L.cloud.debug("CloudDMStateFetchRequest: deleted \(toDelete.count) DM conversation states")
 #endif
-        duplicates.forEach({ duplicateDMState in
-            viewContext().delete(duplicateDMState)
+        toDelete.forEach({ dmState in
+            viewContext().delete(dmState)
         })
-        if !duplicates.isEmpty {
+        if !toDelete.isEmpty {
             DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }

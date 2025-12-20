@@ -47,22 +47,22 @@ class CloudRelayBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
         var uniqueRelays = Set<String>()
         let sortedRelays = relays.sorted { $0.updatedAt > $1.updatedAt }
 
-        let duplicates = sortedRelays
+        let toDelete = sortedRelays
             .filter { relay in
-                guard let url = relay.url_ else { return false }
+                guard let url = relay.url_ else { return true }
                 let normalizedUrl = normalizeRelayUrl(url)
                 return !uniqueRelays.insert(normalizedUrl).inserted
             }
 
-        if duplicates.count > 0 {
+        if toDelete.count > 0 {
 #if DEBUG
-            L.cloud.debug("BGAccountFetchRequest Deleting: \(duplicates.count) duplicate relays")
+            L.cloud.debug("BGAccountFetchRequest Deleting: \(toDelete.count) duplicate relays")
 #endif
         }
-        duplicates.forEach({ duplicateRelay in
+        toDelete.forEach({ duplicateRelay in
             bg().delete(duplicateRelay)
         })
-        if !duplicates.isEmpty {
+        if !toDelete.isEmpty {
             DataProvider.shared().saveToDiskNow(.bgContext)
         }
     }

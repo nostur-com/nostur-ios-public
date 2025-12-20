@@ -55,18 +55,18 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
             }
         }
 
-        let duplicates = sortedAccounts
+        let toDelete = sortedAccounts
             .filter { account in
-                guard let publicKey = account.publicKey_ else { return false }
+                guard let publicKey = account.publicKey_ else { return true }
                 return !uniqueAccounts.insert(publicKey).inserted
             }
 
-        if duplicates.count > 0 {
+        if toDelete.count > 0 {
 #if DEBUG
-            L.cloud.debug("BGAccountFetchRequest Deleting: \(duplicates.count) duplicate accounts")
+            L.cloud.debug("BGAccountFetchRequest Deleting: \(toDelete.count) duplicate accounts")
 #endif
         }
-        duplicates.forEach({ duplicateAccount in
+        toDelete.forEach({ duplicateAccount in
             // Before deleting, .union the follows to the existing account
             if let existingAccount = sortedAccounts.first(where: { existingAccount in
                 return existingAccount.publicKey == duplicateAccount.publicKey
@@ -87,7 +87,7 @@ class CloudAccountBgFetchRequest: NSObject, NSFetchedResultsControllerDelegate  
             }
             bg().delete(duplicateAccount)
         })
-        if !duplicates.isEmpty {
+        if !toDelete.isEmpty {
             DataProvider.shared().saveToDiskNow(.bgContext)
         }
         

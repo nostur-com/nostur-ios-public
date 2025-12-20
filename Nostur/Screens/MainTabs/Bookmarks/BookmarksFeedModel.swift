@@ -93,17 +93,18 @@ class BookmarksFeedModel: ObservableObject {
                 ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
             }
             
-            let duplicates = sortedBookmarks
+            let toDelete = sortedBookmarks
                 .filter { bookmark in
-                    guard let eventId = bookmark.eventId else { return false }
+                    guard let eventId = bookmark.eventId else { return true }
                     return !uniqueEventIds.insert(eventId).inserted
                 }
-            
-            L.cloud.debug("Deleting: \(duplicates.count) duplicate bookmarks")
-            duplicates.forEach {
+#if DEBUG
+            L.cloud.debug("Deleting: \(toDelete.count) duplicate bookmarks")
+#endif
+            toDelete.forEach {
                 bgContext.delete($0)
             }
-            if !duplicates.isEmpty {
+            if !toDelete.isEmpty {
                 try? bgContext.save()
             }
             
@@ -200,18 +201,18 @@ class BookmarksColumnVM: ObservableObject {
                 ($0.createdAt as Date?) ?? Date.distantPast > ($1.createdAt as Date?) ?? Date.distantPast
             }
             
-            let duplicates = sortedBookmarks
+            let toDelete = sortedBookmarks
                 .filter { bookmark in
-                    guard let eventId = bookmark.eventId else { return false }
+                    guard let eventId = bookmark.eventId else { return true }
                     return !uniqueEventIds.insert(eventId).inserted
                 }
 #if DEBUG
-            L.cloud.debug("Deleting: \(duplicates.count) duplicate bookmarks")
+            L.cloud.debug("Deleting: \(toDelete.count) duplicate bookmarks")
 #endif
-            duplicates.forEach {
+            toDelete.forEach {
                 bgContext.delete($0)
             }
-            if !duplicates.isEmpty {
+            if !toDelete.isEmpty {
                 try? bgContext.save()
             }
             

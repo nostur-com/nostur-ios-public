@@ -589,17 +589,19 @@ struct MainFeedsScreen: View {
             }
         }
         
-        let duplicates = sortedLists
+        let toDelete = sortedLists
             .filter { list in
-                guard let id = list.id else { return false }
+                guard let id = list.id else { return true }
                 return !uniqueLists.insert(id).inserted
             }
         
-        duplicates.forEach {
+        toDelete.forEach {
             DataProvider.shared().viewContext.delete($0)
         }
-        if !duplicates.isEmpty {
-            L.cloud.debug("Deleting: \(duplicates.count) duplicate feeds")
+        if !toDelete.isEmpty {
+#if DEBUG
+            L.cloud.debug("Deleting: \(toDelete.count) duplicate feeds")
+#endif
             DataProvider.shared().saveToDiskNow(.viewContext)
         }
     }
