@@ -176,15 +176,28 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
 class RecipientResult: ObservableObject, Identifiable {
     let id: UUID
     @Published var anySuccess = false
+    @Published var allFailed = false
+    
     public var recipientPubkey: String
+    
     public var relayResults: [String: DMSendResult] = [:]  { // [pubkey: [relay: DMSendResult]]
         didSet {
+            guard !allFailed else { return }
+            var failed = 0
             for (_, sendResult) in relayResults {
                 if sendResult == .success {
                     Task { @MainActor in
                         anySuccess = true
                     }
                     break
+                }
+                else if sendResult == .timeout {
+                    failed += 1
+                }
+            }
+            if failed > 0 && failed == relayResults.count {
+                Task { @MainActor in
+                    allFailed = true
                 }
             }
         }
@@ -194,5 +207,8 @@ class RecipientResult: ObservableObject, Identifiable {
         self.id = UUID()
         self.recipientPubkey = recipientPubkey
         self.relayResults = relayResults
+        if relayResults.isEmpty {
+            self.allFailed = true
+        }
     }
 }

@@ -97,6 +97,9 @@ struct RecipientResultView: View {
     }
     
     func iconName(for result: RecipientResult) -> String {
+        if result.allFailed {
+            return "xmark.circle.fill"
+        }
         if result.anySuccess {
             return "checkmark.circle.fill"
         }
@@ -104,6 +107,9 @@ struct RecipientResultView: View {
     }
     
     func iconColor(for result: RecipientResult) -> Color {
+        if result.allFailed {
+            return Color.red
+        }
         if result.anySuccess {
             return Color.green
         }
