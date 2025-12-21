@@ -163,6 +163,7 @@ class DMsVM: ObservableObject {
         showUpgradeNotice = await shouldShowUpgradeNotice(accountPubkey: self.accountPubkey)
         self.listenForNewMessages()
         self.fetchGiftWraps()
+        self.startGiftWrapsTimer()
     }
     
     private func fetchDMrelays() {
@@ -194,8 +195,7 @@ class DMsVM: ObservableObject {
         let reqFilters = Filters(
             kinds: [1059],
             tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
-            since: lastGiftWrapAt,
-            limit: 500
+            since: lastGiftWrapAt
         )
         nxReq(
             reqFilters,

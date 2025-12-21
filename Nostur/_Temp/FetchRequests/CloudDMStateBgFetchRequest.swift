@@ -14,7 +14,7 @@ class CloudDMStateFetchRequest: NSObject, NSFetchedResultsControllerDelegate  {
     
     override init() {
         let fr = CloudDMState.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.markedReadAt_, ascending: false)]
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \CloudDMState.lastMessageTimestamp_, ascending: false)]
         self.frc = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: viewContext(), sectionNameKeyPath: nil, cacheName: nil)
         super.init()
         frc.delegate = self
