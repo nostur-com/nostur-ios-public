@@ -36,13 +36,7 @@ struct NotificationsReactions: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     ForEach(model.groupedReactions) { groupedReactions in
-                        Box(nrPost: groupedReactions.nrPost, navMode: .view) {
-                            VStack(alignment:.leading, spacing: 3) {
-                                ReactionsForThisNote(reactions: groupedReactions.reactions)
-                                NoteMinimalContentView(nrPost: groupedReactions.nrPost)
-                            }
-                        }
-                        .id(groupedReactions.nrPost.id)
+                        NRPostOrChatMessage(groupedReactions: groupedReactions)
                     }
                     VStack {
                         if !model.groupedReactions.isEmpty {
@@ -149,6 +143,7 @@ struct NotificationsReactions: View {
 struct ReactionsForThisNote: View {
     
     public var reactions: [Reaction]
+    public var isDM: Bool = false
     
     var body: some View {
         VStack(alignment:.leading) {
@@ -168,11 +163,20 @@ struct ReactionsForThisNote: View {
                 }
             }
             if (reactions.count > 1) {
-                Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** and \(reactions.count - 1) others reacted on your post")
-                    
+                if isDM {
+                    Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** and \(reactions.count - 1) others reacted on your private message")
+                }
+                else {
+                    Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** and \(reactions.count - 1) others reacted on your post")
+                }
             }
             else {
-                Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** reacted on your post")
+                if isDM {
+                    Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** reacted on your private message")
+                }
+                else {
+                    Text("**\(reactions.first(where: { $0.authorName != nil })?.authorName ?? "???")** reacted on your post")
+                }
             }
         }
         .frame(maxWidth:.infinity, alignment:.leading)
@@ -220,6 +224,31 @@ struct NotificationsV_Previews: PreviewProvider {
             VStack {
                 NotificationsReactions(pubkey: AccountsState.shared.activeAccountPublicKey, navPath: .constant(NBNavigationPath()))
             }
+        }
+    }
+}
+
+
+struct NRPostOrChatMessage: View {
+    var groupedReactions: GroupedReactions
+    var body: some View {
+        if let nrPost = groupedReactions.nrPost {
+            Box(nrPost: groupedReactions.nrPost, navMode: .view) {
+                VStack(alignment:.leading, spacing: 3) {
+                    ReactionsForThisNote(reactions: groupedReactions.reactions, isDM: false)
+                    NoteMinimalContentView(nrPost: nrPost)
+                }
+            }
+        } else if let nrChatMessage = groupedReactions.nrChatMessage {
+            Box(navMode: .view) {
+                VStack(alignment:.leading, spacing: 3) {
+                    ReactionsForThisNote(reactions: groupedReactions.reactions, isDM: true)
+                    MinimalChatMessageTextRenderView(nrChatMessage: nrChatMessage)
+                }
+            }
+        }
+        else {
+            EmptyView()
         }
     }
 }

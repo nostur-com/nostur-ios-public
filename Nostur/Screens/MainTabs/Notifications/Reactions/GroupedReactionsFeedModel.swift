@@ -84,7 +84,8 @@ class GroupedReactionsFeedModel: ObservableObject {
                         .map { event in
                             return Reaction(id: event.id, pubkey: event.pubkey, pictureUrl: event.contact?.pictureUrl, authorName: event.contact?.authorName, createdAt: event.created_at, content: event.content)
                         },
-                    nrPost: NRPost(event: reactedTo)
+                    nrPost: reactedTo.kind != 14 ? NRPost(event: reactedTo) : nil,
+                    nrChatMessage: reactedTo.kind == 14 ? NRChatMessage(nEvent: reactedTo.toNEvent()) : nil
                 )
             }
             .sorted(by: { $0.mostRecentCreatedAt > $1.mostRecentCreatedAt })
@@ -132,15 +133,17 @@ struct Reaction: Identifiable {
 }
 
 class GroupedReactions: ObservableObject, Identifiable {
-    public var id: String { nrPost.id }
+    public var id: String { (nrPost?.id ?? nrChatMessage?.id) ?? UUID().uuidString }
     @Published public var reactions: [Reaction]
-    public let nrPost: NRPost
+    public let nrPost: NRPost?
+    public let nrChatMessage: NRChatMessage?
     public var mostRecentCreatedAt: Int64 {
         reactions.sorted(by: { $0.createdAt > $1.createdAt } ).first?.createdAt ?? 0
     }
     
-    public init(reactions: [Reaction], nrPost: NRPost) {
+    public init(reactions: [Reaction], nrPost: NRPost? = nil, nrChatMessage: NRChatMessage? = nil) {
         self.reactions = reactions
         self.nrPost = nrPost
+        self.nrChatMessage = nrChatMessage
     }
 }
