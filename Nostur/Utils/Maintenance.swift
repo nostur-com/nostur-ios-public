@@ -986,7 +986,7 @@ struct Maintenance {
     }
     
     // Upgrade to new DM format
-    static func runUpgradeDMs(force: Bool = false, context: NSManagedObjectContext) {
+    static func runUpgradeDMs(force: Bool = false, context: NSManagedObjectContext, onlyForAccount: String? = nil) {
         guard force || !Self.didRun(migrationCode: migrationCode.upgradeDMformatV2, context: context) else { return }
         
         // First set participantPubkeys_ for all DM states, or delete essential data is missing
@@ -997,6 +997,7 @@ struct Maintenance {
         let dmStates = (try? context.fetch(fr2)) ?? []
         
         var deletedDMSates = 0
+        
         for dmState in dmStates {
             // set participants (.pubkey + P tags)
             if let contactPubkey = dmState.contactPubkey_, contactPubkey.count == 64, let accountPubkey = dmState.accountPubkey_ {
@@ -1019,12 +1020,25 @@ struct Maintenance {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = NSPredicate(format: "kind IN %@", [4,14])
-        let allDMs = (try? context.fetch(fr)) ?? []
+        
+        let allDMs = if let accountPubkey = onlyForAccount {
+            ((try? context.fetch(fr)) ?? []) // only if account is .pubkey or in p tags
+                .filter {
+                    $0.pubkey == accountPubkey || $0.pTags().contains(accountPubkey)
+                }
+        } else { // or all
+            (try? context.fetch(fr)) ?? []
+        }
         
         
         // Our full account pubkeys
         let accounts = CloudAccount.fetchAccounts(context: context)
-        let accountPubkeys = Set(accounts.map { $0.publicKey })
+        let accountPubkeys = if let accountPubkey = onlyForAccount {
+            Set([accountPubkey])
+        } else { // or all
+            Set(accounts.map { $0.publicKey })
+        }
+        
         
         // set .groupId on all kind 4, 14
         // track earliest and newest message for
@@ -1093,7 +1107,7 @@ struct Maintenance {
         var updatedExisting = 0
         var createdNew = 0
         
-        // Create or update actual DM states
+        // Create or update actual DM states from prepared states
         for (_, preparedState) in preparedDMStates {
             
             // Update existing
@@ -1147,8 +1161,12 @@ struct Maintenance {
         let dmStatesToKeep: Set<String> = Set(preparedDMStates.keys) // "<accountPubkey>.<groupId>"
        
         let fr3 = CloudDMState.fetchRequest()
-        fr3.predicate = NSPredicate(value: true)
-        let dmStatesAgain = (try? context.fetch(fr3)) ?? [] // not sure if we can reuse dmStates properly because of .delete() so just fetch again
+        fr3.predicate = if let accountPubkey = onlyForAccount {
+            NSPredicate(format: "accountPubkey_ = %@ AND NOT accountPubkey_ = nil", accountPubkey)
+        } else {
+            NSPredicate(value: true)
+        }
+        let dmStatesAgain = (try? context.fetch(fr3)) ?? []
         
         var deleted = 0
         for dmState in dmStatesAgain {

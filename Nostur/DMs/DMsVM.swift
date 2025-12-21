@@ -416,7 +416,7 @@ class DMsVM: ObservableObject {
 #if DEBUG
                     L.maintenance.info("Running Manual DM fix")
 #endif
-                    Maintenance.runUpgradeDMs(force: true, context: viewContext())
+                    Maintenance.runUpgradeDMs(force: true, context: viewContext(), onlyForAccount: accountPubkey)
                     try? viewContext().save()
                     
                     self.loadConversations(fullReload: true)
