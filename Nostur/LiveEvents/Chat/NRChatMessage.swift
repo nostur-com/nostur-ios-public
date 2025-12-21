@@ -67,6 +67,9 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     // to show success/error in chat bubble
     public var dmSendResult: [String: RecipientResult] = [:] // [pubkey: RecipientResult]
     
+    public var replyTo: NRChatMessage?
+    public var quotedEvent: NRChatMessage?
+    
     init(nEvent: NEvent, keyPair: (publicKey: String, privateKey: String)? = nil) {
         self.nEvent = nEvent
         
@@ -142,6 +145,30 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         self.missingPs = missingPs
         self.content = nEvent.content
         self.isNSFW = self.hasNSFWContent()
+        self.loadReplyTo()
+        self.loadQuotedMessage()
+    }
+    
+    private func loadReplyTo() {
+        if let replyToId = nEvent.firstE() {
+            if let replyToEvent = Event.fetchEvent(id: replyToId, context: context()) {
+                self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent())
+            }
+            else { // listen for updates
+                
+            }
+        }
+    }
+    
+    private func loadQuotedMessage() {
+        if let quoteId = nEvent.tags.first(where: { $0.type == "q" })?.value {
+            if let quotedEvent = Event.fetchEvent(id: quoteId, context: context()) {
+                self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent())
+            }
+            else { // listen for updates
+                
+            }
+        }
     }
     
     private func hasNSFWContent() -> Bool {
