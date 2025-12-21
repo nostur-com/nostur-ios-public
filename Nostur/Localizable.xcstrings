@@ -6185,6 +6185,9 @@
         }
       }
     },
+    "Messages are sent using an older encryption protocol." : {
+
+    },
     "Mic is off" : {
       "localizations" : {
         "nl" : {
@@ -10270,6 +10273,9 @@
           }
         }
       }
+    },
+    "Switch to a more private DM format (NIP-17) for new messages" : {
+
     },
     "Tab" : {
       "shouldTranslate" : false

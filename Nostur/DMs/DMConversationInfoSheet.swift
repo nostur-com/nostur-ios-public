@@ -71,6 +71,7 @@ struct DMConversationInfoSheet: View {
                             
                             Text("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
                                 .font(.footnote)
+                                .padding(.top, 10)
                         }
                         
                         
@@ -90,10 +91,11 @@ struct DMConversationInfoSheet: View {
                         VStack(alignment: .leading) {
                             Text("Using NIP-04")
                             
-                            Text("Messages are sent using an older encryption protocol because the recipients private message relays have not been published or could not be found.")
+                            Text("Messages are sent using an older encryption protocol.")
+                                .padding(.top, 10)
                         }
                         
-                        Toggle("Switch to a more private DM format (NIP-17)", isOn: $useImprovedFormat)
+                        Toggle("Switch to a more private DM format (NIP-17) for new messages", isOn: $useImprovedFormat)
                     } header: {
                         Text("Message format")
                     }
