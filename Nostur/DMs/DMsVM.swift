@@ -266,7 +266,7 @@ class DMsVM: ObservableObject {
                 // Show notification on Mac: ALWAYS
                 // On iOS: Only if app is in background
                 if (IS_CATALYST || AppState.shared.appIsInBackground)  {
-                    let name = contactUsername(fromPubkey: event.pubkey, event: event)
+                    let name = contactUsername(fromPubkey: nEvent.publicKey, event: event)
                     scheduleDMNotification(name: name)
                 }
             }
