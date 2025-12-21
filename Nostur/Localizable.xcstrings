@@ -351,6 +351,22 @@
         }
       }
     },
+    "**%@** and %lld others reacted on your private message" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "**%1$@** and %2$lld others reacted on your private message"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%1$@** en %2$lld anderen reageerden op je privébericht"
+          }
+        }
+      }
+    },
     "**%@** and %lld others zapped your post" : {
       "comment" : "Message when (name) and X others zapped your post",
       "localizations" : {
@@ -389,6 +405,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "**%@** heeft op je bericht gereageerd"
+          }
+        }
+      }
+    },
+    "**%@** reacted on your private message" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**%@** reageerde op jouw privébericht"
           }
         }
       }
@@ -6186,7 +6212,14 @@
       }
     },
     "Messages are sent using an older encryption protocol." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Berichten worden verstuurd met een oudere versleutelingsmethode"
+          }
+        }
+      }
     },
     "Mic is off" : {
       "localizations" : {
@@ -8091,10 +8124,14 @@
       }
     },
     "Quote..." : {
-
-    },
-    "Quoting" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citeer…"
+          }
+        }
+      }
     },
     "Raise hand" : {
       "localizations" : {
@@ -8759,10 +8796,14 @@
       }
     },
     "Reply..." : {
-
-    },
-    "Replying" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord…"
+          }
+        }
+      }
     },
     "Replying to " : {
       "localizations" : {
@@ -10287,7 +10328,14 @@
       }
     },
     "Switch to a more private DM format (NIP-17) for new messages" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schakel over naar een privacyvriendelijkere verzendmethode (NIP-17) voor nieuwe berichten"
+          }
+        }
+      }
     },
     "Tab" : {
       "shouldTranslate" : false

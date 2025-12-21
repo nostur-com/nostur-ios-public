@@ -212,11 +212,9 @@ struct DMChatInputField: View {
     )
     
     VStack {
-        Text("Quoting")
         DMChatInputField(message: $text, vm: vmQuotingNow)
             .padding(5)
         
-        Text("Replying")
         DMChatInputField(message: $text, vm: vmReplyingNow)
             .padding(5)
         
