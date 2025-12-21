@@ -344,7 +344,7 @@ class ConversionVM: ObservableObject {
             content: content,
             kind: 14,
             created_at: Int(messageDate.timeIntervalSince1970),
-            tags: recipientPubkeys.map { Tag(["p", $0]) } // not ourselves
+            tags: participants.map { Tag(["p", $0]) } // include ourselves for compatibility with 0xChat (seems to ignore .pubkey)
         )
         let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
         
