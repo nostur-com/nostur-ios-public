@@ -416,11 +416,10 @@ class DMsVM: ObservableObject {
 #if DEBUG
                     L.maintenance.info("Running Manual DM fix")
 #endif
-                    Maintenance.runFixMissingDMStates(force: true, context: viewContext())
-                    Maintenance.runUpgradeDMformat(force: true, context: viewContext())
+                    Maintenance.runUpgradeDMs(force: true, context: viewContext())
                     try? viewContext().save()
                     
-                    self.reloadConversations()
+                    self.loadConversations(fullReload: true)
                 }
             }
         }

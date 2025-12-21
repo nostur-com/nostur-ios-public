@@ -106,9 +106,7 @@ struct Maintenance {
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
             Self.runUpdateKeychainInfo(context: context)
             Self.runSaveFullAccountFlag(context: context)
-            Self.runFixMissingDMStates(context: context)
-            Self.runUpgradeDMformat(context: context)
-            Self.runDmStateCleanUp(context: context)
+            Self.runUpgradeDMs(context: context)
             Self.runInsertFixedPfps(context: context)
             Self.runPutReferencedAtag(context: context)
             Self.runSetCloudFeedOrder(context: context)
@@ -987,76 +985,35 @@ struct Maintenance {
         migration.migrationCode = migrationCode.saveFullAccountFlag.rawValue
     }
     
-    // Fix missing Cloud DM States: A received DM could be saved under a read-only alt account (as sender), if that account is the sender.
-    // Here we create the missing DM state for the receiver
-    static func runFixMissingDMStates(force: Bool = false, context: NSManagedObjectContext) {
+    // Upgrade to new DM format
+    static func runUpgradeDMs(force: Bool = false, context: NSManagedObjectContext) {
+        guard force || !Self.didRun(migrationCode: migrationCode.upgradeDMformatV2, context: context) else { return }
         
-        // Run at one time at startup, or again if force is true
-        guard force || !Self.didRun(migrationCode: migrationCode.fixMissingDMStatesAgain, context: context) else { return }
-        
-        // Find all DMs sent to full accounts as receiver
-        
-        // Our full account pubkeys
-        let accounts = CloudAccount.fetchAccounts(context: context)
-            .filter { $0.flagsSet.contains("full_account") }
-        let fullAccountPubkeys = accounts.map { $0.publicKey }
-        
-        guard fullAccountPubkeys.count > 0 else { return }
-        
-        // Find DMs sent to our full account pubkeys
-        let fr1 = Event.fetchRequest()
-        fr1.predicate = NSPredicate(format: "kind IN {4,14} AND NOT otherPubkey == nil AND otherPubkey IN %@", fullAccountPubkeys)
-        guard let dmsReceived = try? context.fetch(fr1) else { return }
-        
-        // Which DM states do we already have?
+        // First set participantPubkeys_ for all DM states, or delete essential data is missing
+        L.maintenance.info("🧹🧹 runUpgradeDMs: Making sure participantPubkeys/accountPubkey is set")
+
         let fr2 = CloudDMState.fetchRequest()
-        fr2.predicate = NSPredicate(format: "NOT accountPubkey_ == nil AND accountPubkey_ IN %@", fullAccountPubkeys)
-        guard let dmStates = try? context.fetch(fr2) else { return }
+        fr2.predicate = NSPredicate(value: true)
+        let dmStates = (try? context.fetch(fr2)) ?? []
         
-        var createdPairs: Set<String> = [] // Keep track of accountPubkey + otherPubkey pairs we create here so we don't create duplicates
-        
-        // Create the missing DM states. (our account + other pubkey)
-        for dmReceived in dmsReceived {
-            guard let dmReceivedOtherPubkey = dmReceived.otherPubkey else { continue }
-            
-            // Skip if we already have DM state for this
-            guard !dmStates.contains(where: { dmState in
-                guard let accountPubkey = dmState.accountPubkey_, let otherPubkey = dmState.contactPubkey_ else {
-                    return false
-                }
-                if dmReceived.pubkey == otherPubkey && dmReceivedOtherPubkey == accountPubkey {
-                    return true
-                }
-                return false
-            })
-            else { // Skip
-                continue
+        var deletedDMSates = 0
+        for dmState in dmStates {
+            // set participants (.pubkey + P tags)
+            if let contactPubkey = dmState.contactPubkey_, contactPubkey.count == 64, let accountPubkey = dmState.accountPubkey_ {
+                dmState.participantPubkeys = [contactPubkey, accountPubkey]
             }
-            
-            let pairId = dmReceivedOtherPubkey + dmReceived.pubkey
-            
-            // Skip if we already created a new DMState for this pair
-            guard !createdPairs.contains(pairId) else { continue }
-            
-            // We don't have it, so create it
-            let newDMState = CloudDMState(context: context)
-            newDMState.accepted = false
-            newDMState.accountPubkey_ = dmReceivedOtherPubkey
-            newDMState.contactPubkey_ = dmReceived.pubkey
-            createdPairs.insert(pairId)
-            L.maintenance.info("runFixMissingDMStates: Create new DM state for \(dmReceivedOtherPubkey) - \(dmReceived.pubkey)")
+            else if (dmState.contactPubkey_ == nil && dmState.participantPubkeys_ == nil) || dmState.accountPubkey_ == nil {
+                context.delete(dmState)
+                deletedDMSates += 1
+            }
         }
         
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.fixMissingDMStatesAgain.rawValue
-    }
-    
-    // Upgrade to new DM format
-    static func runUpgradeDMformat(force: Bool = false, context: NSManagedObjectContext) {
-        guard force || !Self.didRun(migrationCode: migrationCode.upgradeDMformat, context: context) else { return }
+        L.maintenance.info("🧹🧹 runUpgradeDMs: deleted \(deletedDMSates) DM states with missing data")
+
         
         // track timestamps and initiatorPubkey, newestId to make blurb, ourNewest to set markedReadAt
-        var earliestAndNewestByGroupId: [String: (earliest: Int64, initiatorPubkey: String?, newest: Int64, newestId: String, didSend: Bool, ourNewest: Int64?)] = [:]
+        // key = accountPubkey + . + groupId
+        var preparedDMStates: [String: (accountPubkey: String, contactPubkey: String?, participantPubkeys: Set<String>, earliest: Int64, initiatorPubkey: String?, newest: Int64, newestId: String, didSend: Bool, ourNewest: Int64?)] = [:]
         
         // get all kind 4 + 14
         let fr = Event.fetchRequest()
@@ -1064,73 +1021,90 @@ struct Maintenance {
         fr.predicate = NSPredicate(format: "kind IN %@", [4,14])
         let allDMs = (try? context.fetch(fr)) ?? []
         
-        var groupIdsSetCounter = 0
         
         // Our full account pubkeys
         let accounts = CloudAccount.fetchAccounts(context: context)
-            .filter { $0.flagsSet.contains("full_account") }
-        let fullAccountPubkeys = accounts.map { $0.publicKey }
+        let accountPubkeys = Set(accounts.map { $0.publicKey })
         
         // set .groupId on all kind 4, 14
         // track earliest and newest message for
         // 1) initiator pubkey (for WoT)
         // 2) newest for last received message and blurb
         // also track did we send (to auto .accept = true) and set markReadAt to at least .created_at of our own messagfe
+        // also track for every accountPubkey so we can create missing
         for dmEvent in allDMs {
-            groupIdsSetCounter += 1
-            let groupId = dmConversationId(event: dmEvent)
-            dmEvent.groupId = groupId
             
-            // track earliest timestamp and initiatorPubkey, and newest timestamp for last message received blurb
-            if let timestamps = earliestAndNewestByGroupId[groupId] {
-                // did we send from our account?
-                let didSend = fullAccountPubkeys.contains(dmEvent.pubkey) || timestamps.didSend
-                
-                // update newest for last message timestamp
-                let newest = dmEvent.created_at > timestamps.newest ? dmEvent.created_at : timestamps.newest
-                
-                // update newest id for blurb
-                let newestId = dmEvent.created_at > timestamps.newest ? dmEvent.id : timestamps.newestId
-                
-                // update our newest for markedReadAt
-                let ourNewest: Int64? = fullAccountPubkeys.contains(dmEvent.pubkey) && (dmEvent.created_at > timestamps.ourNewest ?? 0) ? dmEvent.created_at : timestamps.ourNewest
-                
-                // update earliest for iniatorPubkey
-                let earliest = dmEvent.created_at < timestamps.earliest ? dmEvent.created_at : timestamps.earliest
-                
-                // update earliest initiatorPubkey
-                let initiatorPubkey = dmEvent.created_at < timestamps.earliest ? dmEvent.pubkey : timestamps.initiatorPubkey
-                
-                // store results as tuple in dict
-                earliestAndNewestByGroupId[groupId] = (earliest: earliest, initiatorPubkey: initiatorPubkey, newest: newest, newestId: newestId, didSend: didSend, ourNewest: ourNewest)
+            guard let receiverPubkey = dmEvent.firstP() else { return } // if we have no p, something is wrong
+            let sender = dmEvent.pubkey
+            let participants = if dmEvent.kind == 14 {
+                allDMparticipants(dmEvent) // including sender (.pubkey)
+            } else { // .legacyDirectMessage
+                Set([sender,receiverPubkey]) // just 1 sender and 1 receveiver
             }
             
-            // insert new if there wasn't any match before
-            if earliestAndNewestByGroupId[groupId] == nil {
-                let didSend = fullAccountPubkeys.contains(dmEvent.pubkey)
-                let ourNewest: Int64? = didSend ? dmEvent.created_at : nil
-                earliestAndNewestByGroupId[groupId] = (earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: dmEvent.created_at, newestId: dmEvent.id, didSend: didSend, ourNewest: ourNewest)
+            let groupId = if dmEvent.kind == 14 {
+                dmConversationId(event: dmEvent) // based on all participants
+            } else { // .legacyDirectMessage
+                CloudDMState.getConversationId(for: [sender,receiverPubkey]) // just 1 sender and 1 receveiver
+            }
+            dmEvent.groupId = groupId
+            
+            for accountPubkey in accountPubkeys {
+                if !participants.contains(accountPubkey) { continue }
+                
+                let contactPubkey = participants.subtracting([accountPubkey]).first
+                
+                // use "<accountPubkey>.<groupId>" as identifier
+                let accountPubkeyAndGroupId = accountPubkey + "." + groupId
+                
+                // track earliest timestamp and initiatorPubkey, and newest timestamp for last message received blurb
+                if let timestamps = preparedDMStates[accountPubkeyAndGroupId] {
+                    // did we send from our account?
+                    let didSend = accountPubkeys.contains(dmEvent.pubkey) || timestamps.didSend
+                    
+                    // update newest for last message timestamp
+                    let newest = dmEvent.created_at > timestamps.newest ? dmEvent.created_at : timestamps.newest
+                    
+                    // update newest id for blurb
+                    let newestId = dmEvent.created_at > timestamps.newest ? dmEvent.id : timestamps.newestId
+                    
+                    // update our newest for markedReadAt
+                    let ourNewest: Int64? = accountPubkeys.contains(dmEvent.pubkey) && (dmEvent.created_at > timestamps.ourNewest ?? 0) ? dmEvent.created_at : timestamps.ourNewest
+                    
+                    // update earliest for iniatorPubkey
+                    let earliest = dmEvent.created_at < timestamps.earliest ? dmEvent.created_at : timestamps.earliest
+                    
+                    // update earliest initiatorPubkey
+                    let initiatorPubkey = dmEvent.created_at < timestamps.earliest ? dmEvent.pubkey : timestamps.initiatorPubkey
+                    
+                    // store results as tuple in dict
+                    preparedDMStates[accountPubkeyAndGroupId] = (accountPubkey: accountPubkey, contactPubkey: contactPubkey, participantPubkeys: participants, earliest: earliest, initiatorPubkey: initiatorPubkey, newest: newest, newestId: newestId, didSend: didSend, ourNewest: ourNewest)
+                }
+                
+                // insert new if there wasn't any match before
+                if preparedDMStates[accountPubkeyAndGroupId] == nil {
+                    let didSend = accountPubkeys.contains(dmEvent.pubkey)
+                    let ourNewest: Int64? = didSend ? dmEvent.created_at : nil
+                    preparedDMStates[accountPubkeyAndGroupId] = (accountPubkey: accountPubkey, contactPubkey: contactPubkey, participantPubkeys: participants, earliest: dmEvent.created_at, initiatorPubkey: dmEvent.pubkey, newest: dmEvent.created_at, newestId: dmEvent.id, didSend: didSend, ourNewest: ourNewest)
+                }
             }
         }
         
-        // update participants and update last received timestamp and set initiator pubkey
-        let fr2 = CloudDMState.fetchRequest()
-        fr2.predicate = NSPredicate(value: true)
-        let dmStates = (try? context.fetch(fr2)) ?? []
+        var updatedExisting = 0
+        var createdNew = 0
         
-        var dmStatesUpdatedCounter = 0
-        for dmState in dmStates {
-            var didUpdate = false
-            // set participants (.pubkey + P tags)
-            if let contactPubkey = dmState.contactPubkey_, contactPubkey.count == 64, let accountPubkey = dmState.accountPubkey_ {
-                dmState.participantPubkeys = [contactPubkey, accountPubkey]
-                didUpdate = true
-            }
+        // Create or update actual DM states
+        for (_, preparedState) in preparedDMStates {
             
-            if let timestamps = earliestAndNewestByGroupId[dmState.conversationId] {
-                dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(timestamps.newest))
-                dmState.initiatorPubkey_ = timestamps.initiatorPubkey
-                if let ourNewest = timestamps.ourNewest {
+            // Update existing
+            if let dmState = CloudDMState.fetchByParticipants(participants: preparedState.participantPubkeys,
+                                                              andAccountPubkey: preparedState.accountPubkey,
+                                                              context: context) {
+                updatedExisting += 1
+                dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(preparedState.newest))
+                dmState.initiatorPubkey_ = preparedState.initiatorPubkey
+                
+                if let ourNewest = preparedState.ourNewest {
                     let ourNewestDate = Date(timeIntervalSince1970: TimeInterval(ourNewest))
                     if let existingMarkedReadAt = dmState.markedReadAt_ { // if we have existing
                         if ourNewestDate > existingMarkedReadAt { // only set if newer
@@ -1143,64 +1117,54 @@ struct Maintenance {
                 }
                 
                 // update blurb
-                if let mostRecent = allDMs.first(where: { $0.id == timestamps.newestId }) {
+                if let mostRecent = allDMs.first(where: { $0.id == preparedState.newestId }) {
                     updateBlurb(dmState, event: mostRecent, context: context)
                 }
                 
-                dmState.accepted = timestamps.didSend || dmState.accepted
-                didUpdate = true
+                dmState.accepted = preparedState.didSend || dmState.accepted
             }
-            
-            if didUpdate {
-                dmStatesUpdatedCounter += 1
+            else { // Create New
+                createdNew += 1
+                let dmState = CloudDMState(context: context)
+                dmState.accountPubkey_ = preparedState.accountPubkey
+                dmState.contactPubkey_ = preparedState.participantPubkeys.subtracting([preparedState.accountPubkey]).first
+                dmState.participantPubkeys = preparedState.participantPubkeys
+                dmState.accepted = preparedState.didSend
+                dmState.initiatorPubkey_ = preparedState.initiatorPubkey
+                if let ourNewest = preparedState.ourNewest {
+                    dmState.lastMessageTimestamp_ = Date(timeIntervalSince1970: TimeInterval(ourNewest))
+                    dmState.markedReadAt_ = Date(timeIntervalSince1970: TimeInterval(ourNewest))
+                }
+                // update blurb
+                if let mostRecent = allDMs.first(where: { $0.id == preparedState.newestId }) {
+                    updateBlurb(dmState, event: mostRecent, context: context)
+                }
             }
         }
-       
-        L.maintenance.info("🧹🧹 runUpgradeDMformat: \(groupIdsSetCounter) dm groupIds set.  \(dmStatesUpdatedCounter) DM states updated.")
-       
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.upgradeDMformat.rawValue
-    }
-    
-    // Final DM states clean up
-    static func runDmStateCleanUp(force: Bool = false, context: NSManagedObjectContext) {
-        guard force || !Self.didRun(migrationCode: migrationCode.dmStateCleanUp, context: context) else { return }
-                
-        // Our account pubkeys
-        let accountPubkeys: Set<String> = Set(CloudAccount.fetchAccounts(context: context).map { $0.publicKey })
 
-        let fr2 = CloudDMState.fetchRequest()
-        fr2.predicate = NSPredicate(value: true)
-        let dmStates = (try? context.fetch(fr2)) ?? []
+        L.maintenance.info("🧹🧹 runUpgradeDMs: Updating \(updatedExisting) existing DM states. Creating \(createdNew) new DM states.")
         
-        var dmStatesUpdatedCounter = 0
-        for dmState in dmStates {
-      
-            if let accountPubkey = dmState.accountPubkey_ {
-                
-                // Remove DM states where accountPubkey_ is not even part of participants (accidentally added in buggy build)
-                if !dmState.participantPubkeys.contains(accountPubkey) {
-                    dmStatesUpdatedCounter += 1
-                    context.delete(dmState)
-                }
-                
-                // Remove DM state where accountPubkey is not any of our accounts
-                if !accountPubkeys.contains(accountPubkey) {
-                    dmStatesUpdatedCounter += 1
-                    context.delete(dmState)
-                }
-                
-            }
-            else if dmState.accountPubkey_ == nil { // Remove DM states where accountPubkey_ is empty (shouldn't exist)
-                dmStatesUpdatedCounter += 1
+        let dmStatesToKeep: Set<String> = Set(preparedDMStates.keys) // "<accountPubkey>.<groupId>"
+       
+        let fr3 = CloudDMState.fetchRequest()
+        fr3.predicate = NSPredicate(value: true)
+        let dmStatesAgain = (try? context.fetch(fr3)) ?? [] // not sure if we can reuse dmStates properly because of .delete() so just fetch again
+        
+        var deleted = 0
+        for dmState in dmStatesAgain {
+            let id: String = (dmState.accountPubkey_ ?? "?") + "." + (dmState.conversationId) // "<accountPubkey>.<groupId>"
+            if !dmStatesToKeep.contains(id) {
                 context.delete(dmState)
+                deleted += 1
             }
         }
+        
+        L.maintenance.info("🧹🧹 runUpgradeDMs: Deleted \(deleted) no longer needed DM states")
        
-        L.maintenance.info("🧹🧹 dmStateCleanUp: \(dmStatesUpdatedCounter) states removed.")
-       
-        let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.dmStateCleanUp.rawValue
+        if !force {
+            let migration = Migration(context: context)
+            migration.migrationCode = migrationCode.upgradeDMformatV2.rawValue
+        }
     }
     
     // Update Keychain info. Change from .whenUnlocked to .afterFirstUnlock and store name
@@ -1370,7 +1334,7 @@ struct Maintenance {
         case fixMissingDMStatesAgain = "fixMissingDMStatesAgain"
         
         // Upgrade to new DM format
-        case upgradeDMformat = "upgradeDMformat"
+        case upgradeDMformatV2 = "upgradeDMformatV2"
         
         // Clean up mess from before
         case dmStateCleanUp = "dmStateCleanUp"
