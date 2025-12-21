@@ -38,6 +38,22 @@ class ConversionVM: ObservableObject {
     // 4 = NIP-04, 17 = NIP-17
     @Published var conversionVersion: Int = 17
     
+    // For DMChatInputField
+    @Published var quotingNow: NRChatMessage? = nil {
+        didSet {
+            if replyingNow != nil {
+                replyingNow = nil
+            }
+        }
+    }
+    @Published var replyingNow: NRChatMessage? = nil {
+        didSet {
+            if quotingNow != nil {
+                quotingNow = nil
+            }
+        }
+    }
+    
     public var account: CloudAccount? = nil
     
     private let dayIdFormatter: DateFormatter
@@ -292,9 +308,9 @@ class ConversionVM: ObservableObject {
         return newChatMessage
     }
     
-    @MainActor public func sendMessage(_ message: String) async throws {
+    @MainActor public func sendMessage(_ message: String, quotingNow: NRChatMessage? = nil, replyingNow: NRChatMessage? = nil) async throws {
         if self.conversionVersion == 17 {
-            try await self.sendMessage17(message)
+            try await self.sendMessage17(message, quotingNow: quotingNow, replyingNow: replyingNow)
         }
         else {
             try await self.sendMessage04(message)
@@ -328,7 +344,7 @@ class ConversionVM: ObservableObject {
     }
     
     @MainActor
-    private func sendMessage17(_ message: String) async throws {
+    private func sendMessage17(_ message: String, quotingNow quoted: NRChatMessage? = nil, replyingNow replyingTo: NRChatMessage? = nil) async throws {
         guard let privKey = AccountManager.shared.getPrivateKeyHex(pubkey: ourAccountPubkey), let ourkeys = try? NostrEssentials.Keys(privateKeyHex: privKey) else { throw DMError.PrivateKeyMissing }
         
         
@@ -338,13 +354,23 @@ class ConversionVM: ObservableObject {
         }
         else { message }
         
+        var tags: [Tag] = participants.map { Tag(["p", $0]) } // include ourselves for compatibility with 0xChat (seems to ignore .pubkey)
+        
+        if let quoted {
+            tags.append(Tag(["q", quoted.id]))
+        }
+        
+        if let replyingTo {
+            tags.append(Tag(["e", replyingTo.id]))
+        }
+        
         let messageDate = Date()
         let message = NostrEssentials.Event(
             pubkey: ourAccountPubkey,
             content: content,
             kind: 14,
             created_at: Int(messageDate.timeIntervalSince1970),
-            tags: participants.map { Tag(["p", $0]) } // include ourselves for compatibility with 0xChat (seems to ignore .pubkey)
+            tags: tags
         )
         let rumorEvent = createRumor(message) // makes sure sig is removed and adds id
         

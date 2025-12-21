@@ -80,22 +80,31 @@ struct DMConversationView17: View {
                     Group {
                         if vm.isAccepted {
                             VStack {
-                                ChatInputField(message: $text) {
+                                DMChatInputField(message: $text, vm: vm) {
                                     Task { @MainActor in
                                         guard !text.isEmpty else { return }
                                         let textToSend = text
+                                        let replyingNow = vm.replyingNow
+                                        let quotingNow = vm.quotingNow
+                                        
                                         do {
                                             errorText = nil
                                             text = ""
-                                            try await vm.sendMessage(textToSend)
+                                            vm.replyingNow = nil
+                                            vm.quotingNow = nil
+                                            try await vm.sendMessage(textToSend, quotingNow: quotingNow, replyingNow: replyingNow)
                                         }
                                         catch DMError.PrivateKeyMissing {
                                             AppSheetsModel.shared.readOnlySheetVisible = true
                                             text = textToSend
+                                            vm.replyingNow = replyingNow
+                                            vm.quotingNow = quotingNow
                                         }
                                         catch {
                                             errorText = "Could not send message"
                                             text = textToSend
+                                            vm.replyingNow = replyingNow
+                                            vm.quotingNow = quotingNow
                                         }
                                     }
                                 }

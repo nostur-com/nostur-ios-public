@@ -8090,6 +8090,12 @@
         }
       }
     },
+    "Quote..." : {
+
+    },
+    "Quoting" : {
+
+    },
     "Raise hand" : {
       "localizations" : {
         "nl" : {
@@ -8751,6 +8757,12 @@
           }
         }
       }
+    },
+    "Reply..." : {
+
+    },
+    "Replying" : {
+
     },
     "Replying to " : {
       "localizations" : {
