@@ -22,6 +22,7 @@ struct DMConversationView17: View {
     @State private var didLoad = false
     @State private var selectedContact: NRContact?
     @State private var showConversationInfoSheet = false
+    
     @Namespace private var bottomAnchor
     
     init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false) {
@@ -56,7 +57,7 @@ struct DMConversationView17: View {
                                 Spacer()
                             }
                             ForEach(days) { day in
-                                DayView(ourAccountPubkey: ourAccountPubkey, day: day, showPFP: vm.receivers.count > 1)
+                                DayView(ourAccountPubkey: ourAccountPubkey, day: day, vm: vm)
                             }
                             Color.clear
                                 .frame(height: 0)

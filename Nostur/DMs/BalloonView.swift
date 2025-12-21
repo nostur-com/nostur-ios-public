@@ -11,7 +11,8 @@ import NavigationBackport
 struct BalloonView17: View {
     @ObservedObject public var nrChatMessage: NRChatMessage
     public var accountPubkey: String
-    public var showPFP: Bool = false
+    public var vm: ConversionVM
+    
     private var isSentByCurrentUser: Bool {
         nrChatMessage.pubkey == accountPubkey
     }
@@ -22,49 +23,47 @@ struct BalloonView17: View {
     @State private var showDMSendResult: RecipientResult? = nil
     
     var body: some View {
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         HStack {
             if isSentByCurrentUser {
                 Spacer()
             }
-            else if showPFP {
+            else if vm.receivers.count > 1 {
                 ObservedPFP(nrContact: nrChatMessage.nrContact, size: 20)
                     .offset(x: 5, y: 5)
             }
             VStack(spacing: 3) {
                 
                 if let replyTo = nrChatMessage.replyTo {
-                    VStack(alignment: .leading) {
-                        ContactName(nrContact: replyTo.nrContact)
-                            .fontWeightBold()
-                            .foregroundColor(isSentByCurrentUser ? .white : theme.primary)
-                        DMContentRenderer(pubkey: replyTo.pubkey, contentElements: replyTo.contentElementsDetail, availableWidth: availableWidth - 10, isSentByCurrentUser: isSentByCurrentUser)
-                    }
-                    .padding(7)
-                    .background(theme.secondary.opacity(0.3))
-                    .overlay(alignment: .leading) {
-                        replyTo.nrContact.randomColor.frame(width: 3)
-                    }
+                    EmbeddedChatMessage(nrChatMessage: replyTo, isSentByCurrentUser: isSentByCurrentUser)
+                        .padding(.trailing, 10)
                 }
                  
                 DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
+                    .padding(.trailing, 15)
                 
                 if let quotedEvent = nrChatMessage.quotedEvent {
-                    VStack(alignment: .leading) {
-                        ContactName(nrContact: quotedEvent.nrContact)
-                            .fontWeightBold()
-                            .foregroundColor(isSentByCurrentUser ? .white : theme.primary)
-                        DMContentRenderer(pubkey: quotedEvent.pubkey, contentElements: quotedEvent.contentElementsDetail, availableWidth: availableWidth - 10, isSentByCurrentUser: isSentByCurrentUser)
-                    }
-                    .padding(7)
-                    .background(theme.secondary.opacity(0.3))
-                    
-                    
-                    .overlay(alignment: .leading) {
-                        quotedEvent.nrContact.randomColor.frame(width: 3)
-                    }
+                    EmbeddedChatMessage(nrChatMessage: quotedEvent, isSentByCurrentUser: isSentByCurrentUser)
                 }
             }
             .padding(10)
+            .overlay(alignment: .topTrailing) {
+                if vm.conversionVersion == 17 {
+                    Menu {
+                        Button("Reply...", systemImage: "arrowshape.turn.up.left") { vm.replyingNow = nrChatMessage  }
+                        Button("Quote...", systemImage: "quote.bubble.rtl") { vm.quotingNow = nrChatMessage }
+    //                    Button("React...", systemImage: "smiley") { }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .padding(5)
+                            .contentShape(Rectangle())
+                            .foregroundStyle(isSentByCurrentUser ? Color.white : theme.accent)
+                    }
+                    .offset(x: -7, y: 4)
+                }
+            }
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(isSentByCurrentUser ? theme.accent : theme.background)
@@ -119,7 +118,14 @@ struct BalloonView17: View {
     }
 }
 
+@available(iOS 17.0, *)
 #Preview {
+    
+    @Previewable @StateObject var vm = ConversionVM(
+        participants: ["9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
+                       "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"],
+        ourAccountPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"
+    )
 
     let nrChatMessage = NRChatMessage(
         nEvent: NEvent(
@@ -144,6 +150,7 @@ struct BalloonView17: View {
             signature: ""
         )
     )
+    
     
     var nrChatMessage3 = NRChatMessage(
         nEvent: NEvent(
@@ -173,14 +180,15 @@ struct BalloonView17: View {
     
     let _ = nrChatMessage4.replyTo = NRChatMessage(nEvent: nrChatMessage.nEvent)
     
+    
     VStack {
-        BalloonView17(nrChatMessage: nrChatMessage, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", showPFP: true)
+        BalloonView17(nrChatMessage: nrChatMessage, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", vm: vm)
         
-        BalloonView17(nrChatMessage: nrChatMessage2, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", showPFP: true)
+        BalloonView17(nrChatMessage: nrChatMessage2, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", vm: vm)
         
-        BalloonView17(nrChatMessage: nrChatMessage3, accountPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33", showPFP: true)
+        BalloonView17(nrChatMessage: nrChatMessage3, accountPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33", vm: vm)
         
-        BalloonView17(nrChatMessage: nrChatMessage4, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", showPFP: true)
+        BalloonView17(nrChatMessage: nrChatMessage4, accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", vm: vm)
         
         Spacer()
     }
