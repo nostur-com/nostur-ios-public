@@ -67,7 +67,9 @@ class GroupedReactionsFeedModel: ObservableObject {
             self.allReactionEvents = ((try? bgContext.fetch(r1)) ?? [])
                 .filter { includeSpam || !$0.isSpam }
             
-            let eventsReactedTo: [Event] = allReactionEvents.compactMap { $0.reactionTo }
+            let eventsReactedTo: [Event] = allReactionEvents
+                .compactMap { $0.reactionToId }
+                .compactMap { Event.fetchEvent(id: $0, context: bgContext) }
             let uniqueEventsReactedTo: Set<Event> = Set(eventsReactedTo)
         
             let groupedReactions: [GroupedReactions] = uniqueEventsReactedTo.map { reactedTo in

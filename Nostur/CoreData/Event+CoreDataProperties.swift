@@ -228,7 +228,6 @@ extension Event {
 // MARK: Generated accessors for reactions
 extension Event {
     @NSManaged public var reactionToId: String?
-    @NSManaged public var reactionTo: Event?
 }
 
 extension Event {
@@ -416,14 +415,9 @@ extension Event {
             guard let lastEtag = reaction.lastE() else { break }
             guard let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) else { break }
             
-            
-            CoreDataRelationFixer.shared.addTask({
-                reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-                guard contextWontCrash([reaction, reactingToEvent], debugInfo: "updateLikeCountCache") else { return }
-                reaction.reactionTo = reactingToEvent
-                reaction.reactionToId = reactingToEvent.id
-            })
+            reactingToEvent.likesCount = (reactingToEvent.likesCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+            reaction.reactionToId = reactingToEvent.id
         }
     }
     
@@ -432,12 +426,8 @@ extension Event {
         guard let lastEtag = event.lastE() else { return }
         guard let reactingToEvent = Event.fetchEvent(id: lastEtag, context: context) else { return }
         
-        CoreDataRelationFixer.shared.addTask({
-            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
-            guard contextWontCrash([event, reactingToEvent], debugInfo: "updateReactionTo") else { return }
-            event.reactionTo = reactingToEvent
-            event.reactionToId = reactingToEvent.id
-        })
+        ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: reactingToEvent.id, likes: reactingToEvent.likesCount))
+        event.reactionToId = reactingToEvent.id
     }
     
     static func updateZapTallyCache(_ zap: Event, context: NSManagedObjectContext) {

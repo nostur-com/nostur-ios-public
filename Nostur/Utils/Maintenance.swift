@@ -908,10 +908,6 @@ struct Maintenance {
                     reaction.otherPubkey = lastP
                     fixed += 1
                 }
-                else if let otherPubkey = reaction.reactionTo?.pubkey {
-                    reaction.otherPubkey = otherPubkey
-                    fixed += 1
-                }
             }
             L.maintenance.info("🧹🧹 runPutReactionToPubkeyInOtherPubkey: Fixed \(fixed) otherPubkey in reactions")
         }
