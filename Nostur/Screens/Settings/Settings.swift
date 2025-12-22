@@ -68,7 +68,7 @@ struct Settings: View {
                     if IS_CATALYST {
                         Toggle(isOn: $settings.proMode) {
                             VStack(alignment: .leading) {
-                                Text("Nostur Pro (Beta)", comment:"Setting on settings screen")
+                                Text("Nostur Pro", comment:"Setting on settings screen")
                                 Text("Multi-columns and more")
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
