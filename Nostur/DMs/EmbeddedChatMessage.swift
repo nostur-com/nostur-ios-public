@@ -21,11 +21,11 @@ struct EmbeddedChatMessage: View {
                 .foregroundColor(isSentByCurrentUser ? .white : theme.primary)
             DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth - 10, isSentByCurrentUser: isSentByCurrentUser)
         }
-        .padding(7)
+        .padding(8)
         .background(theme.secondary.opacity(0.3))
         .padding(.trailing, 15)
         .overlay(alignment: .leading) {
-            nrChatMessage.nrContact.randomColor.frame(width: 3)
+            nrChatMessage.nrContact.randomColor.frame(width: 4)
         }
     }
 }

@@ -108,6 +108,23 @@ struct DMChatInputField: View {
                 
                 if let replyingNow = vm.replyingNow {
                     EmbeddedChatMessage(nrChatMessage: replyingNow, isSentByCurrentUser: false)
+                        .modifier {
+                            if #available(iOS 26.0, *) {
+                                $0.clipShape(.rect(corners: .concentric))
+                            }
+                            else {
+                                $0.clipShape(.rect(cornerRadius: 22))
+                            }
+                        }
+                        .overlay(alignment: .topTrailing) {
+                            Button("Remove", systemImage: "xmark.circle.fill") {
+                                withAnimation {
+                                    vm.replyingNow = nil
+                                }
+                            }
+                            .labelStyle(.iconOnly)
+                            .offset(x: -17, y: 3)
+                        }
                         .padding(.leading, 10)
                         .padding(.top, 10)
                 }
@@ -129,6 +146,23 @@ struct DMChatInputField: View {
                 
                 if let quotingNow = vm.quotingNow {
                     EmbeddedChatMessage(nrChatMessage: quotingNow, isSentByCurrentUser: false)
+                        .modifier {
+                            if #available(iOS 26.0, *) {
+                                $0.clipShape(.rect(corners: .concentric))
+                            }
+                            else {
+                                $0.clipShape(.rect(cornerRadius: 22))
+                            }
+                        }
+                        .overlay(alignment: .topTrailing) {
+                            Button("Remove", systemImage: "xmark.circle.fill") {
+                                withAnimation {
+                                    vm.replyingNow = nil
+                                }
+                            }
+                            .labelStyle(.iconOnly)
+                            .offset(x: -17, y: 3)
+                        }
                         .padding(.horizontal, 10)
                         .padding(.bottom, 10)
                         .padding(.trailing, 10)
@@ -161,11 +195,10 @@ struct DMChatInputField: View {
             }
         }
         .background(theme.listBackground)
-        .cornerRadius(22)
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(theme.lineColor, lineWidth: 1)
-        )
+        .containerShape(.rect(cornerRadius: 22))
+        .padding(1)
+        .background(theme.lineColor)
+        .containerShape(.rect(cornerRadius: 22))
         .padding([.leading, .trailing], 10)
         .onAppear {
             if startWithFocus {
