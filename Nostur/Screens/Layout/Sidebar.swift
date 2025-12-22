@@ -173,8 +173,8 @@ struct SideBar: View {
                                     Image(systemName: "envelope")
                                         .frame(width: Self.ICON_WIDTH)
                                         .overlay(alignment: .topTrailing) {
-                                            if (dm.unread + dm.newRequests) > 0 {
-                                                Text("\((dm.unread + dm.newRequests))")
+                                            if (dm.unread + dm.unreadNewRequestsCount) > 0 {
+                                                Text("\((dm.unread + dm.unreadNewRequestsCount))")
                                                     .font(.caption2)
                                                     .fontWeight(.semibold)
                                                     .foregroundColor(.white)

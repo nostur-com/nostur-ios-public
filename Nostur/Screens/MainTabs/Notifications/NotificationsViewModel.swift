@@ -318,12 +318,12 @@ class NotificationsViewModel: ObservableObject {
                 badgeSubcription = self.unreadPublisher // TODO: Also do .unreadPublisher for DMs to fix badge/unread mismatch
                     .sink { [weak self] _ in
                         guard let self else { return }
-                        let dmsCount = (DMsVM.shared.unread + DMsVM.shared.newRequests)
+                        let dmsCount = (DMsVM.shared.unread + DMsVM.shared.unreadNewRequestsCount)
                         setAppIconBadgeCount(self.unread + dmsCount, center: center)
                     }
                 
                 Task { @MainActor in
-                    let dmsCount = (DMsVM.shared.unread + DMsVM.shared.newRequests)
+                    let dmsCount = (DMsVM.shared.unread + DMsVM.shared.unreadNewRequestsCount)
                     setAppIconBadgeCount(self.unread + dmsCount)
                 }
             }

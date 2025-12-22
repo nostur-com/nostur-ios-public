@@ -66,7 +66,7 @@ struct MainTabs15: View {
                         Image(systemName: "envelope.fill")
                     }
                     .tag("Messages")
-                    .badge((dm.unread + dm.newRequests))
+                    .badge((dm.unread + dm.unreadNewRequestsCount))
                     .nosturTabsCompat(theme: theme)
             }
             .environment(\.horizontalSizeClass, .compact)

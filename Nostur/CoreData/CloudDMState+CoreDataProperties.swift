@@ -115,34 +115,49 @@ extension CloudDMState: Identifiable {
         newGroupDMSstate.contactPubkey_ = participants.subtracting([accountPubkey]).first
         return newGroupDMSstate
     }
-    
-    var unread: Int {
-        guard contactPubkey_ != nil || participantPubkeys_ != nil else { return 0 }
-        guard let managedObjectContext else { return 0 }
 
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@", [4,14], self.conversationId)
-        let allReceived = (try? managedObjectContext.fetch(fr)) ?? []
-        
+    @MainActor
+    func updateUnread() {
+        guard contactPubkey_ != nil || participantPubkeys_ != nil else { return }
+        guard let accountPubkey = accountPubkey_ else { return }
         
         let unreadSince = markedReadAt_ ?? Date.distantPast
+        let conversationId = self.conversationId
         
-        return allReceived.count { $0.date > unreadSince }
+        bg().perform {
+            let fr = Event.fetchRequest()
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@ AND NOT pubkey = %@", [4,14], conversationId, accountPubkey)
+            let allReceived = (try? bg().fetch(fr)) ?? []
+            let viewUnread = allReceived.count { $0.date > unreadSince }
+            
+            Task { @MainActor in
+                self.objectWillChange.send()
+                self.cachedViewUnread = viewUnread
+            }
+        }
     }
     
-    func unread(for accountPubkey: String) -> Int {
+    @MainActor
+    func getUnread() async -> Int {
         guard contactPubkey_ != nil || participantPubkeys_ != nil else { return 0 }
-        guard let managedObjectContext else { return 0 }
+        guard let accountPubkey = accountPubkey_ else { return 0 }
 
-        let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-        fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@ AND NOT pubkey = %@", [4,14], self.conversationId, accountPubkey)
-        let allReceived = (try? managedObjectContext.fetch(fr)) ?? []
-        
-        
         let unreadSince = markedReadAt_ ?? Date.distantPast
+        let conversationId = self.conversationId
         
-        return allReceived.count { $0.date > unreadSince }
+        return await withBgContext { bgContext in
+            let fr = Event.fetchRequest()
+            fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+            fr.predicate = NSPredicate(format: "kind IN %@ AND groupId == %@ AND NOT pubkey = %@", [4,14], conversationId, accountPubkey)
+            let allReceived = (try? bgContext.fetch(fr)) ?? []
+            let viewUnread = allReceived.count { $0.date > unreadSince }
+            
+            Task { @MainActor in
+                self.objectWillChange.send()
+                self.cachedViewUnread = viewUnread
+            }
+            return viewUnread
+        }
     }
 }

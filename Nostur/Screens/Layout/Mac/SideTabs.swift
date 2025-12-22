@@ -67,7 +67,7 @@ struct SideTabs: View {
                 .background(selectedTab == "Messages" ? theme.accent.opacity(0.2) : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .animation(.easeInOut(duration: 0.2), value: selectedTab)
-                .badgeCompat((dm.unread + dm.newRequests))
+                .badgeCompat((dm.unread + dm.unreadNewRequestsCount))
             
             }
             .labelStyle(.iconOnly)

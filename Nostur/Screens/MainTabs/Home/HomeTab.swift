@@ -63,8 +63,8 @@ struct HomeTab: View {
                                         }
                                         .accessibilityLabel("Account menu")
                                         .overlay(alignment: .topTrailing) {
-                                            if !IS_CATALYST && (dm.unread + dm.newRequests) > 0 {
-                                                Text("\((dm.unread + dm.newRequests))")
+                                            if !IS_CATALYST && (dm.unread + dm.unreadNewRequestsCount) > 0 {
+                                                Text("\((dm.unread + dm.unreadNewRequestsCount))")
                                                     .font(.caption2)
                                                     .fontWeight(.semibold)
                                                     .foregroundColor(.white)

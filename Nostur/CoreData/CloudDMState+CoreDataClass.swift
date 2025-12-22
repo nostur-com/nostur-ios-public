@@ -11,4 +11,7 @@ import CoreData
 import Combine
 
 @objc(CloudDMState)
-public class CloudDMState: NSManagedObject { }
+public class CloudDMState: NSManagedObject {
+    
+    var cachedViewUnread: Int = 0
+}

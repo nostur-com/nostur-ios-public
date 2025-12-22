@@ -110,19 +110,11 @@ struct DMConversationInfoSheet: View {
         .onValueChange(useImprovedFormat) { oldValue, newValue in
             if !oldValue && newValue {
                 vm.conversionVersion = 17
-                Task {
-                    await withBgContext { [weak vm] bgContext in
-                        vm?.cloudDMState?.version = 17
-                    }
-                }
+                vm.dmState?.version = 17
             }
             else if !newValue {
                 vm.conversionVersion = 4
-                Task {
-                    await withBgContext { [weak vm] bgContext in
-                        vm?.cloudDMState?.version = 0
-                    }
-                }
+                vm.dmState?.version = 0
             }
         }
         .navigationTitle(String(localized:"Conversation info", comment:"Navigation title for screen with DM conversation info"))

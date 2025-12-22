@@ -48,13 +48,13 @@ class DMsVM: ObservableObject {
 
     
     @Published var conversationRows: [CloudDMState] = [] {
-        didSet { self.unread = self.unread_ }
+        didSet { updateUnreadsCount() }
     }
     @Published var requestRows: [CloudDMState] = [] {
-        didSet { self.newRequests = self.newRequests_ }
+        didSet { updateUnreadsCount() }
     }
     @Published var requestRowsNotWoT: [CloudDMState] = [] {
-        didSet { self.newRequestsNotWoT = self.newRequestsNotWoT_ }
+        didSet { updateUnreadsCount() }
     }
     
     @Published var showNotWoT = false {
@@ -71,23 +71,38 @@ class DMsVM: ObservableObject {
     @Published var showUpgradeNotice = false
      
     @Published var unread: Int = 0
-    @Published var newRequests: Int = 0
-    @Published var newRequestsNotWoT: Int = 0
+    @Published var unreadNewRequestsCount: Int = 0
+    @Published var unreadNewRequestsNotWoTCount: Int = 0
     
-    var unread_: Int {
-        conversationRows.reduce(0) { $0 + $1.unread(for: self.accountPubkey) }
-    }
-    var newRequests_: Int {
-        requestRows.reduce(0) { $0 + $1.unread(for: self.accountPubkey) }
-    }
-    var newRequestsNotWoT_: Int {
-        requestRowsNotWoT.count
+    @MainActor
+    private func updateUnreads() async {
+        var unreadCount = 0
+        for conversationRow in conversationRows {
+            unreadCount += await conversationRow.getUnread()
+        }
+        self.unread = unreadCount
+        
+        var newRequestsCount = 0
+        for requestRow in requestRows {
+            newRequestsCount += await requestRow.getUnread()
+        }
+        self.unreadNewRequestsCount = newRequestsCount
+        
+        self.unreadNewRequestsNotWoTCount = requestRowsNotWoT.count
     }
     
-    public func updateUnreads() {
-        self.unread = self.unread_
-        self.newRequests = self.newRequests_
-        self.newRequestsNotWoT = self.newRequestsNotWoT_
+    private func updateSorting() {
+        self.conversationRows = self.conversationRows
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+            .sorted(by: { $0.isPinned != $1.isPinned })
+        
+        self.requestRows = self.requestRows
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+            .sorted(by: { $0.isPinned != $1.isPinned })
+        
+        self.requestRowsNotWoT = self.requestRowsNotWoT
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+            .sorted(by: { $0.isPinned != $1.isPinned })
     }
     
     public var hiddenDMs: Int {
@@ -103,6 +118,15 @@ class DMsVM: ObservableObject {
             .sink { [weak self] _ in
                 Task { @MainActor in
                     self?.loadConversations()
+                }
+            }
+            .store(in: &self.subscriptions)
+        
+        self._updateUnreadsCount
+            .debounce(for: 0.25, scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    await self?.updateUnreads()
                 }
             }
             .store(in: &self.subscriptions)
@@ -244,8 +268,10 @@ class DMsVM: ObservableObject {
                     }
                 }
                 
+                self.updateUnreadsCount()
+                
                 Task { @MainActor in
-                    self.updateUnreads()
+                    self.updateSorting()
                 }
                 
                 // Only do notifications for logged in account
@@ -290,7 +316,7 @@ class DMsVM: ObservableObject {
         for dmState in conversationRows {
             dmState.markedReadAt_ = Date.now
         }
-        self.unread = self.unread_
+        self.updateUnreadsCount()
     }
     
     @MainActor
@@ -304,13 +330,15 @@ class DMsVM: ObservableObject {
                 dmState.markedReadAt_ = Date.now
             }
         }
-        self.newRequests = self.newRequests_
-        self.newRequestsNotWoT = self.newRequestsNotWoT_
+        self.updateUnreadsCount()
     }
     
     
     public func reloadConversations() { _reloadConversations.send() }
     private var _reloadConversations = PassthroughSubject<Void, Never>()
+    
+    public func updateUnreadsCount() { _updateUnreadsCount.send() }
+    private var _updateUnreadsCount = PassthroughSubject<Void, Never>()
     
     @MainActor
     public func loadConversations(fullReload: Bool = false) {
@@ -353,8 +381,10 @@ class DMsVM: ObservableObject {
             }
         
         conversationRows = accepted
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
             .sorted(by: { $0.isPinned != $1.isPinned })
         requestRows = requests
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
             .sorted(by: { $0.isPinned != $1.isPinned })
         
         guard WOT_FILTER_ENABLED() else { return }
@@ -377,6 +407,7 @@ class DMsVM: ObservableObject {
             }
 
         requestRowsNotWoT = outsideWoT
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
             .sorted(by: { $0.isPinned != $1.isPinned })
     }
     
@@ -444,12 +475,12 @@ class DMsVM: ObservableObject {
                     .sink { [weak self] _ in
                         guard let self else { return }
                         let notificationsCount = NotificationsViewModel.shared.unread
-                        setAppIconBadgeCount((self.unread + self.newRequests) + notificationsCount, center: center)
+                        setAppIconBadgeCount((self.unread + self.unreadNewRequestsCount) + notificationsCount, center: center)
                     }
                     .store(in: &self.subscriptions)
                 
                 let notificationsCount = NotificationsViewModel.shared.unread
-                setAppIconBadgeCount((self.unread + self.newRequests) + notificationsCount)
+                setAppIconBadgeCount((self.unread + self.unreadNewRequestsCount) + notificationsCount)
             }
         }
     }

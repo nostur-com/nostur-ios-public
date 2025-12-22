@@ -52,7 +52,7 @@ struct DMsInnerList: View {
                                         // mark as read
                                         navPath.append(row)
                                         row.markedReadAt_ = .now
-                                        vm.updateUnreads()
+                                        vm.updateUnreadsCount()
                                     }
                                 }
                             }
@@ -72,7 +72,7 @@ struct DMsInnerList: View {
                                     .onTapGesture {
                                         navPath.append(row)
                                         row.markedReadAt_ = .now
-                                        vm.updateUnreads()
+                                        vm.updateUnreadsCount()
                                     }
                                 }
                                 
@@ -176,7 +176,7 @@ struct DMsInnerList: View {
                         //                                    .frame(maxWidth: .infinity)
                         //                                    .padding(.top, 8)
                         //                                    .padding(.bottom, 5)
-                        if vm.newRequests > 0 {
+                        if vm.unreadNewRequestsCount > 0 {
                             Menu {
                                 Button {
                                     vm.markRequestsAsRead()
@@ -184,7 +184,7 @@ struct DMsInnerList: View {
                                     Label(String(localized: "Mark all as read", comment:"Menu action to mark all dm requests as read"), systemImage: "envelope.open")
                                 }
                             } label: {
-                                Text("\(vm.newRequests)")
+                                Text("\(vm.unreadNewRequestsCount)")
                                     .font(.footnote)
                                     .foregroundColor(.white)
                                     .padding(.horizontal,6)
@@ -224,7 +224,6 @@ struct DMStateRow: View {
     @ObservedObject private var dmState: CloudDMState
     @State var nrContacts: [NRContact]
     @State var nrContact: NRContact?
-    private var unread: Int { dmState.unread(for: accountPubkey) }
     private let accountPubkey: String
     private let vm: DMsVM
     
@@ -244,8 +243,8 @@ struct DMStateRow: View {
         HStack(alignment: .top) {
             MultiPFPs(nrContacts: nrContacts)
                 .overlay(alignment: .topTrailing) {
-                    if unread > 0 {
-                        Text("\(unread)")
+                    if dmState.cachedViewUnread > 0 {
+                        Text("\(dmState.cachedViewUnread)")
                             .font(.footnote)
                             .foregroundColor(.white)
                             .padding(.horizontal,6)
@@ -304,6 +303,9 @@ struct DMStateRow: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .onAppear {
+            dmState.updateUnread()
+        }
     }
 }
 
@@ -313,7 +315,7 @@ struct DMSettingsSheet: View {
     
     var body: some View {
         NXForm {
-            if (vm.unread + vm.newRequests) > 0 {
+            if (vm.unread + vm.unreadNewRequestsCount) > 0 {
                 Button("Mark all as read") {
                     vm.markAcceptedAsRead()
                     vm.markRequestsAsRead()
@@ -333,10 +335,10 @@ struct DMSettingsSheet: View {
                 .hCentered()
             }
 
-            if (vm.newRequestsNotWoT > 0) {
+            if (vm.unreadNewRequestsNotWoTCount > 0) {
                 Section {
                     HStack {
-                        Text("\(vm.newRequestsNotWoT) requests outside Web of Trust")
+                        Text("\(vm.unreadNewRequestsNotWoTCount) requests outside Web of Trust")
                         if vm.showNotWoT {
                             Button("Hide") {
                                 vm.showNotWoT = false

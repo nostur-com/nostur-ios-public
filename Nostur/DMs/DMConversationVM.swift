@@ -29,10 +29,7 @@ class ConversionVM: ObservableObject {
     
     @Published var isAccepted = false {
         didSet {
-            let isAccepted = isAccepted
-            bg().perform { [weak self] in
-                self?.cloudDMState?.accepted = isAccepted
-            }
+            self.dmState?.accepted = isAccepted
         }
     }
     
@@ -63,8 +60,7 @@ class ConversionVM: ObservableObject {
     
     private var subscriptions: Set<AnyCancellable> = []
     
-    // bg
-    public var cloudDMState: CloudDMState? = nil
+    public var dmState: CloudDMState? = nil
     
     init(participants: Set<String>, ourAccountPubkey: String) {
         self.participants = participants
@@ -86,10 +82,8 @@ class ConversionVM: ObservableObject {
         self.didLoad = true
         self.viewState = .loading
         self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
-        self.cloudDMState = await getGroupState()
-        self.isAccepted = await withBgContext { _ in
-            return self.cloudDMState?.accepted ?? false
-        }
+        self.dmState = getGroupState()
+        self.isAccepted = self.dmState?.accepted ?? false
 //#if DEBUG
 //        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
 //            guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }) else {
@@ -105,8 +99,8 @@ class ConversionVM: ObservableObject {
         }
 //#endif
 
-        if let cloudDMState { // Should always exists because getGroupState() gets existing or creates new
-            let visibleMessages = await getMessages(cloudDMState, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
+        if let dmState { // Should always exists because getGroupState() gets existing or creates new
+            let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
             
             if self.conversionVersion == 0 {
                 await self.resolveConversationVersion(participants, messages: visibleMessages)
@@ -200,34 +194,28 @@ class ConversionVM: ObservableObject {
         await self.load(force: true)
     }
     
-    private func getGroupState() async -> CloudDMState {
+    private func getGroupState() -> CloudDMState {
         // Get existing or create new
         let participants = self.participants
-        return await withBgContext { bgContext in
-            if let groupDMState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: self.ourAccountPubkey, context: bgContext) {
-                let version = groupDMState.version
-                Task { @MainActor in
-                    self.conversionVersion = version
-                }
-                return groupDMState
-            }
-            let newDMState = CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: bgContext)
-            newDMState.accepted = true
-            newDMState.initiatorPubkey_ = self.ourAccountPubkey
-            newDMState.version = participants.count > 2 ? 17 : 0
-            DataProvider.shared().saveToDisk(.bgContext)
-            Task { @MainActor in
-                self.conversionVersion = participants.count > 2 ? 17 : 0
-            }
-            return newDMState
+        if let groupDMState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: self.ourAccountPubkey, context: viewContext()) {
+            let version = groupDMState.version
+            self.conversionVersion = version
+            return groupDMState
         }
+        let newDMState = CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: viewContext())
+        newDMState.accepted = true
+        newDMState.initiatorPubkey_ = self.ourAccountPubkey
+        newDMState.version = participants.count > 2 ? 17 : 0
+        DataProvider.shared().saveToDisk(.bgContext)
+        self.conversionVersion = participants.count > 2 ? 17 : 0
+        return newDMState
     }
     
-    private func getMessages(_ cloudDMState: CloudDMState, keyPair: (publicKey: String, privateKey: String)) async -> [NRChatMessage] {
+    private func getMessages(conversationId: String, keyPair: (publicKey: String, privateKey: String)) async -> [NRChatMessage] {
         
         let dmEvents = await withBgContext { bgContext in
             let request = NSFetchRequest<Event>(entityName: "Event")
-            request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14}", cloudDMState.conversationId)
+            request.predicate = NSPredicate(format: "groupId = %@ AND kind IN {4,14}", conversationId)
             request.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: true)]
             
             
@@ -568,10 +556,8 @@ class ConversionVM: ObservableObject {
     
     @MainActor
     public func markAsRead() {
-        bg().perform { [weak self] in
-            self?.cloudDMState?.markedReadAt_ = Date.now
-            DataProvider.shared().saveToDisk(.bgContext)
-        }
+        self.dmState?.markedReadAt_ = Date.now
+//        DataProvider.shared().saveToDisk(.all)
     }
 }
 

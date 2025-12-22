@@ -140,7 +140,7 @@ struct MainTabsDesktop: View {
                         tabTapped("Messages", oldTab: selectedTab)
                         selectedTab = "Messages"
                     }, title: "Messages", systemImage: "envelope.fill", isActive: selectedTab == "Messages")
-                    .badgeCompat((dm.unread + dm.newRequests))
+                    .badgeCompat((dm.unread + dm.unreadNewRequestsCount))
                 }
                 .foregroundStyle(Color.white)
                 .padding(3)
