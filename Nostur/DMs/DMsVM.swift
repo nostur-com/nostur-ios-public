@@ -224,6 +224,7 @@ class DMsVM: ObservableObject {
         nxReq(
             reqFilters,
             subscriptionId: "-OPEN-59-" + self.id,
+            isActiveSubscription: true,
             relayType: .READ
         )
     }
