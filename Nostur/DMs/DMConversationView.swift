@@ -25,6 +25,9 @@ struct DMConversationView17: View {
     
     @Namespace private var bottomAnchor
     
+    @State private var stickToBottom = false
+    @State private var showThereIsMore = false
+    
     init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false) {
         self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
@@ -59,9 +62,17 @@ struct DMConversationView17: View {
                             ForEach(days) { day in
                                 DayView(ourAccountPubkey: ourAccountPubkey, day: day, vm: vm)
                             }
+                            
                             Color.clear
-                                .frame(height: 0)
+                                .frame(height: 3)
                                 .id(bottomAnchor)
+                                .onAppear {
+                                    stickToBottom = true
+                                    showThereIsMore = false
+                                }
+                                .onDisappear {
+                                    stickToBottom = false
+                                }
                         }
                     }
                     .defaultScrollAnchor(.bottom)
@@ -75,69 +86,71 @@ struct DMConversationView17: View {
                         vm.markAsRead()
                         didLoad = true
                     }
-                }
-                .safeAreaInset(edge: .bottom) {
-                    Group {
-                        if vm.isAccepted {
-                            VStack {
-                                DMChatInputField(message: $text, vm: vm) {
-                                    Task { @MainActor in
-                                        guard !text.isEmpty else { return }
-                                        let textToSend = text
-                                        let replyingNow = vm.replyingNow
-                                        let quotingNow = vm.quotingNow
-                                        
-                                        do {
-                                            errorText = nil
-                                            text = ""
-                                            vm.replyingNow = nil
-                                            vm.quotingNow = nil
-                                            try await vm.sendMessage(textToSend, quotingNow: quotingNow, replyingNow: replyingNow)
-                                        }
-                                        catch DMError.PrivateKeyMissing {
-                                            AppSheetsModel.shared.readOnlySheetVisible = true
-                                            text = textToSend
-                                            vm.replyingNow = replyingNow
-                                            vm.quotingNow = quotingNow
-                                        }
-                                        catch {
-                                            errorText = "Could not send message"
-                                            text = textToSend
-                                            vm.replyingNow = replyingNow
-                                            vm.quotingNow = quotingNow
+                    .onValueChange(vm.lastMessageId) { _, _ in
+                        if stickToBottom {
+                            withAnimation {
+                                scrollProxy.scrollTo(bottomAnchor, anchor: .bottom)
+                            }
+                            vm.markAsRead()
+                        }
+                        else {
+                            showThereIsMore = true
+                        }
+                    }
+                    .safeAreaInset(edge: .bottom) {
+                        Group {
+                            if vm.isAccepted {
+                                VStack {
+                                    DMChatInputField(message: $text, vm: vm, startWithFocus: false) {
+                                        self.sendMessage()
+                                    }
+                                    .overlay(alignment: .topTrailing) {
+                                        if showThereIsMore {
+                                            Image(systemName: "chevron.down.circle.fill")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 35, height: 35)
+                                                .foregroundStyle(Color.red)
+                                                .onTapGesture {
+                                                    withAnimation {
+                                                        showThereIsMore = false
+                                                        scrollProxy.scrollTo(bottomAnchor, anchor: .bottom)
+                                                    }
+                                                }
+                                                .offset(x: -20, y: -50)
                                         }
                                     }
-                                }
-                                if vm.conversionVersion == 4 {
-                                    Label("Using NIP-04", systemImage: "exclamationmark.lock")
-                                        .font(.footnote)
-                                        .onTapGesture {
-                                            showConversationInfoSheet = true
-                                        }
+                                    if vm.conversionVersion == 4 {
+                                        Label("Using NIP-04", systemImage: "exclamationmark.lock")
+                                            .font(.footnote)
+                                            .onTapGesture {
+                                                showConversationInfoSheet = true
+                                            }
+                                    }
                                 }
                             }
-                        }
-                        else {
-                            Divider()
-                            Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
-                                vm.isAccepted = true
-//                                DataProvider.shared().saveToDiskNow(.viewContext)
-//                                DirectMessageViewModel.default.reloadAccepted()
-                                
+                            else {
+                                Divider()
+                                Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
+                                    vm.isAccepted = true
+    //                                DataProvider.shared().saveToDiskNow(.viewContext)
+    //                                DirectMessageViewModel.default.reloadAccepted()
+                                    
+                                }
+                                .buttonStyle(NRButtonStyle(style: .borderedProminent))
                             }
-                            .buttonStyle(NRButtonStyle(style: .borderedProminent))
                         }
+                        .padding(.vertical, 5)
+                        .modifier {
+                            if #available(iOS 26.0, *), IS_CATALYST {
+                                $0.padding(.bottom, 50)
+                            }
+                            else {
+                                $0
+                            }
+                        }
+                        .background(theme.listBackground)
                     }
-                    .padding(.vertical, 5)
-                    .modifier {
-                        if #available(iOS 26.0, *), IS_CATALYST {
-                            $0.padding(.bottom, 50)
-                        }
-                        else {
-                            $0
-                        }
-                    }
-                    .background(theme.listBackground)
                 }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
@@ -181,6 +194,35 @@ struct DMConversationView17: View {
                         }
                     }
                 }
+            }
+        }
+    }
+    
+    private func sendMessage() {
+        Task { @MainActor in
+            guard !text.isEmpty else { return }
+            let textToSend = text
+            let replyingNow = vm.replyingNow
+            let quotingNow = vm.quotingNow
+            
+            do {
+                errorText = nil
+                text = ""
+                vm.replyingNow = nil
+                vm.quotingNow = nil
+                try await vm.sendMessage(textToSend, quotingNow: quotingNow, replyingNow: replyingNow)
+            }
+            catch DMError.PrivateKeyMissing {
+                AppSheetsModel.shared.readOnlySheetVisible = true
+                text = textToSend
+                vm.replyingNow = replyingNow
+                vm.quotingNow = quotingNow
+            }
+            catch {
+                errorText = "Could not send message"
+                text = textToSend
+                vm.replyingNow = replyingNow
+                vm.quotingNow = quotingNow
             }
         }
     }

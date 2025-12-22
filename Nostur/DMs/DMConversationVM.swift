@@ -23,6 +23,7 @@ class ConversionVM: ObservableObject {
     private var conversationId: String
     
     @Published var viewState: ConversionVMViewState = .initializing
+    @Published var lastMessageId: String? = nil
     @Published var navigationTitle = "To: ..."
     @Published var receiverContacts: [NRContact] = []
     
@@ -128,6 +129,7 @@ class ConversionVM: ObservableObject {
             }.sorted(by: { $0.dayId < $1.dayId })
             
             viewState = .ready(days)
+            lastMessageId = visibleMessages.last?.id
         }
         
         self.fetchDMrelays()
@@ -277,6 +279,7 @@ class ConversionVM: ObservableObject {
             if let day = days.first(where: { $0.dayId == dayIdFormatter.string(from: messageDate) }) {
                 Task { @MainActor in
                     withAnimation {
+                        lastMessageId = rumorNEvent.id
                         day.messages.append(
                             newChatMessage
                         )
@@ -286,6 +289,7 @@ class ConversionVM: ObservableObject {
             else {
                 Task { @MainActor in
                     withAnimation {
+                        lastMessageId = rumorNEvent.id
                         self.viewState = .ready(days + [ConversationDay(
                             dayId: dayIdFormatter.string(from: messageDate),
                             date: messageDate,
