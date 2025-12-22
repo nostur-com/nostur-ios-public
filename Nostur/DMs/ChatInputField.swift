@@ -65,11 +65,10 @@ struct ChatInputField: View {
                 }
         }
         .background(theme.listBackground)
-        .cornerRadius(22)
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(theme.lineColor, lineWidth: 1)
-        )
+        .containerShape(.rect(cornerRadius: 14))
+        .padding(1)
+        .background(theme.lineColor)
+        .containerShape(.rect(cornerRadius: 14))
         .padding([.leading, .trailing], 10)
         .onAppear {
             if startWithFocus {
@@ -108,14 +107,7 @@ struct DMChatInputField: View {
                 
                 if let replyingNow = vm.replyingNow {
                     EmbeddedChatMessage(nrChatMessage: replyingNow, isSentByCurrentUser: false)
-                        .modifier {
-                            if #available(iOS 26.0, *) {
-                                $0.clipShape(.rect(corners: .concentric))
-                            }
-                            else {
-                                $0.clipShape(.rect(cornerRadius: 22))
-                            }
-                        }
+                        .clipShape(.rect(cornerRadius: 14))
                         .overlay(alignment: .topTrailing) {
                             Button("Remove", systemImage: "xmark.circle.fill") {
                                 withAnimation {
@@ -123,9 +115,9 @@ struct DMChatInputField: View {
                                 }
                             }
                             .labelStyle(.iconOnly)
-                            .offset(x: -17, y: 3)
+                            .offset(x: -3, y: 3)
                         }
-                        .padding(.leading, 10)
+                        .padding(.horizontal, 10)
                         .padding(.top, 10)
                 }
                 
@@ -146,26 +138,18 @@ struct DMChatInputField: View {
                 
                 if let quotingNow = vm.quotingNow {
                     EmbeddedChatMessage(nrChatMessage: quotingNow, isSentByCurrentUser: false)
-                        .modifier {
-                            if #available(iOS 26.0, *) {
-                                $0.clipShape(.rect(corners: .concentric))
-                            }
-                            else {
-                                $0.clipShape(.rect(cornerRadius: 22))
-                            }
-                        }
+                        .clipShape(.rect(cornerRadius: 14))
                         .overlay(alignment: .topTrailing) {
                             Button("Remove", systemImage: "xmark.circle.fill") {
                                 withAnimation {
-                                    vm.replyingNow = nil
+                                    vm.quotingNow = nil
                                 }
                             }
                             .labelStyle(.iconOnly)
-                            .offset(x: -17, y: 3)
+                            .offset(x: -3, y: 3)
                         }
                         .padding(.horizontal, 10)
                         .padding(.bottom, 10)
-                        .padding(.trailing, 10)
                 }
             }
             .overlay(alignment: .bottomTrailing) {
@@ -195,10 +179,10 @@ struct DMChatInputField: View {
             }
         }
         .background(theme.listBackground)
-        .containerShape(.rect(cornerRadius: 22))
+        .containerShape(.rect(cornerRadius: 14))
         .padding(1)
         .background(theme.lineColor)
-        .containerShape(.rect(cornerRadius: 22))
+        .containerShape(.rect(cornerRadius: 14))
         .padding([.leading, .trailing], 10)
         .onAppear {
             if startWithFocus {
@@ -272,7 +256,7 @@ struct DMChatInputField: View {
                 id: "173f85cb559d5d8866e7c3ffef536c67323ef44fe2d08d4bef42d82d9f868879",
                 publicKey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33",
                 createdAt: NTimestamp.init(date: Date()),
-                content: "Hello again! A bit longer. This message is a few lines long. So here is a newline.\nAnd I'm starting another sentence here. What's up!",
+                content: "Hello again!",
                 kind: .directMessage,
                 tags: [],
                 signature: ""

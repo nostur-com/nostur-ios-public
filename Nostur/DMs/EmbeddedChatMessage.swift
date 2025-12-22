@@ -23,7 +23,6 @@ struct EmbeddedChatMessage: View {
         }
         .padding(8)
         .background(theme.secondary.opacity(0.3))
-        .padding(.trailing, 15)
         .overlay(alignment: .leading) {
             nrChatMessage.nrContact.randomColor.frame(width: 4)
         }

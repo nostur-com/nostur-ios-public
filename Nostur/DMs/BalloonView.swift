@@ -38,22 +38,32 @@ struct BalloonView17: View {
                 
                 if let replyTo = nrChatMessage.replyTo {
                     EmbeddedChatMessage(nrChatMessage: replyTo, isSentByCurrentUser: isSentByCurrentUser)
-                        .padding(.trailing, 10)
+                        .clipShape(.rect(cornerRadius: 14))
+                        .padding(.trailing, 15)
                 }
                  
                 DMContentRenderer(pubkey: nrChatMessage.pubkey, contentElements: nrChatMessage.contentElementsDetail, availableWidth: availableWidth, isSentByCurrentUser: isSentByCurrentUser)
-                    .padding(.trailing, 15)
+                    .padding(.trailing, 16) // space for menu button
                 
                 if let quotedEvent = nrChatMessage.quotedEvent {
                     EmbeddedChatMessage(nrChatMessage: quotedEvent, isSentByCurrentUser: isSentByCurrentUser)
+                        .clipShape(.rect(cornerRadius: 14))
                 }
             }
             .padding(10)
             .overlay(alignment: .topTrailing) {
                 if vm.conversionVersion == 17 {
                     Menu {
-                        Button("Reply...", systemImage: "arrowshape.turn.up.left") { vm.replyingNow = nrChatMessage  }
-                        Button("Quote...", systemImage: "quote.bubble.rtl") { vm.quotingNow = nrChatMessage }
+                        Button("Reply...", systemImage: "arrowshape.turn.up.left") {
+                            withAnimation {
+                                vm.replyingNow = nrChatMessage
+                            }
+                        }
+                        Button("Quote...", systemImage: "quote.bubble.rtl") {
+                            withAnimation {
+                                vm.quotingNow = nrChatMessage
+                            }
+                        }
     //                    Button("React...", systemImage: "smiley") { }
                     } label: {
                         Image(systemName: "ellipsis")
@@ -65,7 +75,7 @@ struct BalloonView17: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 16)
+                RoundedRectangle(cornerRadius: 14)
                     .fill(isSentByCurrentUser ? theme.accent : theme.background)
             )
             .background(alignment: isSentByCurrentUser ? .bottomTrailing : .bottomLeading) {
