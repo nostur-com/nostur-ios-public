@@ -180,7 +180,7 @@ struct NXColumnView<HeaderContent: View>: View {
         }
         .onChange(of: config) { [config] newConfig in
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) .onChange(of: config)")
+            L.og.debug("☘️☘️ \(config.name) .onChange(of: config) -[LOG]-")
 #endif
             guard viewModel.config != newConfig else { return }
             if let relaysData = newConfig.feed?.relaysData {

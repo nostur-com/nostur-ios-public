@@ -112,7 +112,7 @@ struct NXPostsFeed: View {
                 guard !vmInner.isPerformingScrollToFirstUnread else { return } // Prevent re-entrancy
                 
     #if DEBUG
-                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description)")
+                L.og.debug("☘️☘️ \(vm.config?.name ?? "?") NXPostsFeed .isAtTop \(vmInner.isAtTop) onChange(of: vm.scrollToIndex) \(scrollToIndex.description) -[LOG]-")
     #endif
                 
                 performScrollToIndex(scrollToIndex)

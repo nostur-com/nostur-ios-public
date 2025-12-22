@@ -275,7 +275,7 @@ class Backlog {
                 task.onTimeout()
                 self.tasks.remove(task)
 #if DEBUG
-                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId)")
+                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId) -[LOG]-")
                 removed += 1
 #endif
             }
@@ -284,7 +284,7 @@ class Backlog {
                 task.onTimeout()
                 self.tasks.remove(task)
 #if DEBUG
-                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId)")
+                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId) -[LOG]-")
                 removed += 1
 #endif
                 
@@ -297,7 +297,7 @@ class Backlog {
                 self?.timer?.invalidate()
                 self?.timer = nil
 #if DEBUG
-                L.og.debug("⏳⏳ \(self?.backlogDebugName) removeOldTasks(): cleanup timer removed")
+                L.og.debug("⏳⏳ \(self?.backlogDebugName) removeOldTasks(): cleanup timer removed -[LOG]-")
 #endif
             }
         }
@@ -312,7 +312,7 @@ class Backlog {
         bg().perform { [weak self] in
             guard let self = self else { return }
 #if DEBUG
-            L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.clear() - \((self.tasks.map { $0.subscriptionId }).description)")
+            L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.clear() - \((self.tasks.map { $0.subscriptionId }).description) -[LOG]-")
 #endif
             // Clean up subscriptions in each task before removing
             let tasksToRemove = Array(self.tasks)
@@ -331,7 +331,7 @@ class Backlog {
         bg().perform { [weak self] in
             guard let self else { return }
 #if DEBUG
-            L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId))")
+            L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.add(\(task.subscriptionId)) -[LOG]-")
 #endif
             self.tasks.insert(task)
             self.startCleanUpTimer()
@@ -340,7 +340,7 @@ class Backlog {
     
     public func remove(_ task: ReqTask) {
 #if DEBUG
-        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.remove(\(task.subscriptionId))")
+        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.remove(\(task.subscriptionId)) -[LOG]-")
 #endif
         bg().perform { [weak self] in
             self?.tasks.remove(task)
@@ -450,11 +450,11 @@ class ReqTask: Identifiable, Hashable {
     
     public func onTimeout() {
 #if DEBUG
-        L.og.debug("⏳⏳ ReqTask.onTimout: \(self.subscriptionId)")
+        L.og.debug("⏳⏳ ReqTask.onTimout: \(self.subscriptionId) -[LOG]-")
 #endif
         if didProcess || skipTimeout { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
 #if DEBUG
-            L.og.debug("⏳⏳ ReqTask: didProcess or skipTimeout, timeout not needed \(self.subscriptionId)")
+            L.og.debug("⏳⏳ ReqTask: didProcess or skipTimeout, timeout not needed \(self.subscriptionId) -[LOG]-")
 #endif
             return
         }

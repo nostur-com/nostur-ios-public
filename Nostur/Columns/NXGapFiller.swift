@@ -46,11 +46,11 @@ class NXGapFiller {
 //        // Check connection? This actually makes the first fetch never work, need to fix the timing or enable somewhere else, disabled for now
         guard ConnectionPool.shared.anyConnected else {
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true")
+            L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true -[LOG]-")
 #endif
             if let speedTest = columnVM.speedTest, speedTest.timestampStart != nil {
 #if DEBUG
-                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted()")
+                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted() -[LOG]-")
 #endif
                 speedTest.loadRemoteStarted()
             }
@@ -61,7 +61,7 @@ class NXGapFiller {
         // Check if paused
         guard !columnVM.isPaused else {
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) 🔴🔴 paused, skipping fetchGap")
+            L.og.debug("☘️☘️ \(config.name) 🔴🔴 paused, skipping fetchGap -[LOG]-")
 #endif
             return
         }
@@ -75,7 +75,7 @@ class NXGapFiller {
                 reqCommand: { [weak self] subId in
                     guard let self else { return }
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
+                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
 #endif
                     cmd()
                 },
@@ -96,7 +96,7 @@ class NXGapFiller {
                     
                     if self.windowStart < Int(Date().timeIntervalSince1970) {
 #if DEBUG
-                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") subId: \(subId) processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
+                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") subId: \(subId) processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1) -[LOG]-")
 #endif
                         self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
                     }
@@ -106,7 +106,7 @@ class NXGapFiller {
                 },
                 timeoutCommand: { [weak self] subId in
 #if DEBUG
-                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchGap")
+                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchGap -[LOG]-")
 #endif
                     Task { @MainActor in
 
@@ -128,11 +128,11 @@ class NXGapFiller {
 //        // Check connection? This actually makes the first fetch never work, need to fix the timing or enable somewhere else, disabled for now
         guard ConnectionPool.shared.anyConnected else {
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true")
+            L.og.debug("☘️☘️ \(config.name) 🔴🔴 Not connected, skipping fetchGap, setting watchForFirstConnection = true -[LOG]-")
 #endif
             if let speedTest = columnVM.speedTest, speedTest.timestampStart != nil {
 #if DEBUG
-                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted()")
+                L.og.debug("🏁🏁 NXGapFiller.fetchGap speedTest.loadRemoteStarted() -[LOG]-")
 #endif
                 speedTest.loadRemoteStarted()
             }
@@ -143,7 +143,7 @@ class NXGapFiller {
         // Check if paused
         guard !columnVM.isPaused else {
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) 🔴🔴 paused, skipping fetchGap")
+            L.og.debug("☘️☘️ \(config.name) 🔴🔴 paused, skipping fetchGap -[LOG]-")
 #endif
             return
         }
@@ -157,7 +157,7 @@ class NXGapFiller {
                 reqCommand: { [weak self] subId in
                     guard let self else { return }
 #if DEBUG
-                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted())")
+                    L.og.debug("☘️☘️ \(config.name) subId: \(subId) reqCommand currentGap: \(self.currentGap) \(Date(timeIntervalSince1970: TimeInterval(self.windowStart)).formatted()) - \(Date(timeIntervalSince1970: TimeInterval(self.windowEnd)).formatted()) now=\(Date.now.formatted()) -[LOG]-")
 #endif
                     cmd()
                 },
@@ -178,7 +178,7 @@ class NXGapFiller {
                     
                     if self.windowStart < Int(Date().timeIntervalSince1970) {
 #if DEBUG
-                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") subId: \(subId) processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1)")
+                        L.og.debug("☘️☘️⏭️ \(columnVM.id ?? "?") subId: \(subId) processResponseCommand.fetchGap self.currentGap + 1: \(self.currentGap + 1) -[LOG]-")
 #endif
                         self.fetchGap(since: self.since, currentGap: self.currentGap) // next gap (no since param)
                     }
@@ -188,7 +188,7 @@ class NXGapFiller {
                 },
                 timeoutCommand: { [weak self] subId in
 #if DEBUG
-                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchGap")
+                    L.og.debug("☘️☘️⏭️🔴🔴 \(columnVM.id ?? "?") subId: \(subId) timeout in fetchGap -[LOG]-")
 #endif
                     Task { @MainActor in
 

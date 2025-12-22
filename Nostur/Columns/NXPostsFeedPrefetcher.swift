@@ -82,7 +82,7 @@ class NXPostsFeedPrefetcher: NSObject, UICollectionViewDataSourcePrefetching {
             
             guard !SettingsStore.shared.lowDataMode else { return }
 #if DEBUG
-            L.og.debug("☘️☘️ Prefetching \(imageRequests.count) + \(imageRequestsPFP.count)")
+            L.og.debug("☘️☘️ Prefetching \(imageRequests.count) + \(imageRequestsPFP.count) -[LOG]-")
 #endif
             if !imageRequests.isEmpty {
                 ImageProcessing.shared.contentPrefetcher.startPrefetching(with: imageRequests)
@@ -227,7 +227,7 @@ class NXPostsFeedTablePrefetcher: NSObject, UITableViewDataSourcePrefetching {
             }
             
             guard !SettingsStore.shared.lowDataMode else { return }
-            L.og.debug("☘️☘️ Prefetching \(imageRequests.count) + \(imageRequestsPFP.count)")
+            L.og.debug("☘️☘️ Prefetching \(imageRequests.count) + \(imageRequestsPFP.count) -[LOG]-")
             if !imageRequests.isEmpty {
                 ImageProcessing.shared.contentPrefetcher.startPrefetching(with: imageRequests)
             }
