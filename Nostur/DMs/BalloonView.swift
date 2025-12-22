@@ -39,6 +39,9 @@ struct BalloonView17: View {
                 if let replyTo = nrChatMessage.replyTo {
                     EmbeddedChatMessage(nrChatMessage: replyTo, isSentByCurrentUser: isSentByCurrentUser)
                         .clipShape(.rect(cornerRadius: 14))
+                        .onTapGesture {
+                            vm.scrollToId = replyTo.id
+                        }
                         .padding(.trailing, 15)
                 }
                  
@@ -48,6 +51,9 @@ struct BalloonView17: View {
                 if let quotedEvent = nrChatMessage.quotedEvent {
                     EmbeddedChatMessage(nrChatMessage: quotedEvent, isSentByCurrentUser: isSentByCurrentUser)
                         .clipShape(.rect(cornerRadius: 14))
+                        .onTapGesture {
+                            vm.scrollToId = quotedEvent.id
+                        }
                 }
             }
             .padding(10)

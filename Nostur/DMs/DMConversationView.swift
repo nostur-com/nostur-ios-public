@@ -97,6 +97,13 @@ struct DMConversationView17: View {
                             showThereIsMore = true
                         }
                     }
+                    .onValueChange(vm.scrollToId) { _, scrollToId in
+                        guard let scrollToId else { return }
+                        withAnimation {
+                            scrollProxy.scrollTo(scrollToId, anchor: .top)
+                        }
+                        vm.scrollToId = nil
+                    }
                     .safeAreaInset(edge: .bottom) {
                         Group {
                             if vm.isAccepted {

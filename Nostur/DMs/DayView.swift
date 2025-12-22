@@ -23,6 +23,7 @@ struct DayView: View {
         // messagess
         ForEach(day.messages) { message in
             BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey, vm: vm)
+                .id(message.id)
         }
     }
 }

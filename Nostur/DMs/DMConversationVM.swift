@@ -24,6 +24,7 @@ class ConversionVM: ObservableObject {
     
     @Published var viewState: ConversionVMViewState = .initializing
     @Published var lastMessageId: String? = nil
+    @Published var scrollToId: String? = nil
     @Published var navigationTitle = "To: ..."
     @Published var receiverContacts: [NRContact] = []
     
