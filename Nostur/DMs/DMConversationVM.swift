@@ -40,14 +40,16 @@ class ConversionVM: ObservableObject {
     
     // For DMChatInputField
     @Published var quotingNow: NRChatMessage? = nil {
-        didSet {
+        didSet { // can only have quote OR reply, so unset other
+            if quotingNow == nil { return } // but not if already unsetting
             if replyingNow != nil {
                 replyingNow = nil
             }
         }
     }
     @Published var replyingNow: NRChatMessage? = nil {
-        didSet {
+        didSet { // can only have quote OR reply, so unset other
+            if replyingNow == nil { return } // but not if already unsetting
             if quotingNow != nil {
                 quotingNow = nil
             }
