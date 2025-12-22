@@ -143,6 +143,7 @@ struct DMChatInputField: View {
                             Button("Remove", systemImage: "xmark.circle.fill") {
                                 withAnimation {
                                     vm.quotingNow = nil
+                                    focusedField = .message
                                 }
                             }
                             .labelStyle(.iconOnly)
@@ -186,6 +187,16 @@ struct DMChatInputField: View {
         .padding([.leading, .trailing], 10)
         .onAppear {
             if startWithFocus {
+                focusedField = .message
+            }
+        }
+        .onValueChange(vm.replyingNow) { oldValue, newValue in
+            if oldValue == nil && newValue != nil { // auto focus after adding reply
+                focusedField = .message
+            }
+        }
+        .onValueChange(vm.quotingNow) { oldValue, newValue in
+            if oldValue == nil && newValue != nil { // auto focus after adding quote
                 focusedField = .message
             }
         }
