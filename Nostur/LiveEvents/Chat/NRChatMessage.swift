@@ -67,8 +67,17 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
     // to show success/error in chat bubble
     public var dmSendResult: [String: RecipientResult] = [:] // [pubkey: RecipientResult]
     
-    public var replyTo: NRChatMessage?
-    public var quotedEvent: NRChatMessage?
+    public var replyToId: String?
+    public var replyTo: NRChatMessage? {
+        didSet { self.stopListeningForEmbeddedContent() }
+    }
+    
+    public var quoteId: String?
+    public var quotedEvent: NRChatMessage? {
+        didSet { self.stopListeningForEmbeddedContent() }
+    }
+    
+    private var embeddedContentListener: AnyCancellable?
     
     init(nEvent: NEvent, keyPair: (publicKey: String, privateKey: String)? = nil) {
         self.nEvent = nEvent
@@ -145,31 +154,58 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         self.missingPs = missingPs
         self.content = nEvent.content
         self.isNSFW = self.hasNSFWContent()
-        self.loadReplyTo()
-        self.loadQuotedMessage()
+        self.loadEmbeddedContent()
     }
     
-    private func loadReplyTo() {
+    private func loadEmbeddedContent() {
         if let replyToId = nEvent.firstE() {
+            self.replyToId = replyToId
             if let replyToEvent = Event.fetchEvent(id: replyToId, context: context()) {
                 self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent())
             }
-            else { // listen for updates
-                
-            }
         }
-    }
-    
-    private func loadQuotedMessage() {
         if let quoteId = nEvent.tags.first(where: { $0.type == "q" })?.value {
+            self.quoteId = quoteId
             if let quotedEvent = Event.fetchEvent(id: quoteId, context: context()) {
                 self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent())
             }
-            else { // listen for updates
-                
-            }
+        }
+        
+        if (self.replyToId != nil && self.replyTo == nil) || (self.quoteId != nil && self.quotedEvent == nil) {
+            self.listenForEmbeddedContent()
         }
     }
+    
+    private func listenForEmbeddedContent() {
+        guard embeddedContentListener == nil else { return }
+        embeddedContentListener = Importer.shared.importedDMSub
+            .filter { ($0.nEvent.id == self.replyToId) || ($0.nEvent.id == self.quoteId) }
+            .sink { [weak self] dmInfo in
+                guard let self else { return }
+                if let replyToId = self.replyToId, self.replyTo == nil {
+                    if let replyToEvent = Event.fetchEvent(id: replyToId, context: context()) {
+                        self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent())
+                    }
+                }
+                else if let quoteId = self.quoteId, self.quotedEvent == nil {
+                    if let quotedEvent = Event.fetchEvent(id: quoteId, context: context()) {
+                        self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent())
+                    }
+                }
+            }
+    }
+    
+    // if replyTo or quotedEvent are no longer missing, cancel subscription
+    private func stopListeningForEmbeddedContent() {
+        if embeddedContentListener == nil { return }
+        if (self.replyToId != nil && self.replyTo != nil) || (self.quoteId != nil && self.quotedEvent != nil) {
+            return
+        }
+        embeddedContentListener?.cancel()
+        embeddedContentListener = nil
+    }
+    
+
     
     private func hasNSFWContent() -> Bool {
         // event contains nsfw hashtag?
