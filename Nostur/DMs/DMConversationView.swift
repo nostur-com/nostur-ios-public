@@ -117,11 +117,15 @@ struct DMConversationView17: View {
                                                 .resizable()
                                                 .scaledToFit()
                                                 .frame(width: 35, height: 35)
-                                                .foregroundStyle(Color.red)
+                                                .foregroundStyle(.white, .red)
                                                 .onTapGesture {
                                                     withAnimation {
                                                         showThereIsMore = false
                                                         scrollProxy.scrollTo(bottomAnchor, anchor: .bottom)
+                                                    }
+                                                    vm.markAsRead()
+                                                    if vm.ourAccountPubkey == AccountsState.shared.activeAccountPublicKey {
+                                                        DMsVM.shared.updateUnreadsCount()
                                                     }
                                                 }
                                                 .offset(x: -20, y: -50)
