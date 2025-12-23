@@ -56,7 +56,7 @@ struct NXVinesFeed: View {
                         }
                         .scrollTargetBehavior(.paging)
                         .onChange(of: currentIndex) { newIdx in
-                            guard IS_DESKTOP_COLUMNS() else { return }
+                            guard IS_CATALYST else { return }
                             // Scroll to the post with the new index (animated)
                             if posts.indices.contains(newIdx) {
                                 withAnimation {
@@ -65,7 +65,7 @@ struct NXVinesFeed: View {
                             }
                         }
                         .overlay(alignment: .center) {
-                            if IS_DESKTOP_COLUMNS() {
+                            if IS_CATALYST { // buttons on macOS (columns and normal mode)
                                 VStack {
                                     HStack {
                                         Spacer()
