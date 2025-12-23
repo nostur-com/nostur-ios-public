@@ -93,7 +93,6 @@ struct DiscoverLists: View {
             discoverListsVM.load(speedTest: speedTest)
         }
         .onChange(of: selectedSubTab) { newValue in
-            guard !IS_CATALYST else { return }
             guard newValue == "DiscoverLists" else { return }
             discoverListsVM.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
