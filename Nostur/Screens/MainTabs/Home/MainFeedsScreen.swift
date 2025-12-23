@@ -14,6 +14,7 @@ let MAINFEEDS_TABS_HEIGHT = 42.0
 
 struct MainFeedsScreen: View {
     
+//    @EnvironmentObject private var vpc: VideoPostPlaybackCoordinator
     @EnvironmentObject private var la: LoggedInAccount
     @Environment(\.theme) private var theme
     @Environment(\.availableWidth) private var availableWidth
@@ -442,6 +443,11 @@ struct MainFeedsScreen: View {
                 selectedList = list
             }
         }
+//        .onChange(of: selectedSubTab) { newSelectedSubTab in
+//            if newSelectedSubTab != "Vine" {
+//                vpc.mostVisiblePostID = nil
+//            }
+//        }
         .onChange(of: la.account) { [oldAccount = la.account] newAccount in
             guard oldAccount != newAccount else { return }
 #if DEBUG

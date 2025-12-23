@@ -93,9 +93,6 @@ struct NXColumnView<HeaderContent: View>: View {
                 
             }
         }
-        
-        .environmentObject(VideoPostPlaybackCoordinator())
-        
         .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
             LoadingBar(loadingBarViewState: $speedTest.loadingBarViewState)
 //            LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
@@ -247,6 +244,7 @@ struct NXColumnView<HeaderContent: View>: View {
         if let list = PreviewFetcher.fetchCloudFeed() {
             let config = NXColumnConfig(id: list.id?.uuidString ?? "?", columnType: .pubkeys(list), accountPubkey: "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e", name: "Following")
             NXColumnView(config: config, isVisible: true)
+                .environmentObject(VideoPostPlaybackCoordinator())
         }
     }
 }
@@ -275,6 +273,7 @@ struct FeedListViewTester: View {
                 ZStack { // <-- added because "In Lists, the Top-Level Structure Type _ConditionalContent Can Break Lazy Loading" (https://fatbobman.com/en/posts/tips-and-considerations-for-using-lazy-containers-in-swiftui/)
                     AvailableWidthContainer {
                         NXColumnView(config: config, isVisible: true)
+                            .environmentObject(VideoPostPlaybackCoordinator())
                     }
                 }
             }

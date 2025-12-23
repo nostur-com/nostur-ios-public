@@ -168,8 +168,6 @@ struct MacColumn: View {
                     columnType = .unconfigured
                 }
             }
-            
-            .environmentObject(VideoPostPlaybackCoordinator())
             .withNavigationDestinations(navPath: $navPath)
             .onReceive(receiveNotification(.navigateTo)) { notification in
                 let destination = notification.object as! NavigationDestination

@@ -70,6 +70,7 @@ struct MacMainWindow: View {
                     // Extra lists (+ -)
                     ForEach(vm.columns) { columnConfig in
                         MacColumn(config: columnConfig)
+                            .environmentObject(VideoPostPlaybackCoordinator())
                             .environment(\.availableWidth, columnSize(geo.size.width))
                             .environment(\.containerID, columnConfig.id.uuidString)
                             .modifier {

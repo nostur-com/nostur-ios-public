@@ -137,6 +137,11 @@ struct VideoPost: View {
             guard isPlaying && !isVisibleNow else { return }
             isPlaying = false
         }
+//        .onValueChange(coordinator.mostVisiblePostID) { oldId, newId in
+//            // When changing feed, don't continue playing
+//            guard oldId == postID else  { return }
+//            isPlaying = false
+//        }
     }
     
     private func updateVisibilityPreiOS16(geo: GeometryProxy) {

@@ -32,6 +32,7 @@ struct RelayFeedPreviewSheet: View {
             .frame(maxWidth: .infinity, alignment: .center) // Make toolbar background fill full width
             .background(theme.listBackground)
         })
+        .environmentObject(VideoPostPlaybackCoordinator())
         .environment(\.nxViewingContext, [.feedPreview])
         .toolbar {
             ToolbarItem(placement: .principal) {

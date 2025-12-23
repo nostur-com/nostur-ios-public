@@ -52,6 +52,7 @@ struct PhoneViewIsh: View {
                                         }
                                     }
                                 }
+                                .environmentObject(VideoPostPlaybackCoordinator())
                         }
                     }
                 }

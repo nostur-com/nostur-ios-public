@@ -38,6 +38,7 @@ struct FollowPackPreviewSheet: View {
                     .background(theme.listBackground)
                 }
             })
+            .environmentObject(VideoPostPlaybackCoordinator())
         }
             .environment(\.nxViewingContext, [.feedPreview])
             .toolbar {
