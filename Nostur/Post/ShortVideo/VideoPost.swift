@@ -87,7 +87,8 @@ struct VideoPost: View {
                                     coordinator.removeVisibility(postID: postID)
                                     isPlaying = false
                                 }
-                                .onChange(of: coordinator.mostVisiblePostID) { newValue in
+                                .onValueChange(coordinator.mostVisiblePostID) { oldValue, newValue in
+                                    guard oldValue != newValue else { return }
                                     guard canPlay && isVisible else { return }
                                     isPlaying = (coordinator.mostVisiblePostID == postID)
                                 }
@@ -120,7 +121,8 @@ struct VideoPost: View {
                                         guard isVisible else { return }
                                         updateVisibilityPreiOS16(geo: geo)
                                     }
-                                    .onChange(of: coordinator.mostVisiblePostID) { newValue in
+                                    .onValueChange(coordinator.mostVisiblePostID) { oldValue, newValue in
+                                        guard oldValue != newValue else { return }
                                         guard canPlay && isVisible else { return }
                                         isPlaying = (coordinator.mostVisiblePostID == postID)
                                     }
