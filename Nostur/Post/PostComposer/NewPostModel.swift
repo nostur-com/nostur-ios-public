@@ -484,7 +484,6 @@ public final class NewPostModel: ObservableObject {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
                             savedEvent.cancellationId = cancellationId
-//                            savedEvent.updateNRPost.send(savedEvent)
                             ViewUpdates.shared.updateNRPost.send(savedEvent)
                             DispatchQueue.main.async {
                                 _ = Unpublisher.shared.publish(signedEvent, cancellationId: cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)

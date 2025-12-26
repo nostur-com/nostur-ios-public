@@ -685,7 +685,6 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         let id = id
         updateNRPostSubscription = ViewUpdates.shared.updateNRPost
             .filter { $0.id == id }
-//            .debounce(for: .seconds(0.1), scheduler: RunLoop.main)
             .sink { [weak self] event in
                 guard let self else { return }
                 
