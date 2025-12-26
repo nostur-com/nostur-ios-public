@@ -59,6 +59,7 @@ struct OwnPostFooter: View {
     private let nrPost: NRPost
     @ObservedObject private var own: OwnPostAttributes
     @State private var unpublishing = false
+    @State private var showRetrySigning = false
     
     init(nrPost: NRPost) {
         self.nrPost = nrPost
@@ -69,7 +70,18 @@ struct OwnPostFooter: View {
         if (own.isGoingToSend) {
             HStack {
                 if own.flags == "nsecbunker_unsigned" {
-                    Text("**Signing post...**")
+                    Text(showRetrySigning ? "**Signing failed**" : "**Signing post...**")
+                        .onAppear {
+                            showRetryLater()
+                        }
+                    
+                    if showRetrySigning {
+                        Button("Retry") {
+                            retrySigning()
+                        }
+                        .buttonStyle(NRButtonStyle(style: .borderedProminent))
+                        .foregroundColor(Color.white)
+                    }
                 }
                 else {
                     Text("**Sending post...**")
@@ -124,6 +136,47 @@ struct OwnPostFooter: View {
         }
         else {
             EmptyView()
+        }
+    }
+    
+    private func showRetryLater() {
+        showRetrySigning = false
+//        if (showRetrySigning) { showRetrySigning = false }
+        // show retry after 8 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
+            showRetrySigning = true
+        }
+    }
+    
+    private func retrySigning() {
+        guard let account = account(by: nrPost.pubkey), account.isNC else { return }
+        NSecBunkerManager.shared.connect(account)
+        showRetryLater()
+        bg().perform {
+            guard let savedEvent = nrPost.event else { return }
+            let eventToSign = savedEvent.toNEvent()
+            DispatchQueue.main.async {
+                NSecBunkerManager.shared.requestSignature(forEvent: eventToSign, usingAccount: account, whenSigned: { signedEvent in
+                    bg().perform {
+                        guard eventToSign.id == signedEvent.id else {
+    #if DEBUG
+                            L.og.error("🏰🏰 🔴🔴 Signed event id: \(signedEvent.id) does not match what we requested \(eventToSign.id)")
+    #endif
+                            savedEvent.flags = "nsecbunker_unsigned"
+                            DispatchQueue.main.async {
+                                sendNotification(.anyStatus, ("Remote Signer altered your post before signing. Not publishing", "APP_NOTICE"))
+                            }
+                            return
+                        }
+                        savedEvent.sig = signedEvent.signature
+                        savedEvent.flags = "awaiting_send"
+                        ViewUpdates.shared.updateNRPost.send(savedEvent)
+                        DispatchQueue.main.async {
+                            _ = Unpublisher.shared.publish(signedEvent, cancellationId: nrPost.ownPostAttributes.cancellationId, lockToThisRelay: Drafts.shared.lockToThisRelay)
+                        }
+                    }
+                })
+            }
         }
     }
 }
