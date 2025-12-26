@@ -471,6 +471,16 @@ public final class NewPostModel: ObservableObject {
                 DispatchQueue.main.async {
                     NSecBunkerManager.shared.requestSignature(forEvent: finalEvent, usingAccount: account, whenSigned: { signedEvent in
                         bg().perform {
+                            guard finalEvent.id == signedEvent.id else {
+#if DEBUG
+                                L.og.error("🏰🏰 🔴🔴 Signed event id: \(signedEvent.id) does not match what we requested \(finalEvent.id)")
+#endif
+                                savedEvent.flags = "nsecbunker_unsigned"
+                                DispatchQueue.main.async {
+                                    sendNotification(.anyStatus, ("Remote Signer altered your post before signing. Not publishing", "APP_NOTICE"))
+                                }
+                                return
+                            }
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
                             savedEvent.cancellationId = cancellationId
