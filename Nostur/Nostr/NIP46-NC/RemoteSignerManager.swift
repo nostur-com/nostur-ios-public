@@ -14,7 +14,21 @@ class RemoteSignerManager: ObservableObject {
     
     static let shared = RemoteSignerManager()
     
-    @Published var state: STATE = .disconnected
+    @Published var state: STATE = .disconnected {
+        didSet {
+            if state == .connected {
+                lastConnectedAt = Date.now
+            }
+        }
+    }
+    
+    public var didRecentlyConnect: Bool {
+        guard let lastConnectedAt else { return false }
+        return Date.now.timeIntervalSince(lastConnectedAt) < 60
+    }
+    
+    private var lastConnectedAt: Date?
+    
     @Published var error = ""
     @Published var ncRelay = ""
     

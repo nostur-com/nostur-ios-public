@@ -9,16 +9,18 @@ import SwiftUI
 
 struct WithNSecBunkerConnection<Content: View>: View {
     private let content: Content
-    @ObservedObject var nsecBunker: NSecBunkerManager
+    @ObservedObject private var remoteSigner: RemoteSignerManager = .shared
     
-    init(nsecBunker: NSecBunkerManager, @ViewBuilder content: () -> Content) {
-        self.nsecBunker = nsecBunker
+    init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
     
     var body: some View {
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         VStack {
-            if nsecBunker.state == .error {
+            if remoteSigner.state == .error {
                 Divider()
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red)
@@ -29,20 +31,21 @@ struct WithNSecBunkerConnection<Content: View>: View {
                 Divider()
             }
             content
-                .task { [weak nsecBunker] in
-                    guard let nsecBunker else { return }
-                    nsecBunker.state = .connecting
-                    nsecBunker.describe()
-                    nsecBunker.getPublicKey()
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
-                        if (nsecBunker.state != .connected) {
-                            nsecBunker.state = .error
-                        }
-                    }
-                }
         }
-        .onDisappear {
-            nsecBunker.state = .disconnected
+        .task {
+            if remoteSigner.state == .connected && remoteSigner.didRecentlyConnect {
+                return
+            }
+            
+            remoteSigner.state = .connecting
+            remoteSigner.describe()
+            remoteSigner.getPublicKey()
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+                if (remoteSigner.state != .connected) {
+                    remoteSigner.state = .error
+                }
+            }
         }
     }
 }

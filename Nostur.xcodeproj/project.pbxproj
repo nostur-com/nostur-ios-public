@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1F006B0A29D0A9BE0048C6DD /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 1F006B0929D0A9BE0048C6DD /* Algorithms */; };
 		1F0F0F642A9D220E00E23BA7 /* Themes.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */; };
+		1F12D1B92EFECC4E00A1A965 /* ComposePostContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F12D1B82EFECC4E00A1A965 /* ComposePostContainer.swift */; };
 		1F2F54EA2A0236E500B6D7E4 /* Gifu in Frameworks */ = {isa = PBXBuildFile; productRef = 1F2F54E92A0236E500B6D7E4 /* Gifu */; };
 		1F3C8B752D22D175008231A9 /* secp256k1 in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3C8B742D22D175008231A9 /* secp256k1 */; };
 		1F3E135429C89B9F00D076EA /* NukeVideo in Frameworks */ = {isa = PBXBuildFile; productRef = 1F3E135329C89B9F00D076EA /* NukeVideo */; };
@@ -79,6 +80,7 @@
 /* Begin PBXFileReference section */
 		1F06D2D92A584318007B9373 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1F0F0F632A9D220E00E23BA7 /* Themes.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Themes.xcassets; sourceTree = "<group>"; };
+		1F12D1B82EFECC4E00A1A965 /* ComposePostContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposePostContainer.swift; sourceTree = "<group>"; };
 		1F492DD62E55B9560089CE5E /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
 		1F5B5FD42E4617C800850E35 /* webm_to_m4a_ffmpeg.xcframework */ = {isa = PBXFileReference; expectedSignature = "AppleDeveloperProgram:5T4GDWX88Z:Fabian Lachman"; lastKnownFileType = wrapper.xcframework; path = webm_to_m4a_ffmpeg.xcframework; sourceTree = "<group>"; };
 		1F7483562A67904900CA7026 /* CREDITS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CREDITS.md; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 		1FB448B12965F3D000038671 = {
 			isa = PBXGroup;
 			children = (
+				1F12D1B82EFECC4E00A1A965 /* ComposePostContainer.swift */,
 				1FCEDD312D68913B00587618 /* ci_scripts */,
 				1FD94FD22D7A945300435BB0 /* Nostur */,
 				1F7483562A67904900CA7026 /* CREDITS.md */,
@@ -425,6 +428,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1F12D1B92EFECC4E00A1A965 /* ComposePostContainer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

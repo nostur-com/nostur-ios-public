@@ -525,6 +525,9 @@
         }
       }
     },
+    "**Signing failed**" : {
+
+    },
     "**Signing post...**" : {
       "localizations" : {
         "nl" : {

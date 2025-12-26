@@ -212,62 +212,31 @@ struct WithSheets: ViewModifier {
         
             .sheet(item: $replyTo) { replyTo in
                 NBNavigationStack {
-                    if let account = account(), account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: RemoteSignerManager.shared) {
-                            ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
-                                .environmentObject(la)
-                                .environment(\.theme, theme)
-                                .presentationBackgroundCompat(theme.listBackground)
-                        }
-                    }
-                    else {
-                        ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
-                            .environmentObject(la)
-                            .environment(\.theme, theme)
-                            .presentationBackgroundCompat(theme.listBackground)
-                    }
+                    ComposePostContainer(replyTo: replyTo)
+                        .environmentObject(la)
+                        .environment(\.theme, theme)
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             }
         
             .sheet(item: $quoteOrRepost) { quoteOrRepost in
                 NBNavigationStack {
-                    if let account = account(), account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: RemoteSignerManager.shared) {
-                            QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
-                                .environmentObject(la)
-                                .presentationDetents200()
-                                .presentationBackgroundCompat(theme.listBackground)
-                        }
+                    QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
+                        .environmentObject(la)
                         .environment(\.theme, theme)
-                    }
-                    else {
-                        QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
-                            .environmentObject(la)
-                            .presentationDetents200()
-                            .presentationDragIndicatorVisible()
-                            .environment(\.theme, theme)
-                            .presentationBackgroundCompat(theme.listBackground)
-                    }
+                        .presentationDetents200()
+                        .presentationDragIndicatorVisible()
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
             }
         
             .sheet(item: $quotePost) { quotePost in
                 NBNavigationStack {
-                    if let account = account(), account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: RemoteSignerManager.shared) {
-                            ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
-                                .environmentObject(la)
-                                .presentationBackgroundCompat(theme.listBackground)
-                        }
+                    ComposePostContainer(quotePost: quotePost)
+                        .environmentObject(la)
                         .environment(\.theme, theme)
-                    }
-                    else {
-                        ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
-                            .environmentObject(la)
-                            .environment(\.theme, theme)
-                            .presentationBackgroundCompat(theme.listBackground)
-                    }
+                        .presentationBackgroundCompat(theme.listBackground)
                 }
                 .nbUseNavigationStack(.never)
             }
