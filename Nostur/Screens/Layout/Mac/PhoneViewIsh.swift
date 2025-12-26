@@ -10,6 +10,7 @@ import NavigationBackport
 
 // Copy pasta from MainFeedsScreen, removed "Explore" and other stuff, just keep "Following" feed
 struct PhoneViewIsh: View {
+    @ObservedObject private var settings: SettingsStore = .shared
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.availableWidth) private var availableWidth
     @EnvironmentObject private var la: LoggedInAccount
@@ -66,6 +67,19 @@ struct PhoneViewIsh: View {
             .navigationTitle("Following")
             .navigationBarTitleDisplayMode(.inline)
             .withNavigationDestinations(navPath: $navPath)
+            .overlay(alignment: .bottom) {
+                VStack {
+                    AnyStatus(filter: "APP_NOTICE")
+#if DEBUG
+                    AnyStatus(filter: "RELAY_NOTICE")
+#endif
+                    if settings.statusBubble {
+                        ProcessingStatus()
+                            .opacity(0.85)
+                            .padding(.bottom, 10)
+                    }
+                }
+            }
             .safeAreaInset(edge: .top, alignment: .leading, spacing: 0) {
                 if #available(iOS 26.0, *) {
                     LiveEventsBanner(showLiveEventsBanner: $showLiveEventsBanner)
