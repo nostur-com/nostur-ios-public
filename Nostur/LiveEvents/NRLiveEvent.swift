@@ -218,7 +218,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
         nEvent.tags.append(NostrTag(["method", "GET"]))
         
         if account.isNC {
-            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { [weak self] signedNip98Event in
+            RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { [weak self] signedNip98Event in
      
                 let jsonString = signedNip98Event.eventJson()
                 guard let jsonData = jsonString.data(using: .utf8, allowLossyConversion: true) else { return }
@@ -518,7 +518,7 @@ class NRLiveEvent: ObservableObject, Identifiable, Hashable, Equatable, Identifi
             return tag
         }
         if account.isNC {
-            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedNEvent in
+            RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedNEvent in
                 Unpublisher.shared.publishNow(signedNEvent, skipDB: true)
                 MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedNEvent), nEvent: signedNEvent, relayUrl: "local")
                 self.status = "live"

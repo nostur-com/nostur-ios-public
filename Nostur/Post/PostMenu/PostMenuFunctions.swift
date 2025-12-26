@@ -112,7 +112,7 @@ func sign(nEvent: NEvent, accountPubkey: String) async throws -> NEvent {
                     // Create the signature request task
                     let signatureTask = Task {
                         try await withCheckedThrowingContinuation { continuation in
-                            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+                            RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                                 continuation.resume(returning: signedEvent)
                             })
                         }

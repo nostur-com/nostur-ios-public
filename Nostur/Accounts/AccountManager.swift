@@ -117,13 +117,13 @@ class AccountManager {
             if account.isNC {
                 newKind0Event.publicKey = account.publicKey
                 newKind0Event = newKind0Event.withId()
-                NSecBunkerManager.shared.requestSignature(forEvent: newKind0Event, usingAccount: account, whenSigned: { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: newKind0Event, usingAccount: account, whenSigned: { signedEvent in
                     Unpublisher.shared.publishNow(signedEvent)
                 })
                 
                 newKind3Event.publicKey = account.publicKey
                 newKind3Event = newKind3Event.withId()
-                NSecBunkerManager.shared.requestSignature(forEvent: newKind3Event, usingAccount: account, whenSigned: { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: newKind3Event, usingAccount: account, whenSigned: { signedEvent in
                     Unpublisher.shared.publishNow(signedEvent)
                 })
             }
@@ -298,7 +298,7 @@ func publishMetadataEvent(_ account: CloudAccount) throws {
             newKind0Event.publicKey = account.publicKey
             newKind0Event = newKind0Event.withId()
             
-            NSecBunkerManager.shared.requestSignature(forEvent: newKind0Event, usingAccount: account, whenSigned: { signedEvent in
+            RemoteSignerManager.shared.requestSignature(forEvent: newKind0Event, usingAccount: account, whenSigned: { signedEvent in
                 L.og.debug("Going to publish \(signedEvent.wrappedEventJson())")
                 let bgContext = bg()
                 bgContext.perform {

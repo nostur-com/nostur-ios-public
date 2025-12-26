@@ -165,7 +165,7 @@ struct BlossomServerList: View {
             userServerList.publicKey = account.publicKey
             userServerList = userServerList.withId()
             self.okId = userServerList.id
-            NSecBunkerManager.shared.requestSignature(forEvent: userServerList, usingAccount: account, whenSigned: { signedEvent in
+            RemoteSignerManager.shared.requestSignature(forEvent: userServerList, usingAccount: account, whenSigned: { signedEvent in
                 Unpublisher.shared.publishNow(signedEvent, skipDB: true)
             })
         }

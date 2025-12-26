@@ -150,13 +150,13 @@ struct OwnPostFooter: View {
     
     private func retrySigning() {
         guard let account = account(by: nrPost.pubkey), account.isNC else { return }
-        NSecBunkerManager.shared.connect(account)
+        RemoteSignerManager.shared.connect(account)
         showRetryLater()
         bg().perform {
             guard let savedEvent = nrPost.event else { return }
             let eventToSign = savedEvent.toNEvent()
             DispatchQueue.main.async {
-                NSecBunkerManager.shared.requestSignature(forEvent: eventToSign, usingAccount: account, whenSigned: { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: eventToSign, usingAccount: account, whenSigned: { signedEvent in
                     bg().perform {
                         guard eventToSign.id == signedEvent.id else {
     #if DEBUG

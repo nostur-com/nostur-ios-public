@@ -76,11 +76,11 @@ extension EnvironmentValues {
 }
 
 struct RemoteSignerEnvironmentKey: EnvironmentKey {
-    static let defaultValue: NSecBunkerManager = .shared
+    static let defaultValue: RemoteSignerManager = .shared
 }
 
 extension EnvironmentValues {
-    var remoteSigner: NSecBunkerManager {
+    var remoteSigner: RemoteSignerManager {
         get { self[RemoteSignerEnvironmentKey.self] }
         set { self[RemoteSignerEnvironmentKey.self] = newValue }
     }

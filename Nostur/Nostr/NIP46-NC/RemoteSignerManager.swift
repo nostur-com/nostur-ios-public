@@ -1,5 +1,5 @@
 //
-//  NSecBunkerManager.swift
+//  RemoteSignerManager.swift
 //  Nostur
 //
 //  Created by Fabian Lachman on 30/06/2023.
@@ -10,9 +10,9 @@ import Combine
 import NostrEssentials
 
 // TODO: The happy paths works fine, but need to handle errors, timeouts, etc and notify user instead of silent fail.
-class NSecBunkerManager: ObservableObject {
+class RemoteSignerManager: ObservableObject {
     
-    static let shared = NSecBunkerManager()
+    static let shared = RemoteSignerManager()
     
     @Published var state: STATE = .disconnected
     @Published var error = ""
@@ -26,7 +26,7 @@ class NSecBunkerManager: ObservableObject {
         return true
     }
     
-    var backlog = Backlog(timeout: 15, auto: true, backlogDebugName: "NSecBunkerManager")
+    var backlog = Backlog(timeout: 15, auto: true, backlogDebugName: "RemoteSignerManager")
     let decoder = JSONDecoder()
     var account: CloudAccount? = nil
     var subscriptions = Set<AnyCancellable>()
@@ -60,20 +60,22 @@ class NSecBunkerManager: ObservableObject {
                 if let command = responseCommmandQueue[ncResponse.id] {
                     // SIGNED EVENT RESPONSE
                     if let error = ncResponse.error {
-                        L.og.error("🏰 NSECBUNKER error signing event: \(error) ")
+                        L.og.error("🏰 Remote Signer error signing event: \(error) ")
                         Importer.shared.listStatus.send("nsecBunker: \(error)")
                         return
                     }
                     guard let result = ncResponse.result else {
 #if DEBUG
-                        L.og.error("🏰 NSECBUNKER Unknown or missing result \(decrypted) ")
+                        L.og.error("🏰 Remote Signer Unknown or missing result \(decrypted) ")
 #endif
                         return
                     }
-                    
+#if DEBUG
+                        L.og.error("🏰 Remote Signer result event \(decrypted)")
+#endif
                     guard let nEvent = try? decoder.decode(NEvent.self, from: result.data(using: .utf8)!) else {
 #if DEBUG
-                        L.og.error("🏰 NSECBUNKER error decoding signed result event \(decrypted)")
+                        L.og.error("🏰 Remote Signer error decoding signed result event \(decrypted)")
 #endif
                         return
                     }
@@ -93,7 +95,7 @@ class NSecBunkerManager: ObservableObject {
                     if result == "auth_url" { // ugh need useless OAuth like flow now
                         DispatchQueue.main.async {
                             self.state = .connected
-                            L.og.debug("🏰 NSECBUNKER connection needs auth_url oauth type handling ")
+                            L.og.debug("🏰 Remote Signer connection needs auth_url oauth type handling ")
 #if DEBUG
                             L.og.info("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
 #endif
@@ -103,7 +105,7 @@ class NSecBunkerManager: ObservableObject {
                     else if result == "ack" {
                         DispatchQueue.main.async {
                             self.state = .connected
-                            L.og.debug("🏰 NSECBUNKER ack success ")
+                            L.og.debug("🏰 Remote Signer ack success ")
                             self.getPublicKey()
                         }
                     }
@@ -129,7 +131,7 @@ class NSecBunkerManager: ObservableObject {
                     if result.contains("\"describe\"") { // should be something like "[\"connect\",\"sign_event\",\"nip04_encrypt\",\"nip04_decrypt\",\"get_public_key\",\"describe\",\"publish_event\"]"
                         DispatchQueue.main.async {
                             self.state = .connected
-                            L.og.debug("🏰 NSECBUNKER connection success ")
+                            L.og.debug("🏰 Remote Signer connection success ")
 #if DEBUG
                             L.og.debug("🏰 result: \(result) -- \(event.eventJson()) - \(decrypted)")
 #endif
@@ -158,7 +160,7 @@ class NSecBunkerManager: ObservableObject {
                             
                             guard account.publicKey != newAccountPubkey else {
                                 self.state = .connected
-                                L.og.info("🏰 NSECBUNKER get_public_key success, but pubkey is already set to set to: \(account.publicKey)")
+                                L.og.info("🏰 Remote Signer get_public_key success, but pubkey is already set to set to: \(account.publicKey)")
                                 return
                             }
 
@@ -186,7 +188,7 @@ class NSecBunkerManager: ObservableObject {
                             }
                             
                             self.state = .connected
-                            L.og.info("🏰 NSECBUNKER get_public_key success, pubkey set to: \(account.publicKey)")
+                            L.og.info("🏰 Remote Signer get_public_key success, pubkey set to: \(account.publicKey)")
                             
                             // Need to (re)load following feed with new pubkey
                             sendNotification(.revertToOwnFeed) // normally used for reverting from someone else's feed, but also does the job
@@ -209,12 +211,12 @@ class NSecBunkerManager: ObservableObject {
                 else if ncResponse.id.prefix(11) == "sign-event-" {
                     // SIGNED EVENT RESPONSE
                     if let error = ncResponse.error {
-                        L.og.error("🏰 NSECBUNKER error signing event, error: \(error), decrypted: \(decrypted) ")
+                        L.og.error("🏰 Remote Signer error signing event, error: \(error), decrypted: \(decrypted) ")
                         return
                     }
                     guard let result = ncResponse.result else {
 #if DEBUG
-                        L.og.error("🏰 NSECBUNKER Unknown or missing result \(decrypted) ")
+                        L.og.error("🏰 Remote Signer Unknown or missing result \(decrypted) ")
 #endif
                         return
                     }
@@ -487,7 +489,7 @@ class NSecBunkerManager: ObservableObject {
     }
     
     private func handleSignedEvent(eventString: String) {
-        L.og.info("🏰 NSECBUNKER signed event received, ready to publish: \(eventString)")
+        L.og.info("🏰 Remote Signer signed event received, ready to publish: \(eventString)")
         let accountPubkey = parsePubkey(eventString)
         
         ConnectionPool.shared.sendMessage(
@@ -526,7 +528,7 @@ public func batchSignEvents(_ eventsToSign: [NEvent], account: CloudAccount, onF
     Task { @MainActor in
         if account.isNC {
             for event in eventsToSign {
-                NSecBunkerManager.shared.requestSignature(forEvent: event, usingAccount: account) { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: event, usingAccount: account) { signedEvent in
                     signedEvents[signedEvent.id] = signedEvent
                     
                     if signedEvents.count == eventsToSign.count {

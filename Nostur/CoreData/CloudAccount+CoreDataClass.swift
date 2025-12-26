@@ -53,7 +53,7 @@ public class CloudAccount: NSManagedObject {
         }
         
         if self.isNC {
-            NSecBunkerManager.shared.requestSignature(forEvent: clEvent, usingAccount: self, whenSigned: { signedEvent in
+            RemoteSignerManager.shared.requestSignature(forEvent: clEvent, usingAccount: self, whenSigned: { signedEvent in
                 _ = Unpublisher.shared.publishLast(signedEvent, ofType: .contactList)
             })
         }

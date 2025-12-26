@@ -190,7 +190,7 @@ struct PostDetailsMenuSheet: View {
                 
                 if nrPost.pubkey == AccountsState.shared.activeAccountPublicKey && isUnsigned && isNC {
                     Task { @MainActor in
-                        NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
+                        RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: la.account,  whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
                     }

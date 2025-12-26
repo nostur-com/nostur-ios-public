@@ -74,7 +74,7 @@ struct ReportPostSheet: View {
                         var report = EventMessageBuilder.makeReportEvent(pubkey: nrPost.pubkey, eventId: nrPost.id, type: reason, note: comment, includeProfile: reportWhat == "Profile+Profile")
                         report.publicKey = account.publicKey
                         report = report.withId()
-                        NSecBunkerManager.shared.requestSignature(forEvent: report, usingAccount: account, whenSigned: { signedEvent in
+                        RemoteSignerManager.shared.requestSignature(forEvent: report, usingAccount: account, whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
                     }

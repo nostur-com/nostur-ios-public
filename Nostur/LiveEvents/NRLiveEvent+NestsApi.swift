@@ -335,7 +335,7 @@ func createAuthorizationHeader(account: CloudAccount, urlString: String, method:
         // Sign remotely
         nEvent = nEvent.withId()
         signedNip98Event = try await withCheckedThrowingContinuation { continuation in
-            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedEvent in
+            RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account) { signedEvent in
                 continuation.resume(returning: signedEvent)
             }
         }

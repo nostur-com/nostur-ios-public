@@ -469,7 +469,7 @@ public final class NewPostModel: ObservableObject {
                 DataProvider.shared().saveToDiskNow(.bgContext)
                 
                 DispatchQueue.main.async {
-                    NSecBunkerManager.shared.requestSignature(forEvent: finalEvent, usingAccount: account, whenSigned: { signedEvent in
+                    RemoteSignerManager.shared.requestSignature(forEvent: finalEvent, usingAccount: account, whenSigned: { signedEvent in
                         bg().perform {
                             guard finalEvent.id == signedEvent.id else {
 #if DEBUG

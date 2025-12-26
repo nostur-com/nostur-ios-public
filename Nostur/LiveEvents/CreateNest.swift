@@ -134,7 +134,7 @@ struct CreateNest: View {
                     // Sign remotely
                     nestsEvent = nestsEvent.withId()
                     signedNestsEvent = try await withCheckedThrowingContinuation { continuation in
-                        NSecBunkerManager.shared.requestSignature(forEvent: nestsEvent, usingAccount: account) { signedEvent in
+                        RemoteSignerManager.shared.requestSignature(forEvent: nestsEvent, usingAccount: account) { signedEvent in
                             continuation.resume(returning: signedEvent)
                         }
                     }
@@ -290,7 +290,7 @@ struct ScheduleNestSheet: View {
                     // Sign remotely
                     nestsEvent = nestsEvent.withId()
                     signedNestsEvent = try await withCheckedThrowingContinuation { continuation in
-                        NSecBunkerManager.shared.requestSignature(forEvent: nestsEvent, usingAccount: account) { signedEvent in
+                        RemoteSignerManager.shared.requestSignature(forEvent: nestsEvent, usingAccount: account) { signedEvent in
                             continuation.resume(returning: signedEvent)
                         }
                     }

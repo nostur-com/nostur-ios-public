@@ -35,7 +35,7 @@ struct AddExistingAccountSheet: View {
         (key.prefix(5) == "npub1" && (key.contains("#")) && key.split(separator: "#").count == 2 && key.split(separator: "#")[1].count == 64)
     }
     
-    @ObservedObject private var bunkerManager = NSecBunkerManager.shared
+    @ObservedObject private var bunkerManager = RemoteSignerManager.shared
     
     private var shouldDisableAddButton: Bool {
         isNsecbunkerKey && (bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress)

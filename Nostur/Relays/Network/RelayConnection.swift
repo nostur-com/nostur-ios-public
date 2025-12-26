@@ -740,7 +740,7 @@ public class RelayConnection: NSObject, URLSessionWebSocketDelegate, ObservableO
                 DispatchQueue.main.async {
                     if authAccount.isNC {
                         authResponse = authResponse.withId()
-                        NSecBunkerManager.shared.requestSignature(forEvent: authResponse, usingAccount: authAccount, whenSigned: { signedAuthResponse in
+                        RemoteSignerManager.shared.requestSignature(forEvent: authResponse, usingAccount: authAccount, whenSigned: { signedAuthResponse in
                             self.sendMessage(ClientMessage.auth(event: signedAuthResponse), bypassQueue: true)
                             self.queue.async(flags: .barrier) { [weak self] in
                                 guard let self else { return }

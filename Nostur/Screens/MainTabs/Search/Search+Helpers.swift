@@ -583,7 +583,7 @@ extension Search {
                 
                 if isNC {
                     let kind443NEvent = kind443.withId()
-                    NSecBunkerManager.shared.requestSignature(forEvent: kind443NEvent, usingAccount: account, whenSigned: { signedEvent in
+                    RemoteSignerManager.shared.requestSignature(forEvent: kind443NEvent, usingAccount: account, whenSigned: { signedEvent in
                         bgContext.perform {
                             let unpublishedKind443 = Event.saveEvent(event: signedEvent, context: bgContext)
                             try? bgContext.save()

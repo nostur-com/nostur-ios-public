@@ -280,7 +280,7 @@ class Zap {
                     let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0
                     
                     Task { @MainActor in
-                        NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { [weak self] signedEvent in
+                        RemoteSignerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { [weak self] signedEvent in
                             Task { [weak self] in
                                 guard let self else { return }
                                 

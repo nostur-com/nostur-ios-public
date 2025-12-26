@@ -297,7 +297,7 @@ struct Kind10002ConfigurationWizard: View {
                 onDismiss()
                 DispatchQueue.main.async {
                     dismiss()
-                    NSecBunkerManager.shared.requestSignature(forEvent: kind10002, usingAccount: account, whenSigned: { signedEvent10002 in
+                    RemoteSignerManager.shared.requestSignature(forEvent: kind10002, usingAccount: account, whenSigned: { signedEvent10002 in
                         bgContext.perform {
                             savedEvent10002.sig = signedEvent10002.signature
                             savedEvent10002.flags = ""
@@ -306,7 +306,7 @@ struct Kind10002ConfigurationWizard: View {
                             }
                         }
                     })
-                    NSecBunkerManager.shared.requestSignature(forEvent: kind10050, usingAccount: account, whenSigned: { signedEvent10050 in
+                    RemoteSignerManager.shared.requestSignature(forEvent: kind10050, usingAccount: account, whenSigned: { signedEvent10050 in
                         bgContext.perform {
                             savedEvent10050.sig = signedEvent10050.signature
                             savedEvent10050.flags = ""
@@ -621,7 +621,7 @@ struct UpgradeDMsSheet: View {
                 onDismiss()
                 DispatchQueue.main.async {
                     dismiss()
-                    NSecBunkerManager.shared.requestSignature(forEvent: kind10050, usingAccount: account, whenSigned: { signedEvent10050 in
+                    RemoteSignerManager.shared.requestSignature(forEvent: kind10050, usingAccount: account, whenSigned: { signedEvent10050 in
                         bgContext.perform {
                             savedEvent10050.sig = signedEvent10050.signature
                             savedEvent10050.flags = ""

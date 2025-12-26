@@ -52,7 +52,7 @@ struct PaymentAmountSelector: View {
                 }
                 
                 if isNC {
-                    NSecBunkerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
+                    RemoteSignerManager.shared.requestSignature(forEvent: zapRequestNote, usingAccount: account, whenSigned: { signedZapRequestNote in
                         Task {
                             
                             if paymentInfo.withPending, let aTag = paymentInfo.zapAtag {

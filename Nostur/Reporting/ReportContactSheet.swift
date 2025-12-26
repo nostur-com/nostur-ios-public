@@ -59,7 +59,7 @@ struct ReportContactSheet: View {
                         report.publicKey = account.publicKey
                         report = report.withId()
                         
-                        NSecBunkerManager.shared.requestSignature(forEvent: report, usingAccount: account, whenSigned: { signedEvent in
+                        RemoteSignerManager.shared.requestSignature(forEvent: report, usingAccount: account, whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
                     }

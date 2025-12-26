@@ -436,7 +436,7 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
             DataProvider.shared().saveToDiskNow(.bgContext)
             
             DispatchQueue.main.async {
-                NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                     bg().perform {
                         savedEvent.sig = signedEvent.signature
                         savedEvent.flags = "awaiting_send"
@@ -502,7 +502,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
             DataProvider.shared().saveToDiskNow(.bgContext)
             
             DispatchQueue.main.async {
-                NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                     bg().perform {
                         savedEvent.sig = signedEvent.signature
                         savedEvent.flags = "awaiting_send"
@@ -511,7 +511,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
                         }
                     }
                 })
-                NSecBunkerManager.shared.requestSignature(forEvent: deleteReq, usingAccount: account, whenSigned: { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: deleteReq, usingAccount: account, whenSigned: { signedEvent in
                     bg().perform {
                         savedEvent.sig = signedEvent.signature
                         savedEvent.flags = "awaiting_send"

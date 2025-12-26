@@ -656,7 +656,7 @@
 //                        closedNEvent.tags.append(NostrTag(["ends", Int(Date.now.timeIntervalSince1970).description]))
 //                    }
 //                    if account.isNC {
-//                        NSecBunkerManager.shared.requestSignature(forEvent: closedNEvent, usingAccount: account) { signedClosedNEvent in
+//                        RemoteSignerManager.shared.requestSignature(forEvent: closedNEvent, usingAccount: account) { signedClosedNEvent in
 //                            Unpublisher.shared.publishNow(signedClosedNEvent, skipDB: true)
 //                            MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedClosedNEvent), nEvent: signedClosedNEvent, relayUrl: "local")
 //                            liveEvent.status = "ended"
@@ -689,7 +689,7 @@
 //                    }
 //
 //                    if account.isNC {
-//                        NSecBunkerManager.shared.requestSignature(forEvent: restartedNEvent, usingAccount: account) { signedRestartedNEvent in
+//                        RemoteSignerManager.shared.requestSignature(forEvent: restartedNEvent, usingAccount: account) { signedRestartedNEvent in
 //                            Unpublisher.shared.publishNow(signedRestartedNEvent, skipDB: true)
 //                            MessageParser.shared.handleNormalMessage(message: NXRelayMessage(relays: "local", type: .EVENT, message: "", event: signedRestartedNEvent), nEvent: signedRestartedNEvent, relayUrl: "local")
 //                            liveEvent.status = "live"

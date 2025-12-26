@@ -114,7 +114,7 @@ class LiveKitVoiceSession: ObservableObject {
             
             if cloudAccount.isNC {
                 presenceEvent = presenceEvent.withId()
-                NSecBunkerManager.shared.requestSignature(forEvent: presenceEvent, usingAccount: cloudAccount, whenSigned: { signedPresenceEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: presenceEvent, usingAccount: cloudAccount, whenSigned: { signedPresenceEvent in
                     Unpublisher.shared.publishNow(signedPresenceEvent, skipDB: true)
                 })
             }

@@ -77,7 +77,7 @@ struct WithAppSheets: ViewModifier {
             .sheet(item: $asm.newPostInfo, content: { newPostInfo in
                 NBNavigationStack {
                     if la.account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                        WithNSecBunkerConnection(nsecBunker: RemoteSignerManager.shared) {
                             ComposePost(directMention: newPostInfo.directMention, onDismiss: { asm.newPostInfo = nil }, kind: newPostInfo.kind)
                                 .environmentObject(la)
                                 .presentationBackgroundCompat(theme.listBackground)

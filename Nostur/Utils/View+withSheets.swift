@@ -187,7 +187,7 @@ struct WithSheets: ViewModifier {
                         deletion.publicKey = account.publicKey
                         deletion = deletion.withId()
                         
-                        NSecBunkerManager.shared.requestSignature(forEvent: deletion, usingAccount: account, whenSigned: { signedEvent in
+                        RemoteSignerManager.shared.requestSignature(forEvent: deletion, usingAccount: account, whenSigned: { signedEvent in
                             Unpublisher.shared.publishNow(signedEvent)
                         })
                     }
@@ -213,7 +213,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $replyTo) { replyTo in
                 NBNavigationStack {
                     if let account = account(), account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                        WithNSecBunkerConnection(nsecBunker: RemoteSignerManager.shared) {
                             ComposePost(replyTo: replyTo, onDismiss: { self.replyTo = nil })
                                 .environmentObject(la)
                                 .environment(\.theme, theme)
@@ -233,7 +233,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $quoteOrRepost) { quoteOrRepost in
                 NBNavigationStack {
                     if let account = account(), account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                        WithNSecBunkerConnection(nsecBunker: RemoteSignerManager.shared) {
                             QuoteOrRepostChoiceSheet(quoteOrRepost: quoteOrRepost, quotePost: $quotePost)
                                 .environmentObject(la)
                                 .presentationDetents200()
@@ -255,7 +255,7 @@ struct WithSheets: ViewModifier {
             .sheet(item: $quotePost) { quotePost in
                 NBNavigationStack {
                     if let account = account(), account.isNC {
-                        WithNSecBunkerConnection(nsecBunker: NSecBunkerManager.shared) {
+                        WithNSecBunkerConnection(nsecBunker: RemoteSignerManager.shared) {
                             ComposePost(quotePost: quotePost, onDismiss: { self.quotePost = nil })
                                 .environmentObject(la)
                                 .presentationBackgroundCompat(theme.listBackground)

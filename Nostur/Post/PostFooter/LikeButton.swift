@@ -91,7 +91,7 @@ struct LikeButton: View {
             
             if account.isNC {
                 likeNEvent = likeNEvent.withId()
-                NSecBunkerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
+                RemoteSignerManager.shared.requestSignature(forEvent: likeNEvent, usingAccount: account, whenSigned: { signedEvent in
                     if let unpublishLikeId = self.unpublishLikeId {
                         self.unpublishLikeId = Unpublisher.shared.publish(signedEvent, cancellationId: unpublishLikeId)
                     }

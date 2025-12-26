@@ -94,7 +94,7 @@ class AccountsState: ObservableObject {
     public func changeAccount(_ account: CloudAccount) {
         self.activeAccountPublicKey = account.publicKey
         if account.isNC {
-            NSecBunkerManager.shared.setAccount(account)
+            RemoteSignerManager.shared.setAccount(account)
         }
         let pubkey = account.publicKey
         

@@ -145,7 +145,7 @@ struct ChatRoom: View {
         
         if account.isNC {
             nEvent = nEvent.withId()
-            NSecBunkerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
+            RemoteSignerManager.shared.requestSignature(forEvent: nEvent, usingAccount: account, whenSigned: { signedEvent in
                 Unpublisher.shared.publishNow(signedEvent, skipDB: true)
                 sendNotification(.receivedMessage, NXRelayMessage(relays: "self", type: .EVENT, message: "", subscriptionId: "-DB-CHAT-", event: signedEvent))
                 bg().perform {

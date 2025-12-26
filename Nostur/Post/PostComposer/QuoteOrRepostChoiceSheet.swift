@@ -79,7 +79,7 @@ struct QuoteOrRepostChoiceSheet: View {
                 DataProvider.shared().saveToDiskNow(.bgContext)
                 
                 DispatchQueue.main.async {
-                    NSecBunkerManager.shared.requestSignature(forEvent: repost, usingAccount: account, whenSigned: { signedEvent in
+                    RemoteSignerManager.shared.requestSignature(forEvent: repost, usingAccount: account, whenSigned: { signedEvent in
                         bg().perform {
                             savedEvent.sig = signedEvent.signature
                             savedEvent.flags = "awaiting_send"
