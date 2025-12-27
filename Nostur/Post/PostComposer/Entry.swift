@@ -18,8 +18,9 @@ struct Entry: View {
     @Binding var videoPickerShown: Bool
     @Binding var gifSheetShown: Bool
     @Binding var cameraSheetShown: Bool
-    @Binding var selectedAuthor: Contact?
     @Binding var showAudioRecorder: Bool
+    
+    @State private var showRemoveAuthor = false
     
     private var replyTo: ReplyTo?
     private var quotePost: QuotePost?
@@ -53,7 +54,7 @@ struct Entry: View {
         return false
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, selectedAuthor: Binding<Contact?>, showAudioRecorder: Binding<Bool>) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, showAudioRecorder: Binding<Bool>) {
         self.replyTo = replyTo
         self.quotePost = quotePost
         self.directMention = directMention
@@ -66,7 +67,6 @@ struct Entry: View {
         _videoPickerShown = videoPickerShown
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
-        _selectedAuthor = selectedAuthor
         _showAudioRecorder = showAudioRecorder
     }
     
@@ -239,8 +239,9 @@ struct Entry: View {
             NBNavigationStack {
                 ContactsSearch(followingPubkeys: follows(),
                                prompt: "Search", onSelectContact: { selectedContact in
-                    selectedAuthor = selectedContact
+                    vm.selectedAuthor = selectedContact
                     isAuthorSelectionShown = false
+                    showRemoveAuthor = true
                 })
                 .equatable()
                 .environment(\.theme, theme)
@@ -435,8 +436,11 @@ struct Entry: View {
     
     @ViewBuilder
     var highlightAddRemoveAuthorButton: some View {
-        if selectedAuthor != nil {
-            Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight"), systemImage: "person.crop.circle.badge.minus.fill") { selectedAuthor = nil }
+        if showRemoveAuthor {
+            Button(String(localized:"Remove author", comment: "Button to Remove author from Highlight"), systemImage: "person.crop.circle.badge.minus.fill") {
+                vm.selectedAuthor = nil
+                showRemoveAuthor = false
+            }
                 .help("Remove author")
         }
         else {

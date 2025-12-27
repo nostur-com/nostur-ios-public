@@ -457,7 +457,7 @@ struct ComposePost: View {
     
     @ViewBuilder
     var textEntry: some View {
-        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, selectedAuthor: $vm.selectedAuthor, showAudioRecorder: $showAudioRecorder)
+        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder)
     }
 }
 
