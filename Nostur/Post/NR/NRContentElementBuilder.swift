@@ -271,7 +271,7 @@ class NRContentElementBuilder {
     static let previewVideoPlaceholder = ###"-V-@!\^@(\d+)@\^!@-V-"###
     static let videoUrlPattern = ###"(?i)https?:\/\/\S+?\.(?:mp4#?|mov#?|m3u8#?|m4v#?|mp3#?|m4a#?)(\??\S+){0,1}\b"###
     static let lightningInvoicePattern = ###"(?i)lnbc\S+"###
-    static let cashuTokenPattern = ###"cashuA([A-Za-z0-9=\-]+)"###
+    static let cashuTokenPattern = ###"(?:cashu:)?(cashu[AB][A-Za-z0-9_-]*)"###
     
     // In preview, don't render without "nostr:" to discourage wrong creation
     static let previewNotePattern = ###"(nostr:|@)(note1[023456789acdefghjklmnpqrstuvwxyz]{58})"###
