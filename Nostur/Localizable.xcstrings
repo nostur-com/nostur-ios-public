@@ -5769,7 +5769,11 @@
         }
       }
     },
+    "Lists created by people you follow" : {
+
+    },
     "Lists from people you follow" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -7752,7 +7756,7 @@
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Berichten van mensen gevolgd door het (nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account"
+            "value" : "Berichten van mensen gevolgd door het [Explore Feed](nostur:p:afba415fa31944f579eaf8d291a1d76bc237a527a878e92d7e3b9fc669b14320) account"
           }
         }
       }

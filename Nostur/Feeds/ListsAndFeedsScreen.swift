@@ -92,7 +92,7 @@ struct ListsAndFeedsScreen: View {
 //                    })
                 Toggle(isOn: $enableDiscoverListsFeed, label: {
                     Text("Follow Packs & Lists")
-                    Text("Lists from people you follow")
+                    Text("Lists created by people you follow")
                         .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableEmojiFeed, label: {
