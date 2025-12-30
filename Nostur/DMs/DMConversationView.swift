@@ -84,7 +84,6 @@ struct DMConversationView17: View {
                         guard !didLoad else { return }
                         scrollProxy.scrollTo(bottomAnchor, anchor: .bottom)
                         vm.markAsRead()
-                        didLoad = true
                     }
                     .onValueChange(vm.lastMessageId) { _, _ in
                         if stickToBottom {

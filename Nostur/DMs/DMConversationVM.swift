@@ -36,6 +36,13 @@ class ConversionVM: ObservableObject {
     
     // 4 = NIP-04, 17 = NIP-17
     @Published var conversionVersion: Int = 17
+        didSet {
+            if oldValue == 17 && conversationVersion == 4 {
+                Task { @MainActor in
+                    self.fetchDMs()
+                }
+            }
+        }
     
     // For DMChatInputField
     @Published var quotingNow: NRChatMessage? = nil {
@@ -127,6 +134,10 @@ class ConversionVM: ObservableObject {
             lastMessageId = visibleMessages.last?.id
         }
         
+        
+        if self.conversationVersion == 4 {
+            self.fetchDMs()
+        }
         self.fetchDMrelays()
         self.listenForNewMessages()
     }
