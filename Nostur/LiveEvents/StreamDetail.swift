@@ -210,7 +210,6 @@ struct StreamDetail: View {
                     vc = ViewingContext(availableWidth: min(600, availableWidth - 10), fullWidthImages: false, viewType: .row)
                 }
             }
-            .edgesIgnoringSafeArea(.bottom)
             .toolbar {
                 // VIEWERS / PARTICIPANTS / ...
                 ToolbarItem(placement: .principal) {
