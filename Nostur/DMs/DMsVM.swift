@@ -113,6 +113,17 @@ class DMsVM: ObservableObject {
     
     init(accountPubkey: String? = nil) {
         self.accountPubkey = accountPubkey ?? AccountsState.shared.activeAccountPublicKey
+        
+        receiveNotification(.WoTReady)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in
+                    await self.load()
+                }
+            }
+            .store(in: &self.subscriptions)
+        
         self._reloadConversations
             .debounce(for: 1.5, scheduler: RunLoop.main)
             .sink { [weak self] _ in
@@ -236,6 +247,7 @@ class DMsVM: ObservableObject {
         accountChangedSubscription = receiveNotification(.activeAccountChanged)
             .sink { [weak self] notification in
                 Task { @MainActor in
+                    guard self?.ready ?? false else { return }
                     let account = notification.object as! CloudAccount
                     await self?.reload(accountPubkey: account.publicKey)
                 }
@@ -244,15 +256,7 @@ class DMsVM: ObservableObject {
     
     public func loadAfterWoT() {
         guard isMain else { return }
-        receiveNotification(.WoTReady)
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                Task { @MainActor in
-                    await self.load()
-                }
-            }
-            .store(in: &self.subscriptions)
+        
     }
     
     private func listenForNewMessages() {

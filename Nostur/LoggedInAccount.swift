@@ -278,7 +278,6 @@ extension LoggedInAccount {
                     }
                 }
                 else {
-                    DMsVM.shared.loadAfterWoT()
                     WebOfTrust.shared.loadWoT()
                 }
                 

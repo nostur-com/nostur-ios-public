@@ -118,6 +118,7 @@ struct DMsInnerList: View {
         else {
             CenteredProgressView()
                 .task {
+                    guard !WOT_FILTER_ENABLED() else { return } // if WoT is active it will load from receiveNotification(.WoTReady)
                     await vm.load()
                 }
         }

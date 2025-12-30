@@ -144,9 +144,18 @@ class WebOfTrust: ObservableObject {
         if let mainWoTpubkey {
             _mainAccountWoTpubkey = mainWoTpubkey
         }
-        guard mainAccountWoTpubkey != "" else { return }
-        guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else { return }
-        guard let account = AccountsState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else { return }
+        guard mainAccountWoTpubkey != "" else {
+            sendNotification(.WoTReady)
+            return
+        }
+        guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else {
+            sendNotification(.WoTReady)
+            return
+        }
+        guard let account = AccountsState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else {
+            sendNotification(.WoTReady)
+            return
+        }
 #if DEBUG
         L.og.info("🕸️🕸️ WebOfTrust: Main account: \(account.anyName)")
 #endif
