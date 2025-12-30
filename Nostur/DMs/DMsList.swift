@@ -118,8 +118,18 @@ struct DMsInnerList: View {
         else {
             CenteredProgressView()
                 .task {
-                    guard !WOT_FILTER_ENABLED() else { return } // if WoT is active it will load from receiveNotification(.WoTReady)
-                    await vm.load()
+                    // if WoT is enabled wait for it to load
+                    if WOT_FILTER_ENABLED() {
+                        // WoT filter already ready? load now
+                        if WebOfTrust.shared.didWoT {
+                            await vm.load()
+                        }
+                        // else vm will by default wait for receiveNotification(.WoTReady)
+                    }
+                    else { // else just load
+                        
+                        await vm.load()
+                    }
                 }
         }
     }
