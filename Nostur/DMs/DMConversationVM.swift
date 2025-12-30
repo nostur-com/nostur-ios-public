@@ -515,7 +515,8 @@ class ConversionVM: ObservableObject {
         }
     }
     
-    private func fetchDMs() {
+    @MainActor
+    public func fetchDMs() {
         if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
             nxReq(
                 Filters(
@@ -557,7 +558,7 @@ class ConversionVM: ObservableObject {
         nxReq(
             reqFilters,
             subscriptionId: "DM-" + UUID().uuidString.prefix(48),
-            relayType: .SEARCH
+            relayType: .SEARCH_ONLY
         )
     }
     
