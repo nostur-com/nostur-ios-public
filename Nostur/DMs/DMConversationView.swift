@@ -13,6 +13,7 @@ import NostrEssentials
 struct DMConversationView17: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
+    @EnvironmentObject private var dmVM: DMsVM
     private let participants: Set<String>
     private let ourAccountPubkey: String
     
@@ -143,9 +144,9 @@ struct DMConversationView17: View {
                                 Divider()
                                 Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
                                     vm.isAccepted = true
-    //                                DataProvider.shared().saveToDiskNow(.viewContext)
-    //                                DirectMessageViewModel.default.reloadAccepted()
-                                    
+                                    withAnimation {
+                                        dmVM.reloadConversations()
+                                    }
                                 }
                                 .buttonStyle(NRButtonStyle(style: .borderedProminent))
                             }

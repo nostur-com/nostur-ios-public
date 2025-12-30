@@ -98,6 +98,7 @@ struct DMsInnerList: View {
                     }
                     Spacer()
                 }
+                .environmentObject(vm)
             }
             .background(theme.listBackground)
             .sheet(isPresented: $showUpgradeDMsSheet) {
