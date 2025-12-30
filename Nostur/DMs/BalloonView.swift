@@ -58,7 +58,7 @@ struct BalloonView17: View {
             }
             .padding(10)
             .overlay(alignment: .topTrailing) {
-                if vm.conversionVersion == 17 {
+                if vm.conversationVersion == 17 {
                     Menu {
                         Button("Reply...", systemImage: "arrowshape.turn.up.left") {
                             withAnimation {

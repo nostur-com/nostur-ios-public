@@ -35,7 +35,7 @@ class ConversionVM: ObservableObject {
     }
     
     // 4 = NIP-04, 17 = NIP-17
-    @Published var conversionVersion: Int = 17
+    @Published var conversationVersion: Int = 0 {
         didSet {
             if oldValue == 17 && conversationVersion == 4 {
                 Task { @MainActor in
@@ -43,6 +43,7 @@ class ConversionVM: ObservableObject {
                 }
             }
         }
+    }
     
     // For DMChatInputField
     @Published var quotingNow: NRChatMessage? = nil {
@@ -110,7 +111,7 @@ class ConversionVM: ObservableObject {
         if let dmState { // Should always exists because getGroupState() gets existing or creates new
             let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
             
-            if self.conversionVersion == 0 {
+            if self.conversationVersion == 0 {
                 await self.resolveConversationVersion(participants, messages: visibleMessages)
             }
             
@@ -165,7 +166,7 @@ class ConversionVM: ObservableObject {
         // More than 2 participants = NIP-17
         if participants.count > 2 {
             Task { @MainActor in
-                self.conversionVersion = 17 // NIP-17
+                self.conversationVersion = 17 // NIP-17
             }
             return
         }
@@ -173,7 +174,7 @@ class ConversionVM: ObservableObject {
         // Last message is kind 14? = NIP17
         if messages.last?.nEvent.kind == .directMessage {
             Task { @MainActor in
-                self.conversionVersion = 17 // NIP-17
+                self.conversationVersion = 17 // NIP-17
             }
             return
         }
@@ -183,7 +184,7 @@ class ConversionVM: ObservableObject {
             let relays = await getDMrelays(for: receiverPubkey)
             if !relays.isEmpty {
                 Task { @MainActor in
-                    self.conversionVersion = 17 // NIP-17
+                    self.conversationVersion = 17 // NIP-17
                 }
                 return
             }
@@ -192,7 +193,7 @@ class ConversionVM: ObservableObject {
         
         // No indication of NIP-17 support so fall back to NIP-04
         Task { @MainActor in
-            self.conversionVersion = 4 // NIP-04
+            self.conversationVersion = 4 // NIP-04
         }
         return
     }
@@ -211,7 +212,7 @@ class ConversionVM: ObservableObject {
         let participants = self.participants
         if let groupDMState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: self.ourAccountPubkey, context: viewContext()) {
             let version = groupDMState.version
-            self.conversionVersion = version
+            self.conversationVersion = version
             return groupDMState
         }
         let newDMState = CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: viewContext())
@@ -219,7 +220,7 @@ class ConversionVM: ObservableObject {
         newDMState.initiatorPubkey_ = self.ourAccountPubkey
         newDMState.version = participants.count > 2 ? 17 : 0
         DataProvider.shared().saveToDisk(.bgContext)
-        self.conversionVersion = participants.count > 2 ? 17 : 0
+        self.conversationVersion = participants.count > 2 ? 17 : 0
         return newDMState
     }
     
@@ -315,7 +316,7 @@ class ConversionVM: ObservableObject {
     }
     
     @MainActor public func sendMessage(_ message: String, quotingNow: NRChatMessage? = nil, replyingNow: NRChatMessage? = nil) async throws {
-        if self.conversionVersion == 17 {
+        if self.conversationVersion == 17 {
             try await self.sendMessage17(message, quotingNow: quotingNow, replyingNow: replyingNow)
         }
         else {

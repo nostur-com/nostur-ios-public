@@ -130,7 +130,7 @@ struct DMConversationView17: View {
                                                 .offset(x: -20, y: -50)
                                         }
                                     }
-                                    if vm.conversionVersion == 4 {
+                                    if vm.conversationVersion == 4 {
                                         Label("Using NIP-04", systemImage: "exclamationmark.lock")
                                             .font(.footnote)
                                             .onTapGesture {

@@ -20,7 +20,7 @@ struct DMConversationInfoSheet: View {
     
     var body: some View {
         NXForm {
-            if vm.conversionVersion == 17 {
+            if vm.conversationVersion == 17 {
                 Section {
                     if viewState == .checkingDMrelays {
                         CenteredProgressView(message: "Looking up DM relays...")
@@ -52,7 +52,7 @@ struct DMConversationInfoSheet: View {
                     }
                 }
             }
-            else if vm.conversionVersion == 4 {
+            else if vm.conversationVersion == 4 {
                 switch viewState {
                 case .checkingDMrelays:
                     Section {
@@ -103,17 +103,17 @@ struct DMConversationInfoSheet: View {
             }
         }
         .onAppear {
-            if vm.conversionVersion == 17 {
+            if vm.conversationVersion == 17 {
                 useImprovedFormat = true
             }
         }
         .onValueChange(useImprovedFormat) { oldValue, newValue in
             if !oldValue && newValue {
-                vm.conversionVersion = 17
+                vm.conversationVersion = 17
                 vm.dmState?.version = 17
             }
             else if !newValue {
-                vm.conversionVersion = 4
+                vm.conversationVersion = 4
                 vm.dmState?.version = 0
             }
         }
