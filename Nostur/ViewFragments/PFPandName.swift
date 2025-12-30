@@ -29,12 +29,12 @@ struct PFPandName: View {
     
     var body: some View {
         HStack {
-            if alignment == .trailing {
+            if alignment == .trailing || alignment == .center {
                 Spacer()
             }
             ObservedPFP(nrContact: nrContact, size: 20.0)
             Text(nrContact.anyName)
-            if alignment == .leading {
+            if alignment == .leading || alignment == .center {
                 Spacer()
             }
         }

@@ -65,7 +65,7 @@ struct SelectDMRecipientSheet: View {
                 VStack(alignment: .center) {
                     Text("Could not find DM relays for:")
                     ForEach(pubkeys.sorted(), id: \.self) { pubkey in
-                        PFPandName(pubkey: pubkey)
+                        PFPandName(pubkey: pubkey, alignment: .center)
                     }
                     Text("All participants need to have their DM relays published to start a group chat.")
                         .padding(.top, 20)
