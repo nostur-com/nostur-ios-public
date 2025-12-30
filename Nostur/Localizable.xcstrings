@@ -2959,6 +2959,9 @@
         }
       }
     },
+    "Configure your DM relays..." : {
+
+    },
     "Configure your relays..." : {
       "localizations" : {
         "nl" : {
@@ -8034,6 +8037,9 @@
         }
       }
     },
+    "Publish on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04)." : {
+
+    },
     "Publish selected badges on profile" : {
       "localizations" : {
         "nl" : {
@@ -11441,6 +11447,7 @@
       }
     },
     "Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04)." : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

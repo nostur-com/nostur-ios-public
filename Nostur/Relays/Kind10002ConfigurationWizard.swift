@@ -460,7 +460,6 @@ struct UpgradeDMsSheet: View {
     @Environment(\.theme) private var theme
     public var accountPubkey: String
     @State public var account: CloudAccount?
-    public var onDismiss: () -> Void
     
     @State private var step: Step = .intro
     @State private var isBack = false
@@ -486,14 +485,9 @@ struct UpgradeDMsSheet: View {
                 switch step {
                 case .intro:
                     NXForm {
-                        Text("Upgrade your DMs by publishing on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04).")
+                        Text("Publish on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04).")
                     }
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel", systemImage: "xmark") {
-                                dismiss()
-                            }
-                        }
                         ToolbarItem(placement: .primaryAction) {
                             Button("Next", systemImage: "chevron.right") {
                                 isBack = false
@@ -618,7 +612,6 @@ struct UpgradeDMsSheet: View {
             bgContext.perform {
                 let savedEvent10050 = Event.saveEvent(event: kind10050, flags: "nsecbunker_unsigned", context: bgContext)
                 DataProvider.shared().saveToDiskNow(.bgContext)
-                onDismiss()
                 DispatchQueue.main.async {
                     dismiss()
                     RemoteSignerManager.shared.requestSignature(forEvent: kind10050, usingAccount: account, whenSigned: { signedEvent10050 in
@@ -639,7 +632,6 @@ struct UpgradeDMsSheet: View {
                 bgContext.perform {
                     _ = Event.saveEvent(event: signedEvent10050, context: bgContext)
                     DataProvider.shared().saveToDiskNow(.bgContext)
-                    onDismiss()
                     DispatchQueue.main.async {
                         dismiss()
                         Unpublisher.shared.publishNow(signedEvent10050)
@@ -668,7 +660,7 @@ struct UpgradeDMsSheet: View {
     }) {
         if let account = PreviewFetcher.fetchAccount() {
             NBNavigationStack {
-                UpgradeDMsSheet(accountPubkey: account.publicKey, onDismiss: { })
+                UpgradeDMsSheet(accountPubkey: account.publicKey)
             }
         }
     }

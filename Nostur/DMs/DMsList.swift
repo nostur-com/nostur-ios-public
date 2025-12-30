@@ -101,19 +101,29 @@ struct DMsInnerList: View {
                 .environmentObject(vm)
             }
             .background(theme.listBackground)
-            .sheet(isPresented: $showUpgradeDMsSheet) {
+            .sheet(isPresented: $showUpgradeDMsSheet, onDismiss: {
+                Task { @MainActor [weak vm] in
+                    showUpgradeDMsSheet = false
+                    vm?.showUpgradeNotice = false
+                }
+            }, content: {
                 NBNavigationStack {
-                    UpgradeDMsSheet(accountPubkey: pubkey, onDismiss: {
-                        Task { @MainActor [weak vm] in
-                            showUpgradeDMsSheet = false
-                            vm?.showUpgradeNotice = false
+                    UpgradeDMsSheet(accountPubkey: pubkey)
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("Cancel", systemImage: "xmark") {
+                                    Task { @MainActor [weak vm] in
+                                        showUpgradeDMsSheet = false
+                                        vm?.showUpgradeNotice = false
+                                    }
+                                }
+                            }
                         }
-                    })
                     .environment(\.theme, theme)
                 }
                 .nbUseNavigationStack(.whenAvailable) // .never is broken on macCatalyst, showSettings = false will not dismiss  .sheet(isPresented: $showSettings) ..
                 .presentationBackgroundCompat(theme.listBackground)
-            }
+            })
         }
         else {
             CenteredProgressView()
@@ -383,6 +393,13 @@ struct DMSettingsSheet: View {
                     .hCentered()
                 }
             }
+            
+            NavigationLink {
+                UpgradeDMsSheet(accountPubkey: vm.accountPubkey)
+            } label: {
+                Text("Configure your DM relays...")
+            }
+
         }
         .navigationBarTitleDisplayMode(.inline)
         .navigationTitle("Direct Message Settings")
