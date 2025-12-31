@@ -131,13 +131,12 @@ struct DMsInnerList: View {
                     // if WoT is enabled wait for it to load
                     if WOT_FILTER_ENABLED() {
                         // WoT filter already ready? load now
-                        if WebOfTrust.shared.didWoT {
+                        if WebOfTrust.shared.theWoTisReady {
                             await vm.load()
                         }
                         // else vm will by default wait for receiveNotification(.WoTReady)
                     }
                     else { // else just load
-                        
                         await vm.load()
                     }
                 }

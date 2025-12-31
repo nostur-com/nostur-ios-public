@@ -126,7 +126,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
                 return
             }
             let accountData = account.toStruct()
-            if !WebOfTrust.shared.didWoT {
+            if !WebOfTrust.shared.theWoTisReady {
                 WebOfTrust.shared.loadWoT()
             }
             

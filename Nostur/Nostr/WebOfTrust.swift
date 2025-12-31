@@ -90,7 +90,12 @@ class WebOfTrust: ObservableObject {
         }
     }
     
-    var didWoT = false
+    public var theWoTisReady = false
+    
+    private func woTisReady() {
+        theWoTisReady = true
+        sendNotification(.WoTReady)
+    }
     
     private var backlog = Backlog(timeout: 60, auto: true, backlogDebugName: "WebOfTrust")
     private var subscriptions = Set<AnyCancellable>()
@@ -145,15 +150,15 @@ class WebOfTrust: ObservableObject {
             _mainAccountWoTpubkey = mainWoTpubkey
         }
         guard mainAccountWoTpubkey != "" else {
-            sendNotification(.WoTReady)
+            self.woTisReady()
             return
         }
         guard SettingsStore.shared.webOfTrustLevel != SettingsStore.WebOfTrustLevel.off.rawValue else {
-            sendNotification(.WoTReady)
+            self.woTisReady()
             return
         }
         guard let account = AccountsState.shared.accounts.first(where: { $0.publicKey == mainAccountWoTpubkey }) ?? (try? CloudAccount.fetchAccount(publicKey: mainAccountWoTpubkey, context: context())) else {
-            sendNotification(.WoTReady)
+            self.woTisReady()
             return
         }
 #if DEBUG
@@ -169,7 +174,7 @@ class WebOfTrust: ObservableObject {
             guard wotFollowingPubkeys.count > 10 else {
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
-                    sendNotification(.WoTReady)
+                    self.woTisReady()
                     self.updatingWoT = false
                 }
 #if DEBUG
@@ -183,7 +188,7 @@ class WebOfTrust: ObservableObject {
 #if DEBUG
                     L.og.info("🕸️🕸️ WebOfTrust: Disabled")
 #endif
-                    sendNotification(.WoTReady)
+                    self.woTisReady()
                     self.updatingWoT = false
                 case SettingsStore.WebOfTrustLevel.normal.rawValue:
 #if DEBUG
@@ -197,13 +202,13 @@ class WebOfTrust: ObservableObject {
                     L.og.info("🕸️🕸️ WebOfTrust: Strict")
 #endif
                     self.addOwnFollowsIfNeeded()
-                    sendNotification(.WoTReady)
+                    self.woTisReady()
                     self.updatingWoT = false
                 default:
 #if DEBUG
                     L.og.info("🕸️🕸️ WebOfTrust: Disabled")
 #endif
-                    sendNotification(.WoTReady)
+                    self.woTisReady()
                     self.updatingWoT = false
             }
         }
@@ -310,7 +315,7 @@ class WebOfTrust: ObservableObject {
     // This is for "normal" mode (follows + follows of follows)
     public func loadNormal(wotFollowingPubkeys: Set<String>, force: Bool = false) { // force = true to force fetching (update)
         guard mainAccountWoTpubkey != "" else {
-            sendNotification(.WoTReady)
+            self.woTisReady()
             return
         }
         self.loadFollowingFollowing(wotFollowingPubkeys:wotFollowingPubkeys, force: force)
@@ -327,7 +332,7 @@ class WebOfTrust: ObservableObject {
     // force = true to force fetching (update) - else will only use what is already on disk
     private func loadFollowingFollowing(wotFollowingPubkeys: Set<String>, force: Bool = false) {
         guard mainAccountWoTpubkey != "" else {
-            sendNotification(.WoTReady)
+            self.woTisReady()
             return
         }
         // Load from disk
@@ -338,22 +343,22 @@ class WebOfTrust: ObservableObject {
         
         guard self.followingFollowingPubkeys.count < ENABLE_THRESHOLD || force == true else {
             self.addOwnFollowsIfNeeded()
-            sendNotification(.WoTReady)
+            self.woTisReady()
 #if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already have loaded enough from file")
 #endif
             return
         }
         
-        guard !didWoT || force == true else {
+        guard !theWoTisReady || force == true else {
             self.addOwnFollowsIfNeeded()
-            sendNotification(.WoTReady)
+            self.woTisReady()
 #if DEBUG
             L.sockets.debug("🕸️🕸️ WebOfTrust/WoTFol: already didWot")
 #endif
             return
         }
-        didWoT = true
+        self.woTisReady()
         
         // Fetch kind 3s
         let task = ReqTask(
@@ -385,7 +390,7 @@ class WebOfTrust: ObservableObject {
     
     public func localReload(wotFollowingPubkeys: Set<String>) {
         guard mainAccountWoTpubkey != "" else {
-            sendNotification(.WoTReady)
+            self.woTisReady()
             return
         }
         // Load from disk
@@ -399,7 +404,7 @@ class WebOfTrust: ObservableObject {
     
     private func generateWoT() {
         guard mainAccountWoTpubkey != "" else {
-            sendNotification(.WoTReady)
+            self.woTisReady()
             updatingWoT = false
             return
         }
@@ -424,7 +429,7 @@ class WebOfTrust: ObservableObject {
             self.storeData(pubkeys: self.followingFollowingPubkeys, pubkey: mainAccountWoTpubkey)
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                sendNotification(.WoTReady)
+                self.woTisReady()
                 self.updatingWoT = false
             }
         }

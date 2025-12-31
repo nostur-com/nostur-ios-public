@@ -145,7 +145,7 @@ struct DMConversationView17: View {
                                 Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
                                     vm.isAccepted = true
                                     withAnimation {
-                                        dmVM.reloadConversations()
+                                        dmVM.loadConversations(fullReload: true)
                                     }
                                 }
                                 .buttonStyle(NRButtonStyle(style: .borderedProminent))
