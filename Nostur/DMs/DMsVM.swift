@@ -416,6 +416,32 @@ class DMsVM: ObservableObject {
             .sorted(by: { $0.isPinned != $1.isPinned })
     }
     
+    @MainActor
+    public func acceptConversation(dmState: CloudDMState) {
+        
+        dmState.accepted = true
+        
+        let accepted = conversationRows + [dmState]
+        
+        let requests = requestRows.filter { $0.id != dmState.id }
+        
+        conversationRows = accepted
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+            .sorted(by: { $0.isPinned != $1.isPinned })
+        
+        requestRows = requests
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+            .sorted(by: { $0.isPinned != $1.isPinned })
+        
+        guard WOT_FILTER_ENABLED() else { return }
+        
+        let requestsNotWoT = requestRowsNotWoT.filter { $0.id != dmState.id }
+
+        requestRowsNotWoT = requestsNotWoT
+            .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+            .sorted(by: { $0.isPinned != $1.isPinned })
+    }
+    
     public func unhideAll() {
         for dmState in dmStates {
             if dmState.isHidden {

@@ -143,9 +143,12 @@ struct DMConversationView17: View {
                             else {
                                 Divider()
                                 Button(String(localized:"Accept message request", comment:"Button to accept a Direct Message request")) {
-                                    vm.isAccepted = true
+                                    guard let dmState = vm.dmState else {
+                                        return
+                                    }
                                     withAnimation {
-                                        dmVM.loadConversations(fullReload: true)
+                                        vm.isAccepted = true
+                                        dmVM.acceptConversation(dmState: dmState)
                                     }
                                 }
                                 .buttonStyle(NRButtonStyle(style: .borderedProminent))

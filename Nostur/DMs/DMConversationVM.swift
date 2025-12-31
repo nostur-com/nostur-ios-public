@@ -28,11 +28,7 @@ class ConversionVM: ObservableObject {
     @Published var navigationTitle = "To: ..."
     @Published var receiverContacts: [NRContact] = []
     
-    @Published var isAccepted = false {
-        didSet {
-            self.dmState?.accepted = isAccepted
-        }
-    }
+    @Published var isAccepted = false
     
     // 4 = NIP-04, 17 = NIP-17
     @Published var conversationVersion: Int = 0 {
