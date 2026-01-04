@@ -116,7 +116,7 @@ struct Hot: View {
             }
         }
         .onChange(of: selectedSubTab) { newValue in
-            guard newValue == "Hot" else { return }
+            guard !IS_DESKTOP_COLUMNS() && newValue == "Hot" else { return }
             hotVM.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
