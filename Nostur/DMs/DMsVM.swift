@@ -214,7 +214,7 @@ class DMsVM: ObservableObject {
         )
     }
     
-    private var lastGiftWrapAt = Int(Date().timeIntervalSince1970) - (48 * 60 * 60)  // 48
+    private var lastGiftWrapAt: Int = Int((Date(timeIntervalSinceNow: -518_400)).timeIntervalSince1970) // 6 days
     
     private var giftWrapsTimer: Timer? = nil
     private func startGiftWrapsTimer() {
