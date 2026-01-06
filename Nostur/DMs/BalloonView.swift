@@ -55,6 +55,16 @@ struct BalloonView17: View {
                             vm.scrollToId = quotedEvent.id
                         }
                 }
+                
+                if !isSentByCurrentUser && nrChatMessage.nEvent.kind == .legacyDirectMessage && vm.conversationVersion == 17 {
+                    Image(systemName: "lock.trianglebadge.exclamationmark.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(Color.red)
+                        .infoText("This message is using an older encryption method. Ask the other person to upgrade for a more private conversation")
+                        .frame(height: 12)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
             }
             .padding(10)
             .overlay(alignment: .topTrailing) {
