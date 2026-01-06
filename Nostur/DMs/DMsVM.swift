@@ -261,7 +261,7 @@ class DMsVM: ObservableObject {
     
     private func listenForNewMessages() {
         Importer.shared.importedDMSub // (conversationId: groupId, event: savedEvent, nEvent: nEvent)
-            .filter { $0.nEvent.pTags().contains(self.accountPubkey) }
+            .filter { $0.nEvent.pTags().contains(self.accountPubkey) || $0.nEvent.publicKey == self.accountPubkey }
             .sink { (_, event, nEvent, newDMStateCreated) in
                 
                 if newDMStateCreated {

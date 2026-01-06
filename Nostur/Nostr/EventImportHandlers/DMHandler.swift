@@ -33,67 +33,71 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
     }
     savedEvent.groupId = groupId
     
-    // existing DMStates (as receiver to ourAccountPubkey)
-    let existingDMStates = CloudDMState.fetchByParticipants(participants: participants, context: context)
+    // Info we need in other context
+    let accountPubkeys: Set<String> = AccountsState.shared.bgAccountPubkeys
+    let savedEventDate = savedEvent.date
     
-    // add any missing DMState (as receiver to ourAccountPubkey)
-    let receiversWithMissingDMStates: Set<String> = AccountsState.shared.bgAccountPubkeys
-        .filter { accountPubkey in
-            return participants.contains(accountPubkey) && !existingDMStates.contains { dmState in
-                return (dmState.accountPubkey_ == accountPubkey && dmState.conversationId == dmConversationId(nEvent: nEvent))
-            }
-        }
-
-    var didCreateNewDMState = false
-
-    // Create new DM states if we have missing
-    for accountPubkey in receiversWithMissingDMStates {
-        let dmState = CloudDMState(context: context)
-        dmState.accountPubkey_ = accountPubkey
-        dmState.contactPubkey_ = participants.subtracting([accountPubkey]).first
-        dmState.participantPubkeys = participants
-        if AccountsState.shared.bgAccountPubkeys.contains(sender) {
-            dmState.accepted = true
-            let savedEventDate = savedEvent.date
-            dmState.markedReadAt_ = savedEventDate
-        }
-        else {
-            dmState.accepted = false
-            dmState.initiatorPubkey_ = sender
-        }
-        dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
-        updateBlurb(dmState, event: savedEvent, context: context)
-        didCreateNewDMState = true
-    }
+    // DMStates live in main so need to switch
+    Task { @MainActor in
+        // existing DMStates (as receiver to ourAccountPubkey)
+        let existingDMStates = CloudDMState.fetchByParticipants(participants: participants, context: viewContext())
         
-    // Update existing DM states
-    for dmState in existingDMStates {
-        // Consider accepted if we replied to the DM
-        // DM is sent from one of our account pubkeys
-        if !dmState.accepted && AccountsState.shared.bgAccountPubkeys.contains(nEvent.publicKey) {
-            dmState.accepted = true
-            
-            if let current = dmState.markedReadAt_, savedEvent.date > current {
-                dmState.markedReadAt_ = savedEvent.date
+        // add any missing DMState (as receiver to ourAccountPubkey)
+        let receiversWithMissingDMStates: Set<String> = accountPubkeys
+            .filter { accountPubkey in
+                return participants.contains(accountPubkey) && !existingDMStates.contains { dmState in
+                    return (dmState.accountPubkey_ == accountPubkey && dmState.conversationId == dmConversationId(nEvent: nEvent))
+                }
             }
-            else if dmState.markedReadAt_ == nil {
-                dmState.markedReadAt_ = savedEvent.date
+
+        var didCreateNewDMState = false
+
+        // Create new DM states if we have missing
+        for accountPubkey in receiversWithMissingDMStates {
+            let dmState = CloudDMState(context: viewContext())
+            dmState.accountPubkey_ = accountPubkey
+            dmState.contactPubkey_ = participants.subtracting([accountPubkey]).first
+            dmState.participantPubkeys = participants
+            if accountPubkeys.contains(sender) {
+                dmState.accepted = true
+                dmState.markedReadAt_ = savedEventDate
             }
-        }
-        
-        if nEvent.createdAt.timestamp > Int(dmState.lastMessageTimestamp_?.timeIntervalSince1970 ?? 0) {
+            else {
+                dmState.accepted = false
+                dmState.initiatorPubkey_ = sender
+            }
             dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
             updateBlurb(dmState, event: savedEvent, context: context)
+            didCreateNewDMState = true
         }
-    }
-    
-    // Notify views or whatever needs to know
-    if didCreateNewDMState {
-        DataProvider.shared().saveToDiskNow {
+            
+        // Update existing DM states
+        for dmState in existingDMStates {
+            // Consider accepted if we replied to the DM
+            // DM is sent from one of our account pubkeys
+            if !dmState.accepted && AccountsState.shared.bgAccountPubkeys.contains(nEvent.publicKey) {
+                dmState.accepted = true
+                
+                if let current = dmState.markedReadAt_, savedEvent.date > current {
+                    dmState.markedReadAt_ = savedEvent.date
+                }
+                else if dmState.markedReadAt_ == nil {
+                    dmState.markedReadAt_ = savedEvent.date
+                }
+            }
+            
+            if nEvent.createdAt.timestamp > Int(dmState.lastMessageTimestamp_?.timeIntervalSince1970 ?? 0) {
+                dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
+                updateBlurb(dmState, nEvent: nEvent, context: viewContext())
+            }
+        }
+        
+        // Notify views or whatever needs to know
+        if didCreateNewDMState { // Don't need to save right away anymore?
             Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: true))
+        } else {
+            Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: false))
         }
-    } else {
-        Importer.shared.importedDMSub.send((conversationId: groupId, event: savedEvent, nEvent: nEvent, newDMStateCreated: false))
     }
 }
 
@@ -134,5 +138,29 @@ func updateBlurb(_ dmState: CloudDMState, event: Event, context: NSManagedObject
         // prefix blurb with "You: " if we sent it
         let fromName = dmState.accountPubkey_ == event.pubkey ? "You: " : ""
         dmState.blurb = "\(fromName)\(event.content ?? "")"
+    }
+}
+
+func updateBlurb(_ dmState: CloudDMState, nEvent: NEvent, context: NSManagedObjectContext) {
+    // decrypt if kind 4
+    if nEvent.kind.id == 4, let accountPubkey = dmState.accountPubkey_ {
+        if let account = try? CloudAccount.fetchAccount(publicKey: accountPubkey, context: context), let privateKey = account.privateKey {
+            let keyPair = (publicKey: account.publicKey, privateKey: privateKey)
+            
+            let content = if nEvent.publicKey == keyPair.publicKey, let firstP = nEvent.firstP() {
+                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: firstP, content: nEvent.content) ?? "(Encrypted content)"
+            }
+            else {
+                Keys.decryptDirectMessageContent(withPrivateKey: keyPair.privateKey, pubkey: nEvent.publicKey, content: nEvent.content) ?? "(Encrypted content)"
+            }
+            // prefix blurb with "You: " if we sent it
+            let fromName = accountPubkey == nEvent.publicKey ? "You: " : ""
+            dmState.blurb = "\(fromName)\(content)"
+        }
+    }
+    else { // kind 14 is already decrypted rumor
+        // prefix blurb with "You: " if we sent it
+        let fromName = dmState.accountPubkey_ == nEvent.publicKey ? "You: " : ""
+        dmState.blurb = "\(fromName)\(nEvent.content)"
     }
 }
