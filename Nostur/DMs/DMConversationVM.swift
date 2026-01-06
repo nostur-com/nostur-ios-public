@@ -284,6 +284,7 @@ class ConversionVM: ObservableObject {
                 Task { @MainActor in
                     withAnimation {
                         lastMessageId = rumorNEvent.id
+                        self.objectWillChange.send() // without this view doesn't update properly
                         self.viewState = .ready(days + [ConversationDay(
                             dayId: dayIdFormatter.string(from: messageDate),
                             date: messageDate,
@@ -296,6 +297,7 @@ class ConversionVM: ObservableObject {
         else {
             Task { @MainActor in
                 withAnimation {
+                    self.objectWillChange.send() // without this view doesn't update properly
                     self.viewState = .ready([ConversationDay(
                         dayId: dayIdFormatter.string(from: messageDate),
                         date: messageDate,

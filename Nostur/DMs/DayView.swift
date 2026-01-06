@@ -20,7 +20,7 @@ struct DayView: View {
             .foregroundStyle(.secondary)
             .padding(.top, 20)
         
-        // messagess
+        // messages
         ForEach(day.messages) { message in
             BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey, vm: vm)
                 .id(message.id)
