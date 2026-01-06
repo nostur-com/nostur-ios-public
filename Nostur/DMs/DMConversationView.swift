@@ -132,7 +132,7 @@ struct DMConversationView17: View {
                                         }
                                     }
                                     if vm.conversationVersion == 4 {
-                                        Label("Using NIP-04", systemImage: "exclamationmark.lock")
+                                        Label("Using NIP-04", systemImage: "lock.trianglebadge.exclamationmark.fill")
                                             .font(.footnote)
                                             .onTapGesture {
                                                 showConversationInfoSheet = true
