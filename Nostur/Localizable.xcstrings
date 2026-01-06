@@ -5368,6 +5368,9 @@
         }
       }
     },
+    "Increase privacy" : {
+
+    },
     "Interactions" : {
       "comment" : "Tab title",
       "localizations" : {
@@ -10331,6 +10334,7 @@
       }
     },
     "Switch to a more private DM format (NIP-17)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
