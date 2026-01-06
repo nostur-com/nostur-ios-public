@@ -35,7 +35,7 @@ class ConversionVM: ObservableObject {
         didSet {
             if oldValue == 17 && conversationVersion == 4 {
                 Task { @MainActor in
-                    self.fetchDMs()
+                    self.fetchNip04DMs()
                 }
             }
         }
@@ -132,9 +132,8 @@ class ConversionVM: ObservableObject {
         }
         
         
-        if self.conversationVersion == 4 {
-            self.fetchDMs()
-        }
+        self.fetchNip04DMs() // Always fetch for older DMs also in case of earlier older messages or older clients
+        // newer giftwraps will be fetched from general DMsVM.fetchGiftWraps(), can't query conversation specific with metadata hidden
         self.fetchDMrelays()
         self.listenForNewMessages()
     }
@@ -512,7 +511,7 @@ class ConversionVM: ObservableObject {
     }
     
     @MainActor
-    public func fetchDMs() {
+    public func fetchNip04DMs() {
         if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
             nxReq(
                 Filters(
@@ -534,10 +533,6 @@ class ConversionVM: ObservableObject {
                 subscriptionId: "DM-R"
             )
         }
-        
-        
-        
-        // Make sure main giftwraps receive subscription is active
     }
     
     private func fetchDMrelays() {
