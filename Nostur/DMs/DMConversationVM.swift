@@ -276,9 +276,7 @@ class ConversionVM: ObservableObject {
                 Task { @MainActor in
                     withAnimation {
                         lastMessageId = rumorNEvent.id
-                        day.messages.append(
-                            newChatMessage
-                        )
+                        day.messages = (day.messages + [newChatMessage]).sorted(by: { $0.createdAt < $1.createdAt })
                     }
                 }
             }
