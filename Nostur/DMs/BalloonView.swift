@@ -61,7 +61,7 @@ struct BalloonView17: View {
                         .resizable()
                         .scaledToFit()
                         .foregroundStyle(Color.red)
-                        .infoText("This message is using an older encryption method. Ask the other person to upgrade for a more private conversation")
+                        .infoText("This message is using an older encryption method. Ask the other person to upgrade or use a different app for a more private conversation")
                         .frame(height: 12)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
