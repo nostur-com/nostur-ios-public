@@ -154,29 +154,29 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
         self.missingPs = missingPs
         self.content = nEvent.content
         self.isNSFW = self.hasNSFWContent()
-        self.loadEmbeddedContent()
+        self.loadEmbeddedContent(keyPair)
     }
     
-    private func loadEmbeddedContent() {
+    private func loadEmbeddedContent(_ keyPair: (publicKey: String, privateKey: String)? = nil) {
         if let replyToId = nEvent.firstE() {
             self.replyToId = replyToId
             if let replyToEvent = Event.fetchEvent(id: replyToId, context: context()) {
-                self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent())
+                self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent(), keyPair: keyPair)
             }
         }
         if let quoteId = nEvent.tags.first(where: { $0.type == "q" })?.value {
             self.quoteId = quoteId
             if let quotedEvent = Event.fetchEvent(id: quoteId, context: context()) {
-                self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent())
+                self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent(), keyPair: keyPair)
             }
         }
         
         if (self.replyToId != nil && self.replyTo == nil) || (self.quoteId != nil && self.quotedEvent == nil) {
-            self.listenForEmbeddedContent()
+            self.listenForEmbeddedContent(keyPair)
         }
     }
     
-    private func listenForEmbeddedContent() {
+    private func listenForEmbeddedContent(_ keyPair: (publicKey: String, privateKey: String)? = nil) {
         guard embeddedContentListener == nil else { return }
         embeddedContentListener = Importer.shared.importedDMSub
             .filter { ($0.nEvent.id == self.replyToId) || ($0.nEvent.id == self.quoteId) }
@@ -184,12 +184,12 @@ class NRChatMessage: ObservableObject, Identifiable, Hashable, Equatable {
                 guard let self else { return }
                 if let replyToId = self.replyToId, self.replyTo == nil {
                     if let replyToEvent = Event.fetchEvent(id: replyToId, context: context()) {
-                        self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent())
+                        self.replyTo = NRChatMessage(nEvent: replyToEvent.toNEvent(), keyPair: keyPair)
                     }
                 }
                 else if let quoteId = self.quoteId, self.quotedEvent == nil {
                     if let quotedEvent = Event.fetchEvent(id: quoteId, context: context()) {
-                        self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent())
+                        self.quotedEvent = NRChatMessage(nEvent: quotedEvent.toNEvent(), keyPair: keyPair)
                     }
                 }
             }
