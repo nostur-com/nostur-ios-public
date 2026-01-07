@@ -130,8 +130,26 @@ struct PostMenu: View {
                 if !isOwnPost {
                     Button(action: {
                         dismiss()
-                        sendNotification(.clearNavigation)
-                        sendNotification(.showingSomeoneElsesFeed, nrPost.contact)
+                        
+                        
+                        if IS_DESKTOP_COLUMNS() {
+                            // Create new column, or replace last column (if too many)
+                            withAnimation {
+                                if !MacColumnsVM.shared.allowAddColumn {
+                                    MacColumnsVM.shared.columns.removeLast()
+                                }
+                                MacColumnsVM.shared.addColumn(
+                                    MacColumnConfig(
+                                        type: .someoneElses(nrContact.pubkey),
+                                        title: nrContact.anyName
+                                    )
+                                )
+                            }
+                        }
+                        else {
+                            sendNotification(.clearNavigation)
+                            sendNotification(.showingSomeoneElsesFeed, nrPost.contact)
+                        }
                     }) {
                         Label {
                             Text("Show \(nrContact.anyName)'s feed", comment: "Menu button to show someone's feed")

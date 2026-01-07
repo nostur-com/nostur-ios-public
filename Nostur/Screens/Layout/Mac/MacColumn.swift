@@ -47,8 +47,15 @@ struct MacColumn: View {
             return String(localized: "Explore", comment: "Feed title")
         case .notifications:
             return String(localized: "Notifications", comment: "Feed title")
-        case .following:
+        case .following(_):
             return String(localized: "Following", comment: "Feed title")
+        case .someoneElses(_):
+            if let title = config.title {
+                return String(localized: "\(title)'s Feed", comment: "(name)'s Feed")
+            }
+            else {
+                return String(localized: "Someone's Feed", comment: "Feed title")
+            }
         case .photos:
             return String(localized: "Photos", comment: "Feed title")
         case .yaks:
@@ -118,8 +125,11 @@ struct MacColumn: View {
                 case .newPosts:
                     NotificationsNewPosts(navPath: $navPath)
                     
-                case .following:
-                    Text("following")
+                case .following(let accountPubkey):
+                    FollowingColumn(pubkey: accountPubkey, columnType: $columnType)
+                    
+                case .someoneElses(let pubkey):
+                    FollowingColumn(pubkey: pubkey, columnType: $columnType, isSomeoneElsesFeed: true)
                     
                 case .photos(let accountPubkey):
                     self.renderContentTypeColumn(accountPubkey, columnType: $columnType)

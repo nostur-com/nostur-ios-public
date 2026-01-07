@@ -748,6 +748,9 @@
         }
       }
     },
+    "%@'s Feed" : {
+      "comment" : "(name)'s Feed"
+    },
     "%@'s posts can be found at" : {
       "localizations" : {
         "nl" : {
@@ -10097,6 +10100,9 @@
           }
         }
       }
+    },
+    "Someone's Feed" : {
+      "comment" : "Feed title"
     },
     "Something about yourself" : {
       "comment" : "Placeholder on input field for Bio on Edit Profile screen",

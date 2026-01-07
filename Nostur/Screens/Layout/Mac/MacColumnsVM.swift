@@ -132,8 +132,9 @@ struct MacColumnConfig: Codable, Equatable, Identifiable {
         if case .cloudFeed(let id) = type { return id }
         else { return nil }
     }
+    var title: String?
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id && lhs.type == rhs.type && lhs.cloudFeedId == rhs.cloudFeedId
+        lhs.id == rhs.id && lhs.type == rhs.type && lhs.cloudFeedId == rhs.cloudFeedId && lhs.title == rhs.title
     }
 }
 
@@ -155,7 +156,8 @@ enum MacColumnType: Codable, Equatable {
     case explore
     
     case notifications(String?) // .notifications(accountPubkey)
-    case following
+    case following(String) // .following(accountPubkey)
+    case someoneElses(String) // .someoneElses(pubkey)
     case photos(String?) // .photos(accountPubkey)
     case yaks(String?) // .yaks(accountPubkey)
     case vines(String?) // .vines(accountPubkey)
@@ -187,8 +189,10 @@ enum MacColumnType: Codable, Equatable {
             return "explore"
         case .notifications(let accountPubkey):
             return "notifications(\(accountPubkey ?? "nil"))"
-        case .following:
-            return "following"
+        case .following(let accountPubkey):
+            return "following(\(accountPubkey)"
+        case .someoneElses(let pubkey):
+            return "someoneElses(\(pubkey)"
         case .photos(let accountPubkey):
             return "photos(\(accountPubkey ?? "nil"))"
         case .yaks(let accountPubkey):
