@@ -307,6 +307,15 @@ struct DMStateRow: View {
                         }
                     }
                     
+                    if let timestamp = dmState.lastMessageTimestamp_ {
+                        Ago(timestamp)
+                            .equatable()
+                            .layoutPriority(2)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
+                    
                     Spacer()
                     Menu {
                         Button(dmState.isPinned ? "Unpin" : "Pin", systemImage: dmState.isPinned ? "pin.slash" : "pin") {
