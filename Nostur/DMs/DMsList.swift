@@ -77,7 +77,7 @@ struct DMsInnerList: View {
                                 }
                                 
                                 if !vm.showNotWoT && !vm.requestRowsNotWoT.isEmpty {
-                                    Text("\(vm.requestRowsNotWoT.count) requests not shown")
+                                    Text("Show \(vm.requestRowsNotWoT.count) hidden requests (could be spam)")
                                         .frame(maxWidth: .infinity, alignment: .center)
                                         .padding(5)
                                         .onTapGesture {
@@ -90,8 +90,20 @@ struct DMsInnerList: View {
                             .padding(5)
                         }
                         else {
-                            Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
-                                .centered()
+                            LazyVStack(alignment: .leading, spacing: GUTTER) {
+                                Text("No message requests", comment: "Shown on the DM requests view when there aren't any message requests to show")
+                                    .centered()
+                                if !vm.showNotWoT && !vm.requestRowsNotWoT.isEmpty {
+                                    Text("Show \(vm.requestRowsNotWoT.count) hidden requests (could be spam)")
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                        .padding(5)
+                                        .onTapGesture {
+                                            vm.showNotWoT = true
+                                        }
+                                        .font(.footnote)
+                                        .foregroundStyle(Color.secondary)
+                                }
+                            }
                         }
                     default:
                         EmptyView()
