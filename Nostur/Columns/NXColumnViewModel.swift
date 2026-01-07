@@ -255,8 +255,8 @@ class NXColumnViewModel: ObservableObject {
                             vmInner.unreadIds[postId] = nil
                             vmInner.updateIsAtTopSubject.send()
                         }
-                        withAnimation { // withAnimation and not at top keeps scroll position
-                            self.viewState = .posts(existingPosts.filter { $0.id != postId })
+                        withAnimation { [weak self] in // withAnimation and not at top keeps scroll position
+                            self?.viewState = .posts(existingPosts.filter { $0.id != postId })
                         }
                     }
                 })

@@ -420,8 +420,8 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
     }
     
     // Batch the marking operations to reduce main thread blocking
-    Task.detached(priority: .userInitiated) {
-        vm.markAsRead(idsToMarkAsRead)
+    Task.detached(priority: .userInitiated) { [weak vm] in
+        vm?.markAsRead(idsToMarkAsRead)
         
         await MainActor.run {
             // Send notifications in batch
