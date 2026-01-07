@@ -212,13 +212,11 @@ struct ProfileView: View {
 
         
         .nbNavigationDestination(isPresented: $showFollowing) {
-            NXList(plain: true) {
-                ProfileFollowingList(pubkey: nrContact.pubkey)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
-            .navigationTitle("Following")
-            .background(theme.listBackground)
-            .environment(\.containerID, containerID)
+            ProfileFollowingList(pubkey: nrContact.pubkey)
+                .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure full screen usage (for bg)
+                .navigationTitle("Following")
+                .background(theme.listBackground)
+                .environment(\.containerID, containerID)
         }
         .nbNavigationDestination(isPresented: $showFollowers) {
             NXList(plain: true) {

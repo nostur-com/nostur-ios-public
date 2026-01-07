@@ -4806,6 +4806,9 @@
         }
       }
     },
+    "Follow all" : {
+
+    },
     "Follow all %lld people on this list" : {
       "localizations" : {
         "nl" : {
@@ -9785,6 +9788,9 @@
           }
         }
       }
+    },
+    "Show %lld hidden requests (could be spam)" : {
+
     },
     "Show anyway" : {
       "comment" : "Button to show the blocked content anyway",

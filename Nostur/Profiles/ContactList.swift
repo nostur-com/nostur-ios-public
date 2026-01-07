@@ -11,6 +11,7 @@ import SwiftUI
 // TODO: Remove @FetchRequest
 struct ContactList: View {
     @Environment(\.theme) private var theme
+    @EnvironmentObject private var la: LoggedInAccount
     
     @FetchRequest
     private var contacts: FetchedResults<Contact>
@@ -40,41 +41,49 @@ struct ContactList: View {
     }
     
     var body: some View {
-        ForEach(contacts) { contact in
-            ProfileRow(contact: contact)
-                .frame(height: 120)
-                .background(theme.listBackground)
-                .overlay(alignment: .bottom) {
-                    theme.background.frame(height: GUTTER)
-                }
-        }
-        .onAppear {
-            guard !missing.isEmpty else { return }
-            L.og.debug("Fetching \(missing.count) missing contacts")
-            QueuedFetcher.shared.enqueue(pTags: missing)
-        }
-        .onDisappear {
-            guard !missing.isEmpty else { return }
-            QueuedFetcher.shared.dequeue(pTags: missing)
-        }
-        
-        ForEach(noMetadata, id:\.self) { pubkey in
-            ProfileRowMissing(pubkey: pubkey)
-                .frame(height: 120)
-                .background(theme.listBackground)
-                .overlay(alignment: .bottom) {
-                    theme.background.frame(height: GUTTER)
-                }
-        }
-        
-        if !contacts.isEmpty {
-            Button("Add all to custom list") {
-                AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: Set(pubkeys))
+        NXList(plain: true) {
+            ForEach(contacts) { contact in
+                ProfileRow(contact: contact)
+                    .frame(height: 120)
+                    .background(theme.listBackground)
+                    .overlay(alignment: .bottom) {
+                        theme.background.frame(height: GUTTER)
+                    }
             }
-            .buttonStyle(NRButtonStyle())
-            .frame(height: 120)
-            .background(theme.listBackground)
-            .hCentered()
+            .onAppear {
+                guard !missing.isEmpty else { return }
+                L.og.debug("Fetching \(missing.count) missing contacts")
+                QueuedFetcher.shared.enqueue(pTags: missing)
+            }
+            .onDisappear {
+                guard !missing.isEmpty else { return }
+                QueuedFetcher.shared.dequeue(pTags: missing)
+            }
+            
+            ForEach(noMetadata, id:\.self) { pubkey in
+                ProfileRowMissing(pubkey: pubkey)
+                    .frame(height: 120)
+                    .background(theme.listBackground)
+                    .overlay(alignment: .bottom) {
+                        theme.background.frame(height: GUTTER)
+                    }
+            }
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if !contacts.isEmpty {
+                    Menu {
+                        Button("Follow all") {
+                            la.multiFollow(Set(contacts.map { $0.pubkey }))
+                        }
+                        Button("Add all to custom list") {
+                            AppSheetsModel.shared.addContactsToListInfo = AddContactsToListInfo(pubkeys: Set(pubkeys))
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                    }
+                }
+            }
         }
     }
     
