@@ -99,6 +99,8 @@ struct DMConversationView: View {
                         guard !didLoad else { return }
                         scrollProxy.scrollTo(bottomAnchor, anchor: .bottom)
                         vm.markAsRead()
+                        
+                        didLoad = true
                     }
                     .onValueChange(vm.lastMessageId) { _, _ in
                         if stickToBottom {
@@ -201,6 +203,12 @@ struct DMConversationView: View {
                         DMConversationInfoSheet(vm: vm)
                     }
                 }
+                .onDisappear {
+                    if didLoad && days.isEmpty, let dmState = vm.dmState {
+                        // Started a conversation but did not send or receive any message, so we can remove DM state
+                        dmVM.removeDMState(dmState)
+                    }
+                }
             case .timeout:
                 Text("Unable to load conversation")
                     .padding(10)
@@ -214,7 +222,7 @@ struct DMConversationView: View {
         .background(theme.listBackground)
         .navigationTitle("To: \(vm.receiverContacts.map { $0.anyName }.formatted(.list(type: .and)))")
         .task {
-            await vm.load()
+            await vm.load(parentVM: dmVM)
         }
         .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
         .sheet(item: $selectedContact) { selectedContact in

@@ -311,6 +311,67 @@ class DMsVM: ObservableObject {
     }
     
     @MainActor
+    public func removeDMState(_ dmState: CloudDMState) {
+        self.dmStates.removeAll(where: { $0.conversationId == dmState.conversationId })
+        withAnimation {
+            self.conversationRows.removeAll(where: { $0.conversationId == dmState.conversationId })
+            self.requestRows.removeAll(where: { $0.conversationId == dmState.conversationId })
+            self.requestRowsNotWoT.removeAll(where: { $0.conversationId == dmState.conversationId })
+        }
+        // delete after 6 seconds (maybe messages come in after delay or whatever)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+            if dmState.lastMessageTimestamp_ == nil {
+                viewContext().delete(dmState)
+            }
+        }
+    }
+    
+    // add to list if it doesn't already exist
+    // when viewing a conversation, probably always a new conversation
+    @MainActor
+    public func addDMState(_ dmState: CloudDMState) {
+        self.objectWillChange.send() // <-- not sure why this is needed. conversationRows/requestRows/requestRowsNotWoT are @Published and DMsVM is @ObservedObject. Should work but doesn't.
+        if !self.dmStates.contains(where: { $0.conversationId == dmState.conversationId }) {
+            self.dmStates.append(dmState)
+        }
+        withAnimation { // we are viewing it, so remove from notWoT
+            self.requestRowsNotWoT.removeAll(where: { $0.conversationId == dmState.conversationId })
+        }
+        if dmState.accepted { // if accepted add to conversation list
+            if !self.conversationRows.contains(where: { $0.conversationId == dmState.conversationId }) {
+                withAnimation {
+                    self.conversationRows = (self.conversationRows + [dmState])
+                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+                        .sorted(by: { $0.isPinned != $1.isPinned })
+                }
+            }
+            else { // or only resort
+                withAnimation {
+                    self.conversationRows = self.conversationRows
+                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+                        .sorted(by: { $0.isPinned != $1.isPinned })
+                }
+            }
+        }
+        else { // if not accepted add to requests list
+            if !self.requestRows.contains(where: { $0.conversationId == dmState.conversationId }) {
+                withAnimation {
+                    self.requestRows = (self.requestRows + [dmState])
+                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+                        .sorted(by: { $0.isPinned != $1.isPinned })
+                }
+            }
+            else { // or only resort
+                withAnimation {
+                    self.requestRows = self.requestRows
+                        .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })
+                        .sorted(by: { $0.isPinned != $1.isPinned })
+                }
+            }
+        }
+    }
+    
+    @MainActor
     public func reload(accountPubkey: String) async {
         self.accountPubkey = accountPubkey
         await self.load(force: true)

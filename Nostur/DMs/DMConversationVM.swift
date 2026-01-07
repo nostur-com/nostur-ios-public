@@ -81,7 +81,7 @@ class ConversionVM: ObservableObject {
     private var didLoad = false
     
     @MainActor
-    public func load(force: Bool = false) async {
+    public func load(force: Bool = false, parentVM: DMsVM) async {
         guard force || !didLoad else { return }
         self.subscriptions.removeAll()
         self.didLoad = true
@@ -129,6 +129,9 @@ class ConversionVM: ObservableObject {
             
             viewState = .ready(days)
             lastMessageId = visibleMessages.last?.id
+            
+            // add DM state to parent vm
+            parentVM.addDMState(dmState)
         }
         
         
