@@ -151,14 +151,20 @@ class MessageParser {
                         L.sockets.debug("\(relayUrl): \(message.message) \(message.subscriptionId ?? "") (CLOSED) -[LOG]-")
                     }
                 case .NOTICE:
-                    L.sockets.notice("\(relayUrl): \(message.message)")
-                    #if DEBUG
+                    // handle ["NOTICE", "ping"] only Ditto Core does this??
+                    if message.message == "ping" {
+                        client.sendMessage(ClientMessage.close(subscriptionId: "pong")) // annoying
+                    }
+                    else {
+                        L.sockets.notice("\(relayUrl): \(message.message)")
+#if DEBUG
                         DispatchQueue.main.async {
                             sendNotification(.anyStatus, (String(format:"Notice: %@: %@", relayUrl.replacingOccurrences(of: "wss://", with: ""), message.message), "RELAY_NOTICE"))
                         }
-                    #endif
-                    poolQueue.async(flags: .barrier) {
-                        client.stats.addNoticeMessage(message.message)
+#endif
+                        poolQueue.async(flags: .barrier) {
+                            client.stats.addNoticeMessage(message.message)
+                        }
                     }
                 case .EOSE:
                     // Keep these subscriptions open.
