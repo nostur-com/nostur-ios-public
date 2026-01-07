@@ -154,6 +154,7 @@
       }
     },
     "(Timeout or other error)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -580,6 +581,9 @@
       },
       "shouldTranslate" : false
     },
+    "%@ (Timeout or other error)" : {
+
+    },
     "%@ %@" : {
       "localizations" : {
         "en" : {
@@ -879,6 +883,7 @@
       }
     },
     "%lld requests not shown" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -11269,6 +11274,7 @@
       }
     },
     "Unavailable" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {

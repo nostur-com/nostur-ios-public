@@ -47,10 +47,12 @@ struct DMConversationInfoSheet: View {
                 if vm.participants.count <= 2 {
                     Section {
                         Toggle(isOn: $useImprovedFormat) {
-                            Text("Increase privacy")
-                            Text("Switch to a more private DM format (NIP-17) for new messages")
-                                .font(.footnote)
-                                .foregroundColor(Color.gray)
+                            VStack(alignment: .leading) {
+                                Text("Increase privacy")
+                                Text("Switch to a more private DM format (NIP-17) for new messages")
+                                    .font(.footnote)
+                                    .foregroundColor(Color.gray)
+                            }
                         }
                     } header: {
                         Text("Message format")
@@ -101,10 +103,12 @@ struct DMConversationInfoSheet: View {
                         }
                         
                         Toggle(isOn: $useImprovedFormat) {
-                            Text("Increase privacy")
-                            Text("Switch to a more private DM format (NIP-17) for new messages")
-                                .font(.footnote)
-                                .foregroundColor(Color.gray)
+                            VStack(alignment: .leading) {
+                                Text("Increase privacy")
+                                Text("Switch to a more private DM format (NIP-17) for new messages")
+                                    .font(.footnote)
+                                    .foregroundColor(Color.gray)
+                            }
                         }
                     } header: {
                         Text("Message format")

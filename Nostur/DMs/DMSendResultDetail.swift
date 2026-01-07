@@ -41,10 +41,11 @@ struct DMSendResultDetail: View {
                         .foregroundStyle(color(for: dmSentResult.relayResults[key]!))
                         .frame(width: 24, alignment: .center)
                     
-                    Text(key)
-                    
                     if dmSentResult.relayResults[key]! == .timeout {
-                        Text("(Timeout or other error)")
+                        Text("\(key) (Timeout or other error)")
+                    }
+                    else {
+                        Text(key)
                     }
                     
                     Spacer()

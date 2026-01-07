@@ -146,11 +146,20 @@ struct DMConversationView: View {
                                         }
                                     }
                                     if vm.conversationVersion == 4 {
-                                        Label("Using NIP-04", systemImage: "lock.trianglebadge.exclamationmark.fill")
-                                            .font(.footnote)
-                                            .onTapGesture {
-                                                showConversationInfoSheet = true
-                                            }
+                                        if #available(iOS 16.0, *) {
+                                            Label("Using NIP-04", systemImage: "lock.trianglebadge.exclamationmark.fill")
+                                                .font(.footnote)
+                                                .onTapGesture {
+                                                    showConversationInfoSheet = true
+                                                }
+                                        }
+                                        else {
+                                            Label("Using NIP-04", systemImage: "exclamationmark.triangle.fill")
+                                                .font(.footnote)
+                                                .onTapGesture {
+                                                    showConversationInfoSheet = true
+                                                }
+                                        }
                                     }
                                 }
                             }
