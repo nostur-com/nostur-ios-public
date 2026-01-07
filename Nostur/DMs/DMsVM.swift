@@ -76,6 +76,7 @@ class DMsVM: ObservableObject {
     
     @MainActor
     private func updateUnreads() async {
+        self.objectWillChange.send()
         var unreadCount = 0
         for conversationRow in conversationRows {
             unreadCount += await conversationRow.getUnread()
@@ -267,9 +268,9 @@ class DMsVM: ObservableObject {
                 if newDMStateCreated {
                     Task { @MainActor in
 #if DEBUG
-                        L.og.debug("💌💌 DMsVM.loadDMStates() (newDMStateCreated)")
+                        L.og.debug("💌💌 DMsVM.loadConversations(fullReload: true) (newDMStateCreated)")
 #endif
-                        self.loadDMStates()
+                        self.loadConversations(fullReload: true)
                     }
                 }
                 
@@ -424,6 +425,8 @@ class DMsVM: ObservableObject {
         let accepted = conversationRows + [dmState]
         
         let requests = requestRows.filter { $0.id != dmState.id }
+        
+        self.objectWillChange.send() // <-- not sure why this is needed. conversationRows/requestRows/requestRowsNotWoT are @Published and DMsVM is @ObservedObject. Should work but doesn't.
         
         conversationRows = accepted
             .sorted(by: { ($0.lastMessageTimestamp_ ?? .distantPast) > ($1.lastMessageTimestamp_ ?? .distantPast) })

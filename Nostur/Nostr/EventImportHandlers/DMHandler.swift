@@ -67,7 +67,7 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
                 dmState.initiatorPubkey_ = sender
             }
             dmState.lastMessageTimestamp_ = Date.init(timeIntervalSince1970: TimeInterval(nEvent.createdAt.timestamp))
-            updateBlurb(dmState, event: savedEvent, context: context)
+            updateBlurb(dmState, nEvent: nEvent, context: viewContext())
             didCreateNewDMState = true
         }
             
