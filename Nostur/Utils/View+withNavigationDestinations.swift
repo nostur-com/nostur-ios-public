@@ -115,18 +115,13 @@ struct NavigationDestinationsModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .nbNavigationDestination(for: NewDMConversation.self) { newDMConversation in
-                if #available(iOS 17.1, *) {
-                    DMConversationView17(participants: newDMConversation.participants, ourAccountPubkey: newDMConversation.accountPubkey)
-                        .environment(\.containerID, self.containerID)
-                        .environmentObject(VideoPostPlaybackCoordinator())
-                }
-                else {
-                    Text("Unavailable")
-                }
+                DMConversationView(participants: newDMConversation.participants, ourAccountPubkey: newDMConversation.accountPubkey)
+                    .environment(\.containerID, self.containerID)
+                    .environmentObject(VideoPostPlaybackCoordinator())
             }
             .nbNavigationDestination(for: CloudDMState.self) { dmState in
-                if #available(iOS 17.1, *), let accountPubkey = dmState.accountPubkey_ {
-                    DMConversationView17(participants: dmState.participantPubkeys, ourAccountPubkey: accountPubkey)
+                if let accountPubkey = dmState.accountPubkey_ {
+                    DMConversationView(participants: dmState.participantPubkeys, ourAccountPubkey: accountPubkey)
                         .environment(\.containerID, self.containerID)
                         .environmentObject(VideoPostPlaybackCoordinator())
                 }

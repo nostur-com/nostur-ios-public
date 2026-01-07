@@ -140,12 +140,7 @@ struct MacColumn: View {
                     self.renderDMsColumn(accountPubkey, columnType: $columnType)
                     
                 case .DMConversation(let dmConversationInfo):
-                    if #available(iOS 26.0, *) {
-                        DMConversationView17(participants: dmConversationInfo.participants, ourAccountPubkey: dmConversationInfo.ourAccountPubkey)
-                    }
-                    else {
-                        Text("Unavailable")
-                    }
+                    DMConversationView(participants: dmConversationInfo.participants, ourAccountPubkey: dmConversationInfo.ourAccountPubkey)
                 }
             }
             

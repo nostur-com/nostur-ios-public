@@ -9,8 +9,7 @@ import SwiftUI
 import NavigationBackport
 import NostrEssentials
 
-@available(iOS 17.1, *) //  .defaultScrollAnchor(.bottom)
-struct DMConversationView17: View {
+struct DMConversationView: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
     @EnvironmentObject private var dmVM: DMsVM
@@ -75,8 +74,23 @@ struct DMConversationView17: View {
                                     stickToBottom = false
                                 }
                         }
+                        .modifier {
+                            if #available(iOS 17.1, *) {
+                                $0
+                            }
+                            else {
+                                $0.rotationEffect(.degrees(180)) // do the flip flip because .defaultScrollAnchor(.bottom) is not available
+                            }
+                        }
                     }
-                    .defaultScrollAnchor(.bottom)
+                    .modifier {
+                        if #available(iOS 17.1, *) {
+                            $0.defaultScrollAnchor(.bottom)
+                        }
+                        else {
+                            $0.rotationEffect(.degrees(180)) // do the flip flip because .defaultScrollAnchor(.bottom) is not available
+                        }
+                    }
                     .onTapGesture {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                             to: nil, from: nil, for: nil)
@@ -313,7 +327,7 @@ struct DMConversationView17: View {
             let participants: Set<String> = ["06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
             let ourAccountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
             
-            DMConversationView17(participants: participants, ourAccountPubkey: ourAccountPubkey)
+            DMConversationView(participants: participants, ourAccountPubkey: ourAccountPubkey)
         }
     }
 }
