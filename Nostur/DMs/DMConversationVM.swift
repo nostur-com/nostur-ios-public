@@ -197,14 +197,14 @@ class ConversionVM: ObservableObject {
         return
     }
     
-    @MainActor
-    public func reload(participants: Set<String>, ourAccountPubkey: String) async {
-        self.participants = participants
-        self.ourAccountPubkey = ourAccountPubkey
-        self.conversationId = CloudDMState.getConversationId(for: participants)
-        
-        await self.load(force: true)
-    }
+//    @MainActor
+//    public func reload(participants: Set<String>, ourAccountPubkey: String) async {
+//        self.participants = participants
+//        self.ourAccountPubkey = ourAccountPubkey
+//        self.conversationId = CloudDMState.getConversationId(for: participants)
+//        
+//        await self.load(force: true)
+//    }
     
     private func getGroupState() -> CloudDMState {
         // Get existing or create new
