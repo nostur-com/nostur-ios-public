@@ -115,10 +115,12 @@ func createFeedFromRelayData(_ relayData: RelayData, authPubkey: String? = nil) 
     
     if IS_DESKTOP_COLUMNS() {
         // Create new column, or replace last column (if too many)
-        if !MacColumnsVM.shared.allowAddColumn {
-            MacColumnsVM.shared.columns.removeLast()
+        withAnimation {
+            if !MacColumnsVM.shared.allowAddColumn {
+                MacColumnsVM.shared.columns.removeLast()
+            }
+            MacColumnsVM.shared.addColumn(MacColumnConfig(type: .cloudFeed(newFeed.id?.uuidString ?? "?")))
         }
-        MacColumnsVM.shared.addColumn(MacColumnConfig(type: .cloudFeed(newFeed.id?.uuidString ?? "?")))
     }
     else {
         // Change active tab to this new feed

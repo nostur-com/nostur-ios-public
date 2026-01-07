@@ -79,13 +79,21 @@ struct SideTabs: View {
             
             
             Group {
-                Button { vm.addColumn() } label: {
+                Button {
+                    withAnimation {
+                        vm.addColumn()
+                    }
+                } label: {
                     Image(systemName: "rectangle.stack.badge.plus")
                 }
                 .help("Add column")
                 .disabled(!vm.allowAddColumn)
                 Color.clear.frame(height: 5)
-                Button { vm.removeColumn() } label: {
+                Button {
+                    withAnimation {
+                        vm.removeColumn()
+                    }
+                } label: {
                     Image(systemName: "rectangle.stack.badge.minus")
                 }
                 .help("Remove column")
