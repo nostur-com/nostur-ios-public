@@ -177,10 +177,11 @@ class ConversionVM: ObservableObject {
             return
         }
         
-        // no messages yet, but has DM relay? NIP-17
+        // no messages yet, but has DM relay (both us and them)? NIP-17
         if messages.isEmpty, let receiverPubkey = participants.subtracting([ourAccountPubkey]).first {
-            let relays = await getDMrelays(for: receiverPubkey)
-            if !relays.isEmpty {
+            let receiverHasDMRelays = await hasDMrelays(pubkey: receiverPubkey)
+            let weHaveDMrelays = await hasDMrelays(pubkey: ourAccountPubkey)
+            if receiverHasDMRelays && weHaveDMrelays {
                 Task { @MainActor in
                     self.conversationVersion = 17 // NIP-17
                 }
