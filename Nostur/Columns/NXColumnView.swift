@@ -175,9 +175,9 @@ struct NXColumnView<HeaderContent: View>: View {
             guard viewModel.isVisible != newValue else { return }
             viewModel.isVisible = newValue
         }
-        .onChange(of: config) { [config] newConfig in
+        .onValueChange(config, action: { oldConfig, newConfig in
 #if DEBUG
-            L.og.debug("☘️☘️ \(config.name) .onChange(of: config) -[LOG]-")
+            L.og.debug("☘️☘️ \(oldConfig.name) .onChange(of: config) -[LOG]-")
 #endif
             guard viewModel.config != newConfig else { return }
             if let relaysData = newConfig.feed?.relaysData {
@@ -195,8 +195,7 @@ struct NXColumnView<HeaderContent: View>: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 viewModel.resume()
             }
-        }
-        
+        })
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
             guard viewModel.isVisible, let config = viewModel.config else { return }
             AppSheetsModel.shared.feedSettingsFeed = config.feed

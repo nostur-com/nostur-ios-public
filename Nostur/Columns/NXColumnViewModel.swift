@@ -315,11 +315,31 @@ class NXColumnViewModel: ObservableObject {
     
     private var syncFeedSubject = PassthroughSubject<Void, Never>()
     private var loadLocalSubject = PassthroughSubject<(NXColumnConfig, Bool, (() -> Void)?), Never>()
+    
+    private func resetCancellables() {
+        newEventsInDatabaseSub?.cancel()
+        newPostSavedSub?.cancel()
+        newSingleRelayPostSavedSub?.cancel()
+        newPostUndoSub?.cancel()
+        firstConnectionSub?.cancel()
+        reloadWhenNeededSub?.cancel()
+        lastDisconnectionSub?.cancel()
+        onAppearSubjectSub?.cancel()
+        saveLocalStateSub?.cancel()
+        muteListUpdatedSub?.cancel()
+        blockListUpdatedSub?.cancel()
+        followsChangedSub?.cancel()
+        resumeFeedSub?.cancel()
+        pauseFeedSub?.cancel()
+        saveFeedStateSub?.cancel()
+        nextTickSub?.cancel()
+    }
 
     @MainActor
     public func initialize(_ config: NXColumnConfig, speedTest: NXSpeedTest) {
         // get initial feed state from
-        self.subscriptions = Set<AnyCancellable>()
+        self.subscriptions.forEach { $0.cancel() }
+        self.subscriptions.removeAll()
         self.config = config
         self.speedTest = speedTest
         
@@ -340,6 +360,7 @@ class NXColumnViewModel: ObservableObject {
         gapFiller = NXGapFiller(since: self.refreshedAt, windowSize: 4, timeout: 2.0, currentGap: 0, columnVM: self)
         isViewPaused = false
         guard isVisible else { return }
+        self.resetCancellables()
         startFetchFeedTimer()
         
 //        // Change to loading if we were displaying posts before
@@ -396,7 +417,7 @@ class NXColumnViewModel: ObservableObject {
         
         // if config.columnType is .following OR .picture
         switch config.columnType {
-        case .following, .picture:
+        case .following, .picture, .vine, .yak:
             followsChangedSub?.cancel()
             followsChangedSub = nil
             listenForFollowsChanged(config)
