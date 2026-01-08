@@ -21,15 +21,6 @@ class NotificationsViewModel: ObservableObject {
         self.id == Self.shared.id
     }
     
-    init() {
-        // For the main nvm we can't wait for Notifications View to trigger .load() (as in other notification columns)
-        DispatchQueue.main.async { [weak self] in
-            if (self?.isMain ?? false) && !AccountsState.shared.activeAccountPublicKey.isEmpty {
-                self?.load(AccountsState.shared.activeAccountPublicKey)
-            }
-        }
-    }
-    
     private var account: CloudAccount? {
         didSet {
             self.accountDataCache = account?.toStruct()
@@ -63,7 +54,8 @@ class NotificationsViewModel: ObservableObject {
         restoreRelaySubSubcription?.cancel()
         restoreRelaySubSubcription = nil
 
-        self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey })
+        // Not sure if AccountsState is already ready here so fallback to own fetch
+        self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey }) ?? CloudAccount.fetchAccounts(context: context()).first(where: { $0.publicKey == pubkey })
         
         bg().perform {
             self.needsUpdate = true
@@ -83,6 +75,14 @@ class NotificationsViewModel: ObservableObject {
             setupBadgeNotifications()
         }
         NotificationsViewModel.restoreSubscriptions()
+        if isMain {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { // Give time for AUTH / "auth-required:"
+                bg().perform { [weak self] in
+                    guard let accountData = self?.accountDataCache else { return }
+                    self?.checkForEverything(accountData: accountData, force: true)
+                }
+            }
+        }
     }
     private var accountChangedSubscription: AnyCancellable?
     private var badgeSubcription: AnyCancellable?
@@ -406,6 +406,10 @@ class NotificationsViewModel: ObservableObject {
                         bg().perform { [weak self] in
                             guard let accountData = self?.accountDataCache else { return }
                             self?.checkForEverything(accountData: accountData)
+                            
+                            if let self, self.id == NotificationsViewModel.shared.id {
+                                OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
+                            }
                         }
                     }
                 }
@@ -414,7 +418,7 @@ class NotificationsViewModel: ObservableObject {
         timer?.tolerance = 5.0
     }
     
-    private func checkForEverything(accountData: AccountData) {
+    private func checkForEverything(accountData: AccountData, force: Bool = false) {
         guard (!AppState.shared.appIsInBackground || IS_CATALYST) else {
 #if DEBUG
             L.og.debug("NotificationViewModel.checkForEverything() \(self.pubkey): skipping, app in background.");
@@ -423,13 +427,9 @@ class NotificationsViewModel: ObservableObject {
         }
         shouldBeBg()
         
-        if self.id == NotificationsViewModel.shared.id {
-            OfflinePosts.checkForOfflinePosts() // Not really part of notifications but easy to add here and reuse the same timer
-        }
-        
         guard needsUpdate else { return }
                 
-        guard !Importer.shared.isImporting else {
+        guard !Importer.shared.isImporting || force else {
 #if DEBUG
             L.og.debug("⏳ NotificationsViewModelcheckForEverything() \(accountData.publicKey) Still importing, new notifications check skipped.");
 #endif
@@ -442,15 +442,6 @@ class NotificationsViewModel: ObservableObject {
 #endif
 
         self.relayCheckNewestNotifications() // or wait 3 seconds?
-        
-//        if bg().hasChanges { // No idea why after needsUpdate = true, unread badge doesn't update, maybe because .checkNeedsUpdate() is run before bg save, it runs in bg, but different block, so save is needed? so lets try saving here to be sure.
-//            do {
-//                try bg().save()
-//            }
-//            catch {
-//                L.og.error("🔴🔴 Could not save bgContext \(error)")
-//            }
-//        }
         
         bg().perform { [weak self] in self?.checkForUnreadMentions(accountData: accountData) }
         bg().perform { [weak self] in

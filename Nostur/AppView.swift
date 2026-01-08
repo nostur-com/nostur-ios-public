@@ -16,6 +16,9 @@ struct AppView: View {
     @State private var viewState: ViewState = .starting
 
     var body: some View {
+#if DEBUG
+        let _ = nxLogChanges(of: Self.self)
+#endif
         ZStack {
             switch viewState {
             case .starting:
@@ -30,6 +33,7 @@ struct AppView: View {
                     .environmentObject(loggedInAccount)
                     .onAppear {
                         ImageDecoderRegistry.shared.register(ImageDecoders.Video.init)
+                        NotificationsViewModel.shared.load(loggedInAccount.pubkey)
                     }
                     .onChange(of: scenePhase) { newScenePhase in
                         handleNewScenePhase(newScenePhase)
