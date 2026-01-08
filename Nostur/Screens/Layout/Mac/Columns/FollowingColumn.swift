@@ -9,9 +9,6 @@
 import SwiftUI
 import NavigationBackport
 
-// NotificationsColumn uses own StateObject for each column
-// MainNotificationsColumn uses NotificationsViewModel.shared
-
 struct FollowingColumn: View {
     @Environment(\.theme) private var theme
     @Environment(\.macColumnsState) private var vm
