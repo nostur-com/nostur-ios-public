@@ -9,7 +9,15 @@ import SwiftUI
 import Combine
 import NostrEssentials
 
-class DMsVM: ObservableObject {
+class DMsVM: ObservableObject, Equatable, Hashable {
+    
+    static func == (lhs: DMsVM, rhs: DMsVM) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
     
     @Published var ncNotSupported = false
     @Published var ready = false

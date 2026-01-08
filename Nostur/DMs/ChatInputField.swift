@@ -230,13 +230,15 @@ struct DMChatInputField: View {
     @Previewable @StateObject var vmQuotingNow = ConversionVM(
         participants: ["9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
                        "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"],
-        ourAccountPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"
+        ourAccountPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33",
+        parentDMsVM: DMsVM.shared
     )
     
     @Previewable @StateObject var vmReplyingNow = ConversionVM(
         participants: ["9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e",
                        "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"],
-        ourAccountPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33"
+        ourAccountPubkey: "9be0be0fc079548233231614e4e1efc9f28b0db398011efeecf05fe570e5dd33",
+        parentDMsVM: DMsVM.shared
     )
     
     VStack {

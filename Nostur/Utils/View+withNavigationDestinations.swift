@@ -87,6 +87,13 @@ struct NewDMConversation: IdentifiableDestination {
     let id = UUID()
     let accountPubkey: String
     let participants: Set<String>
+    let parentDMsVM: DMsVM
+}
+
+struct DMConversation: IdentifiableDestination {
+    let id = UUID()
+    let dmState: CloudDMState
+    let parentDMsVM: DMsVM
 }
 
 enum ViewPath: IdentifiableDestination {
@@ -115,13 +122,13 @@ struct NavigationDestinationsModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .nbNavigationDestination(for: NewDMConversation.self) { newDMConversation in
-                DMConversationView(participants: newDMConversation.participants, ourAccountPubkey: newDMConversation.accountPubkey)
+                DMConversationView(participants: newDMConversation.participants, ourAccountPubkey: newDMConversation.accountPubkey, parentDMsVM: newDMConversation.parentDMsVM)
                     .environment(\.containerID, self.containerID)
                     .environmentObject(VideoPostPlaybackCoordinator())
             }
-            .nbNavigationDestination(for: CloudDMState.self) { dmState in
-                if let accountPubkey = dmState.accountPubkey_ {
-                    DMConversationView(participants: dmState.participantPubkeys, ourAccountPubkey: accountPubkey)
+            .nbNavigationDestination(for: DMConversation.self) { dmConversation in
+                if let accountPubkey = dmConversation.dmState.accountPubkey_ {
+                    DMConversationView(participants: dmConversation.dmState.participantPubkeys, ourAccountPubkey: accountPubkey, parentDMsVM: dmConversation.parentDMsVM)
                         .environment(\.containerID, self.containerID)
                         .environmentObject(VideoPostPlaybackCoordinator())
                 }

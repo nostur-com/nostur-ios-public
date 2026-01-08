@@ -150,7 +150,7 @@ struct MacColumn: View {
                     self.renderDMsColumn(accountPubkey, columnType: $columnType)
                     
                 case .DMConversation(let dmConversationInfo):
-                    DMConversationView(participants: dmConversationInfo.participants, ourAccountPubkey: dmConversationInfo.ourAccountPubkey)
+                    Text("Conversation column") // TODO: need to make parentDMsVM optional
                 }
             }
             

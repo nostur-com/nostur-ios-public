@@ -43,15 +43,15 @@ struct DMsInnerList: View {
                     case "Accepted":
                         if !vm.conversationRows.isEmpty {
                             LazyVStack(alignment: .leading, spacing: GUTTER) {
-                                ForEach(vm.conversationRows) { row in
+                                ForEach(vm.conversationRows) { dmState in
                                     Box(navMode: .noNavigation) {
-                                        DMStateRow(dmState: row, accountPubkey: vm.accountPubkey, vm: vm)
+                                        DMStateRow(dmState: dmState, accountPubkey: vm.accountPubkey, vm: vm)
                                     }
                                     .contentShape(Rectangle())
                                     .onTapGesture {
                                         // mark as read
-                                        navPath.append(row)
-                                        row.markedReadAt_ = .now
+                                        navPath.append(DMConversation(dmState: dmState, parentDMsVM: vm))
+                                        dmState.markedReadAt_ = .now
                                         vm.updateUnreadsCount()
                                     }
                                 }
@@ -64,14 +64,14 @@ struct DMsInnerList: View {
                     case "Requests":
                         if !vm.requestRows.isEmpty || vm.showNotWoT {
                             LazyVStack(alignment: .leading, spacing: GUTTER) {
-                                ForEach(vm.requestRows) { row in
+                                ForEach(vm.requestRows) { dmState in
                                     Box(navMode: .noNavigation) {
-                                        DMStateRow(dmState: row, accountPubkey: vm.accountPubkey, vm: vm)
+                                        DMStateRow(dmState: dmState, accountPubkey: vm.accountPubkey, vm: vm)
                                     }
                                     .contentShape(Rectangle())
                                     .onTapGesture {
-                                        navPath.append(row)
-                                        row.markedReadAt_ = .now
+                                        navPath.append(DMConversation(dmState: dmState, parentDMsVM: vm))
+                                        dmState.markedReadAt_ = .now
                                         vm.updateUnreadsCount()
                                     }
                                 }
@@ -110,7 +110,6 @@ struct DMsInnerList: View {
                     }
                     Spacer()
                 }
-                .environmentObject(vm)
             }
             .background(theme.listBackground)
             .sheet(isPresented: $showUpgradeDMsSheet, onDismiss: {

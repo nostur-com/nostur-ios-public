@@ -12,7 +12,6 @@ import NostrEssentials
 struct DMConversationView: View {
     @Environment(\.theme) private var theme
     @EnvironmentObject private var la: LoggedInAccount
-    @EnvironmentObject private var dmVM: DMsVM
     private let participants: Set<String>
     private let ourAccountPubkey: String
     
@@ -27,11 +26,13 @@ struct DMConversationView: View {
     
     @State private var stickToBottom = false
     @State private var showThereIsMore = false
+    private var parentDMsVM: DMsVM
     
-    init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false) {
+    init(participants: Set<String>, ourAccountPubkey: String, accepted: Bool = false, parentDMsVM: DMsVM) {
         self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
-        _vm = StateObject(wrappedValue: ConversionVM(participants: participants, ourAccountPubkey: ourAccountPubkey))
+        _vm = StateObject(wrappedValue: ConversionVM(participants: participants, ourAccountPubkey: ourAccountPubkey, parentDMsVM: parentDMsVM))
+        self.parentDMsVM = parentDMsVM
     }
     
     var body: some View {
@@ -173,7 +174,7 @@ struct DMConversationView: View {
                                     }
                                     withAnimation {
                                         vm.isAccepted = true
-                                        dmVM.acceptConversation(dmState: dmState)
+                                        parentDMsVM.acceptConversation(dmState: dmState)
                                     }
                                 }
                                 .buttonStyle(NRButtonStyle(style: .borderedProminent))
@@ -206,7 +207,7 @@ struct DMConversationView: View {
                 .onDisappear {
                     if didLoad && days.isEmpty, let dmState = vm.dmState {
                         // Started a conversation but did not send or receive any message, so we can remove DM state
-                        dmVM.removeDMState(dmState)
+                        parentDMsVM.removeDMState(dmState)
                     }
                 }
             case .timeout:
@@ -222,7 +223,7 @@ struct DMConversationView: View {
         .background(theme.listBackground)
         .navigationTitle("To: \(vm.receiverContacts.map { $0.anyName }.formatted(.list(type: .and)))")
         .task {
-            await vm.load(parentVM: dmVM)
+            await vm.load()
         }
         .environmentObject(ViewingContext(availableWidth: DIMENSIONS.articleRowImageWidth(UIScreen.main.bounds.width), fullWidthImages: false, viewType: .row))
         .sheet(item: $selectedContact) { selectedContact in
@@ -344,7 +345,7 @@ struct DMConversationView: View {
             let participants: Set<String> = ["06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71","9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"]
             let ourAccountPubkey = "9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e"
             
-            DMConversationView(participants: participants, ourAccountPubkey: ourAccountPubkey)
+            DMConversationView(participants: participants, ourAccountPubkey: ourAccountPubkey, parentDMsVM: DMsVM.shared)
         }
     }
 }

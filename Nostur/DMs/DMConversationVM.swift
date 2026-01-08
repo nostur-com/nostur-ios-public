@@ -67,7 +67,9 @@ class ConversionVM: ObservableObject {
     
     public var dmState: CloudDMState? = nil
     
-    init(participants: Set<String>, ourAccountPubkey: String) {
+    private var parentDMsVM: DMsVM
+    
+    init(participants: Set<String>, ourAccountPubkey: String, parentDMsVM: DMsVM) {
         self.participants = participants
         self.ourAccountPubkey = ourAccountPubkey
         self.conversationId = CloudDMState.getConversationId(for: participants)
@@ -76,12 +78,13 @@ class ConversionVM: ObservableObject {
         dayIdFormatter.dateFormat = "yyyy-MM-dd"          // note: lowercase yyyy
         dayIdFormatter.locale = Locale(identifier: "en_US_POSIX") // ensures consistent format
         self.dayIdFormatter = dayIdFormatter
+        self.parentDMsVM = parentDMsVM
     }
     
     private var didLoad = false
     
     @MainActor
-    public func load(force: Bool = false, parentVM: DMsVM) async {
+    public func load(force: Bool = false) async {
         guard force || !didLoad else { return }
         self.subscriptions.removeAll()
         self.didLoad = true
@@ -131,7 +134,7 @@ class ConversionVM: ObservableObject {
             lastMessageId = visibleMessages.last?.id
             
             // add DM state to parent vm
-            parentVM.addDMState(dmState)
+            parentDMsVM.addDMState(dmState)
         }
         
         

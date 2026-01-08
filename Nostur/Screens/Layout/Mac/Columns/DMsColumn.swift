@@ -44,7 +44,7 @@ struct DMsColumn: View {
             .sheet(isPresented: $showNewDMSheet) {
                 NBNavigationStack {
                     SelectDMRecipientSheet(accountPubkey: pubkey, onSelect: { selectedContactPubkeys in
-                        navPath.append(NewDMConversation(accountPubkey: pubkey, participants: selectedContactPubkeys.union([pubkey])))
+                        navPath.append(NewDMConversation(accountPubkey: pubkey, participants: selectedContactPubkeys.union([pubkey]), parentDMsVM: vm))
                     })
                     .nosturNavBgCompat(theme: theme)
                     .environment(\.theme, theme)
