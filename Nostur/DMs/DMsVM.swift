@@ -290,6 +290,8 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 
                 // Only do notifications for logged in account
                 guard self.isMain else { return }
+                // Don't send notification if it is our own message
+                guard nEvent.publicKey != self.accountPubkey else { return }
                 
                 guard nEvent.createdAt.timestamp > self.lastDMLocalNotifcationAt else { return }
                 
