@@ -143,11 +143,17 @@ struct DMConversationInfoSheet: View {
     }
     
     private func checkDMRelays(_ pubkeys: Set<String>) {
-        let reqTask = ReqTask(debounceTime: 2.0, subscriptionId: "SUPP17I-") { taskId in
+        let reqTask = ReqTask(debounceTime: 2.5, subscriptionId: "SUPP17I-") { taskId in
             nxReq(Filters(
+                authors: pubkeys,
                 kinds: [10050],
                 limit: 200
-            ), subscriptionId: taskId, isActiveSubscription: false, useOutbox: true)
+            ), subscriptionId: taskId, isActiveSubscription: false, relayType: .READ, useOutbox: true)
+            nxReq(Filters(
+                authors: pubkeys,
+                kinds: [10050],
+                limit: 200
+            ), subscriptionId: "SUPP17I-S2-", isActiveSubscription: false, relayType: .SEARCH_ONLY)
         } processResponseCommand: { taskId, _, _ in
             Task {
                 var missingDMrelays: Set<String> = []

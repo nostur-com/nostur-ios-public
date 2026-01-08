@@ -23,6 +23,7 @@ struct ContactsSearch: View, Equatable {
     public var disabledPubkeys: Set<String> = []
     public var onSelectContacts: ((Set<Contact>) -> Void)?
     public var onSelectContact: ((Contact) -> Void)?
+    public var onToggleOn: ((String) -> Void)?
     
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Contact.updated_at, ascending: false)],
@@ -90,6 +91,7 @@ struct ContactsSearch: View, Equatable {
                                     }
                                     else {
                                         selectedContacts.insert(contact)
+                                        onToggleOn?(contact.pubkey)
                                     }
                                 } label: {
                                     if selectedContacts.contains(contact) {
@@ -116,6 +118,7 @@ struct ContactsSearch: View, Equatable {
                                         }
                                         else {
                                             selectedContacts.insert(contact)
+                                            onToggleOn?(contact.pubkey)
                                         }
                                     }
                                 }

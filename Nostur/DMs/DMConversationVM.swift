@@ -111,6 +111,31 @@ class ConversionVM: ObservableObject {
             let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
             
             if self.conversationVersion == 0 {
+                if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
+                    // Check DM relays
+#if DEBUG
+                    L.og.debug("💌💌 Checking for DM relays for \(nameOrPubkey(receiver)) (useOutbox: true)")
+#endif
+                    _ = try? await relayReq(Filters(
+                        authors: [receiver],
+                        kinds: [10050],
+                        limit: 167
+                    ), timeout: 5.5, useOutbox: true)
+                    
+                    let foundRelays = await hasDMrelays(pubkey: receiver)
+                    
+                    // No relays found? Check search relays
+                    if !foundRelays {
+#if DEBUG
+                    L.og.debug("💌💌 No DM relays found for \(nameOrPubkey(receiver)), checking .SEARCH_ONLY relays")
+#endif
+                        _ = try? await relayReq(Filters(
+                            authors: [receiver],
+                            kinds: [10050],
+                            limit: 167
+                        ), timeout: 5.5, relayType: .SEARCH_ONLY)
+                    }
+                }
                 await self.resolveConversationVersion(participants, messages: visibleMessages)
             }
             
@@ -183,6 +208,9 @@ class ConversionVM: ObservableObject {
         // no messages yet, but has DM relay (both us and them)? NIP-17
         if messages.isEmpty, let receiverPubkey = participants.subtracting([ourAccountPubkey]).first {
             let receiverHasDMRelays = await hasDMrelays(pubkey: receiverPubkey)
+#if DEBUG
+            L.og.debug("💌💌 resolveConversationVersion, receiver (\(nameOrPubkey(receiverPubkey))) \(receiverHasDMRelays ? "has" : "has NO") relays")
+#endif
             let weHaveDMrelays = await hasDMrelays(pubkey: ourAccountPubkey)
             if receiverHasDMRelays && weHaveDMrelays {
                 Task { @MainActor in

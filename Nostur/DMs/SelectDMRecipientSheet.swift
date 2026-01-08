@@ -38,6 +38,19 @@ struct SelectDMRecipientSheet: View {
                                 self.viewState = .checkingDMrelays(Set(selectedContacts.map { $0.pubkey }))
                             }
                         }
+                    },
+                    onToggleOn: { pubkey in
+                        // prefetch on toggle
+                        nxReq(Filters(
+                            authors: [pubkey],
+                            kinds: [10050],
+                            limit: 20
+                        ), subscriptionId: "PREFETCH-\(pubkey.suffix(24))", isActiveSubscription: false, useOutbox: true)
+                        nxReq(Filters(
+                            authors: [pubkey],
+                            kinds: [10050],
+                            limit: 20
+                        ), subscriptionId: "PREFETCH-S1-\(pubkey.suffix(24))", isActiveSubscription: false, relayType: .SEARCH_ONLY)
                     }
                 )
                 .padding(.top, 10)
@@ -90,11 +103,17 @@ struct SelectDMRecipientSheet: View {
     }
     
     private func checkDMRelays(_ pubkeys: Set<String>) {
-        let reqTask = ReqTask(debounceTime: 2.0, subscriptionId: "SUPP17-") { taskId in
+        let reqTask = ReqTask(debounceTime: 2.5, subscriptionId: "SUPP17-") { taskId in
             nxReq(Filters(
+                authors: pubkeys,
                 kinds: [10050],
                 limit: 200
             ), subscriptionId: taskId, isActiveSubscription: false, useOutbox: true)
+            nxReq(Filters(
+                authors: pubkeys,
+                kinds: [10050],
+                limit: 200
+            ), subscriptionId: "SUPP17I-S1-", isActiveSubscription: false, relayType: .SEARCH_ONLY)
         } processResponseCommand: { taskId, _, _ in
             Task {
                 var missingDMrelays: Set<String> = []
