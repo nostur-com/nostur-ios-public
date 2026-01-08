@@ -75,8 +75,6 @@ class NotificationsViewModel: ObservableObject {
         self.unreadReactions_ = 0
         self.unreadZaps_ = 0
         self.unreadFailedZaps_ = 0
-        NotificationsViewModel.restoreSubscriptions()
-        
         startTimer()
         setupCheckNeedsUpdateListeners()
         setupRestoreRelaySubSubscriptions()
@@ -84,16 +82,19 @@ class NotificationsViewModel: ObservableObject {
         if IS_CATALYST {
             setupBadgeNotifications()
         }
+        NotificationsViewModel.restoreSubscriptions()
     }
     private var accountChangedSubscription: AnyCancellable?
     private var badgeSubcription: AnyCancellable?
     
     private func setupAccountChangedListener() {
-        guard isMain && accountChangedSubscription == nil else { return }
+        guard isMain else { return }
+        guard accountChangedSubscription == nil else { return }
         accountChangedSubscription = receiveNotification(.activeAccountChanged)
             .sink { [weak self] notification in
                 Task { @MainActor in
                     let account = notification.object as! CloudAccount
+                    guard let currentPubkey = self?.pubkey, currentPubkey != account.publicKey else { return }
                     self?.load(account.publicKey)
                 }
             }
@@ -525,7 +526,7 @@ class NotificationsViewModel: ObservableObject {
         // For notifications we don't need to total unread, we need total new since last notification, because we don't want to repeat the same notification
         // Most accurate would be to track per mention if we already had a local notification for it. (TODO)
         // For now we just track the timestamp since last notification. (potential problems: inaccurate timestamps? time zones? not account-based?)
-        let mentionsForNotification = isMain ? [] : unreadMentions
+        let mentionsForNotification = !isMain ? [] : unreadMentions
             .filter { ($0.created_at > lastLocalNotificationAt) && (!SettingsStore.shared.receiveLocalNotificationsLimitToFollows || accountData.followingPubkeys.contains($0.pubkey)) }
             .map { Mention(name: $0.contact?.anyName ?? "", message: $0.plainText ) }
         
