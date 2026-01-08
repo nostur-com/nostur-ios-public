@@ -38,13 +38,20 @@ func relayReq(_ filter: NostrEssentials.Filters,
 #if DEBUG
                 L.og.debug("⏳⏳ Backlog.shared: Received response for taskId: \(taskId), event: \(event?.id ?? "none") -[LOG]-")
 #endif
-                continuation.resume(returning: ReqReturn(taskId: taskId, relayMessage: relayMessage, event: event))
+                DataProvider.shared().saveToDiskNow(.bgContext) {
+                    continuation.resume(returning: ReqReturn(taskId: taskId, relayMessage: relayMessage, event: event))
+                }
             },
             timeoutCommand: { taskId in
 #if DEBUG
                 L.og.debug("⏳⏳ Backlog.shared: Timeout triggered for taskId: \(taskId)")
 #endif
-                continuation.resume(throwing: FetchError.timeout)
+                
+                // Process response only saves this tasks result
+                // but if there are multiple relayReqs maybe the result is found in anothe req, so need to save in timeout still to make available on calling context
+                DataProvider.shared().saveToDiskNow(.bgContext) {
+                    continuation.resume(throwing: FetchError.timeout)
+                }
             })
         Backlog.shared.add(reqTask)
         reqTask.fetch()
