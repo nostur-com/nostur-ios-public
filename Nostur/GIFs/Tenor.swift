@@ -15,7 +15,10 @@ let clientkey = Bundle.main.infoDictionary?["TENOR_CLIENT_KEY"] as? String ?? ""
  */
 func makeWebRequest<T: Decodable>(urlRequest: URLRequest, callback: @escaping (T) -> ()) {
     // Make the async request and pass the resulting JSON object to the callback
-    let task = URLSession.shared.dataTask(with: urlRequest) { (data, response, error) in
+    var request = urlRequest
+    request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+    
+    let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
         do {
             let decoder = JSONDecoder()
             if let data {
