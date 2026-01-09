@@ -8,6 +8,32 @@
 import SwiftUI
 import NukeUI
 
+struct MasonryLayout<Content: View>: View {
+    let columns: Int
+    let spacing: CGFloat
+    let content: [Content]
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let totalSpacing = spacing * CGFloat(columns - 1)
+            let columnWidth = (geometry.size.width - totalSpacing) / CGFloat(columns)
+            
+            HStack(alignment: .top, spacing: spacing) {
+                ForEach(0..<columns, id: \.self) { columnIndex in
+                    LazyVStack(spacing: spacing) {
+                        ForEach(0..<content.count, id: \.self) { itemIndex in
+                            if itemIndex % columns == columnIndex {
+                                content[itemIndex]
+                                    .frame(width: columnWidth)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct GifSearcher: View {
     @Environment(\.theme) private var theme
     @Environment(\.dismiss) var dismiss
@@ -22,11 +48,9 @@ struct GifSearcher: View {
     }
     var onSelect:(String) -> ()
     
-    let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
+    private var gifItems: [TenorResult] {
+        searchResults.isEmpty ? topResults : searchResults
+    }
     
     var body: some View {
         VStack {
@@ -56,57 +80,16 @@ struct GifSearcher: View {
                 .frame(height: 30)
             }
             ScrollView {
-                LazyVGrid(columns: columns, spacing: 5) {
-                    ForEach(searchResults) { gifResult in
-                        VStack {
-                            if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
-                                LazyImage(url: url) { state in
-                                    if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                                        GIFImage(data: data, isPlaying: .constant(true))
-//                                            .aspectRatio(contentMode: .fit)
-                                            .hCentered()
-                                            .background(theme.lineColor.opacity(0.2))
-                                            .onTapGesture {
-                                                if let url = gifResult.media_formats["gif"]?.url {
-                                                    onSelect(url)
-                                                    dismiss()
-                                                }
-                                            }
-                                    }
-                                }
-                                .frame(height: 90)
-                            }
-                        }
+                MasonryLayout(
+                    columns: 3,
+                    spacing: 5,
+                    content: gifItems.map { gifResult in
+                        AnyView(
+                            gifItemView(gifResult: gifResult)
+                        )
                     }
-                    if searchResults.isEmpty {
-                        ForEach(topResults) { gifResult in
-                            VStack {
-                                if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
-                                    LazyImage(url: url) { state in
-                                        if let container = state.imageContainer, container.type ==  .gif, let data = container.data {
-                                            GIFImage(data: data, isPlaying: .constant(true))
-//                                                .aspectRatio(contentMode: .fit)
-                                                .hCentered()
-                                                .background(theme.lineColor.opacity(0.2))
-                                                .onTapGesture {
-                                                    if let url = gifResult.media_formats["gif"]?.url {
-                                                        onSelect(url)
-                                                        dismiss()
-                                                    }
-                                                }
-                                        }
-                                    }
-                                    .frame(height: 90)
-                                }
-                            }
-                        }
-                    }
-//                    ForEach(tags) { tag in
-//                        Text(tag.name)
-//                    }
-                }
+                )
             }
-            Spacer()
             .onChange(of: searchTerm) { newValue in
                 search(newValue)
             }
@@ -119,6 +102,27 @@ struct GifSearcher: View {
         .padding()
         .onAppear {
             initial()
+        }
+    }
+    
+    @ViewBuilder
+    private func gifItemView(gifResult: TenorResult) -> some View {
+        if let gif = gifResult.media_formats["nanogif"], let url = URL(string: gif.url) {
+            let aspectRatio = gif.dims.count >= 2 ? CGFloat(gif.dims[0]) / CGFloat(gif.dims[1]) : 1.0
+            LazyImage(url: url) { state in
+                if let container = state.imageContainer, container.type == .gif, let data = container.data {
+                    GIFImage(data: data, isPlaying: .constant(true))
+                        .aspectRatio(aspectRatio, contentMode: .fit)
+                        .background(theme.lineColor.opacity(0.2))
+                        .cornerRadius(4)
+                        .onTapGesture {
+                            if let gifUrl = gifResult.media_formats["gif"]?.url {
+                                onSelect(gifUrl)
+                                dismiss()
+                            }
+                        }
+                }
+            }
         }
     }
     
