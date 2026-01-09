@@ -62,6 +62,7 @@ class ConversionVM: ObservableObject {
     public var account: CloudAccount? = nil
     
     private let dayIdFormatter: DateFormatter
+    private let yearIdFormatter: DateFormatter
     
     private var subscriptions: Set<AnyCancellable> = []
     
@@ -78,6 +79,12 @@ class ConversionVM: ObservableObject {
         dayIdFormatter.dateFormat = "yyyy-MM-dd"          // note: lowercase yyyy
         dayIdFormatter.locale = Locale(identifier: "en_US_POSIX") // ensures consistent format
         self.dayIdFormatter = dayIdFormatter
+        
+        let yearIdFormatter = DateFormatter()
+        yearIdFormatter.dateFormat = "yyyy"          // note: lowercase yyyy
+        yearIdFormatter.locale = Locale(identifier: "en_US_POSIX") // ensures consistent format
+        self.yearIdFormatter = yearIdFormatter
+        
         self.parentDMsVM = parentDMsVM
     }
     
@@ -92,23 +99,16 @@ class ConversionVM: ObservableObject {
         self.receiverContacts = receivers.map { NRContact.instance(of: $0) }
         self.dmState = getGroupState()
         self.isAccepted = self.dmState?.accepted ?? false
-//#if DEBUG
-//        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-//            guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }) else {
-//                viewState = .error("Missing private key for account: \(self.ourAccountPubkey)")
-//                return
-//            }
-//        }
-//        let privateKey = "mock-private-key"
-//#else
-        guard let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }), let privateKey = account.privateKey else {
-            viewState = .error("Missing private key for account: \(nameOrPubkey(self.ourAccountPubkey))")
-            return
-        }
-//#endif
 
         if let dmState { // Should always exists because getGroupState() gets existing or creates new
-            let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: (publicKey: ourAccountPubkey, privateKey: privateKey))
+            
+            let keyPair: (publicKey: String, privateKey: String)? = if let account = AccountsState.shared.fullAccounts.first(where: { $0.publicKey == self.ourAccountPubkey }), let privateKey = account.privateKey {
+                (publicKey: account.publicKey, privateKey: privateKey)
+            } else {
+                nil
+            }
+            
+            let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
             
             if self.conversationVersion == 0 {
                 if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
@@ -155,7 +155,20 @@ class ConversionVM: ObservableObject {
                 )
             }.sorted(by: { $0.dayId < $1.dayId })
             
-            viewState = .ready(days)
+            var daysByYear: [String: [ConversationDay]] {
+                return Dictionary(grouping: days) { day in
+                    yearIdFormatter.string(from: day.date)
+                }
+            }
+            
+            let years = daysByYear.map { (year, days) in
+                ConversationYear(
+                    year: year,
+                    days: days
+                )
+            }.sorted(by: { $0.year < $1.year })
+            
+            viewState = .ready(years)
             lastMessageId = visibleMessages.last?.id
             
             // add DM state to parent vm
@@ -254,7 +267,7 @@ class ConversionVM: ObservableObject {
         return newDMState
     }
     
-    private func getMessages(conversationId: String, keyPair: (publicKey: String, privateKey: String)) async -> [NRChatMessage] {
+    private func getMessages(conversationId: String, keyPair: (publicKey: String, privateKey: String)? = nil) async -> [NRChatMessage] {
         
         let dmEvents = await withBgContext { bgContext in
             let request = NSFetchRequest<Event>(entityName: "Event")
@@ -306,38 +319,70 @@ class ConversionVM: ObservableObject {
             keyPair: keyPair
         )
         
-        if case .ready(let days) = self.viewState {
-            if let day = days.first(where: { $0.dayId == dayIdFormatter.string(from: messageDate) }) {
-                Task { @MainActor in
-                    withAnimation {
-                        lastMessageId = rumorNEvent.id
-                        day.messages = (day.messages + [newChatMessage]).sorted(by: { $0.createdAt < $1.createdAt })
+        let yearId = yearIdFormatter.string(from: messageDate)
+        
+        if case .ready(let years) = self.viewState {
+            // Does the year exist?
+            if let year = years.first(where: { $0.year == yearId }) {
+                // Does the day exist?
+                if let day = year.days.first(where: { $0.dayId == dayIdFormatter.string(from: messageDate) }) {
+                    // Add message to existing day
+                    Task { @MainActor in
+                        withAnimation {
+                            lastMessageId = rumorNEvent.id
+                            self.objectWillChange.send() // without this view doesn't update properly
+                            day.messages = (day.messages + [newChatMessage]).sorted(by: { $0.createdAt < $1.createdAt })
+                        }
+                    }
+                }
+                else { // Add the day to existing year
+                    Task { @MainActor in
+                        withAnimation {
+                            lastMessageId = rumorNEvent.id
+                            self.objectWillChange.send() // without this view doesn't update properly
+                            year.days =  year.days + [ConversationDay(
+                                dayId: dayIdFormatter.string(from: messageDate),
+                                date: messageDate,
+                                messages: [newChatMessage]
+                            )]
+                        }
                     }
                 }
             }
-            else {
+            else { // add new year, and new day
                 Task { @MainActor in
                     withAnimation {
                         lastMessageId = rumorNEvent.id
                         self.objectWillChange.send() // without this view doesn't update properly
-                        self.viewState = .ready(days + [ConversationDay(
-                            dayId: dayIdFormatter.string(from: messageDate),
-                            date: messageDate,
-                            messages: [newChatMessage]
-                        )])
+                        
+                        self.viewState = .ready(
+                            (years + [
+                            ConversationYear(
+                                year: yearId,
+                                days: [ConversationDay(
+                                    dayId: dayIdFormatter.string(from: messageDate),
+                                    date: messageDate,
+                                    messages: [newChatMessage]
+                            )])]).sorted(by: { $0.year < $1.year })
+                        )
                     }
                 }
             }
         }
-        else {
+        else { // Add the year and new day
             Task { @MainActor in
                 withAnimation {
                     self.objectWillChange.send() // without this view doesn't update properly
-                    self.viewState = .ready([ConversationDay(
-                        dayId: dayIdFormatter.string(from: messageDate),
-                        date: messageDate,
-                        messages: [newChatMessage]
-                    )])
+                    self.viewState = .ready([
+                        ConversationYear(
+                            year: yearId,
+                            days: [ConversationDay(
+                                dayId: dayIdFormatter.string(from: messageDate),
+                                date: messageDate,
+                                messages: [newChatMessage]
+                            )]
+                        )
+                    ])
                 }
             }
         }
@@ -604,9 +649,26 @@ class ConversionVM: ObservableObject {
 enum ConversionVMViewState {
     case initializing
     case loading
-    case ready([ConversationDay])
+    case ready([ConversationYear])
     case timeout
     case error(String)
+}
+
+class ConversationYear: Identifiable, Equatable, ObservableObject {
+    
+    static func == (lhs: ConversationYear, rhs: ConversationYear) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    var id: String { year }
+    let year: String
+    
+    @Published var days: [ConversationDay]
+    
+    init(year: String, days: [ConversationDay]) {
+        self.year = year
+        self.days = days
+    }
 }
 
 class ConversationDay: Identifiable, Equatable, ObservableObject {

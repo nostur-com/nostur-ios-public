@@ -45,7 +45,7 @@ struct DMConversationView: View {
             switch vm.viewState {
             case .initializing, .loading:
                 ProgressView()
-            case .ready(let days):
+            case .ready(let years):
                 ScrollViewReader { scrollProxy in
                     ScrollView {
                         LazyVStack {
@@ -60,8 +60,8 @@ struct DMConversationView: View {
                                 DMProfileInfo(nrContact: NRContact.instance(of: receiverPubkey))
                                 Spacer()
                             }
-                            ForEach(days) { day in
-                                DayView(ourAccountPubkey: ourAccountPubkey, day: day, vm: vm)
+                            ForEach(years) { year in
+                                YearView(ourAccountPubkey: ourAccountPubkey, year: year, vm: vm)
                             }
                             
                             Color.clear
@@ -205,7 +205,7 @@ struct DMConversationView: View {
                     }
                 }
                 .onDisappear {
-                    if didLoad && days.isEmpty, let dmState = vm.dmState {
+                    if didLoad && years.isEmpty, let dmState = vm.dmState {
                         // Started a conversation but did not send or receive any message, so we can remove DM state
                         parentDMsVM.removeDMState(dmState)
                     }
@@ -275,7 +275,7 @@ struct DMConversationView: View {
 }
 
 @available(iOS 17.1, *)
-#Preview("DMConversationView17") {
+#Preview("DMConversationView") {
     PreviewContainer({ pe in
         pe.parseEventJSON([
             ###"{"kind":4,"id":"fff8c33ce14af29921a6d737e6fe7f4be7eb6689f8c22468111fc4b813c7f6ee","pubkey":"9be0be0e64d38a29a9cec9a5c8ef5d873c2bfa5362a4b558da5ff69bc3cbb81e","created_at":1732966153,"tags":[["p","06639a386c9c1014217622ccbcf40908c4f1a0c33e23f8d6d68f4abf655f8f71"]],"content":"cywUqdpmxTx7ycOlwREYWHNRPVrmcFHHwANXsO0Hx9j7UaTIsDoyNjjP/N75xz7A?iv=vZR3gyFrDniX3o3K+wOWkQ==","sig":"0a1da8058667aaf501a2fa0ca61f506ee0f9f849d94dbb7355d75956baa62b991333fb3c9d1be46e47613ef76bf1aff5a352a34ae88a47f543faa1f21d5d3bed"}"###,
