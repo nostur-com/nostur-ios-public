@@ -596,7 +596,7 @@ class ConversionVM: ObservableObject {
                     tagFilter: TagFilter(tag: "p", values: [receiver]),
                     limit: 999
                 ),
-                subscriptionId: "DM-S"
+                subscriptionId: "DM-S-\(conversationId.prefix(16))-\(conversationId.suffix(16))"
             )
             
             nxReq(
@@ -606,7 +606,7 @@ class ConversionVM: ObservableObject {
                     tagFilter: TagFilter(tag: "p", values: [ourAccountPubkey]),
                     limit: 999
                 ),
-                subscriptionId: "DM-R"
+                subscriptionId: "DM-R-\(conversationId.prefix(16))-\(conversationId.suffix(16))"
             )
         }
     }
