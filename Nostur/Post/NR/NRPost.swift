@@ -498,7 +498,11 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             
         case 9802:
             let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1
-            let highlightAuthorPubkey: String? = event.fastTags.first(where: { $0.0 == "p" } )?.1
+            
+            // take first p and prioritize author if multiple p
+            let highlightAuthorPubkey: String? = event.fastPs
+                .sorted(by: { $0.3 == "author" &&  $1.3 != "author" })
+                .first?.1
             
             let highlightContact: NRContact? = if let highlightAuthorPubkey {
                 NRContact.instance(of: highlightAuthorPubkey)
