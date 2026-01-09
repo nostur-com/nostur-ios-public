@@ -110,35 +110,6 @@ class ConversionVM: ObservableObject {
             
             let visibleMessages = await getMessages(conversationId: dmState.conversationId, keyPair: keyPair)
             
-            if self.conversationVersion == 0 {
-                if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
-                    // Check DM relays
-#if DEBUG
-                    L.og.debug("💌💌 Checking for DM relays for \(nameOrPubkey(receiver)) (useOutbox: true)")
-#endif
-                    _ = try? await relayReq(Filters(
-                        authors: [receiver],
-                        kinds: [10050],
-                        limit: 167
-                    ), timeout: 5.5, useOutbox: true)
-                    
-                    let foundRelays = await hasDMrelays(pubkey: receiver)
-                    
-                    // No relays found? Check search relays
-                    if !foundRelays {
-#if DEBUG
-                    L.og.debug("💌💌 No DM relays found for \(nameOrPubkey(receiver)), checking .SEARCH_ONLY relays")
-#endif
-                        _ = try? await relayReq(Filters(
-                            authors: [receiver],
-                            kinds: [10050],
-                            limit: 167
-                        ), timeout: 5.5, relayType: .SEARCH_ONLY)
-                    }
-                }
-                await self.resolveConversationVersion(participants, messages: visibleMessages)
-            }
-            
             let calendar = Calendar.current
             
             var messagesByDay: [Date: [NRChatMessage]] {
@@ -173,6 +144,41 @@ class ConversionVM: ObservableObject {
             
             // add DM state to parent vm
             parentDMsVM.addDMState(dmState)
+            
+            Task { @MainActor in
+                if dmState.version == 0 {
+                    if participants.count == 2, let receiver = participants.subtracting([ourAccountPubkey]).first, !receiver.isEmpty {
+                        // Check DM relays
+    #if DEBUG
+                        L.og.debug("💌💌 Checking for DM relays for \(nameOrPubkey(receiver)) (useOutbox: true)")
+    #endif
+                        _ = try? await relayReq(Filters(
+                            authors: [receiver],
+                            kinds: [10050],
+                            limit: 167
+                        ), timeout: 2.2, useOutbox: true)
+                        
+                        let foundRelays = await hasDMrelays(pubkey: receiver)
+                        
+                        // No relays found? Check search relays
+                        if !foundRelays {
+    #if DEBUG
+                        L.og.debug("💌💌 No DM relays found for \(nameOrPubkey(receiver)), checking .SEARCH_ONLY relays")
+    #endif
+                            _ = try? await relayReq(Filters(
+                                authors: [receiver],
+                                kinds: [10050],
+                                limit: 167
+                            ), timeout: 2.2, relayType: .SEARCH_ONLY)
+                        }
+                    }
+                    let conversationVersion = await self.resolveConversationVersion(participants, messages: visibleMessages)
+                    Task { @MainActor in
+                        self.conversationVersion = conversationVersion
+                        dmState.version = conversationVersion
+                    }
+                }
+            }
         }
         
         
@@ -201,21 +207,15 @@ class ConversionVM: ObservableObject {
             .store(in: &subscriptions)
     }
     
-    private func resolveConversationVersion(_ participants: Set<String>, messages: [NRChatMessage]) async {
+    private func resolveConversationVersion(_ participants: Set<String>, messages: [NRChatMessage]) async -> Int {
         // More than 2 participants = NIP-17
         if participants.count > 2 {
-            Task { @MainActor in
-                self.conversationVersion = 17 // NIP-17
-            }
-            return
+            return 17 // NIP-17
         }
         
         // Last message is kind 14? = NIP17
         if messages.last?.nEvent.kind == .directMessage {
-            Task { @MainActor in
-                self.conversationVersion = 17 // NIP-17
-            }
-            return
+            return 17 // NIP-17
         }
         
         // no messages yet, but has DM relay (both us and them)? NIP-17
@@ -226,19 +226,16 @@ class ConversionVM: ObservableObject {
 #endif
             let weHaveDMrelays = await hasDMrelays(pubkey: ourAccountPubkey)
             if receiverHasDMRelays && weHaveDMrelays {
-                Task { @MainActor in
-                    self.conversationVersion = 17 // NIP-17
-                }
-                return
+                return 17 // NIP-17
             }
         }
         
+        if messages.isEmpty { // We don't know, maybe still need to fetch messages
+            return 0
+        }
         
         // No indication of NIP-17 support so fall back to NIP-04
-        Task { @MainActor in
-            self.conversationVersion = 4 // NIP-04
-        }
-        return
+        return 4 // NIP-04
     }
     
 //    @MainActor
@@ -254,8 +251,7 @@ class ConversionVM: ObservableObject {
         // Get existing or create new
         let participants = self.participants
         if let groupDMState = CloudDMState.fetchByParticipants(participants: participants, andAccountPubkey: self.ourAccountPubkey, context: viewContext()) {
-            let version = groupDMState.version
-            self.conversationVersion = version
+            self.conversationVersion = groupDMState.version
             return groupDMState
         }
         let newDMState = CloudDMState.create(accountPubkey: self.ourAccountPubkey, participants: participants, context: viewContext())
