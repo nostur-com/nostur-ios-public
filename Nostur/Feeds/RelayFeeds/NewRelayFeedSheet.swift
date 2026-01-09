@@ -188,12 +188,12 @@ struct RelayPreviewFeedSheet: View {
         
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button("Cancel", systemImage: "xmark") {
                     AppSheetsModel.shared.dismiss()
                 }
             }
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Show preview") {
+                Button("Preview") {
                    showPreview()
                 }
                 .disabled(!formIsValid)

@@ -127,7 +127,7 @@ struct AddContactsToListSheet: View {
             
             ToolbarItem(placement: .cancellationAction) {
                 if showChooseListView {
-                    Button("Back") {
+                    Button("Back", systemImage: "chevron.left") {
                         showChooseListView = false
                     }
                 }
