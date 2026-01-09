@@ -206,10 +206,11 @@ class DMsVM: ObservableObject, Equatable, Hashable {
         ready = true
         showUpgradeNotice = await shouldShowUpgradeNotice(accountPubkey: self.accountPubkey)
         self.listenForNewMessages()
+        self.fetchNip04DMs()
         self.fetchGiftWraps()
         self.startGiftWrapsTimer()
     }
-    
+
     private func fetchDMrelays() {
         let reqFilters = Filters(
             authors: [accountPubkey],
@@ -247,6 +248,35 @@ class DMsVM: ObservableObject, Equatable, Hashable {
             isActiveSubscription: true,
             relayType: .READ
         )
+    }
+    
+    public func fetchNip04DMs() {
+        // TODO: Add "since" per account, store timestamp in user defaults
+        nxReq(
+            Filters(
+                authors: [accountPubkey],
+                kinds: [4],
+                limit: 999
+            ),
+            subscriptionId: "-OPEN-DM-S-" + self.id
+        )
+        
+        nxReq(
+            Filters(
+                kinds: [4],
+                tagFilter: TagFilter(tag: "p", values: [accountPubkey]),
+                limit: 999
+            ),
+            subscriptionId: "-OPEN-DM-R-" + self.id
+        )
+    }
+    
+    deinit {
+        let id = self.id
+        Task { @MainActor in
+            ConnectionPool.shared.closeSubscription("-OPEN-DM-S-" + id)
+            ConnectionPool.shared.closeSubscription("-OPEN-DM-R-" + id)
+        }
     }
     
     private var accountChangedSubscription: AnyCancellable?
