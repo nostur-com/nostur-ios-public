@@ -7610,6 +7610,9 @@
         }
       }
     },
+    "Post GIF using Blossom" : {
+
+    },
     "Post New Photo" : {
       "localizations" : {
         "nl" : {
@@ -11492,6 +11495,9 @@
           }
         }
       }
+    },
+    "Uploading to Blossom server(s)..." : {
+
     },
     "Use additional relays from contacts in this feed to fetch posts" : {
       "localizations" : {

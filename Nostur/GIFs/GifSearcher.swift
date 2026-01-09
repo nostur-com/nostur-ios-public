@@ -36,25 +36,40 @@ struct MasonryLayout<Content: View>: View {
 
 struct GifSearcher: View {
     @Environment(\.theme) private var theme
-    @Environment(\.dismiss) var dismiss
-    @State var searchTerm = ""
-    @State var searchResults:[TenorResult] = []
-    @State var topResults:[TenorResult] = []
-    @State var tags:[TenorCategory] = []
-    @State var autocompleteResults:[String] = []
-    @State var _suggestionResults:[String] = []
-    var bothResults:[String] {
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchTerm = ""
+    @State private var searchResults: [TenorResult] = []
+    @State private var topResults: [TenorResult] = []
+    @State private var tags: [TenorCategory] = []
+    @State private var autocompleteResults: [String] = []
+    @State private var _suggestionResults: [String] = []
+    @AppStorage("use_blossom_for_gifs") private var useBlossom = false
+    
+    var bothResults: [String] {
         (autocompleteResults + (_suggestionResults.filter { !autocompleteResults.contains($0) }))
     }
-    var onSelect:(String) -> ()
+    
+    var onSelect: (String) -> ()
     
     private var gifItems: [TenorResult] {
         searchResults.isEmpty ? topResults : searchResults
     }
     
+    @State private var blossomViewState: ViewState = .none
+    
+    enum BlossomError: Error {
+        case noServers
+        case invalidServerURL
+    }
+    
+    enum ViewState: Equatable {
+        case none
+        case uploadingGif
+        case uploadFailed
+    }
+    
     var body: some View {
         VStack {
-            SearchBox(prompt: String(localized:"Search GIF", comment:"Placeholder in GIF search field"), text: $searchTerm)
             HStack {
                 Spacer()
                 Image("PoweredByTenor")
@@ -64,6 +79,15 @@ struct GifSearcher: View {
                     .frame(height: 10.0)
                     .padding(.bottom, 10)
             }
+            
+            SearchBox(prompt: String(localized:"Search GIF", comment:"Placeholder in GIF search field"), text: $searchTerm)
+            
+            if let account = account(), SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
+                Toggle(isOn: $useBlossom) {
+                    Text("Post GIF using Blossom")
+                }
+            }
+            
             if !autocompleteResults.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     LazyHStack {
@@ -94,6 +118,21 @@ struct GifSearcher: View {
                 search(newValue)
             }
         }
+        .disabled(blossomViewState == ViewState.uploadingGif)
+        .overlay {
+            if blossomViewState == ViewState.uploadingGif {
+                ZStack {
+                    theme.listBackground.opacity(0.95)
+                    
+                    VStack {
+                        Text("Uploading to Blossom server(s)...")
+                        ProgressView()
+                        ProgressView(value: 0.5, total: 1.0)
+                    }
+                }
+            }
+        }
+        
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", systemImage: "xmark") { dismiss() }
@@ -102,6 +141,60 @@ struct GifSearcher: View {
         .padding()
         .onAppear {
             initial()
+        }
+    }
+    
+    @MainActor
+    private func uploadToBlossom(_ url: String) async throws {
+        guard let account = account() else { return }
+        
+        guard !SettingsStore.shared.blossomServerList.isEmpty else {
+            throw BlossomError.noServers
+        }
+            
+        // download gif from url
+        guard let gifUrl = URL(string: url) else {
+            throw URLError(.badURL)
+        }
+        
+        let (data, response) = try await URLSession.shared.data(from: gifUrl)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        
+        let contentType = httpResponse.mimeType ?? "image/gif"
+        let blossomFile = BlossomUploadFile(data: data, contentType: contentType)
+        
+        // sign auth header
+        let authHeader = try await getBlossomAuthHeader(account: account, blossomFile: blossomFile)
+        
+        guard let firstServer = SettingsStore.shared.blossomServerList.first, let firstServerUrl = URL(string: firstServer) else {
+            throw BlossomError.invalidServerURL
+        }
+        
+        // upload to blossom server
+        let blossomGifUrl = try await blossomUpload(authHeader: authHeader, blossomFile: blossomFile, contentType: contentType, blossomServer: firstServerUrl)
+        let sha256 = blossomFile.sha256
+#if DEBUG
+        L.og.debug("GIF uploaded: \(blossomGifUrl), SHA256: \(sha256)")
+#endif
+        onSelect(blossomGifUrl)
+        dismiss()
+        
+        // upload to blossom mirrors
+        if SettingsStore.shared.blossomServerList.count > 1 {
+            Task {
+                for server in SettingsStore.shared.blossomServerList.dropFirst(1) {
+                    guard let mirrorServer = URL(string: server) else { continue }
+                    
+                    let mirrorUrl = try await blossomMirror(authHeader: authHeader, url: blossomGifUrl, hash: sha256, contentType: contentType, blossomServer: mirrorServer)
+#if DEBUG
+                    L.og.debug("GIF mirrored: \(mirrorUrl)")
+#endif
+                }
+            }
         }
     }
     
@@ -117,8 +210,23 @@ struct GifSearcher: View {
                         .cornerRadius(4)
                         .onTapGesture {
                             if let gifUrl = gifResult.media_formats["gif"]?.url {
-                                onSelect(gifUrl)
-                                dismiss()
+                                if useBlossom {
+                                    blossomViewState = .uploadingGif
+                                    Task {
+                                        do {
+                                            try await uploadToBlossom(gifUrl)
+                                        }
+                                        catch {
+                                            Task { @MainActor in
+                                                blossomViewState = .uploadFailed
+                                            }
+                                        }
+                                    }
+                                }
+                                else {
+                                    onSelect(gifUrl)
+                                    dismiss()
+                                }
                             }
                         }
                 }
@@ -126,7 +234,7 @@ struct GifSearcher: View {
         }
     }
     
-    func search(_ searchTerm:String) {
+    func search(_ searchTerm: String) {
         guard let searchTerm = searchTerm.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) else { return }
         
         // Define the results upper limit
@@ -165,6 +273,13 @@ struct GifSearcher: View {
     }
     
     func initial() {
+        searchTerm = ""
+        searchResults = []
+        topResults = []
+        tags = []
+        autocompleteResults = []
+        _suggestionResults = []
+        
         // Get the top 10 featured GIFs (updated throughout the day) - using the default locale of en_US
         if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/featured?key=%@&client_key=%@&limit=%d",
                                         apikey,
