@@ -72,11 +72,7 @@ public final class MCEmojiPickerSheetViewController: UIViewController {
     private lazy var containerView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        if #available(iOS 13.0, *) {
-            view.backgroundColor = .systemGroupedBackground
-        } else {
-            view.backgroundColor = .groupTableViewBackground
-        }
+        view.backgroundColor = .popoverBackgroundColor
         return view
     }()
 
@@ -87,15 +83,13 @@ public final class MCEmojiPickerSheetViewController: UIViewController {
         searchBar.searchBarStyle = .minimal
         searchBar.delegate = self
         
-        // Match the sheet's background color
+        // Match the emoji picker's background color
+        searchBar.backgroundColor = .clear
         if #available(iOS 13.0, *) {
             searchBar.searchTextField.backgroundColor = .secondarySystemGroupedBackground
-            searchBar.backgroundColor = .systemGroupedBackground
-        } else {
-            searchBar.backgroundColor = .groupTableViewBackground
         }
         
-        // Remove the search bar's background
+        // Remove the search bar's default background
         searchBar.backgroundImage = UIImage()
         searchBar.scopeBarBackgroundImage = UIImage()
         
@@ -179,7 +173,7 @@ public final class MCEmojiPickerSheetViewController: UIViewController {
         NSLayoutConstraint.activate([
             searchBar.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: 8),
             searchBar.leadingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.leadingAnchor, constant: 8),
-            searchBar.trailingAnchor.constraint(equalTo: dismissButton.leadingAnchor, constant: -8),
+            searchBar.trailingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             
             emojiPickerView.topAnchor.constraint(equalTo: searchBar.bottomAnchor, constant: 8),
             emojiPickerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
@@ -187,7 +181,7 @@ public final class MCEmojiPickerSheetViewController: UIViewController {
             emojiPickerView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
             
             dismissButton.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: 8),
-            dismissButton.trailingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.trailingAnchor, constant: -13),
+            dismissButton.trailingAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.trailingAnchor, constant: -8),
             dismissButton.widthAnchor.constraint(equalToConstant: 24),
             dismissButton.heightAnchor.constraint(equalToConstant: 24)
         ])
