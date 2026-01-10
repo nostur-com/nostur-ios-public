@@ -44,7 +44,6 @@ extension Event {
     @NSManaged public var personZapping: Contact?
     @NSManaged public var replyTo: Event?
     @NSManaged public var replyToRoot: Event?
-    @NSManaged public var firstQuote: Event?
     @NSManaged public var zapTally: Int64
     
     @NSManaged public var replies: Set<Event>?
@@ -112,20 +111,6 @@ extension Event {
                 guard contextWontCrash([self, found], debugInfo: ".replyTo__") else { return }
                 self.replyTo = found
                 found.addToReplies(self)
-            })
-            return found
-        }
-        return nil
-    }
-    
-    var firstQuote_:Event? {
-        guard firstQuote == nil else { return firstQuote }
-        guard let firstQuoteId = firstQuoteId else { return nil }
-        guard let ctx = managedObjectContext else { return nil }
-        if let found = Event.fetchEvent(id: firstQuoteId, context: ctx) {
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([self, found], debugInfo: ".firstQuote_") else { return }
-                self.firstQuote = found
             })
             return found
         }

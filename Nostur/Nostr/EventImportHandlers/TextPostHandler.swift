@@ -16,26 +16,15 @@ func handleTextPost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? =
         savedEvent.firstQuoteId = firstE
         
         if let kind6firstQuote = kind6firstQuote {
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([savedEvent, kind6firstQuote], debugInfo: "#[0] savedEvent.firstQuote = kind6firstQuote") else { return }
-                savedEvent.firstQuote = kind6firstQuote // got it passed in as parameter on saveEvent() already.
-                
-                // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
-                savedEvent.otherPubkey = kind6firstQuote.pubkey
-            })
+            // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+            savedEvent.otherPubkey = kind6firstQuote.pubkey
         }
         else {
             // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
             if let repostedEvent = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                CoreDataRelationFixer.shared.addTask({
-                    guard contextWontCrash([savedEvent, repostedEvent], debugInfo: "II savedEvent.firstQuote = repostedEvent") else { return }
-                    savedEvent.firstQuote = repostedEvent
-                    
-                    // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
-                    savedEvent.otherPubkey = repostedEvent.pubkey
-                })
+                // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+                savedEvent.otherPubkey = repostedEvent.pubkey
                 repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-//                        repostedEvent.repostsDidChange.send(repostedEvent.repostsCount)
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
             }
             else if let firstP = nEvent.firstP() { // or lastP? not sure
@@ -194,13 +183,7 @@ func handleRepostInKind1(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
         
         // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
         if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([savedEvent, firstQuote], debugInfo: "BB savedEvent.firstQuote = firstQuote") else { return }
-                savedEvent.firstQuote = firstQuote
-            })
-            
             if (firstE.tag[safe: 3] == "mention") {
-//                    firstQuote.objectWillChange.send()
                 firstQuote.mentionsCount += 1
                 alreadyCounted = true
             }
@@ -213,12 +196,6 @@ func handleRepostInKind1(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
         
         // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
         if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([savedEvent, firstQuote], debugInfo: "AA savedEvent.firstQuote = firstQuote") else { return }
-                savedEvent.firstQuote = firstQuote
-            })
-            
-//                firstQuote.objectWillChange.send()
             firstQuote.mentionsCount += 1
         }
     }
@@ -258,11 +235,6 @@ func handlePostRelations(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
         // but not relevant for voice messsages
         if nEvent.kind == .shortVoiceMessage { continue }
         if (waitingEvent.firstQuoteId != nil) && (waitingEvent.firstQuoteId == savedEvent.id) {
-            CoreDataRelationFixer.shared.addTask({
-                // Ensure both objects have a valid context
-                guard contextWontCrash([waitingEvent, savedEvent], debugInfo: "waitingEvent.firstQuote = savedEvent") else { return }
-                waitingEvent.firstQuote = savedEvent
-            })
             ViewUpdates.shared.eventRelationUpdate.send((EventRelationUpdate(relationType: .firstQuote, id: waitingEvent.id, event: savedEvent)))
         }
     }

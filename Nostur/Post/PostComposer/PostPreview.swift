@@ -145,24 +145,12 @@ func createPreviewEvent(_ event: NEvent) -> Event {
                 }
             }
         }
-        
-
-//        var contactsInThisEvent = [Contact]()
-//        for pTag in event.pTags() {
-//            if let contact = Contact.fetchByPubkey(pTag, context: context) {
-//                contactsInThisEvent.append(contact)
-//            }
-//        }
     }
 
     // handle REPOST with normal mentions in .kind 1
     // todo handle first nostr:nevent or not?
     if event.kind == .textNote, let firstE = event.firstMentionETag() {
         previewEvent.firstQuoteId = firstE.id
-        // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-        if let firstQuote = Event.fetchEvent(id: previewEvent.firstQuoteId!, context: context) {
-            previewEvent.firstQuote = firstQuote
-        }
     }
     
     return previewEvent

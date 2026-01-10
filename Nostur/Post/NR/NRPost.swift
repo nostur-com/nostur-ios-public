@@ -369,29 +369,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.isRumor = event.otherId != nil && event.sig == nil
         
         self.firstQuoteId = event.firstQuoteId
-        if let firstQuote = event.firstQuote, let firstQuoteId = event.firstQuoteId {
-            if firstQuote.kind == 0 {
-                bg().delete(firstQuote)
-                event.firstQuote = nil
-                Importer.shared.existingIds.removeValue(forKey: firstQuoteId)
-                self.noteRowAttributes = NoteRowAttributes()
-                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005a"); isAwaiting = true
-            }
-            else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
-            }
-        } // why event.firstQuote_ doesn't work??
-        else if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bg()) {
-            if firstQuote.kind == 0 {
-                bg().delete(firstQuote)
-                event.firstQuote = nil
-                Importer.shared.existingIds.removeValue(forKey: firstQuoteId)
-                self.noteRowAttributes = NoteRowAttributes()
-                EventRelationsQueue.shared.addAwaitingEvent(event, debugInfo: "NRPost.005b"); isAwaiting = true
-            }
-            else {
-                self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
-            }
+
+        if let firstQuoteId = event.firstQuoteId, let firstQuote = Event.fetchEvent(id: firstQuoteId, context: bg()) {
+            self.noteRowAttributes = NoteRowAttributes(firstQuote: NRPost(event: firstQuote, withFooter: withFooter && event.kind == 6, withReplies: withReplies, withRepliesCount: withRepliesCount))
         }
         else if !isAwaiting && event.firstQuoteId != nil {
             self.noteRowAttributes = NoteRowAttributes()

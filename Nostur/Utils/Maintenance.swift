@@ -858,8 +858,7 @@ struct Maintenance {
         
         // Find all reposts
         // if otherPubkey is nil:
-        // get it from firstQuote
-        // if we don't have firstQuote, get it from firstP
+        // get it from firstP
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind == 6 AND otherPubkey == nil")
         
@@ -867,15 +866,7 @@ struct Maintenance {
         if let reposts = try? context.fetch(fr) {
             L.maintenance.info("🧹🧹 runPutRepostedPubkeyInOtherPubkey: Found \(reposts.count) reposts without otherPubkey")
             for repost in reposts {
-                
-                // Same code as in saveEvent():
-                // Save reposted pubkey in .otherPubkey for easy querying for repost notifications
-                // if we already have the firstQuote (reposted post), we use that .pubkey
-                if let otherPubkey = repost.firstQuote?.pubkey {
-                    repost.otherPubkey = otherPubkey
-                    fixed += 1
-                } // else we take the pubkey from the tags (should be there)
-                else if let firstP = repost.firstP() {
+                if let firstP = repost.firstP() {
                     repost.otherPubkey = firstP
                     fixed += 1
                 }
@@ -891,10 +882,9 @@ struct Maintenance {
     static func runPutReactionToPubkeyInOtherPubkey(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.runPutReactionToPubkeyInOtherPubkey, context: context) else { return }
         
-        // Find all reposts
+        // Find all reactions
         // if otherPubkey is nil:
-        // get it from firstQuote
-        // if we don't have firstQuote, get it from firstP
+        // if we don't have firstQuote, get it from lastP
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind == 7 AND otherPubkey == nil")
         
