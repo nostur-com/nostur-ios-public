@@ -894,10 +894,7 @@ class NXColumnViewModel: ObservableObject {
                         fr.predicate = NSPredicate(format: "id IN %@", idsToPutInScreen)
                         let events = ((try? bg().fetch(fr)) ?? [])
                             .map {
-                                $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0, fixRelations: true)
-                                if repliesEnabled {
-                                    _ = $0.replyTo__
-                                }
+                                $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0)
                                 return $0
                             }
                         
@@ -2377,10 +2374,7 @@ extension NXColumnViewModel {
                 }
             }
             .map {
-                $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0, fixRelations: true)
-                if repliesEnabled {
-                    _ = $0.replyTo__
-                }
+                $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0)
                 return $0
             }
 
@@ -2392,10 +2386,7 @@ extension NXColumnViewModel {
             if case .loading = viewState {
                 let newUnrenderedEvents: [Event] = wotFilteredEvents
                     .map {
-                        $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0, fixRelations: true)
-                        if repliesEnabled {
-                            _ = $0.replyTo__
-                        }
+                        $0.parentEvents = !repliesEnabled ? [] : Event.getParentEvents($0)
                         return $0
                     }
 #if DEBUG

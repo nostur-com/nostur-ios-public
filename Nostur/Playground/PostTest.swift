@@ -12,7 +12,7 @@ struct PostTest_Previews: PreviewProvider {
     
     static func loadParents (_ event:Event) -> Event {
         let withP = event
-        withP.parentEvents = Event.getParentEvents(event, fixRelations: true)
+        withP.parentEvents = Event.getParentEvents(event)
         return withP
     }
     

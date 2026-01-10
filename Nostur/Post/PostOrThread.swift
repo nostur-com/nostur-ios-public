@@ -158,7 +158,7 @@ struct PostOrThreadSingle_Previews: PreviewProvider {
                 }
                 
                 if let reply = PreviewFetcher.fetchEvent("148f326f04d10c1ef210d25a434ae8a4bc9e1087e9ddd87ad9323e1d21aa9751") {
-                    let _ = reply.parentEvents = Event.getParentEvents(reply, fixRelations: true)
+                    let _ = reply.parentEvents = Event.getParentEvents(reply)
                     let nrReply = NRPost(event: reply, withReplyTo: true, withParents: true, withReplies: false, plainText: false)
                     
                     PostOrThread(nrPost: nrReply, theme: Themes.default.theme)

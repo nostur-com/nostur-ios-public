@@ -70,7 +70,6 @@ func handleAddressableReplacableEvent(nEvent: NEvent, savedEvent: Event, context
                 if let existingReplies = try? context.fetch(fr) {
                     for existingReply in existingReplies {
                         existingReply.replyToRootId = first.id
-                        existingReply.replyToRoot = first
                     }
                 }
                 
@@ -79,7 +78,6 @@ func handleAddressableReplacableEvent(nEvent: NEvent, savedEvent: Event, context
                 if let existingReplies = try? context.fetch(fr) {
                     for existingReply in existingReplies {
                         existingReply.replyToId = first.id
-                        existingReply.replyTo = first
                     }
                 }
             }

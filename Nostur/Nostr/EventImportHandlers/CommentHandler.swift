@@ -19,17 +19,9 @@ func handleComment(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectCo
         
         // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
         if let parent = Event.fetchEvent(id: replyToEtag.id, context: context) {
-            CoreDataRelationFixer.shared.addTask({
-                // Thread 24: "Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
-                // (when opening from bookmarks)
-                guard contextWontCrash([savedEvent, parent], debugInfo: "XF savedEvent.replyTo = parent") else { return }
-                savedEvent.replyTo = parent
-            })
-            // Illegal attempt to establish a relationship 'replyTo' between objects in different contexts
-            parent.addToReplies(savedEvent)
             parent.repliesCount += 1
 //                    replyTo.repliesUpdated.send(replyTo.replies_)
-            ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
+            ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies))
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
         }
     }
@@ -49,23 +41,11 @@ func handleComment(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectCo
         
         if !replyToRootIsSameAsReplyTo, let root = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
             
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([savedEvent, root], debugInfo: "XEE savedEvent.replyToRoot = root") else { return }
-                savedEvent.replyToRoot = root
-            })
-            
-            // Thread 32193: "Illegal attempt to establish a relationship 'replyToRoot' between objects in different contexts (source = <Nostur.Event: 0x371850ee0> (entity: Event; id: 0x351b9e3e0 <x-coredata:///Event/tB769F78C-0ED3-427A-B8A2-BDDA94C71D1030798>; data: {\n    bookmarkedBy =     (\n    );\n    contact = \"0xafbaca1f2e1691dc <x-coredata://3DA0D6F2-885E-43D0-B952-9C23B7D82BA8/Contact/p12190>\";\n    content = \"Do you mind elaborating on \\U201crolling your own kind number is a heavy lift in practice\\U201d? \\n\\nIs it the choice of which kind number to use that\\U2019s the blocker? Are people hesitant to pick a new one and just\";\n    \"created_at\" = 1728407076;\n    dTag = \"\";\n    deletedById = nil;\n    dmAccepted = 0;\n    firstQuote = nil;\n    firstQuoteId = nil;\n    flags = \"\";\n    id = 10eeb3d72083929e9409750c6ad009f736297557b6f8e76bb320b3bd1e61bebd;\n    insertedAt = \"2024-10-10 19:27:50 +0000\";\n    isRepost = 0;\n    kind = 1;\n    lastSeenDMCreatedAt = 0;\n    likesCount = 0;\n    mentionsCount = 0;\n    mostRecentId = nil;\n    otherAtag"
-            
             ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRoot, id: savedEvent.id, event: root))
             ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyToRootInverse, id:  root.id, event: savedEvent))
             if (savedEvent.replyToId == savedEvent.replyToRootId) {
-                CoreDataRelationFixer.shared.addTask({
-                    guard contextWontCrash([savedEvent, root], debugInfo: "DDX savedEvent.replyTo = root") else { return }
-                    savedEvent.replyTo = root // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                })
-                root.addToReplies(savedEvent)
                 root.repliesCount += 1
-                ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: root.id, replies: root.replies_))
+                ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: root.id, replies: root.replies))
                 ViewUpdates.shared.eventRelationUpdate.send(EventRelationUpdate(relationType: .replyTo, id: savedEvent.id, event: root))
                 ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: root.id, replies: root.repliesCount))
             }
@@ -76,18 +56,6 @@ func handleComment(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectCo
     else if savedEvent.replyToRootId != nil, savedEvent.replyToId == nil {
         // so set replyToRoot as replyTo
         savedEvent.replyToId = savedEvent.replyToRootId
-        CoreDataRelationFixer.shared.addTask({
-            guard let replyToRoot = savedEvent.replyToRoot, contextWontCrash([savedEvent, replyToRoot], debugInfo: "CC savedEvent.replyTo = replyToRoot") else { return }
-            savedEvent.replyTo = replyToRoot
-            
-            if let parent = savedEvent.replyTo {
-                parent.addToReplies(savedEvent)
-                parent.repliesCount += 1
-//                    replyTo.repliesUpdated.send(replyTo.replies_)
-                ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies_))
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
-            }
-        })
     }
     
     if let replyToId = savedEvent.replyToId, nEvent.publicKey == AccountsState.shared.activeAccountPublicKey {
@@ -104,15 +72,9 @@ func handleComment(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectCo
     if let replyToAtag = nEvent.replyToAtag() { // Comment on article
         if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
             savedEvent.replyToId = dbArticle.id
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([savedEvent, dbArticle], debugInfo: "HH savedEvent.replyTo = dbArticle") else { return }
-                savedEvent.replyTo = dbArticle
-            })
             
-            dbArticle.addToReplies(savedEvent)
             dbArticle.repliesCount += 1
-//                    dbArticle.repliesUpdated.send(dbArticle.replies_)
-            ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: dbArticle.id, replies: dbArticle.replies_))
+            ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: dbArticle.id, replies: dbArticle.replies))
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: dbArticle.id, replies: dbArticle.repliesCount))
         }
         else {
@@ -124,10 +86,6 @@ func handleComment(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectCo
         // Comment has article as root, but replying to other comment, not to article.
         if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
             savedEvent.replyToRootId = dbArticle.id
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([savedEvent, dbArticle], debugInfo: "GG savedEvent.replyToRoot = dbArticle") else { return }
-                savedEvent.replyToRoot = dbArticle
-            })
         }
         else {
             // we don't have the article yet, store aTag in replyToRootId

@@ -746,7 +746,6 @@ struct Maintenance {
                 if let replyToAtag = event.replyToAtag() { // Comment on article
                     if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
                         reply.replyToId = dbArticle.id
-                        reply.replyTo = dbArticle
                         L.maintenance.info("🧹🧹 runFixArticleReplies: Fixing reply (\(reply.id)) -> \(replyToAtag.value) (article already in DB)")
                     }
                     else {
@@ -759,7 +758,6 @@ struct Maintenance {
                     // Comment has article as root, but replying to other comment, not to article.
                     if let dbArticle = Event.fetchReplacableEvent(aTag: replyToRootAtag.value, context: context) {
                         reply.replyToRootId = dbArticle.id
-                        reply.replyToRoot = dbArticle
                         L.maintenance.info("🧹🧹 runFixArticleReplies: Fixing replyToRoot (\(reply.id)) -> \(replyToRootAtag.value) (article already in DB)")
                     }
                     else {
@@ -771,7 +769,6 @@ struct Maintenance {
                 
                 if reply.replyToId == nil && reply.replyToRootId != nil { // If there is a replyToRoot but not a reply, set replyToRoot as replyTo
                     reply.replyToId = reply.replyToRootId
-                    reply.replyTo = reply.replyToRoot
                 }
             }
         }

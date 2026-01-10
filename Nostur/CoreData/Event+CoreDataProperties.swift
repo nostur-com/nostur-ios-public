@@ -42,11 +42,7 @@ extension Event {
     @NSManaged public var zapsCount: Int64 // Cache
     
     @NSManaged public var personZapping: Contact?
-    @NSManaged public var replyTo: Event?
-    @NSManaged public var replyToRoot: Event?
     @NSManaged public var zapTally: Int64
-    
-    @NSManaged public var replies: Set<Event>?
     
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
@@ -80,45 +76,24 @@ extension Event {
         guard let ctx = managedObjectContext else { return nil }
         return Contact.fetchByPubkey(pubkey, context: ctx)
     }
-
-    var replyTo_:Event? {
-        guard replyTo == nil else { return replyTo }
-        if replyToId == nil && replyToRootId != nil { // Only replyToRootId? Treat as replyToId
-            replyToId = replyToRootId
-        }
-        guard let replyToId = replyToId else { return nil }
-        guard let ctx = managedObjectContext else { return nil }
-        if let found = Event.fetchEvent(id: replyToId, context: ctx) {
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([self, found], debugInfo: ".replyTo_") else { return }
-                self.replyTo = found
-                found.addToReplies(self)
-            })
-            return found
+    
+    var replies: [Event] {
+        Event.fetchReplies(replyToId: self.id, context: self.managedObjectContext ?? bg())
+    }
+    
+    var replyTo: Event? {
+        if let replyToId {
+            return Event.fetchEvent(id: replyToId, context: self.managedObjectContext ?? bg())
         }
         return nil
     }
     
-    var replyTo__:Event? {
-        guard replyTo == nil else { return replyTo }
-        if replyToId == nil && replyToRootId != nil { // Only replyToRootId? Treat as replyToId
-            replyToId = replyToRootId
-        }
-        guard let replyToId = replyToId else { return nil }
-        guard let ctx = managedObjectContext else { return nil }
-        if let found = Event.fetchEvent(id: replyToId, context: ctx) {
-            CoreDataRelationFixer.shared.addTask({
-                guard contextWontCrash([self, found], debugInfo: ".replyTo__") else { return }
-                self.replyTo = found
-                found.addToReplies(self)
-            })
-            return found
+    var replyToRoot: Event? {
+        if let replyToRootId {
+            return Event.fetchEvent(id: replyToRootId, context: self.managedObjectContext ?? bg())
         }
         return nil
     }
-
-    var replies_: [Event] { Array(replies ?? []) }
-    
     
     var relays_: Set<String> {
         get {
@@ -131,7 +106,7 @@ extension Event {
     }
 
     // Gets all parents. If until(id) is set, it will stop and wont traverse further, to prevent rendering duplicates
-    static func getParentEvents(_ event:Event, fixRelations:Bool = false, until:String? = nil) -> [Event] {
+    static func getParentEvents(_ event: Event, until: String? = nil) -> [Event] {
         let RECURSION_LIMIT = 35 // PREVENT SPAM THREADS
         var parentEvents = [Event]()
         var currentEvent: Event? = event
@@ -145,14 +120,14 @@ extension Event {
                 break
             }
             
-            if let replyTo = fixRelations ? currentEvent?.replyTo__ : currentEvent?.replyTo {
+            if let replyToId = currentEvent!.replyToId, let replyTo = Event.fetchEvent(id: replyToId, context: bg()) {
                 parentEvents.append(replyTo)
                 currentEvent = replyTo
                 i = (i + 1)
             }
             else {
                 currentEvent = nil
-            }
+            }            
         }
         return parentEvents
             .sorted(by: { $0.created_at < $1.created_at })
@@ -180,23 +155,6 @@ extension Event {
             return bg().object(with: self.objectID) as? Event
         }
     }
-}
-
-// MARK: Generated accessors for replies
-extension Event {
-    
-    @objc(addRepliesObject:)
-    @NSManaged public func addToReplies(_ value: Event)
-    
-    @objc(removeRepliesObject:)
-    @NSManaged public func removeFromReplies(_ value: Event)
-    
-    @objc(addReplies:)
-    @NSManaged public func addToReplies(_ values: NSSet)
-    
-    @objc(removeReplies:)
-    @NSManaged public func removeFromReplies(_ values: NSSet)
-    
 }
 
 // MARK: Generated accessors for zaps
@@ -694,6 +652,13 @@ extension Event {
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
 //        fr.predicate = NSPredicate(format: "(kind = 6 AND firstQuoteId == %@) OR (firstQuoteId = %@ AND kind = 1 AND content = \"#[0]\")", id, id)
         fr.predicate = NSPredicate(format: "kind = 6 AND firstQuoteId == %@", id)
+        return (try? context.fetch(fr)) ?? []
+    }
+    
+    static func fetchReplies(replyToId: String, context: NSManagedObjectContext = bg()) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "replyToId == %@", replyToId)
         return (try? context.fetch(fr)) ?? []
     }
     

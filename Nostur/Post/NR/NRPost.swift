@@ -348,7 +348,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
         self.postOrThreadAttributes = PostOrThreadAttributes(parentPosts: parentPosts)
         self._parentPosts = parentPosts
         
-        let replies = withReplies && withFooter ? event.replies_.map { NRPost(event: $0) } : []
+        let replies = withReplies && withFooter ? event.replies.map { NRPost(event: $0) } : []
         self._replies = replies
         self.ownPostAttributes = OwnPostAttributes(id: event.id, isOwnPost: AccountsState.shared.bgFullAccountPubkeys.contains(pubkey), relays: event.relays, cancellationId: cancellationId, flags: event.flags)
         
@@ -931,15 +931,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             let fr = Event.fetchRequest()
             let afterCreatedAt = self.created_at - 7200 // allow some time mismatch (2 hours)
             fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {1,1111,1244} AND replyToId == %@ AND NOT pubkey IN %@", afterCreatedAt, String(self.id), blocks()) // _PFManagedObject_coerceValueForKeyWithDescription + 1472 (NSManagedObject.m:0) - Maybe fix with String(self.id)
-            if let foundReplies = try? ctx.fetch(fr) {
-                if let existingReplies = self.event?.replies {
-                    self.event?.replies = existingReplies.union(Set(foundReplies))
-                }
-                else {
-                    self.event?.replies = Set(foundReplies)
-                }
-            }
-            let nrReplies = (self.event?.replies_ ?? [])
+            
+            let nrReplies = (self.event?.replies ?? [])
                 .filter { !blocks().contains($0.pubkey) }
                 .map { NRPost(event: $0, cancellationId: cancellationIds[$0.id]) }
             self.event?.repliesCount = Int64(nrReplies.count) // Fix wrong count in db
@@ -986,7 +979,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             guard !self.withParents else { return }
             self.withParents = true
             
-            let parents = Event.getParentEvents(event, fixRelations: true)//, until:self.id)
+            let parents = Event.getParentEvents(event)//, until:self.id)
             let parentPosts = parents.map { NRPost(event: $0) }
             let threadPostsCount = 1 + event.parentEvents.count
             
@@ -1213,7 +1206,7 @@ extension NRPost { // Helpers for grouped replies
             if let replyToId = currentEvent?.replyToId, replyToId == self.id {
                 return true
             }
-            currentEvent = currentEvent?.replyTo__
+            currentEvent = currentEvent?.replyTo
         }
         return false
     }
@@ -1236,7 +1229,7 @@ extension NRPost { // Helpers for grouped replies
                 .map { reply in
                     // use until:self.id so we don't render duplicates
                     if let replyEvent = reply.event {
-                        replyEvent.parentEvents = Event.getParentEvents(replyEvent, fixRelations: true, until:self.id)
+                        replyEvent.parentEvents = Event.getParentEvents(replyEvent, until: self.id)
                         reply.parentPosts = replyEvent.parentEvents.map { NRPost(event: $0) }
                         reply.threadPostsCount = 1 + replyEvent.parentEvents.count
                     }

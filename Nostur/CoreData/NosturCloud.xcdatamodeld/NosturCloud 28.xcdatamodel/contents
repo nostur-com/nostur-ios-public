@@ -167,9 +167,6 @@
         <attribute name="zapsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="zapState" optional="YES" attributeType="String"/>
         <attribute name="zapTally" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="replies" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Event" inverseName="replyTo" inverseEntity="Event" elementID="repliesRelation"/>
-        <relationship name="replyTo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" inverseName="replies" inverseEntity="Event" elementID="replyToRelation"/>
-        <relationship name="replyToRoot" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event" elementID="replyToRootRelation"/>
         <relationship name="zapFromRequest" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <relationship name="zappedContact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
         <relationship name="zappedEvent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>

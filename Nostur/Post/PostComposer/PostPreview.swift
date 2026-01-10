@@ -123,11 +123,6 @@ func createPreviewEvent(_ event: NEvent) -> Event {
         // CACHE THE REPLY "E" IN replyToId
         if let replyToEtag = event.replyToEtag() {
             previewEvent.replyToId = replyToEtag.id
-            
-            // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-            if let replyTo = Event.fetchEvent(id: replyToEtag.id, context: context) {
-                previewEvent.replyTo = replyTo
-            }
         }
         
         // IF THE THERE IS A ROOT, AND ITS NOT THE SAME AS THE REPLY TO
@@ -137,11 +132,6 @@ func createPreviewEvent(_ event: NEvent) -> Event {
                 previewEvent.replyToRootId = replyToRootEtag.id
                 if (previewEvent.replyToId == nil) { // IF IT HAS ONLY A ROOT REPLY, NO NORMAL REPLY: THEN REPLYTOROOT = REPLYTO
                     previewEvent.replyToId = replyToRootEtag.id
-                    
-                    // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
-                    if let replyToRoot = Event.fetchEvent(id: replyToRootEtag.id, context: context) {
-                        previewEvent.replyTo = replyToRoot // NO REPLYTO, SO REPLYTOROOT IS THE REPLYTO
-                    }
                 }
             }
         }
