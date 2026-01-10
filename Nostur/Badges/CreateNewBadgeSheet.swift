@@ -58,11 +58,9 @@ struct CreateNewBadgeSheet: View {
         .scrollContentBackgroundHidden()
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button(action: {
+                Button("Cancel", systemImage: "xmark") {
                     dismiss()
-                }, label: {
-                    Text("Cancel")
-                })
+                }
             }
             
             ToolbarItem(placement: .confirmationAction) {

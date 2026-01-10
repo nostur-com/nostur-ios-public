@@ -75,10 +75,10 @@ struct NewPrivateNoteSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Save") {
+                Button("Save", systemImage: "checkmark") {
                     dismiss()
                     do {
                         guard post != nil || contact != nil else { return }

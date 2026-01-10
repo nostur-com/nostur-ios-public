@@ -68,7 +68,7 @@ struct ReportPostSheet: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button(String(localized: "Report.verb", comment: "Button to publish report")) {
+                Button(String(localized: "Report.verb", comment: "Button to publish report"), systemImage: "checkmark") {
                     guard let account = account() else { return }
                     if account.isNC {
                         var report = EventMessageBuilder.makeReportEvent(pubkey: nrPost.pubkey, eventId: nrPost.id, type: reason, note: comment, includeProfile: reportWhat == "Profile+Profile")

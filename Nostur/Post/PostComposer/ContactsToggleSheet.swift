@@ -120,7 +120,7 @@ struct ContactsToggleSheet: View {
             }
             
             ToolbarItem(placement: .confirmationAction) {
-                Button("Back") {
+                Button("Done", systemImage: "checkmark") {
                     dismiss()
                 }
             }

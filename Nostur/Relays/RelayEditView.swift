@@ -185,10 +185,10 @@ struct RelayEditView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Save") {
+                Button("Save", systemImage: "checkmark") {
                     do {
                         let correctedRelayUrl = normalizeRelayUrl((relayUrl.prefix(6) != "wss://" && relayUrl.prefix(5) != "ws://"  ? ("wss://" + relayUrl) : relayUrl).lowercased())
                         relayUrl = correctedRelayUrl

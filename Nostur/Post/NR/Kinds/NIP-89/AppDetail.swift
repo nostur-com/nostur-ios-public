@@ -107,7 +107,7 @@ struct AppDetail: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { onDismiss() }
+                Button("Cancel", systemImage: "xmark") { onDismiss() }
             }
         }
     }

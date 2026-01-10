@@ -50,7 +50,7 @@ struct EditPrivateNoteSheet: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
             ToolbarItem(placement: .destructiveAction) {
                 Button(role: .destructive) {
@@ -60,7 +60,7 @@ struct EditPrivateNoteSheet: View {
                 }
             }
             ToolbarItem(placement: .primaryAction) {
-                Button("Save") {
+                Button("Save", systemImage: "checkmarl") {
                     do {
                         privateNote.content = noteText
                         try viewContext.save()

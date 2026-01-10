@@ -184,7 +184,7 @@ struct SettingsDefaultZapAmount: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("Cancel", systemImage: "xmark") { dismiss() }
             }
         }
         .navigationTitle(String(localized:"Default zap amount"))

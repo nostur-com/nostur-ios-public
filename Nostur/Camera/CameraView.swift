@@ -162,7 +162,7 @@ struct CameraView: View {
 //                                            .animation(.spring())
                                     .toolbar {
                                         ToolbarItem(placement: .primaryAction) {
-                                            Button("Use photo") {
+                                            Button("Use photo", systemImage: "checkmark") {
                                                 guard let uiImage = model.photo?.image else { return }
                                                 onUse(uiImage)
                                                 dismiss()
@@ -217,7 +217,7 @@ struct CameraView: View {
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button("Cancel", systemImage: "xmark") {
                     dismiss()
                 }
             }

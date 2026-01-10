@@ -89,7 +89,7 @@ struct DeleteAccountSheet: View {
         })
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button("Cancel", systemImage: "xmark") {
                     cancel?.cancel()
                     dismiss()
                 }
