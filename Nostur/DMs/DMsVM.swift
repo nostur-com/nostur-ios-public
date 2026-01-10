@@ -179,6 +179,7 @@ class DMsVM: ObservableObject, Equatable, Hashable {
     // For per account columns: .onAppear/.task of column
     @MainActor
     public func load(force: Bool = false) async {
+        guard !accountPubkey.isEmpty else { return }
         guard force || !ready else { return }
         if let account = AccountsState.shared.accounts.first(where: { $0.publicKey == self.accountPubkey }) {
             ncNotSupported = account.isNC

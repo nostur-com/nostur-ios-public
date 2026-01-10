@@ -143,11 +143,17 @@ struct DMsInnerList: View {
                     if WOT_FILTER_ENABLED() {
                         // WoT filter already ready? load now
                         if WebOfTrust.shared.theWoTisReady {
+                            if vm.isMain && (vm.accountPubkey.isEmpty || !vm.ready) { // Main doesn't load properly in a fresh
+                                vm.accountPubkey = pubkey
+                            }
                             await vm.load()
                         }
                         // else vm will by default wait for receiveNotification(.WoTReady)
                     }
                     else { // else just load
+                        if vm.isMain && (vm.accountPubkey.isEmpty || !vm.ready) { // Main doesn't load properly in a fresh
+                            vm.accountPubkey = pubkey
+                        }
                         await vm.load()
                     }
                 }
