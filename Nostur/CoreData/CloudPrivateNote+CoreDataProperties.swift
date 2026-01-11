@@ -55,7 +55,7 @@ extension CloudPrivateNote : Identifiable {
     }
     
     
-    static func createNewFor(_ post:Event, context:NSManagedObjectContext) -> CloudPrivateNote? {
+    static func createNewFor(_ post: Event, context:NSManagedObjectContext) -> CloudPrivateNote? {
         let privateNote = CloudPrivateNote(context: context)
         privateNote.type = CloudPrivateNote.PrivateNoteType.post.rawValue
         privateNote.updatedAt = Date.now
@@ -63,8 +63,12 @@ extension CloudPrivateNote : Identifiable {
         privateNote.eventId = post.id
         privateNote.json = post.toNEvent().eventJson()
         privateNote.content = ""
+        let postId = post.id
         do {
             try context.save()
+            Task { @MainActor in
+                AppState.shared.bgAppState.hasPrivateNoteEventIds.insert(postId)
+            }
             return privateNote
         }
         catch {
@@ -73,7 +77,7 @@ extension CloudPrivateNote : Identifiable {
         }
     }
     
-    static func createNewFor(_ contact:Contact, context:NSManagedObjectContext) -> CloudPrivateNote? {
+    static func createNewFor(_ contact: Contact, context:NSManagedObjectContext) -> CloudPrivateNote? {
         let privateNote = CloudPrivateNote(context: context)
         privateNote.type = CloudPrivateNote.PrivateNoteType.contact.rawValue
         privateNote.updatedAt = Date.now
@@ -81,8 +85,13 @@ extension CloudPrivateNote : Identifiable {
         privateNote.pubkey = contact.pubkey
         privateNote.json = Event.fetchReplacableEvent(0, pubkey: contact.pubkey, context: context)?.toNEvent().eventJson()
         privateNote.content = ""
+        let contactPubkey = contact.pubkey
         do {
             try context.save()
+            Task { @MainActor in
+                AppState.shared.bgAppState.hasPrivateNoteContactPubkeys.insert(contactPubkey)
+
+            }
             return privateNote
         }
         catch {

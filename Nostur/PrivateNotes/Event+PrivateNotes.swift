@@ -8,7 +8,7 @@
 import Foundation
 
 extension Event {
-    var privateNote:CloudPrivateNote? {
+    var privateNote: CloudPrivateNote? {
         let fr = CloudPrivateNote.fetchRequest()
         fr.predicate = NSPredicate(format: "eventId == %@", self.id)
         fr.fetchLimit = 1

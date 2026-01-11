@@ -8,7 +8,7 @@
 import Foundation
 
 extension Contact {
-    var privateNote:CloudPrivateNote? {
+    var privateNote: CloudPrivateNote? {
         let fr = CloudPrivateNote.fetchRequest()
         fr.predicate = NSPredicate(format: "pubkey == %@", self.pubkey)
         fr.fetchLimit = 1

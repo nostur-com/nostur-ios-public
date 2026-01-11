@@ -45,10 +45,24 @@ struct PrivateNotesScreen: View {
                     .id(pn.objectID) // <-- must use .id or can't .scrollTo
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive, action: {
+                            let eventId = pn.eventId
+                            let contactPubkey = pn.pubkey
+                            
                             viewContext.delete(pn)
                             viewContext.transactionAuthor = "removeCloudPrivateNote"
                             DataProvider.shared().saveToDiskNow(.viewContext)
                             viewContext.transactionAuthor = nil
+  
+                            if let eventId {
+                                Task { @MainActor in
+                                    AppState.shared.bgAppState.hasPrivateNoteEventIds.remove(eventId)
+                                }
+                            }
+                            else if let contactPubkey {
+                                Task { @MainActor in
+                                    AppState.shared.bgAppState.hasPrivateNoteContactPubkeys.remove(contactPubkey)
+                                }
+                            }
                         }) {
                         Label("Remove", systemImage: "trash")
                       }
@@ -156,6 +170,11 @@ struct PrivateNotesScreen: View {
             if events.count == 0 {
                 noEvents = true
             }
+        }
+        
+        Task { @MainActor in
+            self.bgAppState.hasPrivateNoteEventIds = Set(pnEventIds)
+            self.bgAppState.hasPrivateNoteContactPubkeys = Set(pnContactPubkeys)
         }
     }
 }

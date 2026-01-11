@@ -318,7 +318,7 @@ class FooterAttributes: ObservableObject {
         return false
     }
     
-    static private func hasPrivateNote(_ event:Event) -> Bool {
-        return event.privateNote != nil
+    static private func hasPrivateNote(_ event: Event) -> Bool {
+        return AppState.shared.bgAppState.hasPrivateNoteEventIds.contains(event.id)
     }
 }

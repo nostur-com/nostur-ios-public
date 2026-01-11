@@ -86,7 +86,21 @@ struct EditPrivateNoteSheet: View {
                         }
                         
                         viewContext.delete(privateNote)
+                        
+                        let eventId = privateNote.eventId
+                        let contactPubkey = privateNote.pubkey
+                        
                         DataProvider.shared().saveToDiskNow(.viewContext)
+                        if let eventId {
+                            Task { @MainActor in
+                                AppState.shared.bgAppState.hasPrivateNoteEventIds.remove(eventId)
+                            }
+                        }
+                        else if let contactPubkey {
+                            Task { @MainActor in
+                                AppState.shared.bgAppState.hasPrivateNoteContactPubkeys.remove(contactPubkey)
+                            }
+                        }
                     }),
                     .cancel(Text("Cancel"))
                 ])

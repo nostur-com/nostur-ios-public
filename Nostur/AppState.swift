@@ -23,6 +23,8 @@ class AppState: ObservableObject {
         loadMutedWords()
         loadBlockedPubkeys()
         loadBlockedHashtags()
+        loadPrivateNoteEventIds()
+        loadPrivateNoteContactPubkeys()
         loadMutedRootIds()
         handleDynamicFontSize()
         initializeAgoUpdater()
@@ -150,6 +152,14 @@ class AppState: ObservableObject {
         self.bgAppState.blockedHashtags = CloudBlocked.blockedHashtags()
     }
     
+    public func loadPrivateNoteEventIds() {
+        self.bgAppState.hasPrivateNoteEventIds = Set(CloudPrivateNote.fetchAll(context: viewContext()).compactMap { $0.eventId })
+    }
+    
+    public func loadPrivateNoteContactPubkeys() {
+        self.bgAppState.hasPrivateNoteContactPubkeys = Set(CloudPrivateNote.fetchAll(context: viewContext()).compactMap { $0.pubkey })
+    }
+    
     public func loadMutedRootIds() {
         self.bgAppState.mutedRootIds = CloudBlocked.mutedRootIds()
     }
@@ -232,7 +242,11 @@ class BgAppState: ObservableObject {
     public var blockedPubkeys: Set<String> = []
     public var mutedRootIds: Set<String> = []
     public var blockedHashtags: Set<String> = [] // put lowercased here
-    public var mutedWords: [String] = []
+    public var mutedWords: [String] = [] // TODO: Should be Set
+    
+    // Optimization/Cache
+    public var hasPrivateNoteEventIds: Set<String> = []
+    public var hasPrivateNoteContactPubkeys: Set<String> = []
 }
 
 
