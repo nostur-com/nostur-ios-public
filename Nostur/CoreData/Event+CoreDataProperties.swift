@@ -552,13 +552,7 @@ extension Event {
                 return bgEvent
             }
         }
-        
-        if !Thread.isMainThread {
-            if let eventfromCache = EventCache.shared.retrieveObject(at: id), !eventfromCache.isDeleted {
-                return eventfromCache
-            }
-        }
-                
+       
         let request = NSFetchRequest<Event>(entityName: "Event")
         request.predicate = if !isWrapId {
             NSPredicate(format: "id == %@", id)
@@ -567,7 +561,16 @@ extension Event {
         }
         request.fetchLimit = 1
         request.fetchBatchSize = 1
-        return try? context.fetch(request).first
+        if !Thread.isMainThread {
+            if let event = try? context.fetch(request).first {
+                EventCache.shared.setObject(for: id, value: event)
+                return event
+            }
+            return nil
+        }
+        else {
+            return try? context.fetch(request).first
+        }
     }
     
     static func fetchEventsBy(pubkey: String, andKind kind: Int, context: NSManagedObjectContext) -> [Event] {
@@ -649,15 +652,12 @@ extension Event {
     
     static func fetchReposts(id: String, context: NSManagedObjectContext = bg()) -> [Event] {
         let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
-//        fr.predicate = NSPredicate(format: "(kind = 6 AND firstQuoteId == %@) OR (firstQuoteId = %@ AND kind = 1 AND content = \"#[0]\")", id, id)
         fr.predicate = NSPredicate(format: "kind = 6 AND firstQuoteId == %@", id)
         return (try? context.fetch(fr)) ?? []
     }
     
     static func fetchReplies(replyToId: String, context: NSManagedObjectContext = bg()) -> [Event] {
         let fr = Event.fetchRequest()
-        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
         fr.predicate = NSPredicate(format: "replyToId == %@", replyToId)
         return (try? context.fetch(fr)) ?? []
     }

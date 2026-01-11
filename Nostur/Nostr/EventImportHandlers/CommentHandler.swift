@@ -20,7 +20,6 @@ func handleComment(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectCo
         // IF WE ALREADY HAVE THE PARENT, ADD OUR NEW EVENT IN THE REPLIES
         if let parent = Event.fetchEvent(id: replyToEtag.id, context: context) {
             parent.repliesCount += 1
-//                    replyTo.repliesUpdated.send(replyTo.replies_)
             ViewUpdates.shared.repliesUpdated.send(EventRepliesChange(id: parent.id, replies: parent.replies))
             ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: parent.id, replies: parent.repliesCount))
         }
