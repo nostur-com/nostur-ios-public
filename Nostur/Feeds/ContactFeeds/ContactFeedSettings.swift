@@ -423,7 +423,7 @@ func publishList(_ feed: CloudFeed, account: CloudAccount) {
     
     // Include client meta data if enabled
     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
-        nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+        nEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
     }
     
     if account.isNC {
@@ -477,7 +477,7 @@ func clearAndDeleteList(_ feed: CloudFeed, account: CloudAccount) {
    
     // Include client meta data if enabled
     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
-        nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+        nEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
     }
     
     

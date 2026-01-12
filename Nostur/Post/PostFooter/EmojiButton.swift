@@ -119,7 +119,7 @@ struct EmojiButton: View {
             
             likeNEvent.publicKey = account.publicKey
             if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(likeNEvent.publicKey)) {
-                likeNEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                likeNEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
             }
             
             if account.isNC {
@@ -263,7 +263,7 @@ struct VideoEmojiButton: View {
             
             likeNEvent.publicKey = account.publicKey
             if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(likeNEvent.publicKey)) {
-                likeNEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                likeNEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
             }
             
             if account.isNC {

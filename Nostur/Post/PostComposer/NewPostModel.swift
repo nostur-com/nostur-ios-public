@@ -752,7 +752,7 @@ public final class NewPostModel: ObservableObject {
             nEvent.tags.append(NostrTag(["k", "20"]))
         }
         if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nEvent.publicKey)) {
-            nEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+            nEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
         }
         
         if nEvent.kind == .highlight { // for highlight the content is in the comment tag

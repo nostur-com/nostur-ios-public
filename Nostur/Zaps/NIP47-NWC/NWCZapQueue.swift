@@ -274,7 +274,7 @@ class Zap {
                     }
                     
                     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
-                        zapRequestNote.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                        zapRequestNote.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                     }
                     
                     let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0
@@ -335,7 +335,7 @@ class Zap {
                     }
                     
                     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
-                        zapRequestNote.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                        zapRequestNote.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                     }
                     
                     let content = NRContentElementBuilder.shared.buildElements(input: zapRequestNote.content, fastTags: zapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0

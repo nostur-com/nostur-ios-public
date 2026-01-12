@@ -578,7 +578,7 @@ extension Search {
                 kind443.tags.append(NostrTag(["r", term]))
                 
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(kind443.publicKey)) {
-                    kind443.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                    kind443.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                 }
                 
                 if isNC {

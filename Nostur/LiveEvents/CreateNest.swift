@@ -125,7 +125,7 @@ struct CreateNest: View {
                 nestsEvent.publicKey = account.publicKey
                 
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nestsEvent.publicKey)) {
-                    nestsEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                    nestsEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                 }
                 
                 let signedNestsEvent: NEvent
@@ -281,7 +281,7 @@ struct ScheduleNestSheet: View {
                 nestsEvent.publicKey = account.publicKey
                 
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(nestsEvent.publicKey)) {
-                    nestsEvent.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                    nestsEvent.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                 }
                 
                 let signedNestsEvent: NEvent

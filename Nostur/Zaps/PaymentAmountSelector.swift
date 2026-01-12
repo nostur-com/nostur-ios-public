@@ -48,7 +48,7 @@ struct PaymentAmountSelector: View {
                 }
                 
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
-                    zapRequestNote.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                    zapRequestNote.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                 }
                 
                 if isNC {
@@ -107,7 +107,7 @@ struct PaymentAmountSelector: View {
                                                 createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)), aTag: aTag,
                                                 amount: Int64(amount),
                                                 nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734), content: [],
-                                                via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? "Nostur" : nil
+                                                via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? NIP89_APP_NAME : nil
                                              ))
                         }
                     }

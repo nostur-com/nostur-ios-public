@@ -66,7 +66,7 @@ struct QuoteOrRepostChoiceSheet: View {
                 repost.publicKey = accountPublicKey
                 
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(repost.publicKey)) {
-                    repost.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                    repost.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                 }
                 
                 repost = repost.withId()
@@ -104,7 +104,7 @@ struct QuoteOrRepostChoiceSheet: View {
                 repost.publicKey = accountPublicKey
                 
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(repost.publicKey)) {
-                    repost.tags.append(NostrTag(["client", "Nostur", NIP89_APP_REFERENCE]))
+                    repost.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                 }
                 
                 repost = repost.withId()

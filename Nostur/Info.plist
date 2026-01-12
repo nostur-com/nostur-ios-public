@@ -48,6 +48,8 @@
 	<false/>
 	<key>LSMinimumSystemVersion</key>
 	<string>12.4</string>
+    <key>NIP89_APP_NAME</key>
+    <string>$(NIP89_APP_NAME)</string>
 	<key>NIP89_APP_REFERENCE</key>
 	<string>$(NIP89_APP_REFERENCE)</string>
 	<key>NOSTRCHECK_PUBLIC_API_KEY</key>
