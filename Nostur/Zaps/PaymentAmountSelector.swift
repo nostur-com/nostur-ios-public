@@ -33,9 +33,19 @@ struct PaymentAmountSelector: View {
         let pubkey = paymentInfo.nrContact!.pubkey
         let eventId = (paymentInfo.nrPost?.id ?? paymentInfo.zapEtag) ?? nil
         let aTag = paymentInfo.zapAtag ?? nil
-        let relays = ConnectionPool.shared.connections.values
-            .filter { $0.relayData.write }
-            .map { $0.url }
+   
+        // Try to use NIP-65 kind 10002 relays first
+        let relays = if !account.accountRelays.filter({ $0.write }).isEmpty {
+            account.accountRelays.filter({ $0.write }).map({ $0.url })
+        } else { // else fall back to app confired relays
+            ConnectionPool.shared.connections.values
+                .filter {  // don't inculude localhost / 127.0.x.x / ws:// (non-wss)
+                    !$0.relayData.url.contains("//localhost") && !$0.relayData.url.contains("ws:/") && !$0.relayData.url.contains("s:/127.0") && $0.relayData.url != "local"
+                }
+                .filter { $0.relayData.write && !$0.isNWC }
+                .map { $0.url }
+        }
+        
         let isNC = account.isNC
         
         if (paymentInfo.supportsZap) {
