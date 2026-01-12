@@ -173,8 +173,8 @@ struct PrivateNotesScreen: View {
         }
         
         Task { @MainActor in
-            self.bgAppState.hasPrivateNoteEventIds = Set(pnEventIds)
-            self.bgAppState.hasPrivateNoteContactPubkeys = Set(pnContactPubkeys)
+            AppState.shared.bgAppState.hasPrivateNoteEventIds = Set(pnEventIds)
+            AppState.shared.bgAppState.hasPrivateNoteContactPubkeys = Set(pnContactPubkeys)
         }
     }
 }
