@@ -284,6 +284,7 @@ class Zap {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
                     
+                    zapRequestNote.publicKey = accountPubkey
                     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
                         zapRequestNote.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                     }
@@ -345,6 +346,7 @@ class Zap {
                         zapRequest(forPubkey: self.contactPubkey, andEvent: self.eventId, withMessage: zapMessage, relays: relays)
                     }
                     
+                    zapRequestNote.publicKey = accountPubkey
                     if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
                         zapRequestNote.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                     }

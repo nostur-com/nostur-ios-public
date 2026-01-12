@@ -57,6 +57,7 @@ struct PaymentAmountSelector: View {
                     zapRequest(forPubkey: pubkey, andEvent: eventId, withMessage: zapMessage, relays: relays)
                 }
                 
+                zapRequestNote.publicKey = account.publicKey
                 if (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(zapRequestNote.publicKey)) {
                     zapRequestNote.tags.append(NostrTag(["client", NIP89_APP_NAME, NIP89_APP_REFERENCE]))
                 }
