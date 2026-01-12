@@ -84,25 +84,21 @@ struct KindResolver: View {
 //                .padding(.horizontal, -10)
             }
         case 9735: // TODO: need to check
-            if let zap = nrPost.nxZap {
+            if let fromPubkey = nrPost.fromPubkey {
                 if isEmbedded {
-                    NxZapReceipt(sats: zap.sats, receiptPubkey: zap.receiptPubkey, fromPubkey: zap.fromPubkey, nrZapFrom: zap.nrZapFrom)
+                    NxZapReceipt(fromPubkey: fromPubkey, nrPost: nrPost)
                         .onAppear { self.enqueue() }
                         .onDisappear { self.dequeue() }
                         .padding(.top, 5)
                         .padding(.trailing, 5)
                         .padding(.bottom, 5)
-//                        .background(
-//                            theme.listBackground
-//                                .cornerRadius(8)
-//                        )
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(theme.lineColor, lineWidth: 1)
                         )
                 }
                 else {
-                    NxZapReceipt(sats: zap.sats, receiptPubkey: zap.receiptPubkey, fromPubkey: zap.fromPubkey, nrZapFrom: zap.nrZapFrom)
+                    NxZapReceipt(fromPubkey: fromPubkey, nrPost: nrPost)
                         .onAppear { self.enqueue() }
                         .onDisappear { self.dequeue() }
                 }

@@ -259,6 +259,9 @@ extension Contact : Identifiable {
     }
     
     static func updateRelatedEvents(_ contact: Contact) {
+#if DEBUG
+        shouldBeBg()
+#endif
 //        if contact.nip05 != nil && !contact.nip05veried {
 //            NIP05Verifier.shared.verify(contact)
 //        }
@@ -269,14 +272,10 @@ extension Contact : Identifiable {
         let awaitingZaps = ZapperPubkeyVerificationQueue.shared.getQueuedZaps()
         awaitingZaps.forEach { zap in
             if (zap.otherPubkey == contact.pubkey) {
-                zap.objectWillChange.send() // Needed for zaps on notification screen
-                if zap.zappedContact == nil {
-                    zap.zappedContact = contact
-                }
-                if let zappedEvent = zap.zappedEvent, contact.zapperPubkeys.contains(zap.pubkey) {
+
+                if let zappedEventId = zap.zappedEventId, let zappedEvent = Event.fetchEvent(id: zappedEventId, context: bg()), contact.zapperPubkeys.contains(zap.pubkey) {
                     zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
                     zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
-//                    zappedEvent.zapsDidChange.send((zappedEvent.zapsCount, zappedEvent.zapTally))
                     ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
 #if DEBUG
                     L.og.debug("⚡️👍 zap \(zap.id) verified after fetching contact \(contact.pubkey)")

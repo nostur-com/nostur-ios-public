@@ -8,19 +8,9 @@
 import SwiftUI
 import Combine
 
-struct NxZap: Identifiable {
-    public var id: String
-    public let sats: Double
-    public let receiptPubkey: String // zapper
-    public var fromPubkey: String // sender
-    
-    public let nrZapFrom: NRPost // sender
-    public let verified: Bool
-}
-
 class PostZapsModel: ObservableObject {
-    @Published public var verifiedZaps: [NxZap] = []
-    @Published public var unverifiedZaps: [NxZap] = []
+    @Published public var verifiedZaps: [NRPost] = []
+    @Published public var unverifiedZaps: [NRPost] = []
     
     @Published public var foundSpam: Bool = false
     @Published public var includeSpam: Bool = false
@@ -70,26 +60,13 @@ class PostZapsModel: ObservableObject {
             self.allZapEvents = ((try? bgContext.fetch(r1)) ?? [])
                 .sorted(by: { !$0.isSpam && $1.isSpam })
             
-            let zaps: [NxZap] = self.allZapEvents
-                                        .filter { includeSpam || !$0.isSpam }
-                                        .compactMap {
-                guard let zapFrom = $0.zapFromRequest else { return nil }
-                return NxZap(id: $0.id,
-                             sats: $0.naiveSats,
-                             receiptPubkey: $0.pubkey,
-                             fromPubkey: zapFrom.pubkey,
-                             nrZapFrom: NRPost(event: zapFrom, 
-                                               withFooter: false,
-                                               withReplyTo: false,
-                                               withParents: false,
-                                               withReplies: false,
-                                               plainText: false,
-                                               withRepliesCount: false
-                                              ),
-                             verified: $0.flags != "zpk_mismatch_event"
-                            )
-            }
-            .sorted(by: { $0.sats > $1.sats })
+            let zaps: [NRPost] = self.allZapEvents
+                .filter { includeSpam || !$0.isSpam }
+                .compactMap {
+                    guard $0.fromPubkey != nil else { return nil }
+                    return NRPost(event: $0)
+                }
+                .sorted(by: { $0.sats > $1.sats })
             
             let foundSpam = self.allZapEvents.count > zaps.count
             
@@ -144,8 +121,8 @@ class PostZapsModel: ObservableObject {
         // Fix zaps afterwards??
         // (0, 0) = (tally, count)
         let tally = verifiedZaps
-            .reduce((0, 0)) { partialResult, zap in
-            return (partialResult.0 + Int64(zap.sats), partialResult.1 + Int64(1))
+            .reduce((0, 0)) { partialResult, nrPost in
+                return (partialResult.0 + Int64(nrPost.sats), partialResult.1 + Int64(1))
         }
         
         if let event = Event.fetchEvent(id: eventId, context: bg()) {
@@ -158,18 +135,14 @@ class PostZapsModel: ObservableObject {
             
         var missing: [Event] = []
         for zap in allZapEvents {
-            if let zapFrom = zap.zapFromRequest {
-                if let contact = zapFrom.contact, contact.metadata_created_at == 0 {
-                    missing.append(zapFrom)
+            if let zapFromPubkey = zap.fromPubkey {
+                if let contact = Contact.fetchByPubkey(zapFromPubkey, context: bg()), contact.metadata_created_at == 0 {
+                    missing.append(zap)
                     EventRelationsQueue.shared.addAwaitingContact(contact, debugInfo: "PostZapsModel.001")
-                }
-                else if zapFrom.contact == nil {
-                    missing.append(zapFrom)
-                    EventRelationsQueue.shared.addAwaitingEvent(zapFrom, debugInfo: "PostZapsModel.002")
                 }
             }
         }
             
-        QueuedFetcher.shared.enqueue(pTags: missing.map { $0.pubkey })
+        QueuedFetcher.shared.enqueue(pTags: missing.compactMap { $0.fromPubkey })
     }
 }

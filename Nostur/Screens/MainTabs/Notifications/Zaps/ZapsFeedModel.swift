@@ -57,7 +57,7 @@ class ZapsFeedModel: ObservableObject {
             guard let self else { return }
             let r1 = Event.fetchRequest()
             r1.predicate = NSPredicate(
-                format: "otherPubkey == %@ AND kind == 9735 AND NOT zapFromRequest.pubkey IN %@",
+                format: "otherPubkey == %@ AND kind == 9735 AND NOT fromPubkey IN %@",
                 pubkey,
                 AppState.shared.bgAppState.blockedPubkeys
             )
@@ -69,27 +69,36 @@ class ZapsFeedModel: ObservableObject {
             self.allZapEvents = ((try? bgContext.fetch(r1)) ?? [])
                 .filter { includeSpam || !$0.isSpam }
             
-            let eventsZapped: [Event] = allZapEvents.compactMap { $0.zappedEvent }
+            let eventsZapped: [Event] = allZapEvents
+                .compactMap { $0.zappedEventId }
+                .uniqued(on: \.self)
+                .compactMap { Event.fetchEvent(id: $0, context: bgContext) }
+            
             let uniqueEventsZapped: Set<Event> = Set(eventsZapped)
         
             let postZaps: [GroupedPostZaps] = uniqueEventsZapped.map { zappedEvent in
                 GroupedPostZaps(
                     zaps: self.allZapEvents
                         .filter { $0.zappedEventId == zappedEvent.id }
-                        .map { ($0, $0.naiveSats)  } // We need the .naiveSats from 9735 later when we only have 9734
-                        .compactMap { (zapEvent: Event, sats: Double) in
-                            if let zapFromRequest = zapEvent.zapFromRequest {
-                                return (zapFromRequest, sats)
+                        .reduce(into: [String: (fromPubkey: String, amount: Int64, zap: Event)]()) { (result, zap) in
+                            if let fromPubkey = zap.fromPubkey {
+                                if let zapInfo = result[fromPubkey] {
+                                    result[fromPubkey] = (fromPubkey: fromPubkey, amount: zapInfo.zap.amount + zap.amount, zap: zap) // add
+                                }
+                                else {
+                                    result[fromPubkey] = (fromPubkey: fromPubkey, amount: zap.amount, zap: zap) // create
+                                }
                             }
-                            return nil
-                        }
-                        .reduce(into: [String: (Event, Double)]()) { (result, tuple: (Event, Double)) in
-                            result[tuple.0.pubkey] = (tuple.0, tuple.1)
                         }
                         .values
-                        .sorted(by: { $0.0.created_at > $1.0.created_at })
-                        .map { (zapFrom: Event, sats: Double) in
-                            return SingleZap(id: zapFrom.id, pubkey: zapFrom.pubkey, pictureUrl: zapFrom.contact?.pictureUrl, authorName: zapFrom.contact?.authorName, createdAt: zapFrom.created_at, sats: sats, content: zapFrom.content ?? "")
+                        .sorted(by: { $0.zap.created_at > $1.zap.created_at })
+                        .map { (fromPubkey, amount, zap) in
+                            return SingleZap(
+                                id: fromPubkey,
+                                fromNRContact: NRContact.instance(of: fromPubkey),
+                                createdAt: zap.created_at,
+                                sats: Double(amount),
+                                content: zap.content ?? "")
                         },
                     nrPost: NRPost(event: zappedEvent)
                 )
@@ -98,15 +107,20 @@ class ZapsFeedModel: ObservableObject {
             
             let profileZaps: [SingleZap] = allZapEvents
                 .filter { $0.zappedEventId == nil }
-                .map { ($0, $0.naiveSats)  } // We need the .naiveSats from 9735 later when we only have 9734
-                .compactMap { (zapEvent: Event, sats: Double) in
-                    if let zapFromRequest = zapEvent.zapFromRequest {
-                        return (zapFromRequest, sats)
+                .compactMap { zapEvent in
+                    if let zapFromPubkey = zapEvent.fromPubkey {
+                        return (zapFromPubkey, zapEvent)
                     }
                     return nil
                 }
-                .map { (profileZapFrom: Event, sats: Double) in
-                    SingleZap(id: profileZapFrom.id, pubkey: profileZapFrom.pubkey, pictureUrl: profileZapFrom.contact?.pictureUrl, authorName: profileZapFrom.contact?.authorName, createdAt: profileZapFrom.created_at, sats: sats, content: profileZapFrom.content ?? "")
+                .map { (zapFromPubkey: String, zapEvent: Event) in
+                    SingleZap(
+                        id: zapEvent.id,
+                        fromNRContact: NRContact.instance(of: zapFromPubkey),
+                        createdAt: zapEvent.created_at,
+                        sats: Double(zapEvent.amount),
+                        content: zapEvent.content ?? ""
+                    )
                 }
             
             let postOrProfileZaps: [PostOrProfileZaps] = (postZaps.map { PostOrProfileZaps(post: $0) } + profileZaps.map { PostOrProfileZaps(profile: $0) }).sorted(by: { $0.mostRecentCreatedAt > $1.mostRecentCreatedAt })
@@ -175,9 +189,7 @@ class ZapsFeedModel: ObservableObject {
 
 struct SingleZap: Identifiable {
     public let id: String
-    public let pubkey: String
-    public var pictureUrl: URL?
-    public var authorName: String?
+    public let fromNRContact: NRContact
     public let createdAt: Int64
     public let sats: Double
     public let content: String // zap message

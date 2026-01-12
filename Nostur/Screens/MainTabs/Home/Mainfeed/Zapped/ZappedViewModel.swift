@@ -190,7 +190,7 @@ class ZappedViewModel: ObservableObject {
             speedTest?.loadingBarViewState = .earlyLoad
         }
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "created_at > %i AND kind = 9735 AND zapFromRequest.pubkey IN %@", agoTimestamp, follows)
+        fr.predicate = NSPredicate(format: "created_at > %i AND kind = 9735 AND fromPubkey IN %@", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let zaps = try? bg().fetch(fr) else { return }

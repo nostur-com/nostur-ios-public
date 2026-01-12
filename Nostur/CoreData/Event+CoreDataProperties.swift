@@ -41,13 +41,16 @@ extension Event {
     @NSManaged public var mentionsCount: Int64 // Cache (No longer used? is now repostsCount)
     @NSManaged public var zapsCount: Int64 // Cache
     
-    @NSManaged public var personZapping: Contact?
     @NSManaged public var zapTally: Int64
     
     @NSManaged public var deletedById: String?
     @NSManaged public var dTag: String
     @NSManaged public var kTag: Int64 // backwards compatible kind
 
+    // Cache some related info, can be different info depending on kind
+    // For example, if kind 9735, we use cache1 to cache the client info,
+    // so we don't have to parse the 9735 tags to get the zap request, and then parse zap request to get the client tag
+    @NSManaged public var cache1: String? // So far: 9735: zap request client tag name value
     
     // A referenced A tag 
     @NSManaged public var otherAtag: String?
@@ -159,13 +162,11 @@ extension Event {
 
 // MARK: Generated accessors for zaps
 extension Event {
-    //    @NSManaged public var zapFromRequestId: String? // We ALWAYS have zapFromRequest (it is IN the 9735, so not needed)
     @NSManaged public var zappedEventId: String?
-    @NSManaged public var otherPubkey: String?
     
-    @NSManaged public var zapFromRequest: Event?
-    @NSManaged public var zappedEvent: Event?
-    @NSManaged public var zappedContact: Contact?
+    @NSManaged public var otherPubkey: String? // generic cache for any target pubkey (recipient of zap, target of reaction etc)
+    @NSManaged public var fromPubkey: String? // generic cache from any "from" pubkey (zaps or other)
+    @NSManaged public var amount: Int64 // generic cache for amounts (sats on zaps)
 }
 
 // MARK: Generated accessors for reactions
@@ -180,7 +181,7 @@ extension Event {
     var isSpam: Bool {
         // combine all the checks here
         
-        if kind == 9735, let zapReq = zapFromRequest, zapReq.naiveSats >= 250 { // TODO: Make amount configurable
+        if kind == 9735, amount >= 250 { // TODO: Make amount configurable
             // Never consider zaps of more than 250 sats as spam
             return false
         }
@@ -208,8 +209,8 @@ extension Event {
     }
     
     var inWoT: Bool {
-        if kind == 9735, let zapReq = zapFromRequest {
-            return WebOfTrust.shared.isAllowed(zapReq.pubkey)
+        if kind == 9735, let fromPubkey {
+            return WebOfTrust.shared.isAllowed(fromPubkey)
         }
         return WebOfTrust.shared.isAllowed(pubkey)
     }
@@ -374,30 +375,27 @@ extension Event {
     }
     
     static func updateZapTallyCache(_ zap: Event, context: NSManagedObjectContext) {
-        if let zappedEvent = zap.zappedEvent {
-            zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
-            zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
-            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
-        }
-        else if let zappedEventId = zap.zappedEventId {
-            guard let zappedEvent = Event.fetchEvent(id: zappedEventId, context: context) else { return }
-            CoreDataRelationFixer.shared.addTask({
-                zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
-                zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
-            })
+       if let zappedEventId = zap.zappedEventId {
+           guard let zappedEvent = Event.fetchEvent(id: zappedEventId, context: context) else { return }
+           zappedEvent.zapTally = (zappedEvent.zapTally + Int64(zap.naiveSats))
+           zappedEvent.zapsCount = (zappedEvent.zapsCount + 1)
+           ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: zappedEvent.id, zaps: zappedEvent.zapsCount, zapTally: zappedEvent.zapTally))
+           
+           // Check if contact matches the zapped event contact
+           if let otherPubkey = zap.otherPubkey, otherPubkey != zappedEvent.pubkey {
+   #if DEBUG
+               L.og.debug("⚡️🔴🔴 updateZapTallyCache: zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
+   #endif
+               zap.flags = "zpk_mismatch_event"
+           }
         }
         
         // Repair things afterwards
         
-        // Missing contact
-        if zap.zappedContact == nil, let zappedPubkey = zap.otherPubkey {
-            // but have in DB
+        // Check contact
+        if let zappedPubkey = zap.otherPubkey {
+            //  have in DB?
             if let zappedContact = Contact.fetchByPubkey(zappedPubkey, context: context) {
-                CoreDataRelationFixer.shared.addTask({
-                    guard contextWontCrash([zap, zappedContact], debugInfo: "-- zap.zappedContact = zappedContact") else { return }
-                    zap.zappedContact = zappedContact
-                })
                 
                 if zappedContact.metadata_created_at == 0 { // no data yet
 #if DEBUG
@@ -421,34 +419,7 @@ extension Event {
                 QueuedFetcher.shared.enqueue(pTag: zappedPubkey)
                 ZapperPubkeyVerificationQueue.shared.addZap(zap)
             }
-        }
-
-        
-        else if let zappedContact = zap.zappedContact {
-            
-            if zappedContact.metadata_created_at == 0 { // Missing kind-0 metadata
-#if DEBUG
-                L.fetching.debug("⚡️⏳ updateZapTallyCache: missing contact info for zap. fetching: \(zappedContact.pubkey), and queueing zap \(zap.id)")
-#endif
-                QueuedFetcher.shared.enqueue(pTag: zappedContact.pubkey)
-                ZapperPubkeyVerificationQueue.shared.addZap(zap)
-            }
-            else if zappedContact.zapperPubkeys.contains(zap.pubkey) {
-                // Check if zapper pubkey matches contacts published zapper pubkey
-                zap.flags = "zpk_verified" // zapper pubkey is correct
-            }
-        }
-        
-        
-        // Check if contact matches the zapped event contact
-        if let otherPubkey = zap.otherPubkey, let zappedEvent = zap.zappedEvent {
-            if otherPubkey != zappedEvent.pubkey {
-#if DEBUG
-                L.og.debug("⚡️🔴🔴 updateZapTallyCache: zapped contact pubkey is not the same as zapped event pubkey. zap: \(zap.id)")
-#endif
-                zap.flags = "zpk_mismatch_event"
-            }
-        }
+        }  
     }
     
     var fastEs: [FastTag] {

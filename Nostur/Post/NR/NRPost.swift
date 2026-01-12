@@ -60,9 +60,7 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var samples: [Int]? // kind 1222+1244 waveform data
     var duration: Int? // kind 1222+1244 audio length in seconds
     var audioUrl: URL? // kind 1222+1244 audio url from content
-    
-    var nxZap: NxZap?
-    
+        
     var contact: NRContact
     
     var replyingToUsernamesMarkDown:AttributedString? {
@@ -239,6 +237,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     var isNSFW: Bool = false
     var sizeEstimate: RowSizeEstimate
     
+    // Zap stuff
+    var sats: Double = 0.0
+    var receiptPubkey: String? // Zapper (not from, or receiver)
+    var fromPubkey: String? // zap sent from
+    var verified = false
+    
     init(event: Event, withFooter: Bool = true, withReplyTo: Bool = false, withParents: Bool = false, withReplies: Bool = false, plainText: Bool = false, withRepliesCount: Bool = false, isPreview: Bool = false, cancellationId: UUID? = nil) {
         var isAwaiting = false
         
@@ -284,7 +288,8 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             case "client":
                 // Show if ["client", "Name", ""31990:..." ...]
                 // Hide if ["client", ""31990:..." ..]
-                if self.via == nil && tag.1.prefix(6) != "31990:" {
+                // Don't use if kind 9735 (its taken from zap request, cached in event.cache1)
+                if event.kind != 9735 && self.via == nil && tag.1.prefix(6) != "31990:" {
                     self.via = tag.1
                 }
             case "proxy":
@@ -460,21 +465,12 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
             self.fileMetadata = getKindFileMetadata(event: event)
 
         case 9735:
-            guard let zapFrom = event.zapFromRequest else { break }
-            self.nxZap = NxZap(id: event.id,
-                         sats: event.naiveSats,
-                         receiptPubkey: event.pubkey,
-                         fromPubkey: zapFrom.pubkey,
-                         nrZapFrom: NRPost(event: zapFrom,
-                                           withFooter: false,
-                                           withReplyTo: false,
-                                           withParents: false,
-                                           withReplies: false,
-                                           plainText: false,
-                                           withRepliesCount: false
-                                          ),
-                         verified: event.flags != "zpk_mismatch_event"
-                        )
+            guard let fromPubkey = event.fromPubkey else { break }
+            self.sats = Double(event.amount)
+            self.receiptPubkey = event.pubkey
+            self.fromPubkey = fromPubkey
+            self.verified = event.flags != "zpk_mismatch_event"
+            self.via = event.cache1
             
         case 9802:
             let highlightUrl = event.fastTags.first(where: { $0.0 == "r" } )?.1

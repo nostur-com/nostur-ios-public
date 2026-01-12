@@ -101,7 +101,7 @@ struct Maintenance {
             Self.runInsertFixedNames(context: context)
             Self.runFixArticleReplies(context: context)
             Self.runFixImposterFalsePositivesAgainAgain(context: context)
-            Self.runFixZappedContactPubkey(context: context)
+            Self.runFixZaps(context: context)
             Self.runPutRepostedPubkeyInOtherPubkey(context: context)
             Self.runPutReactionToPubkeyInOtherPubkey(context: context)
             Self.runUpdateKeychainInfo(context: context)
@@ -110,6 +110,7 @@ struct Maintenance {
             Self.runInsertFixedPfps(context: context)
             Self.runPutReferencedAtag(context: context)
             Self.runSetCloudFeedOrder(context: context)
+            Self.runRemoveZapRequests(context: context)
             Self.runTempAlways(context: context)
             do {
                 if context.hasChanges {
@@ -385,19 +386,13 @@ struct Maintenance {
         fr9735.predicate = NSPredicate(format: "created_at < %i AND kind == 9735 AND (otherPubkey == nil OR NOT otherPubkey IN %@)", Int64(xDaysAgo.timeIntervalSince1970), ownAccountPubkeys)
         
         var deleted9735 = 0
-        var deleted9734 = 0
         if let zaps = try? context.fetch(fr9735) {
             for zap in zaps {
-                // Also delete zap request (not sure if cascades from 9735 so just delete here anyway)
-                if let zapReq = zap.zapFromRequest {
-                    context.delete(zapReq)
-                    deleted9734 += 1
-                }
                 context.delete(zap)
                 deleted9735 += 1
             }
         }
-        L.maintenance.info("🧹🧹 Deleted \(deleted9735) zaps and \(deleted9734) zap requests")
+        L.maintenance.info("🧹🧹 Deleted \(deleted9735) zaps")
         
         // KIND 0
         // REMOVE ALL BECAUSE EVERY KIND 0 HAS A CONTACT
@@ -683,6 +678,30 @@ struct Maintenance {
         migration.migrationCode = migrationCode.deleteEventsWithoutId.rawValue
     }
     
+    // Run once to delete all zap requests
+    static func runRemoveZapRequests(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.removeZapRequests, context: context) else { return }
+        
+        let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "Event")
+        fr.predicate = NSPredicate(format: "kind == 9734")
+        
+        let frBatchDelete = NSBatchDeleteRequest(fetchRequest: fr)
+        frBatchDelete.resultType = .resultTypeCount
+        
+        do {
+            let result = try context.execute(frBatchDelete) as! NSBatchDeleteResult
+            if let count = result.result as? Int, count > 0 {
+                L.maintenance.info("🧹🧹 Deleted \(count) zap requests")
+            }
+        } catch {
+            L.maintenance.info("🧹🧹 🔴🔴 Failed to delete zap requests")
+        }
+        
+        
+        let migration = Migration(context: context)
+        migration.migrationCode = migrationCode.removeZapRequests.rawValue
+    }
+    
     // Run once to put .anyName in fixedName
     static func runInsertFixedNames(context: NSManagedObjectContext) {
         guard !Self.didRun(migrationCode: migrationCode.insertFixedNames, context: context) else { return }
@@ -821,32 +840,38 @@ struct Maintenance {
     }
     
     
-    // Run once to fix ZappedContactPubkey not migrated to otherPubkey, ughh Xcode
-    static func runFixZappedContactPubkey(context: NSManagedObjectContext) {
-        guard !Self.didRun(migrationCode: migrationCode.fixZappedContactPubkey, context: context) else { return }
+    // Run once to fix .otherPubkey (receiver) .fromPubkey (sender) .amount and .content (take from zap request)
+    static func runFixZaps(context: NSManagedObjectContext) {
+        guard !Self.didRun(migrationCode: migrationCode.fixZaps, context: context) else { return }
         
         // Find all zaps 9735
-        // if otherPubkey is nil:
-        // get it from first P
-        // set otherPubkey
+        // Set .otherPubkey (receiver) .fromPubkey (sender) .amount, .content, and .via (client tag) (take from zap request)
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 9735 AND otherPubkey == nil")
+        fr.predicate = NSPredicate(format: "kind == 9735")
         
         var fixed = 0
         if let zaps = try? context.fetch(fr) {
-            L.maintenance.info("🧹🧹 runFixZappedContactPubkey: Found \(zaps.count) zaps without otherPubkey")
             for zap in zaps {
+                guard let nZapRequest = Event.extractZapRequest(tags: zap.tags()) else { continue }
                 if let firstP = zap.firstP() {
                     zap.otherPubkey = firstP
-                    zap.zappedContact = Contact.fetchByPubkey(firstP, context: context)
-                    fixed += 1
                 }
+                zap.fromPubkey = nZapRequest.publicKey
+                
+                zap.amount = Int64(zap.naiveSats)
+                zap.content = nZapRequest.content
+                
+                if let clientTag = nZapRequest.tags.first(where: { $0.type == "client" && $0.value.prefix(6) != "31990:" }) {
+                    zap.cache1 = clientTag.value
+                }
+                
+                fixed += 1
             }
-            L.maintenance.info("🧹🧹 runFixZappedContactPubkey: Fixed \(fixed) otherPubkey in zaps")
+            L.maintenance.info("🧹🧹 runFixZaps: Fixed \(fixed) zaps")
         }
                 
         let migration = Migration(context: context)
-        migration.migrationCode = migrationCode.fixZappedContactPubkey.rawValue
+        migration.migrationCode = migrationCode.fixZaps.rawValue
     }
     
     // Run once to put .firstQuote.pubkey in .otherPubkey, for fast reposts notification querying
@@ -1282,6 +1307,9 @@ struct Maintenance {
         // Run once to delete events without id (old bug)
         case deleteEventsWithoutId = "deleteEventsWithoutId"
         
+        // Run once to delete all zap requests
+        case removeZapRequests = "removeZapRequests"
+        
         // Run once to add k tag
         case addKtag = "addKtag2" // Needed to run again because forgot to add kTag in .saveEvent()
         
@@ -1307,8 +1335,8 @@ struct Maintenance {
         // And again - found another bug during new account onboarding
         case fixImposterFalsePositivesAgainAgain = "fixImposterFalsePositivesAgainAgain"
         
-        // Move zappedContactPubkey to otherPubkey
-        case fixZappedContactPubkey = "fixZappedContactPubkey"
+        // fix .otherPubkey (receiver) .fromPubkey (sender) .amount and .content (take part from zap request)
+        case fixZaps = "fixZaps3"
         
         // Cache .firstQuote.pubkey in .otherPubkey
         case runPutRepostedPubkeyInOtherPubkey = "runPutRepostedPubkeyInOtherPubkey"

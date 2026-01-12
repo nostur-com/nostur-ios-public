@@ -7,7 +7,7 @@
 
 import Foundation
 
-func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, andATag aTag: String? = nil, withMessage message:String = "", relays:[String]) -> NEvent {
+func zapRequest(forPubkey pubkey: String, andEvent eventId: String? = nil, andATag aTag: String? = nil, withMessage message:String = "", relays: [String]) -> NEvent {
     var zapRequest = NEvent(content: message)
     zapRequest.kind = .zapRequest
     

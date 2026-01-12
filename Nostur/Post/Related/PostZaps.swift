@@ -30,9 +30,9 @@ struct PostZaps: View {
                 ScrollView {
                     Color.clear.frame(height: 1).id(top)
                     LazyVStack(spacing: GUTTER) {
-                        ForEach(model.verifiedZaps) { nxZap in
+                        ForEach(model.verifiedZaps) { nrPost in
                             Box {
-                                NxZapReceipt(sats: nxZap.sats, receiptPubkey: nxZap.receiptPubkey, fromPubkey: nxZap.fromPubkey, nrZapFrom: nxZap.nrZapFrom)
+                                NxZapReceipt(fromPubkey: nrPost.fromPubkey!, nrPost: nrPost)
                             }
                         }
                         
@@ -65,9 +65,9 @@ struct PostZaps: View {
                                 Text("Verifying... Done.")
                             }
                             
-                            ForEach(model.unverifiedZaps) { nxZap in
+                            ForEach(model.unverifiedZaps) { nrPost in
                                 Box {
-                                    NxZapReceipt(sats: nxZap.sats, receiptPubkey: nxZap.receiptPubkey, fromPubkey: nxZap.fromPubkey, nrZapFrom: nxZap.nrZapFrom)
+                                    NxZapReceipt(fromPubkey: nrPost.fromPubkey!, nrPost: nrPost)
                                 }
                             }
                         }
@@ -144,21 +144,15 @@ struct NxZapReceipt: View {
     @Environment(\.theme) private var theme
     @Environment(\.containerID) private var containerID
     @Environment(\.availableWidth) private var availableWidth
-    
-    public let sats: Double
-    public let receiptPubkey: String
-    
+        
     public var fromPubkey: String
-    public let nrZapFrom: NRPost
+    public let nrPost: NRPost
 
     @ObservedObject private var nrContact: NRContact
-    @State var showMiniProfile = false
     
-    init(sats: Double, receiptPubkey: String, fromPubkey: String, nrZapFrom: NRPost) {
-        self.sats = sats
-        self.receiptPubkey = receiptPubkey
+    init(fromPubkey: String, nrPost: NRPost) {
         self.fromPubkey = fromPubkey
-        self.nrZapFrom = nrZapFrom
+        self.nrPost = nrPost
         
         self.nrContact = NRContact.instance(of: fromPubkey)
     }
@@ -168,14 +162,14 @@ struct NxZapReceipt: View {
             VStack(alignment: .center) {
                 Image(systemName: "bolt.fill")
                     .foregroundColor(theme.accent)
-                Text(sats, format: .number.notation((.compactName)))
+                Text(nrPost.sats, format: .number.notation((.compactName)))
                     .font(.title3)
                 if (ExchangeRateModel.shared.bitcoinPrice != 0.0) {
-                    let fiatPrice = String(format: "$%.02f",(Double(sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
+                    let fiatPrice = String(format: "$%.02f",(Double(nrPost.sats) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
 
                     Text("\(fiatPrice)")
                         .font(.caption)
-                        .opacity(sats != 0 ? 0.5 : 0)
+                        .opacity(nrPost.sats != 0 ? 0.5 : 0)
                 }
             }
             .frame(width: 70)
@@ -187,12 +181,11 @@ struct NxZapReceipt: View {
                 }
             
             VStack(alignment: .leading, spacing: 3) { // Post container
-                ZappedFrom(nrZapFrom: nrZapFrom)
+                ZappedFromName(pubkey: fromPubkey, nrPost: nrPost)
                 
-                ContentRenderer(nrPost: nrZapFrom, showMore: .constant(true), isDetail: false, fullWidth: false)
+                ContentRenderer(nrPost: nrPost, showMore: .constant(true), isDetail: false, fullWidth: false)
                     .environment(\.availableWidth, DIMENSIONS.articleRowImageWidth(availableWidth) - 80)
                     .frame(maxWidth: DIMENSIONS.articleRowImageWidth(availableWidth) - 80, minHeight: 40, alignment: .leading)
-//                ReceiptFrom(pubkey: receiptPubkey)
             }
             .task {
                 QueuedFetcher.shared.enqueue(pTag: fromPubkey)

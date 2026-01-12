@@ -253,8 +253,8 @@ struct ProfileZap: View {
             .frame(width:80)
             
             VStack(alignment:.leading, spacing: 3) {
-                PFP(pubkey: zap.pubkey, pictureUrl: zap.pictureUrl, forceFlat: true)
-                Text("**\(zap.authorName ?? "??")** zapped your profile", comment: "Message when someone zapped your profile")
+                PFP(pubkey: zap.fromNRContact.pubkey, nrContact: zap.fromNRContact, forceFlat: true)
+                Text("**\(zap.fromNRContact.anyName)** zapped your profile", comment: "Message when someone zapped your profile")
                 Text(zap.content)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -264,56 +264,26 @@ struct ProfileZap: View {
                     .foregroundColor(.gray)
             }
             .onAppear {
-                if (zap.authorName == nil) {
-                    QueuedFetcher.shared.enqueue(pTag: zap.pubkey)
+                if (zap.fromNRContact.metadata_created_at == 0) {
+                    QueuedFetcher.shared.enqueue(pTag: zap.fromNRContact.pubkey)
                 }
             }
             .onTapGesture {
-                navigateTo(ContactPath(key: zap.pubkey), context: containerID)
+                navigateToContact(pubkey: zap.fromNRContact.pubkey, nrContact: zap.fromNRContact, context: containerID)
             }
         }
     }
 }
 
 struct ZapsForThisNote: View {
-    public var zaps: [SingleZap]
-    
-//    private var deduplicated:[String: (String, Contact?, Double, Date, String?)] { // [string: (pubkey, Contact?, amount, created_at)]
-//        var d = [String: (String, Contact?, Double, Date, String?)]()
-//        // show only 1 zap per pubkey, combine total amount, track most recent created_at
-//        zaps
-//            .map {
-//                ($0.zapFromRequest, $0.date, $0.naiveSats, $0.zapFromRequest?.contact?.authorName)
-//            }
-//            .filter {
-//                $0.0 != nil
-//            }
-//            .forEach { tuple in
-//                guard tuple.0 != nil else { return }
-//                let (req, createdAt, sats, authorName) = tuple
-//                if d[req!.pubkey] != nil {
-//                    // additional entry, add up sats, and only keep most recent date
-//                    let current = d[req!.pubkey]!
-//                    let mostRecentDate = current.3 > createdAt ? current.3 : createdAt
-//                    d[req!.pubkey] = (current.0, current.1, current.2 + sats, mostRecentDate, current.4)
-//                }
-//                else {
-//                    // first entry
-//                    d[req!.pubkey] = (req!.pubkey, req!.contact, sats, createdAt, authorName)
-//                }
-//            }
-//        return d.sorted { $0.value.2 > $1.value.2 }
-//            .reduce(into: [String: (String, Contact?, Double, Date, String?)]()) { $0[$1.0] = $1.1 }
-//
-//    }
-    
+    public var zaps: [SingleZap]    
     
     var body: some View {
         VStack(alignment:.leading) {
             ZStack(alignment:.leading) {
                 ForEach(zaps.prefix(10).indices, id: \.self) { index in
                     ZStack(alignment:.leading) {
-                        PFP(pubkey: zaps[index].pubkey, pictureUrl: zaps[index].pictureUrl, forceFlat: true)
+                        PFP(pubkey: zaps[index].fromNRContact.pubkey, nrContact: zaps[index].fromNRContact, forceFlat: true)
                             .id(zaps[index].id)
                             .zIndex(-Double(index))
                         
@@ -330,10 +300,10 @@ struct ZapsForThisNote: View {
                 }
             }
             if (zaps.count > 1) {
-                Text("**\(zaps.first(where: { $0.authorName != nil })?.authorName ?? "???")** and \(zaps.count - 1) others zapped your post", comment: "Message when (name) and X others zapped your post")
+                Text("**\(zaps.first(where: { $0.fromNRContact.metadata_created_at != 0 })?.fromNRContact.anyName ?? "???")** and \(zaps.count - 1) others zapped your post", comment: "Message when (name) and X others zapped your post")
             }
             else {
-                Text("**\(zaps.first(where: { $0.authorName != nil })?.authorName ?? "???")** zapped your post", comment: "Message when (name) zapped your post")
+                Text("**\(zaps.first(where: { $0.fromNRContact.metadata_created_at != 0 })?.fromNRContact.anyName ?? "???")** zapped your post", comment: "Message when (name) zapped your post")
             }
         }
         .frame(maxWidth:.infinity, alignment: .leading)

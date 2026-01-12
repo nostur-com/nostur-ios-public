@@ -90,7 +90,7 @@ class ProfileZapsViewModel: ObservableObject {
     // STEP 2: FETCH ZAPS FROM DB
     private func fetchZapsFromDB(_ onComplete: (() -> ())? = nil) {
         let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind == 9735 AND zapFromRequest.pubkey == %@", self.pubkey)
+        fr.predicate = NSPredicate(format: "kind == 9735 AND fromPubkey == %@", self.pubkey)
         bg().perform { [weak self] in
             guard let self else { return }
             guard let zaps = try? bg().fetch(fr) else { return }
@@ -103,7 +103,7 @@ class ProfileZapsViewModel: ObservableObject {
                 guard !zappedEventId.contains(":") else { continue } // no easy way to query article aTags like kind:1 ids, so skip
                 
                 self.zappedEventIds.insert(zappedEventId)
-                let zapInfo: (Double, String?) = (zap.naiveSats, zap.zapFromRequest?.content)
+                let zapInfo: (Double, String?) = (zap.naiveSats, zap.content)
                 Task { @MainActor in
                     self.zapsMap[zappedEventId] = zapInfo
                 }

@@ -1021,7 +1021,7 @@ class NotificationFetchRequests {
                                     "created_at > %i " + // AFTER LAST SEEN
                                     "AND otherPubkey == %@" + // ONLY TO ME
                                     "AND kind == 9735 " + // ONLY ZAPS
-                                    "AND NOT zapFromRequest.pubkey IN %@", // NOT FROM BLOCKED PUBKEYS. TODO: Maybe need another index like .otherPubkey
+                                    "AND NOT fromPubkey IN %@", // NOT FROM BLOCKED PUBKEYS. TODO: Maybe need another index like .otherPubkey
                                     accountData.lastSeenZapCreatedAt,
                                     accountData.publicKey,
                                     blockedPubkeys)

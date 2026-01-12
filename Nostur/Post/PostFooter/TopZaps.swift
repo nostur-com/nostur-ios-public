@@ -25,7 +25,7 @@ struct TopZaps: View {
             if let actualSize {
                 ForEach(model.verifiedZaps.indices, id: \.self) { index in
                     ZapPill(
-                        nxZap: model.verifiedZaps[index],
+                        nrPost: model.verifiedZaps[index],
                         index: index,
                         availableWidth: actualSize.width
                     )
@@ -107,17 +107,17 @@ struct TopZaps: View {
 
 struct ZapPill: View {
     @Environment(\.theme) private var theme
-    public var nxZap: NxZap
+    public var nrPost: NRPost
     public var index: Int
     public var availableWidth: CGFloat
     
     var body: some View {
         HStack(spacing: 5) {
-            ObservedPFP(pubkey: nxZap.fromPubkey, size: 20.0, forceFlat: false)
-            Text(nxZap.sats, format: .number.notation((.compactName)))
+            ObservedPFP(pubkey: nrPost.fromPubkey!, size: 20.0, forceFlat: false)
+            Text(nrPost.sats, format: .number.notation((.compactName)))
                 .foregroundColor(theme.accent)
                 .padding(.trailing, 5)
-            if index < 3, let content = nxZap.nrZapFrom.content {
+            if index < 3, let content = nrPost.content {
                 Text(content)
                     .padding(.trailing, 5)
                     .lineLimit(1)

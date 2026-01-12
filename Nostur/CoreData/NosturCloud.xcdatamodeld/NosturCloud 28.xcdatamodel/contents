@@ -135,13 +135,16 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="Event" representedClassName=".Event" elementID="mentionsCount" versionHashModifier="remove-relations-add-index" syncable="YES">
+    <entity name="Event" representedClassName=".Event" elementID="mentionsCount" versionHashModifier="remove-relations3-add-index" syncable="YES">
+        <attribute name="amount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="cache1" optional="YES" attributeType="String"/>
         <attribute name="content" optional="YES" attributeType="String"/>
         <attribute name="created_at" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="deletedById" optional="YES" attributeType="String"/>
         <attribute name="dTag" attributeType="String" defaultValueString=""/>
         <attribute name="firstQuoteId" optional="YES" attributeType="String"/>
         <attribute name="flags" attributeType="String" defaultValueString=""/>
+        <attribute name="fromPubkey" optional="YES" attributeType="String"/>
         <attribute name="groupId" optional="YES" attributeType="String"/>
         <attribute name="id" attributeType="String"/>
         <attribute name="insertedAt" attributeType="Date" defaultDateTimeInterval="-978332400" usesScalarValueType="NO"/>
@@ -162,14 +165,10 @@
         <attribute name="repostsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sig" optional="YES" attributeType="String"/>
         <attribute name="tagsSerialized" optional="YES" attributeType="String"/>
-        <attribute name="zapFromRequestId" optional="YES" attributeType="String"/>
         <attribute name="zappedEventId" optional="YES" attributeType="String"/>
         <attribute name="zapsCount" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="zapState" optional="YES" attributeType="String"/>
         <attribute name="zapTally" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
-        <relationship name="zapFromRequest" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
-        <relationship name="zappedContact" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Contact"/>
-        <relationship name="zappedEvent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Event"/>
         <fetchIndex name="byKindAndPubkey">
             <fetchIndexElement property="kind" type="Binary" order="ascending"/>
             <fetchIndexElement property="pubkey" type="Binary" order="ascending"/>
