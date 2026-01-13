@@ -25,44 +25,54 @@ struct DetailFooterFragment: View {
         if !viewingContext.contains(.preview) {
             TopZaps(id: nrPost.id)
         }
-        HStack {
-            NBNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
-                HStack(spacing: 3) {
-                    AnimatedNumber(number: footerAttributes.likesCount)
-                        .layoutPriority(footerAttributes.likesCount == 0 ? -1 : 1)
-                    Text("reactions", comment: "Label for reactions count, example: (7) reactions")
-                        .layoutPriority(footerAttributes.likesCount == 0 ? -1 : 1)
+        VStack(spacing: 5) {
+            HStack(spacing: 2) {
+                NBNavigationLink(value: ViewPath.PostReactions(eventId: nrPost.id)) {
+                    HStack(spacing: 2) {
+                        AnimatedNumber(number: footerAttributes.likesCount)
+                            .layoutPriority(footerAttributes.likesCount == 0 ? -1 : 1)
+                        Text("reactions", comment: "Label for reactions count, example: (7) reactions")
+                            .layoutPriority(footerAttributes.likesCount == 0 ? -1 : 1)
+                    }
+                    .lineLimit(1)
                 }
-                .lineLimit(1)
-            }
-            NBNavigationLink(value: ViewPath.PostReposts(id: nrPost.id)) {
-                HStack(spacing: 3) {
-                    AnimatedNumber(number: footerAttributes.repostsCount)
-                        .layoutPriority(footerAttributes.repostsCount == 0 ? -1 : 1)
-                    Text("reposts", comment: "Label for reposts count, example: (7) reposts")
-                        .layoutPriority(footerAttributes.repostsCount == 0 ? -1 : 1)
+                Spacer()
+                NBNavigationLink(value: ViewPath.PostReposts(id: nrPost.id)) {
+                    HStack(spacing: 2) {
+                        AnimatedNumber(number: footerAttributes.repostsCount)
+                            .layoutPriority(footerAttributes.repostsCount == 0 ? -1 : 2)
+                        Text("reposts", comment: "Label for reposts count, example: (7) reposts")
+                            .layoutPriority(footerAttributes.repostsCount == 0 ? -1 : 2)
+                    }
+                    .lineLimit(1)
                 }
-                .lineLimit(1)
-            }
-            NBNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
-                HStack(spacing: 3) {
-                    AnimatedNumber(number: footerAttributes.zapsCount)
-                        .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 1)
-                    Text("zaps", comment: "Label for zaps count, example: (4) zaps")
-                        .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 1)
-                    
-                    AnimatedNumberString(number: tallyString)
-                        .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
-                        .layoutPriority(footerAttributes.zapTally == 0 ? -1 : 1)
+                Spacer()
+                NBNavigationLink(value: ViewPath.PostMentions(id: nrPost.id)) {
+                    HStack(spacing: 2) {
+                        AnimatedNumber(number: footerAttributes.mentionsCount)
+                            .layoutPriority(footerAttributes.mentionsCount == 0 ? -1 : 2)
+                        Text("mentions", comment: "Label for quoted count, example: (7) quoted")
+                            .layoutPriority(footerAttributes.mentionsCount == 0 ? -1 : 2)
+                    }
+                    .lineLimit(1)
                 }
-                .lineLimit(1)
+                Spacer()
+                NBNavigationLink(value: ViewPath.PostZaps(nrPost: nrPost)) {
+                    HStack(spacing: 2) {
+                        AnimatedNumber(number: footerAttributes.zapsCount)
+                            .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 3)
+                        Text("zaps", comment: "Label for zaps count, example: (4) zaps")
+                            .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 3)
+                        
+                        if footerAttributes.zapsCount != 0 {
+                            Text(tallyString)
+                                .opacity(tallyString != "" ? 1.0 : 0)
+                                .layoutPriority(tallyString == "" ? -1 : 3)
+                        }
+                    }
+                    .lineLimit(1)
+                }
             }
-            
-            Spacer()
-            
-            Text(nrPost.createdAt.formatted())
-                .lineLimit(1)
-                .layoutPriority(5)
         }
         .onAppear {
             guard !viewingContext.contains(.preview) else { return }
@@ -127,8 +137,7 @@ struct DetailFooterFragment: View {
             tallyString = fiatPrice
         }
         else {
-            guard String(tally.formatNumber) != tallyString else { return }
-            tallyString = String(tally.formatNumber)
+            tallyString = "\(String(tally.formatNumber)) sats"
         }
     }
 }

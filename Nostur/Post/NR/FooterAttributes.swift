@@ -26,6 +26,7 @@ class FooterAttributes: ObservableObject {
     
     @Published var zapsCount: Int64
     @Published var zapTally: Int64
+    @Published var zapTallyString: String = ""
     
     @Published var relays: Set<String> = []
     
@@ -77,6 +78,7 @@ class FooterAttributes: ObservableObject {
         
         
         if withFooter {
+            self.loadTallyString(event.zapTally)
             self.setupListeners()
         }
     }
@@ -125,6 +127,9 @@ class FooterAttributes: ObservableObject {
             self.zapState = zapState
             self.zapsCount = zapsCount
             self.zapTally = zapTally
+            if self.zapTally != 0 {
+                self.loadTallyString(zapTally)
+            }
             
             self.setupListeners()
         }
@@ -210,7 +215,6 @@ class FooterAttributes: ObservableObject {
         actionListener()
     }
 
-    
     private func actionListener() {
         guard postActionSubscription == nil else { return }
         postActionSubscription = receiveNotification(.postAction)
@@ -246,6 +250,14 @@ class FooterAttributes: ObservableObject {
                     }
                 }
             }
+    }
+    
+    public func loadTallyString(_ tally: Int64) {
+        if (tally != 0 && ExchangeRateModel.shared.bitcoinPrice != 0.0) {
+            let fiatPrice = String(format: "$%.02f",(Double(tally) / 100000000 * Double(ExchangeRateModel.shared.bitcoinPrice)))
+            guard fiatPrice != zapTallyString else { return }
+            zapTallyString = fiatPrice
+        }
     }
     
     static private func getBookmarkColor(_ event: Event) -> Color? {
