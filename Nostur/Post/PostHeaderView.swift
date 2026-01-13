@@ -14,16 +14,18 @@ struct NRPostHeaderContainer: View {
     @ObservedObject var settings: SettingsStore = .shared
     @ObservedObject var nrContact: NRContact
     private var singleLine: Bool = true
+    private var isDetail: Bool = false
 
-    init(nrPost: NRPost, singleLine: Bool = true) {
+    init(nrPost: NRPost, singleLine: Bool = true, isDetail: Bool = false) {
         self.nrPost = nrPost
         self.nrContact = nrPost.contact
         self.singleLine = singleLine
+        self.isDetail = isDetail
     }
 
     var body: some View {
         VStack(alignment: .leading) { // Name + menu "replying to"
-            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, nrContact: nrContact)
+            PostHeaderView(pubkey: nrPost.pubkey, name: nrContact.anyName, onTap: nameTapped, via: nrPost.via, createdAt: nrPost.createdAt, agoText: nrPost.ago, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: singleLine, restricted: nrPost.isRestricted, nrContact: nrContact, isDetail: isDetail)
                 .onDisappear {
                     if nrContact.metadata_created_at == 0 {
                         QueuedFetcher.shared.dequeue(pTag: nrContact.pubkey)
@@ -66,8 +68,8 @@ struct PostHeaderView: View {
     public let singleLine: Bool
     public var restricted: Bool = false
     public var isPrivate: Bool = false
-    
     public var nrContact: NRContact? = nil
+    public var isDetail: Bool = false
 
     var body: some View {
 //#if DEBUG
@@ -135,8 +137,19 @@ struct PostHeaderView: View {
                     Text(String(format: "via %@", via))
                         .font(.subheadline)
                         .lineLimit(1)
-                        .layoutPriority(3)
+                        .layoutPriority(1)
                         .foregroundColor(.secondary)
+                }
+                
+                if isDetail {
+                    Text(verbatim: "·")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text(createdAt.formatted(date: .numeric, time: .shortened))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .layoutPriority(3)
                 }
                 
                 if shouldShowFollowButton {

@@ -58,18 +58,16 @@ struct PostEmbeddedLayout<Content: View>: View {
                             PossibleImposterLabelView(nrContact: nrContact)
                             
                             Group {
-                                Text(verbatim: " ·") //
+                                Text(verbatim: "·")
                                 Ago(nrPost.createdAt)
                                     .equatable()
                                 if let via = nrPost.via {
-                                    Text(" · via \(via)") //
-                                        .lineLimit(1)
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
+                                    Text("· via \(via)")
                                 }
                             }
-                            .font(.body)
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                         }
                     }
                     ReplyingToFragmentView(nrPost: nrPost)
@@ -104,18 +102,16 @@ struct PostEmbeddedLayout<Content: View>: View {
                     PossibleImposterLabelView(nrContact: nrContact)
                     
                     Group {
-                        Text(verbatim: " ·") //
+                        Text(verbatim: "·")
                         Ago(nrPost.createdAt)
                             .equatable()
                         if let via = nrPost.via {
-                            Text(" · via \(via)") //
-                                .lineLimit(1)
-                                .font(.body)
-                                .foregroundColor(.secondary)
+                            Text("· via \(via)")
                         }
                     }
-                    .font(.body)
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
                 }
             }
         }

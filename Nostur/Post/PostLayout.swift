@@ -95,7 +95,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 else {
                     HStack(alignment: .top) { // name + reply + context menu
-                        NRPostHeaderContainer(nrPost: nrPost)
+                        NRPostHeaderContainer(nrPost: nrPost, isDetail: isDetail)
                         Spacer()
                         PostMenuButton(nrPost: nrPost, theme: theme)
                     }
@@ -134,7 +134,7 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 }
                 else {
                     regularPFP
-                    NRPostHeaderContainer(nrPost: nrPost, singleLine: false)
+                    NRPostHeaderContainer(nrPost: nrPost, singleLine: false, isDetail: isDetail)
                 }
                 
                 if !isItem || isDetail {
@@ -149,6 +149,14 @@ struct PostLayout<Content: View, TitleContent: View>: View {
                 
                 if isItem {
                     bottomAuthorInfo
+                    if (isDetail) {
+                        Text(nrPost.createdAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                            .layoutPriority(3)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
                 }
                 
                 if isDetail {

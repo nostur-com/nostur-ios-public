@@ -143,6 +143,9 @@
         }
       }
     },
+    "· via %@" : {
+
+    },
     "(Re)connects/Messages/Errors" : {
       "localizations" : {
         "nl" : {
