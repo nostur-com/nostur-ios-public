@@ -269,26 +269,34 @@ class Backlog {
         let tasksCount = self.tasks.count
         var removed = 0
 #endif
+        // Collect tasks to remove to avoid modifying the set during iteration
+        var tasksToRemove = [ReqTask]()
+        
         for task in self.tasks {
-            // Check timeoout if configured per task
+            // Check timeout if configured per task
             if let timeout = task.timeout, task.createdAt.timeIntervalSinceNow < -timeout {
                 task.onTimeout()
-                self.tasks.remove(task)
+                tasksToRemove.append(task)
 #if DEBUG
-                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId) -[LOG]-")
                 removed += 1
 #endif
             }
             // else check against the Backlog timeout
             else if task.createdAt.timeIntervalSinceNow < -self.timeout {
                 task.onTimeout()
-                self.tasks.remove(task)
+                tasksToRemove.append(task)
 #if DEBUG
-                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId) -[LOG]-")
                 removed += 1
 #endif
-                
             }
+        }
+        
+        // Now safely remove the collected tasks
+        for task in tasksToRemove {
+            self.tasks.remove(task)
+#if DEBUG
+            L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): removed \(task.subscriptionId) -[LOG]-")
+#endif
         }
         
         if self.tasks.isEmpty {
