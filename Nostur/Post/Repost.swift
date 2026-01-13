@@ -177,10 +177,11 @@ struct RepostHeader: View {
     @Environment(\.containerID) private var containerID
 
     @ObservedObject public var nrContact: NRContact
+    public var iconName: String = "arrow.2.squarepath"
     
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: "arrow.2.squarepath")
+            Image(systemName: iconName)
                 .fontWeightBold()
                 .scaleEffect(0.6)
                 .layoutPriority(1)

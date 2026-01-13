@@ -18,7 +18,9 @@ class FooterAttributes: ObservableObject {
     @Published var repliesCount: Int64
     
     @Published var reposted: Bool
-    @Published var repostsCount: Int64 // was mentionsCount
+    @Published var repostsCount: Int64
+    @Published var mentionsCount: Int64 // (q tag mentions)
+    public var repostsAndMentionsCount: Int64 { repostsCount + mentionsCount }
     
     @Published var likesCount: Int64
     
@@ -49,6 +51,8 @@ class FooterAttributes: ObservableObject {
         
         self.reposted = withFooter && Self.isReposted(event)
         self.repostsCount = event.repostsCount
+        
+        self.mentionsCount = event.mentionsCount
         
         self.ourReactions = Self.getOurReactions(event)
         self.likesCount = event.likesCount
@@ -166,6 +170,7 @@ class FooterAttributes: ObservableObject {
                     var mergedChange = acc
                     
                     mergedChange.reposts = max(change.reposts ?? 0, acc.reposts ?? 0)
+                    mergedChange.mentions = max(change.mentions ?? 0, acc.mentions ?? 0)
                     mergedChange.replies = max(change.replies ?? 0, acc.replies ?? 0)
                     mergedChange.likes = max(change.likes ?? 0, acc.likes ?? 0)
                     mergedChange.zaps = max(change.zaps ?? 0, acc.zaps ?? 0)
@@ -190,6 +195,9 @@ class FooterAttributes: ObservableObject {
                 }
                 if let reposts = change.reposts, reposts != self.repostsCount, reposts != 0 {
                     self.repostsCount = reposts
+                }
+                if let mentions = change.mentions, mentions != self.mentionsCount, mentions != 0 {
+                    self.mentionsCount = mentions
                 }
                 if let zaps = change.zaps, zaps != self.zapsCount, zaps != 0 {
                     self.zapsCount = zaps

@@ -104,6 +104,7 @@ enum ViewPath: IdentifiableDestination {
     case Bookmarks(account: CloudAccount)
     case PostReactions(eventId: String)
     case PostReposts(id: String)
+    case PostMentions(id: String)
     case PostZaps(nrPost: NRPost)
     case Settings
     case Lists
@@ -232,6 +233,9 @@ struct NavigationDestinationsModifier: ViewModifier {
                     case .PostReposts(let id):
                         PostReposts(id: id)
                             .environment(\.containerID, self.containerID)
+                    case .PostMentions(let id):
+                        PostMentions(id: id)
+                        .environment(\.containerID, self.containerID)
                     case .PostZaps(let nrPost):
                         PostZaps(nrPost: nrPost)
                             .environment(\.containerID, self.containerID)

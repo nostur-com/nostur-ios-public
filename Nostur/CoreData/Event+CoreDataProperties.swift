@@ -38,7 +38,7 @@ extension Event {
     @NSManaged public var likesCount: Int64 // Cache
     @NSManaged public var repostsCount: Int64 // Cache
     @NSManaged public var repliesCount: Int64 // Cache
-    @NSManaged public var mentionsCount: Int64 // Cache (No longer used? is now repostsCount)
+    @NSManaged public var mentionsCount: Int64 // Cache (q tag mentions)
     @NSManaged public var zapsCount: Int64 // Cache
     
     @NSManaged public var zapTally: Int64
@@ -558,6 +558,13 @@ extension Event {
         return (try? context.fetch(fr)) ?? []
     }
     
+    static func fetchEventsBy(firstQuoteId: String, andKinds kinds: Set<Int>, context: NSManagedObjectContext) -> [Event] {
+        let fr = Event.fetchRequest()
+        fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
+        fr.predicate = NSPredicate(format: "kind IN %@ AND firstQuoteId = %@", kinds, firstQuoteId)
+        return (try? context.fetch(fr)) ?? []
+    }
+    
     static func fetchEventsBy(kind: Int, context: NSManagedObjectContext) -> [Event] {
         let fr = Event.fetchRequest()
         fr.sortDescriptors = [NSSortDescriptor(keyPath: \Event.created_at, ascending: false)]
@@ -624,6 +631,17 @@ extension Event {
     static func fetchReposts(id: String, context: NSManagedObjectContext = bg()) -> [Event] {
         let fr = Event.fetchRequest()
         fr.predicate = NSPredicate(format: "kind = 6 AND firstQuoteId == %@", id)
+        return (try? context.fetch(fr)) ?? []
+    }
+    
+    static func fetchMentions(id: String, after: Int? = nil, context: NSManagedObjectContext = bg()) -> [Event] {
+        let fr = Event.fetchRequest()
+        if let after {
+            fr.predicate = NSPredicate(format: "created_at > %i AND kind IN {1,1111,30023} AND mostRecentId = nil AND tagsSerialized CONTAINS %@", after, serializedQ(id))
+        }
+        else {
+            fr.predicate = NSPredicate(format: "kind IN {1,1111,30023} AND mostRecentId = nil AND tagsSerialized CONTAINS %@", serializedQ(id))
+        }
         return (try? context.fetch(fr)) ?? []
     }
     
@@ -842,7 +860,7 @@ extension Event {
         handleComment(nEvent: event, savedEvent: savedEvent, context: context)
         handleProfileUpdate(nEvent: event, savedEvent: savedEvent, context: context)
         handleRelaySets(nEvent: event, savedEvent: savedEvent, context: context)
-        
+        handleMentions(nEvent: event, savedEvent: savedEvent, context: context)
         
         return savedEvent
     }

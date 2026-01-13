@@ -153,7 +153,9 @@ struct PostAndParent: View {
                             rootE: nrPost.id,
                             nrPost: nrPost
                         )
-                        
+                        Task {
+                            await fetchMentions()
+                        }
                     }
                 }
             }
@@ -171,6 +173,23 @@ struct PostAndParent: View {
     private var replyButton: some View {
         Image("ReplyIcon")
         Text("Add comment")
+    }
+    
+    private func fetchMentions() async {
+        guard SUPPORTED_KINDS_CAN_HAVE_MENTIONS.map(\.self.id).contains(Int(nrPost.kind)) else { return }
+        
+        _ = try? await relayReq(Filters(kinds: [1,1111,30023], tagFilter: TagFilter(tag: "q", values: [nrPost.id])), timeout: 3.0)
+        
+        // Get reposts, return related contact
+        let mentionsCount: Int64 = await withBgContext { bg in
+            let mentions = Event.fetchMentions(id: nrPost.id)
+            let mentionsCount = Int64(mentions.count)
+            return mentionsCount
+        }
+        
+        Task { @MainActor in
+            nrPost.footerAttributes.mentionsCount = mentionsCount
+        }
     }
 }
 

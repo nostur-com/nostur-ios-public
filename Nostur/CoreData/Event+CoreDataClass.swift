@@ -36,5 +36,9 @@ public class Event: NSManagedObject, Identifiable {
     lazy var fastPs: [FastTag] = {
         fastTags.filter { $0.0 == "p" && $0.1.count == 64 }
     }()
+    
+    lazy var fastQs: [FastTag] = {
+        fastTags.filter { $0.0 == "q" } // can also be id but also aTag
+    }()
 }
 

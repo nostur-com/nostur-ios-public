@@ -11,28 +11,6 @@ import CoreData
 func handleTextPost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
     guard nEvent.kind == .textNote else { return }
     
-    if nEvent.content == "#[0]", let firstE = nEvent.firstE() {
-        
-        savedEvent.firstQuoteId = firstE
-        
-        if let kind6firstQuote = kind6firstQuote {
-            // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
-            savedEvent.otherPubkey = kind6firstQuote.pubkey
-        }
-        else {
-            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
-            if let repostedEvent = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
-                // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
-                savedEvent.otherPubkey = repostedEvent.pubkey
-                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
-                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
-            }
-            else if let firstP = nEvent.firstP() { // or lastP? not sure
-                savedEvent.otherPubkey = firstP
-            }
-        }
-    }
-    
     if let replyToAtag = nEvent.replyToAtag() { // Comment on article
         if let dbArticle = Event.fetchReplacableEvent(aTag: replyToAtag.value, context: context) {
             savedEvent.replyToId = dbArticle.id
@@ -115,32 +93,57 @@ func handleTextPost(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? =
     }
     
     // UPDATE THINGS THAT THIS EVENT RELATES TO (MENTIONS)
-    // NIP-10: Those marked with "mention" denote a quoted or reposted event id.
-    // TODO: REPLACE WITH q tag handling (NIP-18)
-    guard let mentionEtags = TagsHelpers(nEvent.tags).newerMentionEtags() else { return }
-    CoreDataRelationFixer.shared.addTask({
-        for etag in mentionEtags {
-            if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
-                guard contextWontCrash([mentioningEvent], debugInfo: "updateMentionsCountCache") else { return }
-                mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
+    // First handle mentions NIP-10: Those marked with "mention" denote a quoted or reposted event id.
+    if let mentionEtags = TagsHelpers(nEvent.tags).newerMentionEtags() {
+        CoreDataRelationFixer.shared.addTask({
+            for etag in mentionEtags {
+                if let mentioningEvent = Event.fetchEvent(id: etag.id, context: context) {
+                    guard contextWontCrash([mentioningEvent], debugInfo: "updateMentionsCountCache") else { return }
+                    mentioningEvent.mentionsCount = (mentioningEvent.mentionsCount + 1)
+                }
             }
-        }
-    })
-    
+        })
+    }
+
+    // Reposts in kind 1 (old style)
     handleRepostInKind1(nEvent: nEvent, savedEvent: savedEvent, kind6firstQuote: kind6firstQuote, context: context)
 }
 
 func handleRepostInKind1(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
     // handle REPOST with normal mentions in .kind 1
-    // TODO: handle first nostr:nevent or not?
     var alreadyCounted = false
-    if let firstE = nEvent.firstMentionETag(), let replyToId = savedEvent.replyToId, firstE.id != replyToId { // also fQ not the same as replyToId
+    
+    if nEvent.content == "#[0]", let firstE = nEvent.firstE() { // Old repost structure
+        
+        savedEvent.firstQuoteId = firstE
+        alreadyCounted = true
+        
+        if let kind6firstQuote = kind6firstQuote {
+            // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+            savedEvent.otherPubkey = kind6firstQuote.pubkey
+        }
+        else {
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT + UPDATE REPOST COUNT
+            if let repostedEvent = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+                // Also save reposted pubkey in .otherPubkey for easy querying for repost notifications
+                savedEvent.otherPubkey = repostedEvent.pubkey
+                repostedEvent.repostsCount = (repostedEvent.repostsCount + 1)
+                ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: repostedEvent.id, reposts: repostedEvent.repostsCount))
+            }
+            else if let firstP = nEvent.firstP() { // or lastP? not sure
+                savedEvent.otherPubkey = firstP
+            }
+        }
+    }
+    
+    if !alreadyCounted, let firstE = nEvent.firstMentionETag(), let replyToId = savedEvent.replyToId, firstE.id != replyToId { // also fQ not the same as replyToId
         savedEvent.firstQuoteId = firstE.id
         
         // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
         if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
             if (firstE.tag[safe: 3] == "mention") {
                 firstQuote.mentionsCount += 1
+                savedEvent.otherPubkey = firstQuote.pubkey
                 alreadyCounted = true
             }
         }
@@ -150,13 +153,24 @@ func handleRepostInKind1(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Eve
     if !alreadyCounted && nEvent.content.contains("#[0]"), let firstE = nEvent.firstMentionETag() {
         savedEvent.firstQuoteId = firstE.id
         
-        // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
-        if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+        if let kind6firstQuote = kind6firstQuote {
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
+            kind6firstQuote.mentionsCount += 1
+            savedEvent.otherPubkey = kind6firstQuote.pubkey
+            
+            kind6firstQuote.repostsCount = (kind6firstQuote.repostsCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: kind6firstQuote.id, reposts: kind6firstQuote.repostsCount))
+        }
+        else if let firstQuote = Event.fetchEvent(id: savedEvent.firstQuoteId!, context: context) {
+            // IF WE ALREADY HAVE THE FIRST QUOTE, ADD OUR NEW EVENT IN THE MENTIONS
             firstQuote.mentionsCount += 1
+            savedEvent.otherPubkey = firstQuote.pubkey
+            
+            firstQuote.repostsCount = (firstQuote.repostsCount + 1)
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: firstQuote.id, reposts: firstQuote.repostsCount))
         }
     }
 }
-
 
 func handlePostRelations(nEvent: NEvent, savedEvent: Event, kind6firstQuote: Event? = nil, context: NSManagedObjectContext) {
     guard nEvent.kind == .textNote || nEvent.kind == .shortVoiceMessage else { return }

@@ -69,10 +69,11 @@ struct EventRepliesChange {
 
 struct EventStatChange {
     let id: String
-    var replies: Int64? // replies
-    var reposts: Int64? // reposts
-    var likes: Int64? // likes (reactions), reposts,
-    var zaps: Int64? // zaps
+    var replies: Int64? // replies (1,1111,1244)
+    var reposts: Int64? // reposts (kind 6)
+    var mentions: Int64? // mentions (q tag)
+    var likes: Int64? // likes (reactions) (kind 7)
+    var zaps: Int64? // zaps (9735)
     var zapTally: Int64? // total zap amount
     var detectedRelay: String? // update view with new detected sent-to relay (after "OK")
 }
