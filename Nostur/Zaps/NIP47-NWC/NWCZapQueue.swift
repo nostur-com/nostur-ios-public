@@ -308,7 +308,7 @@ class Zap {
                                             amount: self.amount,
                                             nxEvent: NXEvent(pubkey: signedEvent.publicKey, kind: signedEvent.kind.id),
                                             content: content,
-                                            via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedEvent.publicKey)) ? "Nostur" : nil
+                                            via: via(zapRequestNote)
                                         ))
                                     }
                                 }
@@ -366,7 +366,7 @@ class Zap {
                                         amount: self.amount,
                                         nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: signedZapRequestNote.kind.id),
                                         content: content,
-                                        via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? "Nostur" : nil
+                                        via: via(zapRequestNote)
                                     ))
                             }
                             if let response = try? await LUD16.getInvoice(url:callbackUrl, amount:UInt64(self.amount * 1000), zapRequestNote: signedZapRequestNote) {

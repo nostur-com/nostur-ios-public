@@ -334,7 +334,6 @@ extension Contact : Identifiable {
         }
         let r = Contact.fetchRequest()
         r.predicate = NSPredicate(format: "pubkey == %@", pubkey)
-        r.sortDescriptors = [NSSortDescriptor(key: "updated_at", ascending: false)]
         r.fetchLimit = 1
         r.fetchBatchSize = 1
         return try? context.fetch(r).first

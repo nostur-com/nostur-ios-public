@@ -228,7 +228,7 @@ struct ComposePost: View {
                                             }).equatable()
                                             
                                             VStack(alignment: .leading, spacing: 0) {
-                                                PostHeaderView(pubkey: account.publicKey, name: account.anyName, via: "Nostur", createdAt: Date.now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: false)
+                                                PostHeaderView(pubkey: account.publicKey, name: account.anyName, via: NIP89_APP_NAME, createdAt: Date.now, displayUserAgentEnabled: settings.displayUserAgentEnabled, singleLine: false)
                                             }
                                         }
                                         .padding(.top, 10)

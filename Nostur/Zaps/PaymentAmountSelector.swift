@@ -77,7 +77,7 @@ struct PaymentAmountSelector: View {
                                                         amount: Int64(amount),
                                                         nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734),
                                                         content: NRContentElementBuilder.shared.buildElements(input: signedZapRequestNote.content, fastTags: signedZapRequestNote.fastTags, primaryColor: Themes.default.theme.primary).0,
-                                                        via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? "Nostur" : nil
+                                                        via: via(zapRequestNote)
                                                      )
                                     )
                                 }
@@ -118,7 +118,7 @@ struct PaymentAmountSelector: View {
                                                 createdAt: Date(timeIntervalSince1970: Double(signedZapRequestNote.createdAt.timestamp)), aTag: aTag,
                                                 amount: Int64(amount),
                                                 nxEvent: NXEvent(pubkey: signedZapRequestNote.publicKey, kind: 9734), content: [],
-                                                via: (SettingsStore.shared.postUserAgentEnabled && !SettingsStore.shared.excludedUserAgentPubkeys.contains(signedZapRequestNote.publicKey)) ? NIP89_APP_NAME : nil
+                                                via: via(zapRequestNote)
                                              ))
                         }
                     }
