@@ -47,73 +47,79 @@ struct ZapButton: View {
 //#if DEBUG
 //        let _ = nxLogChanges(of: Self.self)
 //#endif
-        Image(systemName: icon)
-            .overlay(alignment: .leading) {
-                if #available(iOS 26.0, *) {
-                    Text(footerAttributes.zapTally, format: .number.notation((.compactName)))
-                        .multilineTextAlignment(.center)
-                        .animation(.snappy, value: footerAttributes.zapTally)
-                        .contentTransition(.numericText(countsDown: false))
-                        .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
-                        .frame(width: 34)
-                        .offset(x: 14, y: -1)
+        HStack(spacing: 3) {
+            Image(systemName: icon)
+            
+            if footerAttributes.zapsCount != 0 {
+                HStack(spacing: 2) {
+                    AnimatedNumber(number: footerAttributes.zapTally)
+                    Text("sats")
                 }
-                else {
-                    AnimatedNumberString(number: footerAttributes.zapTally.formatNumber)
-                        .opacity(footerAttributes.zapTally == 0 ? 0 : 1)
-                        .frame(width: 34)
-                        .offset(x: 14, y: -1)
+                .layoutPriority(footerAttributes.zapsCount == 0 ? -1 : 3)
+                .opacity(footerAttributes.zapTally != 0 ? 1.0 : 0)
+                .onAppear {
+                    if footerAttributes.zapTallyString == "" && footerAttributes.zapTally != 0 {
+                        footerAttributes.loadTallyString(footerAttributes.zapTally)
+                    }
+                }
+                
+                if footerAttributes.zapTallyString != "" {
+                    Text(footerAttributes.zapTallyString)
+                        .opacity(footerAttributes.zapTallyString != "" ? 0.5 : 0)
+                        .layoutPriority(footerAttributes.zapTallyString != "" ? -1 : 3)
                 }
             }
-            .padding(.trailing, 34)
-            .foregroundColor(isZapped ? .yellow : theme.footerButtons)
-            .padding(.vertical, 5)
-            .contentShape(Rectangle())
-            .simultaneousGesture(
-                LongPressGesture()
-                    .onEnded { _ in
-                        if ss.nwcReady {
-                            self.longTap()
+        }
+        .offset(y: -1)
+        .lineLimit(1)
+        .foregroundColor(isZapped ? .yellow : theme.footerButtons)
+        .padding(.vertical, 5)
+        .contentShape(Rectangle())
+        .simultaneousGesture(
+            LongPressGesture()
+                .onEnded { _ in
+                    if ss.nwcReady {
+                        self.longTap()
+                    }
+                    else {
+                        tap()
+                    }
+                }
+        )
+        .highPriorityGesture(
+            TapGesture()
+                .onEnded { _ in
+                    self.tap()
+                }
+        )
+        .onReceive(receiveNotification(.sendCustomZap)) { notification in
+            // Complete custom zap
+            let customZap = notification.object as! CustomZap
+            guard customZapId != nil && customZap.customZapId == customZapId else { return }
+            customAmount = customZap.amount
+            zapMessage = customZap.publicNote
+            triggerStrike = true
+        }
+        .overlay {
+            if triggerStrike {
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear {
+                            guard !isZapped else { return }
+                            guard cancellationId == nil else { return }
+                            self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount)
                         }
-                        else {
-                            tap() 
-                        }
-                    }
-            )
-            .highPriorityGesture(
-                TapGesture()
-                    .onEnded { _ in
-                        self.tap()
-                    }
-            )
-            .onReceive(receiveNotification(.sendCustomZap)) { notification in
-                // Complete custom zap
-                let customZap = notification.object as! CustomZap
-                guard customZapId != nil && customZap.customZapId == customZapId else { return }
-                customAmount = customZap.amount
-                zapMessage = customZap.publicNote
-                triggerStrike = true
-            }
-            .overlay {
-                if triggerStrike {
-                    GeometryReader { geo in
-                        Color.clear
-                            .onAppear {
-                                guard !isZapped else { return }
-                                guard cancellationId == nil else { return }
-                                self.triggerZap(strikeLocation: geo.frame(in: .global).origin, nrContact: nrPost.contact, zapMessage: zapMessage, amount: customAmount)
-                            }
-                    }
                 }
             }
-            .onAppear {
-                guard [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(footerAttributes.zapState) else { return }
-                isZapped = true
-            }
-            .onReceive(ViewUpdates.shared.zapStateChanged.receive(on: RunLoop.main)) { zapStateChange in
-                guard nrPost.id == zapStateChange.eTag else { return }
-                isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
-            }
+        }
+        .onAppear {
+            guard [.initiated, .nwcConfirmed, .zapReceiptConfirmed].contains(footerAttributes.zapState) else { return }
+            isZapped = true
+        }
+        .onReceive(ViewUpdates.shared.zapStateChanged.receive(on: RunLoop.main)) { zapStateChange in
+            guard nrPost.id == zapStateChange.eTag else { return }
+            isZapped = [.initiated,.nwcConfirmed,.zapReceiptConfirmed].contains(zapStateChange.zapState)
+        }
     }
     
     private func tap() {
