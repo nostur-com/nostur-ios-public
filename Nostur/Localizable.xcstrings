@@ -144,7 +144,14 @@
       }
     },
     "· via %@" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "· via %@"
+          }
+        }
+      }
     },
     "(Re)connects/Messages/Errors" : {
       "localizations" : {
@@ -530,7 +537,14 @@
       }
     },
     "**Signing failed**" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Signing failed**"
+          }
+        }
+      }
     },
     "**Signing post...**" : {
       "localizations" : {
@@ -585,7 +599,14 @@
       "shouldTranslate" : false
     },
     "%@ (Timeout or other error)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (Timeout of andere fout)"
+          }
+        }
+      }
     },
     "%@ %@" : {
       "localizations" : {
@@ -752,7 +773,15 @@
       }
     },
     "%@'s Feed" : {
-      "comment" : "(name)'s Feed"
+      "comment" : "(name)'s Feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@'s Feed"
+          }
+        }
+      }
     },
     "%@'s posts can be found at" : {
       "localizations" : {
@@ -2971,7 +3000,14 @@
       }
     },
     "Configure your DM relays..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DM relays instellen..."
+          }
+        }
+      }
     },
     "Configure your relays..." : {
       "localizations" : {
@@ -3232,7 +3268,7 @@
       }
     },
     "Conversation column" : {
-
+      "shouldTranslate" : false
     },
     "Conversation details" : {
       "localizations" : {
@@ -4816,7 +4852,14 @@
       }
     },
     "Follow all" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volg alle"
+          }
+        }
+      }
     },
     "Follow all %lld people on this list" : {
       "localizations" : {
@@ -5386,7 +5429,14 @@
       }
     },
     "Increase privacy" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meer privacy"
+          }
+        }
+      }
     },
     "Interactions" : {
       "comment" : "Tab title",
@@ -5793,7 +5843,14 @@
       }
     },
     "Lists created by people you follow" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lijsten gemaakt door wie jij volgt"
+          }
+        }
+      }
     },
     "Lists from people you follow" : {
       "extractionState" : "stale",
@@ -6148,7 +6205,14 @@
       }
     },
     "Mentioned by" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vermeld door"
+          }
+        }
+      }
     },
     "mentions" : {
       "comment" : "Label for quoted count, example: (7) quoted",
@@ -7618,7 +7682,14 @@
       }
     },
     "Post GIF using Blossom" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plaats GIF via Blossom"
+          }
+        }
+      }
     },
     "Post New Photo" : {
       "localizations" : {
@@ -8065,7 +8136,14 @@
       }
     },
     "Publish on which relays you wish to receive DMs.\n\nThis enables you to use a more private messaging format (NIP-17).\n\nOthers who have not upgraded can still communicate with you using the older format (NIP-04)." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publiceer op welke relays je privéberichten wilt ontvangen.\n\nJe kan dan met verbeterde pricavy gebruik maken van privéberichten (NIP-17).\n\nAnderen die nog niet geüpgrade hebben kunnen wel nog steeds op de oude manier met je communiceren (NIP-04)."
+          }
+        }
+      }
     },
     "Publish selected badges on profile" : {
       "localizations" : {
@@ -9806,7 +9884,14 @@
       }
     },
     "Show %lld hidden requests (could be spam)" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon %lld verborgen verzoeken (kan spam zijn)"
+          }
+        }
+      }
     },
     "Show anyway" : {
       "comment" : "Button to show the blocked content anyway",
@@ -10115,7 +10200,8 @@
       }
     },
     "Someone's Feed" : {
-      "comment" : "Feed title"
+      "comment" : "Feed title",
+      "shouldTranslate" : false
     },
     "Something about yourself" : {
       "comment" : "Placeholder on input field for Bio on Edit Profile screen",
@@ -11504,7 +11590,14 @@
       }
     },
     "Uploading to Blossom server(s)..." : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploaden naar Blossom server(s)"
+          }
+        }
+      }
     },
     "Use additional relays from contacts in this feed to fetch posts" : {
       "localizations" : {
