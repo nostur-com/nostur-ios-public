@@ -66,6 +66,10 @@ struct GifSearcher: View {
     var body: some View {
         VStack {
             SearchBox(prompt: String(localized:"Search GIF", comment:"Placeholder in GIF search field"), text: $searchTerm)
+                .containerShape(.rect(cornerRadius: 8.0))
+                .padding(1)
+                .background(theme.lineColor)
+                .containerShape(.rect(cornerRadius: 8.0))
             
             if let account = account(), SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
                 Toggle(isOn: $useBlossom) {
