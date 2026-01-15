@@ -65,16 +65,6 @@ struct GifSearcher: View {
     
     var body: some View {
         VStack {
-            HStack {
-                Spacer()
-                Image("PoweredByTenor")
-                    .resizable()
-                    .foregroundColor(.gray)
-                    .scaledToFit()
-                    .frame(height: 10.0)
-                    .padding(.bottom, 10)
-            }
-            
             SearchBox(prompt: String(localized:"Search GIF", comment:"Placeholder in GIF search field"), text: $searchTerm)
             
             if let account = account(), SettingsStore.shared.defaultMediaUploadService.name == BLOSSOM_LABEL {
@@ -132,8 +122,38 @@ struct GifSearcher: View {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel", systemImage: "xmark") { dismiss() }
             }
+            
+           
         }
-        .padding()
+        .modifier { // need to hide glass bg in 26+
+            if #available(iOS 26.0, *) {
+                $0.toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Image("PoweredByTenor")
+                            .resizable()
+                            .foregroundColor(.gray)
+                            .scaledToFit()
+                            .frame(height: 10.0)
+                            .padding(.top, 16)
+                    }
+                    .sharedBackgroundVisibility(.hidden)
+                }
+            }
+            else {
+                $0.toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Image("PoweredByTenor")
+                            .resizable()
+                            .foregroundColor(.gray)
+                            .scaledToFit()
+                            .frame(height: 10.0)
+                            .padding(.top, 16)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 1)
         .onAppear {
             initial()
         }
