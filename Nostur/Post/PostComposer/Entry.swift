@@ -190,6 +190,8 @@ struct Entry: View {
                     }
                     .environment(\.theme, theme)
                 }
+                .nbUseNavigationStack(.never)
+                .presentationBackgroundCompat(theme.listBackground)
             }
             .sheet(isPresented: $cameraSheetShown) {
                 NBNavigationStack {
