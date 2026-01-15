@@ -20,6 +20,10 @@ struct ThreadReplies: View {
 #endif
         LazyVStack(spacing: GUTTER) {
             if didLoad {
+                if nrPost.groupedRepliesSorted.isEmpty && nrPost.groupedRepliesNotWoT.isEmpty {
+                    Color.clear
+                        .frame(height: 30) // need some space or footer buttons of detail post dissapear behind toolbar
+                }
                 ForEach(nrPost.groupedRepliesSorted) { reply in
                     PostOrThread(nrPost: reply, theme: theme, rootId: nrPost.id)
                         .id(reply.id)
