@@ -14,21 +14,16 @@ struct MasonryLayout<Content: View>: View {
     let content: [Content]
     
     var body: some View {
-        GeometryReader { geometry in
-            let totalSpacing = spacing * CGFloat(columns - 1)
-            let columnWidth = (geometry.size.width - totalSpacing) / CGFloat(columns)
-            
-            HStack(alignment: .top, spacing: spacing) {
-                ForEach(0..<columns, id: \.self) { columnIndex in
-                    LazyVStack(spacing: spacing) {
-                        ForEach(0..<content.count, id: \.self) { itemIndex in
-                            if itemIndex % columns == columnIndex {
-                                content[itemIndex]
-                                    .frame(width: columnWidth)
-                            }
+        HStack(alignment: .top, spacing: spacing) {
+            ForEach(0..<columns, id: \.self) { columnIndex in
+                LazyVStack(spacing: spacing) {
+                    ForEach(0..<content.count, id: \.self) { itemIndex in
+                        if itemIndex % columns == columnIndex {
+                            content[itemIndex]
                         }
                     }
                 }
+                .frame(maxWidth: .infinity)
             }
         }
     }
