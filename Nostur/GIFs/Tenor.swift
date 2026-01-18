@@ -6,9 +6,24 @@
 //
 
 import Foundation
+
+let GIF_API = if Date.now.timeIntervalSince1970 > 1782597600 { // if date is after june 29 2026
+    "api.klipy.com"
+} else {
+    "tenor.googleapis.com"
+}
  
-let apikey = Bundle.main.infoDictionary?["TENOR_API_KEY"] as? String ?? ""
-let clientkey = Bundle.main.infoDictionary?["TENOR_CLIENT_KEY"] as? String ?? ""
+let apikey = if Date.now.timeIntervalSince1970 > 1782597600 { // if date is after june 29 2026
+    Bundle.main.infoDictionary?["KLIPY_API_KEY"] as? String ?? ""
+} else {
+    Bundle.main.infoDictionary?["TENOR_API_KEY"] as? String ?? ""
+}
+
+let clientkey = if Date.now.timeIntervalSince1970 > 1782597600 { // if date is after june 29 2026
+    Bundle.main.infoDictionary?["KLIPY_CLIENT_KEY"] as? String ?? ""
+} else {
+    Bundle.main.infoDictionary?["TENOR_CLIENT_KEY"] as? String ?? ""
+}
 
 /**
  Async URL requesting function.
@@ -39,7 +54,7 @@ func makeWebRequest<T: Decodable>(urlRequest: URLRequest, callback: @escaping (T
 func registerShare(gifId: String, searchTerm: String) {
     
     // Register the user's share - using the default locale of en_US
-    let shareRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/registershare?key=%@&client_key=%@&id=%@&q=%@",
+    let shareRequest = URLRequest(url: URL(string: String(format: "https://\(GIF_API)/v2/registershare?key=%@&client_key=%@&id=%@&q=%@",
                                                           apikey,
                                                           clientkey,
                                                           gifId,

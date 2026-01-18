@@ -132,26 +132,51 @@ struct GifSearcher: View {
         .modifier { // need to hide glass bg in 26+
             if #available(iOS 26.0, *) {
                 $0.toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Image("PoweredByTenor")
-                            .resizable()
-                            .foregroundColor(.gray)
-                            .scaledToFit()
-                            .frame(height: 10.0)
-                            .padding(.top, 16)
+                    // if date is after june 29 2026
+                    if Date.now.timeIntervalSince1970 > 1782597600 {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Image("PoweredByKlipy")
+                                .resizable()
+                                .foregroundColor(.gray)
+                                .scaledToFit()
+                                .frame(height: 20.0)
+//                                .padding(.top, 16)
+                        }
+                        .sharedBackgroundVisibility(.hidden)
                     }
-                    .sharedBackgroundVisibility(.hidden)
+                    else {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Image("PoweredByTenor")
+                                .resizable()
+                                .foregroundColor(.gray)
+                                .scaledToFit()
+                                .frame(height: 10.0)
+                                .padding(.top, 16)
+                        }
+                        .sharedBackgroundVisibility(.hidden)
+                    }
                 }
             }
             else {
                 $0.toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Image("PoweredByTenor")
-                            .resizable()
-                            .foregroundColor(.gray)
-                            .scaledToFit()
-                            .frame(height: 10.0)
-                            .padding(.top, 16)
+                        // if date is after june 29 2026
+                        if Date.now.timeIntervalSince1970 > 1782597600 {
+                            Image("PoweredByKlipy")
+                                .resizable()
+                                .foregroundColor(.gray)
+                                .scaledToFit()
+                                .frame(height: 20.0)
+//                                .padding(.top, 16)
+                        }
+                        else {
+                            Image("PoweredByTenor")
+                                .resizable()
+                                .foregroundColor(.gray)
+                                .scaledToFit()
+                                .frame(height: 10.0)
+                                .padding(.top, 16)
+                        }
                     }
                 }
             }
@@ -260,7 +285,7 @@ struct GifSearcher: View {
         let limit = 30
         
         // make initial search request for the first 8 items
-        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/search?q=%@&key=%@&client_key=%@&limit=%d&media_filter=gif,nanogif",
+        if let url = URL(string: String(format: "https://\(GIF_API)/v2/search?q=%@&key=%@&client_key=%@&limit=%d&media_filter=gif,nanogif",
                                         searchTerm,
                                         apikey,
                                         clientkey,
@@ -271,7 +296,7 @@ struct GifSearcher: View {
         
         
         // Get up to 5 results from the autocomplete suggestions - using the default locale of en_US
-        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/autocomplete?key=%@&client_key=%@&q=%@&limit=%d",
+        if let url = URL(string: String(format: "https://\(GIF_API)/v2/autocomplete?key=%@&client_key=%@&q=%@&limit=%d",
                                         apikey,
                                         clientkey,
                                         searchTerm,
@@ -280,7 +305,7 @@ struct GifSearcher: View {
             makeWebRequest(urlRequest: autoRequest, callback: tenorAutoCompleteResultsHandler)
         }
         
-        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/search_suggestions?key=%@&client_key=%@&q=%@&limit=%d",
+        if let url = URL(string: String(format: "https://\(GIF_API)/v2/search_suggestions?key=%@&client_key=%@&q=%@&limit=%d",
                                         apikey,
                                         clientkey,
                                         searchTerm,
@@ -300,7 +325,7 @@ struct GifSearcher: View {
         _suggestionResults = []
         
         // Get the top 10 featured GIFs (updated throughout the day) - using the default locale of en_US
-        if let url = URL(string: String(format: "https://tenor.googleapis.com/v2/featured?key=%@&client_key=%@&limit=%d",
+        if let url = URL(string: String(format: "https://\(GIF_API)/v2/featured?key=%@&client_key=%@&limit=%d",
                                         apikey,
                                         clientkey,
                                         10)) {
@@ -311,7 +336,7 @@ struct GifSearcher: View {
 
 
 //           // Get the current list of categories - using the default locale of en_US
-//           let categoryRequest = URLRequest(url: URL(string: String(format: "https://tenor.googleapis.com/v2/categories?key=%@&client_key=%@&limit=%d",
+//           let categoryRequest = URLRequest(url: URL(string: String(format: "https://\(GIF_API)/v2/categories?key=%@&client_key=%@&limit=%d",
 //                                                                    apikey, clientkey, 10))!)
 //           makeWebRequest(urlRequest: categoryRequest, callback: tenorCategoryResultsHandler)
 
