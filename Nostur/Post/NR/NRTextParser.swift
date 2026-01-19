@@ -164,6 +164,7 @@ class NRTextParser { // TEXT things
         guard !fastTags.isEmpty else { return TextWithPs(text: text, pTags: []) }
 
         var pTags = [Ptag]()
+        var eTags = [String]()
         var newText = text
 
         let nsRange = NSRange(text.startIndex..<text.endIndex, in: text)
@@ -179,7 +180,7 @@ class NRTextParser { // TEXT things
             
             let tag = fastTags[tagIndex]
 
-            if tag.0 == "p" {
+            if tag.0 == "p", !pTags.contains(tag.1) {
                 pTags.append(tag.1)
                 let replacementString = !plainText ?
                     "[@\(contactUsername(fromPubkey: tag.1, event: event).escapeMD())](nostur:p:\(tag.1))" :
@@ -188,7 +189,7 @@ class NRTextParser { // TEXT things
                 if let entireSwiftRange = Range(entireMatchRange, in: newText) {
                     newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
                 }
-            } else if tag.0 == "e" {
+            } else if tag.0 == "e", !eTags.contains(tag.1) {
                 let key = try! NIP19(prefix: "note1", hexString: tag.1)
                 let replacementString = !plainText ?
                     "[@\(String(key.displayString).prefix(11))](nostur:e:\(tag.1))" :
@@ -196,6 +197,7 @@ class NRTextParser { // TEXT things
                 let entireMatchRange = match.range(at: 0)
                 if let entireSwiftRange = Range(entireMatchRange, in: newText) {
                     newText = newText.replacingOccurrences(of: String(newText[entireSwiftRange]), with: replacementString)
+                    eTags.append(tag.1)
                 }
             }
         }
