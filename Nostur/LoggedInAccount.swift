@@ -266,6 +266,8 @@ extension LoggedInAccount {
             self.followingCache = bgAccount.loadFollowingCache()
             self.reprocessContactListIfNeeded(bgAccount)
             
+            self.updateAccountFromKind0(bgAccount)
+            
             DispatchQueue.main.async {
                 // Probably should not use this. Observe LoggedInAccount instead
                 sendNotification(.activeAccountChanged, account)
@@ -287,6 +289,27 @@ extension LoggedInAccount {
             }
         }
     }
+    
+    private func updateAccountFromKind0(_ bgAccount: CloudAccount) {
+        guard let kind0 = Event.fetchEventsBy(pubkey: bgAccount.publicKey, andKind: 0, context: self.bg).first else { return }
+        guard let content = kind0.content else { return }
+        
+        let decoder = JSONDecoder()
+        guard let metaData = try? decoder.decode(NSetMetadata.self, from: content.data(using: .utf8, allowLossyConversion: false)!) else {
+            return
+        }
+        bgAccount.name = metaData.name ?? ""
+        if bgAccount.name == "" { // fallback
+            bgAccount.name = metaData.display_name ?? ""
+        }
+        bgAccount.about = metaData.about ?? ""
+        bgAccount.picture = metaData.picture ?? ""
+        bgAccount.banner = metaData.banner ?? ""
+        bgAccount.nip05 = metaData.nip05 ?? ""
+        bgAccount.lud16 = metaData.lud16 ?? ""
+        bgAccount.lud06 = metaData.lud06 ?? ""
+    }
+    
     
     // If CloudAccount is following has 12 pubkeys, but kind 3 in db has 21 pubkeys and is newest, it will not update at login
     // So we need to handle the existing kind 3 as if .newFollowingListFromRelay
