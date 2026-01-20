@@ -193,7 +193,10 @@ class ZappedViewModel: ObservableObject {
         fr.predicate = NSPredicate(format: "created_at > %i AND kind = 9735 AND fromPubkey IN %@", agoTimestamp, follows)
         bg().perform { [weak self] in
             guard let self else { return }
-            guard let zaps = try? bg().fetch(fr) else { return }
+            guard let zaps = try? bg().fetch(fr) else {
+                onComplete?()
+                return
+            }
             for item in zaps {
                 guard let zappedEventId = item.zappedEventId, !zappedEventId.contains(":") else {
                     // Skip param replaceable events

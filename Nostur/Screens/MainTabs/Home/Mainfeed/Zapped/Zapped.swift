@@ -116,7 +116,7 @@ struct Zapped: View {
             }
         }
         .onChange(of: selectedSubTab) { newValue in
-            guard newValue == "Zapped" else { return }
+            guard !IS_DESKTOP_COLUMNS() && newValue == "Zapped" else { return }
             zappedVM.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in
