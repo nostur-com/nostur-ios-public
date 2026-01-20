@@ -172,9 +172,9 @@ class DiscoverListsViewModel: ObservableObject {
                 .map { NRPost(event: $0) }
             
             DispatchQueue.main.async { [weak self] in
-                onComplete?()
                 self?.discoverLists = nrLists
                 self?.state = .ready
+                onComplete?()
             }
         }
     }
@@ -228,27 +228,29 @@ class DiscoverListsViewModel: ObservableObject {
     
     // pull to refresh
     public func refresh() async {
+        self.backlog.clear()
+        
         Task { @MainActor in
             self.discoverLists = []
-        }
-        self.backlog.clear()
-        self.follows = resolveFollows()
-        
-        self.speedTest?.start()
-        await withCheckedContinuation { continuation in
-            self.fetchListsFromRelays {
-                Task { @MainActor in
-                    self.speedTest?.loadingBarViewState = .finalLoad
-                    if self.discoverLists.isEmpty {
-#if DEBUG
-                        L.og.debug("Discover lists feed: timeout()")
-#endif
-                        self.timeout()
+            self.follows = resolveFollows()
+            
+            await withCheckedContinuation { continuation in
+                self.fetchListsFromRelays {
+                    Task { @MainActor in
+                        self.speedTest?.loadingBarViewState = .finalLoad
+                        if self.discoverLists.isEmpty {
+    #if DEBUG
+                            L.og.debug("Discover lists feed: timeout()")
+    #endif
+                            self.timeout()
+                        }
                     }
+                    continuation.resume()
                 }
-                continuation.resume()
             }
         }
+        
+        self.speedTest?.start()
     }
     
     public enum FeedState {
