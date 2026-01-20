@@ -61,9 +61,11 @@ class NewOnboardingTracker {
             if guestAlreadyStarted { return }
             guestAlreadyStarted = true
         }
-        self.bg.performAndWait { [weak self] in
-            self?.cancel()
-        }
+        
+        self.backlog.clear()
+        self.subscriptions.forEach { $0.cancel() }
+        self.subscriptions.removeAll()
+        
         self.backlog = Backlog(backlogDebugName: "NewOnboardingTracker")
         self.pubkey = pubkey
         

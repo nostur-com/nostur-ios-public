@@ -23,8 +23,6 @@ struct AddExistingAccountSheet: View {
     
     @Environment(\.theme) private var theme
     @Environment(\.managedObjectContext) private var viewContext
-    @Environment(\.dismiss) private var dismiss
-
     @State private var key = ""
     @State private var invalidKey = false
     
@@ -37,167 +35,174 @@ struct AddExistingAccountSheet: View {
     
     @ObservedObject private var bunkerManager = RemoteSignerManager.shared
     
+    @State private var loading = false
+    
     private var shouldDisableAddButton: Bool {
         isNsecbunkerKey && (bunkerManager.state == .connecting || bunkerManager.invalidRelayAddress)
     }
     
     var body: some View {
             ZStack {
-                VStack {
-                    if (key.isEmpty || key.lowercased().starts(with: "nsec1")) {
-                        SecureField("", text: $key, prompt: Text("nostr address / npub / nsec / signer url", comment: "Input field to enter public or private key on Add Existing Account screen").foregroundColor(Color.black))
-                            .textInputAutocapitalization(.never)
-                            .disableAutocorrection(true)
-                            .padding()
-                            .background(grayBackground)
-                            .cornerRadius(5.0)
-                            .padding(.bottom, 20)
-                    }
-                    else {
-                        TextField("", text: $key, prompt: Text("nostr address / npub / nsec / signer url", comment: "Input field to enter public or private key on Add Existing Account screen").foregroundColor(Color.black))
-                            .textInputAutocapitalization(.never)
-                            .disableAutocorrection(true)
-                            .padding()
-                            .background(grayBackground)
-                            .cornerRadius(5.0)
-                            .padding(.bottom, 20)
-                            .disabled(bunkerManager.state == .connecting)
-                    }
-                    
-                    if isNsecbunkerKey {
-                        TextField(text: $bunkerManager.ncRelay) {
-                            Text("Enter relay address")
-                        }
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                        .padding()
-                        .background(grayBackground)
-                        .cornerRadius(5.0)
-                        .padding(.bottom, 10)
-                    }
-                    
-//                    Text("Keys are stored on your device in iOS keychain", comment:"Informational message about key storage on Add Existing Account screen").foregroundColor(.gray)
-//                        .font(.caption2)
-                    
-                    Button {
-                        if isNsecbunkerKey {
-                            if let bunkerURL = parseBunkerUrl(key) {
-                                guard isValidPubkey(bunkerURL.pubkey) else {
-                                    invalidKey = true
-                                    key = ""
-                                    return
-                                }
-                                addExistingBunkerAccount(pubkey: bunkerURL.pubkey, token: bunkerURL.secret)
-                                showSidebar = false
-                                dismiss()
-                                onDismiss?()
-                            }
-                            else {
-                                guard key.split(separator: "#").count >= 2 else { return }
-                                let bunkerNpub = String(key.split(separator: "#")[0])
-                                let token = String(key.split(separator: "#")[1])
-                                guard let nip19 = try? NIP19(displayString: bunkerNpub.replacingOccurrences(of: "-", with: "")) else {
-                                    invalidKey = true
-                                    key = ""
-                                    return
-                                }
-                                addExistingBunkerAccount(pubkey: nip19.hexString, token: token)
-                                showSidebar = false
-                                dismiss()
-                                onDismiss?()
-                            }
+                if loading {
+                    CenteredProgressView()
+                }
+                else {
+                    VStack {
+                        if (key.isEmpty || key.lowercased().starts(with: "nsec1")) {
+                            SecureField("", text: $key, prompt: Text("nostr address / npub / nsec / signer url", comment: "Input field to enter public or private key on Add Existing Account screen").foregroundColor(Color.black))
+                                .textInputAutocapitalization(.never)
+                                .disableAutocorrection(true)
+                                .padding()
+                                .background(grayBackground)
+                                .cornerRadius(5.0)
+                                .padding(.bottom, 20)
                         }
                         else {
-                            if (key.prefix(5) == "npub1") {
-                                guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
-                                    invalidKey = true
-                                    key = ""
-                                    return
-                                }
-                                addExistingReadOnlyAccount(pubkey: nip19.hexString)
-                                
-                                showSidebar = false
-                                dismiss()
-                                onDismiss?()
-                            }
-                            else if (key.prefix(5) == "nsec1") {
-                                guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
-                                    invalidKey = true
-                                    key = ""
-                                    return
-                                }
-                                addExistingAccount(privkey: nip19.hexString)
-                                
-                                showSidebar = false
-                                dismiss()
-                                onDismiss?()
-                            }
-                            else if (key.contains("@")) {
-                                guard let nip05parts = try? NostrEssentials.parseNip05Address(key) else {
-                                    invalidKey = true
-                                    return
-                                }
-                                
-                                Task { 
-                                    do {
-                                        let pubkey = try await NostrEssentials.fetchPubkey(from: nip05parts)
-                                        addExistingReadOnlyAccount(pubkey: pubkey)
-                                        showSidebar = false
-                                        dismiss()
-                                        onDismiss?()
-                                    } catch {
-                                        invalidKey = true
-                                    }
-                                }
-                            }
-                            else {
-                                invalidKey = true
-                            }
+                            TextField("", text: $key, prompt: Text("nostr address / npub / nsec / signer url", comment: "Input field to enter public or private key on Add Existing Account screen").foregroundColor(Color.black))
+                                .textInputAutocapitalization(.never)
+                                .disableAutocorrection(true)
+                                .padding()
+                                .background(grayBackground)
+                                .cornerRadius(5.0)
+                                .padding(.bottom, 20)
+                                .disabled(bunkerManager.state == .connecting)
                         }
                         
-                    } label: {
-                        if bunkerManager.state == .connecting {
-                            CenteredProgressView()
-                                .frame(width: 20, height: 20)
-                                .foregroundColor(.white)
-                                .padding(.vertical, 10)
+                        if isNsecbunkerKey {
+                            TextField(text: $bunkerManager.ncRelay) {
+                                Text("Enter relay address")
+                            }
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .disableAutocorrection(true)
+                            .padding()
+                            .background(grayBackground)
+                            .cornerRadius(5.0)
+                            .padding(.bottom, 10)
                         }
-                        else if (isNsecbunkerKey) {
-                            Text("Add (Remote Signer)")
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity)
-                        }
-                        else {
-                            Text("Add")
-                                .padding(.vertical, 10)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                    .frame(maxWidth: 300)
-                    .fontWeightBold()
-                    .tint(.black.opacity(0.65))
-                    .buttonStyle(.borderedProminent)
-                    .clipShape(Capsule())
-                    .disabled(shouldDisableAddButton)
-                    .opacity(shouldDisableAddButton ? 0.5 : 1.0)
-                    
-                    if (offerTryOut) {
-                        NavigationLink {
-                            TryGuestAccountSheet()
+                        
+    //                    Text("Keys are stored on your device in iOS keychain", comment:"Informational message about key storage on Add Existing Account screen").foregroundColor(.gray)
+    //                        .font(.caption2)
+                        
+                        Button {
+                            if isNsecbunkerKey {
+                                if let bunkerURL = parseBunkerUrl(key) {
+                                    guard isValidPubkey(bunkerURL.pubkey) else {
+                                        invalidKey = true
+                                        key = ""
+                                        return
+                                    }
+                                    addExistingBunkerAccount(pubkey: bunkerURL.pubkey, token: bunkerURL.secret)
+                                    showSidebar = false
+                                    loading = true
+                                    onDismiss?()
+                                }
+                                else {
+                                    guard key.split(separator: "#").count >= 2 else { return }
+                                    let bunkerNpub = String(key.split(separator: "#")[0])
+                                    let token = String(key.split(separator: "#")[1])
+                                    guard let nip19 = try? NIP19(displayString: bunkerNpub.replacingOccurrences(of: "-", with: "")) else {
+                                        invalidKey = true
+                                        key = ""
+                                        return
+                                    }
+                                    addExistingBunkerAccount(pubkey: nip19.hexString, token: token)
+                                    showSidebar = false
+                                    loading = true
+                                    onDismiss?()
+                                }
+                            }
+                            else {
+                                if (key.prefix(5) == "npub1") {
+                                    guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
+                                        invalidKey = true
+                                        key = ""
+                                        return
+                                    }
+                                    addExistingReadOnlyAccount(pubkey: nip19.hexString)
+                                    
+                                    showSidebar = false
+                                    loading = true
+                                    onDismiss?()
+                                }
+                                else if (key.prefix(5) == "nsec1") {
+                                    guard let nip19 = try? NIP19(displayString: key.replacingOccurrences(of: "-", with: "")) else {
+                                        invalidKey = true
+                                        key = ""
+                                        return
+                                    }
+                                    addExistingAccount(privkey: nip19.hexString)
+                                    
+                                    showSidebar = false
+                                    loading = true
+                                    onDismiss?()
+                                }
+                                else if (key.contains("@")) {
+                                    guard let nip05parts = try? NostrEssentials.parseNip05Address(key) else {
+                                        invalidKey = true
+                                        return
+                                    }
+                                    
+                                    Task {
+                                        do {
+                                            let pubkey = try await NostrEssentials.fetchPubkey(from: nip05parts)
+                                            addExistingReadOnlyAccount(pubkey: pubkey)
+                                            showSidebar = false
+                                            loading = true
+                                            onDismiss?()
+                                        } catch {
+                                            invalidKey = true
+                                        }
+                                    }
+                                }
+                                else {
+                                    invalidKey = true
+                                }
+                            }
+                            
                         } label: {
-                            Text("Skip and try as guest first", comment: "Button to skip adding account and use the guest account instead")
+                            if bunkerManager.state == .connecting {
+                                CenteredProgressView()
+                                    .frame(width: 20, height: 20)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 10)
+                            }
+                            else if (isNsecbunkerKey) {
+                                Text("Add (Remote Signer)")
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity)
+                            }
+                            else {
+                                Text("Add")
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity)
+                            }
                         }
-                        .buttonStyle(.borderless)   
-                        .padding(.top, 20)
+                        .frame(maxWidth: 300)
+                        .fontWeightBold()
+                        .tint(.black.opacity(0.65))
+                        .buttonStyle(.borderedProminent)
+                        .clipShape(Capsule())
+                        .disabled(shouldDisableAddButton)
+                        .opacity(shouldDisableAddButton ? 0.5 : 1.0)
+                        
+                        if (offerTryOut) {
+                            NavigationLink {
+                                TryGuestAccountSheet()
+                            } label: {
+                                Text("Skip and try as guest first", comment: "Button to skip adding account and use the guest account instead")
+                            }
+                            .buttonStyle(.borderless)
+                            .padding(.top, 20)
+                        }
+                        if !bunkerManager.error.isEmpty {
+                            Text(bunkerManager.error).foregroundColor(Color.red)
+                        }
                     }
-                    if !bunkerManager.error.isEmpty {
-                        Text(bunkerManager.error).foregroundColor(Color.red)
+                    VStack {
+                        Spacer()
+                        Text("Note: You can also add someone elses public key to try out Nostur from their perspective.", comment: "Informational message on Add Existing Account screen").opacity(0.7)
                     }
-                }
-                VStack {
-                    Spacer()
-                    Text("Note: You can also add someone elses public key to try out Nostur from their perspective.", comment: "Informational message on Add Existing Account screen").opacity(0.7)
                 }
             }
             .padding()
@@ -256,7 +261,7 @@ struct AddExistingAccountSheet: View {
                         DispatchQueue.main.async {
                             accountsState.changeAccount(account)
                             showSidebar = false
-                            dismiss()
+                            loading = true
                             onDismiss?()
                             
                             do {
@@ -279,6 +284,7 @@ struct AddExistingAccountSheet: View {
                 if bunkerManager.state == .error {
                     bunkerManager.state = .disconnected
                 }
+                loading = false
             }
             .wowBackground()
     }
@@ -296,7 +302,7 @@ struct AddExistingAccountSheet: View {
             existingAccount.flagsSet.insert("full_account")
             accountsState.changeAccount(existingAccount)
             showSidebar = false
-            dismiss()
+            loading = true
             onDismiss?()
             return
         }
@@ -340,7 +346,7 @@ struct AddExistingAccountSheet: View {
             DispatchQueue.main.async {
                 accountsState.changeAccount(account)
                 showSidebar = false
-                dismiss()
+                loading = true
                 onDismiss?()
                 
                 do {
@@ -357,7 +363,7 @@ struct AddExistingAccountSheet: View {
         if let existingAccount = (try? CloudAccount.fetchAccount(publicKey: pubkey, context: viewContext)) {
             accountsState.changeAccount(existingAccount)
             showSidebar = false
-            dismiss()
+            loading = true
             onDismiss?()
             return
         }
@@ -397,7 +403,7 @@ struct AddExistingAccountSheet: View {
             DispatchQueue.main.async {
                 accountsState.changeAccount(account)
                 showSidebar = false
-                dismiss()
+                loading = true
                 onDismiss?()
                 
                 do {
@@ -431,7 +437,7 @@ struct AddExistingAccountSheet: View {
  
         accountsState.changeAccount(account)
         showSidebar = false
-        dismiss()
+        loading = true
         onDismiss?()
         return
     }
