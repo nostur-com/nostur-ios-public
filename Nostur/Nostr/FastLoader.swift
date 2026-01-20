@@ -322,15 +322,24 @@ class Backlog {
 #if DEBUG
             L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.clear() - \((self.tasks.map { $0.subscriptionId }).description) -[LOG]-")
 #endif
-            // Clean up subscriptions in each task before removing
-            let tasksToRemove = Array(self.tasks)
-            self.tasks.removeAll()
             
-            // Explicitly cancel subscriptions on a separate queue to avoid retain cycles
-            DispatchQueue.global(qos: .utility).async {
-                tasksToRemove.forEach { task in
-                    task.cleanup()
-                }
+            // Capture tasks before clearing
+            let tasksToRemove = Array(self.tasks)
+            
+            // Clear the set first while still on bg() context
+            self.tasks.removeAll(keepingCapacity: false)
+            
+            // Stop the timer synchronously to ensure it's invalidated before we continue
+            // Using sync here is safe because we're going from bg() -> main, not the reverse
+            DispatchQueue.main.sync { [weak self] in
+                self?.timer?.invalidate()
+                self?.timer = nil
+            }
+            
+            // Clean up subscriptions for each task on the same bg() context
+            // This ensures cleanup happens in order and completes before clear() returns
+            tasksToRemove.forEach { task in
+                task.cleanup()
             }
         }
     }
