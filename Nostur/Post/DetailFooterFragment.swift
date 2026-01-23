@@ -76,7 +76,9 @@ struct DetailFooterFragment: View {
         }
         .onAppear {
             guard !viewingContext.contains(.preview) else { return }
-            loadTally(footerAttributes.zapTally)
+            if SettingsStore.shared.showFiat {
+                loadTally(footerAttributes.zapTally)
+            }
         }
         .onChange(of: footerAttributes.zapTally) { [oldTally = footerAttributes.zapTally] newTally in
             guard newTally != oldTally, newTally > 0 else { return }

@@ -1949,6 +1949,9 @@
         }
       }
     },
+    "Appearance" : {
+      "comment" : "Setting heading on settings screen"
+    },
     "Approve" : {
       "localizations" : {
         "nl" : {
@@ -3698,6 +3701,7 @@
     },
     "Data usage" : {
       "comment" : "Setting heading on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -3706,6 +3710,12 @@
           }
         }
       }
+    },
+    "Data Usage" : {
+      "comment" : "Setting heading on settings screen"
+    },
+    "Database & Cache" : {
+
     },
     "Database status" : {
       "comment" : "Settings heading",
@@ -4037,6 +4047,7 @@
     },
     "Display" : {
       "comment" : "Setting heading on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6009,6 +6020,7 @@
     },
     "Low Data mode" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6019,7 +6031,7 @@
       }
     },
     "Low Data Mode" : {
-      "comment" : "Menu item",
+      "comment" : "Menu item\nSetting on settings screen",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -6159,6 +6171,9 @@
           }
         }
       }
+    },
+    "Media downloading" : {
+      "comment" : "Setting on settings screen"
     },
     "Media from posts from anyone which are most liked or reposted by people you follow" : {
       "localizations" : {
@@ -7779,6 +7794,9 @@
         }
       }
     },
+    "Posting & Media Uploading" : {
+
+    },
     "Posts" : {
       "comment" : "Tab title",
       "localizations" : {
@@ -8611,6 +8629,9 @@
         }
       }
     },
+    "Relay Connections" : {
+
+    },
     "Relay feed" : {
       "localizations" : {
         "nl" : {
@@ -9226,6 +9247,7 @@
       }
     },
     "Restrict auto-downloading of media posted by others" : {
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9237,6 +9259,7 @@
     },
     "Restrict media downloading" : {
       "comment" : "Setting on settings screen",
+      "extractionState" : "stale",
       "localizations" : {
         "nl" : {
           "stringUnit" : {
@@ -9967,6 +9990,9 @@
         }
       }
     },
+    "Show fiat value" : {
+      "comment" : "Setting on settings screen"
+    },
     "Show from which app someone posted" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -10072,6 +10098,12 @@
         }
       }
     },
+    "Show USD value next to sats on post" : {
+      "comment" : "Setting on settings screen"
+    },
+    "Show USD value next to sats on posts" : {
+      "comment" : "Setting on settings screen"
+    },
     "Show wallet balance" : {
       "comment" : "Setting on settings screen",
       "localizations" : {
@@ -10082,6 +10114,9 @@
           }
         }
       }
+    },
+    "Show zaps fiat value" : {
+      "comment" : "Setting on settings screen"
     },
     "Shown in the tab bar" : {
       "localizations" : {
@@ -10306,6 +10341,9 @@
           }
         }
       }
+    },
+    "Spam Filtering" : {
+
     },
     "Speaker" : {
       "comment" : "Role of participant",
@@ -11926,6 +11964,9 @@
           }
         }
       }
+    },
+    "When to auto-download media posted by others" : {
+
     },
     "When you bookmark a post it will show up here." : {
       "localizations" : {

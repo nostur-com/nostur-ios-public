@@ -18,7 +18,7 @@ struct AutodownloadLevelPicker: View {
                     .foregroundColor(theme.primary)
             }
         } label: {
-            Text("Restrict media downloading", comment:"Setting on settings screen")
+            Text("Media downloading", comment:"Setting on settings screen")
         }
         .pickerStyleCompatNavigationLink()
     }

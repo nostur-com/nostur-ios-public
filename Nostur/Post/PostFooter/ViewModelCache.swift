@@ -9,9 +9,9 @@ import SwiftUI
 import Algorithms
 
 struct FooterButton: Identifiable {
-    let id:String
-    var isFirst:Bool = false
-    var isLast:Bool = false
+    let id: String
+    var isFirst: Bool = false
+    var isLast: Bool = false
 }
 
 class ViewModelCache: ObservableObject {
@@ -22,7 +22,7 @@ class ViewModelCache: ObservableObject {
         footerButtons = SettingsStore.shared.footerButtons
     }
     
-    static let MAX_BUTTONS: Int = 9 // Max 8 buttons on each row
+    static let MAX_BUTTONS: Int = 9 // Max 9 buttons on each row
     
     public var footerButtons: String = "" {
         didSet {

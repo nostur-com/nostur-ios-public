@@ -63,7 +63,7 @@ struct ZapButton: View {
                     }
                 }
                 
-                if footerAttributes.zapTallyString != "" {
+                if footerAttributes.zapTallyString != "" && ss.showFiat {
                     Text(footerAttributes.zapTallyString)
                         .opacity(footerAttributes.zapTallyString != "" ? 0.5 : 0)
                         .layoutPriority(footerAttributes.zapTallyString != "" ? -1 : 3)

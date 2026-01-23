@@ -20,6 +20,7 @@ final class SettingsStore: ObservableObject {
         static let replaceNsecWithHunter2:String = "replace_nsec_with_hunter2"
         
         static let defaultZapAmount:String = "default_zap_amount"
+        static let showFiat:String = "show_fiat"
         static let defaultLightningWallet:String = "default_lightning_wallet"
 //        static let hideEmojisInNames:String = "hide_emojis_in_names"
         static let hideBadges:String = "hide_badges"
@@ -160,8 +161,9 @@ final class SettingsStore: ObservableObject {
             Keys.lastMaintenanceTimestamp: 0,
             Keys.replaceNsecWithHunter2: true,
             Keys.defaultZapAmount: 21,
+            Keys.showFiat: true,
 //            Keys.hideEmojisInNames: false,
-            Keys.hideBadges: false,
+            Keys.hideBadges: defaultZapAmount,
             Keys.autoDownloadFrom: AutodownloadLevel.onlyWoT.rawValue,
             Keys.thunderzapLevel: ThunderzapLevel.normal.rawValue,
             Keys.restrictAutoDownload: false,
@@ -212,6 +214,7 @@ final class SettingsStore: ObservableObject {
         _enableOutboxPreview = defaults.bool(forKey: Keys.enableOutboxPreview)
         _enableVPNdetection = defaults.bool(forKey: Keys.enableVPNdetection)
         _animatedPFPenabledCache = defaults.bool(forKey: Keys.animatedPFPenabled)
+        _showFiat = defaults.bool(forKey: Keys.showFiat)
         _lowDataModeCache = defaults.bool(forKey: Keys.lowDataMode)
         _rowFooterEnabled = defaults.bool(forKey: Keys.rowFooterEnabled)
         _displayUserAgentEnabled = defaults.bool(forKey: Keys.displayUserAgentEnabled)
@@ -281,7 +284,6 @@ final class SettingsStore: ObservableObject {
         set { defaults.set(newValue, forKey: Keys.autoScroll); objectWillChange.send() }
         get { defaults.bool(forKey: Keys.autoScroll) }
     }
-    
     
     var nwcShowBalance: Bool {
         set { defaults.set(newValue, forKey: Keys.nwcShowBalance); objectWillChange.send() }
@@ -477,6 +479,17 @@ final class SettingsStore: ObservableObject {
     }
     
     private var _displayUserAgentEnabled:Bool = true
+    
+    var showFiat: Bool {
+        set {
+            objectWillChange.send()
+            _showFiat = newValue
+            defaults.set(newValue, forKey: Keys.showFiat);
+        }
+        get { _showFiat }
+    }
+    
+    private var _showFiat:Bool = true
     
     public var restrictAutoDownload: Bool {
         set {
