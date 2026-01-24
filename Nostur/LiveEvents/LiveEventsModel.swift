@@ -73,7 +73,7 @@ class LiveEventsModel: ObservableObject {
             
             let nrLiveEvents: [NRLiveEvent] = events
                 .filter { !self.dismissedLiveEvents.contains($0.aTag) } // don't show dismissed events
-                .filter { $0.fastTags.contains(where: { $0.0 == "status" && $0.1 == "live" }) } // only LIVE
+                .filter { ($0.isLive() || $0.isPlanned()) }
 //                .filter {
 //                  // remove old events that appear live but where we maybe missed receiving the "ended" state
 //                  // so only keep if $0.created_at is newer than 8 hours ago AND we have a "streaming" tag, should be enough sanity check
@@ -82,7 +82,7 @@ class LiveEventsModel: ObservableObject {
 //                  let eightHoursAgo = Date().addingTimeInterval(-8 * 60 * 60)
 //                  return createdAt > eightHoursAgo && $0.fastTags.contains(where: { $0.0 == "streaming" })
 //                }
-                .filter { self.hasSpeakerOrHostInFollows($0) || (accountPubkey == $0.pubkey) }
+                .filter { hasSpeakerOrHostInFollows($0, follows: self.follows) || (accountPubkey == $0.pubkey) }
                 .sorted(by: { $0.created_at > $1.created_at })
                 .uniqued(on: { $0.aTag })
                 .map { NRLiveEvent(event: $0) }
@@ -93,26 +93,6 @@ class LiveEventsModel: ObservableObject {
                 self?.nrLiveEvents = nrLiveEvents
             }
         }
-    }
-    
-    private func hasSpeakerOrHostInFollows(_ event: Event) -> Bool {
-        if (self.follows.contains(event.pubkey)) { return true }
-        
-        // event.pubkey can be ANY since REQ was on p-tags not .pubkey, so need to apply WoT filter
-        if event.inWoT == false { return false }
-
-        let speakerOrHostPubkeys: Set<String> = Set(event.fastPs
-            // Check for "speaker" or "host" on p-tags
-            .filter { fastP in
-                if !isValidPubkey(fastP.1) {
-                    return false
-                }
-                return (fastP.3?.lowercased() == "speaker" || fastP.3?.lowercased() == "host")
-            }
-            .map { $0.1 })
-        
-        
-        return self.follows.intersection(speakerOrHostPubkeys).count > 0
     }
     
     private var agoTimestamp: Int {
@@ -274,7 +254,11 @@ class LiveEventsModel: ObservableObject {
                             nil
                         }
                         
-                        if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag }) {
+                        // if planned but in the past, remove
+                        if let scheduledAt, event.isPlanned() && scheduledAt > Date().addingTimeInterval(-10800) { // 3 hours ago
+                            self.nrLiveEvents.removeAll(where: { $0.id == aTag })
+                        }
+                        else if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag }) {
                             DispatchQueue.main.async {
                                 nrLiveEvent.objectWillChange.send()
                                 nrLiveEvent.loadReplacableData((nEvent: nEvent,
@@ -328,4 +312,25 @@ class LiveEventsModel: ObservableObject {
     }
     
         
+}
+
+
+func hasSpeakerOrHostInFollows(_ event: Event, follows: Set<String>) -> Bool {
+    if (follows.contains(event.pubkey)) { return true }
+    
+    // event.pubkey can be ANY since REQ was on p-tags not .pubkey, so need to apply WoT filter
+    if event.inWoT == false { return false }
+
+    let speakerOrHostPubkeys: Set<String> = Set(event.fastPs
+        // Check for "speaker" or "host" on p-tags
+        .filter { fastP in
+            if !isValidPubkey(fastP.1) {
+                return false
+            }
+            return (fastP.3?.lowercased() == "speaker" || fastP.3?.lowercased() == "host")
+        }
+        .map { $0.1 })
+    
+    
+    return follows.intersection(speakerOrHostPubkeys).count > 0
 }

@@ -29,6 +29,7 @@ struct ListsAndFeedsScreen: View {
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
+    @AppStorage("enable_streams_feed") private var enableStreamsFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
@@ -93,6 +94,11 @@ struct ListsAndFeedsScreen: View {
                 Toggle(isOn: $enableDiscoverListsFeed, label: {
                     Text("Follow Packs & Lists")
                     Text("Lists created by people you follow")
+                        .foregroundStyle(.secondary)
+                })
+                Toggle(isOn: $enableStreamsFeed, label: {
+                    Text("Live Streams")
+                    Text("Live Streams from people you follow")
                         .foregroundStyle(.secondary)
                 })
                 Toggle(isOn: $enableEmojiFeed, label: {

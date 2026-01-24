@@ -43,6 +43,8 @@ struct MacColumn: View {
             return String(localized: "Gallery", comment: "Feed title")
         case .discoverLists:
             return String(localized: "Lists & Follow Packs", comment: "Feed title")
+        case .streams:
+            return String(localized: "Live Streams", comment: "Feed title")
         case .explore:
             return String(localized: "Explore", comment: "Feed title")
         case .notifications:
@@ -115,6 +117,9 @@ struct MacColumn: View {
                     
                 case .discoverLists:
                     DiscoverListsColumn()
+                    
+                case .streams:
+                    StreamsColumn()
                     
                 case .explore:
                     ExploreColumn()

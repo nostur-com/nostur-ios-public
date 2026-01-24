@@ -35,6 +35,7 @@ struct MainFeedsScreen: View {
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
+    @AppStorage("enable_streams_feed") private var enableStreamsFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true    
@@ -52,6 +53,7 @@ struct MainFeedsScreen: View {
     @StateObject private var emojiVM = EmojiFeedViewModel()
 //    @StateObject private var discoverVM = DiscoverViewModel()
     @StateObject private var discoverListsVM = DiscoverListsViewModel()
+    @StateObject private var streamsVM = StreamsViewModel()
     @StateObject private var articlesVM = ArticlesFeedViewModel()
     @StateObject private var galleryVM = GalleryViewModel()
 
@@ -79,6 +81,7 @@ struct MainFeedsScreen: View {
         if (la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed) { return false }
 //        if (la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed) { return false }
         if enableDiscoverListsFeed { return false }
+        if enableStreamsFeed { return false }
         if enableExploreFeed { return false }
         if (la.viewFollowingPublicKeys.count > 10 && enableArticleFeed) { return false }
         if lists.count > 0 { return false }
@@ -195,6 +198,16 @@ struct MainFeedsScreen: View {
                                         .id("DiscoverLists")
                                         Spacer()
                                     }
+                                    
+                                    if enableStreamsFeed {
+                                        TabButton(
+                                            action: { selectedSubTab = "Streams" },
+                                            title: String(localized: "Live Streams", comment:"Tab title for Live Streams feed"),
+                                            selected: selectedSubTab == "Streams")
+                                        .id("DiscoverLists")
+                                        Spacer()
+                                    }
+                                    
             //                        else if la.viewFollowingPublicKeys.count > 10 && enableDiscoverFeed {
             //                            TabButton(
             //                                action: { selectedSubTab = "Discover" },
@@ -344,6 +357,14 @@ struct MainFeedsScreen: View {
                     AvailableWidthContainer {
                         DiscoverLists()
                             .environmentObject(discoverListsVM)
+                    }
+                }
+                
+                // DISCOVER LISTS / FOLLOW PACKS
+                if selectedSubTab == "Streams" {
+                    AvailableWidthContainer {
+                        Streams()
+                            .environmentObject(streamsVM)
                     }
                 }
                 
@@ -558,6 +579,10 @@ struct MainFeedsScreen: View {
                           
                           if enableDiscoverListsFeed {
                               Button("Follow Packs & Lists", systemImage: "person.2.crop.square.stack") { selectedSubTab = "DiscoverLists" }
+                          }
+                          
+                          if enableStreamsFeed {
+                              Button("Live Streams", systemImage: "dot.radiowaves.left.and.right") { selectedSubTab = "Streams" }
                           }
                           
                           if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {

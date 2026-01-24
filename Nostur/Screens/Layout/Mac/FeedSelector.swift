@@ -67,6 +67,7 @@ struct ColumnConfigToolbarMenu: ViewModifier {
     @AppStorage("enable_emoji_feed") private var enableEmojiFeed: Bool = true
     @AppStorage("enable_discover_feed") private var enableDiscoverFeed: Bool = true
     @AppStorage("enable_discover_lists_feed") private var enableDiscoverListsFeed: Bool = true
+    @AppStorage("enable_streams_feed") private var enableStreamsFeed: Bool = true
     @AppStorage("enable_gallery_feed") private var enableGalleryFeed: Bool = true
     @AppStorage("enable_article_feed") private var enableArticleFeed: Bool = true
     @AppStorage("enable_explore_feed") private var enableExploreFeed: Bool = true
@@ -145,8 +146,10 @@ struct ColumnConfigToolbarMenu: ViewModifier {
             }
         }
         
-        Button("Follow Packs & Lists", systemImage: "person.2.crop.square.stack") {
-            columnType = .discoverLists
+        if enableDiscoverListsFeed {
+            Button("Follow Packs & Lists", systemImage: "person.2.crop.square.stack") {
+                columnType = .discoverLists
+            }
         }
         
         Button("Notifications", systemImage: "bell") {
@@ -172,6 +175,12 @@ struct ColumnConfigToolbarMenu: ViewModifier {
         }
         
         Divider()
+        
+        if enableStreamsFeed {
+            Button("Live Streams", systemImage: "dot.radiowaves.left.and.right") {
+                columnType = .streams
+            }
+        }
         
         if enableYakFeed {
             Button("Yaks", systemImage: "waveform.circle") {
