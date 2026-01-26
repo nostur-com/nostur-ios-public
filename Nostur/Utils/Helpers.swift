@@ -69,6 +69,9 @@ func homeTabNavigationTitle(_ selectedList: CloudFeed? = nil) -> String {
     if selectedSubTab() == "DiscoverLists" {
         return String(localized: "Follow Packs & Lists", comment: "Tab title for the Discover Lists feed")
     }
+    if selectedSubTab() == "Streams" {
+        return String(localized: "Live Streams", comment: "Tab title for the Live Streams feed")
+    }
     if selectedSubTab() == "Gallery" {
         return String(localized: "Gallery", comment: "Tab title for the Gallery feed")
     }

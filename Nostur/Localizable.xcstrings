@@ -772,6 +772,9 @@
         }
       }
     },
+    "%@ tuned in" : {
+
+    },
     "%@'s Feed" : {
       "comment" : "(name)'s Feed",
       "localizations" : {
@@ -5396,6 +5399,9 @@
         }
       }
     },
+    "in private" : {
+      "comment" : "Replying to xxx 'in private'"
+    },
     "Include author" : {
       "comment" : "Button to include author in Highlight",
       "localizations" : {
@@ -5883,6 +5889,12 @@
           }
         }
       }
+    },
+    "Live Streams" : {
+      "comment" : "Feed title\nTab title for Live Streams feed"
+    },
+    "Live Streams from people you follow" : {
+
     },
     "Load anyway" : {
       "comment" : "Button to show the blocked content anyway",
@@ -7947,6 +7959,9 @@
         }
       }
     },
+    "private" : {
+      "comment" : "Label shown on a private item"
+    },
     "Private conversation" : {
       "comment" : "Navigation title for screen to select a contact to send a Direct Message to",
       "localizations" : {
@@ -8934,6 +8949,9 @@
         }
       }
     },
+    "Reply in private" : {
+
+    },
     "Reply..." : {
       "localizations" : {
         "nl" : {
@@ -8953,6 +8971,9 @@
           }
         }
       }
+    },
+    "Replying to **%@**" : {
+
     },
     "Replying to %lld people" : {
       "comment" : "Shown in a post, Replying to (X) people ",
