@@ -57,8 +57,8 @@ class NotificationsViewModel: ObservableObject {
         // Not sure if AccountsState is already ready here so fallback to own fetch
         self.account = AccountsState.shared.accounts.first(where: { $0.publicKey == pubkey }) ?? CloudAccount.fetchAccounts(context: context()).first(where: { $0.publicKey == pubkey })
         
-        bg().perform {
-            self.needsUpdate = true
+        bg().perform { [weak self] in
+            self?.needsUpdate = true
         }
         self.unreadMentions_ = 0
         self.unreadNewPosts_ = 0

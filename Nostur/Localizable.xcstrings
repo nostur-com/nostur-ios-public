@@ -5891,7 +5891,7 @@
       }
     },
     "Live Streams" : {
-      "comment" : "Feed title\nTab title for Live Streams feed"
+      "comment" : "Feed title\nTab title for Live Streams feed\nTab title for the Live Streams feed"
     },
     "Live Streams from people you follow" : {
 
