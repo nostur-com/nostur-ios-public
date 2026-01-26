@@ -547,6 +547,10 @@ struct MainFeedsScreen: View {
                               }
                           }
                           
+                          if enableStreamsFeed {
+                              Button("Live Streams", systemImage: "dot.radiowaves.left.and.right") { selectedSubTab = "Streams" }
+                          }
+                          
                           Divider()
                           
                           ForEach(lists) { list in
@@ -579,10 +583,6 @@ struct MainFeedsScreen: View {
                           
                           if enableDiscoverListsFeed {
                               Button("Follow Packs & Lists", systemImage: "person.2.crop.square.stack") { selectedSubTab = "DiscoverLists" }
-                          }
-                          
-                          if enableStreamsFeed {
-                              Button("Live Streams", systemImage: "dot.radiowaves.left.and.right") { selectedSubTab = "Streams" }
                           }
                           
                           if la.viewFollowingPublicKeys.count > 10 && enableGalleryFeed {

@@ -37,9 +37,7 @@ class StreamsViewModel: ObservableObject {
     
     public init() {
         self.state = .initializing
-
         self.backlog = Backlog(timeout: 5.0, auto: true, backlogDebugName: "StreamsViewModel")
-        
         self.follows = resolveFollows()
         
         receiveNotification(.blockListUpdated)
@@ -64,43 +62,27 @@ class StreamsViewModel: ObservableObject {
         
         let reqTask = ReqTask(
             debounceTime: 0.5,
+            timeout: 3.0,
             subscriptionId: "STREAMS",
             reqCommand: { [weak self] taskId in
                 guard let self else { return }
                 
-                let follows = self.follows.count <= 2000 ? self.follows : Set(self.follows.shuffled().prefix(2000))
+                let follows = self.follows.count <= 1950 ? self.follows : Set(self.follows.shuffled().prefix(1950))
                 
-                if let cm = NostrEssentials
-                            .ClientMessage(type: .REQ,
-                                           subscriptionId: taskId,
-                                           filters: [
-                                            Filters(
-                                                authors: follows,
-                                                kinds: [30311],
-                                                limit: 9999
-                                            )
-                                           ]
-                            ).json() {
-                    req(cm) // TODO: Make outbox req
-                }
-                else {
-#if DEBUG
-                    L.og.error("Streams feed: Problem generating request")
-#endif
-                }
+                nxReq(Filters(
+                    authors: follows,
+                    kinds: Set([30311]),
+                    limit: 500
+                ), subscriptionId: taskId)
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchStreamsFromDB(onComplete)
+                self?.fetchStreamsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Streams feed: ready to process relay response")
 #endif
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchStreamsFromDB(onComplete)
+                self?.fetchStreamsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Streams feed: timeout ")
 #endif
@@ -112,21 +94,29 @@ class StreamsViewModel: ObservableObject {
     
     // STEP 2: FETCH RECEIVED StREAMS FROM DB
     private func fetchStreamsFromDB(_ onComplete: (() -> ())? = nil) {
-
+        guard let accountPubkey = AccountsState.shared.loggedInAccount?.pubkey else {
+            DispatchQueue.main.async { [weak self] in
+                self?.state = .ready
+                onComplete?()
+            }
+            return
+        }
+        let agoTimestamp: Int = 0 // Int(Date().timeIntervalSince1970 - (14400)) // Only with recent 4 hours
+        let blockedPubkeys = blocks()
+        let followsAndMe: Set<String> = self.follows.union(Set([accountPubkey]))
+        
         let fr2 = Event.fetchRequest()
-        fr2.predicate = NSPredicate(format: "kind = 30311 AND pubkey IN %@ AND dTag != nil AND mostRecentId = nil", follows)
+        fr2.predicate = NSPredicate(format: "(created_at > %i OR pubkey == %@) AND kind = 30311 AND mostRecentId = nil AND NOT pubkey IN %@", agoTimestamp, accountPubkey, blockedPubkeys)
         
         
         bg().perform { [weak self] in
             guard let self else { return }
-            
-            let blockedPubkeys = blocks()
             let streams = ((try? bg().fetch(fr2)) ?? [])
             
             guard !streams.isEmpty else {
                 DispatchQueue.main.async { [weak self] in
-                    onComplete?()
                     self?.state = .ready
+                    onComplete?()
                 }
                 return
             }          
@@ -141,12 +131,20 @@ class StreamsViewModel: ObservableObject {
                     return false
                 }
                 
-                .filter { hasSpeakerOrHostInFollows($0, follows: self.follows) || (AccountsState.shared.bgAccountPubkeys.contains($0.pubkey)) }
+                .filter { hasSpeakerOrHostInFollows($0, follows: followsAndMe) || (AccountsState.shared.bgAccountPubkeys.contains($0.pubkey)) }
                 .sorted(by: { $0.created_at > $1.created_at })
                 .uniqued(on: { $0.aTag })
                 .prefix(Self.POSTS_LIMIT)
                 .map { NRLiveEvent(event: $0) }
                 .filter { !blockedPubkeys.contains($0.hostPubkey) } // also catch "host" in p-tags blocked
+            
+            guard !nrLiveEvents.isEmpty else {
+                DispatchQueue.main.async { [weak self] in
+                    self?.state = .ready
+                    onComplete?()
+                }
+                return
+            }
             
             DispatchQueue.main.async { [weak self] in
                 self?.streams = nrLiveEvents
@@ -161,7 +159,7 @@ class StreamsViewModel: ObservableObject {
         self.didLoad = true
         self.speedTest = speedTest
 #if DEBUG
-        L.og.debug("Steams feed: load()")
+        L.og.debug("Streams feed: load()")
 #endif
         self.follows = resolveFollows()
         self.state = .loading
@@ -173,7 +171,7 @@ class StreamsViewModel: ObservableObject {
                 self.speedTest?.loadingBarViewState = .finalLoad
                 if self.streams.isEmpty {
 #if DEBUG
-                    L.og.debug("Steams feed: timeout()")
+                    L.og.debug("Streams feed: timeout()")
 #endif
                     self.timeout()
                 }
@@ -194,7 +192,7 @@ class StreamsViewModel: ObservableObject {
                 self.speedTest?.loadingBarViewState = .finalLoad
                 if self.streams.isEmpty {
 #if DEBUG
-                    L.og.debug("Steams feed: timeout()")
+                    L.og.debug("Streams feed: timeout()")
 #endif
                     self.timeout()
                 }
@@ -216,7 +214,7 @@ class StreamsViewModel: ObservableObject {
                         self.speedTest?.loadingBarViewState = .finalLoad
                         if self.streams.isEmpty {
     #if DEBUG
-                            L.og.debug("Steams feed: timeout()")
+                            L.og.debug("Streams feed: timeout()")
     #endif
                             self.timeout()
                         }
