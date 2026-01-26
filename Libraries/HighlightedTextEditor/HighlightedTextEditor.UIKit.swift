@@ -15,6 +15,7 @@ public typealias GifsTappedCallback = () -> Void
 public typealias CameraTappedCallback = () -> Void
 public typealias NestsTappedCallback = () -> Void
 public typealias VoiceMessageTappedCallback = () -> Void
+public typealias PrivateReplyTappedCallback = () -> Void
 
 protocol PastedMediaDelegate: UITextViewDelegate {
     func didPasteImage(_ image: UIImage)
@@ -30,6 +31,7 @@ protocol PastedMediaDelegate: UITextViewDelegate {
     func cameraTapped()
     func nestsTapped()
     func voiceMessageTapped()
+    func privateReplyTapped()
 }
 
 class NosturTextView: UITextView {
@@ -104,6 +106,10 @@ class NosturTextView: UITextView {
         pastedMediaDelegate?.voiceMessageTapped()
     }
     
+    @objc func privateReplyTapped() {
+        pastedMediaDelegate?.privateReplyTapped()
+    }
+    
     
 }
 
@@ -130,6 +136,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
     var cameraTapped: CameraTappedCallback?
     var nestsTapped: NestsTappedCallback?
     var voiceMessageTapped: VoiceMessageTappedCallback?
+    var privateReplyTapped: PrivateReplyTappedCallback?
     var kind: NEventKind?
     
     private(set) var onEditingChanged: OnEditingChangedCallback?
@@ -149,7 +156,8 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         gifsTapped: GifsTappedCallback? = nil,
         cameraTapped: CameraTappedCallback? = nil,
         nestsTapped: NestsTappedCallback? = nil,
-        voiceMessageTapped: VoiceMessageTappedCallback? = nil
+        voiceMessageTapped: VoiceMessageTappedCallback? = nil,
+        privateReplyTapped: PrivateReplyTappedCallback? = nil
     ) {
         _text = text
         _showVoiceRecorderButton = showVoiceRecorderButton
@@ -163,6 +171,7 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         self.cameraTapped = cameraTapped
         self.nestsTapped = nestsTapped
         self.voiceMessageTapped = voiceMessageTapped
+        self.privateReplyTapped = privateReplyTapped
         self.kind = kind
     }
     
@@ -256,6 +265,13 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         
         var barButtons: [UIBarButtonItem] = []
         
+        let privateReplyButton = UIButton(type: .system)
+        privateReplyButton.setImage(UIImage(systemName: "lock.rectangle.on.rectangle"), for: .normal)
+        privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
+        privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
+        let privateReply = UIBarButtonItem(customView: privateReplyButton)
+        barButtons.append(privateReply)
+        
         if showVoiceRecorderButton {
             let voiceRecordingButton = UIButton(type: .system)
             voiceRecordingButton.setImage(UIImage(systemName: "mic"), for: .normal)
@@ -327,6 +343,17 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         fixedSpace.width = 9
         
         var barButtons: [UIBarButtonItem] = []
+        
+        let privateReplyButton = UIButton(type: .system)
+        privateReplyButton.setImage(UIImage(systemName: "lock.rectangle.on.rectangle"), for: .normal)
+        privateReplyButton.tintColor = UIColor(Themes.default.theme.accent)
+        privateReplyButton.addTarget(self, action: #selector(textView.privateReplyTapped), for: .touchUpInside)
+        let privateReply = UIBarButtonItem(customView: privateReplyButton)
+        
+        if barButtons.count != 0 {
+            barButtons.append(fixedSpace)
+        }
+        barButtons.append(privateReply)
         
         if showVoiceRecorderButton {
             let voiceRecordingButton = UIButton(type: .system)
@@ -480,6 +507,12 @@ public struct HighlightedTextEditor: UIViewRepresentable, HighlightingTextEditor
         func voiceMessageTapped() {
             guard let voiceMessageTapped = self.parent.voiceMessageTapped else { return }
             voiceMessageTapped()
+        }
+        
+        
+        func privateReplyTapped() {
+            guard let privateReplyTapped = self.parent.privateReplyTapped else { return }
+            privateReplyTapped()
         }
         
         var parent: HighlightedTextEditor

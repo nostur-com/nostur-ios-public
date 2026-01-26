@@ -83,8 +83,13 @@ struct ComposePost: View {
                             
                             VStack(alignment: .leading, spacing: 3) {
                                 if replyTo != nil {
-                                    ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $vm.typingTextModel.selectedMentions, unselected: $vm.typingTextModel.unselectedMentions)
-                                        .offset(x: 5.0, y: 4.0)
+                                    if vm.replyInPrivate, let requiredP = vm.requiredP {
+                                        ReplyingInPrivateTo(pubkey: requiredP)
+                                    }
+                                    else {
+                                        ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $vm.typingTextModel.selectedMentions, unselected: $vm.typingTextModel.unselectedMentions)
+                                            .offset(x: 5.0, y: 4.0)
+                                    }
                                 }
                                 
                                 Text("Tap mic to record a voice message")
@@ -457,7 +462,7 @@ struct ComposePost: View {
     
     @ViewBuilder
     var textEntry: some View {
-        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder)
+        Entry(vm: vm, photoPickerShown: $photoPickerShown, videoPickerShown: $videoPickerShown, gifSheetShown: $gifSheetShown, cameraSheetShown: $cameraSheetShown, replyTo: replyTo, quotePost: quotePost, directMention: directMention, onDismiss: { onDismiss() }, replyToKind: replyToNRPost?.kind, kind: kind, showAudioRecorder: $showAudioRecorder, replyInPrivate: $vm.replyInPrivate)
     }
 }
 

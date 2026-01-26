@@ -19,6 +19,7 @@ struct Entry: View {
     @Binding var gifSheetShown: Bool
     @Binding var cameraSheetShown: Bool
     @Binding var showAudioRecorder: Bool
+    @Binding var replyInPrivate: Bool
     
     @State private var showRemoveAuthor = false
     
@@ -54,7 +55,7 @@ struct Entry: View {
         return false
     }
     
-    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, showAudioRecorder: Binding<Bool>) {
+    init(vm: NewPostModel, photoPickerShown: Binding<Bool>, videoPickerShown: Binding<Bool>, gifSheetShown: Binding<Bool>, cameraSheetShown: Binding<Bool>, replyTo: ReplyTo? = nil, quotePost: QuotePost? = nil, directMention: NRContact? = nil, onDismiss: @escaping () -> Void, replyToKind: Int64?, kind: NEventKind? = nil, showAudioRecorder: Binding<Bool>, replyInPrivate: Binding<Bool>) {
         self.replyTo = replyTo
         self.quotePost = quotePost
         self.directMention = directMention
@@ -68,6 +69,7 @@ struct Entry: View {
         _gifSheetShown = gifSheetShown
         _cameraSheetShown = cameraSheetShown
         _showAudioRecorder = showAudioRecorder
+        _replyInPrivate = replyInPrivate
     }
     
     var body: some View {
@@ -119,8 +121,14 @@ struct Entry: View {
                             .offset(x: 5.0, y: 4.0)
                     }
                     else {
-                        ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $typingTextModel.selectedMentions, unselected: $typingTextModel.unselectedMentions)
-                            .offset(x: 5.0, y: 4.0)
+                        if replyInPrivate, let requiredP = vm.requiredP {
+                            ReplyingInPrivateTo(pubkey: requiredP)
+                                .offset(x: 5.0, y: 4.0)
+                        }
+                        else {
+                            ReplyingToEditable(requiredP: vm.requiredP, available: vm.availableContacts, selected: $typingTextModel.selectedMentions, unselected: $typingTextModel.unselectedMentions)
+                                .offset(x: 5.0, y: 4.0)
+                        }
                     }
                 }
                 .frame(height: 21.0)
@@ -158,6 +166,9 @@ struct Entry: View {
                 },
                 voiceMessageTapped: {
                     showAudioRecorder = true
+                },
+                privateReplyTapped: {
+                    replyInPrivate.toggle()
                 }
             )
             .introspect { editor in
@@ -290,6 +301,8 @@ struct Entry: View {
         ToolbarItem(placement: .primaryAction) {
             HStack {
                 if kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
+                    self.privateReplyButton
+                    
                     if showVoiceRecorderButton {
                         self.voiceRecordingButton
                     }
@@ -341,6 +354,9 @@ struct Entry: View {
         
         ToolbarItemGroup(placement: .primaryAction) {
             if  kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
+                
+                self.privateReplyButton
+                
                 if showVoiceRecorderButton {
                     self.voiceRecordingButton
                 }
@@ -389,6 +405,9 @@ struct Entry: View {
         
         if kind != .highlight && (IS_CATALYST || (UIDevice.current.userInterfaceIdiom == .pad && horizontalSizeClass == .regular)) {
             ToolbarItemGroup(placement: .primaryAction) {
+                
+                self.privateReplyButton
+                
                 if showVoiceRecorderButton {
                     self.voiceRecordingButton
                 }
@@ -519,6 +538,16 @@ struct Entry: View {
         .buttonStyle(.borderless)
         .disabled(typingTextModel.uploading)
         .help("Record Voice Message")
+    }
+    
+    @ViewBuilder
+    private var privateReplyButton: some View {
+        Button("Reply in private", systemImage: replyInPrivate ? "lock.rectangle.on.rectangle.fill" : "lock.rectangle.on.rectangle") {
+            replyInPrivate.toggle()
+        }
+        .buttonStyle(.borderless)
+        .disabled(typingTextModel.uploading)
+        .help("Reply in private")
     }
     
     @ViewBuilder

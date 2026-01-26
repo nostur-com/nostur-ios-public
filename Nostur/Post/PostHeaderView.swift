@@ -200,3 +200,17 @@ struct PrivateLabel: View {
             .layoutPriority(2)
     }
 }
+
+struct PrivateTextLabel: View {
+    @Environment(\.theme) private var theme
+    
+    var body: some View {
+        Text("private", comment: "Label shown on a private item").font(.system(size: 12.0))
+            .padding(.horizontal, 8)
+            .background(theme.accent.opacity(0.8))
+            .foregroundColor(.white)
+            .cornerRadius(8)
+            .padding(.top, 3)
+            .layoutPriority(2)
+    }
+}

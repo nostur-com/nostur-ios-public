@@ -97,7 +97,7 @@ public final class NewPostModel: ObservableObject {
     @Published var previewNEvent: NEvent? // needed for AutoPilot preview (and probably should use this more and reduce use of Event)
     @Published var previewNRPost: NRPost?
     @Published var gifSheetShown = false
-    
+    @Published var replyInPrivate: Bool = false
     @Published var contactSearchResults: [NRContact] = []
     @Published var activeAccount: CloudAccount? = nil {
         didSet {
