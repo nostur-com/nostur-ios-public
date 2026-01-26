@@ -9,6 +9,11 @@ import SwiftUI
 import Combine
 import CoreData
 
+// Use for user defaults but for specific account setting
+func accountSpecificKey(_ accountPubkey: String, forKey: String) -> String {
+    return ("as_" + accountPubkey + "_" + forKey)
+}
+
 class NotificationsViewModel: ObservableObject {
     
     @Published public var tab = "Mentions" // This is for per column tabs. Use @AppStorage("selected_notifications_tab") for pre-Desktop columns
