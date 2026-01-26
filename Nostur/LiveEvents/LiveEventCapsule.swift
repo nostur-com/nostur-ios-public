@@ -54,11 +54,29 @@ struct LiveEventCapsule: View {
         .padding(.leading, 2)
         .padding(.trailing, 8)
         .foregroundColor(Color.white)
+        .contentShape(Rectangle())
+        .offset(y: dragOffset.height)
         .modifier {
             if #available(iOS 26.0, *) {
                 $0.glassEffect(colorScheme == .dark
                                ? .clear.tint(theme.accent.opacity(0.35)).interactive()
                                : .clear.tint(theme.accent.mix(with: .black, by: 0.1).opacity(0.6)).interactive() // .accent colors on .clear look too bright on light mode for liquid glass tint, so mix with black to make darker
+                )
+                .gesture(
+                    SimultaneousGesture(
+                        onBegan: {
+                            print("Long Press Began")
+                        },
+                        onChanged: { recognizer in
+//                            print("Long Press Changed: \(recognizer.location(in: recognizer.view))")
+//                            if value.translation.height < 0 { // Only allow upward swipes
+//                                dragOffset = value.translation
+//                            }
+                        },
+                        onEnded: {
+                            self.tap()
+                        }
+                    )
                 )
             }
             else {
@@ -67,54 +85,56 @@ struct LiveEventCapsule: View {
                     .frame(height: 34.0)
                     .clipShape(.rect(cornerRadius: 30))
                     .frame(height: 44.0)
+                    .simultaneousGesture(
+                        TapGesture()
+                           .onEnded { // TAP
+                               self.tap()
+                           }
+                           .simultaneously(with: DragGesture() // SWIPE UP
+                               .onChanged { value in
+                                   if value.translation.height < 0 { // Only allow upward swipes
+                                       dragOffset = value.translation
+                                   }
+                               }
+                               .onEnded { value in
+                                   // Never dismiss own event, except if its already ended
+                                   if liveEvent.pubkey == AccountsState.shared.activeAccountPublicKey && liveEvent.status != "ended" {
+                                       return
+                                   }
+                                   if value.translation.height < -50 { // Adjust the threshold as needed
+                                       onRemove(liveEvent.id)
+                                   }
+                                   dragOffset = .zero
+                               }
+                           )
+                   )
             }
         }
-        .contentShape(Rectangle())
-        .offset(y: dragOffset.height)
-        .simultaneousGesture(
-            TapGesture()
-               .onEnded {
-                   if let status = liveEvent.status, status == "planned" {
-                       navigateTo(liveEvent, context: containerID)
-                   }
-                   else if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
-                       navigateTo(liveEvent, context: containerID)
-                   }
-                   else {
-                       // LOAD NEST
-                       if liveEvent.isLiveKit {
-                           LiveKitVoiceSession.shared.activeNest = liveEvent
-                       }
-                       // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
-                       else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
-                           AnyPlayerModel.shared.viewMode = .detailstream
-                       }
-                       // LOAD NEW .DETAILSTREAM
-                       else {
-                           Task {
-                               await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay, .audioOnlyBar])
-                           }
-                       }
-                   }
-               }
-               .simultaneously(with: DragGesture()
-                   .onChanged { value in
-                       if value.translation.height < 0 { // Only allow upward swipes
-                           dragOffset = value.translation
-                       }
-                   }
-                   .onEnded { value in
-                       // Never dismiss own event, except if its already ended
-                       if liveEvent.pubkey == AccountsState.shared.activeAccountPublicKey && liveEvent.status != "ended" {
-                           return
-                       }
-                       if value.translation.height < -50 { // Adjust the threshold as needed
-                           onRemove(liveEvent.id)
-                       }
-                       dragOffset = .zero
-                   }
-               )
-       )
+    }
+    
+    private func tap() {
+        if let status = liveEvent.status, status == "planned" {
+            navigateTo(liveEvent, context: containerID)
+        }
+        else if liveEvent.isLiveKit && (IS_CATALYST || IS_IPAD) { // Always do nests in tab on ipad/desktop
+            navigateTo(liveEvent, context: containerID)
+        }
+        else {
+            // LOAD NEST
+            if liveEvent.isLiveKit {
+                LiveKitVoiceSession.shared.activeNest = liveEvent
+            }
+            // ALREADY PLAYING IN .OVERLAY, TOGGLE TO .DETAILSTREAM
+            else if AnyPlayerModel.shared.nrLiveEvent?.id == liveEvent.id {
+                AnyPlayerModel.shared.viewMode = .detailstream
+            }
+            // LOAD NEW .DETAILSTREAM
+            else {
+                Task {
+                    await AnyPlayerModel.shared.loadLiveEvent(nrLiveEvent: liveEvent, availableViewModes: [.detailstream, .overlay, .audioOnlyBar])
+                }
+            }
+        }
     }
 }
 
