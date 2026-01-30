@@ -331,6 +331,10 @@ struct ComposePost: View {
                                     .environment(\.theme, theme)
                                     .environment(\.availableWidth, geo.size.width)
                                     .environmentObject(la)
+                                    .onAppear {
+                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                                            to: nil, from: nil, for: nil)
+                                    }
                                     .onDisappear {
                                         vm.previewNRPost = nil
                                     }
