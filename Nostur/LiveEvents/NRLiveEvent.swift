@@ -626,6 +626,11 @@ extension Event {
         return nil
     }
     
+    func isPlannedNotInPast() -> Bool {
+        if let plannedAt = self.isPlannedAt(), plannedAt > Date().addingTimeInterval(-10800) { return true }
+        return false
+    }
+    
     func recordingUrl() -> String? {
         // Check if status is "ended" first
         guard self.fastTags.contains(where: { $0.0 == "status" && $0.1 == "ended" }) else { return nil }

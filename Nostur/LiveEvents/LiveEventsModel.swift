@@ -75,10 +75,7 @@ class LiveEventsModel: ObservableObject {
                 .filter { !self.dismissedLiveEvents.contains($0.aTag) } // don't show dismissed events
                 .filter {
                     if $0.isLive() { return true } // IS LIVE
-                    
-                    // OR IS PLANNED BUT NOT TOO FAR IN THE PAST
-                    if let plannedAt = $0.isPlannedAt(), plannedAt > Date().addingTimeInterval(-10800) { return true }
-                    
+                    if $0.isPlannedNotInPast() { return true } // OR IS PLANNED BUT NOT TOO FAR IN THE PAST
                     return false
                 }
                 .filter { hasSpeakerOrHostInFollows($0, follows: self.follows) || (accountPubkey == $0.pubkey) }
@@ -207,6 +204,7 @@ class LiveEventsModel: ObservableObject {
             .sink { [weak self] event in
                 guard SettingsStore.shared.enableLiveEvents else { return }
                 guard let self else { return }
+                
                 // We should be in bg() already, here (?)
                 let nEvent = event.toNEvent() // TODO: This is NEvent (MessageParser) to Event (Importer) to NEvent (here), need to fix better
                 let aTag = event.aTag
@@ -214,7 +212,8 @@ class LiveEventsModel: ObservableObject {
                 if Set(self.nrLiveEvents.map { $0.id }).contains(aTag) { // update existing event
                     
                     
-                    guard (self.nrLiveEvents.first(where: { $0.id == aTag })) != nil else { return }
+                    // Only continue if we have aTag, and it is older
+                    guard (self.nrLiveEvents.first(where: { $0.id == aTag && $0.nEvent.createdAt.timestamp < nEvent.createdAt.timestamp })) != nil else { return }
                     
                     if (event.isLive() || event.isPlanned()) { // update if still live or planned
                         
@@ -255,9 +254,9 @@ class LiveEventsModel: ObservableObject {
                         
                         // if planned but in the past, remove
                         if let scheduledAt, event.isPlanned() && scheduledAt > Date().addingTimeInterval(-10800) { // 3 hours ago
-                            self.nrLiveEvents.removeAll(where: { $0.id == aTag })
+                            self.nrLiveEvents.removeAll(where: { $0.id == aTag && $0.nEvent.createdAt.timestamp < nEvent.createdAt.timestamp }) // Only remove older
                         }
-                        else if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag }) {
+                        else if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag && $0.nEvent.createdAt.timestamp < nEvent.createdAt.timestamp }) { // update event (only if existing is older)
                             DispatchQueue.main.async {
                                 nrLiveEvent.objectWillChange.send()
                                 nrLiveEvent.loadReplacableData((nEvent: nEvent,
@@ -284,11 +283,11 @@ class LiveEventsModel: ObservableObject {
                     }
                     else { // else remove
                         DispatchQueue.main.async {
-                            self.nrLiveEvents.removeAll(where: { $0.id == aTag })
+                            self.nrLiveEvents.removeAll(where: { $0.id == aTag && $0.nEvent.createdAt.timestamp < nEvent.createdAt.timestamp })
                         }
                     }
                 }
-                else if !self.dismissedLiveEvents.contains(aTag) && (event.isLive() || event.isPlanned()) && !blocks().contains(event.hostPubkey()) { // insert new live or planned event
+                else if !self.dismissedLiveEvents.contains(aTag) && (event.isLive() || event.isPlannedNotInPast()) && !blocks().contains(event.hostPubkey()) { // insert new live or planned event
                     let nrLiveEvent = NRLiveEvent(event: event)
                     
                     DispatchQueue.main.async {

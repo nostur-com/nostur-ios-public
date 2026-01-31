@@ -101,6 +101,8 @@ class StreamsViewModel: ObservableObject {
             }
             return
         }
+        self.follows = resolveFollows()
+        
         let agoTimestamp: Int = 0 // Int(Date().timeIntervalSince1970 - (14400)) // Only with recent 4 hours
         let blockedPubkeys = blocks()
         let followsAndMe: Set<String> = self.follows.union(Set([accountPubkey]))
@@ -124,10 +126,7 @@ class StreamsViewModel: ObservableObject {
             let nrLiveEvents: [NRLiveEvent] = streams
                 .filter {
                     if $0.isLive() { return true } // IS LIVE
-                    
-                    // OR IS PLANNED BUT NOT TOO FAR IN THE PAST
-                    if let plannedAt = $0.isPlannedAt(), plannedAt > Date().addingTimeInterval(-10800) { return true }
-                    
+                    if $0.isPlannedNotInPast() { return true } // OR IS PLANNED BUT NOT TOO FAR IN THE PAST                    
                     return false
                 }
                 
