@@ -233,13 +233,16 @@ struct NRProfileRow: View {
                                 .font(.caption)
                                 .foregroundColor(.gray)
                                 .opacity(nrContact.npub != nil ? 1 : 0)
+                                .task {
+                                    await nrContact.loadNpub()
+                                }
                         }
                         else if nrContact.similarToPubkey == nil && nrContact.nip05verified, let nip05 = nrContact.nip05 {
                             NostrAddress(nip05: nip05, shortened: nrContact.anyName.lowercased() == nrContact.nip05nameOnly?.lowercased())
                                 .layoutPriority(3)
                         }
                         
-                        if showNpub {
+                        if nrContact.similarToPubkey == nil && showNpub {
                             Text(nrContact.npub ?? "")
                                 .lineLimit(1)
                                 .truncationMode(.middle)
