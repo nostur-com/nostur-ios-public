@@ -117,6 +117,9 @@ class NRPost: ObservableObject, Identifiable, Hashable, Equatable, IdentifiableD
     
     let isRepost: Bool
     let isRumor: Bool // no sig and .otherId not nil means rumor. .otherId is from the outer giftwrap id
+    var isPrivate: Bool {
+        self.isRumor
+    }
 
     var threadPostsCount: Int
     var isTruncated: Bool = false

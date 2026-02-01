@@ -54,6 +54,16 @@ struct PostEmbeddedLayout<Content: View>: View {
                                     navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                                 }
                                 
+                            if nrPost.isPrivate {
+                                PrivateLabel()
+                                    .lineLimit(1)
+                                    .infoText("This is a private post. Only you can see it.")
+                            }
+                            else if nrPost.isRestricted {
+                                RestrictedLabel()
+                                    .lineLimit(1)
+                                    .infoText("The author has marked this post as restricted.\n\nA restricted post is intended to be sent only to specific relays and should not be rebroadcasted to other relays.")
+                            }
                             
                             PossibleImposterLabelView(nrContact: nrContact)
                             
@@ -98,6 +108,17 @@ struct PostEmbeddedLayout<Content: View>: View {
                             guard !nxViewingContext.contains(.preview) else { return }
                             navigateToContact(pubkey: nrPost.pubkey, nrContact: nrContact, nrPost: nrPost, context: containerID)
                         }
+                    
+                    if nrPost.isPrivate {
+                        PrivateLabel()
+                            .lineLimit(1)
+                            .infoText("This is a private post. Only you can see it.")
+                    }
+                    else if nrPost.isRestricted {
+                        RestrictedLabel()
+                            .lineLimit(1)
+                            .infoText("The author has marked this post as restricted.\n\nA restricted post is intended to be sent only to specific relays and should not be rebroadcasted to other relays.")
+                    }
                         
                     PossibleImposterLabelView(nrContact: nrContact)
                     
