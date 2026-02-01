@@ -292,8 +292,11 @@ class LiveEventsModel: ObservableObject {
                         }
                     }
                 }
-                else if !self.dismissedLiveEvents.contains(aTag) && (event.isLive() || event.isPlannedNotInPast()) && !blocks().contains(event.hostPubkey()) { // insert new live or planned event
+                else if !self.dismissedLiveEvents.contains(aTag) && (
+                    event.isLive() || event.isPlannedNotInPast()) && !blocks().contains(event.hostPubkey()
+                    ) { // insert new live or planned event
                     let nrLiveEvent = NRLiveEvent(event: event)
+                    guard nrLiveEvent.title != nil || nrLiveEvent.summary != nil else { return }
                     
                     DispatchQueue.main.async {
                         self.nrLiveEvents.insert(nrLiveEvent, at: 0)
