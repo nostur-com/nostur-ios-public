@@ -25,6 +25,7 @@ struct ChatInputField: View {
             self.textField
                 .textInputAutocapitalization(.sentences)
                 .padding(10)
+                .padding(.trailing, 40)
                 .background(Color.clear)
                 .focused($focusedField, equals: .message)
                 .submitLabel(.send)
@@ -124,6 +125,7 @@ struct DMChatInputField: View {
                 self.textField
                     .textInputAutocapitalization(.sentences)
                     .padding(10)
+                    .padding(.trailing, 40)
                     .background(Color.clear)
                     .focused($focusedField, equals: .message)
                     .submitLabel(.send)
