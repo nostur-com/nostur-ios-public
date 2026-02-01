@@ -83,6 +83,11 @@ class LiveEventsModel: ObservableObject {
                 .uniqued(on: { $0.aTag })
                 .map { NRLiveEvent(event: $0) }
                 .filter { !blockedPubkeys.contains($0.hostPubkey) } // also catch "host" in p-tags blocked
+                .filter {
+                    // hide if missing title and summary
+                    if $0.title == nil && $0.summary == nil { return false }
+                    return true
+                }
             
             DispatchQueue.main.async { [weak self] in
                 onComplete?()
