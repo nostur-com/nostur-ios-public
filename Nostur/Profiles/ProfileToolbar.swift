@@ -27,22 +27,24 @@ struct ProfileToolbar: View {
                 
                 Spacer()
                 
-                if pubkey == AccountsState.shared.activeAccountPublicKey {
-                    Button {
-                        guard let account = account() else { return }
-                        guard isFullAccount(account) else { showReadOnlyMessage(); return }
-                        editingAccount = account
-                    } label: {
-                        Text("Edit profile", comment: "Button to edit own profile")
-                    }
-                    .buttonStyle(NosturButton())
-                    .layoutPriority(2)
-                    //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
-                }
-                else {
-                    FollowButton(pubkey: nrContact.pubkey)
+                if !AVAILABLE_26 { // Toolbar is not tappable on iOs 26, so just disable (use button on normal profile view instead)
+                    if pubkey == AccountsState.shared.activeAccountPublicKey {
+                        Button {
+                            guard let account = account() else { return }
+                            guard isFullAccount(account) else { showReadOnlyMessage(); return }
+                            editingAccount = account
+                        } label: {
+                            Text("Edit profile", comment: "Button to edit own profile")
+                        }
+                        .buttonStyle(NosturButton())
                         .layoutPriority(2)
-                    //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                        //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                    }
+                    else {
+                        FollowButton(pubkey: nrContact.pubkey)
+                            .layoutPriority(2)
+                        //                                    .offset(y: 123 + (max(-123,toolbarGEO.frame(in:.global).minY)))
+                    }
                 }
                 
             }
