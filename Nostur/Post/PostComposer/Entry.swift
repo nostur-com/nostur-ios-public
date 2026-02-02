@@ -284,6 +284,12 @@ struct Entry: View {
 //                showVoiceRecorderButton = false
 //            }
         }
+        .onValueChange(typingTextModel.pastedImages) { oldValue, newValue in
+            guard oldValue.count != newValue.count else { return }
+            // Fix keyboard spacing by removing keyboard (forcing layout fixed after keyboard comes back)
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                                        to: nil, from: nil, for: nil)
+        }
 //        .onChange(of: typingTextModel.text) { newText in
 //            guard showVoiceRecorderButton else { return }
 //            if !newText.isEmpty {

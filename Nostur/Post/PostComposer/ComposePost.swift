@@ -331,7 +331,7 @@ struct ComposePost: View {
                                     .environment(\.theme, theme)
                                     .environment(\.availableWidth, geo.size.width)
                                     .environmentObject(la)
-                                    .onAppear {
+                                    .onAppear { // Fix keyboard spacing by removing keyboard (forcing layout fixed after keyboard comes back)
                                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                                             to: nil, from: nil, for: nil)
                                     }
