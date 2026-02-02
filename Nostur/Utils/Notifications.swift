@@ -386,4 +386,8 @@ extension Notification.Name {
     static var didPinPost: Notification.Name {
         return Notification.Name("didPinPost")
     }
+    
+    static var voiceMessagePlayerDidStartPlayback: Notification.Name {
+        return Notification.Name("voiceMessagePlayerDidStartPlayback")
+    }
 }

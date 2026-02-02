@@ -15,6 +15,7 @@ struct VoiceMessagePlayer: View {
     var url: URL // Remote audio file url
     var samples: [Int]?
     
+    private let playerId = UUID() // Unique identifier for this player instance
     
     @State private var cancellable: AnyCancellable?
     @State private var localFileURL: URL? // downloaded file url
@@ -105,6 +106,9 @@ struct VoiceMessagePlayer: View {
                         player?.pause()
                         isPlaying = false
                     } else {
+                        // Notify other players to pause
+                        sendNotification(.voiceMessagePlayerDidStartPlayback, playerId)
+                        
                         if isFinished {
                             player?.seek(to: .zero)
                             isFinished = false
@@ -251,6 +255,9 @@ struct VoiceMessagePlayer: View {
                         
                         if await forceDownload {
                             Task { @MainActor in
+                                // Notify other players to pause
+                                sendNotification(.voiceMessagePlayerDidStartPlayback, playerId)
+                                
                                 try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
                                 try? AVAudioSession.sharedInstance().setActive(true)
                                 player?.play()
@@ -344,6 +351,15 @@ struct VoiceMessagePlayer: View {
         }
         .frame(height: 50)
         .padding(.vertical, 4)
+        .onReceive(receiveNotification(.voiceMessagePlayerDidStartPlayback)) { notification in
+            // If another player started, pause this one
+            guard let otherPlayerId = notification.object as? UUID, otherPlayerId != playerId else { return }
+            
+            if isPlaying {
+                player?.pause()
+                isPlaying = false
+            }
+        }
         .onAppear {
             Task {
                 if let samples {
