@@ -14,7 +14,7 @@ struct LiveEventCapsule: View {
     @ObservedObject public var liveEvent: NRLiveEvent
     public var onRemove: (String) -> ()
     
-    @State private var dragOffset = CGSize.zero
+    @State private var dragOffset = CGFloat.zero
     
     private var icon: String {
         switch liveEvent.status {
@@ -55,29 +55,41 @@ struct LiveEventCapsule: View {
         .padding(.trailing, 8)
         .foregroundColor(Color.white)
         .contentShape(Rectangle())
-        .offset(y: dragOffset.height)
         .modifier {
             if #available(iOS 26.0, *) {
-                $0.glassEffect(colorScheme == .dark
+                $0
+                    .glassEffect(colorScheme == .dark
                                ? .clear.tint(theme.accent.opacity(0.35)).interactive()
                                : .clear.tint(theme.accent.mix(with: .black, by: 0.1).opacity(0.6)).interactive() // .accent colors on .clear look too bright on light mode for liquid glass tint, so mix with black to make darker
-                )
-                .gesture(
-                    SimultaneousGesture(
-                        onBegan: {
-                            print("Long Press Began")
-                        },
-                        onChanged: { recognizer in
-//                            print("Long Press Changed: \(recognizer.location(in: recognizer.view))")
-//                            if value.translation.height < 0 { // Only allow upward swipes
-//                                dragOffset = value.translation
-//                            }
-                        },
-                        onEnded: {
-                            self.tap()
-                        }
                     )
-                )
+                    .gesture(
+                        SimultaneousGesture(
+                            onChangedWithTranslation: { value in
+                                if value.translation.height > 0 { // Only allow upward swipes
+                                    dragOffset = -1.0
+                                }
+                                else {
+                                    dragOffset = value.translation.height
+                                }
+                            },
+                            onEnded: {
+                                if dragOffset < -22.0 {
+                                    // Never dismiss own event, except if its already ended
+                                    if liveEvent.pubkey == AccountsState.shared.activeAccountPublicKey && liveEvent.status != "ended" {
+                                        return
+                                    }
+                                    onRemove(liveEvent.id)
+                                }
+                                else if dragOffset == 0.0 {
+                                    self.tap()
+                                }
+                                withAnimation {
+                                    dragOffset = .zero
+                                }
+                            }
+                        )
+                    )
+                    .offset(y: dragOffset)
             }
             else {
                 $0
@@ -93,7 +105,7 @@ struct LiveEventCapsule: View {
                            .simultaneously(with: DragGesture() // SWIPE UP
                                .onChanged { value in
                                    if value.translation.height < 0 { // Only allow upward swipes
-                                       dragOffset = value.translation
+                                       dragOffset = value.translation.height
                                    }
                                }
                                .onEnded { value in
@@ -108,6 +120,7 @@ struct LiveEventCapsule: View {
                                }
                            )
                    )
+                    .offset(y: dragOffset)
             }
         }
     }

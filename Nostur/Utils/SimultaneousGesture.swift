@@ -24,16 +24,27 @@ import SwiftUI
 
 // UIGestureRecognizerRepresentable
 struct SimultaneousGesture: UIGestureRecognizerRepresentable {
+    struct Value {
+        let translation: CGSize
+        let location: CGPoint
+    }
+    
     let onBegan: () -> Void
     let onChanged: (UILongPressGestureRecognizer) -> Void
+    let onChangedWithTranslation: ((Value) -> Void)?
     let onEnded: () -> Void
+    let onSwipeUp: () -> Void
 
     init(onBegan: @escaping () -> Void = {},
-         onChanged: @escaping (UILongPressGestureRecognizer) -> Void,
-         onEnded: @escaping () -> Void = {}) {
+         onChanged: @escaping (UILongPressGestureRecognizer) -> Void = { _ in },
+         onChangedWithTranslation: ((Value) -> Void)? = nil,
+         onEnded: @escaping () -> Void = {},
+         onSwipeUp: @escaping () -> Void = {}) {
         self.onBegan = onBegan
         self.onChanged = onChanged
+        self.onChangedWithTranslation = onChangedWithTranslation
         self.onEnded = onEnded
+        self.onSwipeUp = onSwipeUp
     }
     
     func makeUIGestureRecognizer(context: Context) -> UILongPressGestureRecognizer {
@@ -50,11 +61,25 @@ struct SimultaneousGesture: UIGestureRecognizerRepresentable {
     func handleUIGestureRecognizerAction(_ gestureRecognizer: UILongPressGestureRecognizer, context: Context) {
         switch gestureRecognizer.state {
         case .began:
+            let location = gestureRecognizer.location(in: gestureRecognizer.view)
+            context.coordinator.gestureBeganAt(location: location)
             onBegan()
             onChanged(gestureRecognizer)
+            if let onChangedWithTranslation = onChangedWithTranslation {
+                let value = Value(translation: .zero, location: location)
+                onChangedWithTranslation(value)
+            }
         case .changed:
+            let location = gestureRecognizer.location(in: gestureRecognizer.view)
+            context.coordinator.gestureChangedTo(location: location)
             onChanged(gestureRecognizer)
+            if let onChangedWithTranslation = onChangedWithTranslation,
+               let translation = context.coordinator.currentTranslation {
+                let value = Value(translation: translation, location: location)
+                onChangedWithTranslation(value)
+            }
         case .ended, .cancelled:
+            context.coordinator.gestureEnded()
             onEnded()
         default:
             break
@@ -66,10 +91,44 @@ struct SimultaneousGesture: UIGestureRecognizerRepresentable {
     }
     
     func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
-        Coordinator()
+        Coordinator(onSwipeUp: onSwipeUp)
     }
     
     class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        let onSwipeUp: () -> Void
+        private var initialLocation: CGPoint?
+        private(set) var currentTranslation: CGSize?
+        
+        init(onSwipeUp: @escaping () -> Void) {
+            self.onSwipeUp = onSwipeUp
+            super.init()
+        }
+        
+        func gestureBeganAt(location: CGPoint) {
+            initialLocation = location
+            currentTranslation = .zero
+        }
+        
+        func gestureChangedTo(location: CGPoint) {
+            guard let initial = initialLocation else { return }
+            
+            let horizontalMovement = location.x - initial.x
+            let verticalMovement = location.y - initial.y
+            
+            currentTranslation = CGSize(width: horizontalMovement, height: verticalMovement)
+            
+            // Detect upward swipe: vertical movement > 50 points, mostly vertical
+            if -verticalMovement > 50 && -verticalMovement > abs(horizontalMovement) * 2 {
+                onSwipeUp()
+                initialLocation = nil // Reset to avoid multiple triggers
+            }
+        }
+        
+        func gestureEnded() {
+            initialLocation = nil
+            currentTranslation = nil
+        }
+        
         // Key method for simultaneous recognition with ScrollView
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
             return true
