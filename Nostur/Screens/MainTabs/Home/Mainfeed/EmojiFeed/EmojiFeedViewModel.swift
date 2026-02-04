@@ -103,6 +103,7 @@ class EmojiFeedViewModel: ObservableObject {
     
     public func timeout() {
         speedTest?.loadingBarViewState = .timeout
+        self.objectWillChange.send()
         self.state = .timeout
     }
     
@@ -329,7 +330,9 @@ class EmojiFeedViewModel: ObservableObject {
     private func fetchPostsFromDB(_ onComplete: (() -> ())? = nil) {
         let ids = Set(self.posts.keys)
         guard !ids.isEmpty else {
+#if DEBUG
             L.og.debug("fetchPostsFromDB: empty ids")
+#endif
             onComplete?()
             return
         }

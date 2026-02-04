@@ -116,7 +116,7 @@ struct EmojiFeed: View {
             }
         }
         .onChange(of: selectedSubTab) { newValue in
-            guard newValue == "Emoji" else { return }
+            guard !IS_DESKTOP_COLUMNS() && newValue == "Emoji" else { return }
             vm.load(speedTest: speedTest) // didLoad is checked in .load() so no need here
         }
         .onReceive(receiveNotification(.showFeedToggles)) { _ in

@@ -101,6 +101,7 @@ class GalleryViewModel: ObservableObject, Equatable, Hashable {
     
     public func timeout() {
         speedTest?.loadingBarViewState = .timeout
+        self.objectWillChange.send()
         self.state = .timeout
     }
     

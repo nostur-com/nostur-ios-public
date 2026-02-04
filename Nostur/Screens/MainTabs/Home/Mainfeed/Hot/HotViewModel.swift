@@ -96,6 +96,7 @@ class HotViewModel: ObservableObject {
     
     public func timeout() {
         speedTest?.loadingBarViewState = .timeout
+        self.objectWillChange.send()
         self.state = .timeout
     }
     
