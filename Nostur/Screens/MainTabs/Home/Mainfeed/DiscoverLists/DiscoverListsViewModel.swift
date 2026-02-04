@@ -35,6 +35,7 @@ class DiscoverListsViewModel: ObservableObject {
 
     public func timeout() {
         speedTest?.loadingBarViewState = .timeout
+        self.objectWillChange.send()
         self.state = .timeout
     }
     
@@ -79,8 +80,8 @@ class DiscoverListsViewModel: ObservableObject {
                                            filters: [
                                             Filters(
                                                 authors: follows,
-                                                kinds: [30000,39089],
-                                                limit: 9999
+                                                kinds: [39089],
+                                                limit: 1000
                                             )
                                            ]
                             ).json() {
@@ -119,9 +120,9 @@ class DiscoverListsViewModel: ObservableObject {
         let garbage: Set<String> = ["mute", "allowlist", "mutelists"]
         
         // Old kind 30000, needs some cleaning and filtering
-        let fr = Event.fetchRequest()
-        fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", yearAgo, follows, garbage)
-        
+//        let fr = Event.fetchRequest()
+//        fr.predicate = NSPredicate(format: "kind = 30000 AND created_at > %i AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND content == \"\" AND NOT dTag IN %@", yearAgo, follows, garbage)
+//        
         // New 39089 follow pack
         let fr2 = Event.fetchRequest()
         fr2.predicate = NSPredicate(format: "kind = 39089 AND pubkey IN %@ AND dTag != nil AND mostRecentId == nil AND content == \"\"", follows)
@@ -130,11 +131,11 @@ class DiscoverListsViewModel: ObservableObject {
         bg().perform { [weak self] in
             guard let self else { return }
             
-            let followSets = (try? bg().fetch(fr)) ?? []
+//            let followSets = (try? bg().fetch(fr)) ?? []
             let followPacks = ((try? bg().fetch(fr2)) ?? [])
                 .filter { !$0.fastPs.isEmpty }
             
-            guard !followSets.isEmpty || !followPacks.isEmpty  else {
+            guard !followPacks.isEmpty else {
                 DispatchQueue.main.async { [weak self] in
                     onComplete?()
                     self?.state = .ready
@@ -143,31 +144,31 @@ class DiscoverListsViewModel: ObservableObject {
             }
             
             // Only followSets with between 2 and 500 pubkeys
-            let followSetsWithLessGarbage = followSets.filter { list in
-                list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
-            }
+//            let followSetsWithLessGarbage = followSets.filter { list in
+//                list.fastPs.count > 2 && list.fastPs.count <= 500 && noGarbageDtag(list.dTag)
+//            }
             
             // If there are too many lists, hide lists that have 5 or more pubkeys that we already follow
-            let followSetssWithoutAlreadyKnown = if followSetsWithLessGarbage.count > 75 {
-                followSetsWithLessGarbage.filter { list in
-                    Set(list.fastPs.map { $0.1 }).intersection(self.follows).count < 5
-                }
-            }
-            else {
-                followSetsWithLessGarbage
-            }
+//            let followSetssWithoutAlreadyKnown = if followSetsWithLessGarbage.count > 75 {
+//                followSetsWithLessGarbage.filter { list in
+//                    Set(list.fastPs.map { $0.1 }).intersection(self.follows).count < 5
+//                }
+//            }
+//            else {
+//                followSetsWithLessGarbage
+//            }
             
-            guard followSetssWithoutAlreadyKnown.count > 0 || !followPacks.isEmpty else {
-                DispatchQueue.main.async { [weak self] in
-                    onComplete?()
-                    self?.state = .ready
-                }
-                return
-            }
+//            guard followSetssWithoutAlreadyKnown.count > 0 || !followPacks.isEmpty else {
+//                DispatchQueue.main.async { [weak self] in
+//                    onComplete?()
+//                    self?.state = .ready
+//                }
+//                return
+//            }
             
-            let nrLists: [NRPost] = (followPacks + followSetssWithoutAlreadyKnown)
+            let nrLists: [NRPost] = followPacks
                 .sorted { $0.fastPs.count > $1.fastPs.count }
-                .sorted { $0.kind == 39089 && $1.kind != 39089 }
+//                .sorted { $0.kind == 39089 && $1.kind != 39089 }
                 .prefix(Self.POSTS_LIMIT)
                 .map { NRPost(event: $0) }
             
