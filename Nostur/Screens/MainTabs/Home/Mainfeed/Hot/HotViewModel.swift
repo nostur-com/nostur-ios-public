@@ -168,17 +168,15 @@ class HotViewModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchLikesAndRepostsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
+                self?.fetchLikesAndRepostsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Hot feed: ready to process relay response")
 #endif
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchLikesAndRepostsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
+                self?.fetchLikesAndRepostsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Hot feed: timeout ")
 #endif

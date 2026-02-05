@@ -67,13 +67,13 @@ class ProfileInteractionsRepostsVM: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                self?.backlog.clear()
+                self?.backlog.removeTask(with: taskId)
                 self?.fetchRepostsFromDB(onComplete)
 
                 L.og.info("Profile Interactions - Reposts: ready to process relay response")
             },
             timeoutCommand: { [weak self] taskId in
-                self?.backlog.clear()
+                self?.backlog.removeTask(with: taskId)
                 self?.fetchRepostsFromDB(onComplete)
                 L.og.info("Profile Interactions - Reposts: timeout ")
             })

@@ -364,6 +364,16 @@ class Backlog {
         }
     }
     
+    public func removeTask(with subscriptionId: String) {
+#if DEBUG
+        L.og.debug("⏳⏳ \(self.backlogDebugName) Backlog.removeTask(with: \(subscriptionId)) -[LOG]-")
+#endif
+        bg().perform { [weak self] in
+            guard let taskToRemove = self?.task(with: subscriptionId) else { return }
+            self?.tasks.remove(taskToRemove)
+        }
+    }
+    
     public func task(with subscriptionId: String) -> ReqTask? {
 #if DEBUG
             if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {

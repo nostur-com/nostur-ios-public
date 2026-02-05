@@ -181,17 +181,15 @@ class EmojiFeedViewModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchReactionsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
+                self?.fetchReactionsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Feed: ready to process relay response")
 #endif
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchReactionsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
+                self?.fetchReactionsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Feed: timeout ")
 #endif

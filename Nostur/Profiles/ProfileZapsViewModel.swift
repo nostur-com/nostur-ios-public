@@ -72,13 +72,13 @@ class ProfileZapsViewModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                self?.backlog.clear()
+                self?.backlog.removeTask(with: taskId)
                 self?.fetchZapsFromDB(onComplete)
 
                 L.og.info("Profile Zaps: ready to process relay response")
             },
             timeoutCommand: { [weak self] taskId in
-                self?.backlog.clear()
+                self?.backlog.removeTask(with: taskId)
                 self?.fetchZapsFromDB(onComplete)
                 L.og.info("Profile Zaps: timeout ")
             })

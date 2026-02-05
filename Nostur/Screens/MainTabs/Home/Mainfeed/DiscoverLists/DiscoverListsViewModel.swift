@@ -94,17 +94,15 @@ class DiscoverListsViewModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchListsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
+                self?.fetchListsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Discover lists feed: ready to process relay response")
 #endif
             },
             timeoutCommand: { [weak self] taskId in
-                guard let self else { return }
-                self.backlog.clear()
-                self.fetchListsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
+                self?.fetchListsFromDB(onComplete)
 #if DEBUG
                 L.og.debug("Discover lists feed: timeout ")
 #endif
