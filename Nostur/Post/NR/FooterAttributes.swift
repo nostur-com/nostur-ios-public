@@ -328,8 +328,7 @@ class FooterAttributes: ObservableObject {
         }
         if let account = account() {
             let fr = Event.fetchRequest()
-            // TODO: Should use a generic .otherId, similar to .otherPubkey, to make all relational queries superfast.
-            fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9734 AND pubkey == %@ AND tagsSerialized CONTAINS %@", event.created_at, account.publicKey, serializedE(event.id))
+            fr.predicate = NSPredicate(format: "created_at >= %i AND kind == 9735 AND fromPubkey == %@ AND zappedEventId = %@", event.created_at, account.publicKey, event.id)
             fr.fetchLimit = 1
             fr.resultType = .countResultType
             let count = (try? bg().count(for: fr)) ?? 0

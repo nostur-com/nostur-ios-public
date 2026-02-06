@@ -162,7 +162,7 @@ extension Event {
 
 // MARK: Generated accessors for zaps
 extension Event {
-    @NSManaged public var zappedEventId: String?
+    @NSManaged public var zappedEventId: String? // TODO: move .zappedEventId to .otherId and delete zappedEventId column
     
     @NSManaged public var otherPubkey: String? // generic cache for any target pubkey (recipient of zap, target of reaction etc)
     @NSManaged public var fromPubkey: String? // generic cache from any "from" pubkey (zaps or other)
@@ -729,28 +729,6 @@ extension Event {
             }
         }
         return nil
-    }
-    
-    static func saveZapRequest(event: NEvent, context: NSManagedObjectContext) -> Event {
-        if let existingZapReq = Event.fetchEvent(id: event.id, context: context) {
-            return existingZapReq
-        }
-        
-        // CREATE ZAP REQUEST EVENT
-        let zapRequest = Event(context: context)
-        zapRequest.insertedAt = Date.now
-        
-        zapRequest.id = event.id
-        zapRequest.kind = Int64(event.kind.id)
-        zapRequest.created_at = Int64(event.createdAt.timestamp)
-        zapRequest.content = event.content
-        zapRequest.sig = event.signature
-        zapRequest.pubkey = event.publicKey
-        zapRequest.likesCount = 0
-        
-        zapRequest.tagsSerialized = TagSerializer.shared.encode(tags: event.tags)
-        
-        return zapRequest
     }
     
     static func safeUpdateRelays(for event: Event, relays: String) {
