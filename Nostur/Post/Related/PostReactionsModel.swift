@@ -60,6 +60,11 @@ class PostReactionsModel: ObservableObject {
             self.allReactionEvents = ((try? bgContext.fetch(r1)) ?? [])
                 .sorted(by: { !$0.isSpam && $1.isSpam })
             
+            if let event = Event.fetchEvent(id: eventId, context: bgContext) {
+                event.likesCount = Int64(self.allReactionEvents.count)
+            }
+            ViewUpdates.shared.eventStatChanged.send(EventStatChange(id: eventId, likes: Int64(self.allReactionEvents.count)))
+            
             let reactions = self.allReactionEvents
                 .filter { includeSpam || !$0.isSpam }
                 .map { NRPost(event: $0, withFooter: false, withReplyTo: false, withParents: false, withReplies: false, plainText: true, withRepliesCount: false) }
