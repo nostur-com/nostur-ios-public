@@ -34,25 +34,53 @@ struct RelayFeedPreviewSheet: View {
         })
         .environmentObject(VideoPostPlaybackCoordinator())
         .environment(\.nxViewingContext, [.feedPreview])
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack {
-                    Text(previewTitle)
-                }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    sendNotification(.shouldScrollToTop)
-                }
-            }
-
-            ToolbarItem(placement: .primaryAction) {
-                HStack {
-                    Button("Close", systemImage: "xmark") {
-                        AppSheetsModel.shared.dismiss()
+        .modifier {
+            if #available(iOS 26.0, *) {
+                $0.toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack {
+                            Text(previewTitle)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            sendNotification(.shouldScrollToTop)
+                        }
                     }
-                    .labelStyle(.iconOnly)
-                    
-                    previewFeedActionsMenu
+
+                    ToolbarItem(placement: .primaryAction) {
+                        HStack {
+                            Button("Close", systemImage: "xmark") {
+                                AppSheetsModel.shared.dismiss()
+                            }
+                            .labelStyle(.iconOnly)
+                            
+                            previewFeedActionsMenu
+                        }
+                    }
+                    .sharedBackgroundVisibility(.hidden)
+                }
+            } else {
+                $0.toolbar {
+                    ToolbarItem(placement: .principal) {
+                        HStack {
+                            Text(previewTitle)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            sendNotification(.shouldScrollToTop)
+                        }
+                    }
+
+                    ToolbarItem(placement: .primaryAction) {
+                        HStack {
+                            Button("Close", systemImage: "xmark") {
+                                AppSheetsModel.shared.dismiss()
+                            }
+                            .labelStyle(.iconOnly)
+                            
+                            previewFeedActionsMenu
+                        }
+                    }
                 }
             }
         }
