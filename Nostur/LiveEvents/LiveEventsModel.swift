@@ -261,7 +261,7 @@ class LiveEventsModel: ObservableObject {
                         if let scheduledAt, event.isPlanned() && scheduledAt > Date().addingTimeInterval(-10800) { // 3 hours ago
                             self.nrLiveEvents.removeAll(where: { $0.id == aTag && $0.nEvent.createdAt.timestamp < nEvent.createdAt.timestamp }) // Only remove older
                         }
-                        else if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag && $0.nEvent.createdAt.timestamp < nEvent.createdAt.timestamp }) { // update event (only if existing is older)
+                        else if let nrLiveEvent = self.nrLiveEvents.first(where: { $0.id == aTag && $0.nEvent.createdAt.timestamp < nEvent.createdAt.timestamp && event.streamStatus() != "ended" }) { // update event (only if existing is older)
                             DispatchQueue.main.async {
                                 nrLiveEvent.objectWillChange.send()
                                 nrLiveEvent.loadReplacableData((nEvent: nEvent,
