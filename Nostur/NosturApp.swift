@@ -75,6 +75,9 @@ struct iOSApp: App {
     
     private let dlm: DownloadManager = .shared
     
+    private let nwcRequestQueue: NWCRequestQueue = .shared
+    private let nwcZapQueue: NWCZapQueue = .shared
+    
     private let regexes = NostrRegexes.default
     
     private let themes: Themes = .default

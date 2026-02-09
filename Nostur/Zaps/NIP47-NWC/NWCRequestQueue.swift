@@ -92,18 +92,25 @@ class NWCRequestQueue: ObservableObject {
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
                 var timeoutZaps = [Zap]()
-                for req in self.waitingRequests.filter({ now.timeIntervalSince($0.value.queuedAt) >= 55 }) {
+                for req in self.waitingRequests.filter({ now.timeIntervalSince($0.value.queuedAt) >= 42 }) {
                     if req.value.zap?.error != nil { // Received error from NWC
                         failedZaps.append(req.value.zap!)
+#if DEBUG
+        L.og.info("⚡️ NWC Req clean up timer. now in queue: \(self.waitingRequests.count) - ADDING FAILED ZAP")
+#endif
                     }
                     else if let zap = req.value.zap { // Timeout
+                        zap.error = "\nTime out (NWC wallet service down, not reachable, or very slow to send zap receipts)"
                         timeoutZaps.append(zap)
+#if DEBUG
+        L.og.info("⚡️ NWC Req clean up timer. now in queue: \(self.waitingRequests.count) - ADDING TIMEOUT ZAP")
+#endif
                     }
                     else {
                         L.og.info("⚡️ timeout for req: \(req.value.request.id) .. but has no .zap")
                     }
                 }
-                self.waitingRequests = self.waitingRequests.filter { now.timeIntervalSince($0.value.queuedAt) < 55 }
+                self.waitingRequests = self.waitingRequests.filter { now.timeIntervalSince($0.value.queuedAt) < 42 }
                 
                 if !failedZaps.isEmpty, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     
@@ -124,7 +131,7 @@ class NWCRequestQueue: ObservableObject {
                         }
                     }
                 }
-                if !timeoutZaps.isEmpty, let jsonData = try? self.encoder.encode(timeoutZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: "Timeout") }) {
+                if !timeoutZaps.isEmpty, let jsonData = try? self.encoder.encode(timeoutZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error ?? "Error") }) {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
                         L.og.info("⚡️ Creating notification for \(timeoutZaps.count) failed zaps by timeout")

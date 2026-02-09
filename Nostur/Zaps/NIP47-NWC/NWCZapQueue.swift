@@ -35,14 +35,38 @@ class NWCZapQueue {
             bg().perform { [weak self] in
                 guard let self = self else { return }
                 var failedZaps = [Zap]()
-                for zap in self.waitingZaps.filter({ now.timeIntervalSince($0.value.queuedAt) >= 55 }) {
-                    if zap.value.error != nil {
+                var timeoutZaps = [Zap]()
+                for zap in self.waitingZaps.filter({ now.timeIntervalSince($0.value.queuedAt) >= 42 || $0.value.error != nil }) {
+                    if zap.value.error == nil {
+                        zap.value.error = "Time out (receiver wallet service down or not reachable?)"
+                        timeoutZaps.append(zap.value)
+#if DEBUG
+        L.og.info("⚡️ Zap clean up timer. now in queue: \(self.waitingZaps.count) - ADDING TIMEOUT ZAP")
+#endif
+                    }
+                    else {
                         failedZaps.append(zap.value)
+#if DEBUG
+        L.og.info("⚡️ Zap clean up timer. now in queue: \(self.waitingZaps.count) - ADDING FAILED ZAP")
+#endif
                     }
                 }
-                self.waitingZaps = self.waitingZaps.filter { now.timeIntervalSince($0.value.queuedAt) < 55 }
+                self.waitingZaps = self.waitingZaps.filter { now.timeIntervalSince($0.value.queuedAt) < 42 || $0.value.error != nil }
                 
                 if !failedZaps.isEmpty, let jsonData = try? self.encoder.encode(failedZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
+                    
+                    if let serializedFails = String(data: jsonData, encoding: .utf8) {
+#if DEBUG
+                        L.og.info("⚡️ Creating notification for \(failedZaps.count) failed zaps")
+#endif
+                        let notification = PersistentNotification.createFailedNWCZaps(pubkey: AccountsState.shared.activeAccountPublicKey, message: serializedFails, context: bg())
+                        FeedsCoordinator.shared.notificationNeedsUpdateSubject.send(
+                            NeedsUpdateInfo(persistentNotification: notification)
+                        )
+                    }
+                }
+                
+                if !timeoutZaps.isEmpty, let jsonData = try? self.encoder.encode(timeoutZaps.map { FailedZap(contactPubkey: $0.contactPubkey, eventId: $0.eventId, error: $0.error!) }) {
                     
                     if let serializedFails = String(data: jsonData, encoding: .utf8) {
 #if DEBUG
