@@ -273,6 +273,14 @@ class Backlog {
         var tasksToRemove = [ReqTask]()
         
         for task in self.tasks {
+            // Don't timeout if task is still running (or about to run, because of debounce/delays)
+            if task.isRunning {
+#if DEBUG
+                L.og.debug("⏳⏳ \(self.backlogDebugName) removeOldTasks(): not removing, isRunning=true \(task.subscriptionId) -[LOG]-")
+#endif
+                continue
+            }
+            
             // Check timeout if configured per task
             if let timeout = task.timeout, task.createdAt.timeIntervalSinceNow < -timeout {
                 task.onTimeout()
@@ -424,6 +432,7 @@ class ReqTask: Identifiable, Hashable {
     public let processResponseCommand:(_: String, _: NXRelayMessage?, _:Event?) -> Void
     private let timeoutCommand:((_ taskId: String) -> Void)?
     private var didProcess = false
+    public var isRunning = false // to make sure timeout doesn't remove tasks that are still running
     private var skipTimeout = false
     
     // Only use for fetching specific ids. different relays can return different events
@@ -459,6 +468,7 @@ class ReqTask: Identifiable, Hashable {
                 guard !didProcess else { return }
                 didProcess = true
                 processResponseCommand(self.subscriptionId, message, nil)
+                isRunning = false
             }
             .store(in: &subscriptions)
     }
@@ -472,6 +482,7 @@ class ReqTask: Identifiable, Hashable {
     
     public func process(_ message: NXRelayMessage? = nil) {
         self.skipTimeout = true
+        self.isRunning = true
         self.processSubject.send(message)
     }
     
