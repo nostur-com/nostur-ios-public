@@ -335,6 +335,9 @@ class DMsVM: ObservableObject, Equatable, Hashable {
                 guard (!WOT_FILTER_ENABLED()) || WebOfTrust.shared.isAllowed(nEvent.publicKey) else {
                     return
                 }
+                
+                // Don't create notification if blocked
+                guard !blocks().contains(nEvent.publicKey) else { return }
         
                 // Show notification on Mac: ALWAYS
                 // On iOS: Only if app is in background
