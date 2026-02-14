@@ -1,0 +1,119 @@
+name: Build .ipa
+
+on:
+  workflow_dispatch:       # Manual trigger only
+  push:
+    tags: ['v*']           # Or on version tags
+
+jobs:
+  build-ipa:
+    runs-on: macos-14
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Generate Config.xcconfig
+        run: |
+          cat > Config.xcconfig << 'EOF'
+          TENOR_API_KEY = ${{ secrets.TENOR_API_KEY || 'placeholder' }}
+          TENOR_CLIENT_KEY = ${{ secrets.TENOR_CLIENT_KEY || 'placeholder' }}
+          KLIPY_API_KEY = ${{ secrets.KLIPY_API_KEY || 'placeholder' }}
+          IMGUR_CLIENT_ID = ${{ secrets.IMGUR_CLIENT_ID || 'placeholder' }}
+          NOSTRCHECK_PUBLIC_API_KEY = ${{ secrets.NOSTRCHECK_PUBLIC_API_KEY || 'placeholder' }}
+          NOSTUR_IS_DESKTOP = NO
+          NIP89_APP_NAME = Nostur
+          NIP89_APP_REFERENCE =
+          APPSTORE_VERSION = 0.0.1
+          EOF
+
+      - name: Install signing certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Decode certificate (redirect for macOS compatibility)
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode > $CERTIFICATE_PATH
+
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate
+          security import $CERTIFICATE_PATH -P "$CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security set-key-partition-list -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+      - name: Install provisioning profile
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode > $PP_PATH
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+      - name: Resolve SPM Dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -scheme Nostur \
+            -clonedSourcePackagesDirPath .spm-cache
+
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -scheme Nostur \
+            -destination 'generic/platform=iOS' \
+            -archivePath $RUNNER_TEMP/Nostur.xcarchive \
+            -clonedSourcePackagesDirPath .spm-cache
+
+      - name: Create ExportOptions.plist
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>ad-hoc</string>
+              <key>teamID</key>
+              <string>5T4GDWX88Z</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>nostur.com.Nostur</key>
+                  <string>Nostur Ad Hoc</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Export .ipa
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/Nostur.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/ipa
+
+      - name: Upload .ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nostur.ipa
+          path: ${{ runner.temp }}/ipa/*.ipa
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db

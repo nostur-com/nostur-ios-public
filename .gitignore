@@ -1,2 +1,4 @@
 Config.xcconfig
 .claude
+.spm-cache
+TestResults
