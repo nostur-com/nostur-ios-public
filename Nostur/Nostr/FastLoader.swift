@@ -252,7 +252,7 @@ class Backlog {
     }
     
     private func startCleanUpTimer() {
-        let interval = timeout/22
+        let interval = max(timeout/22, 0.75)
         DispatchQueue.main.async { [weak self] in // timer needs to run on main
             guard self?.timer == nil else { return }
             self?.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] timer in
@@ -264,6 +264,11 @@ class Backlog {
     }
     
     private func removeOldTasks() {
+#if DEBUG
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            fatalError("Should only be called from bg()")
+        }
+#endif
         guard !tasks.isEmpty else { return }
 #if DEBUG
         let tasksCount = self.tasks.count
@@ -309,7 +314,6 @@ class Backlog {
         
         if self.tasks.isEmpty {
             DispatchQueue.main.async { [weak self] in // needs to be from main
-                guard self?.tasks.isEmpty ?? false else { return }
                 self?.timer?.invalidate()
                 self?.timer = nil
 #if DEBUG
@@ -384,18 +388,18 @@ class Backlog {
     
     public func task(with subscriptionId: String) -> ReqTask? {
 #if DEBUG
-            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                fatalError("Should only be called from bg()")
-            }
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            fatalError("Should only be called from bg()")
+        }
 #endif
         return tasks.first(where: { $0.subscriptionId == subscriptionId })
     }
     
     public func tasks(with subscriptionIds: Set<String>) -> [ReqTask] {
 #if DEBUG
-            if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
-                fatalError("Should only be called from bg()")
-            }
+        if Thread.isMainThread && ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] != "1" {
+            fatalError("Should only be called from bg()")
+        }
 #endif
         return tasks.filter { subscriptionIds.contains($0.subscriptionId) }
     }
@@ -404,7 +408,6 @@ class Backlog {
         timer?.invalidate()
         timer = nil
         subscriptions.removeAll()
-        tasks.removeAll()
     }
 }
 
@@ -497,6 +500,7 @@ class ReqTask: Identifiable, Hashable {
             return
         }
         self.timeoutCommand?(subscriptionId)
+        self.isRunning = false
     }
     
     public func cleanup() {

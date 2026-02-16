@@ -164,15 +164,15 @@ class ZappedViewModel: ObservableObject {
                 }
             },
             processResponseCommand: { [weak self] taskId, relayMessage, _ in
-                self?.backlog.removeTask(with: taskId)
                 self?.fetchZapsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
 #if DEBUG
                 L.og.debug("Zapped feed: ready to process relay response")
 #endif
             },
             timeoutCommand: { [weak self] taskId in
-                self?.backlog.removeTask(with: taskId)
                 self?.fetchZapsFromDB(onComplete)
+                self?.backlog.removeTask(with: taskId)
 #if DEBUG
                 L.og.debug("Zapped feed: timeout ")
 #endif
