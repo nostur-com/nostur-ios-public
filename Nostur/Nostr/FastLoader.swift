@@ -252,7 +252,7 @@ class Backlog {
     }
     
     private func startCleanUpTimer() {
-        let interval = max(timeout/22, 0.75)
+        let interval = max(timeout/22, 0.50)
         DispatchQueue.main.async { [weak self] in // timer needs to run on main
             guard self?.timer == nil else { return }
             self?.timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] timer in
@@ -493,6 +493,7 @@ class ReqTask: Identifiable, Hashable {
 #if DEBUG
         L.og.debug("⏳⏳ ReqTask.onTimout: \(self.subscriptionId) -[LOG]-")
 #endif
+        self.isRunning = false
         if didProcess || skipTimeout { // need 2 flags to cover the debounce time where onTimeout could get called before didProcess is set
 #if DEBUG
             L.og.debug("⏳⏳ ReqTask: didProcess or skipTimeout, timeout not needed \(self.subscriptionId) -[LOG]-")
@@ -500,7 +501,6 @@ class ReqTask: Identifiable, Hashable {
             return
         }
         self.timeoutCommand?(subscriptionId)
-        self.isRunning = false
     }
     
     public func cleanup() {
