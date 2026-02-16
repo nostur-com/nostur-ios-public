@@ -419,16 +419,10 @@ func performUnreadMarkingUpdates(for nrPost: NRPost, vm: NXColumnViewModel) {
         }
     }
     
-    // Batch the marking operations to reduce main thread blocking
-    Task.detached(priority: .userInitiated) { [weak vm] in
-        vm?.markAsRead(idsToMarkAsRead)
-        
-        await MainActor.run {
-            // Send notifications in batch
-            for (id, columnId) in notificationPairs {
-                FeedsCoordinator.shared.markedAsUnreadSubject.send((id, columnId))
-            }
-        }
+    vm.markAsRead(idsToMarkAsRead)
+    
+    for (id, columnId) in notificationPairs {
+        FeedsCoordinator.shared.markedAsUnreadSubject.send((id, columnId))
     }
     
     // Update UI immediately for responsiveness

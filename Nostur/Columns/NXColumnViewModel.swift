@@ -306,6 +306,7 @@ class NXColumnViewModel: ObservableObject {
         syncFeedSubject.send()
     }
     
+    @MainActor
     public func markAsRead(_ shortPostIds: [String]) {
         guard feed != nil else { return }
         guard SettingsStore.shared.appWideSeenTracker && SettingsStore.shared.appWideSeenTrackeriCloud else { return }
