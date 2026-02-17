@@ -485,7 +485,9 @@ class ReqTask: Identifiable, Hashable {
     
     public func process(_ message: NXRelayMessage? = nil) {
         self.skipTimeout = true
-        self.isRunning = true
+        if !didProcess {
+            self.isRunning = true
+        }
         self.processSubject.send(message)
     }
     
@@ -504,6 +506,7 @@ class ReqTask: Identifiable, Hashable {
     }
     
     public func cleanup() {
+        isRunning = false
         subscriptions.forEach { $0.cancel() }
         subscriptions.removeAll()
     }
