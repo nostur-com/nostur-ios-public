@@ -37,6 +37,7 @@ struct NosturTabsView: View {
                         DetailPane()
                             .environment(\.containerID, "DetailPane")
                             .background(theme.listBackground)
+                            .environmentObject(VideoPostPlaybackCoordinator())
                     }
                 }
             }
