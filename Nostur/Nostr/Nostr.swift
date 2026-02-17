@@ -298,7 +298,7 @@ public struct NEvent: Codable {
     public var kind: NEventKind
     public var tags: [NostrTag]
     public var content: String
-    public var signature: String
+    public var signature: String? = ""
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -336,7 +336,7 @@ public struct NEvent: Codable {
         self.signature = ""
     }
     
-    init(id: String = "", publicKey: String = "", createdAt: NTimestamp = NTimestamp.init(date: Date()), content: String = "", kind: NEventKind, tags: [NostrTag] = [], signature: String = "") {
+    init(id: String = "", publicKey: String = "", createdAt: NTimestamp = NTimestamp.init(date: Date()), content: String = "", kind: NEventKind, tags: [NostrTag] = [], signature: String? = "") {
         self.kind = kind
         self.createdAt = createdAt
         self.content = content
@@ -397,8 +397,9 @@ public struct NEvent: Codable {
 
         let xOnlyKey = try secp256k1.Schnorr.XonlyKey(dataRepresentation: self.publicKey.bytes, keyParity: 1)
 
+        guard let signature else { throw "Invalid signature" }
         // signature from this event
-        let schnorrSignature = try secp256k1.Schnorr.SchnorrSignature(dataRepresentation: self.signature.bytes)
+        let schnorrSignature = try secp256k1.Schnorr.SchnorrSignature(dataRepresentation: signature.bytes)
 
         // public and signature from this event is valid?
         guard xOnlyKey.isValidSignature(schnorrSignature, for: sha256Serialized) else {
