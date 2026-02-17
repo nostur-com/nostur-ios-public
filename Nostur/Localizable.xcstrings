@@ -3405,6 +3405,9 @@
         }
       }
     },
+    "Copy text" : {
+
+    },
     "Copy to clipboard" : {
       "localizations" : {
         "nl" : {
