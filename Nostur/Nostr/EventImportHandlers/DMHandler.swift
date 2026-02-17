@@ -79,10 +79,10 @@ func handleDM(nEvent: NEvent, savedEvent: Event, context: NSManagedObjectContext
                 dmState.accepted = true
                 
                 if let current = dmState.markedReadAt_, savedEvent.date > current {
-                    dmState.markedReadAt_ = savedEvent.date
+                    dmState.markedReadAt_ = savedEventDate
                 }
                 else if dmState.markedReadAt_ == nil {
-                    dmState.markedReadAt_ = savedEvent.date
+                    dmState.markedReadAt_ = savedEventDate
                 }
             }
             
