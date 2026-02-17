@@ -473,11 +473,19 @@ class ConversionVM: ObservableObject {
                 L.og.debug("💌💌 1. (\(n+1)/\(recipientPubkeys.count)) Preparing sendJobs. To: \(nameOrPubkey(receiverPubkey)) relays: \(relays)")
 #endif
                 
-                if relays.isEmpty {
+
+                // If receiver has no relays, use our own relays as fallback for sending
+                let relaysWithFallback = if relays.isEmpty {
+                    await getDMrelays(for: ourAccountPubkey)
+                } else {
+                    relays
+                }
+                
+                if relaysWithFallback.isEmpty {
                     addedChatMessage?.dmSendResult[receiverPubkey] = RecipientResult(recipientPubkey: receiverPubkey, relayResults: [:])
                 }
                 
-                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relays))
+                sendJobs.append((receiver: receiverPubkey, wrappedEvent: giftWrap, relays: relaysWithFallback))
             }
             catch {
 #if DEBUG
