@@ -1,5 +1,5 @@
 {
-  "originHash" : "6938d16cc8f94e568750d85dd5f11dbf482f4290400a4544f21f1d10133b4dcd",
+  "originHash" : "3454ff4e006ec815965ecc99e820ff1084cfee1943ad1795a7197397efe48fcc",
   "pins" : [
     {
       "identity" : "client-sdk-swift",
@@ -59,7 +59,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/nostur-com/nostr-essentials",
       "state" : {
-        "revision" : "85dbd7b1ac9ad03f263c7054fce1f7d85d00f4a5"
+        "revision" : "e5833e7929561336dfb0f9eb6e7a1a889b9a9261"
       }
     },
     {
