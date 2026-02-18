@@ -468,7 +468,7 @@ class ReqTask: Identifiable, Hashable {
             .debounce(for: .seconds(debounceTime), scheduler: DispatchQueue.main)
             .sink { [weak self] message in
                 guard let self = self else { return }
-                guard !didProcess else { return }
+                guard !didProcess else { isRunning = false; return }
                 didProcess = true
                 processResponseCommand(self.subscriptionId, message, nil)
                 isRunning = false

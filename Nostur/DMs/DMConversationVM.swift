@@ -124,7 +124,7 @@ class ConversionVM: ObservableObject {
                     date: date,
                     messages: messages // .sorted(by: { $0.createdAt < $1.createdAt })
                 )
-            }.sorted(by: { $0.dayId < $1.dayId })
+            }.sorted(by: { $0.dayId > $1.dayId })
             
             var daysByYear: [String: [ConversationDay]] {
                 return Dictionary(grouping: days) { day in
@@ -137,7 +137,7 @@ class ConversionVM: ObservableObject {
                     year: year,
                     days: days
                 )
-            }.sorted(by: { $0.year < $1.year })
+            }.sorted(by: { $0.year > $1.year })
             
             viewState = .ready(years)
             lastMessageId = visibleMessages.last?.id
@@ -336,11 +336,11 @@ class ConversionVM: ObservableObject {
                         withAnimation {
                             lastMessageId = rumorNEvent.id
                             self.objectWillChange.send() // without this view doesn't update properly
-                            year.days =  year.days + [ConversationDay(
+                            year.days = [ConversationDay(
                                 dayId: dayIdFormatter.string(from: messageDate),
                                 date: messageDate,
                                 messages: [newChatMessage]
-                            )]
+                            )] + year.days
                         }
                     }
                 }
@@ -359,7 +359,7 @@ class ConversionVM: ObservableObject {
                                     dayId: dayIdFormatter.string(from: messageDate),
                                     date: messageDate,
                                     messages: [newChatMessage]
-                            )])]).sorted(by: { $0.year < $1.year })
+                            )])]).sorted(by: { $0.year > $1.year })
                         )
                     }
                 }

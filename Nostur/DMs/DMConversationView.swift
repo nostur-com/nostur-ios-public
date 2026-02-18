@@ -47,51 +47,57 @@ struct DMConversationView: View {
                 ProgressView()
             case .ready(let years):
                 ScrollViewReader { scrollProxy in
-                    ScrollView {
-                        LazyVStack {
-                            if vm.receivers.count > 1 {
-                                MultiPFPs(nrContacts: vm.receiverContacts, size: 75, onTap: { nrContact in
-                                    
-                                    // TODO: use sheet or navigate to...?
-                                    selectedContact = nrContact
-                                })
+                    List {
+                        Color.clear
+                            .frame(height: 1)
+                            .listRowInsets(.init())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(theme.listBackground)
+                            .id(bottomAnchor)
+                            .onAppear {
+                                stickToBottom = true
+                                showThereIsMore = false
                             }
-                            else if let receiverPubkey = vm.receivers.first {
+                            .onDisappear {
+                                stickToBottom = false
+                            }
+                        
+                        ForEach(years) { year in
+                            YearView(ourAccountPubkey: ourAccountPubkey, year: year, vm: vm)
+                                .listRowInsets(.init())
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(theme.listBackground)
+                                .scaleEffect(x: 1, y: -1, anchor: .center)
+                        }
+                        
+                        if vm.receivers.count > 1 {
+                            MultiPFPs(nrContacts: vm.receiverContacts, size: 75, onTap: { nrContact in
+                                
+                                // TODO: use sheet or navigate to...?
+                                selectedContact = nrContact
+                            })
+                            .listRowInsets(.init())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(theme.listBackground)
+                            .scaleEffect(x: 1, y: -1, anchor: .center)
+                        }
+                        else if let receiverPubkey = vm.receivers.first {
+                            Spacer()
+                                .listRowInsets(.init())
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(theme.listBackground)
+                            VStack(alignment: .center) {
                                 DMProfileInfo(nrContact: NRContact.instance(of: receiverPubkey))
-                                Spacer()
                             }
-                            ForEach(years) { year in
-                                YearView(ourAccountPubkey: ourAccountPubkey, year: year, vm: vm)
-                            }
-                            
-                            Color.clear
-                                .frame(height: 3)
-                                .id(bottomAnchor)
-                                .onAppear {
-                                    stickToBottom = true
-                                    showThereIsMore = false
-                                }
-                                .onDisappear {
-                                    stickToBottom = false
-                                }
-                        }
-                        .modifier {
-                            if #available(iOS 17.1, *) {
-                                $0
-                            }
-                            else {
-                                $0.rotationEffect(.degrees(180)) // do the flip flip because .defaultScrollAnchor(.bottom) is not available
-                            }
+                            .listRowInsets(.init())
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(theme.listBackground)
+                            .scaleEffect(x: 1, y: -1, anchor: .center)
                         }
                     }
-                    .modifier {
-                        if #available(iOS 17.1, *) {
-                            $0.defaultScrollAnchor(.bottom)
-                        }
-                        else {
-                            $0.rotationEffect(.degrees(180)) // do the flip flip because .defaultScrollAnchor(.bottom) is not available
-                        }
-                    }
+                    .scrollContentBackgroundCompat(.hidden)
+                    .listStyle(.plain)
+                    .scaleEffect(x: 1, y: -1, anchor: .center)
                     .onTapGesture {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                             to: nil, from: nil, for: nil)

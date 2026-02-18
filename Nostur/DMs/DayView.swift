@@ -13,17 +13,20 @@ struct DayView: View {
     public var vm: ConversionVM
     
     var body: some View {
+        // messages
+        VStack {
+            ForEach(day.messages) { message in
+                BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey, vm: vm)
+                    .id(message.id)
+            }
+        }
+        
         // day header
         Text(day.date, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
             .fontWeightBold()
             .font(.footnote)
             .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 20)
-        
-        // messages
-        ForEach(day.messages) { message in
-            BalloonView17(nrChatMessage: message, accountPubkey: ourAccountPubkey, vm: vm)
-                .id(message.id)
-        }
     }
 }

@@ -13,16 +13,17 @@ struct YearView: View {
     public var vm: ConversionVM
     
     var body: some View {
+        // days
+        ForEach(year.days) { day in
+            DayView(ourAccountPubkey: ourAccountPubkey, day: day, vm: vm)
+        }
+        
         // year header
         Text(year.year)
             .fontWeightBold()
             .font(.title2)
             .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 20)
-        
-        // days
-        ForEach(year.days) { day in
-            DayView(ourAccountPubkey: ourAccountPubkey, day: day, vm: vm)
-        }
     }
 }
