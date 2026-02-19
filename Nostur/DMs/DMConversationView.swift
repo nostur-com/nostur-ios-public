@@ -97,7 +97,14 @@ struct DMConversationView: View {
                     }
                     .scrollContentBackgroundCompat(.hidden)
                     .listStyle(.plain)
-                    .scaleEffect(x: 1, y: -1, anchor: .center)
+                    .modifier {
+                        if #available(iOS 26.0, *), IS_CATALYST {
+                            // Fix SwiftUI Bug, -1 becomes blurry on Catalyst
+                            $0.scaleEffect(x: 1, y: -0.999, anchor: .center)
+                        } else {
+                            $0.scaleEffect(x: 1, y: -1, anchor: .center)
+                        }
+                    }
                     .onTapGesture {
                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
                                                             to: nil, from: nil, for: nil)
