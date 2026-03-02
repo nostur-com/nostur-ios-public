@@ -25,8 +25,8 @@ struct WaveformView: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            HStack {
+        HStack {
+            GeometryReader { geo in
                 ZStack {
                     WaveformShape(samples: samples)
                         .fill(theme.accent.opacity(0.3))
@@ -51,12 +51,12 @@ struct WaveformView: View {
                             isScrubbing = false
                         }
                 )
-                
-                Text(isPlaying ? formatTime(duration * progress) : formatTime(duration))
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .frame(width: 55)
             }
+            
+            Text(isPlaying ? formatTime(duration * progress) : formatTime(duration))
+                .font(.caption)
+                .foregroundColor(.gray)
+                .frame(width: 55)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 12)
@@ -497,10 +497,8 @@ struct WaveformShape: Shape {
         let actualSpacing = barsToRender > 1 ? totalSpacing / CGFloat(barsToRender - 1) : 0
         
         let maxBarExtent: CGFloat = height / 2
-        let step = max(1, sampleCount / barsToRender)
-        
         for i in 0..<barsToRender {
-            let sampleIndex = min(i * step, sampleCount - 1)
+            let sampleIndex = barsToRender > 1 ? (i * (sampleCount - 1)) / (barsToRender - 1) : 0
             let amplitude = CGFloat(max(1, samples[sampleIndex])) / 100.0 // Convert from 0-100 to 0.0-1.0, minimum 0.01 so line is always visible
             let barExtent = amplitude * maxBarExtent
             let x = CGFloat(i) * (barWidth + actualSpacing)
