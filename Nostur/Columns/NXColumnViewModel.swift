@@ -2813,7 +2813,10 @@ extension NXColumnViewModel {
                 self.gapFiller?.fetchSimple(limit: 75)
             }
             
-            fetchProfiles(config)
+            // If self.refreshedAt is longer than 15 minutes ago, fetch profiles
+            if let feed = config.feed, feed.profilesFetchedAt == nil || (feed.profilesFetchedAt?.timeIntervalSinceNow ?? 0) < -900 {
+                fetchProfiles(config)
+            }
         }
     }
     
