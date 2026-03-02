@@ -2864,13 +2864,13 @@ extension NXColumnViewModel {
         
         guard !pubkeys.isEmpty else {
 #if DEBUG
-            L.fetching.debug("not checking profiles, pubkeys isEmpty")
+            L.fetching.debug("☘️☘️ \(config.name) not checking profiles, pubkeys isEmpty")
 #endif
             return
         }
         
 #if DEBUG
-        L.fetching.debug("checking profiles since: \(since?.description ?? "") -[LOG]-")
+        L.fetching.debug("☘️☘️ \(config.name) checking profiles since: \(since?.description ?? "") -[LOG]-")
 #endif
         
         let subscriptionId = "Profiles-" + feed.subscriptionId
@@ -2903,14 +2903,14 @@ extension NXColumnViewModel {
             prio: true,
             reqCommand: { taskId in
 #if DEBUG
-                L.og.debug("🟪 Fetching clEvent from relays")
+                L.og.debug("☘️☘️ \(config.name) 🟪 Fetching clEvent from relays")
 #endif
                 req(RM.getAuthorContactsList(pubkey: pubkey, subscriptionId: taskId))
             },
             processResponseCommand: { taskId, _, clEvent in
                 bg().perform {
 #if DEBUG
-                    L.og.debug("🟪 Processing clEvent response from relays")
+                    L.og.debug("☘️☘️ \(config.name) 🟪 Processing clEvent response from relays")
 #endif
                     var updatedConfig = config
                     if let clEvent = clEvent, clEvent.pubkey == pubkey && clEvent.kind == 3 {

@@ -392,6 +392,9 @@ public struct NEvent: Codable {
         let sha256Serialized = SHA256.hash(data: serializedEvent)
 
         guard self.id == String(bytes:sha256Serialized.bytes) else {
+#if DEBUG
+            L.og.debug("🔴🔴 Invalid ID 🔴🔴: \(self.id)")
+#endif
             throw "🔴🔴 Invalid ID 🔴🔴"
         }
 
