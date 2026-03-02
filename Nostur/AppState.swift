@@ -12,9 +12,11 @@ class AppState: ObservableObject {
     
     
     public var containerIDTapped: String = "Default"
-    
+   
+    @MainActor
     static let shared = AppState()
     
+    @MainActor
     private init() {
         if UserDefaults.standard.bool(forKey: "firstTimeCompleted") {
             finishedTasks.insert(.firstTimeCompleted)
@@ -135,7 +137,7 @@ class AppState: ObservableObject {
     
     
     // App wide blocking of words, pubkeys, hashtags, threads
-    
+    @MainActor
     public func loadMutedWords() {
         return // TODO: FIXME
         let fr = MutedWords.fetchRequest()
@@ -144,22 +146,27 @@ class AppState: ObservableObject {
         self.bgAppState.mutedWords = mutedWords.map { $0.words }.compactMap { $0 }.filter { $0 != "" }
     }
     
+    @MainActor
     public func loadBlockedPubkeys() {
         self.bgAppState.blockedPubkeys = CloudBlocked.blockedPubkeys()
     }
     
+    @MainActor
     public func loadBlockedHashtags() {
         self.bgAppState.blockedHashtags = CloudBlocked.blockedHashtags()
     }
     
+    @MainActor
     public func loadPrivateNoteEventIds() {
         self.bgAppState.hasPrivateNoteEventIds = Set(CloudPrivateNote.fetchAll(context: viewContext()).compactMap { $0.eventId })
     }
     
+    @MainActor
     public func loadPrivateNoteContactPubkeys() {
         self.bgAppState.hasPrivateNoteContactPubkeys = Set(CloudPrivateNote.fetchAll(context: viewContext()).compactMap { $0.pubkey })
     }
     
+    @MainActor
     public func loadMutedRootIds() {
         self.bgAppState.mutedRootIds = CloudBlocked.mutedRootIds()
     }
