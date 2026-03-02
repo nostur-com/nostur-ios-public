@@ -98,8 +98,8 @@ struct DMConversationView: View {
                     .scrollContentBackgroundCompat(.hidden)
                     .listStyle(.plain)
                     .modifier {
-                        if #available(iOS 26.0, *), IS_CATALYST {
-                            // Fix SwiftUI Bug, -1 becomes blurry on Catalyst
+                        if #available(iOS 26.0, *) {
+                            // Fix SwiftUI Bug, -1 becomes blurry on 26+
                             $0.scaleEffect(x: 1, y: -0.999, anchor: .center)
                         } else {
                             $0.scaleEffect(x: 1, y: -1, anchor: .center)
