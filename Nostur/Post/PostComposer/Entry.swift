@@ -548,12 +548,13 @@ struct Entry: View {
     
     @ViewBuilder
     private var privateReplyButton: some View {
-        Button("Reply in private", systemImage: replyInPrivate ? "lock.rectangle.on.rectangle.fill" : "lock.rectangle.on.rectangle") {
-            replyInPrivate.toggle()
-        }
-        .buttonStyle(.borderless)
-        .disabled(typingTextModel.uploading)
-        .help("Reply in private")
+        EmptyView()
+//        Button("Reply in private", systemImage: replyInPrivate ? "lock.rectangle.on.rectangle.fill" : "lock.rectangle.on.rectangle") {
+//            replyInPrivate.toggle()
+//        }
+//        .buttonStyle(.borderless)
+//        .disabled(typingTextModel.uploading)
+//        .help("Reply in private")
     }
     
     @ViewBuilder
