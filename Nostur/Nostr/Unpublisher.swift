@@ -163,7 +163,7 @@ class Unpublisher {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     
                     // Clear draft
-                    if nEvent.kind == .textNote || nEvent.kind == .picture {
+                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment]).contains(nEvent.kind) {
                         Drafts.shared.draft = ""
                         Drafts.shared.restoreDraft = ""
                     }
@@ -219,7 +219,7 @@ class Unpublisher {
                 DispatchQueue.main.async {
                     sendNotification(.publishingEvent, nEvent.id) // to remove 'undo send' from view
                     // Clear draft
-                    if nEvent.kind == .textNote || nEvent.kind == .picture  {
+                    if Set([.textNote, .picture, .shortVoiceMessage, .shortVoiceMessageComment]).contains(nEvent.kind) {
                         Drafts.shared.draft = ""
                         Drafts.shared.restoreDraft = ""
                     }
