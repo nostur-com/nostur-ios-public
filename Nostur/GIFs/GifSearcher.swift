@@ -38,6 +38,7 @@ struct GifSearcher: View {
     @State private var tags: [TenorCategory] = []
     @State private var autocompleteResults: [String] = []
     @State private var _suggestionResults: [String] = []
+    @State private var scrollUpdater = UUID()
     @AppStorage("use_blossom_for_gifs") private var useBlossom = false
     
     var bothResults: [String] {
@@ -92,19 +93,27 @@ struct GifSearcher: View {
                 }
                 .frame(height: 30)
             }
-            ScrollView {
-                MasonryLayout(
-                    columns: 3,
-                    spacing: 5,
-                    content: gifItems.map { gifResult in
-                        AnyView(
-                            gifItemView(gifResult: gifResult)
-                        )
+            ScrollViewReader { proxy in
+                ScrollView {
+                    MasonryLayout(
+                        columns: 3,
+                        spacing: 5,
+                        content: gifItems.map { gifResult in
+                            AnyView(
+                                gifItemView(gifResult: gifResult)
+                            )
+                        }
+                    )
+                    .id("top")
+                }
+                .onChange(of: searchTerm) { newValue in
+                    search(newValue)
+                }
+                .onChange(of: scrollUpdater) { _ in
+                    withAnimation {
+                        proxy.scrollTo("top", anchor: .top)
                     }
-                )
-            }
-            .onChange(of: searchTerm) { newValue in
-                search(newValue)
+                }
             }
         }
         .disabled(blossomViewState == ViewState.uploadingGif)
@@ -345,6 +354,7 @@ struct GifSearcher: View {
     func tenorSearchHandler(response: TenorResponse)
     {
         if let results = response.results {
+            self.scrollUpdater = UUID()
             self.searchResults = results
         }
     }
