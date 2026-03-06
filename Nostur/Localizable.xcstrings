@@ -1953,7 +1953,15 @@
       }
     },
     "Appearance" : {
-      "comment" : "Setting heading on settings screen"
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weergave"
+          }
+        }
+      }
     },
     "Approve" : {
       "localizations" : {
@@ -3406,7 +3414,14 @@
       }
     },
     "Copy text" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kopieer tekst"
+          }
+        }
+      }
     },
     "Copy to clipboard" : {
       "localizations" : {
@@ -3718,10 +3733,25 @@
       }
     },
     "Data Usage" : {
-      "comment" : "Setting heading on settings screen"
+      "comment" : "Setting heading on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dataverbruik"
+          }
+        }
+      }
     },
     "Database & Cache" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Database & Cache"
+          }
+        }
+      }
     },
     "Database status" : {
       "comment" : "Settings heading",
@@ -5403,7 +5433,15 @@
       }
     },
     "in private" : {
-      "comment" : "Replying to xxx 'in private'"
+      "comment" : "Replying to xxx 'in private'",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "privé"
+          }
+        }
+      }
     },
     "Include author" : {
       "comment" : "Button to include author in Highlight",
@@ -5894,10 +5932,25 @@
       }
     },
     "Live Streams" : {
-      "comment" : "Feed title\nTab title for Live Streams feed\nTab title for the Live Streams feed"
+      "comment" : "Feed title\nTab title for Live Streams feed\nTab title for the Live Streams feed",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Streams"
+          }
+        }
+      }
     },
     "Live Streams from people you follow" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Live Streams van mensen die jij volgt"
+          }
+        }
+      }
     },
     "Load anyway" : {
       "comment" : "Button to show the blocked content anyway",
@@ -6188,7 +6241,15 @@
       }
     },
     "Media downloading" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Media downloaden"
+          }
+        }
+      }
     },
     "Media from posts from anyone which are most liked or reposted by people you follow" : {
       "localizations" : {
@@ -6653,6 +6714,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nieuwe Feed…"
+          }
+        }
+      }
+    },
+    "New follower notifications will show up here" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieuwe volgers meldingen komen hier"
           }
         }
       }
@@ -7810,7 +7881,14 @@
       }
     },
     "Posting & Media Uploading" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versturen en Media Uploads"
+          }
+        }
+      }
     },
     "Posts" : {
       "comment" : "Tab title",
@@ -7963,7 +8041,15 @@
       }
     },
     "private" : {
-      "comment" : "Label shown on a private item"
+      "comment" : "Label shown on a private item",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "privé"
+          }
+        }
+      }
     },
     "Private conversation" : {
       "comment" : "Navigation title for screen to select a contact to send a Direct Message to",
@@ -8329,6 +8415,16 @@
         }
       }
     },
+    "Reactions to your posts will show up here" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reacties op jouw berichten komen hier"
+          }
+        }
+      }
+    },
     "read" : {
       "localizations" : {
         "nl" : {
@@ -8648,7 +8744,14 @@
       }
     },
     "Relay Connections" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relay verbindingen"
+          }
+        }
+      }
     },
     "Relay feed" : {
       "localizations" : {
@@ -8952,6 +9055,16 @@
         }
       }
     },
+    "Replies and mentions will show up here" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoorden en vermeldingen komen hier"
+          }
+        }
+      }
+    },
     "Reply..." : {
       "localizations" : {
         "nl" : {
@@ -8973,7 +9086,14 @@
       }
     },
     "Replying to **%@**" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antwoord aan **%@**"
+          }
+        }
+      }
     },
     "Replying to %lld people" : {
       "comment" : "Shown in a post, Replying to (X) people ",
@@ -9150,6 +9270,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reposts"
+          }
+        }
+      }
+    },
+    "Reposts of your posts will show up here" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herplaatsingen van jouw berichten komen hier"
           }
         }
       }
@@ -10012,7 +10142,15 @@
       }
     },
     "Show fiat value" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon fiat waarde"
+          }
+        }
+      }
     },
     "Show from which app someone posted" : {
       "comment" : "Setting on settings screen",
@@ -10120,10 +10258,26 @@
       }
     },
     "Show USD value next to sats on post" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon USD waarde naast sats bij bericht"
+          }
+        }
+      }
     },
     "Show USD value next to sats on posts" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon USD waarde naast sats bij berichten"
+          }
+        }
+      }
     },
     "Show wallet balance" : {
       "comment" : "Setting on settings screen",
@@ -10137,7 +10291,15 @@
       }
     },
     "Show zaps fiat value" : {
-      "comment" : "Setting on settings screen"
+      "comment" : "Setting on settings screen",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toon zaps fiat waarde"
+          }
+        }
+      }
     },
     "Shown in the tab bar" : {
       "localizations" : {
@@ -10364,7 +10526,14 @@
       }
     },
     "Spam Filtering" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spamfilters"
+          }
+        }
+      }
     },
     "Speaker" : {
       "comment" : "Role of participant",
@@ -11987,7 +12156,14 @@
       }
     },
     "When to auto-download media posted by others" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto-download media geplaatst door anderen"
+          }
+        }
+      }
     },
     "When you bookmark a post it will show up here." : {
       "localizations" : {
