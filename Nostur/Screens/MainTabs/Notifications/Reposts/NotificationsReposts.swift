@@ -35,51 +35,69 @@ struct NotificationsReposts: View {
         let _ = nxLogChanges(of: Self.self)
 #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(spacing: GUTTER) {
-                    ForEach(model.reposts) { nrPost in
-                        Box(nrPost: nrPost) {
-                            VStack(alignment: .leading, spacing: 0) {
-                                RepostHeader(nrContact: nrPost.contact)
-                                    .offset(x: -35)
-                                    .onAppear { self.enqueue(nrPost) }
-                                    .onDisappear { self.dequeue(nrPost) }
-                                if let firstQuote = nrPost.firstQuote {
-                                    MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5)
-                                        .onTapGesture {
-                                            navigateTo(firstQuote, context: containerID)
-                                        }
+            if model.nothingHere && model.reposts.isEmpty {
+                Text("Reposts of your posts will show up here")
+                    .centered()
+            }
+            else if model.reposts.isEmpty {
+                ProgressView()
+                    .centered()
+                    .task(id: "notifications-reposts") {
+                        try? await Task.sleep(nanoseconds: 6_000_000_000)
+                        Task { @MainActor in
+                            if model.reposts.isEmpty {
+                                model.nothingHere = true
+                            }
+                        }
+                    }
+            }
+            else {
+                ScrollView {
+                    LazyVStack(spacing: GUTTER) {
+                        ForEach(model.reposts) { nrPost in
+                            Box(nrPost: nrPost) {
+                                VStack(alignment: .leading, spacing: 0) {
+                                    RepostHeader(nrContact: nrPost.contact)
+                                        .offset(x: -35)
+                                        .onAppear { self.enqueue(nrPost) }
+                                        .onDisappear { self.dequeue(nrPost) }
+                                    if let firstQuote = nrPost.firstQuote {
+                                        MinimalNoteTextRenderView(nrPost: firstQuote, lineLimit: 5)
+                                            .onTapGesture {
+                                                navigateTo(firstQuote, context: containerID)
+                                            }
+                                    }
                                 }
                             }
-                        }
-                        .overlay(alignment: .topTrailing) {
-                            Ago(nrPost.createdAt).layoutPriority(2)
-                                .foregroundColor(.gray)
-                                .padding(10)
-                        }
-                        .id(nrPost.id)
-                    }
-                    VStack {
-                        if !model.reposts.isEmpty {
-                            Button("Show more") {
-                                model.showMore()
+                            .overlay(alignment: .topTrailing) {
+                                Ago(nrPost.createdAt).layoutPriority(2)
+                                    .foregroundColor(.gray)
+                                    .padding(10)
                             }
-                            .padding(.bottom, 40)
-                            .buttonStyle(.bordered)
+                            .id(nrPost.id)
                         }
-                        else {
-                            ProgressView()
+                        VStack {
+                            if !model.reposts.isEmpty {
+                                Button("Show more") {
+                                    model.showMore()
+                                }
+                                .padding(.bottom, 40)
+                                .buttonStyle(.bordered)
+                            }
+                            else {
+                                ProgressView()
+                            }
                         }
+                        .hCentered()
                     }
-                    .hCentered()
                 }
-            }
-            .onReceive(receiveNotification(.didTapTab)) { notification in
-                guard selectedNotificationsTab == "Reposts" else { return }
-                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0, let topId = model.reposts.first?.id {
-                    withAnimation {
-                        proxy.scrollTo(topId)
+                .onReceive(receiveNotification(.didTapTab)) { notification in
+                    guard selectedNotificationsTab == "Reposts" else { return }
+                    guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                    if navPath.count == 0, let topId = model.reposts.first?.id {
+                        withAnimation {
+                            proxy.scrollTo(topId)
+                        }
                     }
                 }
             }
