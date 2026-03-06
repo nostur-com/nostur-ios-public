@@ -34,44 +34,62 @@ struct NotificationsMentions: View {
         let _ = nxLogChanges(of: Self.self)
 #endif
         ScrollViewReader { proxy in
-            List {
-                ForEach (model.mentions) { nrPost in
-                    ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯
-                        Box(nrPost: nrPost) {
-                            PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
-                        }
-                    }
-                    .id(nrPost.id) // <-- must use .id or can't .scrollTo
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(theme.listBackground)
-                    .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    .padding(.bottom, GUTTER)
-                }
-                
-                VStack {
-                    if !model.mentions.isEmpty {
-                        Button("Show more") {
-                            model.showMore()
-                        }
-                        .padding(.bottom, 40)
-                        .buttonStyle(.bordered)
-                    }
-                    else {
-                        ProgressView()
-                    }
-                }
-                .hCentered()
+            if model.nothingHere && model.mentions.isEmpty {
+                Text("Replies and mentions will show up here")
+                    .centered()
             }
-            .environment(\.defaultMinListRowHeight, 50)
-            .listStyle(.plain)
-            .scrollContentBackgroundHidden()
-            
-            .onReceive(receiveNotification(.didTapTab)) { notification in
-                guard selectedNotificationsTab == "Mentions" else { return }
-                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0, let topId = model.mentions.first?.id {
-                    withAnimation {
-                        proxy.scrollTo(topId)
+            else if model.mentions.isEmpty {
+                ProgressView()
+                    .centered()
+                    .task(id: "notifications-mentions") {
+                        try? await Task.sleep(nanoseconds: 4_000_000_000)
+                        Task { @MainActor in
+                            if model.mentions.isEmpty {
+                                model.nothingHere = true
+                            }
+                        }
+                    }
+            }
+            else {
+                List {
+                    ForEach (model.mentions) { nrPost in
+                        ZStack { // Without this ZStack wrapper the bookmark list crashes on load ¯\_(ツ)_/¯
+                            Box(nrPost: nrPost) {
+                                PostRowDeletable(nrPost: nrPost, missingReplyTo: true, fullWidth: settings.fullWidthImages, theme: theme)
+                            }
+                        }
+                        .id(nrPost.id) // <-- must use .id or can't .scrollTo
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(theme.listBackground)
+                        .listRowInsets(.init(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .padding(.bottom, GUTTER)
+                    }
+                    
+                    VStack {
+                        if !model.mentions.isEmpty {
+                            Button("Show more") {
+                                model.showMore()
+                            }
+                            .padding(.bottom, 40)
+                            .buttonStyle(.bordered)
+                        }
+                        else {
+                            ProgressView()
+                        }
+                    }
+                    .hCentered()
+                }
+                .environment(\.defaultMinListRowHeight, 50)
+                .listStyle(.plain)
+                .scrollContentBackgroundHidden()
+                
+                .onReceive(receiveNotification(.didTapTab)) { notification in
+                    guard selectedNotificationsTab == "Mentions" else { return }
+                    guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                    if navPath.count == 0, let topId = model.mentions.first?.id {
+                        withAnimation {
+                            proxy.scrollTo(topId)
+                        }
                     }
                 }
             }
