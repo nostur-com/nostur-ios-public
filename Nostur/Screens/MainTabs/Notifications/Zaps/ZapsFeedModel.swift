@@ -10,6 +10,7 @@ import Combine
 
 class ZapsFeedModel: ObservableObject {
     @Published public var postOrProfileZaps: [PostOrProfileZaps] = []
+    @Published public var nothingHere: Bool = false
     
 
     private var pubkey: String?
@@ -53,6 +54,7 @@ class ZapsFeedModel: ObservableObject {
     public func load(limit: Int?, includeSpam: Bool = false, completion: ((Int64) -> Void)? = nil) {
         guard let pubkey else { return }
         let bgContext = bg()
+        self.nothingHere = false
         bgContext.perform { [weak self] in
             guard let self else { return }
             let r1 = Event.fetchRequest()

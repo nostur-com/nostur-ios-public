@@ -57,58 +57,76 @@ struct NotificationsZaps: View {
         let _ = nxLogChanges(of: Self.self)
 #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(notifications) { pNotification in
-                        switch pNotification.type {
-                        case .NOTIFICATION:
-                            ZapNotificationView(notification: pNotification.notification!)
+            if model.nothingHere && model.postOrProfileZaps.isEmpty {
+                Text("Reposts of your posts will show up here")
+                    .centered()
+            }
+            else if model.postOrProfileZaps.isEmpty {
+                ProgressView()
+                    .centered()
+                    .task(id: "notifications-zaps") {
+                        try? await Task.sleep(nanoseconds: 4_000_000_000)
+                        Task { @MainActor in
+                            if model.postOrProfileZaps.isEmpty {
+                                model.nothingHere = true
+                            }
+                        }
+                    }
+            }
+            else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 2) {
+                        ForEach(notifications) { pNotification in
+                            switch pNotification.type {
+                            case .NOTIFICATION:
+                                ZapNotificationView(notification: pNotification.notification!)
+                                    .padding(10)
+                                    .background(theme.listBackground)
+                                    .overlay(alignment: .bottom) {
+                                        theme.background.frame(height: GUTTER)
+                                    }
+                                    .id(pNotification.id)
+                            case .ZAP:
+                                VStack {
+                                    if let postOrProfileZaps = pNotification.postOrProfileZaps {
+                                        if postOrProfileZaps.type == .Post, let postZaps = postOrProfileZaps.post {
+                                            PostZapsView(postZaps: postZaps)
+                                        }
+                                        else if postOrProfileZaps.type == .Profile, let profileZap = postOrProfileZaps.profile {
+                                            ProfileZap(zap: profileZap)
+                                        }
+                                    }
+                                }
                                 .padding(10)
                                 .background(theme.listBackground)
                                 .overlay(alignment: .bottom) {
                                     theme.background.frame(height: GUTTER)
                                 }
                                 .id(pNotification.id)
-                        case .ZAP:
-                            VStack {
-                                if let postOrProfileZaps = pNotification.postOrProfileZaps {
-                                    if postOrProfileZaps.type == .Post, let postZaps = postOrProfileZaps.post {
-                                        PostZapsView(postZaps: postZaps)
-                                    }
-                                    else if postOrProfileZaps.type == .Profile, let profileZap = postOrProfileZaps.profile {
-                                        ProfileZap(zap: profileZap)
-                                    }
+                            }
+                        }
+                        VStack {
+                            if !model.postOrProfileZaps.isEmpty {
+                                Button("Show more") {
+                                    model.showMore()
                                 }
+                                .padding(.bottom, 40)
+                                .buttonStyle(.bordered)
                             }
-                            .padding(10)
-                            .background(theme.listBackground)
-                            .overlay(alignment: .bottom) {
-                                theme.background.frame(height: GUTTER)
+                            else {
+                                ProgressView()
                             }
-                            .id(pNotification.id)
                         }
+                        .hCentered()
                     }
-                    VStack {
-                        if !model.postOrProfileZaps.isEmpty {
-                            Button("Show more") {
-                                model.showMore()
-                            }
-                            .padding(.bottom, 40)
-                            .buttonStyle(.bordered)
-                        }
-                        else {
-                            ProgressView()
-                        }
-                    }
-                    .hCentered()
                 }
-            }
-            .onReceive(receiveNotification(.didTapTab)) { notification in
-                guard selectedNotificationsTab == "Zaps" else { return }
-                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0, let topId = notifications.first?.id {
-                    withAnimation {
-                        proxy.scrollTo(topId)
+                .onReceive(receiveNotification(.didTapTab)) { notification in
+                    guard selectedNotificationsTab == "Zaps" else { return }
+                    guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                    if navPath.count == 0, let topId = notifications.first?.id {
+                        withAnimation {
+                            proxy.scrollTo(topId)
+                        }
                     }
                 }
             }
