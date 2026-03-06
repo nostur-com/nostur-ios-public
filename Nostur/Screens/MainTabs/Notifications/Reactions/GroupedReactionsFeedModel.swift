@@ -10,6 +10,7 @@ import Combine
 
 class GroupedReactionsFeedModel: ObservableObject {
     @Published public var groupedReactions: [GroupedReactions] = []
+    @Published public var nothingHere: Bool = false
 
     private var pubkey: String?
     public var account: CloudAccount? // Main context
@@ -51,6 +52,7 @@ class GroupedReactionsFeedModel: ObservableObject {
     public func load(limit: Int?, includeSpam: Bool = false, completion: ((Int64) -> Void)? = nil) {
         guard let pubkey else { return }
         let bgContext = bg()
+        self.nothingHere = false
         bgContext.perform { [weak self] in
             guard let self else { return }
             let r1 = Event.fetchRequest()

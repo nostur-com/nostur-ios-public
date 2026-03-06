@@ -33,32 +33,47 @@ struct NotificationsReactions: View {
         let _ = nxLogChanges(of: Self.self)
 #endif
         ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 2) {
-                    ForEach(model.groupedReactions) { groupedReactions in
-                        NRPostOrChatMessage(groupedReactions: groupedReactions)
-                    }
-                    VStack {
-                        if !model.groupedReactions.isEmpty {
-                            Button("Show more") {
-                                model.showMore()
-                            }
-                            .padding(.bottom, 40)
-                            .buttonStyle(.bordered)
-                        }
-                        else {
-                            ProgressView()
-                        }
-                    }
-                    .hCentered()
-                }
+            if model.nothingHere && model.groupedReactions.isEmpty {
+                Text("Reactions to your posts will show up here")
+                    .centered()
             }
-            .onReceive(receiveNotification(.didTapTab)) { notification in
-                guard selectedNotificationsTab == "Reactions" else { return }
-                guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
-                if navPath.count == 0, let topId = model.groupedReactions.first?.id {
-                    withAnimation {
-                        proxy.scrollTo(topId)
+            else if model.groupedReactions.isEmpty {
+                ProgressView()
+                    .centered()
+                    .task(id: "notifications-reactions") {
+                        try? await Task.sleep(nanoseconds: 4_000_000_000)
+                        Task { @MainActor in
+                            if model.groupedReactions.isEmpty {
+                                model.nothingHere = true
+                            }
+                        }
+                    }
+            }
+            else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 2) {
+                        ForEach(model.groupedReactions) { groupedReactions in
+                            NRPostOrChatMessage(groupedReactions: groupedReactions)
+                        }
+                        VStack {
+                            if !model.groupedReactions.isEmpty {
+                                Button("Show more") {
+                                    model.showMore()
+                                }
+                                .padding(.bottom, 40)
+                                .buttonStyle(.bordered)
+                            }
+                        }
+                        .hCentered()
+                    }
+                    .onReceive(receiveNotification(.didTapTab)) { notification in
+                        guard selectedNotificationsTab == "Reactions" else { return }
+                        guard let tabName = notification.object as? String, tabName == "Notifications" else { return }
+                        if navPath.count == 0, let topId = model.groupedReactions.first?.id {
+                            withAnimation {
+                                proxy.scrollTo(topId)
+                            }
+                        }
                     }
                 }
             }
