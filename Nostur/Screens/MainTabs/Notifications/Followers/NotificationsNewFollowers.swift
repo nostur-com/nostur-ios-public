@@ -48,19 +48,24 @@ struct NotificationsFollowers: View {
 #endif
         ScrollViewReader { proxy in
             ZStack {
-                theme.listBackground // List background, not toolbar / screen
-                ScrollView {
-                    LazyVStack(spacing: GUTTER) {
-                        ForEach(notifications) { notification in
-                            NewFollowersNotificationView(notification: notification)
-                                .padding(10)
-                                .background(theme.listBackground)
-                                .overlay(alignment: .bottom) {
-                                    theme.background.frame(height: GUTTER)
-                                }
-                                .id(notification.id)
+                if !notifications.isEmpty {
+                    theme.listBackground // List background, not toolbar / screen
+                    ScrollView {
+                        LazyVStack(spacing: GUTTER) {
+                            ForEach(notifications) { notification in
+                                NewFollowersNotificationView(notification: notification)
+                                    .padding(10)
+                                    .background(theme.listBackground)
+                                    .overlay(alignment: .bottom) {
+                                        theme.background.frame(height: GUTTER)
+                                    }
+                                    .id(notification.id)
+                            }
                         }
                     }
+                } else {
+                    Text("New follower notifications will show up here")
+                        .centered()
                 }
             }
             .onReceive(receiveNotification(.didTapTab)) { notification in
